@@ -1,0 +1,16 @@
+{
+  "codename": "AwesomeSmall",
+  "ttf_path": "/assets/Font Awesome 6 Free-Solid-900.otf",
+  "bin_path": "/assets/ui_font_AwesomeSmall.bin",
+  "c_path": "/assets/ui_font_AwesomeSmall.c",
+  "cfg_path": "/assets/ui_font_AwesomeSmall.fcfg",
+  "size": 16,
+  "bpp": 4,
+  "letters": 0,
+  "ranges": [
+    "0x20-0x7f"
+  ],
+  "symbols": "",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

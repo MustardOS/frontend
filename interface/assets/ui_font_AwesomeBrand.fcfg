@@ -1,0 +1,16 @@
+{
+  "codename": "AwesomeBrand",
+  "ttf_path": "/assets/Font Awesome 6 Brands-Regular-400.otf",
+  "bin_path": "/assets/ui_font_AwesomeBrand.bin",
+  "c_path": "/assets/ui_font_AwesomeBrand.c",
+  "cfg_path": "/assets/ui_font_AwesomeBrand.fcfg",
+  "size": 24,
+  "bpp": 4,
+  "letters": 3,
+  "ranges": [
+    "0x20-0xff"
+  ],
+  "symbols": "",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

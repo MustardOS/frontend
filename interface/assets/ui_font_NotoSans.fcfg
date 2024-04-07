@@ -1,0 +1,16 @@
+{
+  "codename": "NotoSans",
+  "ttf_path": "/assets/NotoSans-Medium.ttf",
+  "bin_path": "/assets/ui_font_NotoSans.bin",
+  "c_path": "/assets/ui_font_NotoSans.c",
+  "cfg_path": "/assets/ui_font_NotoSans.fcfg",
+  "size": 20,
+  "bpp": 4,
+  "letters": 3,
+  "ranges": [
+    "0x20-0xff"
+  ],
+  "symbols": "",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}
