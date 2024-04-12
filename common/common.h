@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../lvgl/lvgl.h"
-#include "mini.h"
+#include "mini/mini.h"
 
 extern int msgbox_active;
 extern lv_obj_t *msgbox_element;
@@ -51,10 +51,6 @@ struct image_info {
     lv_obj_t *ui_element;
     lv_obj_t *ui_panel;
 };
-
-void input_pause();
-
-void input_resume();
 
 int file_exist(char *filename);
 
@@ -194,7 +190,7 @@ void process_visual_element(const char *visual, lv_obj_t *element);
 
 int get_volume_percentage();
 
-int should_skip(const char *name);
+int should_skip(char *name);
 
 int get_brightness_percentage(int brightness);
 

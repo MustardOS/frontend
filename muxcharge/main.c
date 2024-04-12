@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/reboot.h>
@@ -19,7 +19,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 static int js_fd;
 
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
 
     load_font(basename(argv[0]), ui_scrCharge);
 
-    if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
     }
 
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
 
     while (!safe_quit) {
         lv_task_handler();
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 
     mini_free(muos_config);

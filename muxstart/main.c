@@ -1,6 +1,6 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <string.h>
@@ -15,7 +15,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, basename(argv[0]));
     apply_theme();
 
-    if (get_ini_int(muos_config, "tweak", "factory_reset", LABEL)) {
+    if (get_ini_int(muos_config, "boot", "factory_reset", LABEL)) {
         lv_img_set_src(ui_imgWall, &ui_img_muoslogotop_png);
     } else {
         lv_obj_set_user_data(ui_scrStart, "muxstart");
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 
         load_font(basename(argv[0]), ui_scrStart);
 
-        if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+        if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
             nav_sound = 1;
         }
     }
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblMessage, argv[1]);
     lv_task_handler();
 
-    usleep(SCREEN_REFRESH);
+    usleep(SCREEN_WAIT);
 
     mini_free(muos_config);
 

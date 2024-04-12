@@ -10,7 +10,7 @@ TARGET = ${shell basename $$(pwd)}
 
 CC = ccache $(CROSS_COMPILE)gcc -static
 
-CFLAGS  = -O3 $(ARCH) -flto=auto -ffunction-sections -fdata-sections -flto -finline-functions -Wall -Wno-implicit-function-declaration
+CFLAGS  = -O3 $(ARCH) -flto=auto -ffunction-sections -fdata-sections -flto -finline-functions -Wall -Wno-implicit-function-declaration -Wno-format-zero-length
 LDFLAGS = $(CFLAGS) -lpthread -Wl,--gc-sections -s
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer -fno-unroll-loops -fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
@@ -18,7 +18,7 @@ EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer -fn
 LVGL_DIR_NAME ?= lvgl
 LVGL_DIR ?= ${shell pwd}/..
 
-SSRCS := ${shell cat filelist.txt}
+SSRCS := ${shell cat ui/filelist.txt}
 
 MAINSRC = ./main.c
 
@@ -46,7 +46,7 @@ message:
 	@printf "Name:\t$(TARGET)\n"
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
-	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) ../common/json/json.c ../common/mini.c ../common/array.c ../common/common.c ../common/theme.c theme.c $(EXTRA)
+	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) ../common/json/json.c ../common/mini/mini.c ../common/array.c ../common/common.c ../common/theme.c theme.c $(EXTRA)
 
 clean:
 	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)

@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
@@ -18,9 +18,16 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 static int js_fd;
+
+int NAV_DPAD_HOR;
+int NAV_ANLG_HOR;
+int NAV_DPAD_VER;
+int NAV_ANLG_VER;
+int NAV_A;
+int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -44,7 +51,7 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int gamepad_total, gamepad_current;
+int swap_total, swap_current;
 int thermal_total, thermal_current;
 int font_total, font_current;
 int verbose_total, verbose_current;
@@ -56,7 +63,7 @@ typedef struct {
     int *current;
 } Tweak;
 
-Tweak gamepad, thermal, font, verbose, volume, offset;
+Tweak swap, thermal, font, verbose, volume, offset;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -65,8 +72,8 @@ lv_group_t *ui_group_glyph;
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
 
-    if (element_focused == ui_lblGamepad) {
-        message = MUXTWEAKADV_GAMEPAD;
+    if (element_focused == ui_lblSwap) {
+        message = MUXTWEAKADV_SWAP;
     } else if (element_focused == ui_lblThermal) {
         message = MUXTWEAKADV_THERMAL;
     } else if (element_focused == ui_lblFont) {
@@ -103,7 +110,7 @@ static void dropdown_event_handler(lv_event_t *e) {
 
 void elements_events_init() {
     lv_obj_t *dropdowns[] = {
-            ui_droGamepad,
+            ui_droSwap,
             ui_droThermal,
             ui_droFont,
             ui_droVerbose,
@@ -111,7 +118,7 @@ void elements_events_init() {
             ui_droOffset
     };
 
-    labels[0] = ui_droGamepad;
+    labels[0] = ui_droSwap;
     labels[1] = ui_droThermal;
     labels[2] = ui_droFont;
     labels[3] = ui_droVerbose;
@@ -122,7 +129,7 @@ void elements_events_init() {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
 
-    init_pointers(&gamepad, &gamepad_total, &gamepad_current);
+    init_pointers(&swap, &swap_total, &swap_current);
     init_pointers(&thermal, &thermal_total, &thermal_current);
     init_pointers(&font, &font_total, &font_current);
     init_pointers(&verbose, &verbose_total, &verbose_current);
@@ -132,7 +139,7 @@ void elements_events_init() {
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {gamepad.total, gamepad.current},
+            {swap.total,    swap.current},
             {thermal.total, thermal.current},
             {font.total,    font.current},
             {verbose.total, verbose.current},
@@ -141,7 +148,7 @@ void init_dropdown_settings() {
     };
 
     lv_obj_t *dropdowns[] = {
-            ui_droGamepad,
+            ui_droSwap,
             ui_droThermal,
             ui_droFont,
             ui_droVerbose,
@@ -156,14 +163,14 @@ void init_dropdown_settings() {
 }
 
 void restore_tweak_options() {
-    int idx_gamepad = mini_get_int(muos_config, "tweak", "gamepad", 0);
-    int idx_thermal = mini_get_int(muos_config, "tweak", "thermal", 0);
-    int idx_font = mini_get_int(muos_config, "tweak", "font", 0);
-    int idx_verbose = mini_get_int(muos_config, "tweak", "verbose", 0);
-    int idx_volume_low = mini_get_int(muos_config, "tweak", "volume_low", 0);
-    int idx_offset = mini_get_int(muos_config, "tweak", "offset", 50);
+    int idx_swap = mini_get_int(muos_config, "settings.advanced", "swap", 0);
+    int idx_thermal = mini_get_int(muos_config, "settings.advanced", "thermal", 0);
+    int idx_font = mini_get_int(muos_config, "settings.advanced", "font", 0);
+    int idx_verbose = mini_get_int(muos_config, "settings.advanced", "verbose", 0);
+    int idx_volume_low = mini_get_int(muos_config, "settings.advanced", "volume_low", 0);
+    int idx_offset = mini_get_int(muos_config, "settings.advanced", "offset", 50);
 
-    lv_dropdown_set_selected(ui_droGamepad, idx_gamepad);
+    lv_dropdown_set_selected(ui_droSwap, idx_swap);
     lv_dropdown_set_selected(ui_droThermal, idx_thermal);
     lv_dropdown_set_selected(ui_droFont, idx_font);
     lv_dropdown_set_selected(ui_droVerbose, idx_verbose);
@@ -172,19 +179,19 @@ void restore_tweak_options() {
 }
 
 void save_tweak_options() {
-    int idx_gamepad = lv_dropdown_get_selected(ui_droGamepad);
+    int idx_swap = lv_dropdown_get_selected(ui_droSwap);
     int idx_thermal = lv_dropdown_get_selected(ui_droThermal);
     int idx_font = lv_dropdown_get_selected(ui_droFont);
     int idx_verbose = lv_dropdown_get_selected(ui_droVerbose);
     int idx_volume_low = lv_dropdown_get_selected(ui_droVolume);
     int idx_offset = lv_dropdown_get_selected(ui_droOffset);
 
-    mini_set_int(muos_config, "tweak", "gamepad", idx_gamepad);
-    mini_set_int(muos_config, "tweak", "thermal", idx_thermal);
-    mini_set_int(muos_config, "tweak", "font", idx_font);
-    mini_set_int(muos_config, "tweak", "verbose", idx_verbose);
-    mini_set_int(muos_config, "tweak", "volume_low", idx_volume_low);
-    mini_set_int(muos_config, "tweak", "offset", idx_offset);
+    mini_set_int(muos_config, "settings.advanced", "swap", idx_swap);
+    mini_set_int(muos_config, "settings.advanced", "thermal", idx_thermal);
+    mini_set_int(muos_config, "settings.advanced", "font", idx_font);
+    mini_set_int(muos_config, "settings.advanced", "verbose", idx_verbose);
+    mini_set_int(muos_config, "settings.advanced", "volume_low", idx_volume_low);
+    mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
 
@@ -193,7 +200,7 @@ void save_tweak_options() {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects[] = {
-            ui_lblGamepad,
+            ui_lblSwap,
             ui_lblThermal,
             ui_lblFont,
             ui_lblVerbose,
@@ -202,7 +209,7 @@ void init_navigation_groups() {
     };
 
     lv_obj_t *ui_objects_value[] = {
-            ui_droGamepad,
+            ui_droSwap,
             ui_droThermal,
             ui_droFont,
             ui_droVerbose,
@@ -211,7 +218,7 @@ void init_navigation_groups() {
     };
 
     lv_obj_t *ui_objects_icon[] = {
-            ui_icoGamepad,
+            ui_icoSwap,
             ui_icoThermal,
             ui_icoFont,
             ui_icoVerbose,
@@ -276,49 +283,53 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                switch (ev.code) {
-                                    case JOY_B:
-                                    case JOY_MENU:
-                                        play_sound("confirm", nav_sound);
-                                        msgbox_active = 0;
-                                        progress_onscreen = 0;
-                                        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                        break;
-                                    default:
-                                        break;
+                                if (ev.code == NAV_B || ev.code == JOY_MENU) {
+                                    play_sound("confirm", nav_sound);
+                                    msgbox_active = 0;
+                                    progress_onscreen = 0;
+                                    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
                                 }
                             } else {
-                                switch (ev.code) {
-                                    case JOY_A:
-                                        if (element_focused == ui_lblGamepad) {
-                                            increase_option_value(ui_droGamepad, &gamepad_current, gamepad_total);
-                                        } else if (element_focused == ui_lblThermal) {
-                                            increase_option_value(ui_droThermal, &thermal_current, thermal_total);
-                                        } else if (element_focused == ui_lblFont) {
-                                            increase_option_value(ui_droFont, &font_current, font_total);
-                                        } else if (element_focused == ui_lblVerbose) {
-                                            increase_option_value(ui_droVerbose, &verbose_current, verbose_total);
-                                        } else if (element_focused == ui_lblVolume) {
-                                            increase_option_value(ui_droVolume, &volume_current, volume_total);
-                                        } else if (element_focused == ui_lblOffset) {
-                                            increase_option_value(ui_droOffset, &offset_current, offset_total);
-                                        }
-                                        play_sound("navigate", nav_sound);
-                                        break;
-                                    case JOY_MENU:
-                                        JOYHOTKEY_pressed = 1;
-                                        break;
-                                    case JOY_B:
-                                        play_sound("back", nav_sound);
-                                        input_disable = 1;
+                                if (ev.code == JOY_MENU) {
+                                    JOYHOTKEY_pressed = 1;
+                                } else if (ev.code == NAV_A) {
+                                    if (element_focused == ui_lblSwap) {
+                                        increase_option_value(ui_droSwap,
+                                                              &swap_current,
+                                                              swap_total);
+                                    } else if (element_focused == ui_lblThermal) {
+                                        increase_option_value(ui_droThermal,
+                                                              &thermal_current,
+                                                              thermal_total);
+                                    } else if (element_focused == ui_lblFont) {
+                                        increase_option_value(ui_droFont,
+                                                              &font_current,
+                                                              font_total);
+                                    } else if (element_focused == ui_lblVerbose) {
+                                        increase_option_value(ui_droVerbose,
+                                                              &verbose_current,
+                                                              verbose_total);
+                                    } else if (element_focused == ui_lblVolume) {
+                                        increase_option_value(ui_droVolume,
+                                                              &volume_current,
+                                                              volume_total);
+                                    } else if (element_focused == ui_lblOffset) {
+                                        increase_option_value(ui_droOffset,
+                                                              &offset_current,
+                                                              offset_total);
+                                    }
+                                    play_sound("navigate", nav_sound);
+                                } else if (ev.code == NAV_B) {
+                                    play_sound("back", nav_sound);
+                                    input_disable = 1;
 
-                                        osd_message = "Saving Changes";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
-                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    osd_message = "Saving Changes";
+                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                        save_tweak_options();
-                                        safe_quit = 1;
-                                        break;
+                                    usleep(100000);
+                                    save_tweak_options();
+                                    safe_quit = 1;
                                 }
                             }
                         } else {
@@ -334,7 +345,7 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
+                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
                                 case -4096:
                                 case -1:
@@ -355,39 +366,63 @@ void *joystick_task() {
                                 default:
                                     break;
                             }
-                        } else if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
+                        } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             switch (ev.value) {
                                 case -4096:
                                 case -1:
-                                    if (element_focused == ui_lblGamepad) {
-                                        decrease_option_value(ui_droGamepad, &gamepad_current, gamepad_total);
+                                    if (element_focused == ui_lblSwap) {
+                                        decrease_option_value(ui_droSwap,
+                                                              &swap_current,
+                                                              swap_total);
                                     } else if (element_focused == ui_lblThermal) {
-                                        decrease_option_value(ui_droThermal, &thermal_current, thermal_total);
+                                        decrease_option_value(ui_droThermal,
+                                                              &thermal_current,
+                                                              thermal_total);
                                     } else if (element_focused == ui_lblFont) {
-                                        decrease_option_value(ui_droFont, &font_current, font_total);
+                                        decrease_option_value(ui_droFont,
+                                                              &font_current,
+                                                              font_total);
                                     } else if (element_focused == ui_lblVerbose) {
-                                        decrease_option_value(ui_droVerbose, &verbose_current, verbose_total);
+                                        decrease_option_value(ui_droVerbose,
+                                                              &verbose_current,
+                                                              verbose_total);
                                     } else if (element_focused == ui_lblVolume) {
-                                        decrease_option_value(ui_droVolume, &volume_current, volume_total);
+                                        decrease_option_value(ui_droVolume,
+                                                              &volume_current,
+                                                              volume_total);
                                     } else if (element_focused == ui_lblOffset) {
-                                        decrease_option_value(ui_droOffset, &offset_current, offset_total);
+                                        decrease_option_value(ui_droOffset,
+                                                              &offset_current,
+                                                              offset_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                     break;
                                 case 1:
                                 case 4096:
-                                    if (element_focused == ui_lblGamepad) {
-                                        increase_option_value(ui_droGamepad, &gamepad_current, gamepad_total);
+                                    if (element_focused == ui_lblSwap) {
+                                        increase_option_value(ui_droSwap,
+                                                              &swap_current,
+                                                              swap_total);
                                     } else if (element_focused == ui_lblThermal) {
-                                        increase_option_value(ui_droThermal, &thermal_current, thermal_total);
+                                        increase_option_value(ui_droThermal,
+                                                              &thermal_current,
+                                                              thermal_total);
                                     } else if (element_focused == ui_lblFont) {
-                                        increase_option_value(ui_droFont, &font_current, font_total);
+                                        increase_option_value(ui_droFont,
+                                                              &font_current,
+                                                              font_total);
                                     } else if (element_focused == ui_lblVerbose) {
-                                        increase_option_value(ui_droVerbose, &verbose_current, verbose_total);
+                                        increase_option_value(ui_droVerbose,
+                                                              &verbose_current,
+                                                              verbose_total);
                                     } else if (element_focused == ui_lblVolume) {
-                                        increase_option_value(ui_droVolume, &volume_current, volume_total);
+                                        increase_option_value(ui_droVolume,
+                                                              &volume_current,
+                                                              volume_total);
                                     } else if (element_focused == ui_lblOffset) {
-                                        increase_option_value(ui_droOffset, &offset_current, offset_total);
+                                        increase_option_value(ui_droOffset,
+                                                              &offset_current,
+                                                              offset_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                     break;
@@ -430,7 +465,7 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 }
 
@@ -475,7 +510,7 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
     }
 
-    lv_obj_set_user_data(ui_lblGamepad, "gamepad");
+    lv_obj_set_user_data(ui_lblSwap, "swap");
     lv_obj_set_user_data(ui_lblThermal, "thermal");
     lv_obj_set_user_data(ui_lblFont, "font");
     lv_obj_set_user_data(ui_lblVerbose, "verbose");
@@ -590,6 +625,35 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, basename(argv[0]));
     apply_theme();
 
+    switch (theme.MISC.NAVIGATION_TYPE) {
+        case 1:
+            NAV_DPAD_HOR = ABS_HAT0Y;
+            NAV_ANLG_HOR = ABS_RX;
+            NAV_DPAD_VER = ABS_HAT0X;
+            NAV_ANLG_VER = ABS_Z;
+            break;
+        default:
+            NAV_DPAD_HOR = ABS_HAT0X;
+            NAV_ANLG_HOR = ABS_Z;
+            NAV_DPAD_VER = ABS_HAT0Y;
+            NAV_ANLG_VER = ABS_RX;
+    }
+
+    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+        case 1:
+            NAV_A = JOY_B;
+            NAV_B = JOY_A;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
+            break;
+        default:
+            NAV_A = JOY_A;
+            NAV_B = JOY_B;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
+            break;
+    }
+
     current_wall = load_wallpaper(ui_scrTweakAdvanced, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
@@ -604,7 +668,7 @@ int main(int argc, char *argv[]) {
 
     load_font(basename(argv[0]), ui_scrTweakAdvanced);
 
-    if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
     }
 
@@ -659,7 +723,7 @@ int main(int argc, char *argv[]) {
 
     init_elements();
     while (!safe_quit) {
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 
     mini_free(muos_config);

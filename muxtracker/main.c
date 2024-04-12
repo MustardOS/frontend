@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
@@ -18,7 +18,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 static int js_fd;
 
@@ -459,6 +459,12 @@ void *joystick_task() {
                 if (msgbox_active) {
                     break;
                 }
+                switch (theme.MISC.NAVIGATION_TYPE) {
+                    case 0:
+                        break;
+                    case 1:
+                        break;
+                }
                 if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
                     switch (ev.value) {
                         case -4096:
@@ -686,7 +692,7 @@ int main(int argc, char *argv[]) {
 
     load_font(basename(argv[0]), ui_scrTracker);
 
-    if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
     }
 
@@ -756,7 +762,7 @@ int main(int argc, char *argv[]) {
 
     init_elements();
     while (!safe_quit) {
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 
     mini_free(muos_config);

@@ -37,6 +37,7 @@
 #define MUXCONFIG_RESET    ""
 
 // muxdevice
+#define MUXDEVICE_RG28XX     ""
 #define MUXDEVICE_RG35XXH    ""
 #define MUXDEVICE_RG35XXOG   ""
 #define MUXDEVICE_RG35XXPLUS ""
@@ -115,7 +116,7 @@
 #define MUXTRACKER_GENERIC ""
 
 // muxtweakadv
-#define MUXTWEAKADV_GAMEPAD ""
+#define MUXTWEAKADV_SWAP    ""
 #define MUXTWEAKADV_THERMAL ""
 #define MUXTWEAKADV_FONT    ""
 #define MUXTWEAKADV_VERBOSE ""
@@ -123,13 +124,14 @@
 #define MUXTWEAKADV_OFFSET  ""
 
 // muxtweakgen
+#define MUXTWEAKGEN_HIDDEN     ""
 #define MUXTWEAKGEN_SOUND      ""
 #define MUXTWEAKGEN_STARTUP    ""
-#define MUXTWEAKGEN_SLEEP      ""
-#define MUXTWEAKGEN_SHUTDOWN   ""
+#define MUXTWEAKGEN_POWER      ""
 #define MUXTWEAKGEN_LOWBATTERY ""
-#define MUXTWEAKGEN_NIGHT      ""
+#define MUXTWEAKGEN_COLOUR     ""
 #define MUXTWEAKGEN_BRIGHTNESS ""
+#define MUXTWEAKGEN_HDMI       ""
 #define MUXTWEAKGEN_INTERFACE  ""
 #define MUXTWEAKGEN_ADVANCED   ""
 

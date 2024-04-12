@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
@@ -18,9 +18,16 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 static int js_fd;
+
+int NAV_DPAD_HOR;
+int NAV_ANLG_HOR;
+int NAV_DPAD_VER;
+int NAV_ANLG_VER;
+int NAV_A;
+int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -64,7 +71,7 @@ void show_help() {
 }
 
 void set_theme_value(const char *theme) {
-    mini_set_string(muos_config, "tweak", "theme", theme);
+    mini_set_string(muos_config, "theme", "name", theme);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
 
@@ -128,110 +135,112 @@ void create_theme_items() {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
 
-    for (size_t i = 0; i < file_count; i++) {
-        char *base_filename = file_names[i];
+    if (file_count > 0) {
+        for (size_t i = 0; i < file_count; i++) {
+            char *base_filename = file_names[i];
 
-        ui_count++;
+            ui_count++;
 
-        lv_obj_t * ui_pnlTheme = lv_obj_create(ui_pnlContent);
-        lv_obj_set_width(ui_pnlTheme, 640);
-        lv_obj_set_height(ui_pnlTheme, 28);
-        lv_obj_set_scrollbar_mode(ui_pnlTheme, LV_SCROLLBAR_MODE_OFF);
-        lv_obj_set_style_align(ui_pnlTheme, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_width(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_left(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_row(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_column(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_t * ui_pnlTheme = lv_obj_create(ui_pnlContent);
+            lv_obj_set_width(ui_pnlTheme, 640);
+            lv_obj_set_height(ui_pnlTheme, 28);
+            lv_obj_set_scrollbar_mode(ui_pnlTheme, LV_SCROLLBAR_MODE_OFF);
+            lv_obj_set_style_align(ui_pnlTheme, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_opa(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_width(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_top(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_row(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_column(ui_pnlTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_t * ui_lblThemeItem = lv_label_create(ui_pnlTheme);
-        lv_label_set_text(ui_lblThemeItem, base_filename);
+            lv_obj_t * ui_lblThemeItem = lv_label_create(ui_pnlTheme);
+            lv_label_set_text(ui_lblThemeItem, base_filename);
 
-        lv_obj_set_width(ui_lblThemeItem, 640);
-        lv_obj_set_height(ui_lblThemeItem, 28);
+            lv_obj_set_width(ui_lblThemeItem, 640);
+            lv_obj_set_height(ui_lblThemeItem, 28);
 
-        lv_obj_set_style_border_width(ui_lblThemeItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_lblThemeItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblThemeItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_main_stop(ui_lblThemeItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_dir(ui_lblThemeItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_width(ui_lblThemeItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_side(ui_lblThemeItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_grad_color(ui_lblThemeItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
+                                           LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_main_stop(ui_lblThemeItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_grad_dir(ui_lblThemeItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_bg_color(ui_lblThemeItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_lblThemeItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_main_stop(ui_lblThemeItem, theme.LIST_DEFAULT.GRADIENT_START,
+            lv_obj_set_style_bg_color(ui_lblThemeItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_stop(ui_lblThemeItem, theme.LIST_DEFAULT.GRADIENT_STOP,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_color(ui_lblThemeItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblThemeItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblThemeItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblThemeItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_opa(ui_lblThemeItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_main_stop(ui_lblThemeItem, theme.LIST_DEFAULT.GRADIENT_START,
+                                          LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_grad_stop(ui_lblThemeItem, theme.LIST_DEFAULT.GRADIENT_STOP,
+                                          LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_color(ui_lblThemeItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
+                                          LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_opa(ui_lblThemeItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
+                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(ui_lblThemeItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
+                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_opa(ui_lblThemeItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_bg_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_opa(ui_lblThemeItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblThemeItem, theme.LIST_FOCUS.GRADIENT_START,
+            lv_obj_set_style_bg_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_grad_stop(ui_lblThemeItem, theme.LIST_FOCUS.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblThemeItem, theme.LIST_FOCUS.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblThemeItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_opa(ui_lblThemeItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_main_stop(ui_lblThemeItem, theme.LIST_FOCUS.GRADIENT_START,
+                                          LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_grad_stop(ui_lblThemeItem, theme.LIST_FOCUS.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_border_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
+                                          LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_border_opa(ui_lblThemeItem, theme.LIST_FOCUS.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
+                                        LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_opa(ui_lblThemeItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-        lv_obj_set_style_pad_left(ui_lblThemeItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblThemeItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblThemeItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblThemeItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(ui_lblThemeItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(ui_lblThemeItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_top(ui_lblThemeItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(ui_lblThemeItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_text_line_space(ui_lblThemeItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_label_set_long_mode(ui_lblThemeItem, LV_LABEL_LONG_WRAP);
+            lv_obj_set_style_text_line_space(ui_lblThemeItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_long_mode(ui_lblThemeItem, LV_LABEL_LONG_WRAP);
 
-        lv_obj_t * ui_lblThemeItemGlyph = lv_label_create(ui_pnlTheme);
-        lv_label_set_text(ui_lblThemeItemGlyph, "\uF53F");
+            lv_obj_t * ui_lblThemeItemGlyph = lv_label_create(ui_pnlTheme);
+            lv_label_set_text(ui_lblThemeItemGlyph, "\uF53F");
 
-        lv_obj_set_width(ui_lblThemeItemGlyph, 640);
-        lv_obj_set_height(ui_lblThemeItemGlyph, 28);
+            lv_obj_set_width(ui_lblThemeItemGlyph, 640);
+            lv_obj_set_height(ui_lblThemeItemGlyph, 28);
 
-        lv_obj_set_style_border_width(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_width(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_bg_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblThemeItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblThemeItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(ui_lblThemeItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
+                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_opa(ui_lblThemeItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_bg_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblThemeItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblThemeItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_border_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_color(ui_lblThemeItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
+                                        LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_opa(ui_lblThemeItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-        lv_obj_set_style_pad_left(ui_lblThemeItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblThemeItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblThemeItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(ui_lblThemeItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_top(ui_lblThemeItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(ui_lblThemeItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
+                                        LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_text_align(ui_lblThemeItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_font(ui_lblThemeItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_align(ui_lblThemeItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(ui_lblThemeItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_group_add_obj(ui_group, ui_lblThemeItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblThemeItemGlyph);
+            lv_group_add_obj(ui_group, ui_lblThemeItem);
+            lv_group_add_obj(ui_group_glyph, ui_lblThemeItemGlyph);
 
-        free(base_filename);
+            free(base_filename);
+        }
+
+        free(file_names);
     }
-
-    free(file_names);
 }
 
 void list_nav_prev(int steps) {
@@ -332,65 +341,51 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                switch (ev.code) {
-                                    case JOY_B:
-                                    case JOY_MENU:
-                                        play_sound("confirm", nav_sound);
-                                        msgbox_active = 0;
-                                        progress_onscreen = 0;
-                                        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                        break;
-                                    default:
-                                        break;
+                                if (ev.code == NAV_B || ev.code == JOY_MENU) {
+                                    play_sound("confirm", nav_sound);
+                                    msgbox_active = 0;
+                                    progress_onscreen = 0;
+                                    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
                                 }
                             } else {
-                                switch (ev.code) {
-                                    case JOY_MENU:
-                                        JOYHOTKEY_pressed = 1;
-                                        break;
-                                    case JOY_A:
-                                    case JOY_B:
-                                        play_sound("back", nav_sound);
+                                if (ev.code == JOY_MENU) {
+                                    JOYHOTKEY_pressed = 1;
+                                } else if (ev.code == NAV_A || ev.code == NAV_B) {
+                                    play_sound("back", nav_sound);
 
-                                        lv_label_set_text(ui_lblMessage, "Loading Theme");
-                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    lv_label_set_text(ui_lblMessage, "Loading Theme");
+                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                        if (ev.code == JOY_A) {
-                                            char *chosen_theme = lv_label_get_text(element_focused);
-                                            if (file_size(chosen_theme, 16)) {
-                                                set_theme_value(chosen_theme);
-                                                load_mux("theme");
+                                    if (ev.code == NAV_A) {
+                                        char *chosen_theme = lv_label_get_text(element_focused);
+                                        if (file_size(chosen_theme, 16)) {
+                                            set_theme_value(chosen_theme);
+                                            load_mux("theme");
 
-                                                char c_index[MAX_BUFFER_SIZE];
-                                                snprintf(c_index, sizeof(c_index), "%d", current_item_index);
-                                                write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
+                                            char c_index[MAX_BUFFER_SIZE];
+                                            snprintf(c_index, sizeof(c_index), "%d", current_item_index);
+                                            write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
 
-                                                usleep(250000);
-                                            } else {
-                                                lv_label_set_text(ui_lblMessage, "Theme cannot be larger than 16MB");
-                                                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                            usleep(100000);
+                                        } else {
+                                            lv_label_set_text(ui_lblMessage, "Theme cannot be larger than 16MB");
+                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                                usleep(250000);
-                                                break;
-                                            }
+                                            usleep(100000);
                                         }
+                                    }
 
-                                        safe_quit = 1;
-                                        break;
-                                    case JOY_L1:
-                                        if (current_item_index >= 0 && current_item_index < ui_count) {
-                                            list_nav_prev(ITEM_SKIP);
-                                            lv_task_handler();
-                                        }
-                                        break;
-                                    case JOY_R1:
-                                        if (current_item_index >= 0 && current_item_index < ui_count) {
-                                            list_nav_next(ITEM_SKIP);
-                                            lv_task_handler();
-                                        }
-                                        break;
-                                    default:
-                                        break;
+                                    safe_quit = 1;
+                                } else if (ev.code == JOY_L1) {
+                                    if (current_item_index >= 0 && current_item_index < ui_count) {
+                                        list_nav_prev(ITEM_SKIP);
+                                        lv_task_handler();
+                                    }
+                                } else if (ev.code == JOY_R1) {
+                                    if (current_item_index >= 0 && current_item_index < ui_count) {
+                                        list_nav_next(ITEM_SKIP);
+                                        lv_task_handler();
+                                    }
                                 }
                             }
                         } else {
@@ -406,25 +401,7 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
-                            switch (ev.value) {
-                                case -4096:
-                                case -1:
-                                    if (current_item_index >= 0 && current_item_index < ui_count) {
-                                        list_nav_prev(ITEM_SKIP);
-                                        lv_task_handler();
-                                    }
-                                    break;
-                                case 1:
-                                case 4096:
-                                    if (current_item_index >= 0 && current_item_index < ui_count) {
-                                        list_nav_next(ITEM_SKIP);
-                                        lv_task_handler();
-                                    }
-                                    break;
-                            }
-                        }
-                        if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
+                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
                                 case -4096:
                                 case -1:
@@ -518,7 +495,7 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 }
 
@@ -671,6 +648,35 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, basename(argv[0]));
     apply_theme();
 
+    switch (theme.MISC.NAVIGATION_TYPE) {
+        case 1:
+            NAV_DPAD_HOR = ABS_HAT0Y;
+            NAV_ANLG_HOR = ABS_RX;
+            NAV_DPAD_VER = ABS_HAT0X;
+            NAV_ANLG_VER = ABS_Z;
+            break;
+        default:
+            NAV_DPAD_HOR = ABS_HAT0X;
+            NAV_ANLG_HOR = ABS_Z;
+            NAV_DPAD_VER = ABS_HAT0Y;
+            NAV_ANLG_VER = ABS_RX;
+    }
+
+    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+        case 1:
+            NAV_A = JOY_B;
+            NAV_B = JOY_A;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
+            break;
+        default:
+            NAV_A = JOY_A;
+            NAV_B = JOY_B;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
+            break;
+    }
+
     current_wall = load_wallpaper(ui_scrTheme, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
@@ -685,7 +691,7 @@ int main(int argc, char *argv[]) {
 
     load_font(basename(argv[0]), ui_scrTheme);
 
-    if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
     }
 
@@ -748,7 +754,7 @@ int main(int argc, char *argv[]) {
 
     init_elements();
     while (!safe_quit) {
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 
     mini_free(muos_config);

@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
@@ -18,9 +18,16 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 static int js_fd;
+
+int NAV_DPAD_HOR;
+int NAV_ANLG_HOR;
+int NAV_DPAD_VER;
+int NAV_ANLG_VER;
+int NAV_A;
+int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -37,27 +44,28 @@ int nav_moved = 1;
 char *current_wall = "";
 
 // Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
 
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
+int hidden_total, hidden_current;
 int sound_total, sound_current;
 int startup_total, startup_current;
-int blank_total, blank_current;
-int shutdown_total, shutdown_current;
+int power_total, power_current;
 int low_battery_total, low_battery_current;
-int night_total, night_current;
+int colour_total, colour_current;
 int brightness_total, brightness_current;
+int hdmi_total, hdmi_current;
 
 typedef struct {
     int *total;
     int *current;
 } Tweak;
 
-Tweak sound, startup, blank, shutdown, low_battery, night, brightness;
+Tweak hidden, sound, startup, power, low_battery, colour, brightness, hdmi;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -66,20 +74,22 @@ lv_group_t *ui_group_glyph;
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
 
-    if (element_focused == ui_lblSound) {
+    if (element_focused == ui_lblHidden) {
+        message = MUXTWEAKGEN_HIDDEN;
+    } else if (element_focused == ui_lblSound) {
         message = MUXTWEAKGEN_SOUND;
     } else if (element_focused == ui_lblStartup) {
         message = MUXTWEAKGEN_STARTUP;
-    } else if (element_focused == ui_lblSleep) {
-        message = MUXTWEAKGEN_SLEEP;
-    } else if (element_focused == ui_lblShutdown) {
-        message = MUXTWEAKGEN_SHUTDOWN;
+    } else if (element_focused == ui_lblPower) {
+        message = MUXTWEAKGEN_POWER;
     } else if (element_focused == ui_lblLowBattery) {
         message = MUXTWEAKGEN_LOWBATTERY;
-    } else if (element_focused == ui_lblNight) {
-        message = MUXTWEAKGEN_NIGHT;
+    } else if (element_focused == ui_lblColour) {
+        message = MUXTWEAKGEN_COLOUR;
     } else if (element_focused == ui_lblBrightness) {
         message = MUXTWEAKGEN_BRIGHTNESS;
+    } else if (element_focused == ui_lblHDMI) {
+        message = MUXTWEAKGEN_HDMI;
     } else if (element_focused == ui_lblInterface) {
         message = MUXTWEAKGEN_INTERFACE;
     } else if (element_focused == ui_lblAdvanced) {
@@ -110,55 +120,60 @@ static void dropdown_event_handler(lv_event_t *e) {
 
 void elements_events_init() {
     lv_obj_t *dropdowns[] = {
+            ui_droHidden,
             ui_droSound,
             ui_droStartup,
-            ui_droSleep,
-            ui_droShutdown,
+            ui_droPower,
             ui_droLowBattery,
-            ui_droNight,
-            ui_droBrightness
+            ui_droColour,
+            ui_droBrightness,
+            ui_droHDMI
     };
 
-    labels[0] = ui_droSound;
-    labels[1] = ui_droStartup;
-    labels[2] = ui_droSleep;
-    labels[3] = ui_droShutdown;
+    labels[0] = ui_droHidden;
+    labels[1] = ui_droSound;
+    labels[2] = ui_droStartup;
+    labels[3] = ui_droPower;
     labels[4] = ui_droLowBattery;
-    labels[5] = ui_droNight;
+    labels[5] = ui_droColour;
     labels[6] = ui_droBrightness;
+    labels[7] = ui_droHDMI;
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
 
+    init_pointers(&hidden, &hidden_total, &hidden_current);
     init_pointers(&sound, &sound_total, &sound_current);
     init_pointers(&startup, &startup_total, &startup_current);
-    init_pointers(&blank, &blank_total, &blank_current);
-    init_pointers(&shutdown, &shutdown_total, &shutdown_current);
+    init_pointers(&power, &power_total, &power_current);
     init_pointers(&low_battery, &low_battery_total, &low_battery_current);
-    init_pointers(&night, &night_total, &night_current);
+    init_pointers(&colour, &colour_total, &colour_current);
     init_pointers(&brightness, &brightness_total, &brightness_current);
+    init_pointers(&hdmi, &hdmi_total, &hdmi_current);
 }
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {sound.total,       sound.current},
-            {startup.total,     startup.current},
-            {blank.total,       blank.current},
-            {shutdown.total,    shutdown.current},
+            {hidden.total, hidden.current},
+            {sound.total, sound.current},
+            {startup.total, startup.current},
+            {power.total, power.current},
             {low_battery.total, low_battery.current},
-            {night.total,       night.current},
-            {brightness.total,  brightness.current}
+            {colour.total, colour.current},
+            {brightness.total, brightness.current},
+            {hdmi.total, hdmi.current}
     };
 
     lv_obj_t *dropdowns[] = {
+            ui_droHidden,
             ui_droSound,
             ui_droStartup,
-            ui_droSleep,
-            ui_droShutdown,
+            ui_droPower,
             ui_droLowBattery,
-            ui_droNight,
-            ui_droBrightness
+            ui_droColour,
+            ui_droBrightness,
+            ui_droHDMI
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -168,30 +183,101 @@ void init_dropdown_settings() {
 }
 
 void restore_tweak_options() {
-    int idx_msound = mini_get_int(muos_config, "tweak", "sound", 0);
-    int idx_startup = mini_get_int(muos_config, "tweak", "startup", 0);
-    int idx_sleep = mini_get_int(muos_config, "tweak", "sleep", 0);
-    int idx_shutdown = mini_get_int(muos_config, "tweak", "shutdown", 0);
-    int idx_lowbattery = mini_get_int(muos_config, "tweak", "low_battery", 0);
-    int idx_night = mini_get_int(muos_config, "tweak", "night", 0);
+    int idx_hidden = mini_get_int(muos_config, "settings.general", "hidden", 0);
+    int idx_msound = mini_get_int(muos_config, "settings.general", "sound", 0);
+    const char *idx_startup = mini_get_string(muos_config, "settings.general", "startup", "launcher");
+    int idx_power = mini_get_int(muos_config, "settings.general", "power", 0);
+    int idx_lowbattery = mini_get_int(muos_config, "settings.general", "low_battery", 0);
+    int idx_colour = mini_get_int(muos_config, "settings.general", "colour", 9);
     int idx_brightness = get_brightness_percentage(get_brightness());
+    int idx_hdmi = mini_get_int(muos_config, "settings.general", "hdmi", 0);
 
+    lv_dropdown_set_selected(ui_droHidden, idx_hidden);
     lv_dropdown_set_selected(ui_droSound, idx_msound);
-    lv_dropdown_set_selected(ui_droStartup, idx_startup);
-    lv_dropdown_set_selected(ui_droSleep, idx_sleep);
-    lv_dropdown_set_selected(ui_droShutdown, idx_shutdown);
+    lv_dropdown_set_selected(ui_droPower, idx_power);
     lv_dropdown_set_selected(ui_droLowBattery, idx_lowbattery);
-    lv_dropdown_set_selected(ui_droNight, idx_night);
     lv_dropdown_set_selected(ui_droBrightness, idx_brightness);
+    lv_dropdown_set_selected(ui_droHDMI, idx_hdmi);
+
+    if (strcasecmp(idx_startup, "launcher") == 0) {
+        lv_dropdown_set_selected(ui_droStartup, 0);
+    } else if (strcasecmp(idx_startup, "explore") == 0) {
+        lv_dropdown_set_selected(ui_droStartup, 1);
+    } else if (strcasecmp(idx_startup, "favourite") == 0) {
+        lv_dropdown_set_selected(ui_droStartup, 2);
+    } else if (strcasecmp(idx_startup, "history") == 0) {
+        lv_dropdown_set_selected(ui_droStartup, 3);
+    } else if (strcasecmp(idx_startup, "last") == 0) {
+        lv_dropdown_set_selected(ui_droStartup, 4);
+    } else {
+        lv_dropdown_set_selected(ui_droStartup, 0);
+    }
+
+    switch (idx_colour) {
+        case -256:
+            lv_dropdown_set_selected(ui_droColour, 0);
+            break;
+        case -224:
+            lv_dropdown_set_selected(ui_droColour, 1);
+            break;
+        case -192:
+            lv_dropdown_set_selected(ui_droColour, 2);
+            break;
+        case -160:
+            lv_dropdown_set_selected(ui_droColour, 3);
+            break;
+        case -128:
+            lv_dropdown_set_selected(ui_droColour, 4);
+            break;
+        case -96:
+            lv_dropdown_set_selected(ui_droColour, 5);
+            break;
+        case -64:
+            lv_dropdown_set_selected(ui_droColour, 6);
+            break;
+        case -32:
+            lv_dropdown_set_selected(ui_droColour, 7);
+            break;
+        case 0:
+            lv_dropdown_set_selected(ui_droColour, 8);
+            break;
+        case 32:
+            lv_dropdown_set_selected(ui_droColour, 9);
+            break;
+        case 64:
+            lv_dropdown_set_selected(ui_droColour, 10);
+            break;
+        case 96:
+            lv_dropdown_set_selected(ui_droColour, 11);
+            break;
+        case 128:
+            lv_dropdown_set_selected(ui_droColour, 12);
+            break;
+        case 160:
+            lv_dropdown_set_selected(ui_droColour, 13);
+            break;
+        case 192:
+            lv_dropdown_set_selected(ui_droColour, 14);
+            break;
+        case 224:
+            lv_dropdown_set_selected(ui_droColour, 15);
+            break;
+        case 256:
+            lv_dropdown_set_selected(ui_droColour, 16);
+            break;
+        default:
+            lv_dropdown_set_selected(ui_droColour, 9);
+            break;
+    }
 }
 
 void save_tweak_options() {
+    int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
     int idx_msound = lv_dropdown_get_selected(ui_droSound);
-    int idx_sleep = lv_dropdown_get_selected(ui_droSleep);
-    int idx_shutdown = lv_dropdown_get_selected(ui_droShutdown);
+    int idx_power = lv_dropdown_get_selected(ui_droPower);
     int idx_lowbattery = lv_dropdown_get_selected(ui_droLowBattery);
-    int idx_night = lv_dropdown_get_selected(ui_droNight);
     int idx_brightness = lv_dropdown_get_selected(ui_droBrightness);
+    int idx_hdmi = lv_dropdown_get_selected(ui_droHDMI);
 
     char *idx_startup;
     switch (lv_dropdown_get_selected(ui_droStartup)) {
@@ -215,13 +301,72 @@ void save_tweak_options() {
             break;
     }
 
-    mini_set_int(muos_config, "tweak", "sound", idx_msound);
-    mini_set_string(muos_config, "tweak", "startup", idx_startup);
-    mini_set_int(muos_config, "tweak", "sleep", idx_sleep);
-    mini_set_int(muos_config, "tweak", "shutdown", idx_shutdown);
-    mini_set_int(muos_config, "tweak", "low_battery", idx_lowbattery);
-    mini_set_int(muos_config, "tweak", "night", idx_night);
-    mini_set_int(muos_config, "tweak", "brightness", idx_brightness);
+    int idx_colour;
+    switch (lv_dropdown_get_selected(ui_droColour)) {
+        case 0:
+            idx_colour = -256;
+            break;
+        case 1:
+            idx_colour = -224;
+            break;
+        case 2:
+            idx_colour = -192;
+            break;
+        case 3:
+            idx_colour = -160;
+            break;
+        case 4:
+            idx_colour = -128;
+            break;
+        case 5:
+            idx_colour = -96;
+            break;
+        case 6:
+            idx_colour = -64;
+            break;
+        case 7:
+            idx_colour = -32;
+            break;
+        case 8:
+            idx_colour = 0;
+            break;
+        case 9:
+            idx_colour = 32;
+            break;
+        case 10:
+            idx_colour = 64;
+            break;
+        case 11:
+            idx_colour = 96;
+            break;
+        case 12:
+            idx_colour = 128;
+            break;
+        case 13:
+            idx_colour = 160;
+            break;
+        case 14:
+            idx_colour = 192;
+            break;
+        case 15:
+            idx_colour = 224;
+            break;
+        case 16:
+            idx_colour = 256;
+            break;
+        default:
+            idx_colour = 32;
+            break;
+    }
+
+    mini_set_int(muos_config, "settings.general", "hidden", idx_hidden);
+    mini_set_int(muos_config, "settings.general", "sound", idx_msound);
+    mini_set_string(muos_config, "settings.general", "startup", idx_startup);
+    mini_set_int(muos_config, "settings.general", "power", idx_power);
+    mini_set_int(muos_config, "settings.general", "low_battery", idx_lowbattery);
+    mini_set_int(muos_config, "settings.general", "colour", idx_colour);
+    mini_set_int(muos_config, "settings.general", "brightness", idx_brightness);
+    mini_set_int(muos_config, "settings.general", "hdmi", idx_hdmi);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
 
@@ -231,37 +376,40 @@ void save_tweak_options() {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects[] = {
+            ui_lblHidden,
             ui_lblSound,
             ui_lblStartup,
-            ui_lblSleep,
-            ui_lblShutdown,
+            ui_lblPower,
             ui_lblLowBattery,
-            ui_lblNight,
+            ui_lblColour,
             ui_lblBrightness,
+            ui_lblHDMI,
             ui_lblInterface,
             ui_lblAdvanced
     };
 
     lv_obj_t *ui_objects_value[] = {
+            ui_droHidden,
             ui_droSound,
             ui_droStartup,
-            ui_droSleep,
-            ui_droShutdown,
+            ui_droPower,
             ui_droLowBattery,
-            ui_droNight,
+            ui_droColour,
             ui_droBrightness,
+            ui_droHDMI,
             ui_droInterface,
             ui_droAdvanced
     };
 
     lv_obj_t *ui_objects_icon[] = {
+            ui_icoHidden,
             ui_icoSound,
             ui_icoStartup,
-            ui_icoSleep,
-            ui_icoShutdown,
+            ui_icoPower,
             ui_icoLowBattery,
-            ui_icoNight,
+            ui_icoColour,
             ui_icoBrightness,
+            ui_icoHDMI,
             ui_icoInterface,
             ui_icoAdvanced
     };
@@ -323,58 +471,67 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                switch (ev.code) {
-                                    case JOY_B:
-                                    case JOY_MENU:
-                                        play_sound("confirm", nav_sound);
-                                        msgbox_active = 0;
-                                        progress_onscreen = 0;
-                                        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                        break;
-                                    default:
-                                        break;
+                                if (ev.code == NAV_B || ev.code == JOY_MENU) {
+                                    play_sound("confirm", nav_sound);
+                                    msgbox_active = 0;
+                                    progress_onscreen = 0;
+                                    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
                                 }
                             } else {
-                                switch (ev.code) {
-                                    case JOY_A:
-                                        if (element_focused == ui_lblSound) {
-                                            increase_option_value(ui_droSound, &sound_current, sound_total);
-                                        } else if (element_focused == ui_lblStartup) {
-                                            increase_option_value(ui_droStartup, &startup_current, startup_total);
-                                        } else if (element_focused == ui_lblSleep) {
-                                            increase_option_value(ui_droSleep, &blank_current, blank_total);
-                                        } else if (element_focused == ui_lblShutdown) {
-                                            increase_option_value(ui_droShutdown, &shutdown_current, shutdown_total);
-                                        } else if (element_focused == ui_lblLowBattery) {
-                                            increase_option_value(ui_droLowBattery, &low_battery_current,
-                                                                  low_battery_total);
-                                        } else if (element_focused == ui_lblNight) {
-                                            increase_option_value(ui_droNight, &night_current, night_total);
-                                        } else if (element_focused == ui_lblBrightness) {
-                                            increase_option_value(ui_droBrightness, &brightness_current,
-                                                                  brightness_total);
-                                        } else if (element_focused == ui_lblInterface) {
-                                            load_mux("visual");
-                                            safe_quit = 1;
-                                        } else if (element_focused == ui_lblAdvanced) {
-                                            load_mux("tweakadv");
-                                            safe_quit = 1;
-                                        }
-                                        play_sound("navigate", nav_sound);
-                                        break;
-                                    case JOY_MENU:
-                                        JOYHOTKEY_pressed = 1;
-                                        break;
-                                    case JOY_B:
-                                        play_sound("back", nav_sound);
-                                        input_disable = 1;
-
-                                        osd_message = "Saving Changes";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
-                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                        save_tweak_options();
+                                if (ev.code == JOY_MENU) {
+                                    JOYHOTKEY_pressed = 1;
+                                } else if (ev.code == NAV_A) {
+                                    if (element_focused == ui_lblHidden) {
+                                        increase_option_value(ui_droHidden,
+                                                              &hidden_current,
+                                                              hidden_total);
+                                    } else if (element_focused == ui_lblSound) {
+                                        increase_option_value(ui_droSound,
+                                                              &sound_current,
+                                                              sound_total);
+                                    } else if (element_focused == ui_lblStartup) {
+                                        increase_option_value(ui_droStartup,
+                                                              &startup_current,
+                                                              startup_total);
+                                    } else if (element_focused == ui_lblPower) {
+                                        increase_option_value(ui_droPower,
+                                                              &power_current,
+                                                              power_total);
+                                    } else if (element_focused == ui_lblLowBattery) {
+                                        increase_option_value(ui_droLowBattery,
+                                                              &low_battery_current,
+                                                              low_battery_total);
+                                    } else if (element_focused == ui_lblColour) {
+                                        increase_option_value(ui_droColour,
+                                                              &colour_current,
+                                                              colour_total);
+                                    } else if (element_focused == ui_lblBrightness) {
+                                        increase_option_value(ui_droBrightness,
+                                                              &brightness_current,
+                                                              brightness_total);
+                                    } else if (element_focused == ui_lblHDMI) {
+                                        increase_option_value(ui_droHDMI,
+                                                              &hdmi_current,
+                                                              hdmi_total);
+                                    } else if (element_focused == ui_lblInterface) {
+                                        load_mux("visual");
                                         safe_quit = 1;
-                                        break;
+                                    } else if (element_focused == ui_lblAdvanced) {
+                                        load_mux("tweakadv");
+                                        safe_quit = 1;
+                                    }
+                                    play_sound("navigate", nav_sound);
+                                } else if (ev.code == NAV_B) {
+                                    play_sound("back", nav_sound);
+                                    input_disable = 1;
+
+                                    osd_message = "Saving Changes";
+                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+
+                                    usleep(100000);
+                                    save_tweak_options();
+                                    safe_quit = 1;
                                 }
                             }
                         } else {
@@ -390,7 +547,7 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
+                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
                                 case -4096:
                                 case -1:
@@ -411,45 +568,79 @@ void *joystick_task() {
                                 default:
                                     break;
                             }
-                        } else if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
+                        } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             switch (ev.value) {
                                 case -4096:
                                 case -1:
-                                    if (element_focused == ui_lblSound) {
-                                        decrease_option_value(ui_droSound, &sound_current, sound_total);
+                                    if (element_focused == ui_lblHidden) {
+                                        decrease_option_value(ui_droHidden,
+                                                              &hidden_current,
+                                                              hidden_total);
+                                    } else if (element_focused == ui_lblSound) {
+                                        decrease_option_value(ui_droSound,
+                                                              &sound_current,
+                                                              sound_total);
                                     } else if (element_focused == ui_lblStartup) {
-                                        decrease_option_value(ui_droStartup, &startup_current, startup_total);
-                                    } else if (element_focused == ui_lblSleep) {
-                                        decrease_option_value(ui_droSleep, &blank_current, blank_total);
-                                    } else if (element_focused == ui_lblShutdown) {
-                                        decrease_option_value(ui_droShutdown, &shutdown_current, shutdown_total);
+                                        decrease_option_value(ui_droStartup,
+                                                              &startup_current,
+                                                              startup_total);
+                                    } else if (element_focused == ui_lblPower) {
+                                        decrease_option_value(ui_droPower,
+                                                              &power_current,
+                                                              power_total);
                                     } else if (element_focused == ui_lblLowBattery) {
-                                        decrease_option_value(ui_droLowBattery, &low_battery_current,
+                                        decrease_option_value(ui_droLowBattery,
+                                                              &low_battery_current,
                                                               low_battery_total);
-                                    } else if (element_focused == ui_lblNight) {
-                                        decrease_option_value(ui_droNight, &night_current, night_total);
+                                    } else if (element_focused == ui_lblColour) {
+                                        decrease_option_value(ui_droColour,
+                                                              &colour_current,
+                                                              colour_total);
                                     } else if (element_focused == ui_lblBrightness) {
-                                        decrease_option_value(ui_droBrightness, &brightness_current, brightness_total);
+                                        decrease_option_value(ui_droBrightness,
+                                                              &brightness_current,
+                                                              brightness_total);
+                                    } else if (element_focused == ui_lblHDMI) {
+                                        decrease_option_value(ui_droHDMI,
+                                                              &hdmi_current,
+                                                              hdmi_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                     break;
                                 case 1:
                                 case 4096:
-                                    if (element_focused == ui_lblSound) {
-                                        increase_option_value(ui_droSound, &sound_current, sound_total);
+                                    if (element_focused == ui_lblHidden) {
+                                        decrease_option_value(ui_droHidden,
+                                                              &hidden_current,
+                                                              hidden_total);
+                                    } else if (element_focused == ui_lblSound) {
+                                        increase_option_value(ui_droSound,
+                                                              &sound_current,
+                                                              sound_total);
                                     } else if (element_focused == ui_lblStartup) {
-                                        increase_option_value(ui_droStartup, &startup_current, startup_total);
-                                    } else if (element_focused == ui_lblSleep) {
-                                        increase_option_value(ui_droSleep, &blank_current, blank_total);
-                                    } else if (element_focused == ui_lblShutdown) {
-                                        increase_option_value(ui_droShutdown, &shutdown_current, shutdown_total);
+                                        increase_option_value(ui_droStartup,
+                                                              &startup_current,
+                                                              startup_total);
+                                    } else if (element_focused == ui_lblPower) {
+                                        increase_option_value(ui_droPower,
+                                                              &power_current,
+                                                              power_total);
                                     } else if (element_focused == ui_lblLowBattery) {
-                                        increase_option_value(ui_droLowBattery, &low_battery_current,
+                                        increase_option_value(ui_droLowBattery,
+                                                              &low_battery_current,
                                                               low_battery_total);
-                                    } else if (element_focused == ui_lblNight) {
-                                        increase_option_value(ui_droNight, &night_current, night_total);
+                                    } else if (element_focused == ui_lblColour) {
+                                        increase_option_value(ui_droColour,
+                                                              &colour_current,
+                                                              colour_total);
                                     } else if (element_focused == ui_lblBrightness) {
-                                        increase_option_value(ui_droBrightness, &brightness_current, brightness_total);
+                                        increase_option_value(ui_droBrightness,
+                                                              &brightness_current,
+                                                              brightness_total);
+                                    } else if (element_focused == ui_lblHDMI) {
+                                        increase_option_value(ui_droHDMI,
+                                                              &hdmi_current,
+                                                              hdmi_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                     break;
@@ -492,7 +683,7 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 }
 
@@ -537,13 +728,14 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
     }
 
+    lv_obj_set_user_data(ui_lblHidden, "hidden");
     lv_obj_set_user_data(ui_lblSound, "sound");
     lv_obj_set_user_data(ui_lblStartup, "startup");
-    lv_obj_set_user_data(ui_lblSleep, "sleep");
-    lv_obj_set_user_data(ui_lblShutdown, "shutdown");
+    lv_obj_set_user_data(ui_lblPower, "power");
     lv_obj_set_user_data(ui_lblLowBattery, "battery");
-    lv_obj_set_user_data(ui_lblNight, "night");
+    lv_obj_set_user_data(ui_lblColour, "colour");
     lv_obj_set_user_data(ui_lblBrightness, "brightness");
+    lv_obj_set_user_data(ui_lblHDMI, "hdmi");
     lv_obj_set_user_data(ui_lblInterface, "interface");
     lv_obj_set_user_data(ui_lblAdvanced, "advanced");
 }
@@ -655,6 +847,35 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, basename(argv[0]));
     apply_theme();
 
+    switch (theme.MISC.NAVIGATION_TYPE) {
+        case 1:
+            NAV_DPAD_HOR = ABS_HAT0Y;
+            NAV_ANLG_HOR = ABS_RX;
+            NAV_DPAD_VER = ABS_HAT0X;
+            NAV_ANLG_VER = ABS_Z;
+            break;
+        default:
+            NAV_DPAD_HOR = ABS_HAT0X;
+            NAV_ANLG_HOR = ABS_Z;
+            NAV_DPAD_VER = ABS_HAT0Y;
+            NAV_ANLG_VER = ABS_RX;
+    }
+
+    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+        case 1:
+            NAV_A = JOY_B;
+            NAV_B = JOY_A;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
+            break;
+        default:
+            NAV_A = JOY_A;
+            NAV_B = JOY_B;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
+            break;
+    }
+
     current_wall = load_wallpaper(ui_scrTweakGeneral, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
@@ -669,7 +890,7 @@ int main(int argc, char *argv[]) {
 
     load_font(basename(argv[0]), ui_scrTweakGeneral);
 
-    if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
     }
 
@@ -724,7 +945,7 @@ int main(int argc, char *argv[]) {
 
     init_elements();
     while (!safe_quit) {
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 
     mini_free(muos_config);

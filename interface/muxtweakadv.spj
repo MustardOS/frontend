@@ -2882,7 +2882,7 @@
                   {
                     "nid": -426731518,
                     "strtype": "OBJECT/Name",
-                    "strval": "lblGamepad",
+                    "strval": "lblSwap",
                     "InheritedType": 10
                   },
                   {
@@ -3139,7 +3139,7 @@
                   {
                     "nid": -1321843145,
                     "strtype": "LABEL/Text",
-                    "strval": "Gamepad Wait",
+                    "strval": "A+B Button Swap",
                     "InheritedType": 10
                   },
                   {
@@ -5693,8 +5693,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID64779941-1182086S677370",
@@ -5708,7 +5707,7 @@
                   {
                     "nid": 63507015,
                     "strtype": "OBJECT/Name",
-                    "strval": "icoGamepad",
+                    "strval": "icoSwap",
                     "InheritedType": 10
                   },
                   {
@@ -8039,8 +8038,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID90165618-716649S521326",
@@ -8054,7 +8052,7 @@
                   {
                     "nid": 1182541865,
                     "strtype": "OBJECT/Name",
-                    "strval": "droGamepad",
+                    "strval": "droSwap",
                     "InheritedType": 10
                   },
                   {
@@ -18515,6 +18513,8 @@
           }
         ],
         "isPage": true,
+        "editor_posx": 800,
+        "editor_posy": -800,
         "locked": false,
         "properties": [
           {
@@ -18765,6 +18765,7 @@
     "saved_objtypeKey": "STARTEVENTS"
   },
   "animations": [],
+  "selected_theme": "Default",
   "info": {
     "name": "muosmenu.spj",
     "depth": 0,
@@ -18778,22 +18779,34 @@
     "description": "muOS Extras Application for the RG35XX\nAdvanced Settings",
     "board": "Eclipse with SDL for development on PC",
     "board_version": "v1.0.1",
-    "editor_version": "1.3.4",
+    "editor_version": "1.4.0",
     "image": "",
     "force_export_images": true,
     "flat_export": true,
+    "advanced_alpha": false,
     "pointfilter": false,
     "theme_simplified": false,
     "theme_dark": true,
     "theme_color1": 5,
     "theme_color2": 0,
-    "uiExportFolderPath": "/home/phil/Repos/RG35XX/dev/muos/extra/muxtweakadv",
-    "projectExportFolderPath": "/home/phil/Repos/RG35XX/dev/muos/extra/interface",
+    "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxtweakadv/ui",
+    "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
     "backup_cnt": 503,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",
-    "lvgl_include_path": "../lvgl/lvgl.h",
+    "imageexport": "SOURCE",
+    "lvgl_include_path": "../../lvgl/lvgl.h",
+    "drive_stdio": "-",
+    "drive_stdio_path": "",
+    "drive_posix": "-",
+    "drive_posix_path": "",
+    "drive_win32": "-",
+    "drive_win32_path": "",
+    "drive_fatfs": "-",
+    "drive_fatfs_path": "",
+    "naming": null,
+    "naming_force_lowercase": false,
     "BitDepth": 32,
     "Name": "muosmenu"
   }

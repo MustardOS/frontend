@@ -5,9 +5,7 @@
 
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 480
-
-#define SCREEN_REFRESH 1024
-#define SCREEN_WAIT    256
+#define SCREEN_WAIT   256
 
 #define MAX_EVENTS 4
 

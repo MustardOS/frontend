@@ -1,6 +1,6 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <string.h>
@@ -15,7 +15,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 int turbo_mode = 0;
 int msgbox_active = 0;

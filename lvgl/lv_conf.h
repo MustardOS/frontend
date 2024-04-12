@@ -541,7 +541,7 @@ extern uint32_t mux_tick(void);
  *----------*/
 
 /*A simple, impressive and very complete theme*/
-#define LV_USE_THEME_DEFAULT 1
+#define LV_USE_THEME_DEFAULT 0
 #if LV_USE_THEME_DEFAULT
 
 /*0: Light mode; 1: Dark mode*/

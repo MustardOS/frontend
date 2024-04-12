@@ -1,5 +1,5 @@
 #include "../lvgl/lvgl.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include "../common/theme.h"
 
 struct theme_config theme;

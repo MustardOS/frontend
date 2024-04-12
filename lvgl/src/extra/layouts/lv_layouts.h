@@ -14,7 +14,7 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "flex/lv_flex.h"
-//#include "grid/lv_grid.h"
+#include "grid/lv_grid.h"
 
 /*********************
  *      DEFINES

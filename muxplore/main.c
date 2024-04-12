@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
@@ -21,9 +21,16 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/array.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 static int js_fd;
+
+int NAV_DPAD_HOR;
+int NAV_ANLG_HOR;
+int NAV_DPAD_VER;
+int NAV_ANLG_VER;
+int NAV_A;
+int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -559,8 +566,8 @@ struct ThreadArgs {
     int end_index;
 };
 
-void* process_items(void* arg) {
-    struct ThreadArgs* args = (struct ThreadArgs*)arg;
+void *process_items(void *arg) {
+    struct ThreadArgs *args = (struct ThreadArgs *) arg;
 
     for (int i = args->start_index; i < args->end_index; i++) {
         char n_index[MAX_BUFFER_SIZE];
@@ -1091,323 +1098,307 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                switch (ev.code) {
-                                    case JOY_B:
-                                    case JOY_MENU:
-                                        play_sound("confirm", nav_sound);
-                                        msgbox_active = 0;
-                                        progress_onscreen = 0;
-                                        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                        lv_img_set_src(ui_imgHelpPreviewImage, &ui_img_nothing_png);
-                                        break;
-                                    case JOY_A:
-                                        play_sound("confirm", nav_sound);
-                                        if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
-                                            lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
-                                        } else {
-                                            lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
-                                        }
-                                        break;
-                                    default:
-                                        break;
+                                if (ev.code == NAV_B || ev.code == JOY_MENU) {
+                                    play_sound("confirm", nav_sound);
+                                    msgbox_active = 0;
+                                    progress_onscreen = 0;
+                                    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+                                    lv_img_set_src(ui_imgHelpPreviewImage, &ui_img_nothing_png);
+                                } else if (ev.code == NAV_A) {
+                                    play_sound("confirm", nav_sound);
+                                    if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
+                                        lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
+                                        lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+                                    } else {
+                                        lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+                                        lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
+                                    }
                                 }
                             } else {
-                                switch (ev.code) {
-                                    case JOY_MENU:
-                                        JOYHOTKEY_pressed = 1;
-                                        break;
-                                    case JOY_A:
-                                        if (ui_count == 0) {
-                                            goto nothing_ever_happens;
-                                        }
+                                if (ev.code == JOY_MENU) {
+                                    JOYHOTKEY_pressed = 1;
+                                } else if (ev.code == NAV_A) {
+                                    if (ui_count == 0) {
+                                        goto nothing_ever_happens;
+                                    }
 
-                                        play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound);
 
-                                        switch (module) {
-                                            case ROOT:
-                                                if (strcasecmp(lv_label_get_text(lv_group_get_focused(ui_group)),
-                                                               "SD1 (mmc)") ==
-                                                    0) {
-                                                    write_text_to_file("/tmp/explore_card", "mmc", "w");
-                                                    write_text_to_file("/tmp/explore_dir", strip_dir(SD1), "w");
-                                                    write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
-                                                    break;
-                                                } else if (strcasecmp(lv_label_get_text(lv_group_get_focused(ui_group)),
-                                                                      "SD2 (sdcard)") == 0) {
-                                                    write_text_to_file("/tmp/explore_card", "sdcard", "w");
-                                                    write_text_to_file("/tmp/explore_dir", strip_dir(SD2), "w");
-                                                    write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
-                                                    break;
-                                                } else if (strcasecmp(lv_label_get_text(lv_group_get_focused(ui_group)),
-                                                                      "USB (external)") == 0) {
-                                                    write_text_to_file("/tmp/explore_card", "usb", "w");
-                                                    write_text_to_file("/tmp/explore_dir", strip_dir(E_USB), "w");
-                                                    write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
-                                                    break;
-                                                }
-                                                break;
-                                            default:
-                                                char *f_content = get_string_at_index(&content_items, atoi(
-                                                        get_string_at_index(&named_index, current_item_index)));
-                                                char *f_name = get_string_at_index(&named_items, current_item_index);
-                                                printf("CONTENT FILENAME: %s\n", f_content);
-                                                printf("CONTENT RAW NAME: %s\n", f_name);
-
-                                                switch (module) {
-                                                    case MMC:
-                                                    case SDCARD:
-                                                    case USB:
-                                                        if (strcasecmp(f_content, DUMMY_DIR) == 0) {
-                                                            char n_dir[MAX_BUFFER_SIZE];
-                                                            snprintf(n_dir, sizeof(n_dir), "%s/%s",
-                                                                     sd_dir,
-                                                                     lv_label_get_text(lv_group_get_focused(ui_group)));
-
-                                                            write_text_to_file("/tmp/explore_dir", n_dir, "w");
-                                                            write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
-
-                                                            switch (module) {
-                                                                case MMC:
-                                                                    cache_message(n_dir);
-                                                                    break;
-                                                                case SDCARD:
-                                                                    cache_message(n_dir);
-                                                                    break;
-                                                                case USB:
-                                                                    cache_message(n_dir);
-                                                                    break;
-                                                                default:
-                                                                    break;
-                                                            }
-                                                            break;
-                                                        } else {
-                                                            char c_index[MAX_BUFFER_SIZE];
-                                                            snprintf(c_index, sizeof(c_index), "%d",
-                                                                     current_item_index);
-                                                            write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
-
-                                                            if (load_content(f_name, atoi(
-                                                                    get_string_at_index(&named_index,
-                                                                                        current_item_index)), 0)) {
-                                                                system(MUOS_CONTENT_LAUNCH);
-                                                            }
-                                                            break;
-                                                        }
-                                                        break;
-                                                    case FAVOURITE:
-                                                        load_cached_content(
-                                                                lv_label_get_text(lv_group_get_focused(ui_group)),
-                                                                "favourite");
-                                                        write_text_to_file("/tmp/explore_card", "favourite", "w");
-                                                        remove("/tmp/explore_dir");
-                                                        break;
-                                                    case HISTORY:
-                                                        load_cached_content(
-                                                                lv_label_get_text(lv_group_get_focused(ui_group)),
-                                                                "history");
-                                                        write_text_to_file("/tmp/explore_card", "history", "w");
-                                                        remove("/tmp/explore_dir");
-                                                    default:
-                                                        break;
-                                                }
-                                                break;
-                                        }
-                                        safe_quit = 1;
-                                        break;
-                                    case JOY_B:
-                                        play_sound("back", nav_sound);
-
-                                        switch (module) {
-                                            case FAVOURITE:
-                                                write_text_to_file("/tmp/explore_card", "root", "w");
-                                                write_text_to_file("/tmp/explore_dir", "", "w");
-                                                write_text_to_file(MUOS_ACT_LOAD, "launcher", "w");
-                                                break;
-                                            case HISTORY:
-                                                write_text_to_file("/tmp/explore_card", "root", "w");
-                                                write_text_to_file("/tmp/explore_dir", "", "w");
-                                                write_text_to_file(MUOS_ACT_LOAD, "launcher", "w");
-                                                break;
-                                            default:
-                                                if (sd_dir != NULL) {
-                                                    char *b_dir = strrchr(sd_dir, '/');
-                                                    if (b_dir != NULL) {
-                                                        if (strcasecmp(str_tolower(b_dir), "/roms") == 0) {
-                                                            write_text_to_file("/tmp/explore_card", "root", "w");
-                                                            write_text_to_file("/tmp/explore_dir", "", "w");
-                                                            write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
-                                                        } else {
-                                                            write_text_to_file("/tmp/explore_dir",
-                                                                               strndup(sd_dir, b_dir - sd_dir), "w");
-                                                            write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
-                                                        }
-
-                                                    }
-                                                }
-                                                break;
-                                        }
-                                        safe_quit = 1;
-                                        break;
-                                    case JOY_X:
-                                        if (ui_count == 0) {
-                                            goto nothing_ever_happens;
-                                        }
-
-                                        char n_dir[MAX_BUFFER_SIZE];
-                                        snprintf(n_dir, sizeof(n_dir), "%s", sd_dir);
-
-                                        char cache_file[MAX_BUFFER_SIZE];
-                                        switch (module) {
-                                            case MMC:
-                                                play_sound("confirm", nav_sound);
-
-                                                snprintf(cache_file, sizeof(cache_file), "%s/mmc/%s.ini",
-                                                         MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
-
+                                    switch (module) {
+                                        case ROOT:
+                                            if (strcasecmp(lv_label_get_text(lv_group_get_focused(ui_group)),
+                                                           "SD1 (mmc)") ==
+                                                0) {
                                                 write_text_to_file("/tmp/explore_card", "mmc", "w");
-                                                break;
-                                            case SDCARD:
-                                                play_sound("confirm", nav_sound);
-
-                                                snprintf(cache_file, sizeof(cache_file), "%s/sdcard/%s.ini",
-                                                         MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
-
-                                                write_text_to_file("/tmp/explore_card", "sdcard", "w");
-                                                break;
-                                            case USB:
-                                                play_sound("confirm", nav_sound);
-
-                                                snprintf(cache_file, sizeof(cache_file), "%s/usb/%s.ini",
-                                                         MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
-
-                                                write_text_to_file("/tmp/explore_card", "usb", "w");
-                                                break;
-                                            case FAVOURITE:
-                                                play_sound("confirm", nav_sound);
-
-                                                snprintf(cache_file, sizeof(cache_file), "/%s/favourite/%s.cfg",
-                                                         MUOS_INFO_PATH,
-                                                         lv_label_get_text(lv_group_get_focused(ui_group)));
-
-                                                remove(cache_file);
-                                                write_text_to_file("/tmp/mux_reload", "1", "w");
-
-                                                goto ttq;
-                                                break;
-                                            case HISTORY:
-                                                play_sound("confirm", nav_sound);
-
-                                                snprintf(cache_file, sizeof(cache_file), "/%s/history/%s.cfg",
-                                                         MUOS_INFO_PATH,
-                                                         lv_label_get_text(lv_group_get_focused(ui_group)));
-
-                                                remove(cache_file);
-                                                write_text_to_file("/tmp/mux_reload", "1", "w");
-
-                                                goto ttq;
-                                                break;
-                                            default:
-                                                goto nothing_ever_happens;
-                                        }
-
-                                        if (file_exist(cache_file)) {
-                                            remove(cache_file);
-                                            cache_message(n_dir);
-                                        }
-
-                                        write_text_to_file("/tmp/explore_dir", n_dir, "w");
-                                        write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
-
-                                    ttq:
-                                        safe_quit = 1;
-                                        break;
-                                    case JOY_Y:
-                                        play_sound("confirm", nav_sound);
-
-                                        switch (module) {
-                                            case MMC:
-                                            case SDCARD:
-                                            case USB:
-                                                char *f_content = get_string_at_index(&content_items, atoi(
-                                                        get_string_at_index(&named_index, current_item_index)));
-                                                char *f_name = get_string_at_index(&named_items, current_item_index);
-                                                printf("CONTENT FILENAME: %s\n", f_content);
-                                                printf("CONTENT RAW NAME: %s\n", f_name);
-
-                                                if (strcasecmp(f_content, DUMMY_DIR) == 0) {
-                                                    osd_message = "Directories cannot be added to Favourites";
-                                                    lv_label_set_text(ui_lblMessage, osd_message);
-                                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                                    break;
-                                                } else {
-                                                    if (load_content(f_name,
-                                                                     atoi(get_string_at_index(&named_index,
-                                                                                              current_item_index)),
-                                                                     1)) {
-                                                        osd_message = "Added to Favourites";
-                                                        lv_label_set_text(ui_lblMessage, osd_message);
-                                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                                    } else {
-                                                        osd_message = "Error adding to Favourites";
-                                                        lv_label_set_text(ui_lblMessage, osd_message);
-                                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                                    }
-                                                    if (file_exist(MUOS_ROM_LOAD)) {
-                                                        remove(MUOS_ROM_LOAD);
-                                                    }
-                                                    break;
-                                                }
-                                                break;
-                                            default:
-                                                break;
-                                        }
-                                        break;
-                                    case JOY_START:
-                                        switch (module) {
-                                            case MMC:
-                                            case SDCARD:
-                                            case USB:
-                                                play_sound("confirm", nav_sound);
-
+                                                write_text_to_file("/tmp/explore_dir", strip_dir(SD1), "w");
                                                 write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
-                                                write_text_to_file("/tmp/explore_card", "root", "w");
-                                                remove("/tmp/explore_dir");
-
-                                                safe_quit = 1;
                                                 break;
-                                            default:
+                                            } else if (strcasecmp(lv_label_get_text(lv_group_get_focused(ui_group)),
+                                                                  "SD2 (sdcard)") == 0) {
+                                                write_text_to_file("/tmp/explore_card", "sdcard", "w");
+                                                write_text_to_file("/tmp/explore_dir", strip_dir(SD2), "w");
+                                                write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
                                                 break;
-                                        }
-                                        break;
-                                    case JOY_SELECT:
-                                        if (ui_file_count > 0) {
-                                            play_sound("confirm", nav_sound);
+                                            } else if (strcasecmp(lv_label_get_text(lv_group_get_focused(ui_group)),
+                                                                  "USB (external)") == 0) {
+                                                write_text_to_file("/tmp/explore_card", "usb", "w");
+                                                write_text_to_file("/tmp/explore_dir", strip_dir(E_USB), "w");
+                                                write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
+                                                break;
+                                            }
+                                            break;
+                                        default:
+                                            char *f_content = get_string_at_index(&content_items, atoi(
+                                                    get_string_at_index(&named_index, current_item_index)));
+                                            char *f_name = get_string_at_index(&named_items, current_item_index);
+                                            printf("CONTENT FILENAME: %s\n", f_content);
+                                            printf("CONTENT RAW NAME: %s\n", f_name);
 
                                             switch (module) {
                                                 case MMC:
                                                 case SDCARD:
                                                 case USB:
-                                                    load_content_core(1);
+                                                    if (strcasecmp(f_content, DUMMY_DIR) == 0) {
+                                                        char n_dir[MAX_BUFFER_SIZE];
+                                                        snprintf(n_dir, sizeof(n_dir), "%s/%s",
+                                                                 sd_dir,
+                                                                 lv_label_get_text(lv_group_get_focused(ui_group)));
+
+                                                        write_text_to_file("/tmp/explore_dir", n_dir, "w");
+                                                        write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
+
+                                                        switch (module) {
+                                                            case MMC:
+                                                                cache_message(n_dir);
+                                                                break;
+                                                            case SDCARD:
+                                                                cache_message(n_dir);
+                                                                break;
+                                                            case USB:
+                                                                cache_message(n_dir);
+                                                                break;
+                                                            default:
+                                                                break;
+                                                        }
+                                                        break;
+                                                    } else {
+                                                        char c_index[MAX_BUFFER_SIZE];
+                                                        snprintf(c_index, sizeof(c_index), "%d",
+                                                                 current_item_index);
+                                                        write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
+
+                                                        if (load_content(f_name, atoi(
+                                                                get_string_at_index(&named_index,
+                                                                                    current_item_index)), 0)) {
+                                                            system(MUOS_CONTENT_LAUNCH);
+                                                        }
+                                                        break;
+                                                    }
                                                     break;
+                                                case FAVOURITE:
+                                                    load_cached_content(
+                                                            lv_label_get_text(lv_group_get_focused(ui_group)),
+                                                            "favourite");
+                                                    write_text_to_file("/tmp/explore_card", "favourite", "w");
+                                                    remove("/tmp/explore_dir");
+                                                    break;
+                                                case HISTORY:
+                                                    load_cached_content(
+                                                            lv_label_get_text(lv_group_get_focused(ui_group)),
+                                                            "history");
+                                                    write_text_to_file("/tmp/explore_card", "history", "w");
+                                                    remove("/tmp/explore_dir");
                                                 default:
                                                     break;
                                             }
+                                            break;
+                                    }
+                                    safe_quit = 1;
+                                } else if (ev.code == NAV_B) {
+                                    play_sound("back", nav_sound);
+
+                                    switch (module) {
+                                        case FAVOURITE:
+                                            write_text_to_file("/tmp/explore_card", "root", "w");
+                                            write_text_to_file("/tmp/explore_dir", "", "w");
+                                            write_text_to_file(MUOS_ACT_LOAD, "launcher", "w");
+                                            break;
+                                        case HISTORY:
+                                            write_text_to_file("/tmp/explore_card", "root", "w");
+                                            write_text_to_file("/tmp/explore_dir", "", "w");
+                                            write_text_to_file(MUOS_ACT_LOAD, "launcher", "w");
+                                            break;
+                                        default:
+                                            if (sd_dir != NULL) {
+                                                char *b_dir = strrchr(sd_dir, '/');
+                                                if (b_dir != NULL) {
+                                                    if (strcasecmp(str_tolower(b_dir), "/roms") == 0) {
+                                                        write_text_to_file("/tmp/explore_card", "root", "w");
+                                                        write_text_to_file("/tmp/explore_dir", "", "w");
+                                                        write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
+                                                    } else {
+                                                        write_text_to_file("/tmp/explore_dir",
+                                                                           strndup(sd_dir, b_dir - sd_dir), "w");
+                                                        write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
+                                                    }
+
+                                                }
+                                            }
+                                            break;
+                                    }
+                                    safe_quit = 1;
+                                } else if (ev.code == JOY_X) {
+                                    if (ui_count == 0) {
+                                        goto nothing_ever_happens;
+                                    }
+
+                                    char n_dir[MAX_BUFFER_SIZE];
+                                    snprintf(n_dir, sizeof(n_dir), "%s", sd_dir);
+
+                                    char cache_file[MAX_BUFFER_SIZE];
+                                    switch (module) {
+                                        case MMC:
+                                            play_sound("confirm", nav_sound);
+
+                                            snprintf(cache_file, sizeof(cache_file), "%s/mmc/%s.ini",
+                                                     MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
+
+                                            write_text_to_file("/tmp/explore_card", "mmc", "w");
+                                            break;
+                                        case SDCARD:
+                                            play_sound("confirm", nav_sound);
+
+                                            snprintf(cache_file, sizeof(cache_file), "%s/sdcard/%s.ini",
+                                                     MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
+
+                                            write_text_to_file("/tmp/explore_card", "sdcard", "w");
+                                            break;
+                                        case USB:
+                                            play_sound("confirm", nav_sound);
+
+                                            snprintf(cache_file, sizeof(cache_file), "%s/usb/%s.ini",
+                                                     MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
+
+                                            write_text_to_file("/tmp/explore_card", "usb", "w");
+                                            break;
+                                        case FAVOURITE:
+                                            play_sound("confirm", nav_sound);
+
+                                            snprintf(cache_file, sizeof(cache_file), "/%s/favourite/%s.cfg",
+                                                     MUOS_INFO_PATH,
+                                                     lv_label_get_text(lv_group_get_focused(ui_group)));
+
+                                            remove(cache_file);
+                                            write_text_to_file("/tmp/mux_reload", "1", "w");
+
+                                            goto ttq;
+                                            break;
+                                        case HISTORY:
+                                            play_sound("confirm", nav_sound);
+
+                                            snprintf(cache_file, sizeof(cache_file), "/%s/history/%s.cfg",
+                                                     MUOS_INFO_PATH,
+                                                     lv_label_get_text(lv_group_get_focused(ui_group)));
+
+                                            remove(cache_file);
+                                            write_text_to_file("/tmp/mux_reload", "1", "w");
+
+                                            goto ttq;
+                                            break;
+                                        default:
+                                            goto nothing_ever_happens;
+                                    }
+
+                                    if (file_exist(cache_file)) {
+                                        remove(cache_file);
+                                        cache_message(n_dir);
+                                    }
+
+                                    write_text_to_file("/tmp/explore_dir", n_dir, "w");
+                                    write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
+
+                                    ttq:
+                                    safe_quit = 1;
+                                } else if (ev.code == JOY_Y) {
+                                    play_sound("confirm", nav_sound);
+
+                                    switch (module) {
+                                        case MMC:
+                                        case SDCARD:
+                                        case USB:
+                                            char *f_content = get_string_at_index(&content_items, atoi(
+                                                    get_string_at_index(&named_index, current_item_index)));
+                                            char *f_name = get_string_at_index(&named_items, current_item_index);
+                                            printf("CONTENT FILENAME: %s\n", f_content);
+                                            printf("CONTENT RAW NAME: %s\n", f_name);
+
+                                            if (strcasecmp(f_content, DUMMY_DIR) == 0) {
+                                                osd_message = "Directories cannot be added to Favourites";
+                                                lv_label_set_text(ui_lblMessage, osd_message);
+                                                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                                break;
+                                            } else {
+                                                if (load_content(f_name,
+                                                                 atoi(get_string_at_index(&named_index,
+                                                                                          current_item_index)),
+                                                                 1)) {
+                                                    osd_message = "Added to Favourites";
+                                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                                } else {
+                                                    osd_message = "Error adding to Favourites";
+                                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                                }
+                                                if (file_exist(MUOS_ROM_LOAD)) {
+                                                    remove(MUOS_ROM_LOAD);
+                                                }
+                                                break;
+                                            }
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                } else if (ev.code == JOY_START) {
+                                    switch (module) {
+                                        case MMC:
+                                        case SDCARD:
+                                        case USB:
+                                            play_sound("confirm", nav_sound);
+
+                                            write_text_to_file(MUOS_ACT_LOAD, "explore", "w");
+                                            write_text_to_file("/tmp/explore_card", "root", "w");
+                                            remove("/tmp/explore_dir");
+
+                                            safe_quit = 1;
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                } else if (ev.code == JOY_SELECT) {
+                                    if (ui_file_count > 0) {
+                                        play_sound("confirm", nav_sound);
+
+                                        switch (module) {
+                                            case MMC:
+                                            case SDCARD:
+                                            case USB:
+                                                load_content_core(1);
+                                                break;
+                                            default:
+                                                break;
                                         }
-                                        break;
-                                    case JOY_L1:
-                                        if (current_item_index >= 0 && current_item_index < ui_count) {
-                                            list_nav_prev(ITEM_SKIP);
-                                            lv_task_handler();
-                                        }
-                                        break;
-                                    case JOY_R1:
-                                        if (current_item_index >= 0 && current_item_index < ui_count) {
-                                            list_nav_next(ITEM_SKIP);
-                                            lv_task_handler();
-                                        }
-                                        break;
+                                    }
+                                } else if (ev.code == JOY_L1) {
+                                    if (current_item_index >= 0 && current_item_index < ui_count) {
+                                        list_nav_prev(ITEM_SKIP);
+                                        lv_task_handler();
+                                    }
+                                } else if (ev.code == JOY_R1) {
+                                    if (current_item_index >= 0 && current_item_index < ui_count) {
+                                        list_nav_next(ITEM_SKIP);
+                                        lv_task_handler();
+                                    }
                                 }
                             }
                         } else {
@@ -1445,24 +1436,7 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
-                            switch (ev.value) {
-                                case -4096:
-                                case -1:
-                                    if (current_item_index >= 0 && current_item_index < ui_count) {
-                                        list_nav_prev(ITEM_SKIP);
-                                        lv_task_handler();
-                                    }
-                                    break;
-                                case 1:
-                                case 4096:
-                                    if (current_item_index >= 0 && current_item_index < ui_count) {
-                                        list_nav_next(ITEM_SKIP);
-                                        lv_task_handler();
-                                    }
-                                    break;
-                            }
-                        } else if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
+                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
                                 case -4096:
                                 case -1:
@@ -1557,11 +1531,52 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 }
 
 void init_elements() {
+    switch (get_ini_int(muos_config, "visual", "boxart", LABEL)) {
+        case 0: // Bottom + Behind
+            lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+            lv_obj_move_background(ui_pnlBox);
+            lv_obj_move_background(ui_pnlWall);
+            break;
+        case 1: // Bottom + Front
+            lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+            lv_obj_move_foreground(ui_pnlBox);
+            break;
+        case 2: // Middle + Behind
+            lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
+            lv_obj_move_background(ui_pnlBox);
+            lv_obj_move_background(ui_pnlWall);
+            break;
+        case 3: // Middle + Front
+            lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
+            lv_obj_move_foreground(ui_pnlBox);
+            break;
+        case 4: // Top + Behind
+            lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
+            lv_obj_move_background(ui_pnlBox);
+            lv_obj_move_background(ui_pnlWall);
+            break;
+        case 5: // Top + Front
+            lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
+            lv_obj_move_foreground(ui_pnlBox);
+            break;
+        case 6: // Fullscreen + Behind
+            lv_obj_set_height(ui_pnlBox, SCREEN_HEIGHT);
+            lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+            lv_obj_move_background(ui_pnlBox);
+            lv_obj_move_background(ui_pnlWall);
+            break;
+        case 7: // Fullscreen + Front
+            lv_obj_set_height(ui_pnlBox, SCREEN_HEIGHT);
+            lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+            lv_obj_move_foreground(ui_pnlBox);
+            break;
+    }
+
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
@@ -1694,6 +1709,8 @@ void init_elements() {
                     lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_HIDDEN);
                 }
             }
+            break;
+        default:
             break;
     }
 }
@@ -1864,8 +1881,6 @@ int main(int argc, char *argv[]) {
     ui_init();
     muos_config = mini_try_load(MUOS_CONFIG_FILE);
 
-    init_elements();
-
     lv_obj_set_user_data(ui_scrExplore, wall_base);
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -1873,6 +1888,37 @@ int main(int argc, char *argv[]) {
 
     load_theme(&theme, basename(argv[0]));
     apply_theme();
+
+    switch (theme.MISC.NAVIGATION_TYPE) {
+        case 1:
+            NAV_DPAD_HOR = ABS_HAT0Y;
+            NAV_ANLG_HOR = ABS_RX;
+            NAV_DPAD_VER = ABS_HAT0X;
+            NAV_ANLG_VER = ABS_Z;
+            break;
+        default:
+            NAV_DPAD_HOR = ABS_HAT0X;
+            NAV_ANLG_HOR = ABS_Z;
+            NAV_DPAD_VER = ABS_HAT0Y;
+            NAV_ANLG_VER = ABS_RX;
+    }
+
+    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+        case 1:
+            NAV_A = JOY_B;
+            NAV_B = JOY_A;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
+            lv_label_set_text(ui_lblPreviewHeaderGlyph, "\u21D2");
+            lv_label_set_text(ui_lblHelpPreviewInfoGlyph, "\u21D2");
+            break;
+        default:
+            NAV_A = JOY_A;
+            NAV_B = JOY_B;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
+            break;
+    }
 
     current_wall = load_wallpaper(ui_scrExplore, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
@@ -1888,7 +1934,7 @@ int main(int argc, char *argv[]) {
 
     load_font(basename(argv[0]), ui_scrExplore);
 
-    if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
     }
 
@@ -2007,7 +2053,7 @@ int main(int argc, char *argv[]) {
     init_elements();
 
     while (!safe_quit) {
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 
     mini_free(muos_config);

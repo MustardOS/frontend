@@ -2,7 +2,7 @@
 #include "common.h"
 #include "options.h"
 #include "theme.h"
-#include "mini.h"
+#include "mini/mini.h"
 
 void load_theme(struct theme_config *theme, char *mux_name) {
     char scheme[MAX_BUFFER_SIZE];

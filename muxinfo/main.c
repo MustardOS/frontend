@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
@@ -17,9 +17,16 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 static int js_fd;
+
+int NAV_DPAD_HOR;
+int NAV_ANLG_HOR;
+int NAV_DPAD_VER;
+int NAV_ANLG_VER;
+int NAV_A;
+int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -129,39 +136,30 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                switch (ev.code) {
-                                    case JOY_B:
-                                    case JOY_MENU:
-                                        play_sound("confirm", nav_sound);
-                                        msgbox_active = 0;
-                                        progress_onscreen = 0;
-                                        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                        break;
+                                if (ev.code == NAV_B || ev.code == JOY_MENU) {
+                                    play_sound("confirm", nav_sound);
+                                    msgbox_active = 0;
+                                    progress_onscreen = 0;
+                                    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
                                 }
                             } else {
-                                switch (ev.code) {
-                                    case JOY_MENU:
-                                        JOYHOTKEY_pressed = 1;
-                                        break;
-                                    case JOY_A:
-                                        play_sound("confirm", nav_sound);
-                                        input_disable = 1;
+                                if (ev.code == JOY_MENU) {
+                                    JOYHOTKEY_pressed = 1;
+                                } else if (ev.code == NAV_A) {
+                                    play_sound("confirm", nav_sound);
 
-                                        if (element_focused == ui_lblTester) {
-                                            load_mux("tester");
-                                        } else if (element_focused == ui_lblSystem) {
-                                            load_mux("system");
-                                        } else if (element_focused == ui_lblCredits) {
-                                            load_mux("credits");
-                                        }
-                                        safe_quit = 1;
-                                        break;
-                                    case JOY_B:
-                                        play_sound("back", nav_sound);
-                                        input_disable = 1;
+                                    if (element_focused == ui_lblTester) {
+                                        load_mux("tester");
+                                    } else if (element_focused == ui_lblSystem) {
+                                        load_mux("system");
+                                    } else if (element_focused == ui_lblCredits) {
+                                        load_mux("credits");
+                                    }
 
-                                        safe_quit = 1;
-                                        break;
+                                    safe_quit = 1;
+                                } else if (ev.code == NAV_B) {
+                                    play_sound("back", nav_sound);
+                                    safe_quit = 1;
                                 }
                             }
                         } else {
@@ -177,25 +175,7 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
-                            switch (ev.value) {
-                                case -4096:
-                                case -1:
-                                    nav_prev(ui_group, ITEM_SKIP);
-                                    nav_prev(ui_group_glyph, ITEM_SKIP);
-                                    play_sound("navigate", nav_sound);
-                                    nav_moved = 1;
-                                    break;
-                                case 1:
-                                case 4096:
-                                    nav_next(ui_group, ITEM_SKIP);
-                                    nav_next(ui_group_glyph, ITEM_SKIP);
-                                    play_sound("navigate", nav_sound);
-                                    nav_moved = 1;
-                                    break;
-                            }
-                        }
-                        if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
+                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
                                 case -4096:
                                 case -1:
@@ -250,7 +230,7 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 }
 
@@ -407,6 +387,35 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, basename(argv[0]));
     apply_theme();
 
+    switch (theme.MISC.NAVIGATION_TYPE) {
+        case 1:
+            NAV_DPAD_HOR = ABS_HAT0Y;
+            NAV_ANLG_HOR = ABS_RX;
+            NAV_DPAD_VER = ABS_HAT0X;
+            NAV_ANLG_VER = ABS_Z;
+            break;
+        default:
+            NAV_DPAD_HOR = ABS_HAT0X;
+            NAV_ANLG_HOR = ABS_Z;
+            NAV_DPAD_VER = ABS_HAT0Y;
+            NAV_ANLG_VER = ABS_RX;
+    }
+
+    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+        case 1:
+            NAV_A = JOY_B;
+            NAV_B = JOY_A;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
+            break;
+        default:
+            NAV_A = JOY_A;
+            NAV_B = JOY_B;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
+            break;
+    }
+
     current_wall = load_wallpaper(ui_scrInfo, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
@@ -421,7 +430,7 @@ int main(int argc, char *argv[]) {
 
     load_font(basename(argv[0]), ui_scrInfo);
 
-    if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
     }
 
@@ -472,7 +481,7 @@ int main(int argc, char *argv[]) {
 
     init_elements();
     while (!safe_quit) {
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 
     mini_free(muos_config);

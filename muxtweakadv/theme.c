@@ -1,5 +1,5 @@
 #include "../lvgl/lvgl.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include "../common/theme.h"
 
 struct theme_config theme;
@@ -20,7 +20,7 @@ void apply_theme() {
             {ui_pnlFooter,        theme.FOOTER.BACKGROUND},
             {ui_pnlHeader,        theme.HEADER.BACKGROUND},
             {ui_pnlHelpMessage,   theme.HELP.BACKGROUND},
-            {ui_lblGamepad,       theme.LIST_DEFAULT.BACKGROUND},
+            {ui_lblSwap,       theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblThermal,       theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblFont,          theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblVerbose,       theme.LIST_DEFAULT.BACKGROUND},
@@ -66,7 +66,7 @@ void apply_theme() {
     }
 
     struct big background_focus_elements[] = {
-            {ui_lblGamepad, theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblSwap, theme.LIST_FOCUS.BACKGROUND},
             {ui_lblThermal, theme.LIST_FOCUS.BACKGROUND},
             {ui_lblFont,    theme.LIST_FOCUS.BACKGROUND},
             {ui_lblVerbose, theme.LIST_FOCUS.BACKGROUND},
@@ -79,7 +79,7 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblGamepad, theme.SYSTEM.BACKGROUND},
+            {ui_lblSwap, theme.SYSTEM.BACKGROUND},
             {ui_lblThermal, theme.SYSTEM.BACKGROUND},
             {ui_lblFont,    theme.SYSTEM.BACKGROUND},
             {ui_lblVerbose, theme.SYSTEM.BACKGROUND},
@@ -92,7 +92,7 @@ void apply_theme() {
     }
 
     struct big indicator_elements[] = {
-            {ui_lblGamepad, theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblSwap, theme.LIST_DEFAULT.INDICATOR},
             {ui_lblThermal, theme.LIST_DEFAULT.INDICATOR},
             {ui_lblFont,    theme.LIST_DEFAULT.INDICATOR},
             {ui_lblVerbose, theme.LIST_DEFAULT.INDICATOR},
@@ -105,7 +105,7 @@ void apply_theme() {
     }
 
     struct big indicator_focus_elements[] = {
-            {ui_lblGamepad, theme.LIST_FOCUS.INDICATOR},
+            {ui_lblSwap, theme.LIST_FOCUS.INDICATOR},
             {ui_lblThermal, theme.LIST_FOCUS.INDICATOR},
             {ui_lblFont,    theme.LIST_FOCUS.INDICATOR},
             {ui_lblVerbose, theme.LIST_FOCUS.INDICATOR},
@@ -118,19 +118,19 @@ void apply_theme() {
     }
 
     struct big default_elements[] = {
-            {ui_lblGamepad,      theme.LIST_DEFAULT.TEXT},
+            {ui_lblSwap,      theme.LIST_DEFAULT.TEXT},
             {ui_lblThermal,      theme.LIST_DEFAULT.TEXT},
             {ui_lblFont,         theme.LIST_DEFAULT.TEXT},
             {ui_lblVerbose,      theme.LIST_DEFAULT.TEXT},
             {ui_lblVolume,       theme.LIST_DEFAULT.TEXT},
             {ui_lblOffset,       theme.LIST_DEFAULT.TEXT},
-            {ui_icoGamepad,      theme.LIST_DEFAULT.TEXT},
+            {ui_icoSwap,      theme.LIST_DEFAULT.TEXT},
             {ui_icoThermal,      theme.LIST_DEFAULT.TEXT},
             {ui_icoFont,         theme.LIST_DEFAULT.TEXT},
             {ui_icoVerbose,      theme.LIST_DEFAULT.TEXT},
             {ui_icoVolume,       theme.LIST_DEFAULT.TEXT},
             {ui_icoOffset,       theme.LIST_DEFAULT.TEXT},
-            {ui_droGamepad,      theme.LIST_DEFAULT.TEXT},
+            {ui_droSwap,      theme.LIST_DEFAULT.TEXT},
             {ui_droThermal,      theme.LIST_DEFAULT.TEXT},
             {ui_droFont,         theme.LIST_DEFAULT.TEXT},
             {ui_droVerbose,      theme.LIST_DEFAULT.TEXT},
@@ -166,19 +166,19 @@ void apply_theme() {
     }
 
     struct big focus_elements[] = {
-            {ui_lblGamepad, theme.LIST_FOCUS.TEXT},
+            {ui_lblSwap, theme.LIST_FOCUS.TEXT},
             {ui_lblThermal, theme.LIST_FOCUS.TEXT},
             {ui_lblFont,    theme.LIST_FOCUS.TEXT},
             {ui_lblVerbose, theme.LIST_FOCUS.TEXT},
             {ui_lblVolume,  theme.LIST_FOCUS.TEXT},
             {ui_lblOffset,  theme.LIST_FOCUS.TEXT},
-            {ui_icoGamepad, theme.LIST_FOCUS.TEXT},
+            {ui_icoSwap, theme.LIST_FOCUS.TEXT},
             {ui_icoThermal, theme.LIST_FOCUS.TEXT},
             {ui_icoFont,    theme.LIST_FOCUS.TEXT},
             {ui_icoVerbose, theme.LIST_FOCUS.TEXT},
             {ui_icoVolume,  theme.LIST_FOCUS.TEXT},
             {ui_icoOffset,  theme.LIST_FOCUS.TEXT},
-            {ui_droGamepad, theme.LIST_FOCUS.TEXT},
+            {ui_droSwap, theme.LIST_FOCUS.TEXT},
             {ui_droThermal, theme.LIST_FOCUS.TEXT},
             {ui_droFont,    theme.LIST_FOCUS.TEXT},
             {ui_droVerbose, theme.LIST_FOCUS.TEXT},
@@ -211,19 +211,19 @@ void apply_theme() {
     }
 
     struct small text_default_alpha_elements[] = {
-            {ui_lblGamepad,      theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_lblSwap,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblThermal,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblFont,         theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblVerbose,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblVolume,       theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblOffset,       theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoGamepad,      theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoSwap,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoThermal,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoFont,         theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoVerbose,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoVolume,       theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoOffset,       theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droGamepad,      theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_droSwap,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droThermal,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droFont,         theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droVerbose,      theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -257,19 +257,19 @@ void apply_theme() {
     }
 
     struct small text_focus_alpha_elements[] = {
-            {ui_lblGamepad, theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblSwap, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblThermal, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblFont,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblVerbose, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblVolume,  theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblOffset,  theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoGamepad, theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoSwap, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoThermal, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoFont,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoVerbose, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoVolume,  theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoOffset,  theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droGamepad, theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droSwap, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droThermal, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droFont,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droVerbose, theme.LIST_FOCUS.TEXT_ALPHA},
@@ -282,7 +282,7 @@ void apply_theme() {
     }
 
     struct small indicator_default_alpha_elements[] = {
-            {ui_lblGamepad, theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblSwap, theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblThermal, theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblFont,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblVerbose, theme.LIST_DEFAULT.INDICATOR_ALPHA},
@@ -296,7 +296,7 @@ void apply_theme() {
     }
 
     struct small indicator_focus_alpha_elements[] = {
-            {ui_lblGamepad, theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblSwap, theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblThermal, theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblFont,    theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblVerbose, theme.LIST_FOCUS.INDICATOR_ALPHA},
@@ -309,7 +309,7 @@ void apply_theme() {
     }
 
     struct small gradient_start_default_elements[] = {
-            {ui_lblGamepad, theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblSwap, theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblThermal, theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblFont,    theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblVerbose, theme.LIST_DEFAULT.GRADIENT_START},
@@ -322,7 +322,7 @@ void apply_theme() {
     }
 
     struct small gradient_start_focus_elements[] = {
-            {ui_lblGamepad, theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblSwap, theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblThermal, theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblFont,    theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblVerbose, theme.LIST_FOCUS.GRADIENT_START},
@@ -335,7 +335,7 @@ void apply_theme() {
     }
 
     struct small gradient_stop_default_elements[] = {
-            {ui_lblGamepad, theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblSwap, theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblThermal, theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblFont,    theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblVerbose, theme.LIST_DEFAULT.GRADIENT_STOP},
@@ -348,7 +348,7 @@ void apply_theme() {
     }
 
     struct small gradient_stop_focus_elements[] = {
-            {ui_lblGamepad, theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblSwap, theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblThermal, theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblFont,    theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblVerbose, theme.LIST_FOCUS.GRADIENT_STOP},
@@ -361,7 +361,7 @@ void apply_theme() {
     }
 
     struct small background_alpha_default_elements[] = {
-            {ui_lblGamepad, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblSwap, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblThermal, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblFont,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblVerbose, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
@@ -375,7 +375,7 @@ void apply_theme() {
     }
 
     struct small background_alpha_focus_elements[] = {
-            {ui_lblGamepad, theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblSwap, theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblThermal, theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblFont,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblVerbose, theme.LIST_FOCUS.BACKGROUND_ALPHA},
@@ -478,7 +478,7 @@ void apply_theme() {
     }
 
     struct small font_pad_list_top_elements[] = {
-            {ui_lblGamepad, theme.FONT.LIST_PAD_TOP},
+            {ui_lblSwap, theme.FONT.LIST_PAD_TOP},
             {ui_lblThermal, theme.FONT.LIST_PAD_TOP},
             {ui_lblFont,    theme.FONT.LIST_PAD_TOP},
             {ui_lblVerbose, theme.FONT.LIST_PAD_TOP},
@@ -491,7 +491,7 @@ void apply_theme() {
     }
 
     struct small font_pad_list_bottom_elements[] = {
-            {ui_lblGamepad, theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblSwap, theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblThermal, theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblFont,    theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblVerbose, theme.FONT.LIST_PAD_BOTTOM},
@@ -504,7 +504,7 @@ void apply_theme() {
     }
 
     struct small font_pad_top_dropdown_elements[] = {
-            {ui_droGamepad, theme.FONT.LIST_PAD_TOP},
+            {ui_droSwap, theme.FONT.LIST_PAD_TOP},
             {ui_droThermal, theme.FONT.LIST_PAD_TOP},
             {ui_droFont,    theme.FONT.LIST_PAD_TOP},
             {ui_droVerbose, theme.FONT.LIST_PAD_TOP},
@@ -518,7 +518,7 @@ void apply_theme() {
     }
 
     struct small font_pad_bottom_dropdown_elements[] = {
-            {ui_droGamepad, theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droSwap, theme.FONT.LIST_PAD_BOTTOM},
             {ui_droThermal, theme.FONT.LIST_PAD_BOTTOM},
             {ui_droFont,    theme.FONT.LIST_PAD_BOTTOM},
             {ui_droVerbose, theme.FONT.LIST_PAD_BOTTOM},
@@ -533,7 +533,7 @@ void apply_theme() {
     }
 
     struct small font_pad_top_list_icon_elements[] = {
-            {ui_icoGamepad, theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoSwap, theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoThermal, theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoFont,    theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoVerbose, theme.FONT.LIST_ICON_PAD_TOP},
@@ -546,7 +546,7 @@ void apply_theme() {
     }
 
     struct small font_pad_bottom_list_icon_elements[] = {
-            {ui_icoGamepad, theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoSwap, theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoThermal, theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoFont,    theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoVerbose, theme.FONT.LIST_ICON_PAD_BOTTOM},

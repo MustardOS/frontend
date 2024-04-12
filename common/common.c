@@ -15,18 +15,7 @@
 #include "common.h"
 #include "options.h"
 #include "theme.h"
-#include "mini.h"
-
-void input_pause() {
-    input_disable = 1;
-    lv_obj_invalidate(lv_scr_act());
-    usleep(SCREEN_WAIT);
-}
-
-void input_resume() {
-    input_disable = 0;
-    lv_obj_invalidate(lv_scr_act());
-}
+#include "mini/mini.h"
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
@@ -409,7 +398,7 @@ int read_battery_capacity() {
 
     fclose(file);
 
-    capacity = capacity + (get_ini_int(muos_config, "tweak", "offset", LABEL) - 50);
+    capacity = capacity + (get_ini_int(muos_config, "settings.advanced", "offset", LABEL) - 50);
 
     if (capacity > 100) {
         return 100;
@@ -1111,7 +1100,7 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
 }
 
 void load_font(const char *program, lv_obj_t *screen) {
-    if (get_ini_int(muos_config, "tweak", "font", LABEL)) {
+    if (get_ini_int(muos_config, "settings.advanced", "font", LABEL)) {
         char theme_font_default[MAX_BUFFER_SIZE];
         char theme_font_mux[MAX_BUFFER_SIZE];
         snprintf(theme_font_default, sizeof(theme_font_default), "/%s/default.bin", MUOS_FONT_PATH);
@@ -1188,12 +1177,12 @@ int get_volume_percentage() {
     return volume_percentage;
 }
 
-int should_skip(const char *name) {
+int should_skip(char *name) {
     const char skip_prefix[] = {
             '.', '_'
     };
     for (int i = 0; i < sizeof(skip_prefix) / sizeof(skip_prefix[0]); i++) {
-        if (name[0] == skip_prefix[i]) {
+        if (name[0] == skip_prefix[i] && !get_ini_int(muos_config, "settings.general", "hidden", 0)) {
             return 1;
         }
     }
@@ -1217,10 +1206,12 @@ int should_skip(const char *name) {
     }
 
     const char *skip_extensions[] = {
-            ".bps", ".ips", ".sav", ".srm", ".ups"
+            ".bps", ".ips", ".sav", ".srm",
+            ".ups", ".msu", ".pcm"
     };
+
     for (int i = 0; i < sizeof(skip_extensions) / sizeof(skip_extensions[0]); i++) {
-        if (strrchr(name, '.') != NULL && strcasecmp(strrchr(name, '.'), skip_extensions[i]) == 0) {
+        if (strcasecmp(get_ext(name), skip_extensions[i]) == 0) {
             return 1;
         }
     }
@@ -1245,10 +1236,10 @@ int get_brightness() {
     int disp = open("/dev/disp", O_RDWR);
 
     if (disp >= 0) {
-        struct disp_bright_value brightness_value;
-        memset(&brightness_value, 0, sizeof(brightness_value));
-        brightness_value.screen = 0;
-        current_brightness = ioctl(disp, DISP_LCD_GET_BRIGHTNESS, &brightness_value);
+        unsigned long b_val[3];
+        memset(b_val, 0, sizeof(b_val));
+        b_val[0] = 0;
+        current_brightness = ioctl(disp, DISP_LCD_GET_BRIGHTNESS, (void *) b_val);
         close(disp);
     }
 
@@ -1257,12 +1248,13 @@ int get_brightness() {
 
 void set_brightness(int brightness) {
     int disp = open("/dev/disp", O_RDWR);
+
     if (disp >= 0) {
-        struct disp_bright_value brightness_value;
-        memset(&brightness_value, 0, sizeof(brightness_value));
-        brightness_value.screen = 0;
-        brightness_value.brightness = brightness;
-        ioctl(disp, DISP_LCD_SET_BRIGHTNESS, &brightness_value);
+        unsigned long b_val[3];
+        memset(b_val, 0, sizeof(b_val));
+        b_val[0] = 0;
+        b_val[1] = brightness;
+        ioctl(disp, DISP_LCD_SET_BRIGHTNESS, (void *) b_val);
         close(disp);
     }
 }

@@ -16,7 +16,7 @@ extern "C" {
 
 #include "layouts/lv_layouts.h"
 #include "libs/lv_libs.h"
-//#include "others/lv_others.h"
+#include "others/lv_others.h"
 #include "themes/lv_themes.h"
 #include "widgets/lv_widgets.h"
 

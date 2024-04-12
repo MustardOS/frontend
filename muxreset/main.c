@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui.h"
+#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
@@ -16,9 +16,16 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/mini.h"
+#include "../common/mini/mini.h"
 
 static int js_fd;
+
+int NAV_DPAD_HOR;
+int NAV_ANLG_HOR;
+int NAV_DPAD_VER;
+int NAV_ANLG_VER;
+int NAV_A;
+int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -157,113 +164,102 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                switch (ev.code) {
-                                    case JOY_B:
-                                    case JOY_MENU:
-                                        play_sound("confirm", nav_sound);
-                                        msgbox_active = 0;
-                                        progress_onscreen = 0;
-                                        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                        break;
-                                    default:
-                                        break;
+                                if (ev.code == NAV_B || ev.code == JOY_MENU) {
+                                    play_sound("confirm", nav_sound);
+                                    msgbox_active = 0;
+                                    progress_onscreen = 0;
+                                    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
                                 }
                             } else {
-                                switch (ev.code) {
-                                    case JOY_MENU:
-                                        JOYHOTKEY_pressed = 1;
-                                        break;
-                                    case JOY_X:
-                                        if (element_focused == ui_lblClearFavourites) {
-                                            play_sound("confirm", nav_sound);
+                                if (ev.code == JOY_MENU) {
+                                    JOYHOTKEY_pressed = 1;
+                                } else if (ev.code == JOY_X) {
+                                    if (element_focused == ui_lblClearFavourites) {
+                                        play_sound("confirm", nav_sound);
 
-                                            char favourites[MAX_BUFFER_SIZE];
-                                            snprintf(favourites, sizeof(favourites), "/%s/favourites", MUOS_INFO_PATH);
-                                            delete_files_of_type(favourites, "cfg");
+                                        char favourites[MAX_BUFFER_SIZE];
+                                        snprintf(favourites, sizeof(favourites), "/%s/favourites", MUOS_INFO_PATH);
+                                        delete_files_of_type(favourites, "cfg");
 
-                                            osd_message = "Favourites Cleared";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            break;
-                                        } else if (element_focused == ui_lblClearHistory) {
-                                            play_sound("confirm", nav_sound);
+                                        osd_message = "Favourites Cleared";
+                                    } else if (element_focused == ui_lblClearHistory) {
+                                        play_sound("confirm", nav_sound);
 
-                                            char history[MAX_BUFFER_SIZE];
-                                            snprintf(history, sizeof(history), "/%s/history", MUOS_INFO_PATH);
-                                            delete_files_of_type(history, "cfg");
+                                        char history[MAX_BUFFER_SIZE];
+                                        snprintf(history, sizeof(history), "/%s/history", MUOS_INFO_PATH);
+                                        delete_files_of_type(history, "cfg");
 
-                                            osd_message = "History Cleared";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            break;
-                                        } else if (element_focused == ui_lblClearActivity) {
-                                            play_sound("confirm", nav_sound);
+                                        osd_message = "History Cleared";
+                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    } else if (element_focused == ui_lblClearActivity) {
+                                        play_sound("confirm", nav_sound);
 
-                                            char activity[MAX_BUFFER_SIZE];
-                                            snprintf(activity, sizeof(activity), "/%s/activity", MUOS_INFO_PATH);
-                                            delete_files_of_type(activity, "act");
+                                        char activity[MAX_BUFFER_SIZE];
+                                        snprintf(activity, sizeof(activity), "/%s/activity", MUOS_INFO_PATH);
+                                        delete_files_of_type(activity, "act");
 
-                                            osd_message = "Activity Cleared";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            break;
-                                        } else if (element_focused == ui_lblClearConfigurations) {
-                                            play_sound("confirm", nav_sound);
+                                        osd_message = "Activity Cleared";
+                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    } else if (element_focused == ui_lblClearConfigurations) {
+                                        play_sound("confirm", nav_sound);
 
-                                            delete_files_of_type(MUOS_CORE_DIR, "cfg");
+                                        delete_files_of_type(MUOS_CORE_DIR, "cfg");
 
-                                            osd_message = "Configurations Cleared";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            break;
-                                        } else if (element_focused == ui_lblClearCaches) {
-                                            play_sound("confirm", nav_sound);
+                                        osd_message = "Configurations Cleared";
+                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    } else if (element_focused == ui_lblClearCaches) {
+                                        play_sound("confirm", nav_sound);
 
-                                            delete_files_of_type(MUOS_CACHE_DIR, "json");
+                                        delete_files_of_type(MUOS_CACHE_DIR, "json");
 
-                                            osd_message = "Caches Cleared";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            break;
-                                        } else if (element_focused == ui_lblRestoreConfig) {
-                                            play_sound("confirm", nav_sound);
+                                        osd_message = "Caches Cleared";
+                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    } else if (element_focused == ui_lblRestoreConfig) {
+                                        play_sound("confirm", nav_sound);
 
-                                            system("cp -f /opt/muos/backup/retroarch.cfg /mnt/mmc/MUOS/.retroarch/retroarch.cfg");
+                                        system("cp -f /opt/muos/backup/retroarch.cfg /mnt/mmc/MUOS/.retroarch/retroarch.cfg");
 
-                                            osd_message = "RetroArch Configuration Restored";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            break;
-                                        } else if (element_focused == ui_lblRestoreNetwork) {
-                                            play_sound("confirm", nav_sound);
+                                        osd_message = "RetroArch Configuration Restored";
+                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    } else if (element_focused == ui_lblRestoreNetwork) {
+                                        play_sound("confirm", nav_sound);
 
-                                            system("cp -f /opt/muos/backup/network.txt /opt/muos/config/network.txt");
+                                        set_ini_int(muos_config, "network", "enabled", 0);
+                                        set_ini_string(muos_config, "network", "interface", "wlan0");
+                                        set_ini_int(muos_config, "network", "type", 0);
+                                        set_ini_string(muos_config, "network", "ssid", "");
+                                        set_ini_string(muos_config, "network", "address", "192.168.0.123");
+                                        set_ini_string(muos_config, "network", "gateway", "192.168.0.1");
+                                        set_ini_int(muos_config, "network", "subnet", 24);
+                                        set_ini_string(muos_config, "network", "dns", "1.1.1.1");
+                                        mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
 
-                                            osd_message = "Network Configuration Restored";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            break;
-                                        } else if (element_focused == ui_lblRestorePortMaster) {
-                                            play_sound("confirm", nav_sound);
+                                        system("/opt/muos/script/system/network.sh");
 
-                                            osd_message = "Restoring PortMaster";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                        osd_message = "Network Configuration Restored";
+                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    } else if (element_focused == ui_lblRestorePortMaster) {
+                                        play_sound("confirm", nav_sound);
 
-                                            // TODO: Add PortMaster archival restore here
+                                        osd_message = "Restoring PortMaster";
+                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                            osd_message = "PortMaster Restored";
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            break;
-                                        }
-                                        break;
-                                    case JOY_B:
-                                        play_sound("back", nav_sound);
-                                        input_disable = 1;
+                                        // TODO: Add PortMaster archival restore here
 
-                                        safe_quit = 1;
-                                        break;
+                                        osd_message = "PortMaster Restored";
+                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    }
+                                } else if (ev.code == NAV_B) {
+                                    play_sound("back", nav_sound);
+                                    safe_quit = 1;
                                 }
                             }
                         } else {
@@ -279,25 +275,7 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
-                            switch (ev.value) {
-                                case -4096:
-                                case -1:
-                                    nav_prev(ui_group, ITEM_SKIP);
-                                    nav_prev(ui_group_glyph, ITEM_SKIP);
-                                    play_sound("navigate", nav_sound);
-                                    nav_moved = 1;
-                                    break;
-                                case 1:
-                                case 4096:
-                                    nav_next(ui_group, ITEM_SKIP);
-                                    nav_next(ui_group_glyph, ITEM_SKIP);
-                                    play_sound("navigate", nav_sound);
-                                    nav_moved = 1;
-                                    break;
-                            }
-                        }
-                        if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
+                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
                                 case -4096:
                                 case -1:
@@ -352,7 +330,7 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 }
 
@@ -513,6 +491,35 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, basename(argv[0]));
     apply_theme();
 
+    switch (theme.MISC.NAVIGATION_TYPE) {
+        case 1:
+            NAV_DPAD_HOR = ABS_HAT0Y;
+            NAV_ANLG_HOR = ABS_RX;
+            NAV_DPAD_VER = ABS_HAT0X;
+            NAV_ANLG_VER = ABS_Z;
+            break;
+        default:
+            NAV_DPAD_HOR = ABS_HAT0X;
+            NAV_ANLG_HOR = ABS_Z;
+            NAV_DPAD_VER = ABS_HAT0Y;
+            NAV_ANLG_VER = ABS_RX;
+    }
+
+    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+        case 1:
+            NAV_A = JOY_B;
+            NAV_B = JOY_A;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
+            break;
+        default:
+            NAV_A = JOY_A;
+            NAV_B = JOY_B;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
+            break;
+    }
+
     current_wall = load_wallpaper(ui_scrReset, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
@@ -527,7 +534,7 @@ int main(int argc, char *argv[]) {
 
     load_font(basename(argv[0]), ui_scrReset);
 
-    if (get_ini_int(muos_config, "tweak", "sound", LABEL) == 2) {
+    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
     }
 
@@ -578,7 +585,7 @@ int main(int argc, char *argv[]) {
 
     init_elements();
     while (!safe_quit) {
-        usleep(SCREEN_REFRESH);
+        usleep(SCREEN_WAIT);
     }
 
     mini_free(muos_config);
