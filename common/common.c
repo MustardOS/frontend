@@ -1261,7 +1261,9 @@ void set_brightness(int brightness) {
 
 char *get_friendly_name(char *search, char *file) {
     char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "rg -w --max-count=1 \"%s\" \"%s\" | cut -d'=' -f2-", search, file);
+    snprintf(command, sizeof(command),
+             "/opt/muos/bin/rg -w --max-count=1 \"%s\" \"%s\" | cut -d'=' -f2-",
+             search, file);
 
     FILE * fp = popen(command, "r");
     if (fp == NULL) {

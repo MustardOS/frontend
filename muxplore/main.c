@@ -659,7 +659,7 @@ void gen_item(char **file_names, int file_count) {
             write_text_to_file(init_cache_file, good_fn_name, "a");
 
             snprintf(curr_item, sizeof(curr_item), "%s :: %d",
-                     fn_name, ui_count);
+                     strip_ext((char *) fn_name), ui_count);
         }
 
         ui_count++;
