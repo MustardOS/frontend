@@ -646,21 +646,21 @@ void gen_item(char **file_names, int file_count) {
 
     for (int i = 0; i < file_count; i++) {
         char curr_item[MAX_BUFFER_SIZE];
+        const char *fn_name;
+
         push_string(&content_items, file_names[i]);
 
         if (is_cache) {
-            snprintf(curr_item, sizeof(curr_item), "%s :: %d",
-                     read_line_from_file(init_cache_file, i + 1), ui_count);
+            fn_name = read_line_from_file(init_cache_file, i + 1);
         } else {
-            const char *fn_name = get_friendly_name(file_names[i], MUOS_NAME_FILE);
-
+            fn_name = get_friendly_name(file_names[i], MUOS_NAME_FILE);
             char good_fn_name[MAX_BUFFER_SIZE];
             snprintf(good_fn_name, sizeof(good_fn_name), "%s\n", fn_name);
             write_text_to_file(init_cache_file, good_fn_name, "a");
-
-            snprintf(curr_item, sizeof(curr_item), "%s :: %d",
-                     strip_ext((char *) fn_name), ui_count);
         }
+
+        snprintf(curr_item, sizeof(curr_item), "%s :: %d",
+                 strip_ext((char *) fn_name), ui_count);
 
         ui_count++;
         push_string(&named_items, curr_item);

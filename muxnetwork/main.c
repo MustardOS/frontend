@@ -136,10 +136,12 @@ void get_current_ip() {
         strcasecmp(curr_ip, "") == 0 ||
         curr_ip == NULL) {
         lv_label_set_text(ui_lblStatusValue, "Not Connected");
+        lv_task_handler();
         return;
     } else {
         snprintf(net_message, sizeof(net_message), "Connected - %s", curr_ip);
         lv_label_set_text(ui_lblStatusValue, net_message);
+        lv_task_handler();
         return;
     }
 }
@@ -492,6 +494,7 @@ void *joystick_task() {
                                         }
                                     } else if (strcasecmp(lv_label_get_text(element_focused), "Connect") == 0) {
                                         lv_label_set_text(ui_lblStatusValue, "Trying to Connect...");
+                                        lv_task_handler();
                                         save_network_config();
                                         if (get_ini_int(muos_config, "network", "enabled", LABEL)) {
                                             input_disable = 1;
@@ -514,6 +517,7 @@ void *joystick_task() {
                                             input_disable = 0;
                                         } else {
                                             lv_label_set_text(ui_lblStatusValue, "Network Disabled");
+                                            lv_task_handler();
                                         }
                                     } else {
                                         key_curr = 0;

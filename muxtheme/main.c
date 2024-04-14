@@ -355,24 +355,25 @@ void *joystick_task() {
 
                                     lv_label_set_text(ui_lblMessage, "Loading Theme");
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    lv_task_handler();
 
                                     if (ev.code == NAV_A) {
                                         char *chosen_theme = lv_label_get_text(element_focused);
                                         if (file_size(chosen_theme, 16)) {
                                             set_theme_value(chosen_theme);
-                                            load_mux("theme");
-
-                                            char c_index[MAX_BUFFER_SIZE];
-                                            snprintf(c_index, sizeof(c_index), "%d", current_item_index);
-                                            write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
-
-                                            usleep(100000);
                                         } else {
                                             lv_label_set_text(ui_lblMessage, "Theme cannot be larger than 16MB");
                                             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
-                                            usleep(100000);
+                                            lv_task_handler();
                                         }
+
+                                        load_mux("theme");
+
+                                        char c_index[MAX_BUFFER_SIZE];
+                                        snprintf(c_index, sizeof(c_index), "%d", current_item_index);
+                                        write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
+
+                                        usleep(100000);
                                     }
 
                                     safe_quit = 1;
