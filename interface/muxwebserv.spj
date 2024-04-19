@@ -2868,7 +2868,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID88538790-313673S5222160",
@@ -5266,7 +5267,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID71074823-792553S517370",
@@ -7267,7 +7269,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID85501244-744824S372326",
@@ -9862,7 +9865,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID64809051-811690S1252268",
@@ -15971,9 +15975,9 @@
                     "Flow": 1,
                     "Wrap": true,
                     "Reversed": false,
-                    "MainAlignment": 0,
-                    "CrossAlignment": 0,
-                    "TrackAlignment": 0,
+                    "MainAlignment": 1,
+                    "CrossAlignment": 1,
+                    "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": 75214275,
                     "strtype": "OBJECT/Layout_type",
@@ -16236,6 +16240,27 @@
                               224,
                               8,
                               255
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": 1899706604,
+                            "strtype": "_style/Border width",
+                            "integer": 2,
+                            "InheritedType": 6
+                          },
+                          {
+                            "nid": 1702315509,
+                            "strtype": "_style/Border side",
+                            "strval": "FULL",
+                            "InheritedType": 3
+                          },
+                          {
+                            "nid": 1158355146,
+                            "strtype": "_style/Padding_RowCol",
+                            "intarray": [
+                              15,
+                              0
                             ],
                             "InheritedType": 7
                           }
@@ -16568,8 +16593,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID41530341-650907S737389",
@@ -16948,7 +16972,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      560,
+                      550,
                       16
                     ],
                     "InheritedType": 7
@@ -17227,7 +17251,7 @@
                 "Flow": 0,
                 "Wrap": false,
                 "Reversed": false,
-                "MainAlignment": 1,
+                "MainAlignment": 5,
                 "CrossAlignment": 1,
                 "TrackAlignment": 1,
                 "LayoutType": 1,
@@ -17806,7 +17830,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxwebserv/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 455,
+    "backup_cnt": 459,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

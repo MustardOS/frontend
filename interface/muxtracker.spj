@@ -10095,7 +10095,7 @@
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           515,
-                          275
+                          250
                         ],
                         "InheritedType": 7
                       },
@@ -11008,9 +11008,9 @@
                     "Flow": 1,
                     "Wrap": true,
                     "Reversed": false,
-                    "MainAlignment": 0,
-                    "CrossAlignment": 0,
-                    "TrackAlignment": 0,
+                    "MainAlignment": 1,
+                    "CrossAlignment": 1,
+                    "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": 33063716,
                     "strtype": "OBJECT/Layout_type",
@@ -11276,12 +11276,22 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": 1843341914,
-                            "strtype": "_style/Padding",
+                            "nid": 828603905,
+                            "strtype": "_style/Border width",
+                            "integer": 2,
+                            "InheritedType": 6
+                          },
+                          {
+                            "nid": -1174361476,
+                            "strtype": "_style/Border side",
+                            "strval": "FULL",
+                            "InheritedType": 3
+                          },
+                          {
+                            "nid": 2118865634,
+                            "strtype": "_style/Padding_RowCol",
                             "intarray": [
-                              16,
-                              16,
-                              16,
+                              15,
                               0
                             ],
                             "InheritedType": 7
@@ -12039,7 +12049,7 @@
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           515,
-                          275
+                          250
                         ],
                         "InheritedType": 7
                       },
@@ -12955,9 +12965,9 @@
                     "Flow": 1,
                     "Wrap": true,
                     "Reversed": false,
-                    "MainAlignment": 0,
-                    "CrossAlignment": 0,
-                    "TrackAlignment": 0,
+                    "MainAlignment": 1,
+                    "CrossAlignment": 1,
+                    "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": 238217188,
                     "strtype": "OBJECT/Layout_type",
@@ -13009,7 +13019,7 @@
                   {
                     "nid": -511902963,
                     "strtype": "OBJECT/Clickable",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -13222,12 +13232,22 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": -1631015891,
-                            "strtype": "_style/Padding",
+                            "nid": 661652444,
+                            "strtype": "_style/Border width",
+                            "integer": 2,
+                            "InheritedType": 6
+                          },
+                          {
+                            "nid": -678391319,
+                            "strtype": "_style/Border side",
+                            "strval": "FULL",
+                            "InheritedType": 3
+                          },
+                          {
+                            "nid": 874414570,
+                            "strtype": "_style/Padding_RowCol",
                             "intarray": [
-                              16,
-                              16,
-                              16,
+                              15,
                               0
                             ],
                             "InheritedType": 7
@@ -13939,7 +13959,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      560,
+                      550,
                       16
                     ],
                     "InheritedType": 7
@@ -14218,7 +14238,7 @@
                 "Flow": 0,
                 "Wrap": false,
                 "Reversed": false,
-                "MainAlignment": 1,
+                "MainAlignment": 5,
                 "CrossAlignment": 1,
                 "TrackAlignment": 1,
                 "LayoutType": 1,

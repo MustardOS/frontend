@@ -654,7 +654,7 @@ int main(int argc, char *argv[]) {
     lv_timer_t *osd_timer = lv_timer_create(osd_task, UINT16_MAX / 32, &osd_par);
     lv_timer_ready(osd_timer);
 
-    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 32, NULL);
+    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);
 
     lv_timer_t *sysinfo_timer = lv_timer_create(update_system_info, UINT16_MAX / 32, NULL);

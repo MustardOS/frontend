@@ -21150,6 +21150,26 @@
                         "nid": 994430807,
                         "strtype": "_style/Border width",
                         "InheritedType": 6
+                      },
+                      {
+                        "nid": -594885057,
+                        "strtype": "_style/Padding",
+                        "intarray": [
+                          5,
+                          5,
+                          5,
+                          5
+                        ],
+                        "InheritedType": 7
+                      },
+                      {
+                        "nid": 431900305,
+                        "strtype": "_style/Padding_RowCol",
+                        "intarray": [
+                          5,
+                          5
+                        ],
+                        "InheritedType": 7
                       }
                     ],
                     "InheritedType": 1
@@ -21169,8 +21189,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID28299111-969837S1882355",
@@ -21810,9 +21829,9 @@
                     "Flow": 1,
                     "Wrap": true,
                     "Reversed": false,
-                    "MainAlignment": 0,
-                    "CrossAlignment": 0,
-                    "TrackAlignment": 0,
+                    "MainAlignment": 1,
+                    "CrossAlignment": 1,
+                    "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": 758375327,
                     "strtype": "OBJECT/Layout_type",
@@ -22075,6 +22094,27 @@
                               224,
                               8,
                               255
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": -1731871610,
+                            "strtype": "_style/Border width",
+                            "integer": 2,
+                            "InheritedType": 6
+                          },
+                          {
+                            "nid": -1595749673,
+                            "strtype": "_style/Border side",
+                            "strval": "FULL",
+                            "InheritedType": 3
+                          },
+                          {
+                            "nid": 1238173784,
+                            "strtype": "_style/Padding_RowCol",
+                            "intarray": [
+                              15,
+                              0
                             ],
                             "InheritedType": 7
                           }
@@ -22407,8 +22447,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID82188691-884281S914389",
@@ -22787,7 +22826,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      560,
+                      550,
                       16
                     ],
                     "InheritedType": 7
@@ -23066,7 +23105,7 @@
                 "Flow": 0,
                 "Wrap": false,
                 "Reversed": false,
-                "MainAlignment": 1,
+                "MainAlignment": 5,
                 "CrossAlignment": 1,
                 "TrackAlignment": 1,
                 "LayoutType": 1,
@@ -23645,7 +23684,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxnetwork/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 580,
+    "backup_cnt": 581,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

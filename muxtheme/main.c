@@ -731,7 +731,7 @@ int main(int argc, char *argv[]) {
     lv_timer_t *capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
     lv_timer_ready(capacity_timer);
 
-    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 32, NULL);
+    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);
 
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);

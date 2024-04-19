@@ -2547,7 +2547,8 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "CONTAINER"
+                "saved_objtypeKey": "CONTAINER",
+                "tree_closed": true
               }
             ],
             "locked": false,
@@ -2868,7 +2869,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID88538790-313673S5222160",
@@ -6625,7 +6627,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID63600080-753942S565369",
@@ -9668,7 +9671,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID64809051-811690S1252268",
@@ -15136,7 +15140,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID87081799-1131048S3462169",
@@ -15412,7 +15417,7 @@
                       {
                         "nid": 322130273,
                         "strtype": "LABEL/Text",
-                        "strval": "",
+                        "strval": "hhhhhhh",
                         "InheritedType": 10
                       },
                       {
@@ -15450,7 +15455,8 @@
                         "InheritedType": 2
                       }
                     ],
-                    "saved_objtypeKey": "LABEL"
+                    "saved_objtypeKey": "LABEL",
+                    "tree_closed": true
                   },
                   {
                     "guid": "GUID84169336-1131046S3462169",
@@ -15718,7 +15724,7 @@
                       {
                         "nid": 1405974042,
                         "strtype": "LABEL/Text",
-                        "strval": "",
+                        "strval": "hhhhhhhh",
                         "InheritedType": 10
                       },
                       {
@@ -15776,9 +15782,9 @@
                     "Flow": 1,
                     "Wrap": true,
                     "Reversed": false,
-                    "MainAlignment": 0,
-                    "CrossAlignment": 0,
-                    "TrackAlignment": 0,
+                    "MainAlignment": 1,
+                    "CrossAlignment": 1,
+                    "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": 75214275,
                     "strtype": "OBJECT/Layout_type",
@@ -16041,6 +16047,27 @@
                               224,
                               8,
                               255
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": 1493415224,
+                            "strtype": "_style/Border width",
+                            "integer": 2,
+                            "InheritedType": 6
+                          },
+                          {
+                            "nid": 1664137359,
+                            "strtype": "_style/Border side",
+                            "strval": "FULL",
+                            "InheritedType": 3
+                          },
+                          {
+                            "nid": 1450645500,
+                            "strtype": "_style/Padding_RowCol",
+                            "intarray": [
+                              15,
+                              0
                             ],
                             "InheritedType": 7
                           }
@@ -16788,7 +16815,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      560,
+                      550,
                       16
                     ],
                     "InheritedType": 7
@@ -17067,7 +17094,7 @@
                 "Flow": 0,
                 "Wrap": false,
                 "Reversed": false,
-                "MainAlignment": 1,
+                "MainAlignment": 5,
                 "CrossAlignment": 1,
                 "TrackAlignment": 1,
                 "LayoutType": 1,
@@ -17375,7 +17402,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           }
         ],
         "isPage": true,
@@ -17657,7 +17685,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxlaunch/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 989,
+    "backup_cnt": 995,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

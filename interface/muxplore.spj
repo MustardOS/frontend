@@ -10430,7 +10430,7 @@
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           515,
-                          275
+                          250
                         ],
                         "InheritedType": 7
                       },
@@ -11668,9 +11668,9 @@
                     "Flow": 1,
                     "Wrap": true,
                     "Reversed": false,
-                    "MainAlignment": 0,
-                    "CrossAlignment": 0,
-                    "TrackAlignment": 0,
+                    "MainAlignment": 1,
+                    "CrossAlignment": 1,
+                    "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": -1115879782,
                     "strtype": "OBJECT/Layout_type",
@@ -11936,12 +11936,22 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": -443677035,
-                            "strtype": "_style/Padding",
+                            "nid": -2000027779,
+                            "strtype": "_style/Border width",
+                            "integer": 2,
+                            "InheritedType": 6
+                          },
+                          {
+                            "nid": -193656592,
+                            "strtype": "_style/Border side",
+                            "strval": "FULL",
+                            "InheritedType": 3
+                          },
+                          {
+                            "nid": 552644433,
+                            "strtype": "_style/Padding_RowCol",
                             "intarray": [
-                              16,
-                              16,
-                              16,
+                              15,
                               0
                             ],
                             "InheritedType": 7
@@ -11964,8 +11974,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "PANEL",
-                "tree_closed": true
+                "saved_objtypeKey": "PANEL"
               },
               {
                 "guid": "GUID90731273-744901S264348",
@@ -12703,7 +12712,7 @@
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           515,
-                          275
+                          250
                         ],
                         "InheritedType": 7
                       },
@@ -13921,9 +13930,9 @@
                     "Flow": 1,
                     "Wrap": true,
                     "Reversed": false,
-                    "MainAlignment": 0,
-                    "CrossAlignment": 0,
-                    "TrackAlignment": 0,
+                    "MainAlignment": 1,
+                    "CrossAlignment": 1,
+                    "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": 369370511,
                     "strtype": "OBJECT/Layout_type",
@@ -14188,12 +14197,22 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": -729301040,
-                            "strtype": "_style/Padding",
+                            "nid": 2014469217,
+                            "strtype": "_style/Border width",
+                            "integer": 2,
+                            "InheritedType": 6
+                          },
+                          {
+                            "nid": -320249825,
+                            "strtype": "_style/Border side",
+                            "strval": "FULL",
+                            "InheritedType": 3
+                          },
+                          {
+                            "nid": -1887731117,
+                            "strtype": "_style/Padding_RowCol",
                             "intarray": [
-                              16,
-                              16,
-                              16,
+                              15,
                               0
                             ],
                             "InheritedType": 7
@@ -14216,8 +14235,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "PANEL",
-                "tree_closed": true
+                "saved_objtypeKey": "PANEL"
               }
             ],
             "locked": false,
@@ -14526,8 +14544,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID50950459-1160419S971389",
@@ -14906,7 +14923,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      560,
+                      550,
                       16
                     ],
                     "InheritedType": 7
@@ -15185,7 +15202,7 @@
                 "Flow": 0,
                 "Wrap": false,
                 "Reversed": false,
-                "MainAlignment": 1,
+                "MainAlignment": 5,
                 "CrossAlignment": 1,
                 "TrackAlignment": 1,
                 "LayoutType": 1,

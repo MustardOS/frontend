@@ -73,33 +73,47 @@ kv user_quote[] = {
         {"04wiwe",           ""},
         {"acmeplus",         ""},
         {"antikk",           "Hey, I'm just happy to be here."},
+        {"applechipper",     ""},
+        {"arobee",           "Where's the money, Lebowski?"},
         {"bazkart",          "By the people, for the people!"},
         {"benzo1985",        ""},
+        {"brites2508",       "Proof that nature is wise is that she didn't even know we would wear glasses and notice how she placed our ears."},
+        {"brohsnbluffs",     ""},
         {"btreecat",         ""},
         {"cebion",           ""},
+        {"combustify",       ""},
         {"dabom123",         ""},
-        {"defensemechanism", ""},
+        {"defensemechanism", "I'm a huge gamer most of the time"},
         {"ee1000",           ""},
+        {"fifth8241",        "If my calculations are correct, when this baby hits 88 miles per hour, you're gonna see some serious shit."},
         {"ilfordhp5",        "As it happens, I've worked on three CFWs and am a dev on the ChimeraOS project. Fell free to bash me if it makes you feel better. I don't actually care."},
         {"intelliaim",       "Mind the gap!"},
         {"irilivibi",        ""},
         {"joyrider3774",     "i have no such things lol"},
         {"jupyter",          "if i could, i would help thits dumpster fire of an os (no offence) (edited)\n"},
+        {"kardus",           "h"},
         {"kiko_lake",        ""},
-        {"kloptops",         "PortMaster when? :D"},
+        {"kloptops",         "How about dem apples"},
         {"koolkidkorey",     "But why no mupen64plus-next?"},
+        {"lasereverything",  "Sleep when you're dead!"},
+        {"mrminholi",        ""},
+        {"phyrex",           ""},
         {"qpla",             "Contrary to popular belief, James Cameron did not raze the entirety of downtown Los Angeles for the Terminator 2 nuke scene"},
         {"reapdg",           ""},
+        {"robbiet480",       ""},
         {"sethg911",         ""},
         {"shengy",           ""},
         {"sidnt",            ""},
         {"siliconexarch",    ""},
-        {"skyarcher",        "Never stop playing."},
+        {"skyarcher",        "Play keeps the world young as nothing else can. We do not so much quit playing because we grow old, as grow old because we quit playing."},
         {"tokyovigilante",   ""},
+        {"tsuica",           "Other than the fast boot, general performance, lots of features, ease of use, ports, save syncing, and 64-bit, what has muOS ever done for us?"},
+        {"vagueparade",      "In your hands isn't the real thing... it's BETTER! This community is so lovely and full of smart fellows, thank you to everyone and you for supporting awesome people - Tom"},
         {"x_tremis",         "\"A mind forever Voyaging through strange seas of Thought, alone.\" - William Wordsworth"},
         {"xonglebongle",     "1) Develop Stuff\n2) Break Stuff\n3) Cry\n4) Fix Stuff\n5) Notice something else is broken\n6) Fix that too!\n7) Start over"},
         {"xquader",          ""},
-        {"youraveragelord",  ""}
+        {"youraveragelord",  ""},
+        {"zadeis",           ""}
 };
 
 kv_storage kv_sto = {
@@ -722,7 +736,7 @@ int main(int argc, char *argv[]) {
     lv_timer_t *osd_timer = lv_timer_create(osd_task, UINT16_MAX / 32, &osd_par);
     lv_timer_ready(osd_timer);
 
-    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 32, NULL);
+    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);
 
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);

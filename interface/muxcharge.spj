@@ -2150,6 +2150,15 @@
                         "InheritedType": 6
                       },
                       {
+                        "nid": -503860584,
+                        "strtype": "_style/Padding_RowCol",
+                        "intarray": [
+                          15,
+                          30
+                        ],
+                        "InheritedType": 7
+                      },
+                      {
                         "nid": -514483290,
                         "strtype": "_style/Text_Align",
                         "strval": "CENTER",
