@@ -15,6 +15,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 int turbo_mode = 0;
@@ -82,7 +83,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font(basename(argv[0]), ui_scrLog);
+    load_font_text(basename(argv[0]), ui_scrLog);
 
     lv_label_set_text(ui_txtMessage, argv[1]);
     lv_task_handler();

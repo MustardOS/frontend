@@ -15,6 +15,7 @@
 #include "common.h"
 #include "options.h"
 #include "theme.h"
+#include "glyph.h"
 #include "mini/mini.h"
 
 int file_exist(char *filename) {
@@ -541,9 +542,7 @@ const char *get_random_int() {
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
     const char *meta = mini_get_string(ini_config, section, key, get_random_hex());
 
-    uint32_t
-    result = (uint32_t)
-    strtoul(meta, NULL, 16);
+    uint32_t result = (uint32_t) strtoul(meta, NULL, 16);
     //printf("HEX\t%s: %s (%d)\n", key, meta, result);
 
     return result;
@@ -590,6 +589,24 @@ const char *get_ini_string(mini_t *ini_config, const char *section, const char *
     //printf("STR\t%s: %s\n", key, meta);
 
     return meta;
+}
+
+const char *get_ini_unicode(mini_t *ini_config, const char *section, const char *key) {
+    const char *meta = mini_get_string(ini_config, section, key, "FFFF");
+
+    char *unicode = (char *)malloc(10);
+    if (unicode == NULL) {
+        fprintf(stderr, "Memory allocation failure\n");
+        return "\\uFFFF";
+    }
+
+    int codepoint;
+    sscanf(meta, "%x", &codepoint);
+    snprintf(unicode, 7, "\\u%04X", codepoint);
+
+    //printf("UNICODE\t%s: %s\t\t\t(%s)\n", key, meta, unicode);
+
+    return unicode;
 }
 
 int set_ini_string(mini_t *ini_config, const char *section, const char *key, const char *value) {
@@ -1099,22 +1116,56 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
     return "";
 }
 
-void load_font(const char *program, lv_obj_t *screen) {
+void load_font_text(const char *program, lv_obj_t *screen) {
     if (get_ini_int(muos_config, "settings.advanced", "font", LABEL)) {
-        char theme_font_default[MAX_BUFFER_SIZE];
-        char theme_font_mux[MAX_BUFFER_SIZE];
-        snprintf(theme_font_default, sizeof(theme_font_default), "/%s/default.bin", MUOS_FONT_PATH);
-        snprintf(theme_font_mux, sizeof(theme_font_mux), "/%s/%s.bin", MUOS_FONT_PATH, program);
-        if (file_exist(theme_font_mux)) {
-            char theme_font_mux_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_mux_fs, sizeof(theme_font_mux_fs), "M:%s/%s.bin", MUOS_FONT_PATH, program);
-            lv_obj_set_style_text_font(screen, lv_font_load(theme_font_mux_fs), LV_PART_MAIN | LV_STATE_DEFAULT);
+        char theme_font_text_default[MAX_BUFFER_SIZE];
+        char theme_font_text[MAX_BUFFER_SIZE];
+        snprintf(theme_font_text_default, sizeof(theme_font_text_default),
+                 "/%s/default.bin", MUOS_FONT_PATH);
+        snprintf(theme_font_text, sizeof(theme_font_text),
+                 "/%s/%s.bin", MUOS_FONT_PATH, program);
+        if (file_exist(theme_font_text)) {
+            char theme_font_text_fs[MAX_BUFFER_SIZE];
+            snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
+                     "M:%s/%s.bin", MUOS_FONT_PATH, program);
+            lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_fs),
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
-            if (file_exist(theme_font_default)) {
-                char theme_font_default_fs[MAX_BUFFER_SIZE];
-                snprintf(theme_font_default_fs, sizeof(theme_font_default_fs), "M:%s/default.bin", MUOS_FONT_PATH);
-                lv_obj_set_style_text_font(screen, lv_font_load(theme_font_default_fs),
+            if (file_exist(theme_font_text_default)) {
+                char theme_font_text_default_fs[MAX_BUFFER_SIZE];
+                snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
+                         "M:%s/default.bin", MUOS_FONT_PATH);
+                lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
+            }
+        }
+    }
+}
+
+void load_font_glyph(const char *program, lv_obj_t *element) {
+    printf("\t\t\t\tTRYING TO LOAD GLYPH FONT\n");
+
+    if (get_ini_int(muos_config, "settings.advanced", "font", LABEL)) {
+        char theme_font_glyph_default[MAX_BUFFER_SIZE];
+        char theme_font_glyph[MAX_BUFFER_SIZE];
+        snprintf(theme_font_glyph_default, sizeof(theme_font_glyph_default),
+                 "/%s/glyph/default.bin", MUOS_FONT_PATH);
+        snprintf(theme_font_glyph, sizeof(theme_font_glyph),
+                 "/%s/glyph/%s.bin", MUOS_FONT_PATH, program);
+        if (file_exist(theme_font_glyph)) {
+            char theme_font_glyph_fs[MAX_BUFFER_SIZE];
+            snprintf(theme_font_glyph_fs, sizeof(theme_font_glyph_fs),
+                     "M:%s/glyph/%s.bin", MUOS_FONT_PATH, program);
+            lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_fs),
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+        } else {
+            if (file_exist(theme_font_glyph_default)) {
+                char theme_font_glyph_default_fs[MAX_BUFFER_SIZE];
+                snprintf(theme_font_glyph_default_fs, sizeof(theme_font_glyph_default_fs),
+                         "M:%s/glyph/default.bin", MUOS_FONT_PATH);
+                lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_default_fs),
+                                           LV_PART_MAIN | LV_STATE_DEFAULT);
+                printf("\t\t\t\tLOADED DEFAULT GLYPH FONT (%s)\n", theme_font_glyph_default_fs);
             }
         }
     }
@@ -1155,7 +1206,9 @@ int get_volume_percentage() {
     char result[MAX_BUFFER_SIZE];
     int volume_percentage;
 
-    snprintf(command, sizeof(command), "amixer get \"%s\" | grep -oE '[0-9]+' | tail -n 1", VOL_SPK_MASTER);
+    snprintf(command, sizeof(command),
+             "amixer get \"%s\" | grep -o '\\[[0-9]*%%' | tr -d '[]%%'",
+             VOL_SPK_MASTER);
 
     FILE * pipe;
     pipe = popen(command, "r");
@@ -1207,7 +1260,7 @@ int should_skip(char *name) {
 
     const char *skip_extensions[] = {
             ".bps", ".ips", ".sav", ".srm",
-            ".ups", ".msu", ".pcm"
+            ".ups", ".msu", ".pcm", ".xml"
     };
 
     for (int i = 0; i < sizeof(skip_extensions) / sizeof(skip_extensions[0]); i++) {

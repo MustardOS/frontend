@@ -15,6 +15,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 int turbo_mode = 0;

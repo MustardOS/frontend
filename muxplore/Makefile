@@ -46,7 +46,7 @@ message:
 	@printf "Name:\t$(TARGET)\n"
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
-	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) ../common/json/json.c ../common/mini/mini.c ../common/array.c ../common/common.c ../common/theme.c theme.c $(EXTRA)
+	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) ../common/json/json.c ../common/mini/mini.c ../common/array.c ../common/common.c ../common/glyph.c ../common/theme.c theme.c $(EXTRA)
 
 clean:
 	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)

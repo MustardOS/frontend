@@ -2,8 +2,6 @@
 #include "ui/ui.h"
 #include "../common/theme.h"
 
-struct theme_config theme;
-
 struct big {
     lv_obj_t *e;
     uint32_t c;

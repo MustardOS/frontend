@@ -20,6 +20,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 static int js_fd;
@@ -1436,7 +1437,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font(basename(argv[0]), ui_scrNetwork);
+    load_font_text(basename(argv[0]), ui_scrNetwork);
 
     if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;

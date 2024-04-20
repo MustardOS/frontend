@@ -35,6 +35,7 @@
 #define MUOS_DEVICE_FILE "/opt/muos/config/device.txt"
 
 #define MUOS_SCHEME_DIR "/opt/muos/theme/scheme"
+#define MUOS_GLYPH_DIR "/opt/muos/theme/glyph"
 
 #define MUOS_ACTIVITY_DIR  "/mnt/mmc/MUOS/info/activity"
 #define MUOS_CACHE_DIR     "/mnt/mmc/MUOS/info/cache"

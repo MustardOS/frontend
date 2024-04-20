@@ -20,8 +20,13 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/glyph.h"
 #include "../common/array.h"
 #include "../common/mini/mini.h"
+
+char *mux_prog;
+struct glyph_config glyph;
+struct theme_config theme;
 
 static int js_fd;
 
@@ -1736,6 +1741,10 @@ void init_elements() {
     }
 }
 
+void init_fonts() {
+    load_font_text(mux_prog, ui_scrExplore);
+}
+
 void glyph_task() {
     // TODO: Bluetooth connectivity!
 
@@ -1814,7 +1823,6 @@ int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     int sys_index = -1;
-    char *wall_base;
     int opt;
     while ((opt = getopt(argc, argv, "i:m:")) != -1) {
         switch (opt) {
@@ -1823,27 +1831,27 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 if (strcasecmp(optarg, "root") == 0) {
-                    wall_base = basename(argv[0]);
+                    mux_prog = "muxplore";
                     module = ROOT;
                     break;
                 } else if (strcasecmp(optarg, "mmc") == 0) {
-                    wall_base = basename(argv[0]);
+                    mux_prog = "muxplore";
                     module = MMC;
                     break;
                 } else if (strcasecmp(optarg, "sdcard") == 0) {
-                    wall_base = basename(argv[0]);
+                    mux_prog = "muxplore";
                     module = SDCARD;
                     break;
                 } else if (strcasecmp(optarg, "usb") == 0) {
-                    wall_base = basename(argv[0]);
+                    mux_prog = "muxplore";
                     module = USB;
                     break;
                 } else if (strcasecmp(optarg, "favourite") == 0) {
-                    wall_base = "muxfavourite";
+                    mux_prog = "muxfavourite";
                     module = FAVOURITE;
                     break;
                 } else if (strcasecmp(optarg, "history") == 0) {
-                    wall_base = "muxhistory";
+                    mux_prog = "muxhistory";
                     module = HISTORY;
                     break;
                 } else {
@@ -1902,13 +1910,16 @@ int main(int argc, char *argv[]) {
     ui_init();
     muos_config = mini_try_load(MUOS_CONFIG_FILE);
 
-    lv_obj_set_user_data(ui_scrExplore, wall_base);
+    lv_obj_set_user_data(ui_scrExplore, mux_prog);
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, mux_prog);
+    load_glyph(&glyph, mux_prog);
+
     apply_theme();
+    init_fonts();
 
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
@@ -1952,8 +1963,6 @@ int main(int argc, char *argv[]) {
     } else {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
-
-    load_font(basename(argv[0]), ui_scrExplore);
 
     if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;

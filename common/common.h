@@ -114,6 +114,8 @@ int set_ini_int(mini_t *ini_config, const char *section, const char *key, int va
 
 const char *get_ini_string(mini_t *ini_config, const char *section, const char *key);
 
+const char *get_ini_unicode(mini_t *ini_config, const char *section, const char *key);
+
 int set_ini_string(mini_t *ini_config, const char *section, const char *key, const char *value);
 
 char *format_meta_text(char *filename);
@@ -182,7 +184,9 @@ void set_image(char *path, lv_obj_t *ui_element, lv_obj_t *ui_panel);
 
 char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated);
 
-void load_font(const char *program, lv_obj_t *screen);
+void load_font_text(const char *program, lv_obj_t *screen);
+
+void load_font_glyph(const char *program, lv_obj_t *element);
 
 int is_network_connected();
 
@@ -198,4 +202,4 @@ int get_brightness();
 
 void set_brightness(int brightness);
 
-char* get_friendly_name(char *search, char *file);
+char *get_friendly_name(char *search, char *file);

@@ -11,7 +11,7 @@ void load_theme(struct theme_config *theme, char *mux_name) {
         snprintf(scheme, sizeof(scheme), "%s/default.txt", MUOS_SCHEME_DIR);
     }
 
-    mini_t *muos_theme = mini_try_load(scheme);
+    mini_t * muos_theme = mini_try_load(scheme);
 
     theme->SYSTEM.BACKGROUND = get_ini_hex(muos_theme, "background", "BACKGROUND");
     theme->SYSTEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "background", "BACKGROUND_ALPHA", IGNORE);

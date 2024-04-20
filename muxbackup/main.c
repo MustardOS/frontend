@@ -18,6 +18,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 static int js_fd;
@@ -335,7 +336,7 @@ void *joystick_task() {
                                     if (ui_count > 0) {
                                         play_sound("confirm", nav_sound);
 
-                                        lv_label_set_text(ui_lblMessage, "Running Backup Routine");
+                                        lv_label_set_text(ui_lblMessage, "Running Backup Script");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                         usleep(100000);
 
@@ -675,7 +676,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font(basename(argv[0]), ui_scrBackup);
+    load_font_text(basename(argv[0]), ui_scrBackup);
 
     if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
         nav_sound = 1;
