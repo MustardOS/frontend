@@ -18,6 +18,8 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+#define NP_LOG "/tmp/muxlog"
+
 int turbo_mode = 0;
 int msgbox_active = 0;
 int input_disable = 0;
@@ -37,11 +39,6 @@ lv_obj_t *msgbox_element = NULL;
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
-
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <message>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
@@ -85,13 +82,51 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrLog);
 
-    lv_label_set_text(ui_txtMessage, argv[1]);
     lv_task_handler();
 
+    mkfifo(NP_LOG, 0666);
+
+    int pipe_fd = open(NP_LOG, O_RDONLY | O_NONBLOCK);
+    int epoll_fd = epoll_create1(0);
+
+    struct epoll_event ev, events[MAX_EVENTS];
+
+    ev.events = EPOLLIN;
+    ev.data.fd = pipe_fd;
+
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_fd, &ev);
+
     while (!safe_quit) {
-        usleep(SCREEN_WAIT);
+        int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+        if (event_count == -1) {
+            perror("epoll_wait");
+            break;
+        }
+
+        for (int i = 0; i < event_count; i++) {
+            if (events[i].data.fd == pipe_fd) {
+                char buffer[1024];
+                ssize_t bytes_read = read(pipe_fd, buffer, sizeof(buffer));
+                if (bytes_read > 0) {
+                    buffer[bytes_read] = '\0';
+                    char *ptr;
+                    while ((ptr = strstr(buffer, "\\n")) != NULL) {
+                        *ptr++ = '\n';
+                        memmove(ptr, ptr + 1, strlen(ptr));
+                    }
+                    if (strcmp(str_nonew(buffer), "!end") == 0) {
+                        safe_quit = 1;
+                        break;
+                    } else {
+                        lv_textarea_add_text(ui_txtMessage, buffer);
+                    }
+                }
+            }
+        }
+        lv_task_handler();
     }
 
+    close(pipe_fd);
     mini_free(muos_config);
 
     return 0;

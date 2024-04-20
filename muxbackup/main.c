@@ -336,26 +336,10 @@ void *joystick_task() {
                                     if (ui_count > 0) {
                                         play_sound("confirm", nav_sound);
 
-                                        lv_label_set_text(ui_lblMessage, "Running Backup Script");
-                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                        usleep(100000);
-
                                         static char command[MAX_BUFFER_SIZE];
-                                        snprintf(command, sizeof(command), "%s/%s.sh",
+                                        snprintf(command, sizeof(command), "\"%s/%s.sh\"",
                                                  MUOS_BACKUP_SCRIPT_DIR, lv_label_get_text(element_focused));
                                         system(command);
-
-                                        lv_label_set_text(ui_lblMessage, "Backup Complete");
-                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                        usleep(100000);
-
-                                        char c_index[MAX_BUFFER_SIZE];
-                                        snprintf(c_index, sizeof(c_index), "%d", current_item_index);
-                                        write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
-
-                                        lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                        load_mux("backup");
-                                        safe_quit = 1;
                                     }
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound);
