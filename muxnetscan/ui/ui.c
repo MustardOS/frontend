@@ -14,6 +14,8 @@ void ui_scrNetScan_screen_init(void);
 lv_obj_t * ui_scrNetScan;
 lv_obj_t * ui_pnlWall;
 lv_obj_t * ui_imgWall;
+lv_obj_t * ui_pnlBox;
+lv_obj_t * ui_imgBox;
 lv_obj_t * ui_pnlContent;
 lv_obj_t * ui_pnlHeader;
 lv_obj_t * ui_lblDatetime;

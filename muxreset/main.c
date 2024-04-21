@@ -449,6 +449,44 @@ void ui_refresh_task() {
                     lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
                 }
             }
+
+            static char static_image[MAX_BUFFER_SIZE];
+            snprintf(static_image, sizeof(static_image), "%s",
+                     load_static_image(ui_scrReset, ui_group));
+
+            if (strlen(static_image) > 0) {
+                printf("LOADING STATIC IMAGE: %s\n", static_image);
+
+                switch (theme.MISC.STATIC_ALIGNMENT) {
+                    case 0: // Bottom + Front
+                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+                        lv_obj_move_foreground(ui_pnlBox);
+                        break;
+                    case 1: // Middle + Front
+                        lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
+                        lv_obj_move_foreground(ui_pnlBox);
+                        break;
+                    case 2: // Top + Front
+                        lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
+                        lv_obj_move_foreground(ui_pnlBox);
+                        break;
+                    case 3: // Fullscreen + Behind
+                        lv_obj_set_height(ui_pnlBox, SCREEN_HEIGHT);
+                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+                        lv_obj_move_background(ui_pnlBox);
+                        lv_obj_move_background(ui_pnlWall);
+                        break;
+                    case 4: // Fullscreen + Front
+                        lv_obj_set_height(ui_pnlBox, SCREEN_HEIGHT);
+                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+                        lv_obj_move_foreground(ui_pnlBox);
+                        break;
+                }
+
+                lv_img_set_src(ui_imgBox, static_image);
+            } else {
+                lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
+            }
         }
         lv_obj_invalidate(ui_pnlContent);
         lv_task_handler();

@@ -187,6 +187,7 @@ void load_theme(struct theme_config *theme, char *mux_name) {
     theme->BAR.ICON = get_ini_hex(muos_theme, "bar", "BAR_ICON");
     theme->BAR.ICON_ALPHA = get_ini_int(muos_theme, "bar", "BAR_ICON_ALPHA", VALUE);
 
+    theme->MISC.STATIC_ALIGNMENT = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", VALUE);
     theme->MISC.ANIMATED_BACKGROUND = get_ini_int(muos_theme, "misc", "ANIMATED_BACKGROUND", VALUE);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", VALUE);
 

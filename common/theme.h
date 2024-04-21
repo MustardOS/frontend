@@ -228,6 +228,7 @@ struct theme_config {
     } BAR;
 
     struct {
+        int16_t STATIC_ALIGNMENT;
         int16_t ANIMATED_BACKGROUND;
         int16_t NAVIGATION_TYPE;
     } MISC;

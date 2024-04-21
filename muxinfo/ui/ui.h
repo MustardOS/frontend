@@ -20,6 +20,8 @@ void ui_scrInfo_screen_init(void);
 extern lv_obj_t * ui_scrInfo;
 extern lv_obj_t * ui_pnlWall;
 extern lv_obj_t * ui_imgWall;
+extern lv_obj_t * ui_pnlBox;
+extern lv_obj_t * ui_imgBox;
 extern lv_obj_t * ui_pnlHeader;
 extern lv_obj_t * ui_lblDatetime;
 extern lv_obj_t * ui_lblTitle;

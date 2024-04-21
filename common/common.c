@@ -1084,16 +1084,18 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
         wall_extension = "png";
     }
 
-    if (lv_group_get_obj_count(ui_group) > 0) {
-        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-        const char *element = lv_obj_get_user_data(element_focused);
+    if (ui_group != NULL) {
+        if (lv_group_get_obj_count(ui_group) > 0) {
+            struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+            const char *element = lv_obj_get_user_data(element_focused);
 
-        if (snprintf(wall_image_path, sizeof(wall_image_path), "/%s/wall/%s/%s.%s",
-                     MUOS_IMAGE_PATH, program, element, wall_extension) >= 0 &&
-            file_exist(wall_image_path)) {
-            snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/wall/%s/%s.%s",
-                     MUOS_IMAGE_PATH, program, element, wall_extension);
-            return wall_image_embed;
+            if (snprintf(wall_image_path, sizeof(wall_image_path), "/%s/wall/%s/%s.%s",
+                         MUOS_IMAGE_PATH, program, element, wall_extension) >= 0 &&
+                file_exist(wall_image_path)) {
+                snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/wall/%s/%s.%s",
+                         MUOS_IMAGE_PATH, program, element, wall_extension);
+                return wall_image_embed;
+            }
         }
     }
 
@@ -1111,6 +1113,28 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/wall/default.%s",
                  MUOS_IMAGE_PATH, wall_extension);
         return wall_image_embed;
+    }
+
+    return "";
+}
+
+char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
+    const char *program = lv_obj_get_user_data(ui_screen);
+
+    static char static_image_path[MAX_BUFFER_SIZE];
+    static char static_image_embed[MAX_BUFFER_SIZE];
+
+    if (lv_group_get_obj_count(ui_group) > 0) {
+        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+        const char *element = lv_obj_get_user_data(element_focused);
+
+        if (snprintf(static_image_path, sizeof(static_image_path), "/%s/static/%s/%s.png",
+                     MUOS_IMAGE_PATH, program, element) >= 0 &&
+            file_exist(static_image_path)) {
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/static/%s/%s.png",
+                     MUOS_IMAGE_PATH, program, element);
+            return static_image_embed;
+        }
     }
 
     return "";

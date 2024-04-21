@@ -184,6 +184,8 @@ void set_image(char *path, lv_obj_t *ui_element, lv_obj_t *ui_panel);
 
 char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated);
 
+char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
+
 void load_font_text(const char *program, lv_obj_t *screen);
 
 void load_font_glyph(const char *program, lv_obj_t *element);

@@ -63,7 +63,7 @@
 #define NETWORK_ADDRESS "/opt/muos/config/address.txt"
 
 #define RA_CONFIG_FILE "/mnt/mmc/MUOS/.retroarch/retroarch.cfg"
-#define RA_CONFIG_CRC "24a1032e"
+#define RA_CONFIG_CRC "3efae82f"
 
 #define GOVERNOR_FILE "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
 #define SCALE_MN_FILE "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq"

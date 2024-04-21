@@ -94,8 +94,6 @@ void ui_scrExplore_screen_init(void)
     lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
     lv_obj_add_flag(ui_imgBox, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_imgBox, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_radius(ui_imgBox, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_clip_corner(ui_imgBox, true, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHeader = lv_obj_create(ui_scrExplore);
     lv_obj_set_width(ui_pnlHeader, 640);
