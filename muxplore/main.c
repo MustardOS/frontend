@@ -1238,12 +1238,12 @@ void *joystick_task() {
 
                                     switch (module) {
                                         case FAVOURITE:
-                                            remove("/tmp/explore_card");
+                                            write_text_to_file("/tmp/explore_card", "root", "w");
                                             remove("/tmp/explore_dir");
                                             load_mux("launcher");
                                             break;
                                         case HISTORY:
-                                            remove("/tmp/explore_card");
+                                            write_text_to_file("/tmp/explore_card", "root", "w");
                                             remove("/tmp/explore_dir");
                                             load_mux("launcher");
                                             break;
