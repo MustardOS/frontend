@@ -59,11 +59,10 @@
 #define MUOS_NAME_FILE   "/mnt/mmc/MUOS/info/name.ini"
 
 #define MUOS_NET_FILE "/opt/muos/config/network.txt"
-#define MUOS_NET_TEMP "/tmp/network.txt"
 #define NETWORK_ADDRESS "/opt/muos/config/address.txt"
 
 #define RA_CONFIG_FILE "/mnt/mmc/MUOS/.retroarch/retroarch.cfg"
-#define RA_CONFIG_CRC "3efae82f"
+#define RA_CONFIG_CRC "59749d83"
 
 #define GOVERNOR_FILE "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
 #define SCALE_MN_FILE "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq"

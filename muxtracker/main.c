@@ -32,7 +32,7 @@ int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
-mini_t *muos_config;
+struct mux_config config;
 
 // Place as many NULL as there are options!
 lv_obj_t *labels[] = {};

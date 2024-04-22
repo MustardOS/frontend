@@ -13,7 +13,7 @@ extern int nav_sound;
 extern int bar_header;
 extern int bar_footer;
 extern char *osd_message;
-extern mini_t *muos_config;
+extern struct mux_config config;
 
 #define DISP_LCD_SET_BRIGHTNESS 0x102
 #define DISP_LCD_GET_BRIGHTNESS 0x103
@@ -25,6 +25,10 @@ struct disp_bright_value {
 
 enum count_type {
     FILES_ONLY, DIRECTORIES_ONLY, BOTH
+};
+
+enum visual_type {
+    CLOCK, BLUETOOTH, NETWORK, BATTERY
 };
 
 enum element_type {
@@ -192,7 +196,7 @@ void load_font_glyph(const char *program, lv_obj_t *element);
 
 int is_network_connected();
 
-void process_visual_element(const char *visual, lv_obj_t *element);
+void process_visual_element(enum visual_type visual, lv_obj_t *element);
 
 int get_volume_percentage();
 

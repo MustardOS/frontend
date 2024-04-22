@@ -15,6 +15,7 @@
 #include "common.h"
 #include "options.h"
 #include "theme.h"
+#include "config.h"
 #include "glyph.h"
 #include "mini/mini.h"
 
@@ -399,7 +400,7 @@ int read_battery_capacity() {
 
     fclose(file);
 
-    capacity = capacity + (get_ini_int(muos_config, "settings.advanced", "offset", LABEL) - 50);
+    capacity = capacity + ((config.SETTINGS.ADVANCED.OFFSET) - 50);
 
     if (capacity > 100) {
         return 100;
@@ -841,7 +842,7 @@ char *get_datetime() {
 
     static char datetime_str[MAX_BUFFER_SIZE];
 
-    if (get_ini_int(muos_config, "clock", "notation", LABEL)) {
+    if (config.CLOCK.NOTATION) {
         strftime(datetime_str, sizeof(datetime_str), TIME_STRING_24, time_info);
     } else {
         strftime(datetime_str, sizeof(datetime_str), TIME_STRING_12, time_info);
@@ -1141,7 +1142,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
 }
 
 void load_font_text(const char *program, lv_obj_t *screen) {
-    if (get_ini_int(muos_config, "settings.advanced", "font", LABEL)) {
+    if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
         char theme_font_text[MAX_BUFFER_SIZE];
         snprintf(theme_font_text_default, sizeof(theme_font_text_default),
@@ -1169,7 +1170,7 @@ void load_font_text(const char *program, lv_obj_t *screen) {
 void load_font_glyph(const char *program, lv_obj_t *element) {
     printf("\t\t\t\tTRYING TO LOAD GLYPH FONT\n");
 
-    if (get_ini_int(muos_config, "settings.advanced", "font", LABEL)) {
+    if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_glyph_default[MAX_BUFFER_SIZE];
         char theme_font_glyph[MAX_BUFFER_SIZE];
         snprintf(theme_font_glyph_default, sizeof(theme_font_glyph_default),
@@ -1205,7 +1206,7 @@ int is_network_connected() {
     struct ifreq iface;
     memset(&iface, 0, sizeof(iface));
 
-    const char *config_iface = get_ini_string(muos_config, "network", "interface");
+    const char *config_iface = config.NETWORK.INTERFACE;
     snprintf(iface.ifr_name, sizeof(iface.ifr_name), "%s", config_iface);
 
     if (ioctl(sock, SIOCGIFFLAGS, &iface) == -1) {
@@ -1219,9 +1220,28 @@ int is_network_connected() {
     return (iface.ifr_flags & IFF_UP) && (iface.ifr_flags & IFF_RUNNING);
 }
 
-void process_visual_element(const char *visual, lv_obj_t *element) {
-    if (!get_ini_int(muos_config, "visual", visual, LABEL)) {
-        lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
+void process_visual_element(enum visual_type visual, lv_obj_t *element) {
+    switch (visual) {
+        case CLOCK:
+            if (!config.VISUAL.CLOCK) {
+                lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
+            }
+            break;
+        case BLUETOOTH:
+            if (!config.VISUAL.BLUETOOTH) {
+                lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
+            }
+            break;
+        case NETWORK:
+            if (!config.VISUAL.NETWORK) {
+                lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
+            }
+            break;
+        case BATTERY:
+            if (!config.VISUAL.BATTERY) {
+                lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
+            }
+            break;
     }
 }
 
@@ -1259,7 +1279,7 @@ int should_skip(char *name) {
             '.', '_'
     };
     for (int i = 0; i < sizeof(skip_prefix) / sizeof(skip_prefix[0]); i++) {
-        if (name[0] == skip_prefix[i] && !get_ini_int(muos_config, "settings.general", "hidden", 0)) {
+        if (name[0] == skip_prefix[i] && !config.SETTINGS.GENERAL.HIDDEN) {
             return 1;
         }
     }
