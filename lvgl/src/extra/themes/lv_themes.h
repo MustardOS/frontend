@@ -14,8 +14,6 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "default/lv_theme_default.h"
-#include "mono/lv_theme_mono.h"
-#include "basic/lv_theme_basic.h"
 
 /*********************
  *      DEFINES
