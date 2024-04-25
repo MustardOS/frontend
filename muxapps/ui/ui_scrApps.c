@@ -372,8 +372,8 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -388,7 +388,7 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoArchiveManager = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoArchiveManager, 32);
+    lv_obj_set_width(ui_icoArchiveManager, 640);
     lv_obj_set_height(ui_icoArchiveManager, 28);
     lv_obj_set_align(ui_icoArchiveManager, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoArchiveManager, "");
@@ -404,7 +404,7 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoArchiveManager, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoBackupManager = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoBackupManager, 32);
+    lv_obj_set_width(ui_icoBackupManager, 640);
     lv_obj_set_height(ui_icoBackupManager, 28);
     lv_obj_set_align(ui_icoBackupManager, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoBackupManager, "");
@@ -420,7 +420,7 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoBackupManager, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoPortMaster = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoPortMaster, 32);
+    lv_obj_set_width(ui_icoPortMaster, 640);
     lv_obj_set_height(ui_icoPortMaster, 28);
     lv_obj_set_align(ui_icoPortMaster, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoPortMaster, "");
@@ -436,7 +436,7 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoPortMaster, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoRetroArch = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoRetroArch, 32);
+    lv_obj_set_width(ui_icoRetroArch, 640);
     lv_obj_set_height(ui_icoRetroArch, 28);
     lv_obj_set_align(ui_icoRetroArch, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoRetroArch, "");
@@ -452,7 +452,7 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoRetroArch, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoDinguxCommander = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoDinguxCommander, 32);
+    lv_obj_set_width(ui_icoDinguxCommander, 640);
     lv_obj_set_height(ui_icoDinguxCommander, 28);
     lv_obj_set_align(ui_icoDinguxCommander, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoDinguxCommander, "");
@@ -468,7 +468,7 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoDinguxCommander, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoGmuMusicPlayer = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoGmuMusicPlayer, 32);
+    lv_obj_set_width(ui_icoGmuMusicPlayer, 640);
     lv_obj_set_height(ui_icoGmuMusicPlayer, 28);
     lv_obj_set_align(ui_icoGmuMusicPlayer, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoGmuMusicPlayer, "");

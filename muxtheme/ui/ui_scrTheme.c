@@ -53,7 +53,7 @@ void ui_scrTheme_screen_init(void)
     lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
     lv_obj_set_width(ui_imgBox, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_imgBox, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
+    lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
     lv_obj_add_flag(ui_imgBox, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_imgBox, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
                       LV_OBJ_FLAG_SCROLL_CHAIN);     /// Flags

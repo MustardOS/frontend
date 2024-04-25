@@ -314,8 +314,8 @@ void ui_scrInfo_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_radius(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -331,7 +331,7 @@ void ui_scrInfo_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoTracker = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoTracker, 32);
+    lv_obj_set_width(ui_icoTracker, 640);
     lv_obj_set_height(ui_icoTracker, 28);
     lv_obj_set_align(ui_icoTracker, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoTracker, "");
@@ -348,7 +348,7 @@ void ui_scrInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoTracker, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoTester = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoTester, 32);
+    lv_obj_set_width(ui_icoTester, 640);
     lv_obj_set_height(ui_icoTester, 28);
     lv_obj_set_align(ui_icoTester, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoTester, "");
@@ -364,7 +364,7 @@ void ui_scrInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoTester, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoSystem = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoSystem, 32);
+    lv_obj_set_width(ui_icoSystem, 640);
     lv_obj_set_height(ui_icoSystem, 28);
     lv_obj_set_align(ui_icoSystem, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoSystem, "");
@@ -380,7 +380,7 @@ void ui_scrInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoSystem, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoCredits = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoCredits, 32);
+    lv_obj_set_width(ui_icoCredits, 640);
     lv_obj_set_height(ui_icoCredits, 28);
     lv_obj_set_align(ui_icoCredits, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoCredits, "");

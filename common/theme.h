@@ -28,31 +28,33 @@ struct theme_config {
     } FONT;
 
     struct {
-        uint32_t NORMAL;
-        uint32_t ACTIVE;
-        uint32_t LOW;
-        int16_t NORMAL_ALPHA;
-        int16_t ACTIVE_ALPHA;
-        int16_t LOW_ALPHA;
-    } BATTERY;
-
-    struct {
-        uint32_t NORMAL;
-        uint32_t ACTIVE;
-        int16_t NORMAL_ALPHA;
-        int16_t ACTIVE_ALPHA;
-    } NETWORK;
-
-    struct {
-        uint32_t NORMAL;
-        uint32_t ACTIVE;
-        int16_t NORMAL_ALPHA;
-        int16_t ACTIVE_ALPHA;
-    } BLUETOOTH;
+        int16_t PADDING_RIGHT;
+        struct {
+            uint32_t NORMAL;
+            uint32_t ACTIVE;
+            uint32_t LOW;
+            int16_t NORMAL_ALPHA;
+            int16_t ACTIVE_ALPHA;
+            int16_t LOW_ALPHA;
+        } BATTERY;
+        struct {
+            uint32_t NORMAL;
+            uint32_t ACTIVE;
+            int16_t NORMAL_ALPHA;
+            int16_t ACTIVE_ALPHA;
+        } NETWORK;
+        struct {
+            uint32_t NORMAL;
+            uint32_t ACTIVE;
+            int16_t NORMAL_ALPHA;
+            int16_t ACTIVE_ALPHA;
+        } BLUETOOTH;
+    } STATUS;
 
     struct {
         uint32_t TEXT;
         int16_t ALPHA;
+        int16_t PADDING_LEFT;
     } DATETIME;
 
     struct {
@@ -80,6 +82,7 @@ struct theme_config {
     } HELP;
 
     struct {
+        uint16_t ALIGNMENT;
         struct {
             uint32_t GLYPH;
             int16_t GLYPH_ALPHA;
@@ -231,6 +234,10 @@ struct theme_config {
         int16_t STATIC_ALIGNMENT;
         int16_t ANIMATED_BACKGROUND;
         int16_t NAVIGATION_TYPE;
+        struct {
+            int16_t PADDING_LEFT;
+            int16_t WIDTH;
+        } CONTENT;
     } MISC;
 };
 

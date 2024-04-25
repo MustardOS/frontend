@@ -8849,7 +8849,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -9184,7 +9184,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -9519,7 +9519,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -9854,7 +9854,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -10189,7 +10189,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -10524,7 +10524,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -10859,7 +10859,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -11195,7 +11195,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -11530,7 +11530,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -11814,7 +11814,8 @@
                     "InheritedType": 2
                   }
                 ],
-                "saved_objtypeKey": "LABEL"
+                "saved_objtypeKey": "LABEL",
+                "tree_closed": true
               },
               {
                 "guid": "GUID45386317-727495S539369",
@@ -11865,7 +11866,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -12200,7 +12201,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -12535,7 +12536,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -12836,11 +12837,11 @@
                 "InheritedType": 1
               },
               {
-                "Flow": 1,
+                "Flow": 0,
                 "Wrap": true,
                 "Reversed": false,
-                "MainAlignment": 0,
-                "CrossAlignment": 0,
+                "MainAlignment": 1,
+                "CrossAlignment": 1,
                 "TrackAlignment": 0,
                 "LayoutType": 1,
                 "nid": -1944847912,
@@ -13138,8 +13139,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID77090076-672386S754326",

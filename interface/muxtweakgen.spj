@@ -8016,7 +8016,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -8351,7 +8351,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -8686,7 +8686,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -9021,7 +9021,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -9356,7 +9356,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -9691,7 +9691,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -10026,7 +10026,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -10361,7 +10361,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -10696,7 +10696,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -11031,7 +11031,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -11323,7 +11323,7 @@
               {
                 "nid": -767743224,
                 "strtype": "OBJECT/Name",
-                "strval": "pnlGylph",
+                "strval": "pnlGlyph",
                 "InheritedType": 10
               },
               {
@@ -11332,11 +11332,11 @@
                 "InheritedType": 1
               },
               {
-                "Flow": 1,
+                "Flow": 0,
                 "Wrap": true,
                 "Reversed": false,
-                "MainAlignment": 0,
-                "CrossAlignment": 0,
+                "MainAlignment": 1,
+                "CrossAlignment": 1,
                 "TrackAlignment": 0,
                 "LayoutType": 1,
                 "nid": 1365526277,
@@ -24207,7 +24207,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxtweakgen/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 492,
+    "backup_cnt": 493,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

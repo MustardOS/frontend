@@ -496,8 +496,8 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -511,7 +511,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoEnable = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoEnable, 32);
+    lv_obj_set_width(ui_icoEnable, 640);
     lv_obj_set_height(ui_icoEnable, 28);
     lv_obj_set_x(ui_icoEnable, 100);
     lv_obj_set_y(ui_icoEnable, -70);
@@ -527,7 +527,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoEnable, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoIdentifier = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoIdentifier, 32);
+    lv_obj_set_width(ui_icoIdentifier, 640);
     lv_obj_set_height(ui_icoIdentifier, 28);
     lv_obj_set_x(ui_icoIdentifier, 100);
     lv_obj_set_y(ui_icoIdentifier, -70);
@@ -543,7 +543,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoIdentifier, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoPassword = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoPassword, 32);
+    lv_obj_set_width(ui_icoPassword, 640);
     lv_obj_set_height(ui_icoPassword, 28);
     lv_obj_set_x(ui_icoPassword, 100);
     lv_obj_set_y(ui_icoPassword, -70);
@@ -559,7 +559,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoPassword, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoType = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoType, 32);
+    lv_obj_set_width(ui_icoType, 640);
     lv_obj_set_height(ui_icoType, 28);
     lv_obj_set_x(ui_icoType, 100);
     lv_obj_set_y(ui_icoType, -70);
@@ -575,7 +575,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoType, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoAddress = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoAddress, 32);
+    lv_obj_set_width(ui_icoAddress, 640);
     lv_obj_set_height(ui_icoAddress, 28);
     lv_obj_set_x(ui_icoAddress, 100);
     lv_obj_set_y(ui_icoAddress, -70);
@@ -593,7 +593,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoAddress, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoSubnet = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoSubnet, 32);
+    lv_obj_set_width(ui_icoSubnet, 640);
     lv_obj_set_height(ui_icoSubnet, 28);
     lv_obj_set_x(ui_icoSubnet, 100);
     lv_obj_set_y(ui_icoSubnet, -70);
@@ -611,7 +611,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoSubnet, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoGateway = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoGateway, 32);
+    lv_obj_set_width(ui_icoGateway, 640);
     lv_obj_set_height(ui_icoGateway, 28);
     lv_obj_set_x(ui_icoGateway, 100);
     lv_obj_set_y(ui_icoGateway, -70);
@@ -629,7 +629,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoGateway, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoDNS = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoDNS, 32);
+    lv_obj_set_width(ui_icoDNS, 640);
     lv_obj_set_height(ui_icoDNS, 28);
     lv_obj_set_x(ui_icoDNS, 100);
     lv_obj_set_y(ui_icoDNS, -70);
@@ -647,7 +647,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoDNS, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoStatus = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoStatus, 32);
+    lv_obj_set_width(ui_icoStatus, 640);
     lv_obj_set_height(ui_icoStatus, 28);
     lv_obj_set_x(ui_icoStatus, 100);
     lv_obj_set_y(ui_icoStatus, -70);
@@ -663,7 +663,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoStatus, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoConnect = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoConnect, 32);
+    lv_obj_set_width(ui_icoConnect, 640);
     lv_obj_set_height(ui_icoConnect, 28);
     lv_obj_set_x(ui_icoConnect, 100);
     lv_obj_set_y(ui_icoConnect, -70);

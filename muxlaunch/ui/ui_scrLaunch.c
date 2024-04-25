@@ -432,8 +432,8 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -448,7 +448,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoContent = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoContent, 32);
+    lv_obj_set_width(ui_icoContent, 640);
     lv_obj_set_height(ui_icoContent, 28);
     lv_obj_set_align(ui_icoContent, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoContent, "");
@@ -462,7 +462,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoContent, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoFavourites = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoFavourites, 32);
+    lv_obj_set_width(ui_icoFavourites, 640);
     lv_obj_set_height(ui_icoFavourites, 28);
     lv_obj_set_align(ui_icoFavourites, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoFavourites, "");
@@ -476,7 +476,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoFavourites, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoHistory = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoHistory, 32);
+    lv_obj_set_width(ui_icoHistory, 640);
     lv_obj_set_height(ui_icoHistory, 28);
     lv_obj_set_align(ui_icoHistory, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoHistory, "");
@@ -490,7 +490,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoHistory, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoApps = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoApps, 32);
+    lv_obj_set_width(ui_icoApps, 640);
     lv_obj_set_height(ui_icoApps, 28);
     lv_obj_set_align(ui_icoApps, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoApps, "");
@@ -506,7 +506,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoApps, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoInfo = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoInfo, 32);
+    lv_obj_set_width(ui_icoInfo, 640);
     lv_obj_set_height(ui_icoInfo, 28);
     lv_obj_set_align(ui_icoInfo, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoInfo, "");
@@ -522,7 +522,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoInfo, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoConfig = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoConfig, 32);
+    lv_obj_set_width(ui_icoConfig, 640);
     lv_obj_set_height(ui_icoConfig, 28);
     lv_obj_set_align(ui_icoConfig, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoConfig, "");
@@ -536,7 +536,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoConfig, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoReboot = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoReboot, 32);
+    lv_obj_set_width(ui_icoReboot, 640);
     lv_obj_set_height(ui_icoReboot, 28);
     lv_obj_set_align(ui_icoReboot, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoReboot, "");
@@ -550,7 +550,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoReboot, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoShutdown = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoShutdown, 32);
+    lv_obj_set_width(ui_icoShutdown, 640);
     lv_obj_set_height(ui_icoShutdown, 28);
     lv_obj_set_align(ui_icoShutdown, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoShutdown, "");

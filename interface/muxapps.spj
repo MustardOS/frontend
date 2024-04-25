@@ -6350,8 +6350,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID82602921-591586S350369",
@@ -6406,7 +6405,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -6751,7 +6750,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -7096,7 +7095,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -7441,7 +7440,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -7785,7 +7784,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -8129,7 +8128,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -8440,11 +8439,11 @@
                 "InheritedType": 1
               },
               {
-                "Flow": 1,
+                "Flow": 0,
                 "Wrap": true,
                 "Reversed": false,
-                "MainAlignment": 0,
-                "CrossAlignment": 0,
+                "MainAlignment": 1,
+                "CrossAlignment": 1,
                 "TrackAlignment": 0,
                 "LayoutType": 1,
                 "nid": 1579692736,
@@ -8742,8 +8741,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID64809051-811690S1252268",
@@ -16707,7 +16705,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxapps/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 775,
+    "backup_cnt": 777,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

@@ -673,7 +673,7 @@
                   {
                     "nid": 1284707193,
                     "strtype": "OBJECT/Align",
-                    "strval": "TOP_RIGHT",
+                    "strval": "BOTTOM_RIGHT",
                     "InheritedType": 3
                   },
                   {

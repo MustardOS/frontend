@@ -40,7 +40,7 @@ extern lv_obj_t * ui_lblBrightness;
 extern lv_obj_t * ui_lblHDMI;
 extern lv_obj_t * ui_lblInterface;
 extern lv_obj_t * ui_lblAdvanced;
-extern lv_obj_t * ui_pnlGylph;
+extern lv_obj_t * ui_pnlGlyph;
 extern lv_obj_t * ui_icoHidden;
 extern lv_obj_t * ui_icoSound;
 extern lv_obj_t * ui_icoStartup;

@@ -552,8 +552,8 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_scrollbar_mode(ui_pnlGlyph, LV_SCROLLBAR_MODE_OFF);
@@ -569,7 +569,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoVersion = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoVersion, 32);
+    lv_obj_set_width(ui_icoVersion, 640);
     lv_obj_set_height(ui_icoVersion, 28);
     lv_obj_set_x(ui_icoVersion, 100);
     lv_obj_set_y(ui_icoVersion, -70);
@@ -585,7 +585,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoVersion, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoRetro = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoRetro, 32);
+    lv_obj_set_width(ui_icoRetro, 640);
     lv_obj_set_height(ui_icoRetro, 28);
     lv_obj_set_x(ui_icoRetro, 100);
     lv_obj_set_y(ui_icoRetro, -70);
@@ -601,7 +601,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoRetro, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoKernel = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoKernel, 32);
+    lv_obj_set_width(ui_icoKernel, 640);
     lv_obj_set_height(ui_icoKernel, 28);
     lv_obj_set_x(ui_icoKernel, 100);
     lv_obj_set_y(ui_icoKernel, -70);
@@ -617,7 +617,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoKernel, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoUptime = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoUptime, 32);
+    lv_obj_set_width(ui_icoUptime, 640);
     lv_obj_set_height(ui_icoUptime, 28);
     lv_obj_set_x(ui_icoUptime, 100);
     lv_obj_set_y(ui_icoUptime, -70);
@@ -633,7 +633,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoUptime, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoCPU = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoCPU, 32);
+    lv_obj_set_width(ui_icoCPU, 640);
     lv_obj_set_height(ui_icoCPU, 28);
     lv_obj_set_x(ui_icoCPU, 100);
     lv_obj_set_y(ui_icoCPU, -70);
@@ -649,7 +649,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoCPU, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoSpeed = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoSpeed, 32);
+    lv_obj_set_width(ui_icoSpeed, 640);
     lv_obj_set_height(ui_icoSpeed, 28);
     lv_obj_set_x(ui_icoSpeed, 100);
     lv_obj_set_y(ui_icoSpeed, -70);
@@ -665,7 +665,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoSpeed, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoGovernor = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoGovernor, 32);
+    lv_obj_set_width(ui_icoGovernor, 640);
     lv_obj_set_height(ui_icoGovernor, 28);
     lv_obj_set_x(ui_icoGovernor, 100);
     lv_obj_set_y(ui_icoGovernor, -70);
@@ -681,7 +681,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoGovernor, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoMemory = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoMemory, 32);
+    lv_obj_set_width(ui_icoMemory, 640);
     lv_obj_set_height(ui_icoMemory, 28);
     lv_obj_set_x(ui_icoMemory, 100);
     lv_obj_set_y(ui_icoMemory, -70);
@@ -697,7 +697,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoMemory, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoTemp = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoTemp, 32);
+    lv_obj_set_width(ui_icoTemp, 640);
     lv_obj_set_height(ui_icoTemp, 28);
     lv_obj_set_x(ui_icoTemp, 100);
     lv_obj_set_y(ui_icoTemp, -70);
@@ -713,7 +713,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoTemp, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoServices = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoServices, 32);
+    lv_obj_set_width(ui_icoServices, 640);
     lv_obj_set_height(ui_icoServices, 28);
     lv_obj_set_x(ui_icoServices, 100);
     lv_obj_set_y(ui_icoServices, -70);
@@ -729,7 +729,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoServices, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoBatteryCap = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoBatteryCap, 32);
+    lv_obj_set_width(ui_icoBatteryCap, 640);
     lv_obj_set_height(ui_icoBatteryCap, 28);
     lv_obj_set_x(ui_icoBatteryCap, 100);
     lv_obj_set_y(ui_icoBatteryCap, -70);
@@ -745,7 +745,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoBatteryCap, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoVoltage = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoVoltage, 32);
+    lv_obj_set_width(ui_icoVoltage, 640);
     lv_obj_set_height(ui_icoVoltage, 28);
     lv_obj_set_x(ui_icoVoltage, 100);
     lv_obj_set_y(ui_icoVoltage, -70);

@@ -399,8 +399,8 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -414,7 +414,7 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoYear = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoYear, 32);
+    lv_obj_set_width(ui_icoYear, 640);
     lv_obj_set_height(ui_icoYear, 28);
     lv_obj_set_x(ui_icoYear, 100);
     lv_obj_set_y(ui_icoYear, -70);
@@ -430,7 +430,7 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoYear, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoMonth = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoMonth, 32);
+    lv_obj_set_width(ui_icoMonth, 640);
     lv_obj_set_height(ui_icoMonth, 28);
     lv_obj_set_x(ui_icoMonth, 100);
     lv_obj_set_y(ui_icoMonth, -70);
@@ -446,7 +446,7 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoMonth, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoDay = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoDay, 32);
+    lv_obj_set_width(ui_icoDay, 640);
     lv_obj_set_height(ui_icoDay, 28);
     lv_obj_set_x(ui_icoDay, 100);
     lv_obj_set_y(ui_icoDay, -70);
@@ -462,7 +462,7 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoDay, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoHour = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoHour, 32);
+    lv_obj_set_width(ui_icoHour, 640);
     lv_obj_set_height(ui_icoHour, 28);
     lv_obj_set_x(ui_icoHour, 100);
     lv_obj_set_y(ui_icoHour, -70);
@@ -478,7 +478,7 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoHour, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoMinute = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoMinute, 32);
+    lv_obj_set_width(ui_icoMinute, 640);
     lv_obj_set_height(ui_icoMinute, 28);
     lv_obj_set_x(ui_icoMinute, 100);
     lv_obj_set_y(ui_icoMinute, -70);
@@ -494,7 +494,7 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoMinute, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoNotation = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoNotation, 32);
+    lv_obj_set_width(ui_icoNotation, 640);
     lv_obj_set_height(ui_icoNotation, 28);
     lv_obj_set_x(ui_icoNotation, 100);
     lv_obj_set_y(ui_icoNotation, -70);
@@ -510,7 +510,7 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoNotation, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoTimezone = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoTimezone, 32);
+    lv_obj_set_width(ui_icoTimezone, 640);
     lv_obj_set_height(ui_icoTimezone, 28);
     lv_obj_set_x(ui_icoTimezone, 100);
     lv_obj_set_y(ui_icoTimezone, -70);

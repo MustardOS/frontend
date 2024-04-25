@@ -1133,7 +1133,13 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
         const char *element = lv_obj_get_user_data(element_focused);
 
-        if (snprintf(static_image_path, sizeof(static_image_path), "/%s/static/%s/%s.png",
+        if (snprintf(static_image_path, sizeof(static_image_path), "/%s/static/%s.png",
+                     MUOS_IMAGE_PATH, program) >= 0 &&
+            file_exist(static_image_path)) {
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/static/%s.png",
+                     MUOS_IMAGE_PATH, program);
+            return static_image_embed;
+        } else if (snprintf(static_image_path, sizeof(static_image_path), "/%s/static/%s/%s.png",
                      MUOS_IMAGE_PATH, program, element) >= 0 &&
             file_exist(static_image_path)) {
             snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/static/%s/%s.png",

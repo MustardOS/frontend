@@ -63,8 +63,6 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXDEVICE_RG28XX;
     } else if (element_focused == ui_lblRG35XXH) {
         message = MUXDEVICE_RG35XXH;
-    } else if (element_focused == ui_lblRG35XXOG) {
-        message = MUXDEVICE_RG35XXOG;
     } else if (element_focused == ui_lblRG35XXPLUS) {
         message = MUXDEVICE_RG35XXPLUS;
     } else if (element_focused == ui_lblRG35XX2024) {
@@ -82,7 +80,6 @@ void init_navigation_groups() {
     lv_obj_t *ui_objects[] = {
             ui_lblRG28XX,
             ui_lblRG35XXH,
-            ui_lblRG35XXOG,
             ui_lblRG35XXPLUS,
             ui_lblRG35XX2024
     };
@@ -90,7 +87,6 @@ void init_navigation_groups() {
     lv_obj_t *ui_objects_icon[] = {
             ui_icoRG28XX,
             ui_icoRG35XXH,
-            ui_icoRG35XXOG,
             ui_icoRG35XXPLUS,
             ui_icoRG35XX2024
     };
@@ -163,8 +159,6 @@ void *joystick_task() {
                                         write_text_to_file(MUOS_DEVICE_FILE, "RG28XX", "w");
                                     } else if (element_focused == ui_lblRG35XXH) {
                                         write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-H", "w");
-                                    } else if (element_focused == ui_lblRG35XXOG) {
-                                        write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-OG", "w");
                                     } else if (element_focused == ui_lblRG35XXPLUS) {
                                         write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-PLUS", "w");
                                     } else if (element_focused == ui_lblRG35XX2024) {
@@ -287,8 +281,8 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
     }
 
+    lv_obj_set_user_data(ui_lblRG28XX, "rg28xx");
     lv_obj_set_user_data(ui_lblRG35XXH, "rg35xx-h");
-    lv_obj_set_user_data(ui_lblRG35XXOG, "rg35xx-og");
     lv_obj_set_user_data(ui_lblRG35XXPLUS, "rg35xx-plus");
     lv_obj_set_user_data(ui_lblRG35XX2024, "rg35xx-2024");
 }
@@ -298,26 +292,26 @@ void glyph_task() {
 
 /*
     if (is_network_connected() > 0) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staNetwork, theme.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
     else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staNetwork, theme.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 */
 
     if (atoi(read_text_from_file(BATT_CHARGER))) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.BATTERY.ACTIVE),
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.BATTERY.NORMAL),
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.BATTERY.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     if (progress_onscreen > 0) {

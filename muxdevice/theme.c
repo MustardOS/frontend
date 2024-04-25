@@ -23,7 +23,6 @@ void apply_theme() {
             {ui_pnlHelpMessage, theme.HELP.BACKGROUND},
             {ui_lblRG28XX,      theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblRG35XXH,     theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblRG35XXOG,    theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblRG35XXPLUS,  theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblRG35XX2024,  theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,     theme.MESSAGE.BACKGROUND},
@@ -68,7 +67,6 @@ void apply_theme() {
     struct big background_focus_elements[] = {
             {ui_lblRG28XX,     theme.LIST_FOCUS.BACKGROUND},
             {ui_lblRG35XXH,    theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblRG35XXOG,   theme.LIST_FOCUS.BACKGROUND},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.BACKGROUND},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.BACKGROUND},
     };
@@ -80,7 +78,6 @@ void apply_theme() {
     struct big gradient_elements[] = {
             {ui_lblRG28XX,     theme.SYSTEM.BACKGROUND},
             {ui_lblRG35XXH,    theme.SYSTEM.BACKGROUND},
-            {ui_lblRG35XXOG,   theme.SYSTEM.BACKGROUND},
             {ui_lblRG35XXPLUS, theme.SYSTEM.BACKGROUND},
             {ui_lblRG35XX2024, theme.SYSTEM.BACKGROUND},
     };
@@ -92,7 +89,6 @@ void apply_theme() {
     struct big indicator_elements[] = {
             {ui_lblRG28XX,     theme.LIST_DEFAULT.INDICATOR},
             {ui_lblRG35XXH,    theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblRG35XXOG,   theme.LIST_DEFAULT.INDICATOR},
             {ui_lblRG35XXPLUS, theme.LIST_DEFAULT.INDICATOR},
             {ui_lblRG35XX2024, theme.LIST_DEFAULT.INDICATOR},
     };
@@ -104,7 +100,6 @@ void apply_theme() {
     struct big indicator_focus_elements[] = {
             {ui_lblRG28XX,     theme.LIST_FOCUS.INDICATOR},
             {ui_lblRG35XXH,    theme.LIST_FOCUS.INDICATOR},
-            {ui_lblRG35XXOG,   theme.LIST_FOCUS.INDICATOR},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.INDICATOR},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.INDICATOR},
     };
@@ -116,23 +111,21 @@ void apply_theme() {
     struct big default_elements[] = {
             {ui_lblRG28XX,       theme.LIST_DEFAULT.TEXT},
             {ui_lblRG35XXH,      theme.LIST_DEFAULT.TEXT},
-            {ui_lblRG35XXOG,     theme.LIST_DEFAULT.TEXT},
             {ui_lblRG35XXPLUS,   theme.LIST_DEFAULT.TEXT},
             {ui_lblRG35XX2024,   theme.LIST_DEFAULT.TEXT},
             {ui_icoRG28XX,       theme.LIST_DEFAULT.TEXT},
             {ui_icoRG35XXH,      theme.LIST_DEFAULT.TEXT},
-            {ui_icoRG35XXOG,     theme.LIST_DEFAULT.TEXT},
             {ui_icoRG35XXPLUS,   theme.LIST_DEFAULT.TEXT},
             {ui_icoRG35XX2024,   theme.LIST_DEFAULT.TEXT},
-            {ui_staCapacity,     theme.BATTERY.NORMAL},
+            {ui_staCapacity,     theme.STATUS.BATTERY.NORMAL},
             {ui_lblDatetime,     theme.DATETIME.TEXT},
             {ui_lblTitle,        theme.HEADER.TEXT},
             {ui_lblHelpContent,  theme.HELP.CONTENT},
             {ui_lblHelpHeader,   theme.HELP.TITLE},
             {ui_lblMessage,      theme.MESSAGE.TEXT},
-            {ui_staBluetooth,    theme.BLUETOOTH.NORMAL},
-            {ui_staNetwork,      theme.NETWORK.NORMAL},
-            {ui_staCapacity,     theme.BATTERY.NORMAL},
+            {ui_staBluetooth,    theme.STATUS.BLUETOOTH.NORMAL},
+            {ui_staNetwork,      theme.STATUS.NETWORK.NORMAL},
+            {ui_staCapacity,     theme.STATUS.BATTERY.NORMAL},
             {ui_lblNavA,         theme.NAV.A.TEXT},
             {ui_lblNavB,         theme.NAV.B.TEXT},
             {ui_lblNavC,         theme.NAV.C.TEXT},
@@ -157,12 +150,10 @@ void apply_theme() {
     struct big focus_elements[] = {
             {ui_lblRG28XX,     theme.LIST_FOCUS.TEXT},
             {ui_lblRG35XXH,    theme.LIST_FOCUS.TEXT},
-            {ui_lblRG35XXOG,   theme.LIST_FOCUS.TEXT},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.TEXT},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.TEXT},
             {ui_icoRG28XX,     theme.LIST_FOCUS.TEXT},
             {ui_icoRG35XXH,    theme.LIST_FOCUS.TEXT},
-            {ui_icoRG35XXOG,   theme.LIST_FOCUS.TEXT},
             {ui_icoRG35XXPLUS, theme.LIST_FOCUS.TEXT},
             {ui_icoRG35XX2024, theme.LIST_FOCUS.TEXT},
     };
@@ -194,21 +185,19 @@ void apply_theme() {
     struct small text_default_alpha_elements[] = {
             {ui_lblRG28XX,       theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblRG35XXH,      theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblRG35XXOG,     theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblRG35XXPLUS,   theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblRG35XX2024,   theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRG28XX,       theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRG35XXH,      theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoRG35XXOG,     theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRG35XXPLUS,   theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRG35XX2024,   theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTitle,        theme.HEADER.TEXT_ALPHA},
-            {ui_staCapacity,     theme.BATTERY.NORMAL_ALPHA},
+            {ui_staCapacity,     theme.STATUS.BATTERY.NORMAL_ALPHA},
             {ui_lblDatetime,     theme.DATETIME.ALPHA},
             {ui_lblMessage,      theme.MESSAGE.TEXT_ALPHA},
-            {ui_staBluetooth,    theme.BLUETOOTH.NORMAL_ALPHA},
-            {ui_staNetwork,      theme.NETWORK.NORMAL_ALPHA},
-            {ui_staCapacity,     theme.BATTERY.NORMAL_ALPHA},
+            {ui_staBluetooth,    theme.STATUS.BLUETOOTH.NORMAL_ALPHA},
+            {ui_staNetwork,      theme.STATUS.NETWORK.NORMAL_ALPHA},
+            {ui_staCapacity,     theme.STATUS.BATTERY.NORMAL_ALPHA},
             {ui_lblNavA,         theme.NAV.A.TEXT_ALPHA},
             {ui_lblNavB,         theme.NAV.B.TEXT_ALPHA},
             {ui_lblNavC,         theme.NAV.C.TEXT_ALPHA},
@@ -233,12 +222,10 @@ void apply_theme() {
     struct small text_focus_alpha_elements[] = {
             {ui_lblRG28XX,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblRG35XXH,    theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblRG35XXOG,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRG28XX,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRG35XXH,    theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoRG35XXOG,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRG35XXPLUS, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRG35XX2024, theme.LIST_FOCUS.TEXT_ALPHA},
     };
@@ -250,7 +237,6 @@ void apply_theme() {
     struct small indicator_default_alpha_elements[] = {
             {ui_lblRG28XX,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblRG35XXH,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblRG35XXOG,   theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_DEFAULT.INDICATOR_ALPHA},
     };
@@ -263,7 +249,6 @@ void apply_theme() {
     struct small indicator_focus_alpha_elements[] = {
             {ui_lblRG28XX,     theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblRG35XXH,    theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblRG35XXOG,   theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.INDICATOR_ALPHA},
     };
@@ -275,7 +260,6 @@ void apply_theme() {
     struct small gradient_stop_default_elements[] = {
             {ui_lblRG28XX,     theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblRG35XXH,    theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblRG35XXOG,   theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblRG35XXPLUS, theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblRG35XX2024, theme.LIST_DEFAULT.GRADIENT_STOP},
     };
@@ -287,7 +271,6 @@ void apply_theme() {
     struct small gradient_stop_focus_elements[] = {
             {ui_lblRG28XX,     theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblRG35XXH,    theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblRG35XXOG,   theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.GRADIENT_STOP},
     };
@@ -299,7 +282,6 @@ void apply_theme() {
     struct small background_alpha_default_elements[] = {
             {ui_lblRG28XX,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblRG35XXH,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblRG35XXOG,   theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
     };
@@ -312,7 +294,6 @@ void apply_theme() {
     struct small background_alpha_focus_elements[] = {
             {ui_lblRG28XX,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblRG35XXH,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblRG35XXOG,   theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.BACKGROUND_ALPHA},
     };
@@ -414,7 +395,6 @@ void apply_theme() {
     struct small font_pad_list_top_elements[] = {
             {ui_lblRG28XX,     theme.FONT.LIST_PAD_TOP},
             {ui_lblRG35XXH,    theme.FONT.LIST_PAD_TOP},
-            {ui_lblRG35XXOG,   theme.FONT.LIST_PAD_TOP},
             {ui_lblRG35XXPLUS, theme.FONT.LIST_PAD_TOP},
             {ui_lblRG35XX2024, theme.FONT.LIST_PAD_TOP},
     };
@@ -426,7 +406,6 @@ void apply_theme() {
     struct small font_pad_list_bottom_elements[] = {
             {ui_lblRG28XX,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblRG35XXH,    theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblRG35XXOG,   theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblRG35XXPLUS, theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblRG35XX2024, theme.FONT.LIST_PAD_BOTTOM},
     };
@@ -438,7 +417,6 @@ void apply_theme() {
     struct small font_pad_top_list_icon_elements[] = {
             {ui_icoRG28XX,     theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoRG35XXH,    theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoRG35XXOG,   theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoRG35XXPLUS, theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoRG35XX2024, theme.FONT.LIST_ICON_PAD_TOP},
     };
@@ -450,7 +428,6 @@ void apply_theme() {
     struct small font_pad_bottom_list_icon_elements[] = {
             {ui_icoRG28XX,     theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoRG35XXH,    theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoRG35XXOG,   theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoRG35XXPLUS, theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoRG35XX2024, theme.FONT.LIST_ICON_PAD_BOTTOM},
     };
@@ -497,5 +474,67 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_message_elements) / sizeof(font_pad_bottom_message_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_message_elements[i].e, font_pad_bottom_message_elements[i].c,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_pad_left_element[] = {
+            {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
+        lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_pad_right_element[] = {
+            {ui_pnlContent, theme.MISC.CONTENT.WIDTH},
+            {ui_pnlGlyph,   theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
+        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
+                               LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small datetime_pad_left_element[] = {
+            {ui_lblDatetime, theme.DATETIME.PADDING_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(datetime_pad_left_element) / sizeof(datetime_pad_left_element[0]); ++i) {
+        lv_obj_set_style_pad_left(datetime_pad_left_element[i].e, datetime_pad_left_element[i].c,
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small status_pad_right_element[] = {
+            {ui_conGlyphs, theme.STATUS.PADDING_RIGHT},
+    };
+    for (size_t i = 0; i < sizeof(status_pad_right_element) / sizeof(status_pad_right_element[0]); ++i) {
+        lv_obj_set_style_pad_right(status_pad_right_element[i].e, status_pad_right_element[i].c,
+                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small navigation_alignment_element[] = {
+            {ui_pnlFooter, theme.NAV.ALIGNMENT},
+    };
+    for (size_t i = 0; i < sizeof(navigation_alignment_element) / sizeof(navigation_alignment_element[0]); ++i) {
+        lv_flex_align_t e_align;
+        switch (navigation_alignment_element[i].c) {
+            case 1:
+                e_align = LV_FLEX_ALIGN_CENTER;
+                break;
+            case 2:
+                e_align = LV_FLEX_ALIGN_END;
+                break;
+            case 3:
+                e_align = LV_FLEX_ALIGN_SPACE_AROUND;
+                break;
+            case 4:
+                e_align = LV_FLEX_ALIGN_SPACE_BETWEEN;
+                break;
+            case 5:
+                e_align = LV_FLEX_ALIGN_SPACE_EVENLY;
+                break;
+            default:
+                e_align = LV_FLEX_ALIGN_START;
+                break;
+        }
+        lv_obj_set_style_flex_main_place(navigation_alignment_element[i].e, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 }

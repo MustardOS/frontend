@@ -476,29 +476,29 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_border_color(ui_lblAdvanced, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_lblAdvanced, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_pnlGylph = lv_obj_create(ui_scrTweakGeneral);
-    lv_obj_set_width(ui_pnlGylph, 640);
-    lv_obj_set_height(ui_pnlGylph, 400);
-    lv_obj_set_x(ui_pnlGylph, 0);
-    lv_obj_set_y(ui_pnlGylph, 34);
-    lv_obj_set_align(ui_pnlGylph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGylph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGylph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_add_flag(ui_pnlGylph, LV_OBJ_FLAG_FLOATING);     /// Flags
-    lv_obj_clear_flag(ui_pnlGylph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_pnlGylph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlGylph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlGylph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlGylph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlGylph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlGylph, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlGylph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlGylph, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlGylph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_pnlGylph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_pnlGlyph = lv_obj_create(ui_scrTweakGeneral);
+    lv_obj_set_width(ui_pnlGlyph, 640);
+    lv_obj_set_height(ui_pnlGlyph, 400);
+    lv_obj_set_x(ui_pnlGlyph, 0);
+    lv_obj_set_y(ui_pnlGlyph, 34);
+    lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+    lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
+    lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlGlyph, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(ui_pnlGlyph, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoHidden = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoHidden, 32);
+    ui_icoHidden = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoHidden, 640);
     lv_obj_set_height(ui_icoHidden, 28);
     lv_obj_set_align(ui_icoHidden, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoHidden, "");
@@ -511,8 +511,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoHidden, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoHidden, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoSound = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoSound, 32);
+    ui_icoSound = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoSound, 640);
     lv_obj_set_height(ui_icoSound, 28);
     lv_obj_set_align(ui_icoSound, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoSound, "");
@@ -525,8 +525,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoSound, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoSound, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoStartup = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoStartup, 32);
+    ui_icoStartup = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoStartup, 640);
     lv_obj_set_height(ui_icoStartup, 28);
     lv_obj_set_x(ui_icoStartup, 100);
     lv_obj_set_y(ui_icoStartup, -70);
@@ -541,8 +541,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoStartup, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoStartup, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoPower = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoPower, 32);
+    ui_icoPower = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoPower, 640);
     lv_obj_set_height(ui_icoPower, 28);
     lv_obj_set_x(ui_icoPower, 100);
     lv_obj_set_y(ui_icoPower, -70);
@@ -557,8 +557,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoPower, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoPower, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoLowBattery = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoLowBattery, 32);
+    ui_icoLowBattery = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoLowBattery, 640);
     lv_obj_set_height(ui_icoLowBattery, 28);
     lv_obj_set_x(ui_icoLowBattery, 100);
     lv_obj_set_y(ui_icoLowBattery, -70);
@@ -573,8 +573,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoLowBattery, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoLowBattery, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoColour = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoColour, 32);
+    ui_icoColour = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoColour, 640);
     lv_obj_set_height(ui_icoColour, 28);
     lv_obj_set_x(ui_icoColour, 100);
     lv_obj_set_y(ui_icoColour, -70);
@@ -589,8 +589,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoColour, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoColour, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoBrightness = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoBrightness, 32);
+    ui_icoBrightness = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoBrightness, 640);
     lv_obj_set_height(ui_icoBrightness, 28);
     lv_obj_set_x(ui_icoBrightness, 100);
     lv_obj_set_y(ui_icoBrightness, -70);
@@ -605,8 +605,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoBrightness, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoBrightness, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoHDMI = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoHDMI, 32);
+    ui_icoHDMI = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoHDMI, 640);
     lv_obj_set_height(ui_icoHDMI, 28);
     lv_obj_set_x(ui_icoHDMI, 100);
     lv_obj_set_y(ui_icoHDMI, -70);
@@ -621,8 +621,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoHDMI, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoHDMI, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoInterface = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoInterface, 32);
+    ui_icoInterface = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoInterface, 640);
     lv_obj_set_height(ui_icoInterface, 28);
     lv_obj_set_x(ui_icoInterface, 100);
     lv_obj_set_y(ui_icoInterface, -70);
@@ -637,8 +637,8 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_text_color(ui_icoInterface, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoInterface, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_icoAdvanced = lv_label_create(ui_pnlGylph);
-    lv_obj_set_width(ui_icoAdvanced, 32);
+    ui_icoAdvanced = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoAdvanced, 640);
     lv_obj_set_height(ui_icoAdvanced, 28);
     lv_obj_set_x(ui_icoAdvanced, 100);
     lv_obj_set_y(ui_icoAdvanced, -70);

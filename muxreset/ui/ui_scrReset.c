@@ -410,8 +410,8 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -426,7 +426,7 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoClearFavourites = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoClearFavourites, 32);
+    lv_obj_set_width(ui_icoClearFavourites, 640);
     lv_obj_set_height(ui_icoClearFavourites, 28);
     lv_obj_set_align(ui_icoClearFavourites, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoClearFavourites, "");
@@ -440,7 +440,7 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoClearFavourites, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoClearHistory = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoClearHistory, 32);
+    lv_obj_set_width(ui_icoClearHistory, 640);
     lv_obj_set_height(ui_icoClearHistory, 28);
     lv_obj_set_align(ui_icoClearHistory, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoClearHistory, "");
@@ -454,7 +454,7 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoClearHistory, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoClearActivity = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoClearActivity, 32);
+    lv_obj_set_width(ui_icoClearActivity, 640);
     lv_obj_set_height(ui_icoClearActivity, 28);
     lv_obj_set_align(ui_icoClearActivity, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoClearActivity, "");
@@ -468,7 +468,7 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoClearActivity, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoClearConfigurations = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoClearConfigurations, 32);
+    lv_obj_set_width(ui_icoClearConfigurations, 640);
     lv_obj_set_height(ui_icoClearConfigurations, 28);
     lv_obj_set_align(ui_icoClearConfigurations, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoClearConfigurations, "");
@@ -482,7 +482,7 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoClearConfigurations, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoClearCaches = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoClearCaches, 32);
+    lv_obj_set_width(ui_icoClearCaches, 640);
     lv_obj_set_height(ui_icoClearCaches, 28);
     lv_obj_set_align(ui_icoClearCaches, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoClearCaches, "");
@@ -496,7 +496,7 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoClearCaches, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoRestoreConfig = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoRestoreConfig, 32);
+    lv_obj_set_width(ui_icoRestoreConfig, 640);
     lv_obj_set_height(ui_icoRestoreConfig, 28);
     lv_obj_set_align(ui_icoRestoreConfig, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoRestoreConfig, "");
@@ -510,7 +510,7 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoRestoreConfig, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoRestoreNetwork = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoRestoreNetwork, 32);
+    lv_obj_set_width(ui_icoRestoreNetwork, 640);
     lv_obj_set_height(ui_icoRestoreNetwork, 28);
     lv_obj_set_align(ui_icoRestoreNetwork, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoRestoreNetwork, "");
@@ -524,7 +524,7 @@ void ui_scrReset_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoRestoreNetwork, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoRestorePortMaster = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoRestorePortMaster, 32);
+    lv_obj_set_width(ui_icoRestorePortMaster, 640);
     lv_obj_set_height(ui_icoRestorePortMaster, 28);
     lv_obj_set_align(ui_icoRestorePortMaster, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoRestorePortMaster, "");

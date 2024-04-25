@@ -338,8 +338,8 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -354,7 +354,7 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoBattery = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoBattery, 32);
+    lv_obj_set_width(ui_icoBattery, 640);
     lv_obj_set_height(ui_icoBattery, 28);
     lv_obj_set_align(ui_icoBattery, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoBattery, "");
@@ -368,7 +368,7 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoBattery, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoNetwork = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoNetwork, 32);
+    lv_obj_set_width(ui_icoNetwork, 640);
     lv_obj_set_height(ui_icoNetwork, 28);
     lv_obj_set_align(ui_icoNetwork, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoNetwork, "");
@@ -382,7 +382,7 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoNetwork, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoBluetooth = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoBluetooth, 32);
+    lv_obj_set_width(ui_icoBluetooth, 640);
     lv_obj_set_height(ui_icoBluetooth, 28);
     lv_obj_set_x(ui_icoBluetooth, 100);
     lv_obj_set_y(ui_icoBluetooth, -70);
@@ -399,7 +399,7 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoBluetooth, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoClock = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoClock, 32);
+    lv_obj_set_width(ui_icoClock, 640);
     lv_obj_set_height(ui_icoClock, 28);
     lv_obj_set_x(ui_icoClock, 100);
     lv_obj_set_y(ui_icoClock, -70);
@@ -415,7 +415,7 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoClock, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoBoxArt = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoBoxArt, 32);
+    lv_obj_set_width(ui_icoBoxArt, 640);
     lv_obj_set_height(ui_icoBoxArt, 28);
     lv_obj_set_x(ui_icoBoxArt, 100);
     lv_obj_set_y(ui_icoBoxArt, -70);

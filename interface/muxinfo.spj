@@ -5564,7 +5564,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -5909,7 +5909,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -6254,7 +6254,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -6599,7 +6599,7 @@
                     "flags": 17,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      32,
+                      640,
                       28
                     ],
                     "InheritedType": 7
@@ -6910,11 +6910,11 @@
                 "InheritedType": 1
               },
               {
-                "Flow": 1,
+                "Flow": 0,
                 "Wrap": true,
                 "Reversed": false,
                 "MainAlignment": 1,
-                "CrossAlignment": 0,
+                "CrossAlignment": 1,
                 "TrackAlignment": 0,
                 "LayoutType": 1,
                 "nid": -513001003,
@@ -7218,8 +7218,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID64809051-811690S1252268",

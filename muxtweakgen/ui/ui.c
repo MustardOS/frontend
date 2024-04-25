@@ -34,7 +34,7 @@ lv_obj_t * ui_lblBrightness;
 lv_obj_t * ui_lblHDMI;
 lv_obj_t * ui_lblInterface;
 lv_obj_t * ui_lblAdvanced;
-lv_obj_t * ui_pnlGylph;
+lv_obj_t * ui_pnlGlyph;
 lv_obj_t * ui_icoHidden;
 lv_obj_t * ui_icoSound;
 lv_obj_t * ui_icoStartup;

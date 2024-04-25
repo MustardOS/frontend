@@ -397,8 +397,8 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_x(ui_pnlGlyph, 0);
     lv_obj_set_y(ui_pnlGlyph, 34);
     lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_radius(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -414,7 +414,7 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_icoTweakGeneral = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoTweakGeneral, 32);
+    lv_obj_set_width(ui_icoTweakGeneral, 640);
     lv_obj_set_height(ui_icoTweakGeneral, 28);
     lv_obj_set_align(ui_icoTweakGeneral, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoTweakGeneral, "");
@@ -428,7 +428,7 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoTweakGeneral, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoTheme = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoTheme, 32);
+    lv_obj_set_width(ui_icoTheme, 640);
     lv_obj_set_height(ui_icoTheme, 28);
     lv_obj_set_align(ui_icoTheme, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoTheme, "");
@@ -442,7 +442,7 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoTheme, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoNetwork = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoNetwork, 32);
+    lv_obj_set_width(ui_icoNetwork, 640);
     lv_obj_set_height(ui_icoNetwork, 28);
     lv_obj_set_align(ui_icoNetwork, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoNetwork, "");
@@ -458,7 +458,7 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoNetwork, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoServices = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoServices, 32);
+    lv_obj_set_width(ui_icoServices, 640);
     lv_obj_set_height(ui_icoServices, 28);
     lv_obj_set_align(ui_icoServices, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoServices, "");
@@ -474,7 +474,7 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoServices, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoRTC = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoRTC, 32);
+    lv_obj_set_width(ui_icoRTC, 640);
     lv_obj_set_height(ui_icoRTC, 28);
     lv_obj_set_align(ui_icoRTC, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoRTC, "");
@@ -488,7 +488,7 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoRTC, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoDevice = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoDevice, 32);
+    lv_obj_set_width(ui_icoDevice, 640);
     lv_obj_set_height(ui_icoDevice, 28);
     lv_obj_set_align(ui_icoDevice, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoDevice, "");
@@ -504,7 +504,7 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_text_opa(ui_icoDevice, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoReset = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoReset, 32);
+    lv_obj_set_width(ui_icoReset, 640);
     lv_obj_set_height(ui_icoReset, 28);
     lv_obj_set_align(ui_icoReset, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoReset, "");
