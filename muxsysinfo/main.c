@@ -18,6 +18,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -111,7 +112,7 @@ const char *ra_config_c32_check() {
     char command[MAX_BUFFER_SIZE];
     snprintf(command, sizeof(command), "crc32 %s", RA_CONFIG_FILE);
 
-    FILE *pipe = popen(command, "r");
+    FILE * pipe = popen(command, "r");
     if (!pipe) {
         perror("Error opening pipe");
         return "Unknown";
@@ -176,7 +177,7 @@ void update_system_info() {
     char battery_cap[32];
     sprintf(battery_cap, "%d%% (Offset: %d)",
             read_battery_capacity(),
-            get_ini_int(muos_config, "settings.advanced", "offset", LABEL) - 50);
+            config.SETTINGS.ADVANCED.OFFSET - 50);
 
     char build_version[MAX_BUFFER_SIZE];
     sprintf(build_version, "%s (%s)",
@@ -188,11 +189,16 @@ void update_system_info() {
     lv_label_set_text(ui_lblKernelValue, get_execute_result("uname -rs"));
     lv_label_set_text(ui_lblUptimeValue, format_uptime(remove_comma(get_execute_result("uptime | awk '{print $3}'"))));
     lv_label_set_text(ui_lblCPUValue, "Cortex A53");
-    lv_label_set_text(ui_lblSpeedValue, get_execute_result("cat /sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq | awk '{print $1/1000}'"));
-    lv_label_set_text(ui_lblGovernorValue, get_execute_result("cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor"));
-    lv_label_set_text(ui_lblMemoryValue, get_execute_result("free | awk '/Mem:/ {used = $3 / 1024; total = $2 / 1024; printf \"%.2f MB / %.2f MB\", used, total}'"));
-    lv_label_set_text(ui_lblTempValue, get_execute_result("cat /sys/class/thermal/thermal_zone0/temp | awk '{printf \"%.2f\", $1/1000}'"));
-    lv_label_set_text(ui_lblServicesValue, get_execute_result("ps | grep -v 'COMMAND' | grep -v 'grep' | sed '/\\[/d' | wc -l"));
+    lv_label_set_text(ui_lblSpeedValue, get_execute_result(
+            "cat /sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq | awk '{print $1/1000}'"));
+    lv_label_set_text(ui_lblGovernorValue,
+                      get_execute_result("cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor"));
+    lv_label_set_text(ui_lblMemoryValue, get_execute_result(
+            "free | awk '/Mem:/ {used = $3 / 1024; total = $2 / 1024; printf \"%.2f MB / %.2f MB\", used, total}'"));
+    lv_label_set_text(ui_lblTempValue, get_execute_result(
+            "cat /sys/class/thermal/thermal_zone0/temp | awk '{printf \"%.2f\", $1/1000}'"));
+    lv_label_set_text(ui_lblServicesValue,
+                      get_execute_result("ps | grep -v 'COMMAND' | grep -v 'grep' | sed '/\\[/d' | wc -l"));
     lv_label_set_text(ui_lblBatteryCapValue, battery_cap);
     lv_label_set_text(ui_lblVoltageValue, read_battery_voltage());
 }
@@ -422,10 +428,10 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    process_visual_element("clock", ui_lblDatetime);
-    process_visual_element("battery", ui_staCapacity);
-    process_visual_element("network", ui_staNetwork);
-    process_visual_element("bluetooth", ui_staBluetooth);
+    process_visual_element(CLOCK, ui_lblDatetime);
+    process_visual_element(BLUETOOTH, ui_staBluetooth);
+    process_visual_element(NETWORK, ui_staNetwork);
+    process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
@@ -595,9 +601,9 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = SCREEN_HEIGHT;
     lv_disp_drv_register(&disp_drv);
 
-    ui_init();
-    muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    load_config(&config);
 
+    ui_init();
     init_elements();
 
     lv_obj_set_user_data(ui_scrSysInfo, basename(argv[0]));
@@ -622,7 +628,7 @@ int main(int argc, char *argv[]) {
             NAV_ANLG_VER = ABS_RX;
     }
 
-    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+    switch (config.SETTINGS.ADVANCED.SWAP) {
         case 1:
             NAV_A = JOY_B;
             NAV_B = JOY_A;
@@ -651,7 +657,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrSysInfo);
 
-    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
+    if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
 
@@ -709,8 +715,6 @@ int main(int argc, char *argv[]) {
     while (!safe_quit) {
         usleep(SCREEN_WAIT);
     }
-
-    mini_free(muos_config);
 
     pthread_cancel(joystick_thread);
 

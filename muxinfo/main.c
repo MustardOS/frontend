@@ -17,6 +17,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -249,10 +250,10 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    process_visual_element("clock", ui_lblDatetime);
-    process_visual_element("battery", ui_staCapacity);
-    process_visual_element("network", ui_staNetwork);
-    process_visual_element("bluetooth", ui_staBluetooth);
+    process_visual_element(CLOCK, ui_lblDatetime);
+    process_visual_element(BLUETOOTH, ui_staBluetooth);
+    process_visual_element(NETWORK, ui_staNetwork);
+    process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
@@ -413,9 +414,9 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = SCREEN_HEIGHT;
     lv_disp_drv_register(&disp_drv);
 
-    ui_init();
-    muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    load_config(&config);
 
+    ui_init();
     init_elements();
 
     lv_obj_set_user_data(ui_scrInfo, basename(argv[0]));
@@ -440,7 +441,7 @@ int main(int argc, char *argv[]) {
             NAV_ANLG_VER = ABS_RX;
     }
 
-    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+    switch (config.SETTINGS.ADVANCED.SWAP) {
         case 1:
             NAV_A = JOY_B;
             NAV_B = JOY_A;
@@ -469,7 +470,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrInfo);
 
-    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
+    if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
 
@@ -522,8 +523,6 @@ int main(int argc, char *argv[]) {
     while (!safe_quit) {
         usleep(SCREEN_WAIT);
     }
-
-    mini_free(muos_config);
 
     pthread_cancel(joystick_thread);
 

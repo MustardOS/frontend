@@ -20,6 +20,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -124,7 +125,7 @@ void show_help(lv_obj_t *element_focused) {
 }
 
 void get_current_ip() {
-    if (!get_ini_int(muos_config, "network", "enabled", LABEL)) {
+    if (!config.NETWORK.ENABLED) {
         lv_label_set_text(ui_lblStatusValue, "Network Disabled");
         return;
     }
@@ -148,13 +149,13 @@ void get_current_ip() {
 }
 
 void restore_network_values() {
-    if (mini_get_int(muos_config, "network", "enabled", LABEL)) {
+    if (config.NETWORK.ENABLED) {
         lv_label_set_text(ui_lblEnableValue, "True");
     } else {
         lv_label_set_text(ui_lblEnableValue, "False");
     }
 
-    if (mini_get_int(muos_config, "network", "type", LABEL)) {
+    if (config.NETWORK.TYPE) {
         lv_label_set_text(ui_lblTypeValue, "Static");
     } else {
         lv_label_set_text(ui_lblTypeValue, "DHCP");
@@ -162,11 +163,11 @@ void restore_network_values() {
 
     lv_label_set_text(ui_lblPasswordValue, "");
 
-    lv_label_set_text(ui_lblIdentifierValue, mini_get_string(muos_config, "network", "ssid", ""));
-    lv_label_set_text(ui_lblAddressValue, mini_get_string(muos_config, "network", "address", "192.168.0.123"));
-    lv_label_set_text(ui_lblSubnetValue, mini_get_string(muos_config, "network", "subnet", "24"));
-    lv_label_set_text(ui_lblGatewayValue, mini_get_string(muos_config, "network", "gateway", "192.168.0.1"));
-    lv_label_set_text(ui_lblDNSValue, mini_get_string(muos_config, "network", "dns", "1.1.1.1"));
+    lv_label_set_text(ui_lblIdentifierValue, config.NETWORK.SSID);
+    lv_label_set_text(ui_lblAddressValue, config.NETWORK.ADDRESS);
+    lv_label_set_text(ui_lblSubnetValue, config.NETWORK.SUBNET);
+    lv_label_set_text(ui_lblGatewayValue, config.NETWORK.GATEWAY);
+    lv_label_set_text(ui_lblDNSValue, config.NETWORK.DNS);
 
     get_current_ip();
 }
@@ -182,6 +183,8 @@ void save_network_config() {
         idx_type = 1;
     }
 
+    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+
     mini_set_int(muos_config, "network", "enabled", idx_enable);
     mini_set_int(muos_config, "network", "type", idx_type);
 
@@ -192,6 +195,7 @@ void save_network_config() {
     mini_set_string(muos_config, "network", "dns", lv_label_get_text(ui_lblDNSValue));
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+    mini_free(muos_config);
 }
 
 void init_navigation_groups() {
@@ -497,7 +501,7 @@ void *joystick_task() {
                                         lv_label_set_text(ui_lblStatusValue, "Trying to Connect...");
                                         lv_task_handler();
                                         save_network_config();
-                                        if (get_ini_int(muos_config, "network", "enabled", LABEL)) {
+                                        if (config.NETWORK.ENABLED) {
                                             input_disable = 1;
                                             usleep(100000);
 
@@ -552,6 +556,8 @@ void *joystick_task() {
                                     input_disable = 1;
                                     save_network_config();
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "False") == 0) {
+                                        mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+
                                         set_ini_int(muos_config, "network", "enabled", 0);
                                         set_ini_string(muos_config, "network", "interface", "wlan0");
                                         set_ini_int(muos_config, "network", "type", 0);
@@ -560,7 +566,9 @@ void *joystick_task() {
                                         set_ini_string(muos_config, "network", "gateway", "192.168.0.1");
                                         set_ini_int(muos_config, "network", "subnet", 24);
                                         set_ini_string(muos_config, "network", "dns", "1.1.1.1");
+
                                         mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+                                        mini_free(muos_config);
 
                                         system("/opt/muos/script/system/network.sh");
                                     }
@@ -1054,10 +1062,10 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    process_visual_element("clock", ui_lblDatetime);
-    process_visual_element("battery", ui_staCapacity);
-    process_visual_element("network", ui_staNetwork);
-    process_visual_element("bluetooth", ui_staBluetooth);
+    process_visual_element(CLOCK, ui_lblDatetime);
+    process_visual_element(BLUETOOTH, ui_staBluetooth);
+    process_visual_element(NETWORK, ui_staNetwork);
+    process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
@@ -1421,9 +1429,9 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = SCREEN_HEIGHT;
     lv_disp_drv_register(&disp_drv);
 
-    ui_init();
-    muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    load_config(&config);
 
+    ui_init();
     init_elements();
 
     lv_obj_set_user_data(ui_scrNetwork, basename(argv[0]));
@@ -1448,7 +1456,7 @@ int main(int argc, char *argv[]) {
             NAV_ANLG_VER = ABS_RX;
     }
 
-    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+    switch (config.SETTINGS.ADVANCED.SWAP) {
         case 1:
             NAV_A = JOY_B;
             NAV_B = JOY_A;
@@ -1477,7 +1485,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrNetwork);
 
-    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
+    if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
 
@@ -1532,8 +1540,6 @@ int main(int argc, char *argv[]) {
     while (!safe_quit) {
         usleep(SCREEN_WAIT);
     }
-
-    mini_free(muos_config);
 
     pthread_cancel(joystick_thread);
 

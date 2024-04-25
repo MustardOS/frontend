@@ -18,10 +18,18 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 static int js_fd;
+
+int NAV_DPAD_HOR;
+int NAV_ANLG_HOR;
+int NAV_DPAD_VER;
+int NAV_ANLG_VER;
+int NAV_A;
+int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -118,7 +126,7 @@ void create_metadata_directories() {
 void create_metadata_file(const char *filename) {
     create_metadata_directories();
 
-    FILE *file = fopen(filename, "w");
+    FILE * file = fopen(filename, "w");
     if (file == NULL) {
         perror("Error opening the file");
         return;
@@ -535,10 +543,10 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    process_visual_element("clock", ui_lblDatetime);
-    process_visual_element("battery", ui_staCapacity);
-    process_visual_element("network", ui_staNetwork);
-    process_visual_element("bluetooth", ui_staBluetooth);
+    process_visual_element(CLOCK, ui_lblDatetime);
+    process_visual_element(BLUETOOTH, ui_staBluetooth);
+    process_visual_element(NETWORK, ui_staNetwork);
+    process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
@@ -704,9 +712,9 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = SCREEN_HEIGHT;
     lv_disp_drv_register(&disp_drv);
 
-    ui_init();
-    muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    load_config(&config);
 
+    ui_init();
     init_elements();
 
     lv_obj_set_user_data(ui_scrTracker, basename(argv[0]));
@@ -716,6 +724,35 @@ int main(int argc, char *argv[]) {
 
     load_theme(&theme, basename(argv[0]));
     apply_theme();
+
+    switch (theme.MISC.NAVIGATION_TYPE) {
+        case 1:
+            NAV_DPAD_HOR = ABS_HAT0Y;
+            NAV_ANLG_HOR = ABS_RX;
+            NAV_DPAD_VER = ABS_HAT0X;
+            NAV_ANLG_VER = ABS_Z;
+            break;
+        default:
+            NAV_DPAD_HOR = ABS_HAT0X;
+            NAV_ANLG_HOR = ABS_Z;
+            NAV_DPAD_VER = ABS_HAT0Y;
+            NAV_ANLG_VER = ABS_RX;
+    }
+
+    switch (config.SETTINGS.ADVANCED.SWAP) {
+        case 1:
+            NAV_A = JOY_B;
+            NAV_B = JOY_A;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
+            break;
+        default:
+            NAV_A = JOY_A;
+            NAV_B = JOY_B;
+            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
+            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
+            break;
+    }
 
     current_wall = load_wallpaper(ui_scrTracker, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
@@ -731,7 +768,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrTracker);
 
-    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
+    if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
 
@@ -803,8 +840,6 @@ int main(int argc, char *argv[]) {
     while (!safe_quit) {
         usleep(SCREEN_WAIT);
     }
-
-    mini_free(muos_config);
 
     pthread_cancel(joystick_thread);
 

@@ -18,6 +18,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -156,14 +157,14 @@ void elements_events_init() {
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {hidden.total, hidden.current},
-            {sound.total, sound.current},
-            {startup.total, startup.current},
-            {power.total, power.current},
+            {hidden.total,      hidden.current},
+            {sound.total,       sound.current},
+            {startup.total,     startup.current},
+            {power.total,       power.current},
             {low_battery.total, low_battery.current},
-            {colour.total, colour.current},
-            {brightness.total, brightness.current},
-            {hdmi.total, hdmi.current}
+            {colour.total,      colour.current},
+            {brightness.total,  brightness.current},
+            {hdmi.total,        hdmi.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -184,37 +185,29 @@ void init_dropdown_settings() {
 }
 
 void restore_tweak_options() {
-    int idx_hidden = mini_get_int(muos_config, "settings.general", "hidden", 0);
-    int idx_msound = mini_get_int(muos_config, "settings.general", "sound", 0);
-    const char *idx_startup = mini_get_string(muos_config, "settings.general", "startup", "launcher");
-    int idx_power = mini_get_int(muos_config, "settings.general", "power", 0);
-    int idx_lowbattery = mini_get_int(muos_config, "settings.general", "low_battery", 0);
-    int idx_colour = mini_get_int(muos_config, "settings.general", "colour", 9);
-    int idx_brightness = get_brightness_percentage(get_brightness());
-    int idx_hdmi = mini_get_int(muos_config, "settings.general", "hdmi", 0);
+    lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
+    lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
+    lv_dropdown_set_selected(ui_droPower, config.SETTINGS.GENERAL.POWER);
+    lv_dropdown_set_selected(ui_droLowBattery, config.SETTINGS.GENERAL.LOW_BATTERY);
+    lv_dropdown_set_selected(ui_droBrightness, config.SETTINGS.GENERAL.BRIGHTNESS);
+    lv_dropdown_set_selected(ui_droHDMI, config.SETTINGS.GENERAL.HDMI);
 
-    lv_dropdown_set_selected(ui_droHidden, idx_hidden);
-    lv_dropdown_set_selected(ui_droSound, idx_msound);
-    lv_dropdown_set_selected(ui_droPower, idx_power);
-    lv_dropdown_set_selected(ui_droLowBattery, idx_lowbattery);
-    lv_dropdown_set_selected(ui_droBrightness, idx_brightness);
-    lv_dropdown_set_selected(ui_droHDMI, idx_hdmi);
-
-    if (strcasecmp(idx_startup, "launcher") == 0) {
+    const char *startup_type = config.SETTINGS.GENERAL.STARTUP;
+    if (strcasecmp(startup_type, "launcher") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 0);
-    } else if (strcasecmp(idx_startup, "explore") == 0) {
+    } else if (strcasecmp(startup_type, "explore") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 1);
-    } else if (strcasecmp(idx_startup, "favourite") == 0) {
+    } else if (strcasecmp(startup_type, "favourite") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 2);
-    } else if (strcasecmp(idx_startup, "history") == 0) {
+    } else if (strcasecmp(startup_type, "history") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 3);
-    } else if (strcasecmp(idx_startup, "last") == 0) {
+    } else if (strcasecmp(startup_type, "last") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 4);
     } else {
         lv_dropdown_set_selected(ui_droStartup, 0);
     }
 
-    switch (idx_colour) {
+    switch (config.SETTINGS.GENERAL.COLOUR) {
         case -256:
             lv_dropdown_set_selected(ui_droColour, 0);
             break;
@@ -273,6 +266,8 @@ void restore_tweak_options() {
 }
 
 void save_tweak_options() {
+    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+
     int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
     int idx_msound = lv_dropdown_get_selected(ui_droSound);
     int idx_power = lv_dropdown_get_selected(ui_droPower);
@@ -370,6 +365,7 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.general", "hdmi", idx_hdmi);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+    mini_free(muos_config);
 
     set_brightness(((idx_brightness + 1) * BL_MAX) / 100);
     run_shell_script(MUOS_TWEAK_UPDATE);
@@ -702,10 +698,10 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    process_visual_element("clock", ui_lblDatetime);
-    process_visual_element("battery", ui_staCapacity);
-    process_visual_element("network", ui_staNetwork);
-    process_visual_element("bluetooth", ui_staBluetooth);
+    process_visual_element(CLOCK, ui_lblDatetime);
+    process_visual_element(BLUETOOTH, ui_staBluetooth);
+    process_visual_element(NETWORK, ui_staNetwork);
+    process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
@@ -873,9 +869,9 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = SCREEN_HEIGHT;
     lv_disp_drv_register(&disp_drv);
 
-    ui_init();
-    muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    load_config(&config);
 
+    ui_init();
     init_elements();
 
     lv_obj_set_user_data(ui_scrTweakGeneral, basename(argv[0]));
@@ -900,7 +896,7 @@ int main(int argc, char *argv[]) {
             NAV_ANLG_VER = ABS_RX;
     }
 
-    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+    switch (config.SETTINGS.ADVANCED.SWAP) {
         case 1:
             NAV_A = JOY_B;
             NAV_B = JOY_A;
@@ -929,7 +925,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrTweakGeneral);
 
-    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
+    if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
 
@@ -986,8 +982,6 @@ int main(int argc, char *argv[]) {
     while (!safe_quit) {
         usleep(SCREEN_WAIT);
     }
-
-    mini_free(muos_config);
 
     pthread_cancel(joystick_thread);
 

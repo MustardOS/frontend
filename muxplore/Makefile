@@ -1,19 +1,28 @@
 ifeq ($(DEVICE), RG35XX)
-	ARCH = -marm -mtune=cortex-a9 -mfpu=neon-vfpv3 -mfloat-abi=softfp -march=armv7-a
+	ARCH = -march=armv7-a \
+		-mtune=cortex-a9 \
+		-mfpu=neon-vfpv3 \
+		-mfloat-abi=softfp 
 else ifeq ($(DEVICE), RG35XXPLUS)
-	ARCH = -march=armv8-a+simd -mtune=cortex-a53
+	ARCH = -march=armv8-a+simd \
+		-mtune=cortex-a53
 else
 	$(error Unsupported Device: $(DEVICE))
 endif
 
 TARGET = ${shell basename $$(pwd)}
 
-CC = ccache $(CROSS_COMPILE)gcc -static
+CC = ccache $(CROSS_COMPILE)gcc -static -O3
 
-CFLAGS  = -O3 $(ARCH) -flto=auto -ffunction-sections -fdata-sections -flto -finline-functions -Wall -Wno-implicit-function-declaration -Wno-format-zero-length
+CFLAGS  = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
+	-flto -finline-functions -Wall -Wno-format-zero-length \
+	-Wno-implicit-function-declaration
+
 LDFLAGS = $(CFLAGS) -lpthread -Wl,--gc-sections -s
 
-EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer -fno-unroll-loops -fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
+EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
+	-fno-unroll-loops -fmerge-all-constants -fno-ident \
+	-ffast-math -funroll-loops -falign-functions
 
 LVGL_DIR_NAME ?= lvgl
 LVGL_DIR ?= ${shell pwd}/..
@@ -46,7 +55,17 @@ message:
 	@printf "Name:\t$(TARGET)\n"
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
-	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) ../common/json/json.c ../common/mini/mini.c ../common/array.c ../common/common.c ../common/glyph.c ../common/theme.c theme.c $(EXTRA)
+	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
+		../common/json/json.c \
+		../common/mini/mini.c \
+		../common/array.c \
+		../common/config.c \
+		../common/glyph.c \
+		../common/common.c \
+		../common/theme.c \
+		theme.c \
+		$(EXTRA)
 
 clean:
 	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
+

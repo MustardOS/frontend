@@ -15,6 +15,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -29,7 +30,7 @@ int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
-mini_t *muos_config;
+struct mux_config config;
 
 // Place as many NULL as there are options!
 lv_obj_t *labels[] = {};
@@ -60,8 +61,9 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = SCREEN_HEIGHT;
     lv_disp_drv_register(&disp_drv);
 
+    load_config(&config);
+
     ui_init();
-    muos_config = mini_try_load(MUOS_CONFIG_FILE);
 
     load_theme(&theme, basename(argv[0]));
     apply_theme();
@@ -127,7 +129,6 @@ int main(int argc, char *argv[]) {
     }
 
     close(pipe_fd);
-    mini_free(muos_config);
 
     return 0;
 }

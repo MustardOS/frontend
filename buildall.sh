@@ -26,5 +26,5 @@ for MUX in */; do
 	fi
 done
 
-notify-send "muOS Frontend" "Completed $BUILD_COUNT of $BUILD_TOTAL"
+notify-send "muOS Frontend" "Completed $BUILD_COUNT of $BUILD_TOTAL" && echo -e '\a'
 

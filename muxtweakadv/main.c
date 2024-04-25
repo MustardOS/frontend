@@ -18,6 +18,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -164,22 +165,17 @@ void init_dropdown_settings() {
 }
 
 void restore_tweak_options() {
-    int idx_swap = mini_get_int(muos_config, "settings.advanced", "swap", 0);
-    int idx_thermal = mini_get_int(muos_config, "settings.advanced", "thermal", 0);
-    int idx_font = mini_get_int(muos_config, "settings.advanced", "font", 0);
-    int idx_verbose = mini_get_int(muos_config, "settings.advanced", "verbose", 0);
-    int idx_volume_low = mini_get_int(muos_config, "settings.advanced", "volume_low", 0);
-    int idx_offset = mini_get_int(muos_config, "settings.advanced", "offset", 50);
-
-    lv_dropdown_set_selected(ui_droSwap, idx_swap);
-    lv_dropdown_set_selected(ui_droThermal, idx_thermal);
-    lv_dropdown_set_selected(ui_droFont, idx_font);
-    lv_dropdown_set_selected(ui_droVerbose, idx_verbose);
-    lv_dropdown_set_selected(ui_droVolume, idx_volume_low);
-    lv_dropdown_set_selected(ui_droOffset, idx_offset);
+    lv_dropdown_set_selected(ui_droSwap, config.SETTINGS.ADVANCED.SWAP);
+    lv_dropdown_set_selected(ui_droThermal, config.SETTINGS.ADVANCED.THERMAL);
+    lv_dropdown_set_selected(ui_droFont, config.SETTINGS.ADVANCED.FONT);
+    lv_dropdown_set_selected(ui_droVerbose, config.SETTINGS.ADVANCED.VERBOSE);
+    lv_dropdown_set_selected(ui_droVolume, config.SETTINGS.ADVANCED.VOLUME_LOW);
+    lv_dropdown_set_selected(ui_droOffset, config.SETTINGS.ADVANCED.OFFSET);
 }
 
 void save_tweak_options() {
+    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+
     int idx_swap = lv_dropdown_get_selected(ui_droSwap);
     int idx_thermal = lv_dropdown_get_selected(ui_droThermal);
     int idx_font = lv_dropdown_get_selected(ui_droFont);
@@ -195,6 +191,7 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+    mini_free(muos_config);
 
     run_shell_script(MUOS_TWEAK_UPDATE);
 }
@@ -484,10 +481,10 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    process_visual_element("clock", ui_lblDatetime);
-    process_visual_element("battery", ui_staCapacity);
-    process_visual_element("network", ui_staNetwork);
-    process_visual_element("bluetooth", ui_staBluetooth);
+    process_visual_element(CLOCK, ui_lblDatetime);
+    process_visual_element(BLUETOOTH, ui_staBluetooth);
+    process_visual_element(NETWORK, ui_staNetwork);
+    process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
@@ -651,9 +648,9 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = SCREEN_HEIGHT;
     lv_disp_drv_register(&disp_drv);
 
-    ui_init();
-    muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    load_config(&config);
 
+    ui_init();
     init_elements();
 
     lv_obj_set_user_data(ui_scrTweakAdvanced, basename(argv[0]));
@@ -678,7 +675,7 @@ int main(int argc, char *argv[]) {
             NAV_ANLG_VER = ABS_RX;
     }
 
-    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+    switch (config.SETTINGS.ADVANCED.SWAP) {
         case 1:
             NAV_A = JOY_B;
             NAV_B = JOY_A;
@@ -707,7 +704,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrTweakAdvanced);
 
-    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
+    if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
 
@@ -764,8 +761,6 @@ int main(int argc, char *argv[]) {
     while (!safe_quit) {
         usleep(SCREEN_WAIT);
     }
-
-    mini_free(muos_config);
 
     pthread_cancel(joystick_thread);
 

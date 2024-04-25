@@ -18,6 +18,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -72,9 +73,12 @@ void show_help() {
 }
 
 void set_theme_value(const char *theme) {
+    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+
     mini_set_string(muos_config, "theme", "name", theme);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+    mini_free(muos_config);
 
     run_shell_script(MUOS_THEME_UPDATE);
 }
@@ -171,7 +175,8 @@ void create_theme_items() {
 
             lv_obj_set_style_bg_color(ui_lblThemeItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_opa(ui_lblThemeItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_opa(ui_lblThemeItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_bg_main_stop(ui_lblThemeItem, theme.LIST_DEFAULT.GRADIENT_START,
                                           LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_bg_grad_stop(ui_lblThemeItem, theme.LIST_DEFAULT.GRADIENT_STOP,
@@ -186,13 +191,16 @@ void create_theme_items() {
 
             lv_obj_set_style_bg_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_bg_opa(ui_lblThemeItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_opa(ui_lblThemeItem, theme.LIST_FOCUS.BACKGROUND_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_FOCUSED);
             lv_obj_set_style_bg_main_stop(ui_lblThemeItem, theme.LIST_FOCUS.GRADIENT_START,
                                           LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_bg_grad_stop(ui_lblThemeItem, theme.LIST_FOCUS.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_grad_stop(ui_lblThemeItem, theme.LIST_FOCUS.GRADIENT_STOP,
+                                          LV_PART_MAIN | LV_STATE_FOCUSED);
             lv_obj_set_style_border_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
                                           LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_border_opa(ui_lblThemeItem, theme.LIST_FOCUS.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_border_opa(ui_lblThemeItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
+                                        LV_PART_MAIN | LV_STATE_FOCUSED);
             lv_obj_set_style_text_color(ui_lblThemeItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
                                         LV_PART_MAIN | LV_STATE_FOCUSED);
             lv_obj_set_style_text_opa(ui_lblThemeItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
@@ -217,17 +225,20 @@ void create_theme_items() {
             lv_obj_set_style_border_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_text_color(ui_lblThemeItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
                                         LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_opa(ui_lblThemeItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_opa(ui_lblThemeItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
 
             lv_obj_set_style_bg_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
             lv_obj_set_style_border_opa(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
             lv_obj_set_style_text_color(ui_lblThemeItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
                                         LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_text_opa(ui_lblThemeItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_opa(ui_lblThemeItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
 
             lv_obj_set_style_pad_left(ui_lblThemeItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_pad_right(ui_lblThemeItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_top(ui_lblThemeItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_top(ui_lblThemeItemGlyph, theme.FONT.LIST_ICON_PAD_TOP,
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_pad_bottom(ui_lblThemeItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
                                         LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -515,10 +526,10 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    process_visual_element("clock", ui_lblDatetime);
-    process_visual_element("battery", ui_staCapacity);
-    process_visual_element("network", ui_staNetwork);
-    process_visual_element("bluetooth", ui_staBluetooth);
+    process_visual_element(CLOCK, ui_lblDatetime);
+    process_visual_element(BLUETOOTH, ui_staBluetooth);
+    process_visual_element(NETWORK, ui_staNetwork);
+    process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
@@ -675,9 +686,9 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = SCREEN_HEIGHT;
     lv_disp_drv_register(&disp_drv);
 
-    ui_init();
-    muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    load_config(&config);
 
+    ui_init();
     init_elements();
 
     lv_obj_set_user_data(ui_scrTheme, basename(argv[0]));
@@ -702,7 +713,7 @@ int main(int argc, char *argv[]) {
             NAV_ANLG_VER = ABS_RX;
     }
 
-    switch (mini_get_int(muos_config, "settings.advanced", "swap", LABEL)) {
+    switch (config.SETTINGS.ADVANCED.SWAP) {
         case 1:
             NAV_A = JOY_B;
             NAV_B = JOY_A;
@@ -731,7 +742,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrTheme);
 
-    if (get_ini_int(muos_config, "settings.general", "sound", LABEL) == 2) {
+    if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
 
@@ -796,8 +807,6 @@ int main(int argc, char *argv[]) {
     while (!safe_quit) {
         usleep(SCREEN_WAIT);
     }
-
-    mini_free(muos_config);
 
     pthread_cancel(joystick_thread);
 
