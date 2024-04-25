@@ -224,6 +224,7 @@ void *joystick_task() {
                                         play_sound("confirm", nav_sound);
 
                                         system("cp -f /opt/muos/backup/retroarch.cfg /mnt/mmc/MUOS/.retroarch/retroarch.cfg");
+                                        system("cp -f /opt/muos/backup/retroarch32.cfg /mnt/mmc/MUOS/.retroarch/retroarch32.cfg");
 
                                         osd_message = "RetroArch Configuration Restored";
                                         lv_label_set_text(ui_lblMessage, osd_message);
@@ -257,7 +258,10 @@ void *joystick_task() {
                                         lv_label_set_text(ui_lblMessage, osd_message);
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                        // TODO: Add PortMaster archival restore here
+                                        system("rm -rf /mnt/mmc/MUOS/PortMaster");
+                                        system("mkdir -p /mnt/mmc/MUOS/PortMaster");
+                                        system("unzip -o /opt/muos/archive/portmaster/portmaster.zip "
+                                               "-d /mnt/mmc/MUOS/PortMaster");
 
                                         osd_message = "PortMaster Restored";
                                         lv_label_set_text(ui_lblMessage, osd_message);
