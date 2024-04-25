@@ -584,14 +584,6 @@ int set_ini_int(mini_t *ini_config, const char *section, const char *key, int va
     return meta;
 }
 
-const char *get_ini_string(mini_t *ini_config, const char *section, const char *key) {
-    const char *meta = mini_get_string(ini_config, section, key, "??");
-
-    //printf("STR\t%s: %s\n", key, meta);
-
-    return meta;
-}
-
 const char *get_ini_unicode(mini_t *ini_config, const char *section, const char *key) {
     const char *meta = mini_get_string(ini_config, section, key, "FFFF");
 
@@ -608,6 +600,18 @@ const char *get_ini_unicode(mini_t *ini_config, const char *section, const char 
     //printf("UNICODE\t%s: %s\t\t\t(%s)\n", key, meta, unicode);
 
     return unicode;
+}
+
+char* get_ini_string(mini_t* ini_config, const char* section, const char* key, char* default_value) {
+    static char meta[MAX_BUFFER_SIZE];
+    const char* result = mini_get_string(ini_config, section, key, default_value);
+
+    strncpy(meta, result, MAX_BUFFER_SIZE - 1);
+    meta[MAX_BUFFER_SIZE - 1] = '\0';
+
+    //printf("STR\t%s: %s\n", key, meta);
+
+    return meta;
 }
 
 int set_ini_string(mini_t *ini_config, const char *section, const char *key, const char *value) {

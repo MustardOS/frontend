@@ -1,5 +1,7 @@
 #pragma once
 
+#include "options.h"
+
 extern struct mux_config config;
 
 struct mux_config {
@@ -9,25 +11,25 @@ struct mux_config {
 
     struct {
         int16_t NOTATION;
-        const char *POOL;
+        char POOL[MAX_BUFFER_SIZE];
     } CLOCK;
 
     struct {
         int16_t ENABLED;
-        const char *INTERFACE;
+        char INTERFACE[MAX_BUFFER_SIZE];
         int16_t TYPE;
-        const char *SSID;
-        const char *ADDRESS;
-        const char *GATEWAY;
-        const char *SUBNET;
-        const char *DNS;
+        char SSID[MAX_BUFFER_SIZE];
+        char ADDRESS[MAX_BUFFER_SIZE];
+        char GATEWAY[MAX_BUFFER_SIZE];
+        char SUBNET[MAX_BUFFER_SIZE];
+        char DNS[MAX_BUFFER_SIZE];
     } NETWORK;
 
     struct {
         struct {
             int16_t HIDDEN;
             int16_t SOUND;
-            const char *STARTUP;
+            char STARTUP[MAX_BUFFER_SIZE];
             int16_t POWER;
             int16_t LOW_BATTERY;
             int16_t COLOUR;
@@ -45,7 +47,7 @@ struct mux_config {
     } SETTINGS;
 
     struct {
-        const char *NAME;
+        char NAME[MAX_BUFFER_SIZE];
     } THEME;
 
     struct {

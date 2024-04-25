@@ -116,7 +116,7 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, en
 
 int set_ini_int(mini_t *ini_config, const char *section, const char *key, int value);
 
-const char *get_ini_string(mini_t *ini_config, const char *section, const char *key);
+char* get_ini_string(mini_t* ini_config, const char* section, const char* key, char* default_value);
 
 const char *get_ini_unicode(mini_t *ini_config, const char *section, const char *key);
 

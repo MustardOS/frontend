@@ -11960,7 +11960,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -12432,7 +12432,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -12910,7 +12910,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -13345,7 +13345,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -13760,7 +13760,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -14175,7 +14175,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -14591,7 +14591,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -15007,7 +15007,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -15424,7 +15424,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -15841,7 +15841,7 @@
                             "strtype": "_style/Padding",
                             "intarray": [
                               0,
-                              9,
+                              8,
                               2,
                               0
                             ],
@@ -16243,8 +16243,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID64809051-811690S1252268",
@@ -24201,7 +24200,7 @@
     "force_export_images": true,
     "flat_export": true,
     "advanced_alpha": false,
-    "pointfilter": true,
+    "pointfilter": false,
     "theme_simplified": false,
     "theme_dark": true,
     "theme_color1": 5,
