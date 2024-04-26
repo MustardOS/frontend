@@ -654,11 +654,11 @@ void gen_item(char **file_names, int file_count) {
         push_string(&content_items, file_names[i]);
 
         if (is_cache) {
-            fn_name = get_friendly_name(file_names[i], init_cache_file);
+            fn_name = read_line_from_file(init_cache_file, i + 1);
         } else {
             fn_name = get_friendly_name(file_names[i], MUOS_NAME_FILE);
             char good_fn_name[MAX_BUFFER_SIZE];
-            snprintf(good_fn_name, sizeof(good_fn_name), "%s=%s\n", fn_name, strip_ext_c(fn_name));
+            snprintf(good_fn_name, sizeof(good_fn_name), "%s\n", fn_name);
             write_text_to_file(init_cache_file, good_fn_name, "a");
         }
 

@@ -90,8 +90,6 @@ char *strip_dir(char *text);
 
 char *strip_ext(char *text);
 
-char *strip_ext_c(const char *text);
-
 char *get_ext(char *text);
 
 char *get_execute_result(const char *command);

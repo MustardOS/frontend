@@ -324,21 +324,10 @@ char *strip_dir(char *text) {
 
 char *strip_ext(char *text) {
     char *result = strdup(text);
-    char *ext = get_ext(result);
+    char *ext = strrchr(result, '.');
 
-    if (*ext != '\0') {
-        result[strlen(result) - strlen(ext)] = '\0';
-    }
-
-    return result;
-}
-
-char *strip_ext_c(const char *text) {
-    char *result = strdup(text);
-    char *ext = get_ext(result);
-
-    if (*ext != '\0') {
-        result[strlen(result) - strlen(ext)] = '\0';
+    if (ext != NULL) {
+        *ext = '\0';
     }
 
     return result;
