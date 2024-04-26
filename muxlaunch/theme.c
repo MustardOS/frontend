@@ -168,7 +168,7 @@ void apply_theme() {
             {ui_lblNavYGlyph,    theme.NAV.Y.GLYPH},
             {ui_lblNavZGlyph,    theme.NAV.Z.GLYPH},
             {ui_lblNavMenuGlyph, theme.NAV.MENU.GLYPH},
-            {ui_icoProgress,     theme.LIST_FOCUS.TEXT},
+            {ui_icoProgress,     theme.BAR.ICON},
     };
     for (size_t i = 0; i < sizeof(default_elements) / sizeof(default_elements[0]); ++i) {
         lv_obj_set_style_text_color(default_elements[i].e, lv_color_hex(default_elements[i].c),
@@ -279,7 +279,7 @@ void apply_theme() {
             {ui_lblNavYGlyph,    theme.NAV.Y.GLYPH_ALPHA},
             {ui_lblNavZGlyph,    theme.NAV.Z.GLYPH_ALPHA},
             {ui_lblNavMenuGlyph, theme.NAV.MENU.GLYPH_ALPHA},
-            {ui_icoProgress,     theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoProgress,     theme.BAR.ICON_ALPHA},
     };
     for (size_t i = 0; i < sizeof(text_default_alpha_elements) / sizeof(text_default_alpha_elements[0]); ++i) {
         lv_obj_set_style_text_opa(text_default_alpha_elements[i].e, text_default_alpha_elements[i].c,
