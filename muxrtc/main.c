@@ -95,6 +95,8 @@ void confirm_rtc_config() {
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
+
+    system("hwclock -r");
 }
 
 void read_rtc_hardware() {
