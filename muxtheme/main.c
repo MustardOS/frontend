@@ -62,14 +62,21 @@ int first_open = 1;
 int content_panel_y = 0;
 
 void show_help() {
-    char *title = lv_label_get_text(ui_lblTitle);
-    char *message = MUXTHEME_GENERIC;
+    char credits[MAX_BUFFER_SIZE];
+    strcpy(credits, "This theme has no attributed credits!");
 
-    if (strlen(message) <= 1) {
-        message = NO_HELP_FOUND;
+    char command[MAX_BUFFER_SIZE];
+    snprintf(command, sizeof(command), "unzip -p /%s/%s.zip credits.txt",
+             MUOS_THEME_PATH, lv_label_get_text(lv_group_get_focused(ui_group)));
+
+    FILE *fp = popen(command, "r");
+    if (fp != NULL) {
+        fgets(credits, sizeof(credits), fp);
+        pclose(fp);
     }
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     lv_label_get_text(lv_group_get_focused(ui_group)), credits);
 }
 
 void set_theme_value(const char *theme) {
