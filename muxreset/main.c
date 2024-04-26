@@ -181,7 +181,7 @@ void *joystick_task() {
 
                                         char favourites[MAX_BUFFER_SIZE];
                                         snprintf(favourites, sizeof(favourites), "/%s/favourites", MUOS_INFO_PATH);
-                                        delete_files_of_type(favourites, "cfg");
+                                        delete_files_of_type(favourites, "cfg", NULL);
 
                                         osd_message = "Favourites Cleared";
                                     } else if (element_focused == ui_lblClearHistory) {
@@ -189,7 +189,7 @@ void *joystick_task() {
 
                                         char history[MAX_BUFFER_SIZE];
                                         snprintf(history, sizeof(history), "/%s/history", MUOS_INFO_PATH);
-                                        delete_files_of_type(history, "cfg");
+                                        delete_files_of_type(history, "cfg", NULL);
 
                                         osd_message = "History Cleared";
                                         lv_label_set_text(ui_lblMessage, osd_message);
@@ -199,7 +199,7 @@ void *joystick_task() {
 
                                         char activity[MAX_BUFFER_SIZE];
                                         snprintf(activity, sizeof(activity), "/%s/activity", MUOS_INFO_PATH);
-                                        delete_files_of_type(activity, "act");
+                                        delete_files_of_type(activity, "act", NULL);
 
                                         osd_message = "Activity Cleared";
                                         lv_label_set_text(ui_lblMessage, osd_message);
@@ -207,7 +207,7 @@ void *joystick_task() {
                                     } else if (element_focused == ui_lblClearConfigurations) {
                                         play_sound("confirm", nav_sound);
 
-                                        delete_files_of_type(MUOS_CORE_DIR, "cfg");
+                                        delete_files_of_type(MUOS_CORE_DIR, "cfg", NULL);
 
                                         osd_message = "Configurations Cleared";
                                         lv_label_set_text(ui_lblMessage, osd_message);
@@ -215,7 +215,7 @@ void *joystick_task() {
                                     } else if (element_focused == ui_lblClearCaches) {
                                         play_sound("confirm", nav_sound);
 
-                                        delete_files_of_type(MUOS_CACHE_DIR, "json");
+                                        delete_files_of_type(MUOS_CACHE_DIR, "json", NULL);
 
                                         osd_message = "Caches Cleared";
                                         lv_label_set_text(ui_lblMessage, osd_message);

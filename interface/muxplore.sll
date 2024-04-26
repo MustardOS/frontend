@@ -16,7 +16,7 @@
     "force_export_images": true,
     "flat_export": true,
     "advanced_alpha": false,
-    "pointfilter": true,
+    "pointfilter": false,
     "theme_simplified": false,
     "theme_dark": true,
     "theme_color1": 5,

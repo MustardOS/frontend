@@ -89,7 +89,7 @@ void create_core_assignment(char *core, char *sys) {
      * Will be removed in the future
      * TODO: Individual core locking mechanism
      */
-    delete_files_of_type(core_dir, "cfg");
+    delete_files_of_type(core_dir, "cfg", NULL);
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg", MUOS_CORE_DIR, get_last_subdir(rom_dir, '/', 4));

@@ -654,11 +654,11 @@ void gen_item(char **file_names, int file_count) {
         push_string(&content_items, file_names[i]);
 
         if (is_cache) {
-            fn_name = read_line_from_file(init_cache_file, i + 1);
+            fn_name = get_friendly_name(file_names[i], init_cache_file);
         } else {
             fn_name = get_friendly_name(file_names[i], MUOS_NAME_FILE);
             char good_fn_name[MAX_BUFFER_SIZE];
-            snprintf(good_fn_name, sizeof(good_fn_name), "%s\n", fn_name);
+            snprintf(good_fn_name, sizeof(good_fn_name), "%s=%s\n", fn_name, strip_ext_c(fn_name));
             write_text_to_file(init_cache_file, good_fn_name, "a");
         }
 
@@ -1336,8 +1336,14 @@ void *joystick_task() {
                                             goto nothing_ever_happens;
                                     }
 
+                                    char c_dir[MAX_BUFFER_SIZE];
+                                    snprintf(c_dir, sizeof(c_dir), "%s/%s",
+                                             MUOS_CORE_DIR, get_last_subdir(n_dir, '/', 4));
+                                    const char *exception_list[] = {"core.cfg", NULL};
+
                                     if (file_exist(cache_file)) {
                                         remove(cache_file);
+                                        delete_files_of_type(c_dir, "cfg", exception_list);
                                         cache_message(n_dir);
                                     }
 

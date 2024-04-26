@@ -333,6 +333,17 @@ char *strip_ext(char *text) {
     return result;
 }
 
+char *strip_ext_c(const char *text) {
+    char *result = strdup(text);
+    char *ext = get_ext(result);
+
+    if (*ext != '\0') {
+        result[strlen(result) - strlen(ext)] = '\0';
+    }
+
+    return result;
+}
+
 char *get_ext(char *text) {
     size_t i;
     int last_dot_index = -1;
@@ -990,7 +1001,7 @@ void play_sound(const char *sound, int enabled) {
     }
 }
 
-void delete_files_of_type(const char *dir_path, const char *extension) {
+void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[]) {
     struct dirent *entry;
     DIR *dir = opendir(dir_path);
 
@@ -1006,15 +1017,25 @@ void delete_files_of_type(const char *dir_path, const char *extension) {
                     char file_path[PATH_MAX];
                     snprintf(file_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
 
-                    if (remove(file_path) != 0) {
-                        perror("Error deleting file");
+                    int is_exception = 0;
+                    for (int i = 0; exception[i] != NULL; ++i) {
+                        if (strcmp(entry->d_name, exception[i]) == 0) {
+                            is_exception = 1;
+                            break;
+                        }
+                    }
+
+                    if (!is_exception) {
+                        if (remove(file_path) != 0) {
+                            perror("Error deleting file");
+                        }
                     }
                 }
             } else if (entry->d_type == DT_DIR && strcasecmp(entry->d_name, ".") != 0 &&
                        strcasecmp(entry->d_name, "..") != 0) {
                 char sub_dir_path[PATH_MAX];
                 snprintf(sub_dir_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
-                delete_files_of_type(sub_dir_path, extension);
+                delete_files_of_type(sub_dir_path, extension, exception);
             }
         }
 

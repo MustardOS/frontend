@@ -45,7 +45,6 @@ lv_obj_t * ui_lblMessage;
 lv_obj_t * ui_pnlHelp;
 lv_obj_t * ui_pnlHelpMessage;
 lv_obj_t * ui_lblHelpHeader;
-lv_obj_t * ui_pnlHelpDescription;
 lv_obj_t * ui_lblHelpDescription;
 lv_obj_t * ui_pnlHelpExtra;
 lv_obj_t * ui_lblPreviewHeaderGlyph;

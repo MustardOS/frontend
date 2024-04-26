@@ -90,6 +90,8 @@ char *strip_dir(char *text);
 
 char *strip_ext(char *text);
 
+char *strip_ext_c(const char *text);
+
 char *get_ext(char *text);
 
 char *get_execute_result(const char *command);
@@ -176,7 +178,7 @@ void load_mux(const char *value);
 
 void play_sound(const char *filename, int nav_sound);
 
-void delete_files_of_type(const char *dir_path, const char *extension);
+void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[]);
 
 void delete_files_of_name(const char *dir_path, const char *filename);
 

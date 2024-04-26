@@ -51,7 +51,6 @@ extern lv_obj_t * ui_lblMessage;
 extern lv_obj_t * ui_pnlHelp;
 extern lv_obj_t * ui_pnlHelpMessage;
 extern lv_obj_t * ui_lblHelpHeader;
-extern lv_obj_t * ui_pnlHelpDescription;
 extern lv_obj_t * ui_lblHelpDescription;
 extern lv_obj_t * ui_pnlHelpExtra;
 extern lv_obj_t * ui_lblPreviewHeaderGlyph;

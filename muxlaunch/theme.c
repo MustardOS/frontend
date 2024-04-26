@@ -590,4 +590,64 @@ void apply_theme() {
         lv_obj_set_style_pad_bottom(font_pad_bottom_message_elements[i].e, font_pad_bottom_message_elements[i].c,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    struct small content_pad_left_element[] = {
+            {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
+        lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_pad_right_element[] = {
+            {ui_pnlContent, theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
+        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
+                               LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small datetime_pad_left_element[] = {
+            {ui_lblDatetime, theme.DATETIME.PADDING_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(datetime_pad_left_element) / sizeof(datetime_pad_left_element[0]); ++i) {
+        lv_obj_set_style_pad_left(datetime_pad_left_element[i].e, datetime_pad_left_element[i].c,
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small status_pad_right_element[] = {
+            {ui_conGlyphs, theme.STATUS.PADDING_RIGHT},
+    };
+    for (size_t i = 0; i < sizeof(status_pad_right_element) / sizeof(status_pad_right_element[0]); ++i) {
+        lv_obj_set_style_pad_right(status_pad_right_element[i].e, status_pad_right_element[i].c,
+                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small navigation_alignment_element[] = {
+            {ui_pnlFooter, theme.NAV.ALIGNMENT},
+    };
+    for (size_t i = 0; i < sizeof(navigation_alignment_element) / sizeof(navigation_alignment_element[0]); ++i) {
+        lv_flex_align_t e_align;
+        switch (navigation_alignment_element[i].c) {
+            case 1:
+                e_align = LV_FLEX_ALIGN_CENTER;
+                break;
+            case 2:
+                e_align = LV_FLEX_ALIGN_END;
+                break;
+            case 3:
+                e_align = LV_FLEX_ALIGN_SPACE_AROUND;
+                break;
+            case 4:
+                e_align = LV_FLEX_ALIGN_SPACE_BETWEEN;
+                break;
+            case 5:
+                e_align = LV_FLEX_ALIGN_SPACE_EVENLY;
+                break;
+            default:
+                e_align = LV_FLEX_ALIGN_START;
+                break;
+        }
+        lv_obj_set_style_flex_main_place(navigation_alignment_element[i].e, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
 }
