@@ -286,16 +286,32 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblRG35XXPLUS, "rg35xx-plus");
     lv_obj_set_user_data(ui_lblRG35XX2024, "rg35xx-2024");
 
+    lv_obj_t * opt_hide[6];
+
     if (strcasecmp(HARDWARE, "RG28XX") == 0) {
-        lv_obj_add_flag(ui_lblRG35XXH, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoRG35XXH, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblRG35XXPLUS, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoRG35XXPLUS, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblRG35XX2024, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoRG35XX2024, LV_OBJ_FLAG_HIDDEN);
+        opt_hide[0] = ui_lblRG35XXH;
+        opt_hide[1] = ui_icoRG35XXH;
+        opt_hide[2] = ui_lblRG35XXPLUS;
+        opt_hide[3] = ui_icoRG35XXPLUS;
+        opt_hide[4] = ui_lblRG35XX2024;
+        opt_hide[5] = ui_icoRG35XX2024;
     } else {
-        lv_obj_add_flag(ui_lblRG28XX, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoRG28XX, LV_OBJ_FLAG_FLOATING);
+        opt_hide[0] = ui_lblRG28XX;
+        opt_hide[1] = ui_icoRG28XX;
+        opt_hide[2] = NULL;
+    }
+
+    for (int i = 0; i < sizeof(opt_hide) / sizeof(opt_hide[0]); i++) {
+        if (opt_hide[i] == NULL) break;
+        lv_obj_add_flag(opt_hide[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(opt_hide[i], LV_OBJ_FLAG_FLOATING);
+    }
+
+    if (strcasecmp(HARDWARE, "RG28XX") != 0) {
+        if (lv_group_get_obj_count(ui_group) > 0) {
+            nav_next(ui_group, 1);
+            nav_next(ui_group_glyph, 1);
+        }
     }
 }
 
