@@ -78,7 +78,9 @@
 #define BL_RST_FILE    "/opt/muos/config/brightness.txt"
 #define VOL_RST_FILE   "/opt/muos/config/volume.txt"
 
-#ifdef RG35XX
+#if defined(RG35XX)
+#define HARDWARE "RG35XX"
+
 #define BATT_CAPACITY "/sys/class/power_supply/battery/capacity"
 
 #define BL_DEF      192
@@ -122,7 +124,14 @@
 #define JOY_RIGHT  6
 #endif
 
-#ifdef RG35XXPLUS
+#if defined(RG35XXPLUS) || defined(RG28XX)
+
+#if defined(RG28XX)
+#define HARDWARE "RG28XX"
+#else
+#define HARDWARE "RG35XXPLUS"
+#endif
+
 #define BATT_CAPACITY "/sys/class/power_supply/axp2202-battery/capacity"
 #define BATT_HEALTH   "/sys/class/power_supply/axp2202-battery/health"
 #define BATT_VOLTAGE  "/sys/class/power_supply/axp2202-battery/voltage_now"

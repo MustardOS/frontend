@@ -285,6 +285,18 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblRG35XXH, "rg35xx-h");
     lv_obj_set_user_data(ui_lblRG35XXPLUS, "rg35xx-plus");
     lv_obj_set_user_data(ui_lblRG35XX2024, "rg35xx-2024");
+
+    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
+        lv_obj_add_flag(ui_lblRG35XXH, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoRG35XXH, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblRG35XXPLUS, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoRG35XXPLUS, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblRG35XX2024, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoRG35XX2024, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(ui_lblRG28XX, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoRG28XX, LV_OBJ_FLAG_FLOATING);
+    }
 }
 
 void glyph_task() {
@@ -306,7 +318,8 @@ void glyph_task() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
@@ -415,8 +428,15 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = SCREEN_WIDTH;
-    disp_drv.ver_res = SCREEN_HEIGHT;
+    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
+        disp_drv.hor_res = SCREEN_HEIGHT;
+        disp_drv.ver_res = SCREEN_WIDTH;
+        disp_drv.sw_rotate = 1;
+        disp_drv.rotated = LV_DISP_ROT_90;
+    } else {
+        disp_drv.hor_res = SCREEN_WIDTH;
+        disp_drv.ver_res = SCREEN_HEIGHT;
+    }
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);

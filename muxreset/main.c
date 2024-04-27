@@ -392,6 +392,13 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblRestoreConfig, "retroarch");
     lv_obj_set_user_data(ui_lblRestoreNetwork, "network");
     lv_obj_set_user_data(ui_lblRestorePortMaster, "portmaster");
+
+    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
+        lv_obj_add_flag(ui_lblRestoreNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoRestoreNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblRestorePortMaster, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoRestorePortMaster, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 void glyph_task() {
@@ -522,8 +529,15 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = SCREEN_WIDTH;
-    disp_drv.ver_res = SCREEN_HEIGHT;
+    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
+        disp_drv.hor_res = SCREEN_HEIGHT;
+        disp_drv.ver_res = SCREEN_WIDTH;
+        disp_drv.sw_rotate = 1;
+        disp_drv.rotated = LV_DISP_ROT_90;
+    } else {
+        disp_drv.hor_res = SCREEN_WIDTH;
+        disp_drv.ver_res = SCREEN_HEIGHT;
+    }
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);

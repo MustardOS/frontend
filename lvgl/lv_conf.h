@@ -158,7 +158,7 @@ extern uint32_t mux_tick(void);
 /*Maximum buffer size to allocate for rotation.
  *Only used if software rotation is enabled in the display driver.*/
 //#define LV_DISP_ROT_MAX_BUF (10*1024)
-#define LV_DISP_ROT_MAX_BUF 0
+#define LV_DISP_ROT_MAX_BUF (640*1024U)
 
 /*-------------
  * GPU

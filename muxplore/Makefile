@@ -6,6 +6,9 @@ ifeq ($(DEVICE), RG35XX)
 else ifeq ($(DEVICE), RG35XXPLUS)
 	ARCH = -march=armv8-a+simd \
 		-mtune=cortex-a53
+else ifeq ($(DEVICE), RG28XX)
+	ARCH = -march=armv8-a+simd \
+		-mtune=cortex-a53
 else
 	$(error Unsupported Device: $(DEVICE))
 endif
