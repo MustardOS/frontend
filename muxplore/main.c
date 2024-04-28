@@ -453,16 +453,12 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
                     (*dir_count)++;
                 }
             } else if (entry->d_type == DT_REG) {
-                struct stat file_stat;
-                if (stat(full_path, &file_stat) != -1 && file_stat.st_size > 0) {
-                    char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
-                    snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
+                char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
+                snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
-                    *file_names = (char **) realloc(*file_names, (*file_count + 1) * sizeof(char *));
-                    (*file_names)[*file_count] = file_path;
-                    (*file_count)++;
-                    ui_file_count++;
-                }
+                *file_names = (char **) realloc(*file_names, (*file_count + 1) * sizeof(char *));
+                (*file_names)[*file_count] = file_path;
+                (*file_count)++;
             }
         }
     }
@@ -564,33 +560,6 @@ void gen_label(char *item_glyph, char *item_text) {
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
 }
 
-pthread_mutex_t named_index_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-struct ThreadArgs {
-    int start_index;
-    int end_index;
-};
-
-void *process_items(void *arg) {
-    struct ThreadArgs *args = (struct ThreadArgs *) arg;
-
-    for (int i = args->start_index; i < args->end_index; i++) {
-        char n_index[MAX_BUFFER_SIZE];
-        snprintf(n_index, sizeof(n_index), "%d", get_label_placement(named_items.array[i]));
-
-        pthread_mutex_lock(&named_index_mutex);
-        push_string(&named_index, n_index);
-        pthread_mutex_unlock(&named_index_mutex);
-
-        char *item_name = strip_label_placement(named_items.array[i]);
-        if (strcasecmp(item_name, DUMMY_DIR) != 0) {
-            gen_label("\uF15B", item_name);
-        }
-    }
-
-    pthread_exit(NULL);
-}
-
 void gen_item(char **file_names, int file_count) {
     char init_cache_file[MAX_BUFFER_SIZE];
     char init_meta_dir[MAX_BUFFER_SIZE];
@@ -642,6 +611,11 @@ void gen_item(char **file_names, int file_count) {
     create_directories(strip_dir(init_cache_file));
     create_directories(init_meta_dir);
 
+    char local_name_cache[MAX_BUFFER_SIZE];
+    snprintf(local_name_cache, sizeof(local_name_cache), "%score.cfg", init_meta_dir);
+
+    int require_local_name_cache = atoi(read_line_from_file(local_name_cache, 3));
+
     int is_cache = 0;
     if (file_exist(init_cache_file)) {
         is_cache = 1;
@@ -653,13 +627,17 @@ void gen_item(char **file_names, int file_count) {
 
         push_string(&content_items, file_names[i]);
 
-        if (is_cache) {
-            fn_name = read_line_from_file(init_cache_file, i + 1);
+        if (require_local_name_cache) {
+            if (is_cache) {
+                fn_name = read_line_from_file(init_cache_file, i + 1);
+            } else {
+                fn_name = get_friendly_name(file_names[i], MUOS_NAME_FILE);
+                char good_fn_name[MAX_BUFFER_SIZE];
+                snprintf(good_fn_name, sizeof(good_fn_name), "%s\n", fn_name);
+                write_text_to_file(init_cache_file, good_fn_name, "a");
+            }
         } else {
-            fn_name = get_friendly_name(file_names[i], MUOS_NAME_FILE);
-            char good_fn_name[MAX_BUFFER_SIZE];
-            snprintf(good_fn_name, sizeof(good_fn_name), "%s\n", fn_name);
-            write_text_to_file(init_cache_file, good_fn_name, "a");
+            fn_name = file_names[i];
         }
 
         snprintf(curr_item, sizeof(curr_item), "%s :: %d",
@@ -846,8 +824,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
     printf("ASSIGNED CORE: %s\n", assigned_core);
 
     if (assigned_core == NULL) {
-        lv_label_set_text(ui_lblMessage, osd_message);
-        osd_message = "Cannot associate core to this folder!";
+        lv_label_set_text(ui_lblMessage, "Cannot associate core to this folder!");
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
         return 0;
@@ -898,13 +875,14 @@ int load_content(char *content_name, int content_index, int add_favourite) {
         if (add_favourite) {
             write_text_to_file(add_to_hf, read_text_from_file(content_loader_file), "w");
 
+            char* hf_msg;
             if (file_exist(add_to_hf)) {
-                osd_message = "Added to favourites!";
+                hf_msg = "Added to favourites!";
             } else {
-                osd_message = "Could not add to favourites!";
+                hf_msg = "Could not add to favourites!";
             }
 
-            lv_label_set_text(ui_lblMessage, osd_message);
+            lv_label_set_text(ui_lblMessage, hf_msg);
             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
             return 1;
@@ -927,8 +905,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
         return 1;
     }
 
-    osd_message = "Could not load content!";
-    lv_label_set_text(ui_lblMessage, osd_message);
+    lv_label_set_text(ui_lblMessage, "Could not load content!");
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
     return 0;
@@ -980,8 +957,7 @@ int load_cached_content(char *content_name, char *cache_type) {
         return 1;
     }
 
-    osd_message = "Could not load content!";
-    lv_label_set_text(ui_lblMessage, osd_message);
+    lv_label_set_text(ui_lblMessage, "Could not load content!");
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
     return 0;
@@ -1063,15 +1039,9 @@ void cache_message(char *n_dir) {
         default:
             break;
     }
-    if (file_exist(cache_file)) {
-        printf("LOADING CACHE AT: %s\n", cache_file);
-    } else {
-        printf("NO CACHE FOUND AT: %s\n", cache_file);
-        osd_message = "Caching Directory...";
-        lv_label_set_text(ui_lblMessage, osd_message);
-        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-        usleep(UINT16_MAX);
-    }
+
+    lv_label_set_text(ui_lblMessage, "Loading...");
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 }
 
 void *joystick_task() {
@@ -1366,8 +1336,8 @@ void *joystick_task() {
                                             printf("CONTENT RAW NAME: %s\n", f_name);
 
                                             if (strcasecmp(f_content, DUMMY_DIR) == 0) {
-                                                osd_message = "Directories cannot be added to Favourites";
-                                                lv_label_set_text(ui_lblMessage, osd_message);
+                                                lv_label_set_text(ui_lblMessage,
+                                                                  "Directories cannot be added to Favourites");
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 break;
                                             } else {
@@ -1375,12 +1345,10 @@ void *joystick_task() {
                                                                  atoi(get_string_at_index(&named_index,
                                                                                           current_item_index)),
                                                                  1)) {
-                                                    osd_message = "Added to Favourites";
-                                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                                    lv_label_set_text(ui_lblMessage, "Added to Favourites");
                                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 } else {
-                                                    osd_message = "Error adding to Favourites";
-                                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                                    lv_label_set_text(ui_lblMessage, "Error adding to Favourites");
                                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 }
                                                 if (file_exist(MUOS_ROM_LOAD)) {
@@ -1628,8 +1596,6 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblMessage, osd_message);
-
     switch (module) {
         case ROOT:
             lv_label_set_text(ui_lblNavA, "Open");
@@ -1860,6 +1826,11 @@ void ui_refresh_task() {
 
         snprintf(current_content_label, sizeof(current_content_label), "%s",
                  lv_label_get_text(lv_group_get_focused(ui_group)));
+
+        if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+        }
+
         nav_moved = 0;
     }
 }
@@ -2077,13 +2048,9 @@ int main(int argc, char *argv[]) {
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
-    struct osd_task_param osd_par;
 
     dt_par.lblDatetime = ui_lblDatetime;
     bat_par.staCapacity = ui_staCapacity;
-    osd_par.lblMessage = ui_lblMessage;
-    osd_par.pnlMessage = ui_pnlMessage;
-    osd_par.count = 0;
 
     js_fd = open(JOY_DEVICE, O_RDONLY);
     if (js_fd < 0) {
@@ -2105,9 +2072,6 @@ int main(int argc, char *argv[]) {
 
     capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
     lv_timer_ready(capacity_timer);
-
-    osd_timer = lv_timer_create(osd_task, UINT16_MAX / 32, &osd_par);
-    lv_timer_ready(osd_timer);
 
     glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);

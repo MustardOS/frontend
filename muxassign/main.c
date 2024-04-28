@@ -78,7 +78,7 @@ void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
 }
 
-void create_core_assignment(char *core, char *sys) {
+void create_core_assignment(const char *core, char *sys, int cache) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s/", MUOS_CORE_DIR, get_last_subdir(rom_dir, '/', 4));
 
@@ -100,14 +100,12 @@ void create_core_assignment(char *core, char *sys) {
         return;
     }
 
-    str_remchar(core, ',');
-
-    fprintf(file, "%s\n%s", str_trim(core), str_trim(sys));
+    fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
     fclose(file);
 
     char pico8_splore[MAX_BUFFER_SIZE];
     sprintf(pico8_splore, "%s/Splore.p8", rom_dir);
-    if (strcasecmp(str_trim(core), "ext-pico8") == 0 && !file_exist(pico8_splore)) {
+    if (strcasecmp(core, "ext-pico8") == 0 && !file_exist(pico8_splore)) {
         char pico8_splore_create[MAX_BUFFER_SIZE];
         sprintf(pico8_splore_create, "touch %s", pico8_splore);
         system(pico8_splore_create);
@@ -132,45 +130,203 @@ char *load_core_data() {
     return content;
 }
 
+char **read_assign_ini(const char *filename, int *cores) {
+    FILE * file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error opening file!");
+        return NULL;
+    }
+
+    char **headers = (char **) malloc(MAX_BUFFER_SIZE * sizeof(char *));
+    if (headers == NULL) {
+        perror("Memory allocation failure!");
+        fclose(file);
+        return NULL;
+    }
+
+    *cores = 0;
+    char line[MAX_BUFFER_SIZE];
+    while (fgets(line, sizeof(line), file)) {
+        if (line[0] == '[') {
+            char *start = strstr(line, "[");
+            char *end = strstr(line, "]");
+            if (start != NULL && end != NULL && start < end) {
+                size_t len = end - start - 1;
+                headers[*cores] = (char *) malloc((len + 1) * sizeof(char));
+                strncpy(headers[*cores], start + 1, len);
+                headers[*cores][len] = '\0';
+                (*cores)++;
+            }
+        }
+    }
+
+    fclose(file);
+    return headers;
+}
+
 void create_system_items() {
-    char *core_data = load_core_data();
+    DIR *td;
+    struct dirent *tf;
 
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
+    char assign_dir[PATH_MAX];
+    snprintf(assign_dir, sizeof(assign_dir), "%s", MUOS_ASSIGN_DIR);
 
-    if (!json_valid(core_data)) {
-        lv_label_set_text(ui_lblCoreMessage, "Invalid Core Data - Check 'core.json' file!");
+    td = opendir(assign_dir);
+    if (td == NULL) {
         lv_obj_clear_flag(ui_lblCoreMessage, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    size_t index = 0;
-    for (struct json console = json_first(json_parse(core_data));
-         json_exists(console);
-         console = json_next(console), index++) {
+    char **file_names = NULL;
+    size_t file_count = 0;
 
-        if (index % 2 == 1) {
-            continue;
+    while ((tf = readdir(td))) {
+        if (tf->d_type == DT_REG) {
+            char filename[FILENAME_MAX];
+            snprintf(filename, sizeof(filename), "%s/%s", assign_dir, tf->d_name);
+
+            char *last_dot = strrchr(tf->d_name, '.');
+            if (last_dot != NULL) {
+                *last_dot = '\0';
+            }
+
+            file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
+            file_names[file_count] = strdup(tf->d_name);
+            file_count++;
         }
+    }
 
-        char *fixed_name = strdup(json_raw(console));
+    closedir(td);
+    qsort(file_names, file_count, sizeof(char *), str_compare);
 
-        str_remchar(fixed_name, ':');
-        str_remchar(fixed_name, '"');
-        str_remchar(fixed_name, '[');
+    ui_group = lv_group_create();
+    ui_group_glyph = lv_group_create();
 
-        char label_text[MAX_BUFFER_SIZE];
-        snprintf(label_text, sizeof(label_text), "%s", str_nonew(fixed_name));
+    if (file_count > 0) {
+        for (size_t i = 0; i < file_count; i++) {
+            char *base_filename = file_names[i];
+            ui_count++;
 
-        char init_catalogue_box_dir[MAX_BUFFER_SIZE];
-        char init_catalogue_preview_dir[MAX_BUFFER_SIZE];
-        char init_catalogue_text_dir[MAX_BUFFER_SIZE];
-        snprintf(init_catalogue_box_dir, sizeof(init_catalogue_box_dir), "%s/%s/box/",
-                 MUOS_CATALOGUE_DIR, label_text);
-        snprintf(init_catalogue_preview_dir, sizeof(init_catalogue_preview_dir), "%s/%s/preview/",
-                 MUOS_CATALOGUE_DIR, label_text);
-        snprintf(init_catalogue_text_dir, sizeof(init_catalogue_text_dir), "%s/%s/text/",
-                 MUOS_CATALOGUE_DIR, label_text);
+            lv_obj_t * ui_pnlCore = lv_obj_create(ui_pnlContent);
+            lv_obj_set_width(ui_pnlCore, 640);
+            lv_obj_set_height(ui_pnlCore, 28);
+            lv_obj_set_scrollbar_mode(ui_pnlCore, LV_SCROLLBAR_MODE_OFF);
+            lv_obj_set_style_align(ui_pnlCore, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_opa(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_width(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_top(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_row(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_column(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
+            lv_label_set_text(ui_lblCoreItem, base_filename);
+
+            lv_obj_set_width(ui_lblCoreItem, 640);
+            lv_obj_set_height(ui_lblCoreItem, 28);
+
+            lv_obj_set_style_border_width(ui_lblCoreItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_side(ui_lblCoreItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_grad_color(ui_lblCoreItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
+                                           LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_set_style_bg_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_opa(ui_lblCoreItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_main_stop(ui_lblCoreItem, theme.LIST_DEFAULT.GRADIENT_START,
+                                          LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_grad_stop(ui_lblCoreItem, theme.LIST_DEFAULT.GRADIENT_STOP,
+                                          LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
+                                          LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_opa(ui_lblCoreItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
+                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
+                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_set_style_bg_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_opa(ui_lblCoreItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_main_stop(ui_lblCoreItem, theme.LIST_FOCUS.GRADIENT_START,
+                                          LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_grad_stop(ui_lblCoreItem, theme.LIST_FOCUS.GRADIENT_STOP,
+                                          LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_border_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
+                                          LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_border_opa(ui_lblCoreItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
+                                        LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
+                                        LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+            lv_obj_set_style_pad_left(ui_lblCoreItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(ui_lblCoreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_top(ui_lblCoreItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(ui_lblCoreItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_set_style_text_line_space(ui_lblCoreItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_long_mode(ui_lblCoreItem, LV_LABEL_LONG_WRAP);
+
+            lv_obj_t * ui_lblCoreItemGlyph = lv_label_create(ui_pnlCore);
+            lv_label_set_text(ui_lblCoreItemGlyph, "\uF233");
+
+            lv_obj_set_width(ui_lblCoreItemGlyph, 640);
+            lv_obj_set_height(ui_lblCoreItemGlyph, 28);
+
+            lv_obj_set_style_border_width(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_set_style_bg_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_border_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(ui_lblCoreItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
+                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_opa(ui_lblCoreItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_set_style_bg_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_border_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_color(ui_lblCoreItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
+                                        LV_PART_MAIN | LV_STATE_FOCUSED);
+            lv_obj_set_style_text_opa(ui_lblCoreItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+
+            lv_obj_set_style_pad_left(ui_lblCoreItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_top(ui_lblCoreItemGlyph, theme.FONT.LIST_ICON_PAD_TOP,
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(ui_lblCoreItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
+                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_set_style_text_align(ui_lblCoreItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(ui_lblCoreItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_group_add_obj(ui_group, ui_lblCoreItem);
+            lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
+        }
+    }
+}
+
+void create_core_items(const char *target) {
+    char filename[FILENAME_MAX];
+    snprintf(filename, sizeof(filename), "%s/%s.ini", MUOS_ASSIGN_DIR, target);
+
+    int cores;
+    char **core_headers = read_assign_ini(filename, &cores);
+    if (core_headers == NULL) {
+        lv_obj_clear_flag(ui_lblCoreMessage, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    qsort(core_headers, cores, sizeof(char *), str_compare);
+
+    ui_group = lv_group_create();
+    ui_group_glyph = lv_group_create();
+
+    for (int i = 0; i < cores; ++i) {
+        if (strcasecmp(core_headers[i], "global") == 0) continue;
 
         ui_count++;
 
@@ -189,9 +345,7 @@ void create_system_items() {
         lv_obj_set_style_pad_column(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
-        lv_label_set_text(ui_lblCoreItem, label_text);
-
-        free(fixed_name);
+        lv_label_set_text(ui_lblCoreItem, core_headers[i]);
 
         lv_obj_set_width(ui_lblCoreItem, 640);
         lv_obj_set_height(ui_lblCoreItem, 28);
@@ -200,10 +354,13 @@ void create_system_items() {
         lv_obj_set_style_border_side(ui_lblCoreItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_grad_color(ui_lblCoreItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_main_stop(ui_lblCoreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_grad_dir(ui_lblCoreItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_set_style_bg_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_lblCoreItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(ui_lblCoreItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_main_stop(ui_lblCoreItem, theme.LIST_DEFAULT.GRADIENT_START,
                                       LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_grad_stop(ui_lblCoreItem, theme.LIST_DEFAULT.GRADIENT_STOP,
@@ -214,16 +371,21 @@ void create_system_items() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_DEFAULT.TEXT_ALPHA,
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_set_style_bg_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
                                   LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_opa(ui_lblCoreItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblCoreItem, theme.LIST_FOCUS.GRADIENT_START, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_grad_stop(ui_lblCoreItem, theme.LIST_FOCUS.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_bg_opa(ui_lblCoreItem, theme.LIST_FOCUS.BACKGROUND_ALPHA,
+                                LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_bg_main_stop(ui_lblCoreItem, theme.LIST_FOCUS.GRADIENT_START,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_bg_grad_stop(ui_lblCoreItem, theme.LIST_FOCUS.GRADIENT_STOP,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_border_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblCoreItem, theme.LIST_FOCUS.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_border_opa(ui_lblCoreItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_text_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
@@ -231,13 +393,14 @@ void create_system_items() {
         lv_obj_set_style_pad_left(ui_lblCoreItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_right(ui_lblCoreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_top(ui_lblCoreItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblCoreItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_lblCoreItem, theme.FONT.LIST_PAD_BOTTOM,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_set_style_text_line_space(ui_lblCoreItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_long_mode(ui_lblCoreItem, LV_LABEL_LONG_WRAP);
 
         lv_obj_t * ui_lblCoreItemGlyph = lv_label_create(ui_pnlCore);
-        lv_label_set_text(ui_lblCoreItemGlyph, "\uF233");
+        lv_label_set_text(ui_lblCoreItemGlyph, "\uF6D1");
 
         lv_obj_set_width(ui_lblCoreItemGlyph, 640);
         lv_obj_set_height(ui_lblCoreItemGlyph, 28);
@@ -248,17 +411,20 @@ void create_system_items() {
         lv_obj_set_style_border_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_color(ui_lblCoreItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblCoreItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_opa(ui_lblCoreItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_set_style_bg_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_border_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_text_color(ui_lblCoreItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblCoreItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_text_opa(ui_lblCoreItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA,
+                                  LV_PART_MAIN | LV_STATE_FOCUSED);
 
         lv_obj_set_style_pad_left(ui_lblCoreItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_right(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblCoreItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_top(ui_lblCoreItemGlyph, theme.FONT.LIST_ICON_PAD_TOP,
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_bottom(ui_lblCoreItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -267,144 +433,11 @@ void create_system_items() {
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
-    }
-}
 
-void create_core_items(const char *target_key) {
-    char *core_data = load_core_data();
-
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-
-    if (!json_valid(core_data)) {
-        lv_label_set_text(ui_lblCoreMessage, "Invalid Core Data - Check 'core.json' file!");
-        lv_obj_clear_flag(ui_lblCoreMessage, LV_OBJ_FLAG_HIDDEN);
-        return;
+        free(core_headers[i]);
     }
 
-    struct json key_value = json_object_get(json_parse(core_data), target_key);
-
-    if (json_exists(key_value) && json_type(key_value) == JSON_ARRAY) {
-        for (struct json entry = json_first(key_value); json_exists(entry); entry = json_next(entry)) {
-            struct json name_value = json_object_get(entry, "name");
-
-            if (json_exists(name_value) && json_type(name_value) == JSON_STRING) {
-                char *fixed_name = str_nonew(strdup(json_raw(name_value)));
-
-                str_remchar(fixed_name, ',');
-                str_remchar(fixed_name, '"');
-
-                char label_text[MAX_BUFFER_SIZE];
-                snprintf(label_text, sizeof(label_text), "%s", fixed_name);
-
-                ui_count++;
-
-                lv_obj_t * ui_pnlCore = lv_obj_create(ui_pnlContent);
-                lv_obj_set_width(ui_pnlCore, 640);
-                lv_obj_set_height(ui_pnlCore, 28);
-                lv_obj_set_scrollbar_mode(ui_pnlCore, LV_SCROLLBAR_MODE_OFF);
-                lv_obj_set_style_align(ui_pnlCore, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_opa(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_border_width(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_left(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_right(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_top(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_bottom(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_row(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_column(ui_pnlCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
-                lv_label_set_text(ui_lblCoreItem, label_text);
-
-                lv_obj_set_width(ui_lblCoreItem, 640);
-                lv_obj_set_height(ui_lblCoreItem, 28);
-
-                lv_obj_set_style_border_width(ui_lblCoreItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_border_side(ui_lblCoreItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_grad_color(ui_lblCoreItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
-                                               LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_main_stop(ui_lblCoreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_grad_dir(ui_lblCoreItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                lv_obj_set_style_bg_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
-                                          LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_opa(ui_lblCoreItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_main_stop(ui_lblCoreItem, theme.LIST_DEFAULT.GRADIENT_START,
-                                              LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_bg_grad_stop(ui_lblCoreItem, theme.LIST_DEFAULT.GRADIENT_STOP,
-                                              LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_border_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
-                                              LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_border_opa(ui_lblCoreItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                          LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                lv_obj_set_style_bg_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
-                                          LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_bg_opa(ui_lblCoreItem, theme.LIST_FOCUS.BACKGROUND_ALPHA,
-                                        LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_bg_main_stop(ui_lblCoreItem, theme.LIST_FOCUS.GRADIENT_START,
-                                              LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_bg_grad_stop(ui_lblCoreItem, theme.LIST_FOCUS.GRADIENT_STOP,
-                                              LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_border_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
-                                              LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_border_opa(ui_lblCoreItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
-                                            LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_text_color(ui_lblCoreItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                            LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-                lv_obj_set_style_pad_left(ui_lblCoreItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_right(ui_lblCoreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_top(ui_lblCoreItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_bottom(ui_lblCoreItem, theme.FONT.LIST_PAD_BOTTOM,
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                lv_obj_set_style_text_line_space(ui_lblCoreItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_label_set_long_mode(ui_lblCoreItem, LV_LABEL_LONG_WRAP);
-
-                lv_obj_t * ui_lblCoreItemGlyph = lv_label_create(ui_pnlCore);
-                lv_label_set_text(ui_lblCoreItemGlyph, "\uF6D1");
-
-                lv_obj_set_width(ui_lblCoreItemGlyph, 640);
-                lv_obj_set_height(ui_lblCoreItemGlyph, 28);
-
-                lv_obj_set_style_border_width(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                lv_obj_set_style_bg_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_border_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_color(ui_lblCoreItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_opa(ui_lblCoreItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                          LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                lv_obj_set_style_bg_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_border_opa(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_text_color(ui_lblCoreItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                            LV_PART_MAIN | LV_STATE_FOCUSED);
-                lv_obj_set_style_text_opa(ui_lblCoreItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA,
-                                          LV_PART_MAIN | LV_STATE_FOCUSED);
-
-                lv_obj_set_style_pad_left(ui_lblCoreItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_right(ui_lblCoreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_top(ui_lblCoreItemGlyph, theme.FONT.LIST_ICON_PAD_TOP,
-                                         LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_pad_bottom(ui_lblCoreItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
-                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                lv_obj_set_style_text_align(ui_lblCoreItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_font(ui_lblCoreItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                lv_group_add_obj(ui_group, ui_lblCoreItem);
-                lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
-            }
-        }
-    }
+    free(core_headers);
 }
 
 void list_nav_prev(int steps) {
@@ -520,20 +553,21 @@ void *joystick_task() {
                                     if (strcasecmp(rom_system, "none") == 0) {
                                         load_assign(rom_dir, str_trim(lv_label_get_text(element_focused)));
                                     } else {
-                                        char chosen_core[MAX_BUFFER_SIZE];
-                                        snprintf(chosen_core, sizeof(chosen_core), "%s",
-                                                 json_raw(json_object_get(
-                                                         json_array_get(
-                                                                 json_object_get(
-                                                                         json_parse(load_core_data()), rom_system),
-                                                                 current_item_index), "core")));
-                                        /*
-                                         * This is absolutely absurd and should be moved to a separate function just
-                                         * in case there is ever a need to expand on what needs to be returned...
-                                         */
+                                        char chosen_core_ini[FILENAME_MAX];
+                                        snprintf(chosen_core_ini, sizeof(chosen_core_ini), "%s/%s.ini",
+                                                 MUOS_ASSIGN_DIR, rom_system);
 
-                                        str_remchar(chosen_core, '"');
-                                        create_core_assignment(str_nonew(chosen_core), rom_system);
+                                        mini_t * chosen_core = mini_load(chosen_core_ini);
+
+                                        const char *raw_core = mini_get_string(
+                                                chosen_core, str_trim(lv_label_get_text(element_focused)),
+                                                "core", "none");
+
+                                        int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
+
+                                        create_core_assignment(raw_core, rom_system, name_cache);
+
+                                        mini_free(chosen_core);
                                     }
 
                                     safe_quit = 1;
@@ -730,7 +764,8 @@ void glyph_task() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),

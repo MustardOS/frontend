@@ -30,6 +30,7 @@ lv_obj_t * ui_lblFont;
 lv_obj_t * ui_lblVerbose;
 lv_obj_t * ui_lblVolume;
 lv_obj_t * ui_lblOffset;
+lv_obj_t * ui_lblPasscode;
 lv_obj_t * ui_pnlGlyph;
 lv_obj_t * ui_icoSwap;
 lv_obj_t * ui_icoThermal;
@@ -37,6 +38,7 @@ lv_obj_t * ui_icoFont;
 lv_obj_t * ui_icoVerbose;
 lv_obj_t * ui_icoVolume;
 lv_obj_t * ui_icoOffset;
+lv_obj_t * ui_icoPasscode;
 lv_obj_t * ui_pnlHighlight;
 lv_obj_t * ui_droSwap;
 lv_obj_t * ui_droThermal;
@@ -44,6 +46,7 @@ lv_obj_t * ui_droFont;
 lv_obj_t * ui_droVerbose;
 lv_obj_t * ui_droVolume;
 lv_obj_t * ui_droOffset;
+lv_obj_t * ui_droPasscode;
 lv_obj_t * ui_pnlFooter;
 lv_obj_t * ui_lblNavAGlyph;
 lv_obj_t * ui_lblNavA;
@@ -86,6 +89,10 @@ lv_obj_t * ui____initial_actions0;
 
 void ui_init(void)
 {
+    lv_disp_t * dispp = lv_disp_get_default();
+    lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
+                                               true, LV_FONT_DEFAULT);
+    lv_disp_set_theme(dispp, theme);
     ui_scrTweakAdvanced_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_scrTweakAdvanced);

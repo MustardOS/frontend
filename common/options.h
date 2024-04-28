@@ -37,6 +37,7 @@
 #define MUOS_SCHEME_DIR "/opt/muos/theme/scheme"
 #define MUOS_GLYPH_DIR "/opt/muos/theme/glyph"
 
+#define MUOS_ASSIGN_DIR    "/mnt/mmc/MUOS/info/assign"
 #define MUOS_ACTIVITY_DIR  "/mnt/mmc/MUOS/info/activity"
 #define MUOS_CACHE_DIR     "/mnt/mmc/MUOS/info/cache"
 #define MUOS_CATALOGUE_DIR "/mnt/mmc/MUOS/info/catalogue"
@@ -57,6 +58,8 @@
 
 #define MUOS_CORE_FILE   "/mnt/mmc/MUOS/info/core.json"
 #define MUOS_NAME_FILE   "/mnt/mmc/MUOS/info/name.ini"
+
+#define MUOS_PASS_FILE   "/mnt/mmc/MUOS/info/pass.txt"
 
 #define MUOS_NET_FILE "/opt/muos/config/network.txt"
 #define NETWORK_ADDRESS "/opt/muos/config/address.txt"
