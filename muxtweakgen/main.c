@@ -189,7 +189,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
     lv_dropdown_set_selected(ui_droPower, config.SETTINGS.GENERAL.POWER);
     lv_dropdown_set_selected(ui_droLowBattery, config.SETTINGS.GENERAL.LOW_BATTERY);
-    lv_dropdown_set_selected(ui_droBrightness, config.SETTINGS.GENERAL.BRIGHTNESS);
+    lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BL_RST_FILE)) * 100 / 255);
     lv_dropdown_set_selected(ui_droHDMI, config.SETTINGS.GENERAL.HDMI);
 
     const char *startup_type = config.SETTINGS.GENERAL.STARTUP;
@@ -361,13 +361,18 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.general", "power", idx_power);
     mini_set_int(muos_config, "settings.general", "low_battery", idx_lowbattery);
     mini_set_int(muos_config, "settings.general", "colour", idx_colour);
-    mini_set_int(muos_config, "settings.general", "brightness", idx_brightness);
     mini_set_int(muos_config, "settings.general", "hdmi", idx_hdmi);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
 
-    set_brightness(((idx_brightness + 1) * BL_MAX) / 100);
+    int nb = ((idx_brightness + 1) * BL_MAX) / 100;
+    set_brightness(nb);
+
+    char nbs[8];
+    sprintf(nbs, "%d", nb);
+    write_text_to_file(BL_RST_FILE, nbs, "w");
+
     run_shell_script(MUOS_TWEAK_UPDATE);
 }
 
@@ -522,11 +527,9 @@ void *joystick_task() {
                                     play_sound("back", nav_sound);
                                     input_disable = 1;
 
-                                    osd_message = "Saving Changes";
-                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                    lv_label_set_text(ui_lblMessage, "Saving Changes");
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                    usleep(100000);
                                     save_tweak_options();
                                     safe_quit = 1;
                                 }

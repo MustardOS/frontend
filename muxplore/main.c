@@ -463,6 +463,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
         }
     }
 
+    ui_file_count = *file_count;
     closedir(dir);
 }
 
