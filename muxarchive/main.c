@@ -423,23 +423,16 @@ void *joystick_task() {
                                     if (ui_count > 0) {
                                         play_sound("confirm", nav_sound);
 
-                                        lv_label_set_text(ui_lblMessage, "Extracting Archive");
-                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
                                         static char command[MAX_BUFFER_SIZE];
                                         snprintf(command, sizeof(command), "%s \"%s\"",
-                                                 MUOS_ARCHIVE_EXTRACT, lv_label_get_text(data_focused));
+                                                 MUOS_ARCHIVE_EXTRACT,
+                                                 lv_label_get_text(data_focused));
                                         system(command);
-
-                                        lv_label_set_text(ui_lblMessage, "Extraction Complete");
-                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                        usleep(100000);
 
                                         char c_index[MAX_BUFFER_SIZE];
                                         snprintf(c_index, sizeof(c_index), "%d", current_item_index);
                                         write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
 
-                                        lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                         load_mux("archive");
                                         safe_quit = 1;
                                     }
@@ -473,7 +466,7 @@ void *joystick_task() {
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     if (current_item_index == 0) {
                                         int y = (ui_count - 13) * 30;
@@ -492,7 +485,7 @@ void *joystick_task() {
                                     }
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     if (current_item_index == ui_count - 1) {
                                         lv_obj_scroll_to_y(ui_pnlContent, 0, LV_ANIM_OFF);
                                         content_panel_y = 0;
@@ -639,7 +632,8 @@ void glyph_task() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),

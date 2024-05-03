@@ -19,7 +19,8 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
-#define NP_LOG "/tmp/muxlog"
+#define NP_LOG_INFO "/tmp/muxlog_info"
+#define NP_LOG_MSG  "/tmp/muxlog_msg"
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -93,9 +94,9 @@ int main(int argc, char *argv[]) {
 
     lv_task_handler();
 
-    mkfifo(NP_LOG, 0666);
+    mkfifo(NP_LOG_INFO, 0666);
 
-    int pipe_fd = open(NP_LOG, O_RDONLY | O_NONBLOCK);
+    int pipe_fd = open(NP_LOG_INFO, O_RDONLY | O_NONBLOCK);
     int epoll_fd = epoll_create1(0);
 
     struct epoll_event ev, events[MAX_EVENTS];
@@ -127,12 +128,17 @@ int main(int argc, char *argv[]) {
                         safe_quit = 1;
                         break;
                     } else {
+                        lv_textarea_set_text(ui_txtWait, read_line_from_file(NP_LOG_MSG, 1));
                         lv_textarea_add_text(ui_txtMessage, buffer);
+                        lv_textarea_add_text(ui_txtMessage, "\n");
+                        for (int i = 0; i < 10; i++) {
+                            lv_textarea_cursor_down(ui_txtMessage);
+                        }
+                        lv_task_handler();
                     }
                 }
             }
         }
-        lv_task_handler();
     }
 
     close(pipe_fd);

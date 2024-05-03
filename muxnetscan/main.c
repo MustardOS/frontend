@@ -352,7 +352,7 @@ void *joystick_task() {
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     if (current_item_index == 0) {
                                         int y = (ui_count - 13) * 30;
@@ -369,7 +369,7 @@ void *joystick_task() {
                                     }
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     if (current_item_index == ui_count - 1) {
                                         lv_obj_scroll_to_y(ui_pnlContent, 0, LV_ANIM_OFF);
                                         content_panel_y = 0;

@@ -180,10 +180,11 @@ void *joystick_task() {
                                         play_sound("confirm", nav_sound);
 
                                         char favourites[MAX_BUFFER_SIZE];
-                                        snprintf(favourites, sizeof(favourites), "/%s/favourites", MUOS_INFO_PATH);
+                                        snprintf(favourites, sizeof(favourites), "/%s/favourite", MUOS_INFO_PATH);
                                         delete_files_of_type(favourites, "cfg", NULL);
 
-                                        osd_message = "Favourites Cleared";
+                                        lv_label_set_text(ui_lblMessage, "Favourites Cleared");
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblClearHistory) {
                                         play_sound("confirm", nav_sound);
 
@@ -191,8 +192,7 @@ void *joystick_task() {
                                         snprintf(history, sizeof(history), "/%s/history", MUOS_INFO_PATH);
                                         delete_files_of_type(history, "cfg", NULL);
 
-                                        osd_message = "History Cleared";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_label_set_text(ui_lblMessage, "History Cleared");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblClearActivity) {
                                         play_sound("confirm", nav_sound);
@@ -201,33 +201,35 @@ void *joystick_task() {
                                         snprintf(activity, sizeof(activity), "/%s/activity", MUOS_INFO_PATH);
                                         delete_files_of_type(activity, "act", NULL);
 
-                                        osd_message = "Activity Cleared";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_label_set_text(ui_lblMessage, "Activity Cleared");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblClearConfigurations) {
                                         play_sound("confirm", nav_sound);
 
                                         delete_files_of_type(MUOS_CORE_DIR, "cfg", NULL);
 
-                                        osd_message = "Configurations Cleared";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_label_set_text(ui_lblMessage, "Configurations Cleared");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblClearCaches) {
                                         play_sound("confirm", nav_sound);
 
                                         delete_files_of_type(MUOS_CACHE_DIR, "json", NULL);
 
-                                        osd_message = "Caches Cleared";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_label_set_text(ui_lblMessage, "Caches Cleared");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblRestoreConfig) {
                                         play_sound("confirm", nav_sound);
 
-                                        system("cp -f /opt/muos/backup/retroarch.cfg /mnt/mmc/MUOS/.retroarch/retroarch.cfg");
-                                        system("cp -f /opt/muos/backup/retroarch32.cfg /mnt/mmc/MUOS/.retroarch/retroarch32.cfg");
+                                        system("rm -f /mnt/mmc/muos/retroarch/retroarch.cfg");
+                                        system("rm -f /mnt/mmc/muos/retroarch/retroarch32.cfg");
 
-                                        osd_message = "RetroArch Configuration Restored";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        char run_device_init[MAX_BUFFER_SIZE];
+                                        snprintf(run_device_init, sizeof(run_device_init),
+                                                 "/opt/muos/script/device/%s.sh",
+                                                 str_tolower(read_line_from_file(MUOS_DEVICE_FILE, 1)));
+                                        system(run_device_init);
+
+                                        lv_label_set_text(ui_lblMessage, "RetroArch Configuration Restored");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblRestoreNetwork) {
                                         play_sound("confirm", nav_sound);
@@ -248,14 +250,12 @@ void *joystick_task() {
 
                                         system("/opt/muos/script/system/network.sh");
 
-                                        osd_message = "Network Configuration Restored";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_label_set_text(ui_lblMessage, "Network Configuration Restored");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblRestorePortMaster) {
                                         play_sound("confirm", nav_sound);
 
-                                        osd_message = "Restoring PortMaster";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_label_set_text(ui_lblMessage, "Restoring PortMaster");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                         system("rm -rf /mnt/mmc/MUOS/PortMaster");
@@ -263,8 +263,7 @@ void *joystick_task() {
                                         system("unzip -o /opt/muos/archive/portmaster/portmaster.zip "
                                                "-d /mnt/mmc/MUOS/PortMaster");
 
-                                        osd_message = "PortMaster Restored";
-                                        lv_label_set_text(ui_lblMessage, osd_message);
+                                        lv_label_set_text(ui_lblMessage, "PortMaster Restored");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     }
                                 } else if (ev.code == NAV_B) {
@@ -287,7 +286,7 @@ void *joystick_task() {
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
@@ -295,7 +294,7 @@ void *joystick_task() {
                                     nav_moved = 1;
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
                                     play_sound("navigate", nav_sound);
@@ -506,6 +505,9 @@ void ui_refresh_task() {
         }
         lv_obj_invalidate(ui_pnlContent);
         lv_task_handler();
+
+        lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+
         nav_moved = 0;
     }
 }

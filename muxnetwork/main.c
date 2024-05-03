@@ -606,7 +606,7 @@ void *joystick_task() {
                         }
                         if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     if (key_show > 0) {
                                         if (key_curr >= 1) {
@@ -726,7 +726,7 @@ void *joystick_task() {
                                     }
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     if (key_show > 0) {
                                         int max_key;
                                         if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
@@ -855,7 +855,7 @@ void *joystick_task() {
                             }
                         } else if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     if (key_show > 0) {
                                         if (key_curr >= 1) {
@@ -909,7 +909,7 @@ void *joystick_task() {
                                     }
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     if (key_show > 0) {
                                         int max_key;
                                         if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {

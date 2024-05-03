@@ -16,6 +16,7 @@ lv_obj_t * ui_pnlWall;
 lv_obj_t * ui_imgWall;
 lv_obj_t * ui_pnlMessage;
 lv_obj_t * ui_txtMessage;
+lv_obj_t * ui_txtWait;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////

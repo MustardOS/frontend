@@ -112,7 +112,7 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
-                        case -4096 ... -2048:
+                        case -4100 ... -4000:
                             lv_label_set_text(ui_lblButton, "↾");
                             break;
                         case -1:
@@ -121,7 +121,7 @@ void *joystick_task() {
                         case 1:
                             lv_label_set_text(ui_lblButton, "↡");
                             break;
-                        case 2048 ... 4096:
+                        case 4000 ... 4100:
                             lv_label_set_text(ui_lblButton, "⇂");
                             break;
                         default:
@@ -132,7 +132,7 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
-                        case -4096 ... -2048:
+                        case -4100 ... -4000:
                             lv_label_set_text(ui_lblButton, "↼");
                             break;
                         case -1:
@@ -141,7 +141,7 @@ void *joystick_task() {
                         case 1:
                             lv_label_set_text(ui_lblButton, "↠");
                             break;
-                        case 2048 ... 4096:
+                        case 4000 ... 4100:
                             lv_label_set_text(ui_lblButton, "⇀");
                             break;
                         default:
@@ -152,10 +152,10 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
-                        case -4096 ... -2048:
+                        case -4100 ... -4000:
                             lv_label_set_text(ui_lblButton, "↿");
                             break;
-                        case 2048 ... 4096:
+                        case 4000 ... 4100:
                             lv_label_set_text(ui_lblButton, "⇃");
                             break;
                         default:
@@ -166,10 +166,10 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
-                        case -4096 ... -2048:
+                        case -4100 ... -4000:
                             lv_label_set_text(ui_lblButton, "↽");
                             break;
-                        case 2048 ... 4096:
+                        case 4000 ... 4100:
                             lv_label_set_text(ui_lblButton, "⇁");
                             break;
                         default:

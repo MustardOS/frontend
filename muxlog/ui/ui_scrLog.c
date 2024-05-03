@@ -34,20 +34,32 @@ void ui_scrLog_screen_init(void)
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
     ui_pnlMessage = lv_obj_create(ui_scrLog);
-    lv_obj_set_width(ui_pnlMessage, 640);
+    lv_obj_set_width(ui_pnlMessage, 3840);
     lv_obj_set_height(ui_pnlMessage, 480);
-    lv_obj_set_align(ui_pnlMessage, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_pnlMessage, LV_ALIGN_LEFT_MID);
+    lv_obj_set_flex_flow(ui_pnlMessage, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(ui_pnlMessage, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlMessage, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlMessage, LV_BORDER_SIDE_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_txtMessage = lv_textarea_create(ui_pnlMessage);
-    lv_obj_set_width(ui_txtMessage, 640);
-    lv_obj_set_height(ui_txtMessage, 480);
-    lv_obj_set_align(ui_txtMessage, LV_ALIGN_CENTER);
-    lv_obj_set_style_text_color(ui_txtMessage, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_width(ui_txtMessage, 3840);
+    lv_obj_set_height(ui_txtMessage, 453);
+    lv_textarea_set_placeholder_text(ui_txtMessage, "Waiting for input...");
+    lv_obj_clear_flag(ui_txtMessage, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);      /// Flags
+    lv_obj_set_scrollbar_mode(ui_txtMessage, LV_SCROLLBAR_MODE_ON);
+    lv_obj_set_scroll_dir(ui_txtMessage, LV_DIR_VER);
+    lv_obj_set_style_text_color(ui_txtMessage, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_txtMessage, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_txtMessage, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_txtMessage, &ui_font_NotoSansSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_txtMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_txtMessage, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -56,7 +68,45 @@ void ui_scrLog_screen_init(void)
     lv_obj_set_style_border_opa(ui_txtMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_txtMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_txtMessage, LV_BORDER_SIDE_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_txtMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_txtMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_txtMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_txtMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
+    lv_obj_set_style_text_color(ui_txtMessage, lv_color_hex(0xF7E318), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_txtMessage, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_txtMessage, LV_TEXT_ALIGN_LEFT, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_txtMessage, &ui_font_NotoSansSmall, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+
+    ui_txtWait = lv_textarea_create(ui_pnlMessage);
+    lv_obj_set_width(ui_txtWait, 3840);
+    lv_obj_set_height(ui_txtWait, LV_SIZE_CONTENT);    /// 28
+    lv_textarea_set_text(ui_txtWait, "Please wait...");
+    lv_textarea_set_one_line(ui_txtWait, true);
+    lv_obj_clear_flag(ui_txtWait, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);      /// Flags
+    lv_obj_set_scrollbar_mode(ui_txtWait, LV_SCROLLBAR_MODE_ON);
+    lv_obj_set_scroll_dir(ui_txtWait, LV_DIR_VER);
+    lv_obj_set_style_text_color(ui_txtWait, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_txtWait, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_txtWait, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_txtWait, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_txtWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_txtWait, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_txtWait, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_txtWait, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_txtWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_txtWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui_txtWait, LV_BORDER_SIDE_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_txtWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_txtWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_txtWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_txtWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
+    lv_obj_set_style_text_color(ui_txtWait, lv_color_hex(0xF7E318), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_txtWait, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_txtWait, LV_TEXT_ALIGN_LEFT, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_txtWait, &ui_font_NotoSansSmall, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
 
 }

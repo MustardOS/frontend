@@ -114,13 +114,13 @@ void *joystick_task() {
                     case EV_ABS:
                         if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     nav_prev(ui_group, 1);
                                     play_sound("navigate", nav_sound);
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     nav_next(ui_group, 1);
                                     play_sound("navigate", nav_sound);
                                     break;
@@ -130,7 +130,7 @@ void *joystick_task() {
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     lv_roller_set_selected(element_focused,
                                                            lv_roller_get_selected(element_focused) - 1,
@@ -138,7 +138,7 @@ void *joystick_task() {
                                     play_sound("navigate", nav_sound);
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     lv_roller_set_selected(element_focused,
                                                            lv_roller_get_selected(element_focused) + 1,
                                                            LV_ANIM_ON);

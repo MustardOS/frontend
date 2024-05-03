@@ -476,14 +476,14 @@ void *joystick_task() {
                 }
                 if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
                     switch (ev.value) {
-                        case -4096:
+                        case -4100 ... -4000:
                         case -1:
                             if (current_item_index > 0) {
                                 list_nav_prev(ITEM_SKIP);
                             }
                             break;
                         case 1:
-                        case 4096:
+                        case 4000 ... 4100:
                             if (current_item_index < ((ui_count > 7) ? (ui_count - 2) : (ui_count - 1))) {
                                 list_nav_next(ITEM_SKIP);
                             }
@@ -492,7 +492,7 @@ void *joystick_task() {
                 }
                 if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
                     switch (ev.value) {
-                        case -4096:
+                        case -4100 ... -4000:
                         case -1:
                             if (current_item_index == 0) {
                                 if (ui_count > 7) {
@@ -508,7 +508,7 @@ void *joystick_task() {
                             }
                             break;
                         case 1:
-                        case 4096:
+                        case 4000 ... 4100:
                             if (ui_count > 7 && current_item_index == (ui_count - 2)) {
                                 list_nav_prev((ui_count - 2));
                                 break;

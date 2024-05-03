@@ -345,7 +345,7 @@ void *joystick_task() {
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
@@ -354,7 +354,7 @@ void *joystick_task() {
                                     nav_moved = 1;
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
@@ -366,7 +366,7 @@ void *joystick_task() {
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             switch (ev.value) {
-                                case -4096:
+                                case -4100 ... -4000:
                                 case -1:
                                     if (element_focused == ui_lblSwap) {
                                         decrease_option_value(ui_droSwap,
@@ -396,7 +396,7 @@ void *joystick_task() {
                                     play_sound("navigate", nav_sound);
                                     break;
                                 case 1:
-                                case 4096:
+                                case 4000 ... 4100:
                                     if (element_focused == ui_lblSwap) {
                                         increase_option_value(ui_droSwap,
                                                               &swap_current,

@@ -1007,10 +1007,12 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
                     snprintf(file_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
 
                     int is_exception = 0;
-                    for (int i = 0; exception[i] != NULL; ++i) {
-                        if (strcmp(entry->d_name, exception[i]) == 0) {
-                            is_exception = 1;
-                            break;
+                    if (exception != NULL) {
+                        for (int i = 0; exception[i] != NULL; ++i) {
+                            if (strcmp(entry->d_name, exception[i]) == 0) {
+                                is_exception = 1;
+                                break;
+                            }
                         }
                     }
 
