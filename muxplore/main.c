@@ -1094,7 +1094,6 @@ void *joystick_task() {
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                    lv_img_set_src(ui_imgHelpPreviewImage, &ui_img_nothing_png);
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound);
                                     if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
