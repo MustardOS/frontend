@@ -50,6 +50,7 @@
 #define MUOS_IMAGE_PATH "opt/muos/theme/image"
 #define MUOS_MUSIC_PATH "opt/muos/theme/music"
 #define MUOS_SOUND_PATH "opt/muos/theme/sound"
+#define MUOS_SUPP_PATH  "opt/muos/supporter"
 
 #define MUOS_CORE_PATH "mnt/mmc/MUOS/core"
 #define MUOS_INFO_PATH "mnt/mmc/MUOS/info"

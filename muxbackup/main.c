@@ -341,6 +341,13 @@ void *joystick_task() {
                                         snprintf(command, sizeof(command), "\"%s/%s.sh\"",
                                                  MUOS_BACKUP_SCRIPT_DIR, lv_label_get_text(element_focused));
                                         system(command);
+
+                                        char c_index[MAX_BUFFER_SIZE];
+                                        snprintf(c_index, sizeof(c_index), "%d", current_item_index);
+                                        write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
+
+                                        load_mux("backup");
+                                        safe_quit = 1;
                                     }
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound);

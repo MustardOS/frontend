@@ -20,9 +20,7 @@ void ui_scrLog_screen_init(void);
 extern lv_obj_t * ui_scrLog;
 extern lv_obj_t * ui_pnlWall;
 extern lv_obj_t * ui_imgWall;
-extern lv_obj_t * ui_pnlMessage;
-extern lv_obj_t * ui_txtMessage;
-extern lv_obj_t * ui_txtWait;
+extern lv_obj_t * ui_txtInfo;
 extern lv_obj_t * ui____initial_actions0;
 
 LV_IMG_DECLARE(ui_img_space_png);    // assets/space.png

@@ -72,46 +72,57 @@ typedef struct {
 } kv_storage;
 
 kv user_quote[] = {
-        {"04wiwe",           ""},
         {"acmeplus",         ""},
         {"antikk",           "Hey, I'm just happy to be here."},
         {"applechipper",     ""},
+        {"arkholt",          ""},
         {"arobee",           "Where's the money, Lebowski?"},
         {"bazkart",          "By the people, for the people!"},
-        {"benzo1985",        ""},
+        {"benzo1985",        "\"The key of joy is disobedience.\" - Aleister Crowley"},
         {"brites2508",       "Proof that nature is wise is that she didn't even know we would wear glasses and notice how she placed our ears."},
         {"brohsnbluffs",     ""},
         {"btreecat",         ""},
         {"cebion",           ""},
+        {"cesarjeremias",    ""},
         {"combustify",       ""},
         {"dabom123",         ""},
         {"defensemechanism", "I'm a huge gamer most of the time"},
+        {"drisc",            "Strive for the fun of it"},
         {"ee1000",           ""},
+        {"fibroidjames",     "\"Wake up to reality! Nothing ever goes as planned in this accursed world. The longer you live, the more you realize that the only things that truly exist in this reality are merely pain, suffering, and futility.\" - Madara Uchiha"},
         {"fifth8241",        "If my calculations are correct, when this baby hits 88 miles per hour, you're gonna see some serious shit."},
+        {"heyitscap",        ""},
         {"ilfordhp5",        "As it happens, I've worked on three CFWs and am a dev on the ChimeraOS project. Fell free to bash me if it makes you feel better. I don't actually care."},
         {"intelliaim",       "Mind the gap!"},
         {"irilivibi",        ""},
+        {"jottenmiller",     "I know what you are doing"},
         {"joyrider3774",     "i have no such things lol"},
         {"jupyter",          "if i could, i would help thits dumpster fire of an os (no offence) (edited)\n"},
         {"kardus",           "h"},
-        {"kiko_lake",        ""},
+        {"kikolake",         ""},
         {"kloptops",         "How about dem apples"},
         {"koolkidkorey",     "But why no mupen64plus-next?"},
         {"lasereverything",  "Sleep when you're dead!"},
-        {"mrminholi",        ""},
+        {"nivalis",          ""},
+        {"noxwell",          ""},
+        {"pakwan8234",       ""},
         {"phyrex",           ""},
         {"qpla",             "Contrary to popular belief, James Cameron did not raze the entirety of downtown Los Angeles for the Terminator 2 nuke scene"},
         {"reapdg",           ""},
         {"robbiet480",       ""},
         {"sethg911",         ""},
         {"shengy",           ""},
-        {"sidnt",            ""},
         {"siliconexarch",    ""},
         {"skyarcher",        "Play keeps the world young as nothing else can. We do not so much quit playing because we grow old, as grow old because we quit playing."},
+        {"starship9",        ""},
+        {"sxp",              ""},
+        {"synthesizeme",     ""},
         {"tokyovigilante",   ""},
+        {"tresd",            ""},
         {"tsuica",           "Other than the fast boot, general performance, lots of features, ease of use, ports, save syncing, and 64-bit, what has muOS ever done for us?"},
         {"vagueparade",      "In your hands isn't the real thing... it's BETTER! This community is so lovely and full of smart fellows, thank you to everyone and you for supporting awesome people - Tom"},
-        {"x_tremis",         "\"A mind forever Voyaging through strange seas of Thought, alone.\" - William Wordsworth"},
+        {"xluuke",           ""},
+        {"xtremis",          "\"A mind forever Voyaging through strange seas of Thought, alone.\" - William Wordsworth"},
         {"xonglebongle",     "1) Develop Stuff\n2) Break Stuff\n3) Cry\n4) Fix Stuff\n5) Notice something else is broken\n6) Fix that too!\n7) Start over"},
         {"xquader",          ""},
         {"youraveragelord",  ""},
@@ -150,6 +161,25 @@ void show_help() {
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
     free(message);
+}
+
+void image_refresh() {
+    char *supporter_name = lv_label_get_text(lv_group_get_focused(ui_group));
+    char supporter_image[MAX_BUFFER_SIZE];
+
+    snprintf(supporter_image, sizeof(supporter_image),
+             "/%s/%s.png",
+             MUOS_SUPP_PATH, supporter_name);
+
+    if (file_exist(supporter_image)) {
+        char supporter_image_path[MAX_BUFFER_SIZE];
+        snprintf(supporter_image_path, sizeof(supporter_image_path),
+                 "M:%s/%s.png",
+                 MUOS_SUPP_PATH, supporter_name);
+        lv_img_set_src(ui_imgBox, supporter_image_path);
+    } else {
+        lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
+    }
 }
 
 void create_credit_items() {
@@ -298,6 +328,7 @@ void list_nav_prev(int steps) {
         }
     }
 
+    image_refresh();
     play_sound("navigate", nav_sound);
     nav_moved = 1;
 }
@@ -323,6 +354,7 @@ void list_nav_next(int steps) {
         }
     }
 
+    image_refresh();
     if (first_open) {
         first_open = 0;
     } else {
@@ -423,6 +455,7 @@ void *joystick_task() {
                                         current_item_index = ui_count - 1;
                                         nav_prev(ui_group, 1);
                                         nav_prev(ui_group_glyph, 1);
+                                        image_refresh();
                                         lv_task_handler();
                                     } else if (current_item_index > 0) {
                                         JOYUP_pressed = (ev.value != 0);
@@ -438,6 +471,7 @@ void *joystick_task() {
                                         current_item_index = 0;
                                         nav_next(ui_group, 1);
                                         nav_next(ui_group_glyph, 1);
+                                        image_refresh();
                                         lv_task_handler();
                                     } else if (current_item_index < ui_count) {
                                         JOYDOWN_pressed = (ev.value != 0);
@@ -569,7 +603,8 @@ void glyph_task() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
@@ -653,6 +688,9 @@ void ui_refresh_task() {
                 lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
             }
         }
+        image_refresh();
+        lv_obj_invalidate(ui_pnlBox);
+
         nav_moved = 0;
     }
 }

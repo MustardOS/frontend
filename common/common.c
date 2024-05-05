@@ -504,7 +504,6 @@ char *read_line_from_file(char *filename, int line_number) {
 
         if (current_line < line_number) {
             free(line);
-            perror("line number exceeded");
             return "";
         } else {
             size_t length = strlen(line);

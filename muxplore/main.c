@@ -324,7 +324,7 @@ void image_refresh(char *image_type) {
                 return;
             }
 
-            char *f_file_name = strip_ext(read_line_from_file(f_core_file, 6));
+            char *f_file_name = strip_ext(read_line_from_file(f_core_file, 7));
 
             snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
                      MUOS_CATALOGUE_DIR, f_core_artwork, image_type, f_file_name);
@@ -342,7 +342,7 @@ void image_refresh(char *image_type) {
                 return;
             }
 
-            char *h_file_name = strip_ext(read_line_from_file(h_core_file, 6));
+            char *h_file_name = strip_ext(read_line_from_file(h_core_file, 7));
 
             snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
                      MUOS_CATALOGUE_DIR, h_core_artwork, image_type, h_file_name);

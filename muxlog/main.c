@@ -20,7 +20,6 @@
 #include "../common/mini/mini.h"
 
 #define NP_LOG_INFO "/tmp/muxlog_info"
-#define NP_LOG_MSG  "/tmp/muxlog_msg"
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -94,6 +93,7 @@ int main(int argc, char *argv[]) {
 
     lv_task_handler();
 
+    remove(NP_LOG_INFO);
     mkfifo(NP_LOG_INFO, 0666);
 
     int pipe_fd = open(NP_LOG_INFO, O_RDONLY | O_NONBLOCK);
@@ -119,23 +119,11 @@ int main(int argc, char *argv[]) {
                 ssize_t bytes_read = read(pipe_fd, buffer, sizeof(buffer));
                 if (bytes_read > 0) {
                     buffer[bytes_read] = '\0';
-                    char *ptr;
-                    while ((ptr = strstr(buffer, "\\n")) != NULL) {
-                        *ptr++ = '\n';
-                        memmove(ptr, ptr + 1, strlen(ptr));
+                    if(lv_obj_get_height(ui_txtInfo) > disp_drv.ver_res) {
+                        lv_textarea_set_text(ui_txtInfo, "");
                     }
-                    if (strcmp(str_nonew(buffer), "!end") == 0) {
-                        safe_quit = 1;
-                        break;
-                    } else {
-                        lv_textarea_set_text(ui_txtWait, read_line_from_file(NP_LOG_MSG, 1));
-                        lv_textarea_add_text(ui_txtMessage, buffer);
-                        lv_textarea_add_text(ui_txtMessage, "\n");
-                        for (int i = 0; i < 10; i++) {
-                            lv_textarea_cursor_down(ui_txtMessage);
-                        }
-                        lv_task_handler();
-                    }
+                    lv_textarea_add_text(ui_txtInfo, buffer);
+                    lv_task_handler();
                 }
             }
         }
