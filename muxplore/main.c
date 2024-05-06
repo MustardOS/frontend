@@ -825,9 +825,6 @@ int load_content(char *content_name, int content_index, int add_favourite) {
     printf("ASSIGNED CORE: %s\n", assigned_core);
 
     if (assigned_core == NULL) {
-        lv_label_set_text(ui_lblMessage, "Cannot associate core to this folder!");
-        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
         return 0;
     }
 
@@ -1384,6 +1381,7 @@ void *joystick_task() {
                                             case MMC:
                                             case SDCARD:
                                             case USB:
+                                                write_text_to_file(MUOS_SAA_LOAD, "1", "w");
                                                 load_content_core(1);
                                                 break;
                                             default:
@@ -2098,6 +2096,15 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     init_elements();
+
+    if (file_exist(MUOS_AUT_LOAD)) {
+        remove(MUOS_AUT_LOAD);
+        if (load_content(get_string_at_index(&named_items, current_item_index), atoi(
+                get_string_at_index(&named_index,
+                                    current_item_index)), 0)) {
+            system(MUOS_CONTENT_LAUNCH);
+        }
+    }
 
     while (!safe_quit) {
         usleep(SCREEN_WAIT);

@@ -103,7 +103,7 @@ kv user_quote[] = {
         {"kloptops",         "How about dem apples"},
         {"koolkidkorey",     "But why no mupen64plus-next?"},
         {"lasereverything",  "Sleep when you're dead!"},
-        {"nivalis",          ""},
+        {"nivalis",          "Is mayonnaise an instrument?"},
         {"noxwell",          ""},
         {"pakwan8234",       ""},
         {"phyrex",           ""},
@@ -126,7 +126,7 @@ kv user_quote[] = {
         {"xonglebongle",     "1) Develop Stuff\n2) Break Stuff\n3) Cry\n4) Fix Stuff\n5) Notice something else is broken\n6) Fix that too!\n7) Start over"},
         {"xquader",          ""},
         {"youraveragelord",  ""},
-        {"zadeis",           ""}
+        {"zadeis",           "Quote goes here"}
 };
 
 kv_storage kv_sto = {

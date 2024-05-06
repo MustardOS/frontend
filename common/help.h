@@ -122,6 +122,8 @@
 #define MUXTWEAKADV_VERBOSE ""
 #define MUXTWEAKADV_VOLUME  ""
 #define MUXTWEAKADV_OFFSET  ""
+#define MUXTWEAKADV_LOCK    ""
+#define MUXTWEAKADV_LED     ""
 
 // muxtweakgen
 #define MUXTWEAKGEN_HIDDEN     ""

@@ -59,6 +59,7 @@
 
 #define MUOS_CORE_FILE   "/mnt/mmc/MUOS/info/core.json"
 #define MUOS_NAME_FILE   "/mnt/mmc/MUOS/info/name.ini"
+#define MUOS_ASSIGN_FILE "/mnt/mmc/MUOS/info/assign.ini"
 
 #define MUOS_PASS_FILE   "/mnt/mmc/MUOS/info/pass.txt"
 
@@ -73,6 +74,8 @@
 
 #define MUOS_ACT_LOAD "/tmp/act_go"
 #define MUOS_ASS_LOAD "/tmp/ass_go"
+#define MUOS_AUT_LOAD "/tmp/aut_go"
+#define MUOS_SAA_LOAD "/tmp/saa_go"
 #define MUOS_ROM_LOAD "/tmp/rom_go"
 #define MUOS_SYS_LOAD "/tmp/sys_go"
 

@@ -110,24 +110,10 @@ void create_core_assignment(const char *core, char *sys, int cache) {
         sprintf(pico8_splore_create, "touch %s", pico8_splore);
         system(pico8_splore_create);
     }
-}
 
-char *load_core_data() {
-    FILE * file = fopen(MUOS_CORE_FILE, "rb");
-    assert(file);
-
-    fseek(file, 0, SEEK_END);
-    size_t size = ftell(file);
-    rewind(file);
-
-    char *content = (char *) malloc(size + 1);
-    assert(content);
-
-    assert(fread(content, size, 1, file) == 1);
-    content[size] = '\0';
-
-    assert(fclose(file) == 0);
-    return content;
+    if (file_exist(MUOS_SAA_LOAD)) {
+        remove(MUOS_SAA_LOAD);
+    }
 }
 
 char **read_assign_ini(const char *filename, int *cores) {
@@ -582,6 +568,7 @@ void *joystick_task() {
                                         load_assign(rom_dir, "none");
                                     }
 
+                                    remove(MUOS_SAA_LOAD);
                                     safe_quit = 1;
                                 } else if (ev.code == JOY_L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
@@ -856,6 +843,10 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 
+    char* cmd_help = "\nmuOS Extras - Core Assignment\nUsage: %s <-ds>\n\nOptions:\n"
+                     "\t-d Name of content directory\n"
+                     "\t-s Name of content system (use 'none' for root)\n\n";
+
     int opt;
     while ((opt = getopt(argc, argv, "d:s:")) != -1) {
         switch (opt) {
@@ -866,22 +857,59 @@ int main(int argc, char *argv[]) {
                 rom_system = optarg;
                 break;
             default:
-                fprintf(stderr, "\nmuOS Extras - Core Assignment\nUsage: %s <-ds>\n\nOptions:\n"
-                                "\t-d Name of content directory\n"
-                                "\t-s Name of content system (use 'none' for root)\n\n", argv[0]);
+                fprintf(stderr, cmd_help, argv[0]);
                 return 1;
         }
     }
 
     if (rom_dir == NULL || rom_system == NULL) {
-        fprintf(stderr, "\nmuOS Extras - Core Assignment\nUsage: %s <-ds>\n\nOptions:\n"
-                        "\t-d Name of content directory\n"
-                        "\t-s Name of content system (use 'none' for root)\n\n", argv[0]);
+        fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
 
     printf("ASSIGN CORE ROM_DIR: \"%s\"\n", rom_dir);
     printf("ASSIGN CORE ROM_SYS: \"%s\"\n", rom_system);
+
+    if (!file_exist(MUOS_SAA_LOAD)) {
+        mini_t* auto_assign_ini = mini_load(MUOS_ASSIGN_FILE);
+        char* auto_assign_config = get_ini_string(auto_assign_ini, NULL, get_last_dir(rom_dir), "none");
+        int auto_assign_good = 0;
+
+        if (strcmp(auto_assign_config, "none") != 0) {
+            char assigned_core_ini[FILENAME_MAX];
+            snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s",
+                     MUOS_ASSIGN_DIR, auto_assign_config);
+
+            mini_t* core_config_ini = mini_load(assigned_core_ini);
+
+            static char def_core[MAX_BUFFER_SIZE];
+            strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
+
+            if (strcmp(def_core, "none") != 0) {
+                static char auto_core[MAX_BUFFER_SIZE];
+                strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
+
+                if (strcmp(def_core, "invalid") != 0) {
+                    static char core_catalogue[MAX_BUFFER_SIZE];
+                    strcpy(core_catalogue, get_ini_string(core_config_ini, "global", "catalogue", "none"));
+
+                    int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
+
+                    create_core_assignment(auto_core, core_catalogue, name_cache);
+
+                    auto_assign_good = 1;
+                    write_text_to_file(MUOS_AUT_LOAD, "1", "w");
+                }
+            }
+
+            mini_free(core_config_ini);
+        }
+
+        if (auto_assign_good) {
+            mini_free(auto_assign_ini);
+            return 0;
+        }
+    }
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
