@@ -64,6 +64,7 @@ int current_item_index = 0;
 int first_open = 1;
 int content_panel_y = 0;
 
+char *auto_assign;
 char *rom_dir;
 char *rom_system;
 
@@ -843,13 +844,17 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 
-    char* cmd_help = "\nmuOS Extras - Core Assignment\nUsage: %s <-ds>\n\nOptions:\n"
+    char *cmd_help = "\nmuOS Extras - Core Assignment\nUsage: %s <-ads>\n\nOptions:\n"
+                     "\t-a Auto assign content directory check\n"
                      "\t-d Name of content directory\n"
                      "\t-s Name of content system (use 'none' for root)\n\n";
 
     int opt;
-    while ((opt = getopt(argc, argv, "d:s:")) != -1) {
+    while ((opt = getopt(argc, argv, "a:d:s:")) != -1) {
         switch (opt) {
+            case 'a':
+                auto_assign = optarg;
+                break;
             case 'd':
                 rom_dir = optarg;
                 break;
@@ -862,7 +867,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (rom_dir == NULL || rom_system == NULL) {
+    if (auto_assign == NULL || rom_dir == NULL || rom_system == NULL) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
@@ -870,24 +875,41 @@ int main(int argc, char *argv[]) {
     printf("ASSIGN CORE ROM_DIR: \"%s\"\n", rom_dir);
     printf("ASSIGN CORE ROM_SYS: \"%s\"\n", rom_system);
 
-    if (!file_exist(MUOS_SAA_LOAD)) {
-        mini_t* auto_assign_ini = mini_load(MUOS_ASSIGN_FILE);
-        char* auto_assign_config = get_ini_string(auto_assign_ini, NULL, get_last_dir(rom_dir), "none");
+    if (atoi(auto_assign) && !file_exist(MUOS_SAA_LOAD)) {
+        printf("ASSIGN AUTO INITIATED\n");
+
+        char core_file[MAX_BUFFER_SIZE];
+        snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg", MUOS_CORE_DIR, get_last_subdir(rom_dir, '/', 4));
+
+        if (file_exist(core_file)) {
+            return 0;
+        }
+
+        mini_t * auto_assign_ini = mini_load(MUOS_ASSIGN_FILE);
+        char *auto_assign_config = get_ini_string(auto_assign_ini, "assign", str_tolower(get_last_dir(rom_dir)), "none");
         int auto_assign_good = 0;
+
+        printf("ASSIGN AUTO CORE: %s\n", auto_assign_config);
 
         if (strcmp(auto_assign_config, "none") != 0) {
             char assigned_core_ini[FILENAME_MAX];
             snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s",
                      MUOS_ASSIGN_DIR, auto_assign_config);
 
-            mini_t* core_config_ini = mini_load(assigned_core_ini);
+            printf("OBTAINING CORE INI: %s\n", assigned_core_ini);
+
+            mini_t * core_config_ini = mini_load(assigned_core_ini);
 
             static char def_core[MAX_BUFFER_SIZE];
             strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
 
+            printf("DEFAULT CORE: %s\n", def_core);
+
             if (strcmp(def_core, "none") != 0) {
                 static char auto_core[MAX_BUFFER_SIZE];
                 strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
+
+                printf("CORE TO BE ASSIGNED: %s\n", auto_core);
 
                 if (strcmp(def_core, "invalid") != 0) {
                     static char core_catalogue[MAX_BUFFER_SIZE];
@@ -895,14 +917,19 @@ int main(int argc, char *argv[]) {
 
                     int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
 
+                    printf("ASSIGN CORE CACHE: %d\n", name_cache);
+                    printf("ASSIGN CORE CATALOGUE: %s\n", core_catalogue);
+
                     create_core_assignment(auto_core, core_catalogue, name_cache);
 
                     auto_assign_good = 1;
-                    write_text_to_file(MUOS_AUT_LOAD, "1", "w");
                 }
             }
 
             mini_free(core_config_ini);
+        } else {
+            mini_free(auto_assign_ini);
+            return 0;
         }
 
         if (auto_assign_good) {
