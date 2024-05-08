@@ -313,7 +313,15 @@ void create_core_items(const char *target) {
     ui_group_glyph = lv_group_create();
 
     for (int i = 0; i < cores; ++i) {
-        if (strcasecmp(core_headers[i], "global") == 0) continue;
+        const char *skip_entries[] = {
+                "bios", "global"
+        };
+
+        for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); i++) {
+            if (strcasecmp(core_headers[i], skip_entries[k]) == 0) {
+                continue;
+            }
+        }
 
         ui_count++;
 
