@@ -3974,7 +3974,7 @@
                   {
                     "nid": -1725320370,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -8793,8 +8793,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID47522762-728594S540369",
@@ -9204,7 +9203,7 @@
                   {
                     "nid": 1270498876,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -13557,7 +13556,7 @@
                   {
                     "nid": 1773164004,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -17573,8 +17572,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID64809051-811690S1252268",

@@ -223,6 +223,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_y(ui_lblRetro, -70);
     lv_obj_set_align(ui_lblRetro, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblRetro, "RetroArch Config");
+    lv_obj_add_flag(ui_lblRetro, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblRetro, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblRetro, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblRetro, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -591,6 +592,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_y(ui_icoRetro, -70);
     lv_obj_set_align(ui_icoRetro, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoRetro, "");
+    lv_obj_add_flag(ui_icoRetro, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_icoRetro, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_icoRetro, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_icoRetro, 13, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -803,6 +805,7 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_y(ui_lblRetroValue, -70);
     lv_obj_set_align(ui_lblRetroValue, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblRetroValue, "");
+    lv_obj_add_flag(ui_lblRetroValue, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblRetroValue, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblRetroValue, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblRetroValue, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
