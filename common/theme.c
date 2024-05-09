@@ -192,6 +192,20 @@ void load_theme(struct theme_config *theme, char *mux_name) {
     theme->BAR.ICON = get_ini_hex(muos_theme, "bar", "BAR_ICON");
     theme->BAR.ICON_ALPHA = get_ini_int(muos_theme, "bar", "BAR_ICON_ALPHA", VALUE);
 
+    theme->ROLL.TEXT = get_ini_hex(muos_theme, "roll", "ROLL_TEXT");
+    theme->ROLL.TEXT_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_TEXT_ALPHA", IGNORE);
+    theme->ROLL.BACKGROUND = get_ini_hex(muos_theme, "roll", "ROLL_BACKGROUND");
+    theme->ROLL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_BACKGROUND_ALPHA", IGNORE);
+    theme->ROLL.RADIUS = get_ini_int(muos_theme, "roll", "ROLL_RADIUS", IGNORE);
+    theme->ROLL.SELECT_TEXT = get_ini_hex(muos_theme, "roll", "ROLL_SELECT_TEXT");
+    theme->ROLL.SELECT_TEXT_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_SELECT_TEXT_ALPHA", IGNORE);
+    theme->ROLL.SELECT_BACKGROUND = get_ini_hex(muos_theme, "roll", "ROLL_SELECT_BACKGROUND");
+    theme->ROLL.SELECT_BACKGROUND_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_SELECT_BACKGROUND_ALPHA", IGNORE);
+    theme->ROLL.SELECT_RADIUS = get_ini_int(muos_theme, "roll", "ROLL_SELECT_RADIUS", IGNORE);
+    theme->ROLL.BORDER_COLOUR = get_ini_hex(muos_theme, "roll", "ROLL_BORDER_COLOUR");
+    theme->ROLL.BORDER_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_BORDER_ALPHA", VALUE);
+    theme->ROLL.BORDER_RADIUS = get_ini_int(muos_theme, "roll", "ROLL_BORDER_RADIUS", VALUE);
+
     theme->MISC.STATIC_ALIGNMENT = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", VALUE);
     theme->MISC.CONTENT.PADDING_LEFT = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_LEFT", VALUE);
     theme->MISC.CONTENT.WIDTH = get_ini_int(muos_theme, "misc", "CONTENT_WIDTH", VALUE);

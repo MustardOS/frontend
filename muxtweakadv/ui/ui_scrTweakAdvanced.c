@@ -370,7 +370,7 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_width(ui_lblPasscode, 640);
     lv_obj_set_height(ui_lblPasscode, 28);
     lv_obj_set_align(ui_lblPasscode, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblPasscode, "Lockdown Mode");
+    lv_label_set_text(ui_lblPasscode, "Passcode Lock");
     lv_obj_set_style_text_color(ui_lblPasscode, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblPasscode, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblPasscode, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -757,8 +757,7 @@ void ui_scrTweakAdvanced_screen_init(void)
 
     ui_droPasscode = lv_dropdown_create(ui_pnlHighlight);
     lv_dropdown_set_dir(ui_droPasscode, LV_DIR_LEFT);
-    lv_dropdown_set_options(ui_droPasscode,
-                            "Disabled\nBoot\nSettings\nLaunch\nBoot + Settings\nBoot + Launch\nSettings + Launch\nBoot + Settings + Launch");
+    lv_dropdown_set_options(ui_droPasscode, "Disabled\nEnabled");
     lv_dropdown_set_selected_highlight(ui_droPasscode, false);
     lv_obj_set_width(ui_droPasscode, 640);
     lv_obj_set_height(ui_droPasscode, 28);

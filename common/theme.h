@@ -231,6 +231,22 @@ struct theme_config {
     } BAR;
 
     struct {
+        uint32_t TEXT;
+        int16_t TEXT_ALPHA;
+        uint32_t BACKGROUND;
+        int16_t BACKGROUND_ALPHA;
+        int16_t RADIUS;
+        uint32_t SELECT_TEXT;
+        int16_t SELECT_TEXT_ALPHA;
+        uint32_t SELECT_BACKGROUND;
+        int16_t SELECT_BACKGROUND_ALPHA;
+        int16_t SELECT_RADIUS;
+        uint32_t BORDER_COLOUR;
+        int16_t BORDER_ALPHA;
+        int16_t BORDER_RADIUS;
+    } ROLL;
+
+    struct {
         int16_t STATIC_ALIGNMENT;
         int16_t ANIMATED_BACKGROUND;
         int16_t NAVIGATION_TYPE;

@@ -33,14 +33,28 @@ extern lv_obj_t * ui_rolComboTwo;
 extern lv_obj_t * ui_rolComboThree;
 extern lv_obj_t * ui_rolComboFour;
 extern lv_obj_t * ui_rolComboFive;
+extern lv_obj_t * ui_rolComboSix;
 extern lv_obj_t * ui_pnlFooter;
+extern lv_obj_t * ui_lblNavAGlyph;
+extern lv_obj_t * ui_lblNavA;
+extern lv_obj_t * ui_lblNavBGlyph;
+extern lv_obj_t * ui_lblNavB;
+extern lv_obj_t * ui_lblNavCGlyph;
+extern lv_obj_t * ui_lblNavC;
+extern lv_obj_t * ui_lblNavXGlyph;
+extern lv_obj_t * ui_lblNavX;
+extern lv_obj_t * ui_lblNavYGlyph;
+extern lv_obj_t * ui_lblNavY;
+extern lv_obj_t * ui_lblNavZGlyph;
+extern lv_obj_t * ui_lblNavZ;
+extern lv_obj_t * ui_lblNavMenuGlyph;
+extern lv_obj_t * ui_lblNavMenu;
+extern lv_obj_t * ui_pnlMessage;
 extern lv_obj_t * ui_lblMessage;
 extern lv_obj_t * ui____initial_actions0;
 
 LV_IMG_DECLARE(ui_img_nothing_png);    // assets/nothing.png
 LV_IMG_DECLARE(ui_img_muoskofi_png);    // assets/muoskofi.png
-LV_IMG_DECLARE(ui_img_muoslogotop_png);    // assets/muoslogotop.png
-LV_IMG_DECLARE(ui_img_space_png);    // assets/space.png
 
 
 LV_FONT_DECLARE(ui_font_Awesome);

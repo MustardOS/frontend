@@ -26,7 +26,7 @@ void ui_scrStart_screen_init(void)
     lv_obj_set_style_border_width(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_imgWall = lv_img_create(ui_pnlWall);
-    lv_img_set_src(ui_imgWall, &ui_img_muoslogotop_png);
+    lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     lv_obj_set_width(ui_imgWall, 640);
     lv_obj_set_height(ui_imgWall, 480);
     lv_obj_set_align(ui_imgWall, LV_ALIGN_CENTER);

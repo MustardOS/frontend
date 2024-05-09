@@ -209,7 +209,7 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.advanced", "verbose", idx_verbose);
     mini_set_int(muos_config, "settings.advanced", "volume_low", idx_volume_low);
     mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
-    mini_set_int(muos_config, "settings.advanced", "passcode", idx_lockdown);
+    mini_set_int(muos_config, "settings.advanced", "lock", idx_lockdown);
     mini_set_int(muos_config, "settings.advanced", "led", idx_led);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);

@@ -20,6 +20,7 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/glyph.h"
+#include "../common/passcode.h"
 #include "../common/mini/mini.h"
 
 static int js_fd;
@@ -41,10 +42,13 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 struct mux_config config;
+struct mux_passcode passcode;
 
 char *current_wall = "";
 
-int passcode;
+char *p_type;
+char *p_code;
+char *p_msg;
 
 // Place as many NULL as there are options!
 lv_obj_t *labels[] = {};
@@ -60,7 +64,8 @@ void init_navigation_groups() {
             ui_rolComboTwo,
             ui_rolComboThree,
             ui_rolComboFour,
-            ui_rolComboFive
+            ui_rolComboFive,
+            ui_rolComboSix
     };
 
     ui_group = lv_group_create();
@@ -107,7 +112,24 @@ void *joystick_task() {
                 switch (ev.type) {
                     case EV_KEY:
                         if (ev.value == 1) {
-                            if (ev.code == NAV_B) {
+                            if (ev.code == NAV_A) {
+                                char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
+                                uint32_t bs = sizeof(b1);
+
+                                lv_roller_get_selected_str(ui_rolComboOne, b1, bs);
+                                lv_roller_get_selected_str(ui_rolComboTwo, b2, bs);
+                                lv_roller_get_selected_str(ui_rolComboThree, b3, bs);
+                                lv_roller_get_selected_str(ui_rolComboFour, b4, bs);
+                                lv_roller_get_selected_str(ui_rolComboFive, b5, bs);
+                                lv_roller_get_selected_str(ui_rolComboSix, b6, bs);
+
+                                char try_code[13];
+                                sprintf(try_code, "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
+
+                                if (strcasecmp(try_code, p_code) == 0) {
+                                    safe_quit = 1;
+                                }
+                            } else if (ev.code == NAV_B) {
                                 safe_quit = 2;
                             }
                         }
@@ -154,22 +176,6 @@ void *joystick_task() {
             }
         }
 
-        char buf1[2], buf2[2], buf3[2], buf4[2], buf5[2];
-        uint32_t buf_size = sizeof(buf1);
-
-        lv_roller_get_selected_str(ui_rolComboOne, buf1, buf_size);
-        lv_roller_get_selected_str(ui_rolComboTwo, buf2, buf_size);
-        lv_roller_get_selected_str(ui_rolComboThree, buf3, buf_size);
-        lv_roller_get_selected_str(ui_rolComboFour, buf4, buf_size);
-        lv_roller_get_selected_str(ui_rolComboFive, buf5, buf_size);
-
-        char try_code[11];
-        sprintf(try_code, "%s%s%s%s%s", buf1, buf2, buf3, buf4, buf5);
-
-        if (atoi(try_code) == passcode) {
-            safe_quit = 1;
-        }
-
         lv_task_handler();
         usleep(SCREEN_WAIT);
     }
@@ -192,7 +198,25 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_obj_set_style_text_align(ui_rolComboOne, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text(ui_lblNavA, "Confirm");
+    lv_label_set_text(ui_lblNavB, "Back");
+
+    lv_obj_t *nav_hide[] = {
+            ui_lblNavCGlyph,
+            ui_lblNavC,
+            ui_lblNavXGlyph,
+            ui_lblNavX,
+            ui_lblNavYGlyph,
+            ui_lblNavY,
+            ui_lblNavZGlyph,
+            ui_lblNavZ,
+            ui_lblNavMenuGlyph,
+            ui_lblNavMenu,
+    };
+
+    for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
+        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 void glyph_task() {
@@ -225,12 +249,43 @@ void glyph_task() {
 }
 
 int main(int argc, char *argv[]) {
-    passcode = atoi(read_line_from_file(MUOS_PASS_FILE, 1));
-    if (passcode == 00000) {
-        return 0;
+    srand(time(NULL));
+
+    char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
+                     "\t-t Type of passcode lock <boot|launch|setting>\n\n";
+
+    int opt;
+    while ((opt = getopt(argc, argv, "t:")) != -1) {
+        switch (opt) {
+            case 't':
+                p_type = optarg;
+                break;
+            default:
+                fprintf(stderr, cmd_help, argv[0]);
+                return 1;
+        }
     }
 
-    srand(time(NULL));
+    if (p_type == NULL) {
+        fprintf(stderr, cmd_help, argv[0]);
+        return 1;
+    }
+
+    load_passcode(&passcode);
+
+    if (strcasecmp(p_type, "boot") == 0) {
+        p_code = passcode.CODE.BOOT;
+        p_msg = passcode.MESSAGE.BOOT;
+    } else if (strcasecmp(p_type, "launch") == 0) {
+        p_code = passcode.CODE.LAUNCH;
+        p_msg = passcode.MESSAGE.LAUNCH;
+    } else if (strcasecmp(p_type, "setting") == 0) {
+        p_code = passcode.CODE.SETTING;
+        p_msg = passcode.MESSAGE.SETTING;
+    } else {
+        fprintf(stderr, cmd_help, argv[0]);
+        return 1;
+    }
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
@@ -264,8 +319,10 @@ int main(int argc, char *argv[]) {
     ui_init();
     init_elements();
 
-    passcode = atoi(read_line_from_file(MUOS_PASS_FILE, 1));
-    lv_label_set_text(ui_lblMessage, read_line_from_file(MUOS_PASS_FILE, 2));
+    if (strlen(p_msg) > 1) {
+        lv_label_set_text(ui_lblMessage, p_msg);
+        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    }
 
     lv_obj_set_user_data(ui_scrPass, basename(argv[0]));
 
@@ -353,7 +410,7 @@ int main(int argc, char *argv[]) {
 
     close(js_fd);
 
-    return (safe_quit == 2);
+    return safe_quit;
 }
 
 uint32_t mux_tick(void) {

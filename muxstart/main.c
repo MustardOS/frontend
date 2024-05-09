@@ -91,28 +91,24 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, basename(argv[0]));
     apply_theme();
 
-    if (config.BOOT.FACTORY_RESET) {
-        lv_img_set_src(ui_imgWall, &ui_img_muoslogotop_png);
-    } else {
-        lv_obj_set_user_data(ui_scrStart, "muxstart");
+    lv_obj_set_user_data(ui_scrStart, "muxstart");
 
-        char *current_wall = load_wallpaper(ui_scrStart, NULL, theme.MISC.ANIMATED_BACKGROUND);
-        if (strlen(current_wall) > 3) {
-            if (theme.MISC.ANIMATED_BACKGROUND) {
-                lv_obj_t * img = lv_gif_create(ui_pnlWall);
-                lv_gif_set_src(img, current_wall);
-            } else {
-                lv_img_set_src(ui_imgWall, current_wall);
-            }
+    char *current_wall = load_wallpaper(ui_scrStart, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    if (strlen(current_wall) > 3) {
+        if (theme.MISC.ANIMATED_BACKGROUND) {
+            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+            lv_gif_set_src(img, current_wall);
         } else {
-            lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
+            lv_img_set_src(ui_imgWall, current_wall);
         }
+    } else {
+        lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
+    }
 
-        load_font_text(basename(argv[0]), ui_scrStart);
+    load_font_text(basename(argv[0]), ui_scrStart);
 
-        if (config.SETTINGS.GENERAL.SOUND == 2) {
-            nav_sound = 1;
-        }
+    if (config.SETTINGS.GENERAL.SOUND == 2) {
+        nav_sound = 1;
     }
 
     lv_obj_set_y(ui_pnlMessage, theme.VERBOSE_BOOT.Y_POS);

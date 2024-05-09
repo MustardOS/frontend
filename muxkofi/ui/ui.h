@@ -26,10 +26,8 @@ extern lv_obj_t * ui_lblMessageTwo;
 extern lv_obj_t * ui_imgKofi;
 extern lv_obj_t * ui____initial_actions0;
 
-LV_IMG_DECLARE(ui_img_muoslogotop_png);    // assets/muoslogotop.png
-LV_IMG_DECLARE(ui_img_muoskofi_png);    // assets/muoskofi.png
 LV_IMG_DECLARE(ui_img_nothing_png);    // assets/nothing.png
-LV_IMG_DECLARE(ui_img_space_png);    // assets/space.png
+LV_IMG_DECLARE(ui_img_muoskofi_png);    // assets/muoskofi.png
 
 
 LV_FONT_DECLARE(ui_font_Awesome);

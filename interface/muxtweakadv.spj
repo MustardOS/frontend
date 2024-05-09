@@ -1234,7 +1234,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID81342948-317618S3822160",
@@ -6260,7 +6261,7 @@
                   {
                     "nid": -1013582559,
                     "strtype": "LABEL/Text",
-                    "strval": "Lockdown Mode",
+                    "strval": "Passcode Lock",
                     "InheritedType": 10
                   },
                   {
@@ -7159,7 +7160,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID64779941-1182086S677370",
@@ -10194,7 +10196,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID90165618-716649S521326",
@@ -12951,7 +12954,7 @@
                   {
                     "nid": -197553307,
                     "strtype": "DROPDOWN/Options",
-                    "strval": "Disabled\\nBoot\\nSettings\\nLaunch\\nBoot + Settings\\nBoot + Launch\\nSettings + Launch\\nBoot + Settings + Launch",
+                    "strval": "Disabled\\nEnabled",
                     "InheritedType": 10
                   },
                   {
@@ -13825,7 +13828,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID64809051-811690S1252268",
@@ -18653,8 +18657,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID62341859-1090792S424335",
@@ -20552,7 +20555,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID32855863-1479231S632389",
@@ -21507,7 +21511,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           }
         ],
         "isPage": true,
@@ -21789,7 +21794,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxtweakadv/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 506,
+    "backup_cnt": 508,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

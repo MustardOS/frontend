@@ -2,7 +2,7 @@ ifeq ($(DEVICE), RG35XX)
 	ARCH = -march=armv7-a \
 		-mtune=cortex-a9 \
 		-mfpu=neon-vfpv3 \
-		-mfloat-abi=softfp 
+		-mfloat-abi=softfp
 else ifeq ($(DEVICE), RG35XXPLUS)
 	ARCH = -march=armv8-a+simd \
 		-mtune=cortex-a53
@@ -59,16 +59,15 @@ message:
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
-		../common/json/json.c \
 		../common/mini/mini.c \
 		../common/array.c \
 		../common/config.c \
 		../common/glyph.c \
 		../common/common.c \
 		../common/theme.c \
+		../common/passcode.c \
 		theme.c \
 		$(EXTRA)
 
 clean:
 	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
-

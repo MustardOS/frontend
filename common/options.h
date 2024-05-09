@@ -61,7 +61,7 @@
 #define MUOS_NAME_FILE   "/mnt/mmc/MUOS/info/name.ini"
 #define MUOS_ASSIGN_FILE "/mnt/mmc/MUOS/info/assign.ini"
 
-#define MUOS_PASS_FILE   "/mnt/mmc/MUOS/info/pass.txt"
+#define MUOS_PASS_FILE   "/mnt/mmc/MUOS/info/pass.ini"
 
 #define MUOS_NET_FILE "/opt/muos/config/network.txt"
 #define NETWORK_ADDRESS "/opt/muos/config/address.txt"

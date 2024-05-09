@@ -26,7 +26,7 @@ void ui_scrKofi_screen_init(void)
     lv_obj_set_style_border_width(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_imgWall = lv_img_create(ui_pnlWall);
-    lv_img_set_src(ui_imgWall, &ui_img_muoslogotop_png);
+    lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     lv_obj_set_width(ui_imgWall, 640);
     lv_obj_set_height(ui_imgWall, 480);
     lv_obj_set_align(ui_imgWall, LV_ALIGN_CENTER);
@@ -66,7 +66,7 @@ void ui_scrKofi_screen_init(void)
     lv_obj_set_height(ui_lblMessageTwo, 115);
     lv_obj_set_align(ui_lblMessageTwo, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblMessageTwo,
-                      "If you would like to support muOS by donating or subscribing that would really help.  This project is done as a hobby.\n\nScan the below QR Code that will take you to the Ko-fi page!");
+                      "If you would like to support muOS by donating or subscribing that would really help.  This project is done as a hobby!\n\nScan the below QR Code that will take you to the Ko-fi page!");
     lv_obj_clear_flag(ui_lblMessageTwo, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                       LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
                       LV_OBJ_FLAG_SCROLL_CHAIN);     /// Flags

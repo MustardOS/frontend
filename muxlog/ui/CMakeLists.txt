@@ -3,10 +3,8 @@ SET(SOURCES ui_scrLog.c
     ui_comp_hook.c
     ui_helpers.c
     ui_events.c
-    ui_img_space_png.c
-    ui_img_muoskofi_png.c
-    ui_img_muoslogotop_png.c
     ui_img_nothing_png.c
+    ui_img_muoskofi_png.c
     fonts/ui_font_Awesome.c
     fonts/ui_font_AwesomeBig.c
     fonts/ui_font_AwesomeBrand.c

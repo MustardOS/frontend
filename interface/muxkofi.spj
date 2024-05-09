@@ -271,7 +271,7 @@
                   {
                     "nid": 311525590,
                     "strtype": "IMAGE/Asset",
-                    "strval": "assets/muoslogotop.png",
+                    "strval": "assets/nothing.png",
                     "InheritedType": 5
                   },
                   {
@@ -1209,7 +1209,7 @@
                   {
                     "nid": 638742764,
                     "strtype": "LABEL/Text",
-                    "strval": "If you would like to support muOS by donating or subscribing that would really help.  This project is done as a hobby.\\n\\nScan the below QR Code that will take you to the Ko-fi page!",
+                    "strval": "If you would like to support muOS by donating or subscribing that would really help.  This project is done as a hobby!\\n\\nScan the below QR Code that will take you to the Ko-fi page!",
                     "InheritedType": 10
                   },
                   {
@@ -2123,7 +2123,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxkofi/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 390,
+    "backup_cnt": 392,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",
