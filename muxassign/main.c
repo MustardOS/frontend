@@ -218,6 +218,8 @@ void create_system_items() {
             lv_obj_set_style_border_side(ui_lblCoreItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_bg_grad_color(ui_lblCoreItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_main_stop(ui_lblCoreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_bg_grad_dir(ui_lblCoreItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
 
             lv_obj_set_style_bg_color(ui_lblCoreItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
                                       LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -312,16 +314,19 @@ void create_core_items(const char *target) {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
 
-    for (int i = 0; i < cores; ++i) {
-        const char *skip_entries[] = {
-                "bios", "global"
-        };
+    const char *skip_entries[] = {
+            "bios", "global"
+    };
 
-        for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); i++) {
+    for (int i = 0; i < cores; ++i) {
+        int do_skip = 0;
+        for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); k++) {
             if (strcasecmp(core_headers[i], skip_entries[k]) == 0) {
-                continue;
+                do_skip = 1;
             }
         }
+
+        if (do_skip) continue;
 
         ui_count++;
 
@@ -739,13 +744,19 @@ void init_elements() {
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
     }
+
+    char *overlay = load_overlay_image();
+    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
+        lv_obj_t * overlay_img = lv_img_create(ui_scrAssign);
+        lv_img_set_src(overlay_img, overlay);
+        lv_obj_move_foreground(overlay_img);
+    }
 }
 
 void glyph_task() {
     // TODO: Bluetooth connectivity!
 
-/*
-    if (is_network_connected() > 0) {
+    if (is_network_connected()) {
         lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
@@ -753,7 +764,6 @@ void glyph_task() {
         lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
-*/
 
     if (atoi(read_text_from_file(BATT_CHARGER))) {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),

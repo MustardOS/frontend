@@ -79,14 +79,17 @@ kv user_quote[] = {
         {"arobee",           "Where's the money, Lebowski?"},
         {"bazkart",          "By the people, for the people!"},
         {"benzo1985",        "\"The key of joy is disobedience.\" - Aleister Crowley"},
+        {"bgelmini",         ""},
         {"brites2508",       "Proof that nature is wise is that she didn't even know we would wear glasses and notice how she placed our ears."},
         {"brohsnbluffs",     ""},
         {"btreecat",         ""},
         {"cebion",           ""},
         {"cesarjeremias",    ""},
-        {"combustify",       ""},
+        {"clempurp9868",     ""},
+        {"combustify",       "\"We have to continually be jumping off cliffs and developing our wings on the way down.\" - Kurt Vonnegut"},
         {"dabom123",         ""},
         {"defensemechanism", "I'm a huge gamer most of the time"},
+        {"delored",          ""},
         {"drisc",            "Strive for the fun of it"},
         {"ee1000",           ""},
         {"fibroidjames",     "\"Wake up to reality! Nothing ever goes as planned in this accursed world. The longer you live, the more you realize that the only things that truly exist in this reality are merely pain, suffering, and futility.\" - Madara Uchiha"},
@@ -103,6 +106,8 @@ kv user_quote[] = {
         {"kloptops",         "How about dem apples"},
         {"koolkidkorey",     "But why no mupen64plus-next?"},
         {"lasereverything",  "Sleep when you're dead!"},
+        {"nicolinber",      ""},
+        {"nickcs",           ""},
         {"nivalis",          "Is mayonnaise an instrument?"},
         {"noxwell",          ""},
         {"pakwan8234",       ""},
@@ -110,23 +115,26 @@ kv user_quote[] = {
         {"qpla",             "Contrary to popular belief, James Cameron did not raze the entirety of downtown Los Angeles for the Terminator 2 nuke scene"},
         {"reapdg",           ""},
         {"robbiet480",       ""},
+        {"ryspy",            ""},
         {"sethg911",         ""},
         {"shengy",           ""},
         {"siliconexarch",    ""},
         {"skyarcher",        "Play keeps the world young as nothing else can. We do not so much quit playing because we grow old, as grow old because we quit playing."},
         {"starship9",        ""},
         {"sxp",              ""},
-        {"synthesizeme",     ""},
+        {"synthesizeme",     "I have come to chew bubble gum and support MuOS and I'm all out of bubble gum!"},
         {"tokyovigilante",   ""},
         {"tresd",            ""},
         {"tsuica",           "Other than the fast boot, general performance, lots of features, ease of use, ports, save syncing, and 64-bit, what has muOS ever done for us?"},
         {"vagueparade",      "In your hands isn't the real thing... it's BETTER! This community is so lovely and full of smart fellows, thank you to everyone and you for supporting awesome people - Tom"},
         {"xluuke",           ""},
-        {"xtremis",          "\"A mind forever Voyaging through strange seas of Thought, alone.\" - William Wordsworth"},
         {"xonglebongle",     "1) Develop Stuff\n2) Break Stuff\n3) Cry\n4) Fix Stuff\n5) Notice something else is broken\n6) Fix that too!\n7) Start over"},
+        {"xtremis",          "\"A mind forever Voyaging through strange seas of Thought, alone.\" - William Wordsworth"},
         {"xquader",          ""},
         {"youraveragelord",  ""},
-        {"zadeis",           "Quote goes here"}
+        {"zaka1w3",          ""},
+        {"zadeis",           "Quote goes here"},
+        {"zazouboy",         ""}
 };
 
 kv_storage kv_sto = {
@@ -582,21 +590,27 @@ void init_elements() {
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
     }
+
+    char *overlay = load_overlay_image();
+    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
+        lv_obj_t * overlay_img = lv_img_create(ui_scrCredits);
+        lv_img_set_src(overlay_img, overlay);
+        lv_obj_move_foreground(overlay_img);
+    }
 }
 
 void glyph_task() {
     // TODO: Bluetooth connectivity!
 
-/*
-    if (is_network_connected() > 0) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (is_network_connected()) {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
-*/
 
     if (atoi(read_text_from_file(BATT_CHARGER))) {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),

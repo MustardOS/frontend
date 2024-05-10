@@ -54,7 +54,7 @@ lv_obj_t *msgbox_element = NULL;
 int progress_onscreen = -1;
 
 int hidden_total, hidden_current;
-int sound_total, sound_current;
+int bgm_total, bgm_current;
 int startup_total, startup_current;
 int power_total, power_current;
 int low_battery_total, low_battery_current;
@@ -67,7 +67,7 @@ typedef struct {
     int *current;
 } Tweak;
 
-Tweak hidden, sound, startup, power, low_battery, colour, brightness, hdmi;
+Tweak hidden, bgm, startup, power, low_battery, colour, brightness, hdmi;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -78,8 +78,8 @@ void show_help(lv_obj_t *element_focused) {
 
     if (element_focused == ui_lblHidden) {
         message = MUXTWEAKGEN_HIDDEN;
-    } else if (element_focused == ui_lblSound) {
-        message = MUXTWEAKGEN_SOUND;
+    } else if (element_focused == ui_lblBGM) {
+        message = MUXTWEAKGEN_BGM;
     } else if (element_focused == ui_lblStartup) {
         message = MUXTWEAKGEN_STARTUP;
     } else if (element_focused == ui_lblPower) {
@@ -123,7 +123,7 @@ static void dropdown_event_handler(lv_event_t *e) {
 void elements_events_init() {
     lv_obj_t *dropdowns[] = {
             ui_droHidden,
-            ui_droSound,
+            ui_droBGM,
             ui_droStartup,
             ui_droPower,
             ui_droLowBattery,
@@ -133,7 +133,7 @@ void elements_events_init() {
     };
 
     labels[0] = ui_droHidden;
-    labels[1] = ui_droSound;
+    labels[1] = ui_droBGM;
     labels[2] = ui_droStartup;
     labels[3] = ui_droPower;
     labels[4] = ui_droLowBattery;
@@ -146,7 +146,7 @@ void elements_events_init() {
     }
 
     init_pointers(&hidden, &hidden_total, &hidden_current);
-    init_pointers(&sound, &sound_total, &sound_current);
+    init_pointers(&bgm, &bgm_total, &bgm_current);
     init_pointers(&startup, &startup_total, &startup_current);
     init_pointers(&power, &power_total, &power_current);
     init_pointers(&low_battery, &low_battery_total, &low_battery_current);
@@ -158,7 +158,7 @@ void elements_events_init() {
 void init_dropdown_settings() {
     Tweak settings[] = {
             {hidden.total,      hidden.current},
-            {sound.total,       sound.current},
+            {bgm.total,         bgm.current},
             {startup.total,     startup.current},
             {power.total,       power.current},
             {low_battery.total, low_battery.current},
@@ -169,7 +169,7 @@ void init_dropdown_settings() {
 
     lv_obj_t *dropdowns[] = {
             ui_droHidden,
-            ui_droSound,
+            ui_droBGM,
             ui_droStartup,
             ui_droPower,
             ui_droLowBattery,
@@ -186,7 +186,7 @@ void init_dropdown_settings() {
 
 void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
-    lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
+    lv_dropdown_set_selected(ui_droBGM, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droPower, config.SETTINGS.GENERAL.POWER);
     lv_dropdown_set_selected(ui_droLowBattery, config.SETTINGS.GENERAL.LOW_BATTERY);
     lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BL_RST_FILE)) * 100 / 255);
@@ -269,7 +269,7 @@ void save_tweak_options() {
     mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
 
     int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
-    int idx_msound = lv_dropdown_get_selected(ui_droSound);
+    int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
     int idx_power = lv_dropdown_get_selected(ui_droPower);
     int idx_lowbattery = lv_dropdown_get_selected(ui_droLowBattery);
     int idx_brightness = lv_dropdown_get_selected(ui_droBrightness);
@@ -356,7 +356,7 @@ void save_tweak_options() {
     }
 
     mini_set_int(muos_config, "settings.general", "hidden", idx_hidden);
-    mini_set_int(muos_config, "settings.general", "sound", idx_msound);
+    mini_set_int(muos_config, "settings.general", "bgm", idx_bgm);
     mini_set_string(muos_config, "settings.general", "startup", idx_startup);
     mini_set_int(muos_config, "settings.general", "power", idx_power);
     mini_set_int(muos_config, "settings.general", "low_battery", idx_lowbattery);
@@ -379,7 +379,7 @@ void save_tweak_options() {
 void init_navigation_groups() {
     lv_obj_t *ui_objects[] = {
             ui_lblHidden,
-            ui_lblSound,
+            ui_lblBGM,
             ui_lblStartup,
             ui_lblPower,
             ui_lblLowBattery,
@@ -392,7 +392,7 @@ void init_navigation_groups() {
 
     lv_obj_t *ui_objects_value[] = {
             ui_droHidden,
-            ui_droSound,
+            ui_droBGM,
             ui_droStartup,
             ui_droPower,
             ui_droLowBattery,
@@ -405,7 +405,7 @@ void init_navigation_groups() {
 
     lv_obj_t *ui_objects_icon[] = {
             ui_icoHidden,
-            ui_icoSound,
+            ui_icoBGM,
             ui_icoStartup,
             ui_icoPower,
             ui_icoLowBattery,
@@ -487,10 +487,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droHidden,
                                                               &hidden_current,
                                                               hidden_total);
-                                    } else if (element_focused == ui_lblSound) {
-                                        increase_option_value(ui_droSound,
-                                                              &sound_current,
-                                                              sound_total);
+                                    } else if (element_focused == ui_lblBGM) {
+                                        increase_option_value(ui_droBGM,
+                                                              &bgm_current,
+                                                              bgm_total);
                                     } else if (element_focused == ui_lblStartup) {
                                         increase_option_value(ui_droStartup,
                                                               &startup_current,
@@ -576,10 +576,10 @@ void *joystick_task() {
                                         decrease_option_value(ui_droHidden,
                                                               &hidden_current,
                                                               hidden_total);
-                                    } else if (element_focused == ui_lblSound) {
-                                        decrease_option_value(ui_droSound,
-                                                              &sound_current,
-                                                              sound_total);
+                                    } else if (element_focused == ui_lblBGM) {
+                                        decrease_option_value(ui_droBGM,
+                                                              &bgm_current,
+                                                              bgm_total);
                                     } else if (element_focused == ui_lblStartup) {
                                         decrease_option_value(ui_droStartup,
                                                               &startup_current,
@@ -613,10 +613,10 @@ void *joystick_task() {
                                         decrease_option_value(ui_droHidden,
                                                               &hidden_current,
                                                               hidden_total);
-                                    } else if (element_focused == ui_lblSound) {
-                                        increase_option_value(ui_droSound,
-                                                              &sound_current,
-                                                              sound_total);
+                                    } else if (element_focused == ui_lblBGM) {
+                                        increase_option_value(ui_droBGM,
+                                                              &bgm_current,
+                                                              bgm_total);
                                     } else if (element_focused == ui_lblStartup) {
                                         increase_option_value(ui_droStartup,
                                                               &startup_current,
@@ -729,7 +729,7 @@ void init_elements() {
     }
 
     lv_obj_set_user_data(ui_lblHidden, "hidden");
-    lv_obj_set_user_data(ui_lblSound, "sound");
+    lv_obj_set_user_data(ui_lblBGM, "bgm");
     lv_obj_set_user_data(ui_lblStartup, "startup");
     lv_obj_set_user_data(ui_lblPower, "power");
     lv_obj_set_user_data(ui_lblLowBattery, "battery");
@@ -738,13 +738,19 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblHDMI, "hdmi");
     lv_obj_set_user_data(ui_lblInterface, "interface");
     lv_obj_set_user_data(ui_lblAdvanced, "advanced");
+
+    char *overlay = load_overlay_image();
+    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
+        lv_obj_t * overlay_img = lv_img_create(ui_scrTweakGeneral);
+        lv_img_set_src(overlay_img, overlay);
+        lv_obj_move_foreground(overlay_img);
+    }
 }
 
 void glyph_task() {
     // TODO: Bluetooth connectivity!
 
-/*
-    if (is_network_connected() > 0) {
+    if (is_network_connected()) {
         lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
@@ -752,14 +758,14 @@ void glyph_task() {
         lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
-*/
 
     if (atoi(read_text_from_file(BATT_CHARGER))) {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),

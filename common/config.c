@@ -36,6 +36,7 @@ void load_config(struct mux_config *config) {
 
     config->SETTINGS.GENERAL.HIDDEN = get_ini_int(muos_config, "settings.general", "hidden", 0);
     config->SETTINGS.GENERAL.SOUND = get_ini_int(muos_config, "settings.general", "sound", 0);
+    config->SETTINGS.GENERAL.BGM = get_ini_int(muos_config, "settings.general", "bgm", 0);
     strncpy(config->SETTINGS.GENERAL.STARTUP, get_ini_string(muos_config, "settings.general", "startup", "launcher"),
             MAX_BUFFER_SIZE - 1);
     config->SETTINGS.GENERAL.STARTUP[MAX_BUFFER_SIZE - 1] = '\0';

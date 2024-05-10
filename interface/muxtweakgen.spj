@@ -3912,7 +3912,7 @@
                   {
                     "nid": 416782476,
                     "strtype": "OBJECT/Name",
-                    "strval": "lblSound",
+                    "strval": "lblBGM",
                     "InheritedType": 10
                   },
                   {
@@ -4169,7 +4169,7 @@
                   {
                     "nid": -1620682064,
                     "strtype": "LABEL/Text",
-                    "strval": "Launcher Sound",
+                    "strval": "Background Music",
                     "InheritedType": 10
                   },
                   {
@@ -5221,7 +5221,7 @@
                   {
                     "nid": 1639304593,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -8309,7 +8309,7 @@
                   {
                     "nid": -1790578290,
                     "strtype": "OBJECT/Name",
-                    "strval": "icoSound",
+                    "strval": "icoBGM",
                     "InheritedType": 10
                   },
                   {
@@ -9375,7 +9375,7 @@
                   {
                     "nid": -1854127881,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -12119,7 +12119,7 @@
                   {
                     "nid": 537721453,
                     "strtype": "OBJECT/Name",
-                    "strval": "droSound",
+                    "strval": "droBGM",
                     "InheritedType": 10
                   },
                   {
@@ -12369,7 +12369,7 @@
                   {
                     "nid": -1985231173,
                     "strtype": "DROPDOWN/Options",
-                    "strval": "Disabled\\nMusic\\nNavigation",
+                    "strval": "Disabled\\nEnabled",
                     "InheritedType": 10
                   },
                   {
@@ -12581,7 +12581,8 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "DROPDOWN"
+                "saved_objtypeKey": "DROPDOWN",
+                "tree_closed": true
               },
               {
                 "guid": "GUID87509939-110820S5282268",
@@ -13500,7 +13501,7 @@
                   {
                     "nid": 1954574478,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -24205,7 +24206,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxtweakgen/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 493,
+    "backup_cnt": 494,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

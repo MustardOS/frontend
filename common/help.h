@@ -127,6 +127,7 @@
 
 // muxtweakgen
 #define MUXTWEAKGEN_HIDDEN     ""
+#define MUXTWEAKGEN_BGM        ""
 #define MUXTWEAKGEN_SOUND      ""
 #define MUXTWEAKGEN_STARTUP    ""
 #define MUXTWEAKGEN_POWER      ""

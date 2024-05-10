@@ -1099,6 +1099,13 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblStatus, "status");
     lv_obj_set_user_data(ui_lblConnect, "connect");
 
+    char *overlay = load_overlay_image();
+    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
+        lv_obj_t * overlay_img = lv_img_create(ui_scrNetwork);
+        lv_img_set_src(overlay_img, overlay);
+        lv_obj_move_foreground(overlay_img);
+    }
+
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "False") == 0) {
         lv_obj_add_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
@@ -1300,8 +1307,7 @@ void init_osk() {
 void glyph_task() {
     // TODO: Bluetooth connectivity!
 
-/*
-    if (is_network_connected() > 0) {
+    if (is_network_connected()) {
         lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
@@ -1309,7 +1315,6 @@ void glyph_task() {
         lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
-*/
 
     if (atoi(read_text_from_file(BATT_CHARGER))) {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),

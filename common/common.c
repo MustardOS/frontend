@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
@@ -1162,6 +1164,21 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
     return "";
 }
 
+char *load_overlay_image() {
+    static char static_image_path[MAX_BUFFER_SIZE];
+    static char static_image_embed[MAX_BUFFER_SIZE];
+
+    if (snprintf(static_image_path, sizeof(static_image_path), "/%s/overlay.png",
+                 MUOS_IMAGE_PATH) >= 0 &&
+        file_exist(static_image_path)) {
+        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/overlay.png",
+                 MUOS_IMAGE_PATH);
+        return static_image_embed;
+    }
+
+    return "";
+}
+
 void load_font_text(const char *program, lv_obj_t *screen) {
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
@@ -1218,27 +1235,33 @@ void load_font_glyph(const char *program, lv_obj_t *element) {
 }
 
 int is_network_connected() {
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock == -1) {
-        perror("Socket creation error");
+    struct sockaddr_in servaddr;
+
+    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        perror("Socket creation failed");
         return 0;
     }
 
-    struct ifreq iface;
-    memset(&iface, 0, sizeof(iface));
+    memset(&servaddr, 0, sizeof(servaddr));
 
-    const char *config_iface = config.NETWORK.INTERFACE;
-    snprintf(iface.ifr_name, sizeof(iface.ifr_name), "%s", config_iface);
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(53);
 
-    if (ioctl(sock, SIOCGIFFLAGS, &iface) == -1) {
-        perror("IOCTL error");
-        close(sock);
+    if (inet_pton(AF_INET, config.NETWORK.DNS, &servaddr.sin_addr) <= 0) {
+        perror("Invalid address or address not supported");
+        close(sockfd);
         return 0;
     }
 
-    close(sock);
+    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+        perror("Connection failed");
+        close(sockfd);
+        return 0;
+    }
 
-    return (iface.ifr_flags & IFF_UP) && (iface.ifr_flags & IFF_RUNNING);
+    close(sockfd);
+    return 1;
 }
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element) {
