@@ -292,6 +292,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    if (strcasecmp(p_code, "000000") == 0) return 1;
+
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
 
