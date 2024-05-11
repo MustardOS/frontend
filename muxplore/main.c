@@ -1389,12 +1389,12 @@ void *joystick_task() {
                                         }
                                     }
                                 } else if (ev.code == JOY_L1) {
-                                    if (current_item_index >= 0 && current_item_index < ui_count) {
+                                    if (current_item_index != 0 && current_item_index < ui_count) {
                                         list_nav_prev(ITEM_SKIP);
                                         lv_task_handler();
                                     }
                                 } else if (ev.code == JOY_R1) {
-                                    if (current_item_index >= 0 && current_item_index < ui_count) {
+                                    if (current_item_index >= 0 && current_item_index != ui_count - 1) {
                                         list_nav_next(ITEM_SKIP);
                                         lv_task_handler();
                                     }
@@ -1464,7 +1464,7 @@ void *joystick_task() {
                                         nav_next(ui_group_glyph, 1);
                                         image_refresh("box");
                                         lv_task_handler();
-                                    } else if (current_item_index < ui_count) {
+                                    } else if (current_item_index < ui_count - 1) {
                                         JOYDOWN_pressed = (ev.value != 0);
                                         list_nav_next(1);
                                         lv_task_handler();
@@ -1491,7 +1491,7 @@ void *joystick_task() {
                 if (JOYUP_pressed && current_item_index > 0) {
                     list_nav_prev(1);
                 }
-                if (JOYDOWN_pressed && current_item_index < ui_count) {
+                if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
                     list_nav_next(1);
                 }
             }
