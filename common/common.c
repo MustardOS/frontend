@@ -588,7 +588,7 @@ int set_ini_int(mini_t *ini_config, const char *section, const char *key, int va
 const char *get_ini_unicode(mini_t *ini_config, const char *section, const char *key) {
     const char *meta = mini_get_string(ini_config, section, key, "FFFF");
 
-    char *unicode = (char *)malloc(10);
+    char *unicode = (char *) malloc(10);
     if (unicode == NULL) {
         fprintf(stderr, "Memory allocation failure\n");
         return "\\uFFFF";
@@ -603,9 +603,9 @@ const char *get_ini_unicode(mini_t *ini_config, const char *section, const char 
     return unicode;
 }
 
-char* get_ini_string(mini_t* ini_config, const char* section, const char* key, char* default_value) {
+char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value) {
     static char meta[MAX_BUFFER_SIZE];
-    const char* result = mini_get_string(ini_config, section, key, default_value);
+    const char *result = mini_get_string(ini_config, section, key, default_value);
 
     strncpy(meta, result, MAX_BUFFER_SIZE - 1);
     meta[MAX_BUFFER_SIZE - 1] = '\0';
@@ -1153,8 +1153,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
                      MUOS_IMAGE_PATH, program);
             return static_image_embed;
         } else if (snprintf(static_image_path, sizeof(static_image_path), "/%s/static/%s/%s.png",
-                     MUOS_IMAGE_PATH, program, element) >= 0 &&
-            file_exist(static_image_path)) {
+                            MUOS_IMAGE_PATH, program, element) >= 0 && file_exist(static_image_path)) {
             snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/static/%s/%s.png",
                      MUOS_IMAGE_PATH, program, element);
             return static_image_embed;
@@ -1235,33 +1234,14 @@ void load_font_glyph(const char *program, lv_obj_t *element) {
 }
 
 int is_network_connected() {
-    struct sockaddr_in servaddr;
+    if (!config.NETWORK.ENABLED) return 0;
+    if (!config.VISUAL.NETWORK) return 0;
 
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1) {
-        perror("Socket creation failed");
-        return 0;
+    if (file_exist("/tmp/mux_ping")) {
+        return atoi(read_text_from_file("/tmp/mux_ping"));
     }
 
-    memset(&servaddr, 0, sizeof(servaddr));
-
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(53);
-
-    if (inet_pton(AF_INET, config.NETWORK.DNS, &servaddr.sin_addr) <= 0) {
-        perror("Invalid address or address not supported");
-        close(sockfd);
-        return 0;
-    }
-
-    if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-        perror("Connection failed");
-        close(sockfd);
-        return 0;
-    }
-
-    close(sockfd);
-    return 1;
+    return 0;
 }
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element) {

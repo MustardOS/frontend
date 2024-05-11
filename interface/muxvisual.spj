@@ -4390,7 +4390,7 @@
                   {
                     "nid": -1581800767,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -5881,8 +5881,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID45376105-981581S665369",
@@ -6627,7 +6626,7 @@
                   {
                     "nid": 630543280,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -8884,7 +8883,7 @@
                   {
                     "nid": -1554402286,
                     "strtype": "OBJECT/Hidden",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -9229,7 +9228,8 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "DROPDOWN"
+                "saved_objtypeKey": "DROPDOWN",
+                "tree_closed": true
               },
               {
                 "guid": "GUID59144260-741269S360326",
@@ -10375,8 +10375,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID64809051-811690S1252268",
@@ -18340,7 +18339,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxvisual/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 483,
+    "backup_cnt": 484,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

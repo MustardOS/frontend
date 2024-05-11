@@ -249,6 +249,7 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_y(ui_lblBluetooth, -70);
     lv_obj_set_align(ui_lblBluetooth, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblBluetooth, "Bluetooth");
+    lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblBluetooth, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblBluetooth, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblBluetooth, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -388,6 +389,7 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_y(ui_icoBluetooth, -70);
     lv_obj_set_align(ui_icoBluetooth, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoBluetooth, "");
+    lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_icoBluetooth, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_icoBluetooth, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_icoBluetooth, &ui_font_AwesomeBrandSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -530,7 +532,7 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_x(ui_droBluetooth, 100);
     lv_obj_set_y(ui_droBluetooth, -30);
     lv_obj_set_align(ui_droBluetooth, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_set_style_text_color(ui_droBluetooth, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_droBluetooth, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_droBluetooth, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
