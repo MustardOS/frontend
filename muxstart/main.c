@@ -107,6 +107,8 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrStart);
 
+    if (TEST_IMAGE) display_testing_message(ui_scrStart);
+
     if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }

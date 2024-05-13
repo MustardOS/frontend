@@ -320,6 +320,8 @@ void init_elements() {
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
+
+    if (TEST_IMAGE) display_testing_message(ui_scrDevice);
 }
 
 void glyph_task() {

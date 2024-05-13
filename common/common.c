@@ -1405,3 +1405,48 @@ char *get_friendly_name(char *search, char *file) {
 
     return search;
 }
+
+void display_testing_message(lv_obj_t *screen) {
+    int spec = 48;
+
+    char *test_message = "is a test image! This is a test image! This is a test image! This is a test image! This\n"
+                         "image! This is a test image! This is a test image! This is a test image! This is a test\n"
+                         "a test image! This is a test image! This is a test image! This is a test image! This is\n"
+                         "This is a test image! This is a test image! This is a test image! This is a test image!\n";
+
+    lv_obj_t * ui_conTest = lv_obj_create(screen);
+    lv_obj_remove_style_all(ui_conTest);
+    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
+        lv_obj_set_width(ui_conTest, SCREEN_HEIGHT);
+        lv_obj_set_height(ui_conTest, SCREEN_WIDTH);
+    } else {
+        lv_obj_set_width(ui_conTest, SCREEN_WIDTH);
+        lv_obj_set_height(ui_conTest, SCREEN_HEIGHT);
+    }
+    lv_obj_set_align(ui_conTest, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_conTest, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_text_color(ui_conTest, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_conTest, spec, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_letter_space(ui_conTest, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_conTest, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_t * ui_lblTestBottom = lv_label_create(ui_conTest);
+    lv_obj_set_width(ui_lblTestBottom, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblTestBottom, LV_SIZE_CONTENT);
+    lv_obj_set_x(ui_lblTestBottom, 0);
+    lv_obj_set_y(ui_lblTestBottom, spec * -1);
+    lv_obj_set_align(ui_lblTestBottom, LV_ALIGN_BOTTOM_MID);
+    lv_label_set_text(ui_lblTestBottom, test_message);
+    lv_obj_add_flag(ui_lblTestBottom, LV_OBJ_FLAG_FLOATING);
+
+    lv_obj_t * ui_lblTestTop = lv_label_create(ui_conTest);
+    lv_obj_set_width(ui_lblTestTop, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblTestTop, LV_SIZE_CONTENT);
+    lv_obj_set_x(ui_lblTestTop, 0);
+    lv_obj_set_y(ui_lblTestTop, spec);
+    lv_obj_set_align(ui_lblTestTop, LV_ALIGN_TOP_MID);
+    lv_label_set_text(ui_lblTestTop, test_message);
+    lv_obj_add_flag(ui_lblTestTop, LV_OBJ_FLAG_FLOATING);
+
+    lv_obj_move_foreground(ui_conTest);
+}

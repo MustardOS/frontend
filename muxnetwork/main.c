@@ -1195,6 +1195,8 @@ void init_elements() {
         lv_obj_clear_state(ui_lblGatewayValue, LV_STATE_DISABLED);
         lv_obj_clear_state(ui_lblDNSValue, LV_STATE_DISABLED);
     }
+
+    if (TEST_IMAGE) display_testing_message(ui_scrNetwork);
 }
 
 void init_osk() {

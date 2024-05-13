@@ -1717,6 +1717,8 @@ void init_elements() {
         default:
             break;
     }
+
+    if (TEST_IMAGE) display_testing_message(ui_scrExplore);
 }
 
 void init_fonts() {

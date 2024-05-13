@@ -85,6 +85,12 @@
 #define BL_RST_FILE    "/opt/muos/config/brightness.txt"
 #define VOL_RST_FILE   "/opt/muos/config/volume.txt"
 
+#if defined(RELEASE)
+#define TEST_IMAGE 0
+#else
+#define TEST_IMAGE 1
+#endif
+
 #if defined(RG35XX)
 #define HARDWARE "RG35XX"
 

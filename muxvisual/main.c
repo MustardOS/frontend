@@ -485,6 +485,15 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBluetooth, "bluetooth");
     lv_obj_set_user_data(ui_lblClock, "clock");
     lv_obj_set_user_data(ui_lblBoxArt, "boxart");
+
+    char *overlay = load_overlay_image();
+    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
+        lv_obj_t * overlay_img = lv_img_create(ui_scrVisual);
+        lv_img_set_src(overlay_img, overlay);
+        lv_obj_move_foreground(overlay_img);
+    }
+
+    if (TEST_IMAGE) display_testing_message(ui_scrVisual);
 }
 
 void glyph_task() {
