@@ -209,5 +209,3 @@ int get_brightness_percentage(int brightness);
 int get_brightness();
 
 void set_brightness(int brightness);
-
-char *get_friendly_name(char *search, char *file);

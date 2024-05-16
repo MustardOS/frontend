@@ -58,8 +58,8 @@
 #define MUOS_CATALOGUE_PATH "mnt/mmc/MUOS/info/catalogue"
 
 #define MUOS_CORE_FILE   "/mnt/mmc/MUOS/info/core.json"
-#define MUOS_NAME_FILE   "/mnt/mmc/MUOS/info/name.ini"
-#define MUOS_ASSIGN_FILE "/mnt/mmc/MUOS/info/assign.ini"
+#define MUOS_NAME_FILE   "/mnt/mmc/MUOS/info/name.json"
+#define MUOS_ASSIGN_FILE "/mnt/mmc/MUOS/info/assign.json"
 
 #define MUOS_PASS_FILE   "/mnt/mmc/MUOS/info/pass.ini"
 

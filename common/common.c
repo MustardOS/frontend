@@ -1380,32 +1380,6 @@ void set_brightness(int brightness) {
     }
 }
 
-char *get_friendly_name(char *search, char *file) {
-    char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command),
-             "/opt/muos/bin/rg -w --max-count=1 \"%s\" \"%s\" | cut -d'=' -f2-",
-             search, file);
-
-    FILE * fp = popen(command, "r");
-    if (fp == NULL) {
-        printf("Failed to obtain name\n");
-        return search;
-    }
-
-    char result[MAX_BUFFER_SIZE];
-    if (fgets(result, sizeof(result), fp) != NULL) {
-        result[strcspn(result, "\n")] = '\0';
-        pclose(fp);
-        return strdup(result);
-    }
-
-    pclose(fp);
-
-    puts(search);
-
-    return search;
-}
-
 void display_testing_message(lv_obj_t *screen) {
     int spec = 48;
 

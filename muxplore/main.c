@@ -23,6 +23,7 @@
 #include "../common/config.h"
 #include "../common/glyph.h"
 #include "../common/array.h"
+#include "../common/json/json.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -106,63 +107,6 @@ lv_timer_t *capacity_timer;
 lv_timer_t *osd_timer;
 lv_timer_t *glyph_timer;
 lv_timer_t *ui_refresh_timer;
-
-char *load_friendly_names() {
-    char *load_cache_file = malloc(MAX_BUFFER_SIZE);
-
-    if (load_cache_file == NULL) {
-        return MUOS_NAME_FILE;
-    }
-
-    switch (module) {
-        case MMC:
-            if (strcasecmp(sd_dir, strip_dir(SD1)) != 0) {
-                snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s/mmc/%s.ini",
-                         MUOS_CACHE_DIR, get_last_subdir(sd_dir, '/', 4));
-            } else {
-                snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s/root_mmc.ini",
-                         MUOS_CACHE_DIR);
-            }
-            break;
-        case SDCARD:
-            if (strcasecmp(sd_dir, strip_dir(SD2)) != 0) {
-                snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s/sdcard/%s.ini",
-                         MUOS_CACHE_DIR, get_last_subdir(sd_dir, '/', 4));
-            } else {
-                snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s/root_sdcard.ini",
-                         MUOS_CACHE_DIR);
-            }
-            break;
-        case USB:
-            if (strcasecmp(sd_dir, strip_dir(E_USB)) != 0) {
-                snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s/usb/%s.ini",
-                         MUOS_CACHE_DIR, get_last_subdir(sd_dir, '/', 4));
-            } else {
-                snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s/root_usb.ini",
-                         MUOS_CACHE_DIR);
-            }
-            break;
-        case FAVOURITE:
-            snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s/favourite.ini",
-                     MUOS_CACHE_DIR);
-            break;
-        case HISTORY:
-            snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s/history.ini",
-                     MUOS_CACHE_DIR);
-            break;
-        default:
-            snprintf(load_cache_file, MAX_BUFFER_SIZE, "%s",
-                     MUOS_NAME_FILE);
-            break;
-    }
-
-    if (file_exist(load_cache_file)) {
-        return load_cache_file;
-    } else {
-        free(load_cache_file);
-        return MUOS_NAME_FILE;
-    }
-}
 
 char *load_content_core(int force) {
     char content_core[MAX_BUFFER_SIZE];
@@ -622,27 +566,44 @@ void gen_item(char **file_names, int file_count) {
         is_cache = 1;
     }
 
+    int fn_valid = 0;
+    struct json fn_json;
+    if (json_valid(read_text_from_file(MUOS_NAME_FILE))) {
+        fn_valid = 1;
+        fn_json = json_parse(read_text_from_file(MUOS_NAME_FILE));
+    }
+
     for (int i = 0; i < file_count; i++) {
         char curr_item[MAX_BUFFER_SIZE];
-        const char *fn_name;
+        char fn_name[MAX_BUFFER_SIZE];
+        char cache_fn_name[MAX_BUFFER_SIZE];
 
         push_string(&content_items, file_names[i]);
 
         if (require_local_name_cache) {
             if (is_cache) {
-                fn_name = read_line_from_file(init_cache_file, i + 1);
+                snprintf(fn_name, sizeof(fn_name), "%s", read_line_from_file(init_cache_file, i + 1));
             } else {
-                fn_name = get_friendly_name(file_names[i], MUOS_NAME_FILE);
-                char good_fn_name[MAX_BUFFER_SIZE];
-                snprintf(good_fn_name, sizeof(good_fn_name), "%s\n", fn_name);
-                write_text_to_file(init_cache_file, good_fn_name, "a");
+                if (fn_valid) {
+                    struct json good_name_json = json_object_get(fn_json,
+                                                                 strip_ext((char *) str_tolower(file_names[i])));
+                    if (json_exists(good_name_json)) {
+                        json_string_copy(good_name_json, fn_name, sizeof(fn_name));
+                        snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
+                        write_text_to_file(init_cache_file, cache_fn_name, "a");
+                    } else {
+                        snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
+                        snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
+                        write_text_to_file(init_cache_file, cache_fn_name, "a");
+                        printf("MISSING LABEL: %s", cache_fn_name);
+                    }
+                }
             }
         } else {
-            fn_name = file_names[i];
+            snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
         }
 
-        snprintf(curr_item, sizeof(curr_item), "%s :: %d",
-                 strip_ext((char *) fn_name), ui_count);
+        snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
 
         ui_count++;
         push_string(&named_items, curr_item);
@@ -873,7 +834,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
         if (add_favourite) {
             write_text_to_file(add_to_hf, read_text_from_file(content_loader_file), "w");
 
-            char* hf_msg;
+            char *hf_msg;
             if (file_exist(add_to_hf)) {
                 hf_msg = "Added to favourites!";
             } else {
@@ -1729,11 +1690,12 @@ void glyph_task() {
     // TODO: Bluetooth connectivity!
 
     if (is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
@@ -1742,7 +1704,8 @@ void glyph_task() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),

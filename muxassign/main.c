@@ -759,11 +759,12 @@ void glyph_task() {
     // TODO: Bluetooth connectivity!
 
     if (is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
@@ -905,57 +906,60 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        mini_t * auto_assign_ini = mini_load(MUOS_ASSIGN_FILE);
-        char *auto_assign_config = get_ini_string(auto_assign_ini, "assign", str_tolower(get_last_dir(rom_dir)), "none");
         int auto_assign_good = 0;
 
-        printf("ASSIGN AUTO CORE: %s\n", auto_assign_config);
+        if (json_valid(read_text_from_file(MUOS_ASSIGN_FILE))) {
+            struct json auto_assign_config = json_object_get(
+                    json_parse(read_text_from_file(MUOS_ASSIGN_FILE)),
+                    str_tolower(get_last_dir(rom_dir)));
 
-        if (strcmp(auto_assign_config, "none") != 0) {
-            char assigned_core_ini[FILENAME_MAX];
-            snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s",
-                     MUOS_ASSIGN_DIR, auto_assign_config);
+            if (json_exists(auto_assign_config)) {
+                char ass_config[MAX_BUFFER_SIZE];
+                json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-            printf("OBTAINING CORE INI: %s\n", assigned_core_ini);
+                printf("ASSIGN AUTO CORE: %s\n", ass_config);
 
-            mini_t * core_config_ini = mini_load(assigned_core_ini);
+                char assigned_core_ini[MAX_BUFFER_SIZE];
+                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s",
+                         MUOS_ASSIGN_DIR, ass_config);
 
-            static char def_core[MAX_BUFFER_SIZE];
-            strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
+                printf("OBTAINING CORE INI: %s\n", assigned_core_ini);
 
-            printf("DEFAULT CORE: %s\n", def_core);
+                mini_t * core_config_ini = mini_load(assigned_core_ini);
 
-            if (strcmp(def_core, "none") != 0) {
-                static char auto_core[MAX_BUFFER_SIZE];
-                strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
+                static char def_core[MAX_BUFFER_SIZE];
+                strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
 
-                printf("CORE TO BE ASSIGNED: %s\n", auto_core);
+                printf("DEFAULT CORE: %s\n", def_core);
 
-                if (strcmp(def_core, "invalid") != 0) {
-                    static char core_catalogue[MAX_BUFFER_SIZE];
-                    strcpy(core_catalogue, get_ini_string(core_config_ini, "global", "catalogue", "none"));
+                if (strcmp(def_core, "none") != 0) {
+                    static char auto_core[MAX_BUFFER_SIZE];
+                    strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
 
-                    int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
+                    printf("CORE TO BE ASSIGNED: %s\n", auto_core);
 
-                    printf("ASSIGN CORE CACHE: %d\n", name_cache);
-                    printf("ASSIGN CORE CATALOGUE: %s\n", core_catalogue);
+                    if (strcmp(def_core, "invalid") != 0) {
+                        static char core_catalogue[MAX_BUFFER_SIZE];
+                        strcpy(core_catalogue, get_ini_string(core_config_ini, "global", "catalogue", "none"));
 
-                    create_core_assignment(auto_core, core_catalogue, name_cache);
+                        int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
 
-                    auto_assign_good = 1;
+                        printf("ASSIGN CORE CACHE: %d\n", name_cache);
+                        printf("ASSIGN CORE CATALOGUE: %s\n", core_catalogue);
+
+                        create_core_assignment(auto_core, core_catalogue, name_cache);
+
+                        auto_assign_good = 1;
+                    }
                 }
+
+                mini_free(core_config_ini);
+            } else {
+                if (strcmp(rom_system, "none") == 0) return 0;
             }
-
-            mini_free(core_config_ini);
-        } else {
-            mini_free(auto_assign_ini);
-            return 0;
         }
 
-        if (auto_assign_good) {
-            mini_free(auto_assign_ini);
-            return 0;
-        }
+        if (auto_assign_good) return 0;
     }
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
