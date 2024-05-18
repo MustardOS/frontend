@@ -276,6 +276,36 @@ void ui_scrDevice_screen_init(void)
     lv_obj_set_style_border_color(ui_lblRG35XXPLUS, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_lblRG35XXPLUS, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_lblRG35XXSP = lv_label_create(ui_pnlContent);
+    lv_obj_set_width(ui_lblRG35XXSP, 640);
+    lv_obj_set_height(ui_lblRG35XXSP, 28);
+    lv_obj_set_align(ui_lblRG35XXSP, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblRG35XXSP, "RG35XX - SP");
+    lv_obj_set_style_text_color(ui_lblRG35XXSP, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblRG35XXSP, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblRG35XXSP, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblRG35XXSP, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblRG35XXSP, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblRG35XXSP, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblRG35XXSP, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblRG35XXSP, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui_lblRG35XXSP, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblRG35XXSP, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblRG35XXSP, -3, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(ui_lblRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_lblRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblRG35XXSP, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lblRG35XXSP, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_color(ui_lblRG35XXSP, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_opa(ui_lblRG35XXSP, 25, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(ui_lblRG35XXSP, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(ui_lblRG35XXSP, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     ui_lblRG35XX2024 = lv_label_create(ui_pnlContent);
     lv_obj_set_width(ui_lblRG35XX2024, 640);
     lv_obj_set_height(ui_lblRG35XX2024, 28);
@@ -373,6 +403,22 @@ void ui_scrDevice_screen_init(void)
     lv_obj_set_style_pad_column(ui_icoRG35XXPLUS, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_icoRG35XXPLUS, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoRG35XXPLUS, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    ui_icoRG35XXSP = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoRG35XXSP, 640);
+    lv_obj_set_height(ui_icoRG35XXSP, 28);
+    lv_obj_set_align(ui_icoRG35XXSP, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_icoRG35XXSP, "");
+    lv_obj_set_style_text_color(ui_icoRG35XXSP, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_icoRG35XXSP, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_icoRG35XXSP, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_icoRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_icoRG35XXSP, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_icoRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(ui_icoRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_icoRG35XXSP, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_icoRG35XXSP, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_icoRG35XXSP, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_icoRG35XX2024 = lv_label_create(ui_pnlGlyph);
     lv_obj_set_width(ui_icoRG35XX2024, 640);

@@ -660,7 +660,9 @@ void create_root_items(char *dir_name) {
     }
 }
 
-void create_explore_items() {
+void create_explore_items(void *count) {
+    int *ui_count_ptr = (int *) count;
+
     char curr_dir[PATH_MAX];
     snprintf(curr_dir, sizeof(curr_dir), "%s", sd_dir);
 
@@ -697,7 +699,7 @@ void create_explore_items() {
             push_string(&content_items, DUMMY_DIR);
 
             gen_label("\uF07B", dir_names[i]);
-            ui_count++;
+            (*ui_count_ptr)++;
 
             free(dir_names[i]);
         }
@@ -1806,6 +1808,16 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 
+    char *cmd_help = "\nmuOS Extras - System List\nUsage: %s <-im>\n\nOptions:\n"
+                     "\t-i Index of content to skip to\n"
+                     "\t-m List Module:\n"
+                     "\t\troot - List SD Cards\n"
+                     "\t\tmmc - List directories and files from SD1\n"
+                     "\t\tsdcard - List directories and files from SD2\n"
+                     "\t\tusb - List directories and files from USB\n"
+                     "\t\tfavourite - List favourite items\n"
+                     "\t\thistory - List history items\n\n";
+
     int sys_index = -1;
     int opt;
     while ((opt = getopt(argc, argv, "i:m:")) != -1) {
@@ -1843,31 +1855,13 @@ int main(int argc, char *argv[]) {
                     return 1;
                 }
             default:
-                fprintf(stderr, "\nmuOS Extras - System List\nUsage: %s <-im>\n\nOptions:\n"
-                                "\t-i Index of content to skip to\n"
-                                "\t-m List Module:\n"
-                                "\t\troot - List SD Cards\n"
-                                "\t\tmmc - List directories and files from SD1\n"
-                                "\t\tsdcard - List directories and files from SD2\n"
-                                "\t\tusb - List directories and files from USB\n"
-                                "\t\tfavourite - List favourite items\n"
-                                "\t\thistory - List history items\n"
-                                "\n", argv[0]);
+                fprintf(stderr, cmd_help, argv[0]);
                 return 1;
         }
     }
 
     if (sys_index == -1) {
-        fprintf(stderr, "\nmuOS Extras - System List\nUsage: %s <-im>\n\nOptions:\n"
-                        "\t-i Index of content to skip to\n"
-                        "\t-m List Module:\n"
-                        "\t\troot - List SD Cards\n"
-                        "\t\tmmc - List directories and files from SD1\n"
-                        "\t\tsdcard - List directories and files from SD2\n"
-                        "\t\tusb - List directories and files from USB\n"
-                        "\t\tfavourite - List favourite items\n"
-                        "\t\thistory - List history items\n"
-                        "\n", argv[0]);
+        fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
 
@@ -1967,9 +1961,11 @@ int main(int argc, char *argv[]) {
     initialise_array(&named_items);
     initialise_array(&named_index);
 
+    pthread_t gen_item_thread;
+
     switch (module) {
         case ROOT:
-            explore_root();
+            pthread_create(&gen_item_thread, NULL, (void *) explore_root, (void *) NULL);
             break;
         case MMC:
         case SDCARD:
@@ -1982,35 +1978,39 @@ int main(int argc, char *argv[]) {
                 int usb_okay = strncmp(ex_path, strip_dir(E_USB), strlen(strip_dir(E_USB)));
                 if (sd1_okay == 0 || sd2_okay == 0 || usb_okay == 0) {
                     sd_dir = ex_path;
-                    create_explore_items();
+                    pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
+                                   (void *) &ui_count);
                 } else {
-                    explore_root();
+                    pthread_create(&gen_item_thread, NULL, (void *) explore_root, (void *) NULL);
                 }
             } else {
                 switch (module) {
                     case MMC:
                         sd_dir = strip_dir(SD1);
-                        create_explore_items();
+                        pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
+                                       (void *) &ui_count);
                         break;
                     case SDCARD:
                         sd_dir = strip_dir(SD2);
-                        create_explore_items();
+                        pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
+                                       (void *) &ui_count);
                         break;
                     case USB:
                         sd_dir = strip_dir(E_USB);
-                        create_explore_items();
+                        pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
+                                       (void *) &ui_count);
                         break;
                     default:
-                        explore_root();
+                        pthread_create(&gen_item_thread, NULL, (void *) explore_root, NULL);
                         break;
                 }
             }
             break;
         case FAVOURITE:
-            create_root_items("favourite");
+            pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "favourite");
             break;
         case HISTORY:
-            create_root_items("history");
+            pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "history");
             break;
     }
 
@@ -2047,6 +2047,7 @@ int main(int argc, char *argv[]) {
     ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
+    pthread_join(gen_item_thread, NULL);
     if (ui_count > 0) {
         if (ui_count > 13) {
             lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
@@ -2061,9 +2062,10 @@ int main(int argc, char *argv[]) {
         nav_moved = 0;
         lv_obj_clear_flag(ui_lblExploreMessage, LV_OBJ_FLAG_HIDDEN);
     }
+    pthread_cancel(gen_item_thread);
 
     pthread_t joystick_thread;
-    pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
+    pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
 
     init_elements();
 

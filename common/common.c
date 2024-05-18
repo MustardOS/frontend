@@ -93,24 +93,24 @@ int time_compare_for_history(const void *a, const void *b) {
     snprintf(mod_file_b, sizeof(mod_file_b), "/%s/history/%s.cfg", MUOS_INFO_PATH, file_b);
 
     if (access(mod_file_a, F_OK) != 0) {
-        perror("Error: mod_file_a does not exist");
+        printf("Error: %s does not exist\n", mod_file_a);
         return 0;
     }
 
     if (access(mod_file_b, F_OK) != 0) {
-        perror("Error: mod_file_b does not exist");
+        printf("Error: %s does not exist\n", mod_file_b);
         return 0;
     }
 
     struct stat stat_a, stat_b;
 
     if (stat(mod_file_a, &stat_a) != 0) {
-        perror("Error getting file information for mod_file_a");
+        printf("Error getting file information for %s\n", mod_file_a);
         return 0;
     }
 
     if (stat(mod_file_b, &stat_b) != 0) {
-        perror("Error getting file information for mod_file_b");
+        printf("Error getting file information for %s\n", mod_file_b);
         return 0;
     }
 
@@ -1383,10 +1383,11 @@ void set_brightness(int brightness) {
 void display_testing_message(lv_obj_t *screen) {
     int spec = 48;
 
-    char *test_message = "is a test image! This is a test image! This is a test image! This is a test image! This\n"
-                         "image! This is a test image! This is a test image! This is a test image! This is a test\n"
+    char *test_message = "This is a test image! This is a test image! This is a test image! This is a test image!\n"
+                         "is a test image! This is a test image! This is a test image! This is a test image! This\n"
                          "a test image! This is a test image! This is a test image! This is a test image! This is\n"
-                         "This is a test image! This is a test image! This is a test image! This is a test image!\n";
+                         "test image! This is a test image! This is a test image! This is a test image! This is a\n"
+                         "image! This is a test image! This is a test image! This is a test image! This is a test\n";
 
     lv_obj_t * ui_conTest = lv_obj_create(screen);
     lv_obj_remove_style_all(ui_conTest);

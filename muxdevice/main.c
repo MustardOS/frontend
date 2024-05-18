@@ -65,6 +65,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXDEVICE_RG35XXH;
     } else if (element_focused == ui_lblRG35XXPLUS) {
         message = MUXDEVICE_RG35XXPLUS;
+    } else if (element_focused == ui_lblRG35XXSP) {
+        message = MUXDEVICE_RG35XXSP;
     } else if (element_focused == ui_lblRG35XX2024) {
         message = MUXDEVICE_RG35XX2024;
     }
@@ -81,6 +83,7 @@ void init_navigation_groups() {
             ui_lblRG28XX,
             ui_lblRG35XXH,
             ui_lblRG35XXPLUS,
+            ui_lblRG35XXSP,
             ui_lblRG35XX2024
     };
 
@@ -88,6 +91,7 @@ void init_navigation_groups() {
             ui_icoRG28XX,
             ui_icoRG35XXH,
             ui_icoRG35XXPLUS,
+            ui_icoRG35XXSP,
             ui_icoRG35XX2024
     };
 
@@ -161,6 +165,8 @@ void *joystick_task() {
                                         write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-H", "w");
                                     } else if (element_focused == ui_lblRG35XXPLUS) {
                                         write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-PLUS", "w");
+                                    } else if (element_focused == ui_lblRG35XXSP) {
+                                        write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-SP", "w");
                                     } else if (element_focused == ui_lblRG35XX2024) {
                                         write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-2024", "w");
                                     }
@@ -284,17 +290,20 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblRG28XX, "rg28xx");
     lv_obj_set_user_data(ui_lblRG35XXH, "rg35xx-h");
     lv_obj_set_user_data(ui_lblRG35XXPLUS, "rg35xx-plus");
+    lv_obj_set_user_data(ui_lblRG35XXSP, "rg35xx-sp");
     lv_obj_set_user_data(ui_lblRG35XX2024, "rg35xx-2024");
 
-    lv_obj_t * opt_hide[6];
+    lv_obj_t * opt_hide[8];
 
     if (strcasecmp(HARDWARE, "RG28XX") == 0) {
         opt_hide[0] = ui_lblRG35XXH;
         opt_hide[1] = ui_icoRG35XXH;
         opt_hide[2] = ui_lblRG35XXPLUS;
         opt_hide[3] = ui_icoRG35XXPLUS;
-        opt_hide[4] = ui_lblRG35XX2024;
-        opt_hide[5] = ui_icoRG35XX2024;
+        opt_hide[4] = ui_lblRG35XXSP;
+        opt_hide[5] = ui_icoRG35XXSP;
+        opt_hide[6] = ui_lblRG35XX2024;
+        opt_hide[7] = ui_icoRG35XX2024;
     } else {
         opt_hide[0] = ui_lblRG28XX;
         opt_hide[1] = ui_icoRG28XX;
@@ -328,11 +337,12 @@ void glyph_task() {
     // TODO: Bluetooth connectivity!
 
     if (is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

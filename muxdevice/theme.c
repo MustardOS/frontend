@@ -25,6 +25,7 @@ void apply_theme() {
             {ui_lblRG35XXH,     theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblRG35XXPLUS,  theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblRG35XX2024,  theme.LIST_DEFAULT.BACKGROUND},
+            {ui_lblRG35XXSP,    theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,     theme.MESSAGE.BACKGROUND},
             {ui_pnlProgress,    theme.BAR.PANEL_BACKGROUND},
             {ui_barProgress,    theme.BAR.PROGRESS_MAIN_BACKGROUND},
@@ -69,6 +70,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_FOCUS.BACKGROUND},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.BACKGROUND},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblRG35XXSP,   theme.LIST_FOCUS.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(background_focus_elements) / sizeof(background_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_color(background_focus_elements[i].e, lv_color_hex(background_focus_elements[i].c),
@@ -80,6 +82,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.SYSTEM.BACKGROUND},
             {ui_lblRG35XXPLUS, theme.SYSTEM.BACKGROUND},
             {ui_lblRG35XX2024, theme.SYSTEM.BACKGROUND},
+            {ui_lblRG35XXSP,   theme.SYSTEM.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
@@ -91,6 +94,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_DEFAULT.INDICATOR},
             {ui_lblRG35XXPLUS, theme.LIST_DEFAULT.INDICATOR},
             {ui_lblRG35XX2024, theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblRG35XXSP,   theme.LIST_DEFAULT.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_elements) / sizeof(indicator_elements[0]); ++i) {
         lv_obj_set_style_border_color(indicator_elements[i].e, lv_color_hex(indicator_elements[i].c),
@@ -102,6 +106,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_FOCUS.INDICATOR},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.INDICATOR},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.INDICATOR},
+            {ui_lblRG35XXSP,   theme.LIST_FOCUS.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_elements) / sizeof(indicator_focus_elements[0]); ++i) {
         lv_obj_set_style_border_color(indicator_focus_elements[i].e, lv_color_hex(indicator_focus_elements[i].c),
@@ -113,10 +118,12 @@ void apply_theme() {
             {ui_lblRG35XXH,      theme.LIST_DEFAULT.TEXT},
             {ui_lblRG35XXPLUS,   theme.LIST_DEFAULT.TEXT},
             {ui_lblRG35XX2024,   theme.LIST_DEFAULT.TEXT},
+            {ui_lblRG35XXSP,     theme.LIST_DEFAULT.TEXT},
             {ui_icoRG28XX,       theme.LIST_DEFAULT.TEXT},
             {ui_icoRG35XXH,      theme.LIST_DEFAULT.TEXT},
             {ui_icoRG35XXPLUS,   theme.LIST_DEFAULT.TEXT},
             {ui_icoRG35XX2024,   theme.LIST_DEFAULT.TEXT},
+            {ui_icoRG35XXSP,     theme.LIST_DEFAULT.TEXT},
             {ui_staCapacity,     theme.STATUS.BATTERY.NORMAL},
             {ui_lblDatetime,     theme.DATETIME.TEXT},
             {ui_lblTitle,        theme.HEADER.TEXT},
@@ -152,10 +159,12 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_FOCUS.TEXT},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.TEXT},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.TEXT},
+            {ui_lblRG35XXSP,   theme.LIST_FOCUS.TEXT},
             {ui_icoRG28XX,     theme.LIST_FOCUS.TEXT},
             {ui_icoRG35XXH,    theme.LIST_FOCUS.TEXT},
             {ui_icoRG35XXPLUS, theme.LIST_FOCUS.TEXT},
             {ui_icoRG35XX2024, theme.LIST_FOCUS.TEXT},
+            {ui_icoRG35XXSP,   theme.LIST_FOCUS.TEXT},
     };
     for (size_t i = 0; i < sizeof(focus_elements) / sizeof(focus_elements[0]); ++i) {
         lv_obj_set_style_text_color(focus_elements[i].e, lv_color_hex(focus_elements[i].c),
@@ -187,10 +196,12 @@ void apply_theme() {
             {ui_lblRG35XXH,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblRG35XXPLUS,   theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblRG35XX2024,   theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_lblRG35XXSP,     theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRG28XX,       theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRG35XXH,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRG35XXPLUS,   theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRG35XX2024,   theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoRG35XXSP,     theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTitle,        theme.HEADER.TEXT_ALPHA},
             {ui_staCapacity,     theme.STATUS.BATTERY.NORMAL_ALPHA},
             {ui_lblDatetime,     theme.DATETIME.ALPHA},
@@ -224,10 +235,12 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblRG35XXSP,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRG28XX,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRG35XXH,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRG35XXPLUS, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRG35XX2024, theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoRG35XXSP,   theme.LIST_FOCUS.TEXT_ALPHA},
     };
     for (size_t i = 0; i < sizeof(text_focus_alpha_elements) / sizeof(text_focus_alpha_elements[0]); ++i) {
         lv_obj_set_style_text_opa(text_focus_alpha_elements[i].e, text_focus_alpha_elements[i].c,
@@ -239,6 +252,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblRG35XXSP,   theme.LIST_DEFAULT.INDICATOR_ALPHA},
     };
     for (size_t i = 0;
          i < sizeof(indicator_default_alpha_elements) / sizeof(indicator_default_alpha_elements[0]); ++i) {
@@ -251,6 +265,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblRG35XXSP,   theme.LIST_FOCUS.INDICATOR_ALPHA},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_alpha_elements) / sizeof(indicator_focus_alpha_elements[0]); ++i) {
         lv_obj_set_style_border_opa(indicator_focus_alpha_elements[i].e, indicator_focus_alpha_elements[i].c,
@@ -262,6 +277,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblRG35XXPLUS, theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblRG35XX2024, theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblRG35XXSP,   theme.LIST_DEFAULT.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_default_elements) / sizeof(gradient_stop_default_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_stop(gradient_stop_default_elements[i].e, gradient_stop_default_elements[i].c,
@@ -273,6 +289,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblRG35XXSP,   theme.LIST_FOCUS.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_focus_elements) / sizeof(gradient_stop_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_stop(gradient_stop_focus_elements[i].e, gradient_stop_focus_elements[i].c,
@@ -284,6 +301,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblRG35XXSP,   theme.LIST_DEFAULT.BACKGROUND_ALPHA},
     };
     for (size_t i = 0;
          i < sizeof(background_alpha_default_elements) / sizeof(background_alpha_default_elements[0]); ++i) {
@@ -296,6 +314,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblRG35XXPLUS, theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblRG35XX2024, theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblRG35XXSP,   theme.LIST_FOCUS.BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(background_alpha_focus_elements) / sizeof(background_alpha_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_opa(background_alpha_focus_elements[i].e, background_alpha_focus_elements[i].c,
@@ -397,6 +416,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.FONT.LIST_PAD_TOP},
             {ui_lblRG35XXPLUS, theme.FONT.LIST_PAD_TOP},
             {ui_lblRG35XX2024, theme.FONT.LIST_PAD_TOP},
+            {ui_lblRG35XXSP,   theme.FONT.LIST_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_top_elements) / sizeof(font_pad_list_top_elements[0]); ++i) {
         lv_obj_set_style_pad_top(font_pad_list_top_elements[i].e, font_pad_list_top_elements[i].c,
@@ -408,6 +428,7 @@ void apply_theme() {
             {ui_lblRG35XXH,    theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblRG35XXPLUS, theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblRG35XX2024, theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblRG35XXSP,   theme.FONT.LIST_PAD_BOTTOM},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_bottom_elements) / sizeof(font_pad_list_bottom_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_list_bottom_elements[i].e, font_pad_list_bottom_elements[i].c,
@@ -419,6 +440,7 @@ void apply_theme() {
             {ui_icoRG35XXH,    theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoRG35XXPLUS, theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoRG35XX2024, theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoRG35XXSP,   theme.FONT.LIST_ICON_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_top_list_icon_elements) / sizeof(font_pad_top_list_icon_elements[0]); ++i) {
         lv_obj_set_style_pad_top(font_pad_top_list_icon_elements[i].e, font_pad_top_list_icon_elements[i].c,
@@ -430,6 +452,7 @@ void apply_theme() {
             {ui_icoRG35XXH,    theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoRG35XXPLUS, theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoRG35XX2024, theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoRG35XXSP,   theme.FONT.LIST_ICON_PAD_BOTTOM},
     };
     for (size_t i = 0;
          i < sizeof(font_pad_bottom_list_icon_elements) / sizeof(font_pad_bottom_list_icon_elements[0]); ++i) {

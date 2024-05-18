@@ -41,6 +41,7 @@
 #define MUXDEVICE_RG35XXH    ""
 #define MUXDEVICE_RG35XXOG   ""
 #define MUXDEVICE_RG35XXPLUS ""
+#define MUXDEVICE_RG35XXSP   ""
 #define MUXDEVICE_RG35XX2024 ""
 
 // muxinfo
