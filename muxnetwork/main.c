@@ -511,7 +511,7 @@ void *joystick_task() {
 
                                             static char set_wpa_passphrase[MAX_BUFFER_SIZE];
                                             snprintf(set_wpa_passphrase, sizeof(set_wpa_passphrase),
-                                                     "/opt/muos/script/web/password.sh \"%s\" \"%s\"",
+                                                     "/opt/muos/script/web/password.sh \"%s\" %s",
                                                      lv_label_get_text(ui_lblIdentifierValue), passphrase);
 
                                             system(set_wpa_passphrase);

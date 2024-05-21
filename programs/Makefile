@@ -50,6 +50,11 @@ mushuffle: mushuffle.c common.c
 	$(CC) -D$(DEVICE) -o $(OUT)/mushuffle mushuffle.c common.c $(EXTRA)
 	$(ST) $(OUT)/mushuffle
 
+mushutdown: mushutdown.c common.c
+	@mkdir -p $(OUT)
+	$(CC) -D$(DEVICE) -o $(OUT)/mushutdown mushutdown.c common.c $(EXTRA)
+	$(ST) $(OUT)/mushutdown
+
 muwatch: muwatch.c common.c
 	@mkdir -p $(OUT)
 	$(CC) -D$(DEVICE) -o $(OUT)/muwatch muwatch.c common.c $(EXTRA)
