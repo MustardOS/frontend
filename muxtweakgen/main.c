@@ -46,7 +46,7 @@ int nav_moved = 1;
 char *current_wall = "";
 
 // Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
 
 lv_obj_t *msgbox_element = NULL;
@@ -61,13 +61,14 @@ int low_battery_total, low_battery_current;
 int colour_total, colour_current;
 int brightness_total, brightness_current;
 int hdmi_total, hdmi_current;
+int shutdown_total, shutdown_current;
 
 typedef struct {
     int *total;
     int *current;
 } Tweak;
 
-Tweak hidden, bgm, startup, power, low_battery, colour, brightness, hdmi;
+Tweak hidden, bgm, startup, power, low_battery, colour, brightness, hdmi, shutdown;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -92,6 +93,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKGEN_BRIGHTNESS;
     } else if (element_focused == ui_lblHDMI) {
         message = MUXTWEAKGEN_HDMI;
+    } else if (element_focused == ui_lblShutdown) {
+        message = MUXTWEAKGEN_SHUTDOWN;
     } else if (element_focused == ui_lblInterface) {
         message = MUXTWEAKGEN_INTERFACE;
     } else if (element_focused == ui_lblAdvanced) {
@@ -129,7 +132,8 @@ void elements_events_init() {
             ui_droLowBattery,
             ui_droColour,
             ui_droBrightness,
-            ui_droHDMI
+            ui_droHDMI,
+            ui_droShutdown
     };
 
     labels[0] = ui_droHidden;
@@ -140,6 +144,7 @@ void elements_events_init() {
     labels[5] = ui_droColour;
     labels[6] = ui_droBrightness;
     labels[7] = ui_droHDMI;
+    labels[8] = ui_droShutdown;
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
@@ -153,18 +158,20 @@ void elements_events_init() {
     init_pointers(&colour, &colour_total, &colour_current);
     init_pointers(&brightness, &brightness_total, &brightness_current);
     init_pointers(&hdmi, &hdmi_total, &hdmi_current);
+    init_pointers(&shutdown, &shutdown_total, &shutdown_current);
 }
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {hidden.total,      hidden.current},
-            {bgm.total,         bgm.current},
-            {startup.total,     startup.current},
-            {power.total,       power.current},
+            {hidden.total, hidden.current},
+            {bgm.total, bgm.current},
+            {startup.total, startup.current},
+            {power.total, power.current},
             {low_battery.total, low_battery.current},
-            {colour.total,      colour.current},
-            {brightness.total,  brightness.current},
-            {hdmi.total,        hdmi.current}
+            {colour.total, colour.current},
+            {brightness.total, brightness.current},
+            {hdmi.total, hdmi.current},
+            {shutdown.total, shutdown.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -175,7 +182,8 @@ void init_dropdown_settings() {
             ui_droLowBattery,
             ui_droColour,
             ui_droBrightness,
-            ui_droHDMI
+            ui_droHDMI,
+            ui_droShutdown
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -205,6 +213,30 @@ void restore_tweak_options() {
         lv_dropdown_set_selected(ui_droStartup, 4);
     } else {
         lv_dropdown_set_selected(ui_droStartup, 0);
+    }
+
+    switch (config.SETTINGS.GENERAL.SHUTDOWN) {
+        case -1:
+            lv_dropdown_set_selected(ui_droShutdown, 0);
+            break;
+        case 30:
+            lv_dropdown_set_selected(ui_droShutdown, 1);
+            break;
+        case 60:
+            lv_dropdown_set_selected(ui_droShutdown, 2);
+            break;
+        case 120:
+            lv_dropdown_set_selected(ui_droShutdown, 3);
+            break;
+        case 300:
+            lv_dropdown_set_selected(ui_droShutdown, 4);
+            break;
+        case 600:
+            lv_dropdown_set_selected(ui_droShutdown, 5);
+            break;
+        default:
+            lv_dropdown_set_selected(ui_droShutdown, 0);
+            break;
     }
 
     switch (config.SETTINGS.GENERAL.COLOUR) {
@@ -297,6 +329,31 @@ void save_tweak_options() {
             break;
     }
 
+    int idx_shutdown;
+    switch (lv_dropdown_get_selected(ui_droShutdown)) {
+        case 0:
+            idx_shutdown = -1;
+            break;
+        case 1:
+            idx_shutdown = 30;
+            break;
+        case 2:
+            idx_shutdown = 60;
+            break;
+        case 3:
+            idx_shutdown = 120;
+            break;
+        case 4:
+            idx_shutdown = 300;
+            break;
+        case 5:
+            idx_shutdown = 600;
+            break;
+        default:
+            idx_shutdown = -1;
+            break;
+    }
+
     int idx_colour;
     switch (lv_dropdown_get_selected(ui_droColour)) {
         case 0:
@@ -362,6 +419,7 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.general", "low_battery", idx_lowbattery);
     mini_set_int(muos_config, "settings.general", "colour", idx_colour);
     mini_set_int(muos_config, "settings.general", "hdmi", idx_hdmi);
+    mini_set_int(muos_config, "settings.general", "shutdown", idx_shutdown);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
@@ -386,6 +444,7 @@ void init_navigation_groups() {
             ui_lblColour,
             ui_lblBrightness,
             ui_lblHDMI,
+            ui_lblShutdown,
             ui_lblInterface,
             ui_lblAdvanced
     };
@@ -399,6 +458,7 @@ void init_navigation_groups() {
             ui_droColour,
             ui_droBrightness,
             ui_droHDMI,
+            ui_droShutdown,
             ui_droInterface,
             ui_droAdvanced
     };
@@ -412,6 +472,7 @@ void init_navigation_groups() {
             ui_icoColour,
             ui_icoBrightness,
             ui_icoHDMI,
+            ui_icoShutdown,
             ui_icoInterface,
             ui_icoAdvanced
     };
@@ -515,6 +576,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droHDMI,
                                                               &hdmi_current,
                                                               hdmi_total);
+                                    } else if (element_focused == ui_lblShutdown) {
+                                        increase_option_value(ui_droShutdown,
+                                                              &shutdown_current,
+                                                              shutdown_total);
                                     } else if (element_focused == ui_lblInterface) {
                                         load_mux("visual");
                                         safe_quit = 1;
@@ -604,6 +669,10 @@ void *joystick_task() {
                                         decrease_option_value(ui_droHDMI,
                                                               &hdmi_current,
                                                               hdmi_total);
+                                    } else if (element_focused == ui_lblShutdown) {
+                                        decrease_option_value(ui_droShutdown,
+                                                              &shutdown_current,
+                                                              shutdown_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                     break;
@@ -641,6 +710,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droHDMI,
                                                               &hdmi_current,
                                                               hdmi_total);
+                                    } else if (element_focused == ui_lblShutdown) {
+                                        increase_option_value(ui_droShutdown,
+                                                              &shutdown_current,
+                                                              shutdown_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                     break;
@@ -736,6 +809,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblColour, "colour");
     lv_obj_set_user_data(ui_lblBrightness, "brightness");
     lv_obj_set_user_data(ui_lblHDMI, "hdmi");
+    lv_obj_set_user_data(ui_lblShutdown, "shutdown");
     lv_obj_set_user_data(ui_lblInterface, "interface");
     lv_obj_set_user_data(ui_lblAdvanced, "advanced");
 
@@ -753,11 +827,12 @@ void glyph_task() {
     // TODO: Bluetooth connectivity!
 
     if (is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

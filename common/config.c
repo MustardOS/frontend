@@ -45,6 +45,7 @@ void load_config(struct mux_config *config) {
     config->SETTINGS.GENERAL.COLOUR = get_ini_int(muos_config, "settings.general", "colour", 9);
     config->SETTINGS.GENERAL.BRIGHTNESS = get_ini_int(muos_config, "settings.general", "brightness", 49);
     config->SETTINGS.GENERAL.HDMI = get_ini_int(muos_config, "settings.general", "hdmi", 0);
+    config->SETTINGS.GENERAL.SHUTDOWN = get_ini_int(muos_config, "settings.general", "shutdown", -1);
 
     config->SETTINGS.ADVANCED.SWAP = get_ini_int(muos_config, "settings.advanced", "swap", 0);
     config->SETTINGS.ADVANCED.THERMAL = get_ini_int(muos_config, "settings.advanced", "thermal", 0);
