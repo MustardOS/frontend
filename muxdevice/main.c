@@ -171,7 +171,14 @@ void *joystick_task() {
                                         write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-2024", "w");
                                     }
 
-                                    safe_quit = 1;
+                                    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+                                    mini_set_int(muos_config, "boot", "firmware_done", 0);
+                                    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+                                    mini_free(muos_config);
+
+                                    sync();
+                                    usleep(100000);
+                                    reboot(RB_AUTOBOOT);
                                 }
                             }
                         } else {

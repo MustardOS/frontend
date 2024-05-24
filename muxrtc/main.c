@@ -452,10 +452,10 @@ void *joystick_task() {
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     set_new_time();
 
-                                    char *cs = "/opt/muos/flag/ClockSetup";
-                                    if (file_exist(cs)) {
-                                        remove(cs);
-                                    }
+                                    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+                                    mini_set_int(muos_config, "boot", "clock_setup", 0);
+                                    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+                                    mini_free(muos_config);
 
                                     usleep(100000);
                                     safe_quit = 1;
