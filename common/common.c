@@ -18,6 +18,7 @@
 #include "options.h"
 #include "theme.h"
 #include "config.h"
+#include "device.h"
 #include "glyph.h"
 #include "mini/mini.h"
 
@@ -387,7 +388,7 @@ char *current_datetime() {
 }
 
 int read_battery_capacity() {
-    FILE * file = fopen(BATT_CAPACITY, "r");
+    FILE * file = fopen(device.BATTERY.CAPACITY, "r");
 
     if (file == NULL) {
         perror("Error opening capacity file");
@@ -412,7 +413,7 @@ int read_battery_capacity() {
 }
 
 char *read_battery_health() {
-    FILE * file = fopen(BATT_HEALTH, "r");
+    FILE * file = fopen(device.BATTERY.HEALTH, "r");
 
     if (file == NULL) {
         perror("Error opening health file");
@@ -431,7 +432,7 @@ char *read_battery_health() {
 }
 
 char *read_battery_voltage() {
-    FILE * file = fopen(BATT_VOLTAGE, "r");
+    FILE * file = fopen(device.BATTERY.VOLTAGE, "r");
 
     if (file == NULL) {
         perror("Error opening voltage file");
@@ -762,7 +763,7 @@ int count_items(const char *path, enum count_type type) {
 int detect_sd2() {
     FILE * fp;
     char line[MAX_BUFFER_SIZE];
-    const char *target = "mmcblk1";
+    const char *target = device.STORAGE.SDCARD.DEVICE;
     int found = 0;
 
     fp = fopen("/proc/partitions", "r");
@@ -785,7 +786,7 @@ int detect_sd2() {
 int detect_e_usb() {
     FILE * fp;
     char line[MAX_BUFFER_SIZE];
-    const char *target = "sda1";
+    const char *target = device.STORAGE.USB.DEVICE;
     int found = 0;
 
     fp = fopen("/proc/partitions", "r");
@@ -907,22 +908,22 @@ void osd_task(lv_timer_t *timer) {
 }
 
 void set_governor(char *governor) {
-    FILE * file = fopen(GOVERNOR_FILE, "w");
+    FILE * file = fopen(device.CPU.GOVERNOR, "w");
     if (file != NULL) {
         fprintf(file, "%s", governor);
         fclose(file);
     } else {
-        perror("Failed to open scaling_governor file");
+        perror("Failed to open governor file");
     }
 }
 
 void set_cpu_scale(int speed) {
-    FILE * file = fopen(SCALE_MN_FILE, "w");
+    FILE * file = fopen(device.CPU.SCALER, "w");
     if (file != NULL) {
         fprintf(file, "%d", speed);
         fclose(file);
     } else {
-        perror("Failed to open scaling_max_freq file");
+        perror("Failed to open scaler file");
     }
 }
 
@@ -1391,13 +1392,9 @@ void display_testing_message(lv_obj_t *screen) {
 
     lv_obj_t * ui_conTest = lv_obj_create(screen);
     lv_obj_remove_style_all(ui_conTest);
-    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
-        lv_obj_set_width(ui_conTest, SCREEN_HEIGHT);
-        lv_obj_set_height(ui_conTest, SCREEN_WIDTH);
-    } else {
-        lv_obj_set_width(ui_conTest, SCREEN_WIDTH);
-        lv_obj_set_height(ui_conTest, SCREEN_HEIGHT);
-    }
+    lv_obj_set_width(ui_conTest, device.SCREEN.WIDTH);
+    lv_obj_set_height(ui_conTest, device.SCREEN.HEIGHT);
+
     lv_obj_set_align(ui_conTest, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_conTest, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_color(ui_conTest, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);

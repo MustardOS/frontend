@@ -19,6 +19,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/config.h"
+#include "../common/device.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -40,7 +41,9 @@ int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
+
 struct mux_config config;
+struct mux_device device;
 
 // Place as many NULL as there are options!
 lv_obj_t *labels[] = {};
@@ -380,152 +383,180 @@ void list_nav_next(int steps) {
 
 void *joystick_task() {
     struct input_event ev;
+    int epoll_fd;
+    struct epoll_event event, events[device.DEVICE.EVENT];
+
+    int JOYUP_pressed = 0;
+    int JOYDOWN_pressed = 0;
+    int JOYHOTKEY_pressed = 0;
+
+    int nav_hold = 0;
+    int nav_delay = UINT8_MAX;
+
+    epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1) {
+        perror("Error creating EPOLL instance");
+        return NULL;
+    }
+
+    event.events = EPOLLIN;
+    event.data.fd = js_fd;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
+        perror("Error with EPOLL controller");
+        return NULL;
+    }
 
     while (1) {
-        if (input_disable) {
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, nav_delay);
+        if (num_events == -1) {
+            perror("Error with EPOLL wait event timer");
             continue;
         }
-        read(js_fd, &ev, sizeof(struct input_event));
-        switch (ev.type) {
-            case EV_KEY:
-                if (ev.value == 1) {
-                    if (msgbox_active) {
-                        switch (ev.code) {
-                            case JOY_B:
-                            case JOY_MENU:
-                                play_sound("confirm", nav_sound);
 
-                                msgbox_active = 0;
-                                lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                break;
-                            case JOY_A:
-                                play_sound("confirm", nav_sound);
+        for (int i = 0; i < num_events; i++) {
+            if (events[i].data.fd == js_fd) {
+                int ret = read(js_fd, &ev, sizeof(struct input_event));
+                if (ret == -1) {
+                    perror("Error reading input");
+                    continue;
+                }
 
-                                if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
-                                    lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
-                                    lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
-                                } else {
-                                    lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
-                                    lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
+                switch (ev.type) {
+                    case EV_KEY:
+                        if (ev.value == 1) {
+                            if (msgbox_active) {
+                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                        play_sound("confirm", nav_sound);
+                                        msgbox_active = 0;
+                                        progress_onscreen = 0;
+                                        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+                                } else if (ev.code == NAV_A) {
+                                    play_sound("confirm", nav_sound);
+                                    if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
+                                        lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
+                                        lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+                                    } else {
+                                        lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+                                        lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
+                                    }
                                 }
+                            } else {
+                                switch (ev.code) {
+                                    case JOY_MENU:
+                                        play_sound("confirm", nav_sound);
+
+                                        char *name = lv_label_get_text(lv_group_get_focused(ui_group));
+
+                                        char rom_text_file[MAX_BUFFER_SIZE];
+                                        snprintf(rom_text_file, sizeof(rom_text_file),
+                                                 "/%s/content/%s/meta/%s.txt", MUOS_INFO_PATH, rom_system, name);
+
+                                        if (!file_exist(rom_text_file)) {
+                                            create_metadata_file(rom_text_file);
+                                        }
+
+                                        lv_obj_clear_flag(ui_pnlHelpExtra, LV_OBJ_FLAG_HIDDEN);
+                                        show_rom_info(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpPreviewHeader,
+                                                      ui_lblHelpDescription, name, format_meta_text(rom_text_file));
+                                        break;
+                                    case JOY_B:
+                                        play_sound("back", nav_sound);
+                                        input_disable = 1;
+
+                                        safe_quit = 1;
+                                        break;
+                                    case JOY_X:
+                                        play_sound("confirm", nav_sound);
+                                        input_disable = 1;
+
+                                        char rom_file[MAX_BUFFER_SIZE];
+                                        snprintf(rom_file, sizeof(rom_file), "/%s/activity/%s.act", MUOS_INFO_PATH,
+                                                 lv_label_get_text(lv_group_get_focused(ui_group)));
+
+                                        remove(rom_file);
+
+                                        write_text_to_file("/tmp/mux_suppress", "1", "w");
+                                        write_text_to_file("/tmp/mux_reload", "1", "w");
+                                        safe_quit = 1;
+                                        break;
+                                    case JOY_L1:
+                                        if (current_item_index > 0) {
+                                            list_nav_prev(ITEM_SKIP);
+                                        }
+                                        break;
+                                    case JOY_R1:
+                                        if (current_item_index < ((ui_count > 7) ? (ui_count - 2) : (ui_count - 1))) {
+                                            list_nav_next(ITEM_SKIP);
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+                    case EV_ABS:
+                        if (msgbox_active) {
+                            break;
+                        }
+                        switch (theme.MISC.NAVIGATION_TYPE) {
+                            case 0:
                                 break;
-                            default:
+                            case 1:
                                 break;
                         }
-                    } else {
-                        switch (ev.code) {
-                            case JOY_MENU:
-                                play_sound("confirm", nav_sound);
-
-                                char *name = lv_label_get_text(lv_group_get_focused(ui_group));
-
-                                char rom_text_file[MAX_BUFFER_SIZE];
-                                snprintf(rom_text_file, sizeof(rom_text_file),
-                                         "/%s/content/%s/meta/%s.txt", MUOS_INFO_PATH, rom_system, name);
-
-                                if (!file_exist(rom_text_file)) {
-                                    create_metadata_file(rom_text_file);
-                                }
-
-                                lv_obj_clear_flag(ui_pnlHelpExtra, LV_OBJ_FLAG_HIDDEN);
-                                show_rom_info(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpPreviewHeader,
-                                              ui_lblHelpDescription, name, format_meta_text(rom_text_file));
-                                break;
-                            case JOY_B:
-                                play_sound("back", nav_sound);
-                                input_disable = 1;
-
-                                safe_quit = 1;
-                                break;
-                            case JOY_X:
-                                play_sound("confirm", nav_sound);
-                                input_disable = 1;
-
-                                char rom_file[MAX_BUFFER_SIZE];
-                                snprintf(rom_file, sizeof(rom_file), "/%s/activity/%s.act", MUOS_INFO_PATH,
-                                         lv_label_get_text(lv_group_get_focused(ui_group)));
-
-                                remove(rom_file);
-
-                                write_text_to_file("/tmp/mux_suppress", "1", "w");
-                                write_text_to_file("/tmp/mux_reload", "1", "w");
-                                safe_quit = 1;
-                                break;
-                            case JOY_L1:
-                                if (current_item_index > 0) {
-                                    list_nav_prev(ITEM_SKIP);
-                                }
-                                break;
-                            case JOY_R1:
-                                if (current_item_index < ((ui_count > 7) ? (ui_count - 2) : (ui_count - 1))) {
-                                    list_nav_next(ITEM_SKIP);
-                                }
-                                break;
+                        if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
+                            switch (ev.value) {
+                                case -4100 ... -4000:
+                                case -1:
+                                    if (current_item_index > 0) {
+                                        list_nav_prev(ITEM_SKIP);
+                                    }
+                                    break;
+                                case 1:
+                                case 4000 ... 4100:
+                                    if (current_item_index < ((ui_count > 7) ? (ui_count - 2) : (ui_count - 1))) {
+                                        list_nav_next(ITEM_SKIP);
+                                    }
+                                    break;
+                            }
                         }
-                    }
-                }
-            case EV_ABS:
-                if (msgbox_active) {
-                    break;
-                }
-                switch (theme.MISC.NAVIGATION_TYPE) {
-                    case 0:
-                        break;
-                    case 1:
-                        break;
-                }
-                if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
-                    switch (ev.value) {
-                        case -4100 ... -4000:
-                        case -1:
-                            if (current_item_index > 0) {
-                                list_nav_prev(ITEM_SKIP);
-                            }
-                            break;
-                        case 1:
-                        case 4000 ... 4100:
-                            if (current_item_index < ((ui_count > 7) ? (ui_count - 2) : (ui_count - 1))) {
-                                list_nav_next(ITEM_SKIP);
-                            }
-                            break;
-                    }
-                }
-                if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
-                    switch (ev.value) {
-                        case -4100 ... -4000:
-                        case -1:
-                            if (current_item_index == 0) {
-                                if (ui_count > 7) {
-                                    list_nav_next((ui_count - 2));
+                        if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
+                            switch (ev.value) {
+                                case -4100 ... -4000:
+                                case -1:
+                                    if (current_item_index == 0) {
+                                        if (ui_count > 7) {
+                                            list_nav_next((ui_count - 2));
+                                            break;
+                                        } else {
+                                            list_nav_next(ui_count);
+                                            break;
+                                        }
+                                    } else if (current_item_index > 0) {
+                                        list_nav_prev(1);
+                                        break;
+                                    }
                                     break;
-                                } else {
-                                    list_nav_next(ui_count);
+                                case 1:
+                                case 4000 ... 4100:
+                                    if (ui_count > 7 && current_item_index == (ui_count - 2)) {
+                                        list_nav_prev((ui_count - 2));
+                                        break;
+                                    } else if (ui_count <= 7 && current_item_index == (ui_count - 1)) {
+                                        list_nav_prev((ui_count - 1));
+                                        break;
+                                    } else if (current_item_index <
+                                               ((ui_count > 7) ? (ui_count - 2) : (ui_count - 1))) {
+                                        list_nav_next(1);
+                                        break;
+                                    }
                                     break;
-                                }
-                            } else if (current_item_index > 0) {
-                                list_nav_prev(1);
-                                break;
+                                default:
+                                    break;
                             }
-                            break;
-                        case 1:
-                        case 4000 ... 4100:
-                            if (ui_count > 7 && current_item_index == (ui_count - 2)) {
-                                list_nav_prev((ui_count - 2));
-                                break;
-                            } else if (ui_count <= 7 && current_item_index == (ui_count - 1)) {
-                                list_nav_prev((ui_count - 1));
-                                break;
-                            } else if (current_item_index < ((ui_count > 7) ? (ui_count - 2) : (ui_count - 1))) {
-                                list_nav_next(1);
-                                break;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
+                        }
+                    default:
+                        break;
                 }
-            default:
-                break;
+            }
         }
     }
 }
@@ -591,7 +622,7 @@ void glyph_task() {
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    if (atoi(read_text_from_file(BATT_CHARGER))) {
+    if (atoi(read_text_from_file(device.BATTERY.CHARGER))) {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
