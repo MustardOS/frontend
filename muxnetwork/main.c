@@ -505,22 +505,14 @@ void *joystick_task() {
                                         lv_task_handler();
                                         save_network_config();
                                         if (config.NETWORK.ENABLED) {
-                                            input_disable = 1;
-                                            usleep(100000);
+                                            write_text_to_file("/tmp/net_ssid",
+                                                               lv_label_get_text(ui_lblIdentifierValue), "w");
+                                            write_text_to_file("/tmp/net_pass",
+                                                               lv_obj_get_user_data(ui_lblPasswordValue), "w");
 
-                                            static char passphrase[MAX_BUFFER_SIZE];
-                                            snprintf(passphrase, sizeof(passphrase), "%s",
-                                                     (char *) lv_obj_get_user_data(ui_lblPasswordValue));
-
-                                            static char set_wpa_passphrase[MAX_BUFFER_SIZE];
-                                            snprintf(set_wpa_passphrase, sizeof(set_wpa_passphrase),
-                                                     "/opt/muos/script/web/password.sh \"%s\" %s",
-                                                     lv_label_get_text(ui_lblIdentifierValue), passphrase);
-
-                                            system(set_wpa_passphrase);
+                                            run_shell_script("/opt/muos/script/web/password.sh");
                                             run_shell_script("/opt/muos/script/system/network.sh");
 
-                                            usleep(100000);
                                             get_current_ip();
                                             input_disable = 0;
                                         } else {
@@ -573,13 +565,13 @@ void *joystick_task() {
                                         mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
                                         mini_free(muos_config);
 
-                                        system("/opt/muos/script/system/network.sh");
+                                        run_shell_script("/opt/muos/script/system/network.sh");
                                     }
 
                                     osd_message = "Changes Saved";
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                    usleep(100000);
+
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
@@ -1308,11 +1300,12 @@ void glyph_task() {
     // TODO: Bluetooth connectivity!
 
     if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
@@ -1321,7 +1314,8 @@ void glyph_task() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),

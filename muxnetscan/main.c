@@ -89,7 +89,7 @@ void create_network_items() {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
 
-    system("/opt/muos/script/web/ssid.sh");
+    run_shell_script("/opt/muos/script/web/ssid.sh");
 
     char *scan_file = "/tmp/net_scan";
     FILE * file = fopen(scan_file, "r");
@@ -694,8 +694,6 @@ int main(int argc, char *argv[]) {
         nav_sound = 1;
     }
 
-    create_network_items();
-
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
     struct osd_task_param osd_par;
@@ -738,6 +736,8 @@ int main(int argc, char *argv[]) {
 
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
+
+    create_network_items();
 
     if (ui_count > 13) {
         lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
