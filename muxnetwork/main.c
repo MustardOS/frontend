@@ -335,13 +335,8 @@ void *joystick_task() {
                                             lv_label_set_text(ui_lblIdentifierValue,
                                                               lv_textarea_get_text(ui_txtEntry));
                                         } else if (element_focused == ui_lblPassword) {
-                                            char passphrase[MAX_BUFFER_SIZE];
-                                            snprintf(passphrase, sizeof(passphrase), "%s",
-                                                     lv_textarea_get_text(ui_txtEntry));
-                                            if (strlen(passphrase) > 0) {
-                                                lv_label_set_text(ui_lblPasswordValue, "********");
-                                                lv_obj_set_user_data(ui_lblPasswordValue, passphrase);
-                                            }
+                                            lv_label_set_text(ui_lblPasswordValue,
+                                                              lv_textarea_get_text(ui_txtEntry));
                                         } else if (element_focused == ui_lblAddress) {
                                             lv_label_set_text(ui_lblAddressValue,
                                                               lv_textarea_get_text(ui_txtEntry));
@@ -508,7 +503,7 @@ void *joystick_task() {
                                             write_text_to_file("/tmp/net_ssid",
                                                                lv_label_get_text(ui_lblIdentifierValue), "w");
                                             write_text_to_file("/tmp/net_pass",
-                                                               lv_obj_get_user_data(ui_lblPasswordValue), "w");
+                                                               lv_label_get_text(ui_lblPasswordValue), "w");
 
                                             run_shell_script("/opt/muos/script/web/password.sh");
                                             run_shell_script("/opt/muos/script/system/network.sh");
