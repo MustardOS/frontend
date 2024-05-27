@@ -1,5 +1,7 @@
 #pragma once
 
+#define TEST_IMAGE 1
+
 #define MAX_BUFFER_SIZE 512
 #define DISP_BUF_SIZE   33554432
 
@@ -79,17 +81,8 @@
 #define MUOS_ROM_LOAD "/tmp/rom_go"
 #define MUOS_SYS_LOAD "/tmp/sys_go"
 
-#define BL_BRIGHT_FILE "/sys/class/backlight/backlight.2/brightness"
-#define BL_POWER_FILE  "/sys/class/backlight/backlight.2/bl_power"
-
 #define BL_RST_FILE    "/opt/muos/config/brightness.txt"
 #define VOL_RST_FILE   "/opt/muos/config/volume.txt"
-
-#if defined(RELEASE)
-#define TEST_IMAGE 0
-#else
-#define TEST_IMAGE 1
-#endif
 
 #if defined(RG35XX)
 #define HARDWARE "RG35XX"

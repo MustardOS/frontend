@@ -20,6 +20,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/config.h"
+#include "../common/device.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -34,7 +35,9 @@ int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
+
 struct mux_config config;
+struct mux_device device;
 
 // Place as many NULL as there are options!
 lv_obj_t *labels[] = {};
@@ -49,10 +52,10 @@ char voltage_info[MAX_BUFFER_SIZE];
 char health_info[MAX_BUFFER_SIZE];
 
 void check_for_cable() {
-    if (file_exist(BATT_CHARGER)) {
-        if (atoi(read_line_from_file(BATT_CHARGER, 1)) == 0) {
+    if (file_exist(device.BATTERY.CHARGER)) {
+        if (atoi(read_line_from_file(device.BATTERY.CHARGER, 1)) == 0) {
             sync();
-            sleep(1);
+            usleep(100000);
             reboot(RB_POWER_OFF);
         }
     }
@@ -60,27 +63,60 @@ void check_for_cable() {
 
 void *joystick_task() {
     struct input_event ev;
+    int epoll_fd;
+    struct epoll_event event, events[device.DEVICE.EVENT];
+
+    epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1) {
+        perror("Error creating EPOLL instance");
+        return NULL;
+    }
+
+    event.events = EPOLLIN;
+    event.data.fd = js_fd;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
+        perror("Error with EPOLL controller");
+        return NULL;
+    }
 
     while (1) {
-        read(js_fd, &ev, sizeof(struct input_event));
-        switch (ev.type) {
-            case EV_KEY:
-                if (ev.value == 1) {
-                    if (ev.code == JOY_POWER) {
-                        if (blank < 5) {
-                            safe_quit = 1;
-                        }
-
-                        blank = 0;
-                        set_brightness(100);
-
-                        usleep(500000);
-                    }
-                }
-                break;
-            default:
-                break;
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
+        if (num_events == -1) {
+            perror("Error with EPOLL wait event timer");
+            continue;
         }
+
+        for (int i = 0; i < num_events; i++) {
+            if (events[i].data.fd == js_fd) {
+                int ret = read(js_fd, &ev, sizeof(struct input_event));
+                if (ret == -1) {
+                    perror("Error reading input");
+                    continue;
+                }
+
+                switch (ev.type) {
+                    case EV_KEY:
+                        if (ev.value == 1) {
+                            if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT) {
+                                if (blank < 5) {
+                                    safe_quit = 1;
+                                }
+
+                                blank = 0;
+                                set_brightness(100);
+
+                                usleep(100000);
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -103,33 +139,32 @@ void battery_task() {
 }
 
 int main(int argc, char *argv[]) {
+    load_device(&device);
+
     srand(time(NULL));
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
 
     lv_init();
-    fbdev_init();
+    fbdev_init(device.SCREEN.DEVICE);
 
-    static lv_color_t buf1[DISP_BUF_SIZE];
-    static lv_color_t buf2[DISP_BUF_SIZE];
     static lv_disp_draw_buf_t disp_buf;
+    uint32_t disp_buf_size = device.SCREEN.BUFFER;
 
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, DISP_BUF_SIZE);
+    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
-        disp_drv.hor_res = SCREEN_HEIGHT;
-        disp_drv.ver_res = SCREEN_WIDTH;
-        disp_drv.sw_rotate = 1;
-        disp_drv.rotated = LV_DISP_ROT_90;
-    } else {
-        disp_drv.hor_res = SCREEN_WIDTH;
-        disp_drv.ver_res = SCREEN_HEIGHT;
-    }
+    disp_drv.hor_res = device.SCREEN.WIDTH;
+    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.sw_rotate = device.SCREEN.ROTATE;
+    disp_drv.rotated = device.SCREEN.ROTATE;
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
@@ -164,14 +199,11 @@ int main(int argc, char *argv[]) {
 
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);
 
-    js_fd = open(SYS_DEVICE, O_RDONLY);
+    js_fd = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd < 0) {
         perror("Failed to open joystick device");
         return 1;
     }
-
-    pthread_t joystick_thread;
-    pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
@@ -185,9 +217,11 @@ int main(int argc, char *argv[]) {
     lv_timer_t *battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
     lv_timer_ready(battery_timer);
 
+    pthread_t joystick_thread;
+    pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
+
     while (!safe_quit) {
-        lv_task_handler();
-        usleep(SCREEN_WAIT);
+        usleep(device.SCREEN.WAIT);
     }
 
     pthread_cancel(joystick_thread);

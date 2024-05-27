@@ -21,6 +21,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/config.h"
+#include "../common/device.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -42,7 +43,9 @@ int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
+
 struct mux_config config;
+struct mux_device device;
 
 int nav_moved = 1;
 char *current_wall = "";
@@ -275,7 +278,7 @@ void reset_osk() {
 void *joystick_task() {
     struct input_event ev;
     int epoll_fd;
-    struct epoll_event event, events[MAX_EVENTS];
+    struct epoll_event event, events[device.DEVICE.EVENT];
 
     int JOYHOTKEY_pressed = 0;
 
@@ -293,7 +296,7 @@ void *joystick_task() {
     }
 
     while (1) {
-        int num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, 64);
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
             continue;
@@ -312,7 +315,7 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == JOY_MENU) {
+                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
                                     play_sound("confirm", nav_sound);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -332,13 +335,8 @@ void *joystick_task() {
                                             lv_label_set_text(ui_lblIdentifierValue,
                                                               lv_textarea_get_text(ui_txtEntry));
                                         } else if (element_focused == ui_lblPassword) {
-                                            char passphrase[MAX_BUFFER_SIZE];
-                                            snprintf(passphrase, sizeof(passphrase), "%s",
-                                                     lv_textarea_get_text(ui_txtEntry));
-                                            if (strlen(passphrase) > 0) {
-                                                lv_label_set_text(ui_lblPasswordValue, "********");
-                                                lv_obj_set_user_data(ui_lblPasswordValue, passphrase);
-                                            }
+                                            lv_label_set_text(ui_lblPasswordValue,
+                                                              lv_textarea_get_text(ui_txtEntry));
                                         } else if (element_focused == ui_lblAddress) {
                                             lv_label_set_text(ui_lblAddressValue,
                                                               lv_textarea_get_text(ui_txtEntry));
@@ -374,9 +372,9 @@ void *joystick_task() {
                                     lv_textarea_set_text(ui_txtEntry, "");
                                     lv_group_set_focus_cb(ui_group, NULL);
                                     lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-                                } else if (ev.code == JOY_X) {
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     lv_textarea_del_char(ui_txtEntry);
-                                } else if (ev.code == JOY_Y) {
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     if (key_show == 1) {
                                         switch (key_map) {
                                             case 0:
@@ -397,7 +395,7 @@ void *joystick_task() {
                                     }
                                 }
                             } else {
-                                if (ev.code == JOY_MENU) {
+                                if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
                                     JOYHOTKEY_pressed = 1;
                                     break;
                                 } else if (ev.code == NAV_A) {
@@ -502,22 +500,14 @@ void *joystick_task() {
                                         lv_task_handler();
                                         save_network_config();
                                         if (config.NETWORK.ENABLED) {
-                                            input_disable = 1;
-                                            usleep(100000);
+                                            write_text_to_file("/tmp/net_ssid",
+                                                               lv_label_get_text(ui_lblIdentifierValue), "w");
+                                            write_text_to_file("/tmp/net_pass",
+                                                               lv_label_get_text(ui_lblPasswordValue), "w");
 
-                                            static char passphrase[MAX_BUFFER_SIZE];
-                                            snprintf(passphrase, sizeof(passphrase), "%s",
-                                                     (char *) lv_obj_get_user_data(ui_lblPasswordValue));
-
-                                            static char set_wpa_passphrase[MAX_BUFFER_SIZE];
-                                            snprintf(set_wpa_passphrase, sizeof(set_wpa_passphrase),
-                                                     "/opt/muos/script/web/password.sh \"%s\" %s",
-                                                     lv_label_get_text(ui_lblIdentifierValue), passphrase);
-
-                                            system(set_wpa_passphrase);
+                                            run_shell_script("/opt/muos/script/web/password.sh");
                                             run_shell_script("/opt/muos/script/system/network.sh");
 
-                                            usleep(100000);
                                             get_current_ip();
                                             input_disable = 0;
                                         } else {
@@ -570,15 +560,15 @@ void *joystick_task() {
                                         mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
                                         mini_free(muos_config);
 
-                                        system("/opt/muos/script/system/network.sh");
+                                        run_shell_script("/opt/muos/script/system/network.sh");
                                     }
 
                                     osd_message = "Changes Saved";
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                    usleep(100000);
+
                                     safe_quit = 1;
-                                } else if (ev.code == JOY_X) {
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
                                         play_sound("confirm", nav_sound);
 
@@ -591,7 +581,7 @@ void *joystick_task() {
                                 }
                             }
                         } else {
-                            if (ev.code == JOY_MENU) {
+                            if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
                                 JOYHOTKEY_pressed = 0;
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound);
@@ -604,374 +594,368 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            switch (ev.value) {
-                                case -4100 ... -4000:
-                                case -1:
-                                    if (key_show > 0) {
-                                        if (key_curr >= 1) {
-                                            key_curr--;
-                                            if (key_curr < 0) {
-                                                key_curr = 0;
-                                            }
-                                            if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-                                                key_curr--;
-                                            }
-                                            lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-                                            lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
+                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
+                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
+                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                                ev.value == -1) {
+                                if (key_show > 0) {
+                                    if (key_curr >= 1) {
+                                        switch (key_curr) {
+                                            case 26:
+                                                key_curr = 17;
+                                                break;
+                                            case 27:
+                                                key_curr = 18;
+                                                break;
+                                            case 28:
+                                                key_curr = 19;
+                                                break;
+                                            case 30 ... 36:
+                                                key_curr = key_curr - 9;
+                                                break;
+                                            case 38:
+                                                key_curr = 30;
+                                                break;
+                                            case 39:
+                                                key_curr = 33;
+                                                break;
+                                            case 40:
+                                                key_curr = 36;
+                                                break;
+                                            default:
+                                                if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
+                                                    key_curr = key_curr - 3;
+                                                } else {
+                                                    key_curr = key_curr - 10;
+                                                }
+                                                break;
                                         }
-                                    } else {
-                                        if (element_focused == ui_lblEnable) {
-                                            play_sound("navigate", nav_sound);
-
-                                            if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
-                                                lv_label_set_text(ui_lblEnableValue, "False");
-                                                lv_obj_add_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-                                            } else {
-                                                lv_label_set_text(ui_lblEnableValue, "True");
-                                                lv_obj_clear_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-                                            }
-                                            break;
-                                        }
-                                        if (element_focused == ui_lblType) {
-                                            play_sound("navigate", nav_sound);
-
-                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
-                                                lv_label_set_text(ui_lblTypeValue, "DHCP");
-                                                lv_obj_add_state(ui_lblAddress, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblSubnet, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblGateway, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblDNS, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_icoAddress, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_icoSubnet, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_icoGateway, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_icoDNS, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblAddressValue, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblSubnetValue, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblGatewayValue, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblDNSValue, LV_STATE_DISABLED);
-                                            } else {
-                                                lv_label_set_text(ui_lblTypeValue, "Static");
-                                                lv_obj_clear_state(ui_lblAddress, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblSubnet, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblGateway, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblDNS, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_icoAddress, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_icoSubnet, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_icoGateway, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_icoDNS, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblAddressValue, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblSubnetValue, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblGatewayValue, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblDNSValue, LV_STATE_DISABLED);
-                                            }
-                                            break;
+                                        if (key_curr < 0) {
+                                            key_curr = 0;
                                         }
                                     }
+                                    if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
+                                        key_curr--;
+                                    }
+                                    lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
+                                    lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
+                                } else {
+                                    nav_prev(ui_group, 1);
+                                    nav_prev(ui_group_value, 1);
+                                    nav_prev(ui_group_glyph, 1);
+                                    lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
+                                    play_sound("navigate", nav_sound);
+                                    nav_moved = 1;
                                     break;
-                                case 1:
-                                case 4000 ... 4100:
-                                    if (key_show > 0) {
-                                        int max_key;
-                                        if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-                                            max_key = 11;
-                                        } else {
-                                            max_key = 40;
-                                        }
-                                        if (key_curr <= max_key) {
-                                            key_curr++;
-                                            if (key_curr > max_key) {
-                                                key_curr = max_key;
-                                            }
-                                            if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-                                                key_curr++;
-                                            }
-                                            lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-                                            lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
-                                        }
+                                }
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                                       ev.value == 1) {
+                                if (key_show > 0) {
+                                    int max_key;
+                                    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
+                                        max_key = 11;
                                     } else {
-                                        if (element_focused == ui_lblEnable) {
-                                            play_sound("navigate", nav_sound);
-
-                                            if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
-                                                lv_label_set_text(ui_lblEnableValue, "False");
-                                                lv_obj_add_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-                                            } else {
-                                                lv_label_set_text(ui_lblEnableValue, "True");
-                                                lv_obj_clear_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-                                                lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-                                            }
-                                            break;
+                                        max_key = 40;
+                                    }
+                                    if (key_curr <= max_key) {
+                                        switch (key_curr) {
+                                            case 17:
+                                                key_curr = 26;
+                                                break;
+                                            case 18:
+                                                key_curr = 27;
+                                                break;
+                                            case 19:
+                                                key_curr = 28;
+                                                break;
+                                            case 21 ... 27:
+                                                key_curr = key_curr + 9;
+                                                break;
+                                            case 28:
+                                                key_curr = 36;
+                                                break;
+                                            case 30:
+                                                key_curr = 38;
+                                                break;
+                                            case 31 ... 35:
+                                                key_curr = 39;
+                                                break;
+                                            case 36:
+                                                key_curr = 40;
+                                                break;
+                                            default:
+                                                if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
+                                                    key_curr = key_curr + 3;
+                                                } else {
+                                                    key_curr = key_curr + 10;
+                                                }
+                                                break;
                                         }
-                                        if (element_focused == ui_lblType) {
-                                            play_sound("navigate", nav_sound);
-
-                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
-                                                lv_label_set_text(ui_lblTypeValue, "DHCP");
-                                                lv_obj_add_state(ui_lblAddress, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblSubnet, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblGateway, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblDNS, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_icoAddress, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_icoSubnet, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_icoGateway, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_icoDNS, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblAddressValue, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblSubnetValue, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblGatewayValue, LV_STATE_DISABLED);
-                                                lv_obj_add_state(ui_lblDNSValue, LV_STATE_DISABLED);
-                                            } else {
-                                                lv_label_set_text(ui_lblTypeValue, "Static");
-                                                lv_obj_clear_state(ui_lblAddress, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblSubnet, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblGateway, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblDNS, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_icoAddress, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_icoSubnet, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_icoGateway, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_icoDNS, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblAddressValue, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblSubnetValue, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblGatewayValue, LV_STATE_DISABLED);
-                                                lv_obj_clear_state(ui_lblDNSValue, LV_STATE_DISABLED);
-                                            }
-                                            break;
+                                        if (key_curr > max_key) {
+                                            key_curr = max_key;
                                         }
                                     }
+                                    if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
+                                        key_curr++;
+                                    }
+                                    lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
+                                    lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
+                                } else {
+                                    nav_next(ui_group, 1);
+                                    nav_next(ui_group_value, 1);
+                                    nav_next(ui_group_glyph, 1);
+                                    lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
+                                    play_sound("navigate", nav_sound);
+                                    nav_moved = 1;
                                     break;
-                                default:
-                                    break;
+                                }
                             }
-                        } else if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            switch (ev.value) {
-                                case -4100 ... -4000:
-                                case -1:
-                                    if (key_show > 0) {
-                                        if (key_curr >= 1) {
-                                            switch (key_curr) {
-                                                case 26:
-                                                    key_curr = 17;
-                                                    break;
-                                                case 27:
-                                                    key_curr = 18;
-                                                    break;
-                                                case 28:
-                                                    key_curr = 19;
-                                                    break;
-                                                case 30 ... 36:
-                                                    key_curr = key_curr - 9;
-                                                    break;
-                                                case 38:
-                                                    key_curr = 30;
-                                                    break;
-                                                case 39:
-                                                    key_curr = 33;
-                                                    break;
-                                                case 40:
-                                                    key_curr = 36;
-                                                    break;
-                                                default:
-                                                    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-                                                        key_curr = key_curr - 3;
-                                                    } else {
-                                                        key_curr = key_curr - 10;
-                                                    }
-                                                    break;
-                                            }
-                                            if (key_curr < 0) {
-                                                key_curr = 0;
-                                            }
+                        } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
+                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
+                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                                ev.value == -1) {
+                                if (key_show > 0) {
+                                    if (key_curr >= 1) {
+                                        key_curr--;
+                                        if (key_curr < 0) {
+                                            key_curr = 0;
                                         }
                                         if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
                                             key_curr--;
                                         }
                                         lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
                                         lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
-                                    } else {
-                                        nav_prev(ui_group, 1);
-                                        nav_prev(ui_group_value, 1);
-                                        nav_prev(ui_group_glyph, 1);
-                                        lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
+                                    }
+                                } else {
+                                    if (element_focused == ui_lblEnable) {
                                         play_sound("navigate", nav_sound);
-                                        nav_moved = 1;
+
+                                        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
+                                            lv_label_set_text(ui_lblEnableValue, "False");
+                                            lv_obj_add_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                        } else {
+                                            lv_label_set_text(ui_lblEnableValue, "True");
+                                            lv_obj_clear_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                        }
                                         break;
                                     }
-                                    break;
-                                case 1:
-                                case 4000 ... 4100:
-                                    if (key_show > 0) {
-                                        int max_key;
-                                        if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-                                            max_key = 11;
+                                    if (element_focused == ui_lblType) {
+                                        play_sound("navigate", nav_sound);
+
+                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+                                            lv_label_set_text(ui_lblTypeValue, "DHCP");
+                                            lv_obj_add_state(ui_lblAddress, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblSubnet, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblGateway, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblDNS, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_icoAddress, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_icoSubnet, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_icoGateway, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_icoDNS, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblAddressValue, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblSubnetValue, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblGatewayValue, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblDNSValue, LV_STATE_DISABLED);
                                         } else {
-                                            max_key = 40;
+                                            lv_label_set_text(ui_lblTypeValue, "Static");
+                                            lv_obj_clear_state(ui_lblAddress, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblSubnet, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblGateway, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblDNS, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_icoAddress, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_icoSubnet, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_icoGateway, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_icoDNS, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblAddressValue, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblSubnetValue, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblGatewayValue, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblDNSValue, LV_STATE_DISABLED);
                                         }
-                                        if (key_curr <= max_key) {
-                                            switch (key_curr) {
-                                                case 17:
-                                                    key_curr = 26;
-                                                    break;
-                                                case 18:
-                                                    key_curr = 27;
-                                                    break;
-                                                case 19:
-                                                    key_curr = 28;
-                                                    break;
-                                                case 21 ... 27:
-                                                    key_curr = key_curr + 9;
-                                                    break;
-                                                case 28:
-                                                    key_curr = 36;
-                                                    break;
-                                                case 30:
-                                                    key_curr = 38;
-                                                    break;
-                                                case 31 ... 35:
-                                                    key_curr = 39;
-                                                    break;
-                                                case 36:
-                                                    key_curr = 40;
-                                                    break;
-                                                default:
-                                                    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-                                                        key_curr = key_curr + 3;
-                                                    } else {
-                                                        key_curr = key_curr + 10;
-                                                    }
-                                                    break;
-                                            }
-                                            if (key_curr > max_key) {
-                                                key_curr = max_key;
-                                            }
+                                        break;
+                                    }
+                                }
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                                       ev.value == 1) {
+                                if (key_show > 0) {
+                                    int max_key;
+                                    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
+                                        max_key = 11;
+                                    } else {
+                                        max_key = 40;
+                                    }
+                                    if (key_curr <= max_key) {
+                                        key_curr++;
+                                        if (key_curr > max_key) {
+                                            key_curr = max_key;
                                         }
                                         if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
                                             key_curr++;
                                         }
                                         lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
                                         lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
-                                    } else {
-                                        nav_next(ui_group, 1);
-                                        nav_next(ui_group_value, 1);
-                                        nav_next(ui_group_glyph, 1);
-                                        lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
+                                    }
+                                } else {
+                                    if (element_focused == ui_lblEnable) {
                                         play_sound("navigate", nav_sound);
-                                        nav_moved = 1;
+
+                                        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
+                                            lv_label_set_text(ui_lblEnableValue, "False");
+                                            lv_obj_add_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                        } else {
+                                            lv_label_set_text(ui_lblEnableValue, "True");
+                                            lv_obj_clear_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                        }
                                         break;
                                     }
-                                    break;
-                                default:
-                                    break;
+                                    if (element_focused == ui_lblType) {
+                                        play_sound("navigate", nav_sound);
+
+                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+                                            lv_label_set_text(ui_lblTypeValue, "DHCP");
+                                            lv_obj_add_state(ui_lblAddress, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblSubnet, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblGateway, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblDNS, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_icoAddress, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_icoSubnet, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_icoGateway, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_icoDNS, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblAddressValue, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblSubnetValue, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblGatewayValue, LV_STATE_DISABLED);
+                                            lv_obj_add_state(ui_lblDNSValue, LV_STATE_DISABLED);
+                                        } else {
+                                            lv_label_set_text(ui_lblTypeValue, "Static");
+                                            lv_obj_clear_state(ui_lblAddress, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblSubnet, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblGateway, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblDNS, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_icoAddress, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_icoSubnet, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_icoGateway, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_icoDNS, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblAddressValue, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblSubnetValue, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblGatewayValue, LV_STATE_DISABLED);
+                                            lv_obj_clear_state(ui_lblDNSValue, LV_STATE_DISABLED);
+                                        }
+                                        break;
+                                    }
+                                }
                             }
                         }
                     default:
@@ -980,7 +964,8 @@ void *joystick_task() {
             }
         }
 
-        if (ev.type == EV_KEY && ev.value == 1 && (ev.code == JOY_MINUS || ev.code == JOY_PLUS)) {
+        if (ev.type == EV_KEY && ev.value == 1 &&
+            (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
             progress_onscreen = 1;
             if (lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
                 lv_obj_clear_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
@@ -1009,7 +994,7 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_WAIT);
+        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -1309,21 +1294,23 @@ void init_osk() {
 void glyph_task() {
     // TODO: Bluetooth connectivity!
 
-    if (is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    if (atoi(read_text_from_file(BATT_CHARGER))) {
+    if (atoi(read_text_from_file(device.BATTERY.CHARGER))) {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
@@ -1390,13 +1377,13 @@ void ui_refresh_task() {
                         lv_obj_move_foreground(ui_pnlBox);
                         break;
                     case 3: // Fullscreen + Behind
-                        lv_obj_set_height(ui_pnlBox, SCREEN_HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_background(ui_pnlBox);
                         lv_obj_move_background(ui_pnlWall);
                         break;
                     case 4: // Fullscreen + Front
-                        lv_obj_set_height(ui_pnlBox, SCREEN_HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_foreground(ui_pnlBox);
                         break;
@@ -1414,33 +1401,32 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    load_device(&device);
+
     srand(time(NULL));
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
 
     lv_init();
-    fbdev_init();
+    fbdev_init(device.SCREEN.DEVICE);
 
-    static lv_color_t buf1[DISP_BUF_SIZE];
-    static lv_color_t buf2[DISP_BUF_SIZE];
     static lv_disp_draw_buf_t disp_buf;
+    uint32_t disp_buf_size = device.SCREEN.BUFFER;
 
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, DISP_BUF_SIZE);
+    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
-        disp_drv.hor_res = SCREEN_HEIGHT;
-        disp_drv.ver_res = SCREEN_WIDTH;
-        disp_drv.sw_rotate = 1;
-        disp_drv.rotated = LV_DISP_ROT_90;
-    } else {
-        disp_drv.hor_res = SCREEN_WIDTH;
-        disp_drv.ver_res = SCREEN_HEIGHT;
-    }
+    disp_drv.hor_res = device.SCREEN.WIDTH;
+    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.sw_rotate = device.SCREEN.ROTATE;
+    disp_drv.rotated = device.SCREEN.ROTATE;
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
@@ -1458,28 +1444,28 @@ int main(int argc, char *argv[]) {
 
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
-            NAV_DPAD_HOR = ABS_HAT0Y;
-            NAV_ANLG_HOR = ABS_RX;
-            NAV_DPAD_VER = ABS_HAT0X;
-            NAV_ANLG_VER = ABS_Z;
+            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
+            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
+            NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
+            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
             break;
         default:
-            NAV_DPAD_HOR = ABS_HAT0X;
-            NAV_ANLG_HOR = ABS_Z;
-            NAV_DPAD_VER = ABS_HAT0Y;
-            NAV_ANLG_VER = ABS_RX;
+            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.RIGHT;
+            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
+            NAV_DPAD_VER = device.RAW_INPUT.DPAD.DOWN;
+            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.DOWN;
     }
 
     switch (config.SETTINGS.ADVANCED.SWAP) {
         case 1:
-            NAV_A = JOY_B;
-            NAV_B = JOY_A;
+            NAV_A = device.RAW_INPUT.BUTTON.B;
+            NAV_B = device.RAW_INPUT.BUTTON.A;
             lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
             lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
             break;
         default:
-            NAV_A = JOY_A;
-            NAV_B = JOY_B;
+            NAV_A = device.RAW_INPUT.BUTTON.A;
+            NAV_B = device.RAW_INPUT.BUTTON.B;
             lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
             lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
             break;
@@ -1516,7 +1502,7 @@ int main(int argc, char *argv[]) {
     osd_par.pnlMessage = ui_pnlMessage;
     osd_par.count = 0;
 
-    js_fd = open(JOY_DEVICE, O_RDONLY);
+    js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
         perror("Failed to open joystick device");
         return 1;
@@ -1552,7 +1538,7 @@ int main(int argc, char *argv[]) {
     init_osk();
     init_elements();
     while (!safe_quit) {
-        usleep(SCREEN_WAIT);
+        usleep(device.SCREEN.WAIT);
     }
 
     pthread_cancel(joystick_thread);

@@ -16,6 +16,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/config.h"
+#include "../common/device.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -30,7 +31,9 @@ int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
+
 struct mux_config config;
+struct mux_device device;
 
 // Place as many NULL as there are options!
 lv_obj_t *labels[] = {};
@@ -39,33 +42,32 @@ unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
 lv_obj_t *msgbox_element = NULL;
 
 int main(int argc, char *argv[]) {
+    load_device(&device);
+
     srand(time(NULL));
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
 
     lv_init();
-    fbdev_init();
+    fbdev_init(device.SCREEN.DEVICE);
 
-    static lv_color_t buf1[DISP_BUF_SIZE];
-    static lv_color_t buf2[DISP_BUF_SIZE];
     static lv_disp_draw_buf_t disp_buf;
+    uint32_t disp_buf_size = device.SCREEN.BUFFER;
 
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, DISP_BUF_SIZE);
+    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
-        disp_drv.hor_res = SCREEN_HEIGHT;
-        disp_drv.ver_res = SCREEN_WIDTH;
-        disp_drv.sw_rotate = 1;
-        disp_drv.rotated = LV_DISP_ROT_90;
-    } else {
-        disp_drv.hor_res = SCREEN_WIDTH;
-        disp_drv.ver_res = SCREEN_HEIGHT;
-    }
+    disp_drv.hor_res = device.SCREEN.WIDTH;
+    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.sw_rotate = device.SCREEN.ROTATE;
+    disp_drv.rotated = device.SCREEN.ROTATE;
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
@@ -99,7 +101,7 @@ int main(int argc, char *argv[]) {
     int pipe_fd = open(NP_LOG_INFO, O_RDONLY | O_NONBLOCK);
     int epoll_fd = epoll_create1(0);
 
-    struct epoll_event ev, events[MAX_EVENTS];
+    struct epoll_event ev, events[device.DEVICE.EVENT];
 
     ev.events = EPOLLIN;
     ev.data.fd = pipe_fd;
@@ -107,7 +109,7 @@ int main(int argc, char *argv[]) {
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, pipe_fd, &ev);
 
     while (!safe_quit) {
-        int event_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+        int event_count = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, -1);
         if (event_count == -1) {
             perror("epoll_wait");
             break;
@@ -119,7 +121,7 @@ int main(int argc, char *argv[]) {
                 ssize_t bytes_read = read(pipe_fd, buffer, sizeof(buffer));
                 if (bytes_read > 0) {
                     buffer[bytes_read] = '\0';
-                    if(lv_obj_get_height(ui_txtInfo) > disp_drv.ver_res) {
+                    if (lv_obj_get_height(ui_txtInfo) > disp_drv.ver_res) {
                         lv_textarea_set_text(ui_txtInfo, "");
                     }
                     lv_textarea_add_text(ui_txtInfo, buffer);

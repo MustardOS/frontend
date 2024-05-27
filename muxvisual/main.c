@@ -19,6 +19,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/config.h"
+#include "../common/device.h"
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
@@ -40,7 +41,9 @@ int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
+
 struct mux_config config;
+struct mux_device device;
 
 int nav_moved = 1;
 char *current_wall = "";
@@ -228,7 +231,7 @@ void init_navigation_groups() {
 void *joystick_task() {
     struct input_event ev;
     int epoll_fd;
-    struct epoll_event event, events[MAX_EVENTS];
+    struct epoll_event event, events[device.DEVICE.EVENT];
 
     int JOYHOTKEY_pressed = 0;
 
@@ -246,7 +249,7 @@ void *joystick_task() {
     }
 
     while (1) {
-        int num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, 64);
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
             continue;
@@ -265,14 +268,14 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == JOY_MENU) {
+                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
                                     play_sound("confirm", nav_sound);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
                                 }
                             } else {
-                                if (ev.code == JOY_MENU) {
+                                if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
                                     if (element_focused == ui_lblBattery) {
@@ -311,7 +314,7 @@ void *joystick_task() {
                                 }
                             }
                         } else {
-                            if (ev.code == JOY_MENU) {
+                            if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
                                 JOYHOTKEY_pressed = 0;
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound);
@@ -324,80 +327,74 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            switch (ev.value) {
-                                case -4100 ... -4000:
-                                case -1:
-                                    nav_prev(ui_group, 1);
-                                    nav_prev(ui_group_value, 1);
-                                    nav_prev(ui_group_icon, 1);
-                                    play_sound("navigate", nav_sound);
-                                    nav_moved = 1;
-                                    break;
-                                case 1:
-                                case 4000 ... 4100:
-                                    nav_next(ui_group, 1);
-                                    nav_next(ui_group_value, 1);
-                                    nav_next(ui_group_icon, 1);
-                                    play_sound("navigate", nav_sound);
-                                    nav_moved = 1;
-                                    break;
-                                default:
-                                    break;
+                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
+                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                                ev.value == -1) {
+                                nav_prev(ui_group, 1);
+                                nav_prev(ui_group_value, 1);
+                                nav_prev(ui_group_icon, 1);
+                                play_sound("navigate", nav_sound);
+                                nav_moved = 1;
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                                       ev.value == 1) {
+                                nav_next(ui_group, 1);
+                                nav_next(ui_group_value, 1);
+                                nav_next(ui_group_icon, 1);
+                                play_sound("navigate", nav_sound);
+                                nav_moved = 1;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            switch (ev.value) {
-                                case -4100 ... -4000:
-                                case -1:
-                                    if (element_focused == ui_lblBattery) {
-                                        decrease_option_value(ui_droBattery,
-                                                              &battery_current,
-                                                              battery_total);
-                                    } else if (element_focused == ui_lblNetwork) {
-                                        decrease_option_value(ui_droNetwork,
-                                                              &network_current,
-                                                              network_total);
-                                    } else if (element_focused == ui_lblBluetooth) {
-                                        decrease_option_value(ui_droBluetooth,
-                                                              &bluetooth_current,
-                                                              bluetooth_total);
-                                    } else if (element_focused == ui_lblClock) {
-                                        decrease_option_value(ui_droClock,
-                                                              &mux_clock_current,
-                                                              mux_clock_total);
-                                    } else if (element_focused == ui_lblBoxArt) {
-                                        decrease_option_value(ui_droBoxArt,
-                                                              &boxart_current,
-                                                              boxart_total);
-                                    }
-                                    play_sound("navigate", nav_sound);
-                                    break;
-                                case 1:
-                                case 4000 ... 4100:
-                                    if (element_focused == ui_lblBattery) {
-                                        increase_option_value(ui_droBattery,
-                                                              &battery_current,
-                                                              battery_total);
-                                    } else if (element_focused == ui_lblNetwork) {
-                                        increase_option_value(ui_droNetwork,
-                                                              &network_current,
-                                                              network_total);
-                                    } else if (element_focused == ui_lblBluetooth) {
-                                        increase_option_value(ui_droBluetooth,
-                                                              &bluetooth_current,
-                                                              bluetooth_total);
-                                    } else if (element_focused == ui_lblClock) {
-                                        increase_option_value(ui_droClock,
-                                                              &mux_clock_current,
-                                                              mux_clock_total);
-                                    } else if (element_focused == ui_lblBoxArt) {
-                                        increase_option_value(ui_droBoxArt,
-                                                              &boxart_current,
-                                                              boxart_total);
-                                    }
-                                    play_sound("navigate", nav_sound);
-                                    break;
-                                default:
-                                    break;
+                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
+                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                                ev.value == -1) {
+                                if (element_focused == ui_lblBattery) {
+                                    decrease_option_value(ui_droBattery,
+                                                          &battery_current,
+                                                          battery_total);
+                                } else if (element_focused == ui_lblNetwork) {
+                                    decrease_option_value(ui_droNetwork,
+                                                          &network_current,
+                                                          network_total);
+                                } else if (element_focused == ui_lblBluetooth) {
+                                    decrease_option_value(ui_droBluetooth,
+                                                          &bluetooth_current,
+                                                          bluetooth_total);
+                                } else if (element_focused == ui_lblClock) {
+                                    decrease_option_value(ui_droClock,
+                                                          &mux_clock_current,
+                                                          mux_clock_total);
+                                } else if (element_focused == ui_lblBoxArt) {
+                                    decrease_option_value(ui_droBoxArt,
+                                                          &boxart_current,
+                                                          boxart_total);
+                                }
+                                play_sound("navigate", nav_sound);
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                                       ev.value == 1) {
+                                if (element_focused == ui_lblBattery) {
+                                    increase_option_value(ui_droBattery,
+                                                          &battery_current,
+                                                          battery_total);
+                                } else if (element_focused == ui_lblNetwork) {
+                                    increase_option_value(ui_droNetwork,
+                                                          &network_current,
+                                                          network_total);
+                                } else if (element_focused == ui_lblBluetooth) {
+                                    increase_option_value(ui_droBluetooth,
+                                                          &bluetooth_current,
+                                                          bluetooth_total);
+                                } else if (element_focused == ui_lblClock) {
+                                    increase_option_value(ui_droClock,
+                                                          &mux_clock_current,
+                                                          mux_clock_total);
+                                } else if (element_focused == ui_lblBoxArt) {
+                                    increase_option_value(ui_droBoxArt,
+                                                          &boxart_current,
+                                                          boxart_total);
+                                }
+                                play_sound("navigate", nav_sound);
                             }
                         }
                     default:
@@ -406,7 +403,8 @@ void *joystick_task() {
             }
         }
 
-        if (ev.type == EV_KEY && ev.value == 1 && (ev.code == JOY_MINUS || ev.code == JOY_PLUS)) {
+        if (ev.type == EV_KEY && ev.value == 1 &&
+            (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
             progress_onscreen = 1;
             if (lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
                 lv_obj_clear_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
@@ -435,7 +433,7 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_WAIT);
+        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -486,6 +484,18 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblClock, "clock");
     lv_obj_set_user_data(ui_lblBoxArt, "boxart");
 
+    if (!device.DEVICE.HAS_NETWORK) {
+        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_FLOATING);
+    }
+
+    if (!device.DEVICE.HAS_BLUETOOTH) {
+        lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_FLOATING);
+    }
+
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
         lv_obj_t * overlay_img = lv_img_create(ui_scrVisual);
@@ -499,21 +509,23 @@ void init_elements() {
 void glyph_task() {
     // TODO: Bluetooth connectivity!
 
-    if (is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    if (atoi(read_text_from_file(BATT_CHARGER))) {
+    if (atoi(read_text_from_file(device.BATTERY.CHARGER))) {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
@@ -580,13 +592,13 @@ void ui_refresh_task() {
                         lv_obj_move_foreground(ui_pnlBox);
                         break;
                     case 3: // Fullscreen + Behind
-                        lv_obj_set_height(ui_pnlBox, SCREEN_HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_background(ui_pnlBox);
                         lv_obj_move_background(ui_pnlWall);
                         break;
                     case 4: // Fullscreen + Front
-                        lv_obj_set_height(ui_pnlBox, SCREEN_HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_foreground(ui_pnlBox);
                         break;
@@ -604,33 +616,32 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    load_device(&device);
+
     srand(time(NULL));
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
 
     lv_init();
-    fbdev_init();
+    fbdev_init(device.SCREEN.DEVICE);
 
-    static lv_color_t buf1[DISP_BUF_SIZE];
-    static lv_color_t buf2[DISP_BUF_SIZE];
     static lv_disp_draw_buf_t disp_buf;
+    uint32_t disp_buf_size = device.SCREEN.BUFFER;
 
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, DISP_BUF_SIZE);
+    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    if (strcasecmp(HARDWARE, "RG28XX") == 0) {
-        disp_drv.hor_res = SCREEN_HEIGHT;
-        disp_drv.ver_res = SCREEN_WIDTH;
-        disp_drv.sw_rotate = 1;
-        disp_drv.rotated = LV_DISP_ROT_90;
-    } else {
-        disp_drv.hor_res = SCREEN_WIDTH;
-        disp_drv.ver_res = SCREEN_HEIGHT;
-    }
+    disp_drv.hor_res = device.SCREEN.WIDTH;
+    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.sw_rotate = device.SCREEN.ROTATE;
+    disp_drv.rotated = device.SCREEN.ROTATE;
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
@@ -648,28 +659,28 @@ int main(int argc, char *argv[]) {
 
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
-            NAV_DPAD_HOR = ABS_HAT0Y;
-            NAV_ANLG_HOR = ABS_RX;
-            NAV_DPAD_VER = ABS_HAT0X;
-            NAV_ANLG_VER = ABS_Z;
+            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
+            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
+            NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
+            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
             break;
         default:
-            NAV_DPAD_HOR = ABS_HAT0X;
-            NAV_ANLG_HOR = ABS_Z;
-            NAV_DPAD_VER = ABS_HAT0Y;
-            NAV_ANLG_VER = ABS_RX;
+            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.RIGHT;
+            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
+            NAV_DPAD_VER = device.RAW_INPUT.DPAD.DOWN;
+            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.DOWN;
     }
 
     switch (config.SETTINGS.ADVANCED.SWAP) {
         case 1:
-            NAV_A = JOY_B;
-            NAV_B = JOY_A;
+            NAV_A = device.RAW_INPUT.BUTTON.B;
+            NAV_B = device.RAW_INPUT.BUTTON.A;
             lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
             lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
             break;
         default:
-            NAV_A = JOY_A;
-            NAV_B = JOY_B;
+            NAV_A = device.RAW_INPUT.BUTTON.A;
+            NAV_B = device.RAW_INPUT.BUTTON.B;
             lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
             lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
             break;
@@ -709,7 +720,7 @@ int main(int argc, char *argv[]) {
     osd_par.pnlMessage = ui_pnlMessage;
     osd_par.count = 0;
 
-    js_fd = open(JOY_DEVICE, O_RDONLY);
+    js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
         perror("Failed to open joystick device");
         return 1;
@@ -744,7 +755,7 @@ int main(int argc, char *argv[]) {
 
     init_elements();
     while (!safe_quit) {
-        usleep(SCREEN_WAIT);
+        usleep(device.SCREEN.WAIT);
     }
 
     pthread_cancel(joystick_thread);
