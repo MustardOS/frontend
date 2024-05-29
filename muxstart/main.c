@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
 
     ui_init();
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     lv_obj_set_user_data(ui_scrStart, "muxstart");

@@ -1,6 +1,7 @@
 #pragma once
 
 extern struct theme_config theme;
+extern struct mux_device device;
 
 struct theme_config {
     struct {
@@ -258,4 +259,4 @@ struct theme_config {
     } MISC;
 };
 
-void load_theme(struct theme_config *theme, char *mux_name);
+void load_theme(struct theme_config *theme, struct mux_device *device, char *mux_name);

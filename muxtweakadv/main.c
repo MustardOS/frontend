@@ -195,7 +195,11 @@ void restore_tweak_options() {
 }
 
 void save_tweak_options() {
-    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    static char config_file[MAX_BUFFER_SIZE];
+    snprintf(config_file, sizeof(config_file),
+             "/%s/config/config.ini", INTERNAL_PATH);
+
+    mini_t * muos_config = mini_try_load(config_file);
 
     int idx_swap = lv_dropdown_get_selected(ui_droSwap);
     int idx_thermal = lv_dropdown_get_selected(ui_droThermal);
@@ -218,7 +222,11 @@ void save_tweak_options() {
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
 
-    run_shell_script(MUOS_TWEAK_UPDATE);
+    static char tweak_script[MAX_BUFFER_SIZE];
+    snprintf(tweak_script, sizeof(tweak_script),
+             "/%s/script/mux/tweak.sh", INTERNAL_PATH);
+
+    run_shell_script(tweak_script);
 }
 
 void init_navigation_groups() {
@@ -724,7 +732,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

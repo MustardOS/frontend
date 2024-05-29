@@ -2,13 +2,14 @@
 #include "common.h"
 #include "options.h"
 #include "glyph.h"
+#include "device.h"
 #include "mini/mini.h"
 
-void load_glyph(struct glyph_config *glyph, char *mux_name) {
+void load_glyph(struct glyph_config *glyph, struct mux_device *device, char *mux_name) {
     char scheme[MAX_BUFFER_SIZE];
-    snprintf(scheme, sizeof(scheme), "%s/%s.txt", MUOS_GLYPH_DIR, mux_name);
+    snprintf(scheme, sizeof(scheme), "/%s/MUOS/theme/active/glyph/%s.txt", device->STORAGE.ROM.MOUNT, mux_name);
     if (!file_exist(scheme)) {
-        snprintf(scheme, sizeof(scheme), "%s/default.txt", MUOS_GLYPH_DIR);
+        snprintf(scheme, sizeof(scheme), "%s/MUOS/theme/active/glyph/default.txt", device->STORAGE.ROM.MOUNT);
     }
 
     mini_t * muos_glyph = mini_try_load(scheme);

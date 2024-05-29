@@ -92,7 +92,11 @@ void confirm_rtc_config() {
         idx_notation = 1;
     }
 
-    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    char config_file[MAX_BUFFER_SIZE];
+    snprintf(config_file, sizeof(config_file),
+             "/%s/config/config.ini", INTERNAL_PATH);
+
+    mini_t * muos_config = mini_try_load(config_file);
 
     mini_set_int(muos_config, "clock", "notation", idx_notation);
 
@@ -173,7 +177,7 @@ void restore_clock_settings() {
 }
 
 void set_hardware_clock(struct rtc_time *rtc_tm) {
-    int rtc_fd = open(RTC_DEVICE, O_RDWR);
+    int rtc_fd = open(device.DEVICE.RTC, O_RDWR);
     if (rtc_fd == -1) {
         perror("Failed to open RTC device");
         return;
@@ -455,7 +459,11 @@ void *joystick_task() {
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     set_new_time();
 
-                                    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+                                    char config_file[MAX_BUFFER_SIZE];
+                                    snprintf(config_file, sizeof(config_file),
+                                             "/%s/config/config.ini", INTERNAL_PATH);
+
+                                    mini_t * muos_config = mini_try_load(config_file);
                                     mini_set_int(muos_config, "boot", "clock_setup", 0);
                                     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
                                     mini_free(muos_config);
@@ -705,7 +713,7 @@ void *joystick_task() {
         }
 
         lv_task_handler();
-        usleep(SCREEN_WAIT);
+        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -916,7 +924,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

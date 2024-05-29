@@ -172,6 +172,10 @@ void *joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
+                                    char address_file[MAX_BUFFER_SIZE];
+                                    snprintf(address_file, sizeof(address_file),
+                                             "/%s/config/address.txt", INTERNAL_PATH);
+
                                     if (element_focused == ui_lblContent) {
                                         play_sound("confirm", nav_sound);
                                         load_mux("explore");
@@ -192,15 +196,15 @@ void *joystick_task() {
                                         load_mux("config");
                                     } else if (element_focused == ui_lblReboot) {
                                         play_sound("reboot", nav_sound);
-                                        write_text_to_file(NETWORK_ADDRESS, "", "w");
-                                        system("/opt/muos/script/system/volume.sh save");
+                                        write_text_to_file(address_file, "", "w");
+                                        run_shell_script("/opt/muos/script/system/volume.sh save");
                                         sync();
                                         sleep(1);
                                         reboot(RB_AUTOBOOT);
                                     } else if (element_focused == ui_lblShutdown) {
                                         play_sound("shutdown", nav_sound);
-                                        write_text_to_file(NETWORK_ADDRESS, "", "w");
-                                        system("/opt/muos/script/system/volume.sh save");
+                                        write_text_to_file(address_file, "", "w");
+                                        run_shell_script("/opt/muos/script/system/volume.sh save");
                                         sync();
                                         sleep(1);
                                         reboot(RB_POWER_OFF);
@@ -486,7 +490,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

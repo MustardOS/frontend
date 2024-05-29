@@ -180,13 +180,13 @@ void image_refresh() {
 
     snprintf(supporter_image, sizeof(supporter_image),
              "/%s/%s.png",
-             MUOS_SUPP_PATH, supporter_name);
+             "opt/muos/supporter", supporter_name);
 
     if (file_exist(supporter_image)) {
         char supporter_image_path[MAX_BUFFER_SIZE];
         snprintf(supporter_image_path, sizeof(supporter_image_path),
                  "M:%s/%s.png",
-                 MUOS_SUPP_PATH, supporter_name);
+                 "opt/muos/supporter", supporter_name);
         lv_img_set_src(ui_imgBox, supporter_image_path);
     } else {
         lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
@@ -750,7 +750,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

@@ -130,11 +130,11 @@ char *load_content_core(int force) {
     }
 
     if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
-        snprintf(content_core, sizeof(content_core), "%s/core.cfg",
-                 MUOS_CORE_DIR);
+        snprintf(content_core, sizeof(content_core), "/%s/MUOS/info/core/core.cfg",
+                 device.STORAGE.ROM.MOUNT);
     } else {
-        snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
-                 MUOS_CORE_DIR, get_last_subdir(sd_dir, '/', 4));
+        snprintf(content_core, sizeof(content_core), "/%s/MUOS/info/core/%s/core.cfg",
+                 device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4));
     }
 
     if (file_exist(content_core) && !force) {
@@ -155,28 +155,28 @@ char *load_content_description() {
     switch (module) {
         case ROOT:
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
-                snprintf(content_desc, sizeof(content_desc), "%s/Root/text/sd1.txt",
-                         MUOS_CATALOGUE_DIR);
+                snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/Root/text/sd1.txt",
+                         device.STORAGE.ROM.MOUNT);
             } else if (strcasecmp(content_label, "SD2 (sdcard)") == 0) {
-                snprintf(content_desc, sizeof(content_desc), "%s/Root/text/sd2.txt",
-                         MUOS_CATALOGUE_DIR);
+                snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/Root/text/sd2.txt",
+                         device.STORAGE.ROM.MOUNT);
             }
             break;
         case FAVOURITE:
             char f_core_file[MAX_BUFFER_SIZE];
-            snprintf(f_core_file, sizeof(f_core_file), "%s/%s.cfg",
-                     MUOS_FAVOURITE_DIR, content_label);
-            snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-                     MUOS_CATALOGUE_DIR, read_line_from_file(f_core_file, 5),
-                     strip_ext(read_line_from_file(f_core_file, 6)));
+            snprintf(f_core_file, sizeof(f_core_file), "/%s/MUOS/info/favourite/%s.cfg",
+                     device.STORAGE.ROM.MOUNT, content_label);
+            snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/%s/text/%s.txt",
+                     device.STORAGE.ROM.MOUNT, read_line_from_file(f_core_file, 5),
+            strip_ext(read_line_from_file(f_core_file, 6)));
             break;
         case HISTORY:
             char h_core_file[MAX_BUFFER_SIZE];
-            snprintf(h_core_file, sizeof(h_core_file), "%s/%s.cfg",
-                     MUOS_FAVOURITE_DIR, content_label);
-            snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-                     MUOS_CATALOGUE_DIR, read_line_from_file(h_core_file, 5),
-                     strip_ext(read_line_from_file(h_core_file, 6)));
+            snprintf(h_core_file, sizeof(h_core_file), "/%s/MUOS/info/favourite/%s.cfg",
+                     device.STORAGE.ROM.MOUNT, content_label);
+            snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/%s/text/%s.txt",
+                     device.STORAGE.ROM.MOUNT, read_line_from_file(h_core_file, 5),
+            strip_ext(read_line_from_file(h_core_file, 6)));
             break;
         default:
             content_file_index = atoi(get_string_at_index(&named_index, current_item_index));
@@ -198,14 +198,14 @@ char *load_content_description() {
             }
 
             if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
-                snprintf(content_desc, sizeof(content_desc), "%s/Root/text/%s.txt",
-                         MUOS_CATALOGUE_DIR, content_label);
+                snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/Root/text/%s.txt",
+                         device.STORAGE.ROM.MOUNT, content_label);
             } else {
                 char *desc_name = strip_ext(get_string_at_index(&content_items, content_file_index));
 
                 char core_file[MAX_BUFFER_SIZE];
-                snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-                         MUOS_CORE_DIR, get_last_subdir(sd_dir, '/', 4));
+                snprintf(core_file, sizeof(core_file), "/%s/MUOS/info/core/%s/core.cfg",
+                         device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4));
 
                 printf("TRYING TO READ CORE CONFIG META: %s\n", core_file);
                 char *core_desc = read_line_from_file(core_file, 2);
@@ -216,11 +216,11 @@ char *load_content_description() {
                 printf("TEXT IS STORED AT: %s\n", core_desc);
 
                 if (strcasecmp(desc_name, DUMMY_DIR) == 0) {
-                    snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
-                             MUOS_CATALOGUE_DIR, lv_label_get_text(lv_group_get_focused(ui_group)));
+                    snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/Folder/text/%s.txt",
+                             device.STORAGE.ROM.MOUNT, lv_label_get_text(lv_group_get_focused(ui_group)));
                 } else {
-                    snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-                             MUOS_CATALOGUE_DIR, core_desc, desc_name);
+                    snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/%s/text/%s.txt",
+                             device.STORAGE.ROM.MOUNT, core_desc, desc_name);
                 }
             }
             break;
@@ -244,26 +244,26 @@ void image_refresh(char *image_type) {
     switch (module) {
         case ROOT:
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
-                snprintf(image, sizeof(image), "%s/Root/%s/sd1.png",
-                         MUOS_CATALOGUE_DIR, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/sd1.png",
-                         MUOS_CATALOGUE_PATH, image_type);
+                snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Root/%s/sd1.png",
+                         device.STORAGE.ROM.MOUNT, image_type);
+                snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Root/%s/sd1.png",
+                         device.STORAGE.ROM.MOUNT, image_type);
             } else if (strcasecmp(content_label, "SD2 (sdcard)") == 0) {
-                snprintf(image, sizeof(image), "%s/Root/%s/sd2.png",
-                         MUOS_CATALOGUE_DIR, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/sd2.png",
-                         MUOS_CATALOGUE_PATH, image_type);
+                snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Root/%s/sd2.png",
+                         device.STORAGE.ROM.MOUNT, image_type);
+                snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Root/%s/sd2.png",
+                         device.STORAGE.ROM.MOUNT, image_type);
             } else if (strcasecmp(content_label, "USB (external)") == 0) {
-                snprintf(image, sizeof(image), "%s/Root/%s/usb.png",
-                         MUOS_CATALOGUE_DIR, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/usb.png",
-                         MUOS_CATALOGUE_PATH, image_type);
+                snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Root/%s/usb.png",
+                         device.STORAGE.ROM.MOUNT, image_type);
+                snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Root/%s/usb.png",
+                         device.STORAGE.ROM.MOUNT, image_type);
             }
             break;
         case FAVOURITE:
             char f_core_file[MAX_BUFFER_SIZE];
-            snprintf(f_core_file, sizeof(f_core_file), "%s/%s.cfg",
-                     MUOS_FAVOURITE_DIR, content_label);
+            snprintf(f_core_file, sizeof(f_core_file), "/%s/MUOS/info/favourite/%s.cfg",
+                     device.STORAGE.ROM.MOUNT, content_label);
 
             char *f_core_artwork = read_line_from_file(f_core_file, 3);
             if (strlen(f_core_artwork) <= 1) {
@@ -273,15 +273,15 @@ void image_refresh(char *image_type) {
 
             char *f_file_name = strip_ext(read_line_from_file(f_core_file, 7));
 
-            snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                     MUOS_CATALOGUE_DIR, f_core_artwork, image_type, f_file_name);
-            snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                     MUOS_CATALOGUE_PATH, f_core_artwork, image_type, f_file_name);
+            snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/%s/%s/%s.png",
+                     device.STORAGE.ROM.MOUNT, f_core_artwork, image_type, f_file_name);
+            snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/%s/%s/%s.png",
+                     device.STORAGE.ROM.MOUNT, f_core_artwork, image_type, f_file_name);
             break;
         case HISTORY:
             char h_core_file[MAX_BUFFER_SIZE];
-            snprintf(h_core_file, sizeof(h_core_file), "%s/%s.cfg",
-                     MUOS_HISTORY_DIR, content_label);
+            snprintf(h_core_file, sizeof(h_core_file), "/%s/MUOS/info/history/%s.cfg",
+                     device.STORAGE.ROM.MOUNT, content_label);
 
             char *h_core_artwork = read_line_from_file(h_core_file, 3);
             if (strlen(h_core_artwork) <= 1) {
@@ -291,10 +291,10 @@ void image_refresh(char *image_type) {
 
             char *h_file_name = strip_ext(read_line_from_file(h_core_file, 7));
 
-            snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                     MUOS_CATALOGUE_DIR, h_core_artwork, image_type, h_file_name);
-            snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                     MUOS_CATALOGUE_PATH, h_core_artwork, image_type, h_file_name);
+            snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/%s/%s/%s.png",
+                     device.STORAGE.ROM.MOUNT, h_core_artwork, image_type, h_file_name);
+            snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/%s/%s/%s.png",
+                     device.STORAGE.ROM.MOUNT, h_core_artwork, image_type, h_file_name);
             break;
         default:
             content_file_index = atoi(get_string_at_index(&named_index, current_item_index));
@@ -315,16 +315,16 @@ void image_refresh(char *image_type) {
             }
 
             if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
-                snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
-                         MUOS_CATALOGUE_DIR, image_type, content_label);
-                snprintf(image_path, sizeof(image_path), "M:%s/Folder/%s/%s.png",
-                         MUOS_CATALOGUE_PATH, image_type, content_label);
+                snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Folder/%s/%s.png",
+                         device.STORAGE.ROM.MOUNT, image_type, content_label);
+                snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Folder/%s/%s.png",
+                         device.STORAGE.ROM.MOUNT, image_type, content_label);
             } else {
                 char *file_name = strip_ext(get_string_at_index(&content_items, content_file_index));
 
                 char core_file[MAX_BUFFER_SIZE];
-                snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-                         MUOS_CORE_DIR, get_last_subdir(sd_dir, '/', 4));
+                snprintf(core_file, sizeof(core_file), "/%s/muos/INFO/core/%s/core.cfg",
+                         device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4));
 
                 char *core_artwork = read_line_from_file(core_file, 2);
                 if (strlen(core_artwork) <= 1 && strcasecmp(file_name, DUMMY_DIR) != 0) {
@@ -333,17 +333,17 @@ void image_refresh(char *image_type) {
                 }
 
                 if (strcasecmp(file_name, DUMMY_DIR) == 0) {
-                    snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
-                             MUOS_CATALOGUE_DIR, image_type,
-                             lv_label_get_text(lv_group_get_focused(ui_group)));
-                    snprintf(image_path, sizeof(image_path), "M:%s/Folder/%s/%s.png",
-                             MUOS_CATALOGUE_PATH, image_type,
-                             lv_label_get_text(lv_group_get_focused(ui_group)));
+                    snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Folder/%s/%s.png",
+                             device.STORAGE.ROM.MOUNT, image_type,
+                            lv_label_get_text(lv_group_get_focused(ui_group)));
+                    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Folder/%s/%s.png",
+                             device.STORAGE.ROM.MOUNT, image_type,
+                            lv_label_get_text(lv_group_get_focused(ui_group)));
                 } else {
-                    snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                             MUOS_CATALOGUE_DIR, core_artwork, image_type, file_name);
-                    snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                             MUOS_CATALOGUE_PATH, core_artwork, image_type, file_name);
+                    snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/%s/%s/%s.png",
+                             device.STORAGE.ROM.MOUNT, core_artwork, image_type, file_name);
+                    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/%s/%s/%s.png",
+                             device.STORAGE.ROM.MOUNT, core_artwork, image_type, file_name);
                 }
             }
             break;
@@ -515,41 +515,41 @@ void gen_item(char **file_names, int file_count) {
     switch (module) {
         case MMC:
             if (strcasecmp(sd_dir, strip_dir(SD1)) != 0) {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/mmc/%s.ini",
-                         MUOS_CACHE_DIR, strchr(strdup(sd_dir), '/') + strlen(SD1));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
-                         MUOS_CORE_DIR, strchr(strdup(sd_dir), '/') + strlen(SD1));
+                snprintf(init_cache_file, sizeof(init_cache_file), "/%s/MUOS/info/cache/mmc/%s.ini",
+                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(SD1));
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "/%s/MUOS/info/core/%s/",
+                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(SD1));
             } else {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/root_mmc.ini",
-                         MUOS_CACHE_DIR);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
-                         MUOS_CORE_DIR);
+                snprintf(init_cache_file, sizeof(init_cache_file), "/%s/MUOS/info/cache/root_mmc.ini",
+                         device.STORAGE.ROM.MOUNT);
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "/%s/MUOS/info/core/",
+                         device.STORAGE.ROM.MOUNT);
             }
             break;
         case SDCARD:
             if (strcasecmp(sd_dir, strip_dir(SD2)) != 0) {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/sdcard/%s.ini",
-                         MUOS_CACHE_DIR, strchr(strdup(sd_dir), '/') + strlen(SD2));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
-                         MUOS_CORE_DIR, strchr(strdup(sd_dir), '/') + strlen(SD2));
+                snprintf(init_cache_file, sizeof(init_cache_file), "/%s/MUOS/info/cache/sdcard/%s.ini",
+                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(SD2));
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "/%s/MUOS/info/core/%s/",
+                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(SD2));
             } else {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/root_sdcard.ini",
-                         MUOS_CACHE_DIR);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
-                         MUOS_CORE_DIR);
+                snprintf(init_cache_file, sizeof(init_cache_file), "/%s/MUOS/info/cache/root_sdcard.ini",
+                         device.STORAGE.ROM.MOUNT);
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "/%s/MUOS/info/core/",
+                         device.STORAGE.ROM.MOUNT);
             }
             break;
         case USB:
             if (strcasecmp(sd_dir, strip_dir(E_USB)) != 0) {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/usb/%s.ini",
-                         MUOS_CACHE_DIR, strchr(strdup(sd_dir), '/') + strlen(E_USB));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
-                         MUOS_CORE_DIR, strchr(strdup(sd_dir), '/') + strlen(E_USB));
+                snprintf(init_cache_file, sizeof(init_cache_file), "/%s/MUOS/info/cache/usb/%s.ini",
+                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(E_USB));
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "/%s/MUOS/info/core/%s/",
+                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(E_USB));
             } else {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/root_usb.ini",
-                         MUOS_CACHE_DIR);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
-                         MUOS_CORE_DIR);
+                snprintf(init_cache_file, sizeof(init_cache_file), "/%s/MUOS/info/cache/root_usb.ini",
+                         device.STORAGE.ROM.MOUNT);
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "/%s/MUOS/info/core/",
+                         device.STORAGE.ROM.MOUNT);
             }
             break;
         default:
@@ -571,9 +571,14 @@ void gen_item(char **file_names, int file_count) {
 
     int fn_valid = 0;
     struct json fn_json;
-    if (json_valid(read_text_from_file(MUOS_NAME_FILE))) {
+
+    char name_file[MAX_BUFFER_SIZE];
+    snprintf(name_file, sizeof(name_file), "/%s/MUOS/info/name.json",
+             device.STORAGE.ROM.MOUNT);
+
+    if (json_valid(read_text_from_file(name_file))) {
         fn_valid = 1;
-        fn_json = json_parse(read_text_from_file(MUOS_NAME_FILE));
+        fn_json = json_parse(read_text_from_file(name_file));
     }
 
     for (int i = 0; i < file_count; i++) {
@@ -636,7 +641,8 @@ void gen_item(char **file_names, int file_count) {
 
 void create_root_items(char *dir_name) {
     char spec_dir[PATH_MAX];
-    snprintf(spec_dir, sizeof(spec_dir), "/%s/%s", MUOS_INFO_PATH, dir_name);
+    snprintf(spec_dir, sizeof(spec_dir), "/%s/MUOS/info/%s",
+             device.STORAGE.ROM.MOUNT, dir_name);
 
     char **dir_names = NULL;
     int dir_count = 0;
@@ -795,8 +801,8 @@ int load_content(char *content_name, int content_index, int add_favourite) {
     }
 
     char content_loader_file[MAX_BUFFER_SIZE];
-    snprintf(content_loader_file, sizeof(content_loader_file), "%s/%s/%s.cfg",
-             MUOS_CORE_DIR, get_last_subdir(sd_dir, '/', 4), content_name);
+    snprintf(content_loader_file, sizeof(content_loader_file), "/%s/MUOS/info/core/%s/%s.cfg",
+             device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), content_name);
 
     printf("CONFIG FILE: %s\n", content_loader_file);
 
@@ -828,10 +834,16 @@ int load_content(char *content_name, int content_index, int add_favourite) {
         char add_to_hf[MAX_BUFFER_SIZE];
         char *hf_type;
 
+        char fav_dir[MAX_BUFFER_SIZE];
+        char his_dir[MAX_BUFFER_SIZE];
+        snprintf(fav_dir, sizeof(fav_dir), "/%s/MUOS/info/favourite", device.STORAGE.ROM.MOUNT);
+        snprintf(his_dir, sizeof(his_dir), "/%s/MUOS/info/history", device.STORAGE.ROM.MOUNT);
+
+
         if (add_favourite) {
-            hf_type = MUOS_FAVOURITE_DIR;
+            hf_type = fav_dir;
         } else {
-            hf_type = MUOS_HISTORY_DIR;
+            hf_type = his_dir;
         }
 
         snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s.cfg", hf_type, content_name);
@@ -855,8 +867,8 @@ int load_content(char *content_name, int content_index, int add_favourite) {
 
             char act_file[MAX_BUFFER_SIZE];
             char act_content[MAX_BUFFER_SIZE];
-            snprintf(act_file, sizeof(act_file), "%s/%s.act",
-                     MUOS_ACTIVITY_DIR, content_name);
+            snprintf(act_file, sizeof(act_file), "/%s/MUOS/info/activity/%s.act",
+                     device.STORAGE.ROM.MOUNT, content_name);
             snprintf(act_content, sizeof(act_content), "%s\n%s\n%s",
                      content_name, curr_sd, read_line_from_file(content_loader_file, 5));
             prepare_activity_file(act_content, act_file);
@@ -877,8 +889,8 @@ int load_content(char *content_name, int content_index, int add_favourite) {
 
 int load_cached_content(char *content_name, char *cache_type) {
     char cache_file[MAX_BUFFER_SIZE];
-    snprintf(cache_file, sizeof(cache_file), "/%s/%s/%s.cfg",
-             MUOS_INFO_PATH, cache_type, content_name);
+    snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/%s/%s.cfg",
+             device.STORAGE.ROM.MOUNT, cache_type, content_name);
 
     if (file_exist(cache_file)) {
         char add_to_hf[MAX_BUFFER_SIZE];
@@ -888,8 +900,8 @@ int load_cached_content(char *content_name, char *cache_type) {
 
         printf("CONFIG FILE: %s\n", cache_file);
 
-        snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s.cfg",
-                 MUOS_HISTORY_DIR, content_name);
+        snprintf(add_to_hf, sizeof(add_to_hf), "/%s/MUOS/info/history/%s.cfg",
+                 device.STORAGE.ROM.MOUNT, content_name);
 
         printf("TRYING TO LOAD CONTENT...\n");
 
@@ -908,8 +920,8 @@ int load_cached_content(char *content_name, char *cache_type) {
 
         char act_file[MAX_BUFFER_SIZE];
         char act_content[MAX_BUFFER_SIZE];
-        snprintf(act_file, sizeof(act_file), "%s/%s.act",
-                 MUOS_ACTIVITY_DIR, content_name);
+        snprintf(act_file, sizeof(act_file), "/%s/MUOS/info/activity/%s.act",
+                 device.STORAGE.ROM.MOUNT, content_name);
         snprintf(act_content, sizeof(act_content), "%s\n%s\n%s",
                  content_name, curr_sd, read_line_from_file(cache_file, 5));
         prepare_activity_file(act_content, act_file);
@@ -983,22 +995,22 @@ void cache_message(char *n_dir) {
     char cache_file[MAX_BUFFER_SIZE];
     switch (module) {
         case MMC:
-            snprintf(cache_file, sizeof(cache_file), "%s/mmc/%s.ini", MUOS_CACHE_DIR,
-                     get_last_subdir(n_dir, '/', 4));
+            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/mmc/%s.ini", device.STORAGE.ROM.MOUNT,
+            get_last_subdir(n_dir, '/', 4));
             break;
         case SDCARD:
-            snprintf(cache_file, sizeof(cache_file), "%s/sdcard/%s.ini", MUOS_CACHE_DIR,
-                     get_last_subdir(n_dir, '/', 4));
+            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/sdcard/%s.ini", device.STORAGE.ROM.MOUNT,
+            get_last_subdir(n_dir, '/', 4));
             break;
         case USB:
-            snprintf(cache_file, sizeof(cache_file), "%s/usb/%s.ini", MUOS_CACHE_DIR,
-                     get_last_subdir(n_dir, '/', 4));
+            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/usb/%s.ini", device.STORAGE.ROM.MOUNT,
+            get_last_subdir(n_dir, '/', 4));
             break;
         case FAVOURITE:
-            snprintf(cache_file, sizeof(cache_file), "%s/favourite.ini", MUOS_CACHE_DIR);
+            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/favourite.ini", device.STORAGE.ROM.MOUNT);
             break;
         case HISTORY:
-            snprintf(cache_file, sizeof(cache_file), "%s/history.ini", MUOS_CACHE_DIR);
+            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/history.ini", device.STORAGE.ROM.MOUNT);
             break;
         default:
             break;
@@ -1143,7 +1155,11 @@ void *joystick_task() {
                                                         if (load_content(f_name, atoi(
                                                                 get_string_at_index(&named_index,
                                                                                     current_item_index)), 0)) {
-                                                            system(MUOS_CONTENT_LAUNCH);
+                                                            static char launch_script[MAX_BUFFER_SIZE];
+                                                            snprintf(launch_script, sizeof(launch_script),
+                                                                     "/%s/script/mux/launch.sh", INTERNAL_PATH);
+
+                                                            run_shell_script(launch_script);
                                                         }
                                                         break;
                                                     }
@@ -1220,33 +1236,33 @@ void *joystick_task() {
                                         case MMC:
                                             play_sound("confirm", nav_sound);
 
-                                            snprintf(cache_file, sizeof(cache_file), "%s/mmc/%s.ini",
-                                                     MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
+                                            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/mmc/%s.ini",
+                                                     device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
 
                                             write_text_to_file("/tmp/explore_card", "mmc", "w");
                                             break;
                                         case SDCARD:
                                             play_sound("confirm", nav_sound);
 
-                                            snprintf(cache_file, sizeof(cache_file), "%s/sdcard/%s.ini",
-                                                     MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
+                                            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/sdcard/%s.ini",
+                                                     device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
 
                                             write_text_to_file("/tmp/explore_card", "sdcard", "w");
                                             break;
                                         case USB:
                                             play_sound("confirm", nav_sound);
 
-                                            snprintf(cache_file, sizeof(cache_file), "%s/usb/%s.ini",
-                                                     MUOS_CACHE_DIR, get_last_subdir(n_dir, '/', 4));
+                                            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/usb/%s.ini",
+                                                     device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
 
                                             write_text_to_file("/tmp/explore_card", "usb", "w");
                                             break;
                                         case FAVOURITE:
                                             play_sound("confirm", nav_sound);
 
-                                            snprintf(cache_file, sizeof(cache_file), "/%s/favourite/%s.cfg",
-                                                     MUOS_INFO_PATH,
-                                                     lv_label_get_text(lv_group_get_focused(ui_group)));
+                                            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/favourite/%s.cfg",
+                                                     device.STORAGE.ROM.MOUNT,
+                                            lv_label_get_text(lv_group_get_focused(ui_group)));
 
                                             remove(cache_file);
                                             write_text_to_file("/tmp/mux_reload", "1", "w");
@@ -1256,9 +1272,9 @@ void *joystick_task() {
                                         case HISTORY:
                                             play_sound("confirm", nav_sound);
 
-                                            snprintf(cache_file, sizeof(cache_file), "/%s/history/%s.cfg",
-                                                     MUOS_INFO_PATH,
-                                                     lv_label_get_text(lv_group_get_focused(ui_group)));
+                                            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/history/%s.cfg",
+                                                     device.STORAGE.ROM.MOUNT,
+                                            lv_label_get_text(lv_group_get_focused(ui_group)));
 
                                             remove(cache_file);
                                             write_text_to_file("/tmp/mux_reload", "1", "w");
@@ -1270,8 +1286,8 @@ void *joystick_task() {
                                     }
 
                                     char c_dir[MAX_BUFFER_SIZE];
-                                    snprintf(c_dir, sizeof(c_dir), "%s/%s",
-                                             MUOS_CORE_DIR, get_last_subdir(n_dir, '/', 4));
+                                    snprintf(c_dir, sizeof(c_dir), "/%s/MUOS/info/core/%s",
+                                             device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
                                     const char *exception_list[] = {"core.cfg", NULL};
 
                                     if (file_exist(cache_file)) {
@@ -1902,8 +1918,8 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, mux_prog);
-    load_glyph(&glyph, mux_prog);
+    load_theme(&theme, &device, mux_prog);
+    load_glyph(&glyph, &device, mux_prog);
 
     apply_theme();
     init_fonts();
@@ -2067,15 +2083,6 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
 
     init_elements();
-
-    if (file_exist(MUOS_AUT_LOAD)) {
-        remove(MUOS_AUT_LOAD);
-        if (load_content(get_string_at_index(&named_items, current_item_index), atoi(
-                get_string_at_index(&named_index,
-                                    current_item_index)), 0)) {
-            system(MUOS_CONTENT_LAUNCH);
-        }
-    }
 
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);

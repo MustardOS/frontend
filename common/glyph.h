@@ -1,6 +1,7 @@
 #pragma once
 
 extern struct glyph_config glyph;
+extern struct mux_device device;
 
 struct glyph_config {
     struct {
@@ -210,4 +211,4 @@ struct glyph_config {
     } MUX_WEBSERVICE;
 };
 
-void load_glyph(struct glyph_config *glyph, char *mux_name);
+void load_glyph(struct glyph_config *glyph, struct mux_device *device, char *mux_name);

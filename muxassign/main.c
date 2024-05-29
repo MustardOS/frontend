@@ -84,7 +84,8 @@ void show_help() {
 
 void create_core_assignment(const char *core, char *sys, int cache) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), "%s/%s/", MUOS_CORE_DIR, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_dir, sizeof(core_dir), "/%s/MUOS/info/core/%s/",
+             device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
 
     create_directories(core_dir);
 
@@ -96,7 +97,8 @@ void create_core_assignment(const char *core, char *sys, int cache) {
     delete_files_of_type(core_dir, "cfg", NULL);
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg", MUOS_CORE_DIR, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_file, sizeof(core_file), "/%s/MUOS/info/core/%s/core.cfg",
+             device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
 
     FILE * file = fopen(core_file, "w");
     if (file == NULL) {
@@ -159,7 +161,8 @@ void create_system_items() {
     struct dirent *tf;
 
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), "%s", MUOS_ASSIGN_DIR);
+    snprintf(assign_dir, sizeof(assign_dir), "/%s/MUOS/info/assign",
+             device.STORAGE.ROM.MOUNT);
 
     td = opendir(assign_dir);
     if (td == NULL) {
@@ -303,7 +306,8 @@ void create_system_items() {
 
 void create_core_items(const char *target) {
     char filename[FILENAME_MAX];
-    snprintf(filename, sizeof(filename), "%s/%s.ini", MUOS_ASSIGN_DIR, target);
+    snprintf(filename, sizeof(filename), "/%s/MUOS/info/assign/%s.ini",
+             device.STORAGE.ROM.MOUNT, target);
 
     int cores;
     char **core_headers = read_assign_ini(filename, &cores);
@@ -557,8 +561,8 @@ void *joystick_task() {
                                         load_assign(rom_dir, str_trim(lv_label_get_text(element_focused)));
                                     } else {
                                         char chosen_core_ini[FILENAME_MAX];
-                                        snprintf(chosen_core_ini, sizeof(chosen_core_ini), "%s/%s.ini",
-                                                 MUOS_ASSIGN_DIR, rom_system);
+                                        snprintf(chosen_core_ini, sizeof(chosen_core_ini), "/%s/MUOS/info/assign/%s.ini",
+                                                 device.STORAGE.ROM.MOUNT, rom_system);
 
                                         mini_t * chosen_core = mini_load(chosen_core_ini);
 
@@ -904,7 +908,8 @@ int main(int argc, char *argv[]) {
         printf("ASSIGN AUTO INITIATED\n");
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg", MUOS_CORE_DIR, get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_file, sizeof(core_file), "/%s/MUOS/info/core/%s/core.cfg",
+                 device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
             return 0;
@@ -912,10 +917,14 @@ int main(int argc, char *argv[]) {
 
         int auto_assign_good = 0;
 
-        if (json_valid(read_text_from_file(MUOS_ASSIGN_FILE))) {
+        char assign_file[MAX_BUFFER_SIZE];
+        snprintf(assign_file, sizeof(assign_file), "/%s/MUOS/info/assign.json",
+                 device.STORAGE.ROM.MOUNT);
+
+        if (json_valid(read_text_from_file(assign_file))) {
             struct json auto_assign_config = json_object_get(
-                    json_parse(read_text_from_file(MUOS_ASSIGN_FILE)),
-                    str_tolower(get_last_dir(rom_dir)));
+            json_parse(read_text_from_file(assign_file)),
+            str_tolower(get_last_dir(rom_dir)));
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
@@ -924,8 +933,8 @@ int main(int argc, char *argv[]) {
                 printf("ASSIGN AUTO CORE: %s\n", ass_config);
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
-                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s",
-                         MUOS_ASSIGN_DIR, ass_config);
+                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "/%s/MUOS/info/assign/%s",
+                         device.STORAGE.ROM.MOUNT, ass_config);
 
                 printf("OBTAINING CORE INI: %s\n", assigned_core_ini);
 
@@ -1000,7 +1009,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

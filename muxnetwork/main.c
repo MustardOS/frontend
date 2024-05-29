@@ -133,7 +133,11 @@ void get_current_ip() {
         return;
     }
 
-    const char *curr_ip = read_text_from_file(NETWORK_ADDRESS);
+    char address_file[MAX_BUFFER_SIZE];
+    snprintf(address_file, sizeof(address_file),
+             "/%s/config/address.txt", INTERNAL_PATH);
+
+    const char *curr_ip = read_text_from_file(address_file);
     static char net_message[MAX_BUFFER_SIZE];
 
     if (strcasecmp(curr_ip, "0.0.0.0") == 0 ||
@@ -186,7 +190,11 @@ void save_network_config() {
         idx_type = 1;
     }
 
-    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    char config_file[MAX_BUFFER_SIZE];
+    snprintf(config_file, sizeof(config_file),
+             "/%s/config/config.ini", INTERNAL_PATH);
+
+    mini_t * muos_config = mini_try_load(config_file);
 
     mini_set_int(muos_config, "network", "enabled", idx_enable);
     mini_set_int(muos_config, "network", "type", idx_type);
@@ -546,7 +554,11 @@ void *joystick_task() {
                                     input_disable = 1;
                                     save_network_config();
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "False") == 0) {
-                                        mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+                                        char config_file[MAX_BUFFER_SIZE];
+                                        snprintf(config_file, sizeof(config_file),
+                                                 "/%s/config/config.ini", INTERNAL_PATH);
+
+                                        mini_t * muos_config = mini_try_load(config_file);
 
                                         set_ini_int(muos_config, "network", "enabled", 0);
                                         set_ini_string(muos_config, "network", "interface", "wlan0");
@@ -1439,7 +1451,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

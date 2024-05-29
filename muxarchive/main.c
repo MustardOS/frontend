@@ -262,7 +262,7 @@ void create_archive_items() {
 
         lv_obj_t * ui_lblArchiveItemData = lv_label_create(ui_pnlArchive);
         lv_label_set_text(ui_lblArchiveItemData, base_filename);
-        lv_obj_set_y(ui_lblArchiveItemData, SCREEN_HEIGHT + 1);
+        lv_obj_set_y(ui_lblArchiveItemData, device.SCREEN.HEIGHT + 1);
         lv_obj_set_width(ui_lblArchiveItemData, 1);
         lv_obj_set_height(ui_lblArchiveItemData, 1);
 
@@ -426,11 +426,15 @@ void *joystick_task() {
                                     if (ui_count > 0) {
                                         play_sound("confirm", nav_sound);
 
+                                        static char extract_script[MAX_BUFFER_SIZE];
+                                        snprintf(extract_script, sizeof(extract_script),
+                                                 "/%s/script/mux/extract.sh", INTERNAL_PATH);
+
                                         static char command[MAX_BUFFER_SIZE];
                                         snprintf(command, sizeof(command), "%s \"%s\"",
-                                                 MUOS_ARCHIVE_EXTRACT,
+                                                 extract_script,
                                                  lv_label_get_text(data_focused));
-                                        system(command);
+                                        run_shell_script(command);
 
                                         char c_index[MAX_BUFFER_SIZE];
                                         snprintf(c_index, sizeof(c_index), "%d", current_item_index);
@@ -770,7 +774,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

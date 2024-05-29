@@ -69,8 +69,8 @@ void show_help() {
     strcpy(credits, "This theme has no attributed credits!");
 
     char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "unzip -p /%s/%s.zip credits.txt",
-             MUOS_THEME_PATH, lv_label_get_text(lv_group_get_focused(ui_group)));
+    snprintf(command, sizeof(command), "unzip -p /%s/MUOS/theme/%s.zip credits.txt",
+             device.STORAGE.ROM.MOUNT, lv_label_get_text(lv_group_get_focused(ui_group)));
 
     FILE * fp = popen(command, "r");
     if (fp != NULL) {
@@ -83,14 +83,22 @@ void show_help() {
 }
 
 void set_theme_value(const char *theme) {
-    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    static char config_file[MAX_BUFFER_SIZE];
+    snprintf(config_file, sizeof(config_file),
+             "/%s/config/config.ini", INTERNAL_PATH);
+
+    mini_t * muos_config = mini_try_load(config_file);
 
     mini_set_string(muos_config, "theme", "name", theme);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
 
-    run_shell_script(MUOS_THEME_UPDATE);
+    static char theme_script[MAX_BUFFER_SIZE];
+    snprintf(theme_script, sizeof(theme_script),
+             "/%s/script/mux/theme.sh", INTERNAL_PATH);
+
+    run_shell_script(theme_script);
 }
 
 void image_refresh() {
@@ -98,14 +106,14 @@ void image_refresh() {
     char theme_image[MAX_BUFFER_SIZE];
 
     snprintf(theme_image, sizeof(theme_image),
-             "/%s/preview/%s.png",
-             MUOS_THEME_PATH, theme_name);
+             "/%s/MUOS/theme/preview/%s.png",
+             device.STORAGE.ROM.MOUNT, theme_name);
 
     if (file_exist(theme_image)) {
         char theme_image_path[MAX_BUFFER_SIZE];
         snprintf(theme_image_path, sizeof(theme_image_path),
-                 "M:%s/preview/%s.png",
-                 MUOS_THEME_PATH, theme_name);
+                 "M:%s/MUOS/theme/preview/%s.png",
+                 device.STORAGE.ROM.MOUNT, theme_name);
         lv_img_set_src(ui_imgBox, theme_image_path);
     } else {
         lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
@@ -117,7 +125,7 @@ void create_theme_items() {
     struct dirent *tf;
 
     char theme_dir[PATH_MAX];
-    snprintf(theme_dir, sizeof(theme_dir), "/%s/", MUOS_THEME_PATH);
+    snprintf(theme_dir, sizeof(theme_dir), "/%s/MUOS/theme", device.STORAGE.ROM.MOUNT);
 
     td = opendir(theme_dir);
     if (td == NULL) {
@@ -717,7 +725,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

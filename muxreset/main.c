@@ -183,7 +183,8 @@ void *joystick_task() {
                                         play_sound("confirm", nav_sound);
 
                                         char favourites[MAX_BUFFER_SIZE];
-                                        snprintf(favourites, sizeof(favourites), "/%s/favourite", MUOS_INFO_PATH);
+                                        snprintf(favourites, sizeof(favourites), "/%s/MUOS/info/favourite",
+                                                 device.STORAGE.ROM.MOUNT);
                                         delete_files_of_type(favourites, "cfg", NULL);
 
                                         lv_label_set_text(ui_lblMessage, "Favourites Cleared");
@@ -192,7 +193,7 @@ void *joystick_task() {
                                         play_sound("confirm", nav_sound);
 
                                         char history[MAX_BUFFER_SIZE];
-                                        snprintf(history, sizeof(history), "/%s/history", MUOS_INFO_PATH);
+                                        snprintf(history, sizeof(history), "/%s/MUOS/info/history", device.STORAGE.ROM.MOUNT);
                                         delete_files_of_type(history, "cfg", NULL);
 
                                         lv_label_set_text(ui_lblMessage, "History Cleared");
@@ -201,7 +202,7 @@ void *joystick_task() {
                                         play_sound("confirm", nav_sound);
 
                                         char activity[MAX_BUFFER_SIZE];
-                                        snprintf(activity, sizeof(activity), "/%s/activity", MUOS_INFO_PATH);
+                                        snprintf(activity, sizeof(activity), "/%s/MUOS/info/activity", device.STORAGE.ROM.MOUNT);
                                         delete_files_of_type(activity, "act", NULL);
 
                                         lv_label_set_text(ui_lblMessage, "Activity Cleared");
@@ -209,14 +210,21 @@ void *joystick_task() {
                                     } else if (element_focused == ui_lblClearConfigurations) {
                                         play_sound("confirm", nav_sound);
 
-                                        delete_files_of_type(MUOS_CORE_DIR, "cfg", NULL);
+                                        char core_dir[MAX_BUFFER_SIZE];
+                                        snprintf(core_dir, sizeof(core_dir),
+                                                 "/%s/MUOS/info/core", device.STORAGE.ROM.MOUNT);
+
+                                        delete_files_of_type(core_dir, "cfg", NULL);
 
                                         lv_label_set_text(ui_lblMessage, "Configurations Cleared");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblClearCaches) {
                                         play_sound("confirm", nav_sound);
 
-                                        delete_files_of_type(MUOS_CACHE_DIR, "json", NULL);
+                                        char cache_dir[MAX_BUFFER_SIZE];
+                                        snprintf(cache_dir, sizeof(cache_dir),
+                                                 "/%s/MUOS/info/cache", device.STORAGE.ROM.MOUNT);
+                                        delete_files_of_type(cache_dir, "json", NULL);
 
                                         lv_label_set_text(ui_lblMessage, "Caches Cleared");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
@@ -226,18 +234,27 @@ void *joystick_task() {
                                         system("rm -f /mnt/mmc/muos/retroarch/retroarch.cfg");
                                         system("rm -f /mnt/mmc/muos/retroarch/retroarch32.cfg");
 
+                                        static char device_file[MAX_BUFFER_SIZE];
+                                        snprintf(device_file, sizeof(device_file), "/%s/config/device.txt",
+                                                 INTERNAL_PATH);
+
                                         char run_device_init[MAX_BUFFER_SIZE];
                                         snprintf(run_device_init, sizeof(run_device_init),
-                                                 "/opt/muos/script/device/%s.sh",
-                                                 str_tolower(read_line_from_file(MUOS_DEVICE_FILE, 1)));
-                                        system(run_device_init);
+                                                 "/%s/device/%s/script/control.sh",
+                                                 INTERNAL_PATH,
+                                                 str_tolower(read_line_from_file(device_file, 1)));
+                                        run_shell_script(run_device_init);
 
                                         lv_label_set_text(ui_lblMessage, "RetroArch Configuration Restored");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     } else if (element_focused == ui_lblRestoreNetwork) {
                                         play_sound("confirm", nav_sound);
 
-                                        mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+                                        static char config_file[MAX_BUFFER_SIZE];
+                                        snprintf(config_file, sizeof(config_file),
+                                                 "/%s/config/config.ini", INTERNAL_PATH);
+
+                                        mini_t * muos_config = mini_try_load(config_file);
 
                                         set_ini_int(muos_config, "network", "enabled", 0);
                                         set_ini_string(muos_config, "network", "interface", "wlan0");
@@ -251,7 +268,7 @@ void *joystick_task() {
                                         mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
                                         mini_free(muos_config);
 
-                                        system("/opt/muos/script/system/network.sh");
+                                        run_shell_script("/opt/muos/script/system/network.sh");
 
                                         lv_label_set_text(ui_lblMessage, "Network Configuration Restored");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
@@ -564,7 +581,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

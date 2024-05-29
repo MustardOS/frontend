@@ -1,10 +1,15 @@
 #include "common.h"
 #include "options.h"
 #include "passcode.h"
+#include "device.h"
 #include "mini/mini.h"
 
-void load_passcode(struct mux_passcode *passcode) {
-    mini_t * muos_pass = mini_try_load(MUOS_PASS_FILE);
+void load_passcode(struct mux_passcode *passcode, struct mux_device *device) {
+    char pass_file[MAX_BUFFER_SIZE];
+    snprintf(pass_file, sizeof(pass_file),
+             "/%s/MUOS/info/pass.ini", device->STORAGE.ROM.MOUNT);
+
+    mini_t * muos_pass = mini_try_load(pass_file);
 
     strncpy(passcode->CODE.BOOT, get_ini_string(muos_pass, "code", "boot", "000000"),
             MAX_BUFFER_SIZE - 1);

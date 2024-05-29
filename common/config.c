@@ -4,7 +4,11 @@
 #include "mini/mini.h"
 
 void load_config(struct mux_config *config) {
-    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    static char config_file[MAX_BUFFER_SIZE];
+    snprintf(config_file, sizeof(config_file),
+             "/%s/config/config.ini", INTERNAL_PATH);
+
+    mini_t * muos_config = mini_try_load(config_file);
 
     config->BOOT.FACTORY_RESET = get_ini_int(muos_config, "boot", "factory_reset", 0);
 

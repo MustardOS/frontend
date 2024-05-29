@@ -162,19 +162,26 @@ void *joystick_task() {
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound);
 
+                                    static char device_file[MAX_BUFFER_SIZE];
+                                    snprintf(device_file, sizeof(device_file), "/%s/config/device.txt", INTERNAL_PATH);
+
                                     if (element_focused == ui_lblRG28XX) {
-                                        write_text_to_file(MUOS_DEVICE_FILE, "RG28XX", "w");
+                                        write_text_to_file(device_file, "RG28XX", "w");
                                     } else if (element_focused == ui_lblRG35XXH) {
-                                        write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-H", "w");
+                                        write_text_to_file(device_file, "RG35XX-H", "w");
                                     } else if (element_focused == ui_lblRG35XXPLUS) {
-                                        write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-PLUS", "w");
+                                        write_text_to_file(device_file, "RG35XX-PLUS", "w");
                                     } else if (element_focused == ui_lblRG35XXSP) {
-                                        write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-SP", "w");
+                                        write_text_to_file(device_file, "RG35XX-SP", "w");
                                     } else if (element_focused == ui_lblRG35XX2024) {
-                                        write_text_to_file(MUOS_DEVICE_FILE, "RG35XX-2024", "w");
+                                        write_text_to_file(device_file, "RG35XX-2024", "w");
                                     }
 
-                                    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+                                    static char config_file[MAX_BUFFER_SIZE];
+                                    snprintf(config_file, sizeof(config_file),
+                                             "/%s/config/config.ini", INTERNAL_PATH);
+
+                                    mini_t * muos_config = mini_try_load(config_file);
                                     mini_set_int(muos_config, "boot", "firmware_done", 0);
                                     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
                                     mini_free(muos_config);
@@ -489,7 +496,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

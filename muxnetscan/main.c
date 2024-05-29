@@ -76,7 +76,11 @@ void show_help() {
 }
 
 void save_ssid() {
-    mini_t * muos_config = mini_try_load(MUOS_CONFIG_FILE);
+    static char config_file[MAX_BUFFER_SIZE];
+    snprintf(config_file, sizeof(config_file),
+             "/%s/config/config.ini", INTERNAL_PATH);
+
+    mini_t * muos_config = mini_try_load(config_file);
 
     mini_set_string(muos_config, "network", "ssid",
                     lv_label_get_text(lv_group_get_focused(ui_group)));
@@ -644,7 +648,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

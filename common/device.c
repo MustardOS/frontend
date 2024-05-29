@@ -4,9 +4,12 @@
 #include "mini/mini.h"
 
 void load_device(struct mux_device *device) {
+    static char device_file[MAX_BUFFER_SIZE];
+    snprintf(device_file, sizeof(device_file), "/%s/config/device.txt", INTERNAL_PATH);
+
     static char device_config[MAX_BUFFER_SIZE];
-    snprintf(device_config, sizeof(device_config), "/opt/muos/device/%s/config.ini",
-             str_tolower(read_text_from_file(MUOS_DEVICE_FILE)));
+    snprintf(device_config, sizeof(device_config), "/%s/device/%s/config.ini",
+             INTERNAL_PATH, str_tolower(read_text_from_file(device_file)));
 
     mini_t * muos_device = mini_try_load(device_config);
 

@@ -3,6 +3,7 @@
 #include "options.h"
 
 extern struct mux_passcode passcode;
+extern struct mux_device device;
 
 struct mux_passcode {
     struct {
@@ -18,4 +19,4 @@ struct mux_passcode {
     } MESSAGE;
 };
 
-void load_passcode(struct mux_passcode *passcode);
+void load_passcode(struct mux_passcode *passcode, struct mux_device *device);

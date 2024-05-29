@@ -76,8 +76,12 @@ void show_help() {
 }
 
 void create_backup_items() {
+    char backup_path[MAX_BUFFER_SIZE];
+    snprintf(backup_path, sizeof(backup_path),
+             "/%s/MUOS/backup", device.STORAGE.ROM.MOUNT);
+
     const char *backup_directories[] = {
-            MUOS_BACKUP_SCRIPT_DIR
+            backup_path
     };
     char backup_dir[MAX_BUFFER_SIZE];
 
@@ -340,9 +344,13 @@ void *joystick_task() {
                                     if (ui_count > 0) {
                                         play_sound("confirm", nav_sound);
 
+                                        char backup_path[MAX_BUFFER_SIZE];
+                                        snprintf(backup_path, sizeof(backup_path),
+                                                 "/%s/MUOS/backup", device.STORAGE.ROM.MOUNT);
+
                                         static char command[MAX_BUFFER_SIZE];
                                         snprintf(command, sizeof(command), "\"%s/%s.sh\"",
-                                                 MUOS_BACKUP_SCRIPT_DIR, lv_label_get_text(element_focused));
+                                                 backup_path, lv_label_get_text(element_focused));
                                         system(command);
 
                                         char c_index[MAX_BUFFER_SIZE];
@@ -679,7 +687,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

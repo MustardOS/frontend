@@ -2,13 +2,14 @@
 #include "common.h"
 #include "options.h"
 #include "theme.h"
+#include "device.h"
 #include "mini/mini.h"
 
-void load_theme(struct theme_config *theme, char *mux_name) {
+void load_theme(struct theme_config *theme, struct mux_device *device, char *mux_name) {
     char scheme[MAX_BUFFER_SIZE];
-    snprintf(scheme, sizeof(scheme), "%s/%s.txt", MUOS_SCHEME_DIR, mux_name);
+    snprintf(scheme, sizeof(scheme), "/%s/MUOS/theme/active/scheme/%s.txt", device->STORAGE.ROM.MOUNT, mux_name);
     if (!file_exist(scheme)) {
-        snprintf(scheme, sizeof(scheme), "%s/default.txt", MUOS_SCHEME_DIR);
+        snprintf(scheme, sizeof(scheme), "/%s/MUOS/theme/active/scheme/default.txt", device->STORAGE.ROM.MOUNT);
     }
 
     mini_t * muos_theme = mini_try_load(scheme);

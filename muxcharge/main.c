@@ -51,6 +51,8 @@ char capacity_info[MAX_BUFFER_SIZE];
 char voltage_info[MAX_BUFFER_SIZE];
 char health_info[MAX_BUFFER_SIZE];
 
+lv_timer_t *battery_timer;
+
 void check_for_cable() {
     if (file_exist(device.BATTERY.CHARGER)) {
         if (atoi(read_line_from_file(device.BATTERY.CHARGER, 1)) == 0) {
@@ -99,6 +101,13 @@ void *joystick_task() {
                         if (ev.value == 1) {
                             if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT) {
                                 if (blank < 5) {
+                                    lv_timer_pause(battery_timer);
+
+                                    lv_label_set_text(ui_lblCapacity, "");
+                                    lv_label_set_text(ui_lblVoltage, "");
+                                    lv_label_set_text(ui_lblHealth, "");
+                                    lv_label_set_text(ui_lblBoot, "Booting System - Please Wait...");
+
                                     safe_quit = 1;
                                 }
 
@@ -172,7 +181,7 @@ int main(int argc, char *argv[]) {
     ui_init();
     set_brightness(100);
 
-    load_theme(&theme, basename(argv[0]));
+    load_theme(&theme, &device, basename(argv[0]));
     apply_theme();
 
     lv_obj_set_user_data(ui_scrCharge, "muxcharge");
@@ -214,7 +223,7 @@ int main(int argc, char *argv[]) {
 
     lv_indev_drv_register(&indev_drv);
 
-    lv_timer_t *battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
+    battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
     lv_timer_ready(battery_timer);
 
     pthread_t joystick_thread;
