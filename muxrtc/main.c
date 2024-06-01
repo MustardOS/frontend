@@ -818,26 +818,32 @@ void glyph_task() {
 void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
-            static char old_wall[MAX_BUFFER_SIZE];
-            static char new_wall[MAX_BUFFER_SIZE];
+            if (config.BOOT.FACTORY_RESET) {
+                char init_wall[MAX_BUFFER_SIZE];
+                snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/default.png", INTERNAL_PATH);
+                lv_img_set_src(ui_imgWall, init_wall);
+            } else {
+                static char old_wall[MAX_BUFFER_SIZE];
+                static char new_wall[MAX_BUFFER_SIZE];
 
-            snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
-            snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                    ui_scrRTC, ui_group, theme.MISC.ANIMATED_BACKGROUND));
+                snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
+                snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
+                        ui_scrRTC, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
-                strcpy(current_wall, new_wall);
-                if (strlen(new_wall) > 3) {
-                    printf("LOADING WALLPAPER: %s\n", new_wall);
-                    if (theme.MISC.ANIMATED_BACKGROUND) {
-                        lv_obj_t * img = lv_gif_create(ui_pnlWall);
-                        lv_gif_set_src(img, new_wall);
+                if (strcmp(new_wall, old_wall) != 0) {
+                    strcpy(current_wall, new_wall);
+                    if (strlen(new_wall) > 3) {
+                        printf("LOADING WALLPAPER: %s\n", new_wall);
+                        if (theme.MISC.ANIMATED_BACKGROUND) {
+                            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+                            lv_gif_set_src(img, new_wall);
+                        } else {
+                            lv_img_set_src(ui_imgWall, new_wall);
+                        }
+                        lv_obj_invalidate(ui_pnlWall);
                     } else {
-                        lv_img_set_src(ui_imgWall, new_wall);
+                        lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
                     }
-                    lv_obj_invalidate(ui_pnlWall);
-                } else {
-                    lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
                 }
             }
 
@@ -924,7 +930,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, &device, basename(argv[0]));
+    load_theme(&theme, &config, &device, basename(argv[0]));
     apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {

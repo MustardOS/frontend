@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
     ui_init();
     set_brightness(100);
 
-    load_theme(&theme, &device, basename(argv[0]));
+    load_theme(&theme, &config, &device, basename(argv[0]));
     apply_theme();
 
     lv_obj_set_user_data(ui_scrCharge, "muxcharge");

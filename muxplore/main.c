@@ -1918,7 +1918,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, &device, mux_prog);
+    load_theme(&theme, &config, &device, mux_prog);
     load_glyph(&glyph, &device, mux_prog);
 
     apply_theme();

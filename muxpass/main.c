@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, &device, basename(argv[0]));
+    load_theme(&theme, &config, &device, basename(argv[0]));
     apply_theme();
 
     current_wall = load_wallpaper(ui_scrPass, NULL, theme.MISC.ANIMATED_BACKGROUND);

@@ -33,6 +33,8 @@ char *osd_message;
 struct mux_config config;
 struct mux_device device;
 
+char *current_wall = "";
+
 // Place as many NULL as there are options!
 lv_obj_t *labels[] = {};
 unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
@@ -90,12 +92,19 @@ int main(int argc, char *argv[]) {
 
     ui_init();
 
-    load_theme(&theme, &device, basename(argv[0]));
+    load_theme(&theme, &config, &device, basename(argv[0]));
     apply_theme();
 
     lv_obj_set_user_data(ui_scrStart, "muxstart");
 
-    char *current_wall = load_wallpaper(ui_scrStart, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    if (config.BOOT.FACTORY_RESET) {
+        char init_wall[MAX_BUFFER_SIZE];
+        snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/muxstart.png", INTERNAL_PATH);
+        current_wall = strdup(init_wall);
+    } else {
+        current_wall = load_wallpaper(ui_scrStart, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    }
+
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
