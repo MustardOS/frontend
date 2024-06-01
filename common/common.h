@@ -166,8 +166,6 @@ void increase_option_value(lv_obj_t *element, int *current, int total);
 
 void decrease_option_value(lv_obj_t *element, int *current, int total);
 
-void run_shell_script(const char *shell_script);
-
 void load_system(const char *value);
 
 void load_assign(const char *dir, const char *sys);

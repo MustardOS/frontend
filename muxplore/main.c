@@ -168,7 +168,7 @@ char *load_content_description() {
                      device.STORAGE.ROM.MOUNT, content_label);
             snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/%s/text/%s.txt",
                      device.STORAGE.ROM.MOUNT, read_line_from_file(f_core_file, 5),
-            strip_ext(read_line_from_file(f_core_file, 6)));
+                     strip_ext(read_line_from_file(f_core_file, 6)));
             break;
         case HISTORY:
             char h_core_file[MAX_BUFFER_SIZE];
@@ -176,7 +176,7 @@ char *load_content_description() {
                      device.STORAGE.ROM.MOUNT, content_label);
             snprintf(content_desc, sizeof(content_desc), "/%s/MUOS/info/catalogue/%s/text/%s.txt",
                      device.STORAGE.ROM.MOUNT, read_line_from_file(h_core_file, 5),
-            strip_ext(read_line_from_file(h_core_file, 6)));
+                     strip_ext(read_line_from_file(h_core_file, 6)));
             break;
         default:
             content_file_index = atoi(get_string_at_index(&named_index, current_item_index));
@@ -335,10 +335,10 @@ void image_refresh(char *image_type) {
                 if (strcasecmp(file_name, DUMMY_DIR) == 0) {
                     snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Folder/%s/%s.png",
                              device.STORAGE.ROM.MOUNT, image_type,
-                            lv_label_get_text(lv_group_get_focused(ui_group)));
+                             lv_label_get_text(lv_group_get_focused(ui_group)));
                     snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Folder/%s/%s.png",
                              device.STORAGE.ROM.MOUNT, image_type,
-                            lv_label_get_text(lv_group_get_focused(ui_group)));
+                             lv_label_get_text(lv_group_get_focused(ui_group)));
                 } else {
                     snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/%s/%s/%s.png",
                              device.STORAGE.ROM.MOUNT, core_artwork, image_type, file_name);
@@ -996,15 +996,15 @@ void cache_message(char *n_dir) {
     switch (module) {
         case MMC:
             snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/mmc/%s.ini", device.STORAGE.ROM.MOUNT,
-            get_last_subdir(n_dir, '/', 4));
+                     get_last_subdir(n_dir, '/', 4));
             break;
         case SDCARD:
             snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/sdcard/%s.ini", device.STORAGE.ROM.MOUNT,
-            get_last_subdir(n_dir, '/', 4));
+                     get_last_subdir(n_dir, '/', 4));
             break;
         case USB:
             snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/usb/%s.ini", device.STORAGE.ROM.MOUNT,
-            get_last_subdir(n_dir, '/', 4));
+                     get_last_subdir(n_dir, '/', 4));
             break;
         case FAVOURITE:
             snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/favourite.ini", device.STORAGE.ROM.MOUNT);
@@ -1159,7 +1159,7 @@ void *joystick_task() {
                                                             snprintf(launch_script, sizeof(launch_script),
                                                                      "/%s/script/mux/launch.sh", INTERNAL_PATH);
 
-                                                            run_shell_script(launch_script);
+                                                            system(launch_script);
                                                         }
                                                         break;
                                                     }
@@ -1244,7 +1244,8 @@ void *joystick_task() {
                                         case SDCARD:
                                             play_sound("confirm", nav_sound);
 
-                                            snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/cache/sdcard/%s.ini",
+                                            snprintf(cache_file, sizeof(cache_file),
+                                                     "/%s/MUOS/info/cache/sdcard/%s.ini",
                                                      device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
 
                                             write_text_to_file("/tmp/explore_card", "sdcard", "w");
@@ -1262,7 +1263,7 @@ void *joystick_task() {
 
                                             snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/favourite/%s.cfg",
                                                      device.STORAGE.ROM.MOUNT,
-                                            lv_label_get_text(lv_group_get_focused(ui_group)));
+                                                     lv_label_get_text(lv_group_get_focused(ui_group)));
 
                                             remove(cache_file);
                                             write_text_to_file("/tmp/mux_reload", "1", "w");
@@ -1274,7 +1275,7 @@ void *joystick_task() {
 
                                             snprintf(cache_file, sizeof(cache_file), "/%s/MUOS/info/history/%s.cfg",
                                                      device.STORAGE.ROM.MOUNT,
-                                            lv_label_get_text(lv_group_get_focused(ui_group)));
+                                                     lv_label_get_text(lv_group_get_focused(ui_group)));
 
                                             remove(cache_file);
                                             write_text_to_file("/tmp/mux_reload", "1", "w");

@@ -197,14 +197,14 @@ void *joystick_task() {
                                     } else if (element_focused == ui_lblReboot) {
                                         play_sound("reboot", nav_sound);
                                         write_text_to_file(address_file, "", "w");
-                                        run_shell_script("/opt/muos/script/system/volume.sh save");
+                                        system("/opt/muos/script/system/volume.sh save");
                                         sync();
                                         sleep(1);
                                         reboot(RB_AUTOBOOT);
                                     } else if (element_focused == ui_lblShutdown) {
                                         play_sound("shutdown", nav_sound);
                                         write_text_to_file(address_file, "", "w");
-                                        run_shell_script("/opt/muos/script/system/volume.sh save");
+                                        system("/opt/muos/script/system/volume.sh save");
                                         sync();
                                         sleep(1);
                                         reboot(RB_POWER_OFF);
@@ -234,8 +234,8 @@ void *joystick_task() {
                                 play_sound("navigate", nav_sound);
                                 nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                       ev.value <= (device.INPUT.AXIS_MAX)) ||
-                                      ev.value == 1) {
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                                       ev.value == 1) {
                                 nav_next(ui_group, 1);
                                 nav_next(ui_icon_group, 1);
                                 play_sound("navigate", nav_sound);

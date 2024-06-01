@@ -513,8 +513,8 @@ void *joystick_task() {
                                             write_text_to_file("/tmp/net_pass",
                                                                lv_label_get_text(ui_lblPasswordValue), "w");
 
-                                            run_shell_script("/opt/muos/script/web/password.sh");
-                                            run_shell_script("/opt/muos/script/system/network.sh");
+                                            system("/opt/muos/script/web/password.sh");
+                                            system("/opt/muos/script/system/network.sh");
 
                                             get_current_ip();
                                             input_disable = 0;
@@ -572,7 +572,7 @@ void *joystick_task() {
                                         mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
                                         mini_free(muos_config);
 
-                                        run_shell_script("/opt/muos/script/system/network.sh");
+                                        system("/opt/muos/script/system/network.sh");
                                     }
 
                                     osd_message = "Changes Saved";

@@ -98,7 +98,7 @@ void set_theme_value(const char *theme) {
     snprintf(theme_script, sizeof(theme_script),
              "/%s/script/mux/theme.sh", INTERNAL_PATH);
 
-    run_shell_script(theme_script);
+    system(theme_script);
 }
 
 void image_refresh() {

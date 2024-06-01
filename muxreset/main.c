@@ -193,7 +193,8 @@ void *joystick_task() {
                                         play_sound("confirm", nav_sound);
 
                                         char history[MAX_BUFFER_SIZE];
-                                        snprintf(history, sizeof(history), "/%s/MUOS/info/history", device.STORAGE.ROM.MOUNT);
+                                        snprintf(history, sizeof(history), "/%s/MUOS/info/history",
+                                                 device.STORAGE.ROM.MOUNT);
                                         delete_files_of_type(history, "cfg", NULL);
 
                                         lv_label_set_text(ui_lblMessage, "History Cleared");
@@ -202,7 +203,8 @@ void *joystick_task() {
                                         play_sound("confirm", nav_sound);
 
                                         char activity[MAX_BUFFER_SIZE];
-                                        snprintf(activity, sizeof(activity), "/%s/MUOS/info/activity", device.STORAGE.ROM.MOUNT);
+                                        snprintf(activity, sizeof(activity), "/%s/MUOS/info/activity",
+                                                 device.STORAGE.ROM.MOUNT);
                                         delete_files_of_type(activity, "act", NULL);
 
                                         lv_label_set_text(ui_lblMessage, "Activity Cleared");
@@ -243,7 +245,7 @@ void *joystick_task() {
                                                  "/%s/device/%s/script/control.sh",
                                                  INTERNAL_PATH,
                                                  str_tolower(read_line_from_file(device_file, 1)));
-                                        run_shell_script(run_device_init);
+                                        system(run_device_init);
 
                                         lv_label_set_text(ui_lblMessage, "RetroArch Configuration Restored");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
@@ -268,7 +270,7 @@ void *joystick_task() {
                                         mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
                                         mini_free(muos_config);
 
-                                        run_shell_script("/opt/muos/script/system/network.sh");
+                                        system("/opt/muos/script/system/network.sh");
 
                                         lv_label_set_text(ui_lblMessage, "Network Configuration Restored");
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);

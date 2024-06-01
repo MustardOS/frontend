@@ -226,7 +226,7 @@ void save_tweak_options() {
     snprintf(tweak_script, sizeof(tweak_script),
              "/%s/script/mux/tweak.sh", INTERNAL_PATH);
 
-    run_shell_script(tweak_script);
+    system(tweak_script);
 }
 
 void init_navigation_groups() {

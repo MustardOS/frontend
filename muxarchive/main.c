@@ -434,7 +434,7 @@ void *joystick_task() {
                                         snprintf(command, sizeof(command), "%s \"%s\"",
                                                  extract_script,
                                                  lv_label_get_text(data_focused));
-                                        run_shell_script(command);
+                                        system(command);
 
                                         char c_index[MAX_BUFFER_SIZE];
                                         snprintf(c_index, sizeof(c_index), "%d", current_item_index);

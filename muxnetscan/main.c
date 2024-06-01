@@ -93,7 +93,7 @@ void create_network_items() {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
 
-    run_shell_script("/opt/muos/script/web/ssid.sh");
+    system("/opt/muos/script/web/ssid.sh");
 
     char *scan_file = "/tmp/net_scan";
     FILE * file = fopen(scan_file, "r");

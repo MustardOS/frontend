@@ -193,7 +193,7 @@ void save_web_options() {
     snprintf(service_script, sizeof(service_script),
              "/%s/script/web/service.sh", INTERNAL_PATH);
 
-    run_shell_script(service_script);
+    system(service_script);
 }
 
 void init_navigation_groups() {

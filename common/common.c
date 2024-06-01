@@ -546,7 +546,7 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
     const char *meta = mini_get_string(ini_config, section, key, get_random_hex());
 
     uint32_t
-    result = (uint32_t)
+            result = (uint32_t)
     strtoul(meta, NULL, 16);
     //printf("HEX\t%s: %s (%d)\n", key, meta, result);
 
@@ -949,10 +949,6 @@ void decrease_option_value(lv_obj_t *element, int *current, int total) {
     }
 }
 
-void run_shell_script(const char *shell_script) {
-    if (shell_script) system(shell_script);
-}
-
 void load_system(const char *value) {
     FILE * file = fopen(MUOS_SYS_LOAD, "w");
     if (file == NULL) {
@@ -1111,8 +1107,8 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
             const char *element = lv_obj_get_user_data(element_focused);
 
             if (snprintf(wall_image_path, sizeof(wall_image_path), "/%s/MUOS/theme/active/image/wall/%s/%s.%s",
-                         device.STORAGE.ROM.MOUNT, program, element, wall_extension) >= 0 &&
-                                                                      file_exist(wall_image_path)) {
+                         device.STORAGE.ROM.MOUNT, program, element,
+                         wall_extension) >= 0 && file_exist(wall_image_path)) {
                 snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/%s/%s.%s",
                          device.STORAGE.ROM.MOUNT, program, element, wall_extension);
                 return wall_image_embed;
@@ -1121,16 +1117,14 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
     }
 
     if (snprintf(wall_image_path, sizeof(wall_image_path), "/%s/MUOS/theme/active/image/wall/%s.%s",
-                 device.STORAGE.ROM.MOUNT, program, wall_extension) >= 0 &&
-                                                     file_exist(wall_image_path)) {
+                 device.STORAGE.ROM.MOUNT, program, wall_extension) >= 0 && file_exist(wall_image_path)) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/%s.%s",
                  device.STORAGE.ROM.MOUNT, program, wall_extension);
         return wall_image_embed;
     }
 
     if (snprintf(wall_image_path, sizeof(wall_image_path), "/%s/MUOS/theme/active/image/wall/default.%s",
-                 device.STORAGE.ROM.MOUNT, wall_extension) >= 0 &&
-                                            file_exist(wall_image_path)) {
+                 device.STORAGE.ROM.MOUNT, wall_extension) >= 0 && file_exist(wall_image_path)) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/default.%s",
                  device.STORAGE.ROM.MOUNT, wall_extension);
         return wall_image_embed;
@@ -1150,12 +1144,12 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
         const char *element = lv_obj_get_user_data(element_focused);
 
         if (snprintf(static_image_path, sizeof(static_image_path), "/%s/MUOS/theme/active/image/static/%s.png",
-                     device.STORAGE.ROM.MOUNT, program) >= 0 &&
-                                         file_exist(static_image_path)) {
+                     device.STORAGE.ROM.MOUNT, program) >= 0 && file_exist(static_image_path)) {
             snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/static/%s.png",
                      device.STORAGE.ROM.MOUNT, program);
             return static_image_embed;
-        } else if (snprintf(static_image_path, sizeof(static_image_path), "/%s/MUOS/theme/active/image/static/%s/%s.png",
+        } else if (snprintf(static_image_path, sizeof(static_image_path),
+                            "/%s/MUOS/theme/active/image/static/%s/%s.png",
                             device.STORAGE.ROM.MOUNT, program, element) >= 0 && file_exist(static_image_path)) {
             snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/static/%s/%s.png",
                      device.STORAGE.ROM.MOUNT, program, element);
@@ -1172,7 +1166,7 @@ char *load_overlay_image() {
 
     if (snprintf(static_image_path, sizeof(static_image_path), "/%s/MUOS/theme/active/image/overlay.png",
                  device.STORAGE.ROM.MOUNT) >= 0 &&
-                            file_exist(static_image_path)) {
+        file_exist(static_image_path)) {
         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/overlay.png",
                  device.STORAGE.ROM.MOUNT);
         return static_image_embed;

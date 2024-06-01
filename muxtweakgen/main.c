@@ -442,7 +442,7 @@ void save_tweak_options() {
     snprintf(tweak_script, sizeof(tweak_script),
              "/%s/script/mux/tweak.sh", INTERNAL_PATH);
 
-    run_shell_script(tweak_script);
+    system(tweak_script);
 }
 
 void init_navigation_groups() {
@@ -592,9 +592,13 @@ void *joystick_task() {
                                                               &shutdown_current,
                                                               shutdown_total);
                                     } else if (element_focused == ui_lblInterface) {
+                                        save_tweak_options();
+
                                         load_mux("visual");
                                         safe_quit = 1;
                                     } else if (element_focused == ui_lblAdvanced) {
+                                        save_tweak_options();
+
                                         load_mux("tweakadv");
                                         safe_quit = 1;
                                     }
