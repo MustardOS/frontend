@@ -246,17 +246,17 @@ void image_refresh(char *image_type) {
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
                 snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Root/%s/sd1.png",
                          device.STORAGE.ROM.MOUNT, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Root/%s/sd1.png",
+                snprintf(image_path, sizeof(image_path), "M:/%s/MUOS/info/catalogue/Root/%s/sd1.png",
                          device.STORAGE.ROM.MOUNT, image_type);
             } else if (strcasecmp(content_label, "SD2 (sdcard)") == 0) {
                 snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Root/%s/sd2.png",
                          device.STORAGE.ROM.MOUNT, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Root/%s/sd2.png",
+                snprintf(image_path, sizeof(image_path), "M:/%s/MUOS/info/catalogue/Root/%s/sd2.png",
                          device.STORAGE.ROM.MOUNT, image_type);
             } else if (strcasecmp(content_label, "USB (external)") == 0) {
                 snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Root/%s/usb.png",
                          device.STORAGE.ROM.MOUNT, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Root/%s/usb.png",
+                snprintf(image_path, sizeof(image_path), "M:/%s/MUOS/info/catalogue/Root/%s/usb.png",
                          device.STORAGE.ROM.MOUNT, image_type);
             }
             break;
@@ -275,7 +275,7 @@ void image_refresh(char *image_type) {
 
             snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/%s/%s/%s.png",
                      device.STORAGE.ROM.MOUNT, f_core_artwork, image_type, f_file_name);
-            snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/%s/%s/%s.png",
+            snprintf(image_path, sizeof(image_path), "M:/%s/MUOS/info/catalogue/%s/%s/%s.png",
                      device.STORAGE.ROM.MOUNT, f_core_artwork, image_type, f_file_name);
             break;
         case HISTORY:
@@ -293,7 +293,7 @@ void image_refresh(char *image_type) {
 
             snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/%s/%s/%s.png",
                      device.STORAGE.ROM.MOUNT, h_core_artwork, image_type, h_file_name);
-            snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/%s/%s/%s.png",
+            snprintf(image_path, sizeof(image_path), "M:/%s/MUOS/info/catalogue/%s/%s/%s.png",
                      device.STORAGE.ROM.MOUNT, h_core_artwork, image_type, h_file_name);
             break;
         default:
@@ -317,7 +317,7 @@ void image_refresh(char *image_type) {
             if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
                 snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Folder/%s/%s.png",
                          device.STORAGE.ROM.MOUNT, image_type, content_label);
-                snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Folder/%s/%s.png",
+                snprintf(image_path, sizeof(image_path), "M:/%s/MUOS/info/catalogue/Folder/%s/%s.png",
                          device.STORAGE.ROM.MOUNT, image_type, content_label);
             } else {
                 char *file_name = strip_ext(get_string_at_index(&content_items, content_file_index));
@@ -336,13 +336,13 @@ void image_refresh(char *image_type) {
                     snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/Folder/%s/%s.png",
                              device.STORAGE.ROM.MOUNT, image_type,
                              lv_label_get_text(lv_group_get_focused(ui_group)));
-                    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Folder/%s/%s.png",
+                    snprintf(image_path, sizeof(image_path), "M:/%s/MUOS/info/catalogue/Folder/%s/%s.png",
                              device.STORAGE.ROM.MOUNT, image_type,
                              lv_label_get_text(lv_group_get_focused(ui_group)));
                 } else {
                     snprintf(image, sizeof(image), "/%s/MUOS/info/catalogue/%s/%s/%s.png",
                              device.STORAGE.ROM.MOUNT, core_artwork, image_type, file_name);
-                    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/%s/%s/%s.png",
+                    snprintf(image_path, sizeof(image_path), "M:/%s/MUOS/info/catalogue/%s/%s/%s.png",
                              device.STORAGE.ROM.MOUNT, core_artwork, image_type, file_name);
                 }
             }

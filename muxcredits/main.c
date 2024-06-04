@@ -185,7 +185,7 @@ void image_refresh() {
     if (file_exist(supporter_image)) {
         char supporter_image_path[MAX_BUFFER_SIZE];
         snprintf(supporter_image_path, sizeof(supporter_image_path),
-                 "M:%s/%s.png",
+                 "M:/%s/%s.png",
                  "opt/muos/supporter", supporter_name);
         lv_img_set_src(ui_imgBox, supporter_image_path);
     } else {

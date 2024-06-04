@@ -381,7 +381,7 @@ extern uint32_t mux_tick(void);
 #define LV_USE_FONT_COMPRESSED 0
 
 /*Enable subpixel rendering*/
-#define LV_USE_FONT_SUBPX 0
+#define LV_USE_FONT_SUBPX 1
 #if LV_USE_FONT_SUBPX
 /*Set the pixel order of the display. Physical order of RGB channels. Doesn't matter with "normal" fonts.*/
     #define LV_FONT_SUBPX_BGR 0  /*0: RGB; 1:BGR order*/
@@ -580,7 +580,7 @@ extern uint32_t mux_tick(void);
 #define LV_USE_FS_STDIO 1
 #if LV_USE_FS_STDIO
 #define LV_FS_STDIO_LETTER 'M'     /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
-    #define LV_FS_STDIO_PATH "/"         /*Set the working directory. File/directory paths will be appended to it.*/
+    #define LV_FS_STDIO_PATH ""         /*Set the working directory. File/directory paths will be appended to it.*/
     #define LV_FS_STDIO_CACHE_SIZE 0   /*>0 to cache this number of bytes in lv_fs_read()*/
 #endif
 

@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/muxstart.png", INTERNAL_PATH);
+        snprintf(init_wall, sizeof(init_wall), "M:/%s/theme/image/wall/muxstart.png", INTERNAL_PATH);
         current_wall = strdup(init_wall);
     } else {
         current_wall = load_wallpaper(ui_scrStart, NULL, theme.MISC.ANIMATED_BACKGROUND);

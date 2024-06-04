@@ -1109,7 +1109,7 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
             if (snprintf(wall_image_path, sizeof(wall_image_path), "/%s/MUOS/theme/active/image/wall/%s/%s.%s",
                          device.STORAGE.ROM.MOUNT, program, element,
                          wall_extension) >= 0 && file_exist(wall_image_path)) {
-                snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/%s/%s.%s",
+                snprintf(wall_image_embed, sizeof(wall_image_embed), "M:/%s/MUOS/theme/active/image/wall/%s/%s.%s",
                          device.STORAGE.ROM.MOUNT, program, element, wall_extension);
                 return wall_image_embed;
             }
@@ -1118,14 +1118,14 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
 
     if (snprintf(wall_image_path, sizeof(wall_image_path), "/%s/MUOS/theme/active/image/wall/%s.%s",
                  device.STORAGE.ROM.MOUNT, program, wall_extension) >= 0 && file_exist(wall_image_path)) {
-        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/%s.%s",
+        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:/%s/MUOS/theme/active/image/wall/%s.%s",
                  device.STORAGE.ROM.MOUNT, program, wall_extension);
         return wall_image_embed;
     }
 
     if (snprintf(wall_image_path, sizeof(wall_image_path), "/%s/MUOS/theme/active/image/wall/default.%s",
                  device.STORAGE.ROM.MOUNT, wall_extension) >= 0 && file_exist(wall_image_path)) {
-        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/default.%s",
+        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:/%s/MUOS/theme/active/image/wall/default.%s",
                  device.STORAGE.ROM.MOUNT, wall_extension);
         return wall_image_embed;
     }
@@ -1145,13 +1145,13 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
 
         if (snprintf(static_image_path, sizeof(static_image_path), "/%s/MUOS/theme/active/image/static/%s.png",
                      device.STORAGE.ROM.MOUNT, program) >= 0 && file_exist(static_image_path)) {
-            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/static/%s.png",
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:/%s/MUOS/theme/active/image/static/%s.png",
                      device.STORAGE.ROM.MOUNT, program);
             return static_image_embed;
         } else if (snprintf(static_image_path, sizeof(static_image_path),
                             "/%s/MUOS/theme/active/image/static/%s/%s.png",
                             device.STORAGE.ROM.MOUNT, program, element) >= 0 && file_exist(static_image_path)) {
-            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/static/%s/%s.png",
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:/%s/MUOS/theme/active/image/static/%s/%s.png",
                      device.STORAGE.ROM.MOUNT, program, element);
             return static_image_embed;
         }
@@ -1167,7 +1167,7 @@ char *load_overlay_image() {
     if (snprintf(static_image_path, sizeof(static_image_path), "/%s/MUOS/theme/active/image/overlay.png",
                  device.STORAGE.ROM.MOUNT) >= 0 &&
         file_exist(static_image_path)) {
-        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/overlay.png",
+        snprintf(static_image_embed, sizeof(static_image_embed), "M:/%s/MUOS/theme/active/image/overlay.png",
                  device.STORAGE.ROM.MOUNT);
         return static_image_embed;
     }
@@ -1186,14 +1186,14 @@ void load_font_text(const char *program, lv_obj_t *screen) {
         if (file_exist(theme_font_text)) {
             char theme_font_text_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
-                     "M:%s/MUOS/theme/active/font/%s.bin", device.STORAGE.ROM.MOUNT, program);
+                     "M:/%s/MUOS/theme/active/font/%s.bin", device.STORAGE.ROM.MOUNT, program);
             lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             if (file_exist(theme_font_text_default)) {
                 char theme_font_text_default_fs[MAX_BUFFER_SIZE];
                 snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                         "M:%s/MUOS/theme/active/font/default.bin", device.STORAGE.ROM.MOUNT);
+                         "M:/%s/MUOS/theme/active/font/default.bin", device.STORAGE.ROM.MOUNT);
                 lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
             }
@@ -1214,14 +1214,14 @@ void load_font_glyph(const char *program, lv_obj_t *element) {
         if (file_exist(theme_font_glyph)) {
             char theme_font_glyph_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_glyph_fs, sizeof(theme_font_glyph_fs),
-                     "M:%s/MUOS/theme/active/font/glyph/%s.bin", device.STORAGE.ROM.MOUNT, program);
+                     "M:/%s/MUOS/theme/active/font/glyph/%s.bin", device.STORAGE.ROM.MOUNT, program);
             lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             if (file_exist(theme_font_glyph_default)) {
                 char theme_font_glyph_default_fs[MAX_BUFFER_SIZE];
                 snprintf(theme_font_glyph_default_fs, sizeof(theme_font_glyph_default_fs),
-                         "M:%s/MUOS/theme/active/font/glyph/default.bin", device.STORAGE.ROM.MOUNT);
+                         "M:/%s/MUOS/theme/active/font/glyph/default.bin", device.STORAGE.ROM.MOUNT);
                 lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
                 printf("\t\t\t\tLOADED DEFAULT GLYPH FONT (%s)\n", theme_font_glyph_default_fs);

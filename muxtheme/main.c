@@ -112,7 +112,7 @@ void image_refresh() {
     if (file_exist(theme_image)) {
         char theme_image_path[MAX_BUFFER_SIZE];
         snprintf(theme_image_path, sizeof(theme_image_path),
-                 "M:%s/MUOS/theme/preview/%s.png",
+                 "M:/%s/MUOS/theme/preview/%s.png",
                  device.STORAGE.ROM.MOUNT, theme_name);
         lv_img_set_src(ui_imgBox, theme_image_path);
     } else {
