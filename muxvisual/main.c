@@ -491,13 +491,19 @@ void init_elements() {
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_droNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_droNetwork, LV_OBJ_FLAG_FLOATING);
     }
 
     if (!device.DEVICE.HAS_BLUETOOTH) {
         lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();

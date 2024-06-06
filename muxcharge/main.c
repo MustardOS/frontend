@@ -108,6 +108,9 @@ void *joystick_task() {
                                     lv_label_set_text(ui_lblHealth, "");
                                     lv_label_set_text(ui_lblBoot, "Booting System - Please Wait...");
 
+                                    lv_task_handler();
+                                    usleep(device.SCREEN.WAIT);
+
                                     safe_quit = 1;
                                 }
 

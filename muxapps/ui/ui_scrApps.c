@@ -366,6 +366,36 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_style_border_color(ui_lblGmuMusicPlayer, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_lblGmuMusicPlayer, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_lblSimpleTerminal = lv_label_create(ui_pnlContent);
+    lv_obj_set_width(ui_lblSimpleTerminal, 640);
+    lv_obj_set_height(ui_lblSimpleTerminal, 28);
+    lv_obj_set_align(ui_lblSimpleTerminal, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblSimpleTerminal, "Simple Terminal");
+    lv_obj_set_style_text_color(ui_lblSimpleTerminal, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblSimpleTerminal, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblSimpleTerminal, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblSimpleTerminal, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblSimpleTerminal, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblSimpleTerminal, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblSimpleTerminal, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblSimpleTerminal, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui_lblSimpleTerminal, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblSimpleTerminal, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblSimpleTerminal, -3, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(ui_lblSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_lblSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblSimpleTerminal, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lblSimpleTerminal, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_color(ui_lblSimpleTerminal, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_opa(ui_lblSimpleTerminal, 25, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(ui_lblSimpleTerminal, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(ui_lblSimpleTerminal, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     ui_pnlGlyph = lv_obj_create(ui_scrApps);
     lv_obj_set_width(ui_pnlGlyph, 640);
     lv_obj_set_height(ui_pnlGlyph, 400);
@@ -482,6 +512,22 @@ void ui_scrApps_screen_init(void)
     lv_obj_set_style_pad_column(ui_icoGmuMusicPlayer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_icoGmuMusicPlayer, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoGmuMusicPlayer, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    ui_icoSimpleTerminal = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoSimpleTerminal, 640);
+    lv_obj_set_height(ui_icoSimpleTerminal, 28);
+    lv_obj_set_align(ui_icoSimpleTerminal, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_icoSimpleTerminal, "");
+    lv_obj_set_style_text_color(ui_icoSimpleTerminal, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_icoSimpleTerminal, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_icoSimpleTerminal, 11, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_icoSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_icoSimpleTerminal, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_icoSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(ui_icoSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_icoSimpleTerminal, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_icoSimpleTerminal, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_icoSimpleTerminal, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_pnlFooter = lv_obj_create(ui_scrApps);
     lv_obj_set_width(ui_pnlFooter, 640);

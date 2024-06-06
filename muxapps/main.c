@@ -74,6 +74,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXAPPS_DINGUX;
     } else if (element_focused == ui_lblGmuMusicPlayer) {
         message = MUXAPPS_GMU;
+    } else if (element_focused == ui_lblSimpleTerminal) {
+        message = MUXAPPS_TERMINAL;
     }
 
     if (strlen(message) <= 1) {
@@ -90,7 +92,8 @@ void init_navigation_groups() {
             ui_lblPortMaster,
             ui_lblRetroArch,
             ui_lblDinguxCommander,
-            ui_lblGmuMusicPlayer
+            ui_lblGmuMusicPlayer,
+            ui_lblSimpleTerminal
     };
 
     lv_obj_t *ui_objects_icon[] = {
@@ -99,7 +102,8 @@ void init_navigation_groups() {
             ui_icoPortMaster,
             ui_icoRetroArch,
             ui_icoDinguxCommander,
-            ui_icoGmuMusicPlayer
+            ui_icoGmuMusicPlayer,
+            ui_icoSimpleTerminal
     };
 
     ui_group = lv_group_create();
@@ -177,6 +181,8 @@ void *joystick_task() {
                                         load_mux("dingux");
                                     } else if (element_focused == ui_lblGmuMusicPlayer) {
                                         load_mux("gmu");
+                                    } else if (element_focused == ui_lblSimpleTerminal) {
+                                        load_mux("terminal");
                                     }
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
@@ -300,6 +306,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblRetroArch, "retroarch");
     lv_obj_set_user_data(ui_lblDinguxCommander, "dingux");
     lv_obj_set_user_data(ui_lblGmuMusicPlayer, "gmu");
+    lv_obj_set_user_data(ui_lblSimpleTerminal, "terminal");
 
     if (!device.DEVICE.HAS_PORTMASTER) {
         lv_obj_add_flag(ui_lblPortMaster, LV_OBJ_FLAG_HIDDEN);

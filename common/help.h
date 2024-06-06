@@ -17,6 +17,7 @@
 #define MUXAPPS_RETROARCH  ""
 #define MUXAPPS_DINGUX     ""
 #define MUXAPPS_GMU        ""
+#define MUXAPPS_TERMINAL   ""
 
 // muxarchive
 #define MUXARCHIVE_GENERIC ""
