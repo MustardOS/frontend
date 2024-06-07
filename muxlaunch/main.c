@@ -187,7 +187,7 @@ void *joystick_task() {
                                         load_mux("history");
                                     } else if (element_focused == ui_lblApps) {
                                         play_sound("confirm", nav_sound);
-                                        load_mux("apps");
+                                        load_mux("app");
                                     } else if (element_focused == ui_lblInfo) {
                                         play_sound("confirm", nav_sound);
                                         load_mux("info");

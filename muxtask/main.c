@@ -58,8 +58,6 @@ int progress_onscreen = -1;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_installed;
-lv_group_t *ui_group_data;
 
 int ui_count = 0;
 int current_item_index = 0;
@@ -68,7 +66,7 @@ int content_panel_y = 0;
 
 void show_help() {
     char *title = lv_label_get_text(ui_lblTitle);
-    char *message = MUXARCHIVE_GENERIC;
+    char *message = MUXTASK_GENERIC;
 
     if (strlen(message) <= 1) {
         message = NO_HELP_FOUND;
@@ -77,24 +75,23 @@ void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
 }
 
-void create_archive_items() {
-    const char *archive_directories[] = {
-            "/mnt/mmc/muos/update",
-            "/mnt/mmc/backup",
-            "/mnt/mmc/archive",
-            "/mnt/sdcard/backup",
-            "/mnt/sdcard/archive",
-            "/mnt/usb/backup",
-            "/mnt/usb/archive"};
-    char archive_dir[MAX_BUFFER_SIZE];
+void create_task_items() {
+    char task_path[MAX_BUFFER_SIZE];
+    snprintf(task_path, sizeof(task_path),
+             "/%s/MUOS/task", device.STORAGE.ROM.MOUNT);
+
+    const char *task_directories[] = {
+            task_path
+    };
+    char task_dir[MAX_BUFFER_SIZE];
 
     char **file_names = NULL;
     size_t file_count = 0;
 
-    for (size_t dir_index = 0; dir_index < sizeof(archive_directories) / sizeof(archive_directories[0]); ++dir_index) {
-        snprintf(archive_dir, sizeof(archive_dir), "%s/", archive_directories[dir_index]);
+    for (size_t dir_index = 0; dir_index < sizeof(task_directories) / sizeof(task_directories[0]); ++dir_index) {
+        snprintf(task_dir, sizeof(task_dir), "%s/", task_directories[dir_index]);
 
-        DIR *ad = opendir(archive_dir);
+        DIR *ad = opendir(task_dir);
         if (ad == NULL) {
             continue;
         }
@@ -103,11 +100,11 @@ void create_archive_items() {
         while ((tf = readdir(ad))) {
             if (tf->d_type == DT_REG) {
                 char *last_dot = strrchr(tf->d_name, '.');
-                if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
+                if (last_dot != NULL && strcasecmp(last_dot, ".sh") == 0) {
                     file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    static char full_archive_name[MAX_BUFFER_SIZE];
-                    snprintf(full_archive_name, sizeof(full_archive_name), "%s%s", archive_dir, tf->d_name);
-                    file_names[file_count] = strdup(full_archive_name);
+                    static char full_task_name[MAX_BUFFER_SIZE];
+                    snprintf(full_task_name, sizeof(full_task_name), "%s%s", task_dir, tf->d_name);
+                    file_names[file_count] = strdup(full_task_name);
                     file_count++;
                 }
             }
@@ -119,187 +116,117 @@ void create_archive_items() {
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
-    ui_group_installed = lv_group_create();
-    ui_group_data = lv_group_create();
 
     for (size_t i = 0; i < file_count; i++) {
         char *base_filename = file_names[i];
 
-        static char archive_name[MAX_BUFFER_SIZE];
-        snprintf(archive_name, sizeof(archive_name), "%s",
+        static char task_name[MAX_BUFFER_SIZE];
+        snprintf(task_name, sizeof(task_name), "%s",
                  str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
-        static char install_check[MAX_BUFFER_SIZE];
-        snprintf(install_check, sizeof(install_check), "/mnt/mmc/MUOS/update/installed/%s.done",
-                 archive_name);
-
-        char *is_installed;
-        if (file_exist(install_check)) {
-            is_installed = "INSTALLED";
-        } else {
-            is_installed = "";
-        }
-
-        char *prefix;
-        if (strstr(base_filename, "/mnt/mmc/muos/update") != NULL) {
-            prefix = "[MUX]";
-        } else if (strstr(base_filename, "/mnt/mmc/backup") != NULL) {
-            prefix = "[SD1-BK]";
-        } else if (strstr(base_filename, "/mnt/mmc/") != NULL) {
-            prefix = "[SD1]";
-        } else if (strstr(base_filename, "/mnt/sdcard/backup") != NULL) {
-            prefix = "[SD2-BK]";
-        } else if (strstr(base_filename, "/mnt/sdcard/") != NULL) {
-            prefix = "[SD2]";
-        } else if (strstr(base_filename, "/mnt/usb/backup") != NULL) {
-            prefix = "[USB-BK]";
-        } else if (strstr(base_filename, "/mnt/usb/") != NULL) {
-            prefix = "[USB]";
-        } else {
-            continue;
-        }
-
-        static char archive_store[MAX_BUFFER_SIZE];
-        snprintf(archive_store, sizeof(archive_store), "%s %s", prefix, strip_ext(archive_name));
+        static char task_store[MAX_BUFFER_SIZE];
+        snprintf(task_store, sizeof(task_store), "%s", strip_ext(task_name));
 
         ui_count++;
 
-        lv_obj_t * ui_pnlArchive = lv_obj_create(ui_pnlContent);
-        lv_obj_set_width(ui_pnlArchive, 640);
-        lv_obj_set_height(ui_pnlArchive, 28);
-        lv_obj_set_scrollbar_mode(ui_pnlArchive, LV_SCROLLBAR_MODE_OFF);
-        lv_obj_set_style_align(ui_pnlArchive, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_pnlArchive, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_width(ui_pnlArchive, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_left(ui_pnlArchive, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_pnlArchive, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_pnlArchive, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_pnlArchive, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_row(ui_pnlArchive, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_column(ui_pnlArchive, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_t * ui_pnlTask = lv_obj_create(ui_pnlContent);
+        lv_obj_set_width(ui_pnlTask, 640);
+        lv_obj_set_height(ui_pnlTask, 28);
+        lv_obj_set_scrollbar_mode(ui_pnlTask, LV_SCROLLBAR_MODE_OFF);
+        lv_obj_set_style_align(ui_pnlTask, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_opa(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_top(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_row(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_column(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_t * ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
-        lv_label_set_text(ui_lblArchiveItem, archive_store);
+        lv_obj_t * ui_lblTaskItem = lv_label_create(ui_pnlTask);
+        lv_label_set_text(ui_lblTaskItem, task_store);
 
-        lv_obj_set_width(ui_lblArchiveItem, 640);
-        lv_obj_set_height(ui_lblArchiveItem, 28);
+        lv_obj_set_width(ui_lblTaskItem, 640);
+        lv_obj_set_height(ui_lblTaskItem, 28);
 
-        lv_obj_set_style_border_width(ui_lblArchiveItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_lblArchiveItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblArchiveItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
+        lv_obj_set_style_border_width(ui_lblTaskItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_side(ui_lblTaskItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_grad_color(ui_lblTaskItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_main_stop(ui_lblArchiveItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_dir(ui_lblArchiveItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_main_stop(ui_lblTaskItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_grad_dir(ui_lblTaskItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_bg_color(ui_lblArchiveItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
+        lv_obj_set_style_bg_color(ui_lblTaskItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_lblArchiveItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
+        lv_obj_set_style_bg_opa(ui_lblTaskItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_main_stop(ui_lblArchiveItem, theme.LIST_DEFAULT.GRADIENT_START,
+        lv_obj_set_style_bg_main_stop(ui_lblTaskItem, theme.LIST_DEFAULT.GRADIENT_START,
                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_stop(ui_lblArchiveItem, theme.LIST_DEFAULT.GRADIENT_STOP,
+        lv_obj_set_style_bg_grad_stop(ui_lblTaskItem, theme.LIST_DEFAULT.GRADIENT_STOP,
                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_color(ui_lblArchiveItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
+        lv_obj_set_style_border_color(ui_lblTaskItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblArchiveItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
+        lv_obj_set_style_border_opa(ui_lblTaskItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblArchiveItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
+        lv_obj_set_style_text_color(ui_lblTaskItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblArchiveItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_opa(ui_lblTaskItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_bg_color(ui_lblArchiveItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
+        lv_obj_set_style_bg_color(ui_lblTaskItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
                                   LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_opa(ui_lblArchiveItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblArchiveItem, theme.LIST_FOCUS.GRADIENT_START,
+        lv_obj_set_style_bg_opa(ui_lblTaskItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_bg_main_stop(ui_lblTaskItem, theme.LIST_FOCUS.GRADIENT_START,
                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_grad_stop(ui_lblArchiveItem, theme.LIST_FOCUS.GRADIENT_STOP,
+        lv_obj_set_style_bg_grad_stop(ui_lblTaskItem, theme.LIST_FOCUS.GRADIENT_STOP,
                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_color(ui_lblArchiveItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
+        lv_obj_set_style_border_color(ui_lblTaskItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblArchiveItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
+        lv_obj_set_style_border_opa(ui_lblTaskItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblArchiveItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
+        lv_obj_set_style_text_color(ui_lblTaskItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblArchiveItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_text_opa(ui_lblTaskItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-        lv_obj_set_style_pad_left(ui_lblArchiveItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblArchiveItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblArchiveItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblArchiveItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(ui_lblTaskItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_lblTaskItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_top(ui_lblTaskItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_lblTaskItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_text_line_space(ui_lblArchiveItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_label_set_long_mode(ui_lblArchiveItem, LV_LABEL_LONG_WRAP);
+        lv_obj_set_style_text_line_space(ui_lblTaskItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_label_set_long_mode(ui_lblTaskItem, LV_LABEL_LONG_WRAP);
 
-        lv_obj_t * ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
+        lv_obj_t * ui_lblTaskItemGlyph = lv_label_create(ui_pnlTask);
+        lv_label_set_text(ui_lblTaskItemGlyph, "\uF56E");
 
-        lv_label_set_text(ui_lblArchiveItemInstalled, is_installed);
+        lv_obj_set_width(ui_lblTaskItemGlyph, 640);
+        lv_obj_set_height(ui_lblTaskItemGlyph, 28);
 
-        lv_obj_set_width(ui_lblArchiveItemInstalled, 640);
-        lv_obj_set_height(ui_lblArchiveItemInstalled, 28);
+        lv_obj_set_style_border_width(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_border_width(ui_lblArchiveItemInstalled, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_lblArchiveItemInstalled, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblArchiveItemInstalled, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblArchiveItemInstalled, lv_color_hex(theme.LIST_DEFAULT.TEXT),
+        lv_obj_set_style_bg_opa(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_opa(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_lblTaskItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblArchiveItemInstalled, theme.LIST_DEFAULT.TEXT_ALPHA,
+        lv_obj_set_style_text_opa(ui_lblTaskItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_text_color(ui_lblArchiveItemInstalled, lv_color_hex(theme.LIST_FOCUS.TEXT),
+        lv_obj_set_style_bg_opa(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_border_opa(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_text_color(ui_lblTaskItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblArchiveItemInstalled, theme.LIST_FOCUS.TEXT_ALPHA,
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
+        lv_obj_set_style_text_opa(ui_lblTaskItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-        lv_obj_set_style_pad_left(ui_lblArchiveItemInstalled, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblArchiveItemInstalled, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblArchiveItemInstalled, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblArchiveItemInstalled, theme.FONT.LIST_PAD_BOTTOM,
+        lv_obj_set_style_pad_left(ui_lblTaskItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_top(ui_lblTaskItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_lblTaskItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_text_line_space(ui_lblArchiveItemInstalled, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_align(ui_lblArchiveItemInstalled, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_label_set_long_mode(ui_lblArchiveItemInstalled, LV_LABEL_LONG_WRAP);
+        lv_obj_set_style_text_align(ui_lblTaskItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_font(ui_lblTaskItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_t * ui_lblArchiveItemData = lv_label_create(ui_pnlArchive);
-        lv_label_set_text(ui_lblArchiveItemData, base_filename);
-        lv_obj_set_y(ui_lblArchiveItemData, device.SCREEN.HEIGHT + 1);
-        lv_obj_set_width(ui_lblArchiveItemData, 1);
-        lv_obj_set_height(ui_lblArchiveItemData, 1);
-
-        lv_obj_t * ui_lblArchiveItemGlyph = lv_label_create(ui_pnlArchive);
-        lv_label_set_text(ui_lblArchiveItemGlyph, "\uF1C6");
-
-        lv_obj_set_width(ui_lblArchiveItemGlyph, 640);
-        lv_obj_set_height(ui_lblArchiveItemGlyph, 28);
-
-        lv_obj_set_style_border_width(ui_lblArchiveItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_opa(ui_lblArchiveItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblArchiveItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblArchiveItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblArchiveItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_opa(ui_lblArchiveItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblArchiveItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblArchiveItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblArchiveItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-        lv_obj_set_style_pad_left(ui_lblArchiveItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblArchiveItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblArchiveItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblArchiveItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_text_align(ui_lblArchiveItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_font(ui_lblArchiveItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_group_add_obj(ui_group, ui_lblArchiveItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblArchiveItemGlyph);
-        lv_group_add_obj(ui_group_installed, ui_lblArchiveItemInstalled);
-        lv_group_add_obj(ui_group_data, ui_lblArchiveItemData);
+        lv_group_add_obj(ui_group, ui_lblTaskItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);
 
         free(base_filename);
     }
@@ -313,8 +240,6 @@ void list_nav_prev(int steps) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
-            nav_prev(ui_group_installed, 1);
-            nav_prev(ui_group_data, 1);
             if (current_item_index > 5 && current_item_index < (ui_count - 7)) {
                 content_panel_y -= 30;
                 lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
@@ -324,8 +249,6 @@ void list_nav_prev(int steps) {
                 current_item_index--;
                 nav_prev(ui_group, 1);
                 nav_prev(ui_group_glyph, 1);
-                nav_prev(ui_group_installed, 1);
-                nav_prev(ui_group_data, 1);
             }
         }
     }
@@ -341,8 +264,6 @@ void list_nav_next(int steps) {
                 current_item_index++;
                 nav_next(ui_group, 1);
                 nav_next(ui_group_glyph, 1);
-                nav_next(ui_group_installed, 1);
-                nav_next(ui_group_data, 1);
                 if (current_item_index >= 7 && current_item_index < (ui_count - 6)) {
                     content_panel_y += 30;
                     lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
@@ -353,8 +274,6 @@ void list_nav_next(int steps) {
                 current_item_index++;
                 nav_next(ui_group, 1);
                 nav_next(ui_group_glyph, 1);
-                nav_next(ui_group_installed, 1);
-                nav_next(ui_group_data, 1);
             }
         }
     }
@@ -407,7 +326,7 @@ void *joystick_task() {
                     continue;
                 }
 
-                struct _lv_obj_t *data_focused = lv_group_get_focused(ui_group_data);
+                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
                 switch (ev.type) {
                     case EV_KEY:
                         if (ev.value == 1) {
@@ -417,7 +336,6 @@ void *joystick_task() {
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-
                                 }
                             } else {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
@@ -426,21 +344,20 @@ void *joystick_task() {
                                     if (ui_count > 0) {
                                         play_sound("confirm", nav_sound);
 
-                                        static char extract_script[MAX_BUFFER_SIZE];
-                                        snprintf(extract_script, sizeof(extract_script),
-                                                 "/%s/script/mux/extract.sh", INTERNAL_PATH);
+                                        char task_path[MAX_BUFFER_SIZE];
+                                        snprintf(task_path, sizeof(task_path),
+                                                 "/%s/MUOS/task", device.STORAGE.ROM.MOUNT);
 
                                         static char command[MAX_BUFFER_SIZE];
-                                        snprintf(command, sizeof(command), "%s \"%s\"",
-                                                 extract_script,
-                                                 lv_label_get_text(data_focused));
+                                        snprintf(command, sizeof(command), "\"%s/%s.sh\"",
+                                                 task_path, lv_label_get_text(element_focused));
                                         system(command);
 
                                         char c_index[MAX_BUFFER_SIZE];
                                         snprintf(c_index, sizeof(c_index), "%d", current_item_index);
                                         write_text_to_file(MUOS_IDX_LOAD, c_index, "w");
 
-                                        load_mux("archive");
+                                        load_mux("task");
                                         safe_quit = 1;
                                     }
                                 } else if (ev.code == NAV_B) {
@@ -482,8 +399,6 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    nav_prev(ui_group_installed, 1);
-                                    nav_prev(ui_group_data, 1);
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
                                     JOYUP_pressed = (ev.value != 0);
@@ -499,8 +414,6 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    nav_next(ui_group_installed, 1);
-                                    nav_next(ui_group_data, 1);
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count) {
                                     JOYDOWN_pressed = (ev.value != 0);
@@ -620,12 +533,12 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_scrArchive);
+        lv_obj_t * overlay_img = lv_img_create(ui_scrTask);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
 
-    if (TEST_IMAGE) display_testing_message(ui_scrArchive);
+    if (TEST_IMAGE) display_testing_message(ui_scrTask);
 }
 
 void glyph_task() {
@@ -675,7 +588,7 @@ void ui_refresh_task() {
 
             snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                    ui_scrArchive, ui_group, theme.MISC.ANIMATED_BACKGROUND));
+                    ui_scrTask, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
             if (strcmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
@@ -695,7 +608,7 @@ void ui_refresh_task() {
 
             static char static_image[MAX_BUFFER_SIZE];
             snprintf(static_image, sizeof(static_image), "%s",
-                     load_static_image(ui_scrArchive, ui_group));
+                     load_static_image(ui_scrTask, ui_group));
 
             if (strlen(static_image) > 0) {
                 printf("LOADING STATIC IMAGE: %s\n", static_image);
@@ -769,7 +682,7 @@ int main(int argc, char *argv[]) {
     ui_init();
     init_elements();
 
-    lv_obj_set_user_data(ui_scrArchive, basename(argv[0]));
+    lv_obj_set_user_data(ui_scrTask, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
@@ -806,7 +719,7 @@ int main(int argc, char *argv[]) {
             break;
     }
 
-    current_wall = load_wallpaper(ui_scrArchive, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    current_wall = load_wallpaper(ui_scrTask, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
@@ -818,13 +731,13 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font_text(basename(argv[0]), ui_scrArchive);
+    load_font_text(basename(argv[0]), ui_scrTask);
 
     if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
 
-    create_archive_items();
+    create_task_items();
 
     int sys_index = 0;
     if (file_exist(MUOS_IDX_LOAD)) {
@@ -873,7 +786,7 @@ int main(int argc, char *argv[]) {
             list_nav_next(sys_index);
         }
     } else {
-        lv_obj_clear_flag(ui_lblArchiveMessage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblTaskMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     if (ui_count > 13) {

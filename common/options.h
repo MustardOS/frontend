@@ -17,7 +17,9 @@
 #define RA_CONFIG_CRC "59749d83"
 
 #define MUOS_ACT_LOAD "/tmp/act_go"
+#define MUOS_APP_LOAD "/tmp/app_go"
 #define MUOS_ASS_LOAD "/tmp/ass_go"
+#define MUOS_IDX_LOAD "/tmp/idx_go"
 #define MUOS_SAA_LOAD "/tmp/saa_go"
 #define MUOS_ROM_LOAD "/tmp/rom_go"
 #define MUOS_SYS_LOAD "/tmp/sys_go"

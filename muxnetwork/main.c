@@ -446,32 +446,34 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+                                                lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
+                                            }
                                         }
                                     } else if (strcasecmp(lv_label_get_text(element_focused), "Network Type") == 0) {
                                         if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
@@ -851,32 +853,34 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+                                                lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
+                                            }
                                         }
                                         break;
                                     }
@@ -1048,32 +1052,34 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+                                                lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
+                                            }
                                         }
                                         break;
                                     }
@@ -1353,32 +1359,34 @@ void init_elements() {
         lv_obj_clear_flag(ui_lblIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblPassword, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblType, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblStatus, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblConnect, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_icoIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_icoPassword, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_icoType, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_icoStatus, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_icoConnect, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblIdentifierValue, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblPasswordValue, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblTypeValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblStatusValue, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblConnectValue, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+            lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblDNS, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_icoAddress, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_icoSubnet, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_icoGateway, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_icoDNS, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblAddressValue, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_HIDDEN);
+        }
     }
 
     if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "DHCP") == 0) {

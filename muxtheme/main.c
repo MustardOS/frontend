@@ -400,7 +400,7 @@ void *joystick_task() {
 
                                         char c_index[MAX_BUFFER_SIZE];
                                         snprintf(c_index, sizeof(c_index), "%d", current_item_index);
-                                        write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
+                                        write_text_to_file(MUOS_IDX_LOAD, c_index, "w");
                                     }
 
                                     safe_quit = 1;
@@ -778,9 +778,9 @@ int main(int argc, char *argv[]) {
     create_theme_items();
 
     int sys_index = 0;
-    if (file_exist("/tmp/mux_lastindex_rom")) {
-        sys_index = atoi(read_line_from_file("/tmp/mux_lastindex_rom", 1));
-        remove("/tmp/mux_lastindex_rom");
+    if (file_exist(MUOS_IDX_LOAD)) {
+        sys_index = atoi(read_line_from_file(MUOS_IDX_LOAD, 1));
+        remove(MUOS_IDX_LOAD);
     }
 
     struct dt_task_param dt_par;

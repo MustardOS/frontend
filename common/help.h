@@ -10,6 +10,9 @@
 
 #define NO_HELP_FOUND "This message has not been complete yet. Maybe you could help out?"
 
+// muxapp
+#define MUXAPP_GENERIC ""
+
 // muxapps
 #define MUXAPPS_ARCHIVE    ""
 #define MUXAPPS_BACKUP     ""
@@ -24,9 +27,6 @@
 
 // muxassign
 #define MUXASSIGN_GENERIC ""
-
-// muxbackup
-#define MUXBACKUP_GENERIC ""
 
 // muxconfig
 #define MUXCONFIG_GENERAL  ""
@@ -104,6 +104,9 @@
 
 // muxsyslist
 #define MUXSYSLIST_GENERIC ""
+
+// muxtask
+#define MUXTASK_GENERIC ""
 
 // muxtester
 #define MUXTESTER_GENERIC ""

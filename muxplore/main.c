@@ -1150,7 +1150,7 @@ void *joystick_task() {
                                                         char c_index[MAX_BUFFER_SIZE];
                                                         snprintf(c_index, sizeof(c_index), "%d",
                                                                  current_item_index);
-                                                        write_text_to_file("/tmp/mux_lastindex_rom", c_index, "w");
+                                                        write_text_to_file(MUOS_IDX_LOAD, c_index, "w");
 
                                                         if (load_content(f_name, atoi(
                                                                 get_string_at_index(&named_index,
