@@ -10,6 +10,7 @@ BUILD_COUNT=0
 CURRENT_DIR=$(pwd)
 
 rm -rf bin/mux*
+mkdir bin
 
 for MUX in */; do
 	if [ -d "$MUX" ]; then
