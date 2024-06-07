@@ -13,6 +13,7 @@ export DEVICE=RG35XXPLUS
 # This is the location of your installed Batocera Lite SDK Toolchain.
 # If this is incorrect, point it to your directory.
 export XTOOL=$HOME/x-tools
+export XHOST=arm-buildroot-linux-gnueabihf
 export XBIN=$XTOOL/bin
  
 export PATH="${PATH}:$XBIN"
