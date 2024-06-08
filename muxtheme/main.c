@@ -372,7 +372,7 @@ void *joystick_task() {
 
                                         static char theme_script[MAX_BUFFER_SIZE];
                                         snprintf(theme_script, sizeof(theme_script),
-                                                 "/%s/script/mux/theme.sh %s", INTERNAL_PATH, chosen_theme);
+                                                 "/%s/script/mux/theme.sh \"%s\"", INTERNAL_PATH, chosen_theme);
 
                                         system(theme_script);
                                         load_mux("theme");
