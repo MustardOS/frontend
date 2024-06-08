@@ -403,9 +403,8 @@ void *joystick_task() {
                                     }
                                 }
                             } else {
-                                if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
-                                    break;
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound);
 
@@ -667,12 +666,15 @@ void *joystick_task() {
                                 }
                             }
                         } else {
-                            if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                            if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
+                                ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
+                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound);
                                     show_help(element_focused);
                                 }
+                                */
                             }
                         }
                         break;
