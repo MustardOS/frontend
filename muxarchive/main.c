@@ -417,7 +417,6 @@ void *joystick_task() {
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-
                                 }
                             } else {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {

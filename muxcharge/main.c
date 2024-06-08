@@ -57,7 +57,6 @@ void check_for_cable() {
     if (file_exist(device.BATTERY.CHARGER)) {
         if (atoi(read_line_from_file(device.BATTERY.CHARGER, 1)) == 0) {
             sync();
-            usleep(100000);
             reboot(RB_POWER_OFF);
         }
     }
@@ -116,8 +115,6 @@ void *joystick_task() {
 
                                 blank = 0;
                                 set_brightness(100);
-
-                                usleep(100000);
                             }
                         }
                         break;

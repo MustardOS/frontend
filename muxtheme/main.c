@@ -82,25 +82,6 @@ void show_help() {
                      lv_label_get_text(lv_group_get_focused(ui_group)), credits);
 }
 
-void set_theme_value(const char *theme) {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "/%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
-    mini_set_string(muos_config, "theme", "name", theme);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
-
-    static char theme_script[MAX_BUFFER_SIZE];
-    snprintf(theme_script, sizeof(theme_script),
-             "/%s/script/mux/theme.sh", INTERNAL_PATH);
-
-    system(theme_script);
-}
-
 void image_refresh() {
     char *theme_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char theme_image[MAX_BUFFER_SIZE];
@@ -385,17 +366,15 @@ void *joystick_task() {
 
                                     if (ev.code == NAV_A) {
                                         char *chosen_theme = lv_label_get_text(element_focused);
-                                        if (file_size(chosen_theme, 16)) {
-                                            lv_label_set_text(ui_lblMessage, "Loading Theme");
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            lv_task_handler();
-                                            set_theme_value(chosen_theme);
-                                        } else {
-                                            lv_label_set_text(ui_lblMessage, "Theme cannot be larger than 16MB");
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                            lv_task_handler();
-                                        }
+                                        lv_label_set_text(ui_lblMessage, "Loading Theme");
+                                        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                        lv_task_handler();
 
+                                        static char theme_script[MAX_BUFFER_SIZE];
+                                        snprintf(theme_script, sizeof(theme_script),
+                                                 "/%s/script/mux/theme.sh %s", INTERNAL_PATH, chosen_theme);
+
+                                        system(theme_script);
                                         load_mux("theme");
 
                                         char c_index[MAX_BUFFER_SIZE];

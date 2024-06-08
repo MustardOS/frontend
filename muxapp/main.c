@@ -196,7 +196,24 @@ void create_app_items() {
         lv_label_set_long_mode(ui_lblAppItem, LV_LABEL_LONG_WRAP);
 
         lv_obj_t * ui_lblAppItemGlyph = lv_label_create(ui_pnlApp);
-        lv_label_set_text(ui_lblAppItemGlyph, "\uF04B");
+
+        if (strcasecmp(app_store, "Archive Manager") == 0) {
+            lv_label_set_text(ui_lblAppItemGlyph, "\uF187");
+        } else if (strcasecmp(app_store, "Dingux Commander") == 0) {
+            lv_label_set_text(ui_lblAppItemGlyph, "\uF0C7");
+        } else if (strcasecmp(app_store, "GMU Music Player") == 0) {
+            lv_label_set_text(ui_lblAppItemGlyph, "\uF001");
+        } else if (strcasecmp(app_store, "Portmaster") == 0) {
+            lv_label_set_text(ui_lblAppItemGlyph, "\uF21A");
+        } else if (strcasecmp(app_store, "RetroArch") == 0) {
+            lv_label_set_text(ui_lblAppItemGlyph, "\uF6E2");
+        } else if (strcasecmp(app_store, "Simple Terminal") == 0) {
+            lv_label_set_text(ui_lblAppItemGlyph, "\uF120");
+        } else if (strcasecmp(app_store, "Task Commander") == 0) {
+            lv_label_set_text(ui_lblAppItemGlyph, "\uF7D9");
+        } else {
+            lv_label_set_text(ui_lblAppItemGlyph, "\uF04B");
+        }
 
         lv_obj_set_width(ui_lblAppItemGlyph, 640);
         lv_obj_set_height(ui_lblAppItemGlyph, 28);
@@ -503,7 +520,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Extract");
+    lv_label_set_text(ui_lblNavA, "Launch");
     lv_label_set_text(ui_lblNavB, "Back");
     lv_label_set_text(ui_lblNavMenu, "Info");
 

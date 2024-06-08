@@ -318,7 +318,6 @@ void *joystick_task() {
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                    usleep(100000);
                                     save_web_options();
                                     safe_quit = 1;
                                 }

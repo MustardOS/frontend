@@ -468,7 +468,6 @@ void *joystick_task() {
                                     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
                                     mini_free(muos_config);
 
-                                    usleep(100000);
                                     safe_quit = 1;
                                 }
                             }

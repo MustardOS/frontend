@@ -199,14 +199,12 @@ void *joystick_task() {
                                         write_text_to_file(address_file, "", "w");
                                         system("/opt/muos/script/system/volume.sh save");
                                         sync();
-                                        sleep(1);
                                         reboot(RB_AUTOBOOT);
                                     } else if (element_focused == ui_lblShutdown) {
                                         play_sound("shutdown", nav_sound);
                                         write_text_to_file(address_file, "", "w");
                                         system("/opt/muos/script/system/volume.sh save");
                                         sync();
-                                        sleep(1);
                                         reboot(RB_POWER_OFF);
                                     }
                                     safe_quit = 1;

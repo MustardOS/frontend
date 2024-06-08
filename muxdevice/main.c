@@ -187,7 +187,6 @@ void *joystick_task() {
                                     mini_free(muos_config);
 
                                     sync();
-                                    usleep(100000);
                                     reboot(RB_AUTOBOOT);
                                 }
                             }

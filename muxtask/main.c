@@ -504,7 +504,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Extract");
+    lv_label_set_text(ui_lblNavA, "Launch");
     lv_label_set_text(ui_lblNavB, "Back");
     lv_label_set_text(ui_lblNavMenu, "Info");
 
