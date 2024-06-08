@@ -73,8 +73,6 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXCONFIG_RTC;
     } else if (element_focused == ui_lblDevice) {
         message = MUXCONFIG_DEVICE;
-    } else if (element_focused == ui_lblReset) {
-        message = MUXCONFIG_RESET;
     }
 
     if (strlen(message) <= 1) {
@@ -91,8 +89,7 @@ void init_navigation_groups() {
             ui_lblNetwork,
             ui_lblServices,
             ui_lblRTC,
-            ui_lblDevice,
-            ui_lblReset
+            ui_lblDevice
     };
 
     lv_obj_t *ui_objects_icon[] = {
@@ -101,8 +98,7 @@ void init_navigation_groups() {
             ui_icoNetwork,
             ui_icoServices,
             ui_icoRTC,
-            ui_icoDevice,
-            ui_icoReset
+            ui_icoDevice
     };
 
     ui_group = lv_group_create();
@@ -180,8 +176,6 @@ void *joystick_task() {
                                         load_mux("rtc");
                                     } else if (element_focused == ui_lblDevice) {
                                         load_mux("device");
-                                    } else if (element_focused == ui_lblReset) {
-                                        load_mux("reset");
                                     }
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
@@ -308,7 +302,6 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblServices, "service");
     lv_obj_set_user_data(ui_lblRTC, "clock");
     lv_obj_set_user_data(ui_lblDevice, "device");
-    lv_obj_set_user_data(ui_lblReset, "refresh");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
