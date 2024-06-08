@@ -102,9 +102,14 @@ void *joystick_task() {
                                 if (blank < 5) {
                                     lv_timer_pause(battery_timer);
 
-                                    lv_label_set_text(ui_lblCapacity, "");
-                                    lv_label_set_text(ui_lblVoltage, "");
-                                    lv_label_set_text(ui_lblHealth, "");
+                                    lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_HIDDEN);
+                                    lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_HIDDEN);
+                                    lv_obj_add_flag(ui_lblHealth, LV_OBJ_FLAG_HIDDEN);
+
+                                    lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_FLOATING);
+                                    lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_FLOATING);
+                                    lv_obj_add_flag(ui_lblHealth, LV_OBJ_FLAG_FLOATING);
+
                                     lv_label_set_text(ui_lblBoot, "Booting System - Please Wait...");
 
                                     lv_task_handler();
