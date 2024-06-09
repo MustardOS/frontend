@@ -176,6 +176,10 @@ void *joystick_task() {
                                     snprintf(address_file, sizeof(address_file),
                                              "/%s/config/address.txt", INTERNAL_PATH);
 
+                                    char last_play_file[MAX_BUFFER_SIZE];
+                                    snprintf(last_play_file, sizeof(last_play_file),
+                                             "/%s/config/lastplay.txt", INTERNAL_PATH);
+
                                     if (element_focused == ui_lblContent) {
                                         play_sound("confirm", nav_sound);
                                         load_mux("explore");
@@ -196,12 +200,18 @@ void *joystick_task() {
                                         load_mux("config");
                                     } else if (element_focused == ui_lblReboot) {
                                         play_sound("reboot", nav_sound);
+                                        if (strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") == 0) {
+                                            write_text_to_file(last_play_file, "", "w");
+                                        }
                                         write_text_to_file(address_file, "", "w");
                                         system("/opt/muos/script/system/volume.sh save");
                                         sync();
                                         reboot(RB_AUTOBOOT);
                                     } else if (element_focused == ui_lblShutdown) {
                                         play_sound("shutdown", nav_sound);
+                                        if (strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") == 0) {
+                                            write_text_to_file(last_play_file, "", "w");
+                                        }
                                         write_text_to_file(address_file, "", "w");
                                         system("/opt/muos/script/system/volume.sh save");
                                         sync();

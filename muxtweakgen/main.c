@@ -214,6 +214,8 @@ void restore_tweak_options() {
         lv_dropdown_set_selected(ui_droStartup, 3);
     } else if (strcasecmp(startup_type, "last") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 4);
+    } else if (strcasecmp(startup_type, "resume") == 0) {
+        lv_dropdown_set_selected(ui_droStartup, 5);
     } else {
         lv_dropdown_set_selected(ui_droStartup, 0);
     }
@@ -330,6 +332,9 @@ void save_tweak_options() {
             break;
         case 4:
             idx_startup = "last";
+            break;
+        case 5:
+            idx_startup = "resume";
             break;
         default:
             idx_startup = "launcher";

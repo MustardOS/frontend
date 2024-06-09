@@ -792,7 +792,7 @@ void ui_scrTweakGeneral_screen_init(void)
 
     ui_droStartup = lv_dropdown_create(ui_pnlHighlight);
     lv_dropdown_set_dir(ui_droStartup, LV_DIR_LEFT);
-    lv_dropdown_set_options(ui_droStartup, "Main Menu\nContent Explorer\nFavourites\nHistory\nLast Game");
+    lv_dropdown_set_options(ui_droStartup, "Main Menu\nContent Explorer\nFavourites\nHistory\nLast Game\nResume Game");
     lv_dropdown_set_selected_highlight(ui_droStartup, false);
     lv_obj_set_width(ui_droStartup, 640);
     lv_obj_set_height(ui_droStartup, 28);

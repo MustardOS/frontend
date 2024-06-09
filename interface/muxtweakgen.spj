@@ -13594,7 +13594,7 @@
                   {
                     "nid": 2035633185,
                     "strtype": "DROPDOWN/Options",
-                    "strval": "Main Menu\\nContent Explorer\\nFavourites\\nHistory\\nLast Game",
+                    "strval": "Main Menu\\nContent Explorer\\nFavourites\\nHistory\\nLast Game\\nResume Game",
                     "InheritedType": 10
                   },
                   {
