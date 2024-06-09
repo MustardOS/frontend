@@ -49,7 +49,7 @@ int nav_moved = 1;
 char *current_wall = "";
 
 // Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
 
 lv_obj_t *msgbox_element = NULL;
@@ -59,7 +59,6 @@ int progress_onscreen = -1;
 int swap_total, swap_current;
 int thermal_total, thermal_current;
 int font_total, font_current;
-int verbose_total, verbose_current;
 int volume_total, volume_current;
 int offset_total, offset_current;
 int lockdown_total, lockdown_current;
@@ -70,7 +69,7 @@ typedef struct {
     int *current;
 } Tweak;
 
-Tweak swap, thermal, font, verbose, volume, offset, lockdown, led;
+Tweak swap, thermal, font, volume, offset, lockdown, led;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -85,8 +84,6 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKADV_THERMAL;
     } else if (element_focused == ui_lblFont) {
         message = MUXTWEAKADV_FONT;
-    } else if (element_focused == ui_lblVerbose) {
-        message = MUXTWEAKADV_VERBOSE;
     } else if (element_focused == ui_lblVolume) {
         message = MUXTWEAKADV_VOLUME;
     } else if (element_focused == ui_lblOffset) {
@@ -124,7 +121,6 @@ void elements_events_init() {
             ui_droSwap,
             ui_droThermal,
             ui_droFont,
-            ui_droVerbose,
             ui_droVolume,
             ui_droOffset,
             ui_droPasscode,
@@ -134,11 +130,10 @@ void elements_events_init() {
     labels[0] = ui_droSwap;
     labels[1] = ui_droThermal;
     labels[2] = ui_droFont;
-    labels[3] = ui_droVerbose;
-    labels[4] = ui_droVolume;
-    labels[5] = ui_droOffset;
-    labels[6] = ui_droPasscode;
-    labels[7] = ui_droLED;
+    labels[3] = ui_droVolume;
+    labels[4] = ui_droOffset;
+    labels[5] = ui_droPasscode;
+    labels[6] = ui_droLED;
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
@@ -147,7 +142,6 @@ void elements_events_init() {
     init_pointers(&swap, &swap_total, &swap_current);
     init_pointers(&thermal, &thermal_total, &thermal_current);
     init_pointers(&font, &font_total, &font_current);
-    init_pointers(&verbose, &verbose_total, &verbose_current);
     init_pointers(&volume, &volume_total, &volume_current);
     init_pointers(&offset, &offset_total, &offset_current);
     init_pointers(&lockdown, &lockdown_total, &lockdown_current);
@@ -159,7 +153,6 @@ void init_dropdown_settings() {
             {swap.total,     swap.current},
             {thermal.total,  thermal.current},
             {font.total,     font.current},
-            {verbose.total,  verbose.current},
             {volume.total,   volume.current},
             {offset.total,   offset.current},
             {lockdown.total, lockdown.current},
@@ -170,7 +163,6 @@ void init_dropdown_settings() {
             ui_droSwap,
             ui_droThermal,
             ui_droFont,
-            ui_droVerbose,
             ui_droVolume,
             ui_droOffset,
             ui_droPasscode,
@@ -187,7 +179,6 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droSwap, config.SETTINGS.ADVANCED.SWAP);
     lv_dropdown_set_selected(ui_droThermal, config.SETTINGS.ADVANCED.THERMAL);
     lv_dropdown_set_selected(ui_droFont, config.SETTINGS.ADVANCED.FONT);
-    lv_dropdown_set_selected(ui_droVerbose, config.SETTINGS.ADVANCED.VERBOSE);
     lv_dropdown_set_selected(ui_droVolume, config.SETTINGS.ADVANCED.VOLUME_LOW);
     lv_dropdown_set_selected(ui_droOffset, config.SETTINGS.ADVANCED.OFFSET);
     lv_dropdown_set_selected(ui_droPasscode, config.SETTINGS.ADVANCED.LOCK);
@@ -204,7 +195,6 @@ void save_tweak_options() {
     int idx_swap = lv_dropdown_get_selected(ui_droSwap);
     int idx_thermal = lv_dropdown_get_selected(ui_droThermal);
     int idx_font = lv_dropdown_get_selected(ui_droFont);
-    int idx_verbose = lv_dropdown_get_selected(ui_droVerbose);
     int idx_volume_low = lv_dropdown_get_selected(ui_droVolume);
     int idx_offset = lv_dropdown_get_selected(ui_droOffset);
     int idx_lockdown = lv_dropdown_get_selected(ui_droPasscode);
@@ -213,7 +203,6 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.advanced", "swap", idx_swap);
     mini_set_int(muos_config, "settings.advanced", "thermal", idx_thermal);
     mini_set_int(muos_config, "settings.advanced", "font", idx_font);
-    mini_set_int(muos_config, "settings.advanced", "verbose", idx_verbose);
     mini_set_int(muos_config, "settings.advanced", "volume_low", idx_volume_low);
     mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
     mini_set_int(muos_config, "settings.advanced", "lock", idx_lockdown);
@@ -234,7 +223,6 @@ void init_navigation_groups() {
             ui_lblSwap,
             ui_lblThermal,
             ui_lblFont,
-            ui_lblVerbose,
             ui_lblVolume,
             ui_lblOffset,
             ui_lblPasscode,
@@ -245,7 +233,6 @@ void init_navigation_groups() {
             ui_droSwap,
             ui_droThermal,
             ui_droFont,
-            ui_droVerbose,
             ui_droVolume,
             ui_droOffset,
             ui_droPasscode,
@@ -256,7 +243,6 @@ void init_navigation_groups() {
             ui_icoSwap,
             ui_icoThermal,
             ui_icoFont,
-            ui_icoVerbose,
             ui_icoVolume,
             ui_icoOffset,
             ui_icoPasscode,
@@ -342,10 +328,6 @@ void *joystick_task() {
                                         increase_option_value(ui_droFont,
                                                               &font_current,
                                                               font_total);
-                                    } else if (element_focused == ui_lblVerbose) {
-                                        increase_option_value(ui_droVerbose,
-                                                              &verbose_current,
-                                                              verbose_total);
                                     } else if (element_focused == ui_lblVolume) {
                                         increase_option_value(ui_droVolume,
                                                               &volume_current,
@@ -426,10 +408,6 @@ void *joystick_task() {
                                     decrease_option_value(ui_droFont,
                                                           &font_current,
                                                           font_total);
-                                } else if (element_focused == ui_lblVerbose) {
-                                    decrease_option_value(ui_droVerbose,
-                                                          &verbose_current,
-                                                          verbose_total);
                                 } else if (element_focused == ui_lblVolume) {
                                     decrease_option_value(ui_droVolume,
                                                           &volume_current,
@@ -463,10 +441,6 @@ void *joystick_task() {
                                     increase_option_value(ui_droFont,
                                                           &font_current,
                                                           font_total);
-                                } else if (element_focused == ui_lblVerbose) {
-                                    increase_option_value(ui_droVerbose,
-                                                          &verbose_current,
-                                                          verbose_total);
                                 } else if (element_focused == ui_lblVolume) {
                                     increase_option_value(ui_droVolume,
                                                           &volume_current,
@@ -571,7 +545,6 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblSwap, "swap");
     lv_obj_set_user_data(ui_lblThermal, "thermal");
     lv_obj_set_user_data(ui_lblFont, "font");
-    lv_obj_set_user_data(ui_lblVerbose, "verbose");
     lv_obj_set_user_data(ui_lblVolume, "volume");
     lv_obj_set_user_data(ui_lblOffset, "offset");
     lv_obj_set_user_data(ui_lblPasscode, "lock");
