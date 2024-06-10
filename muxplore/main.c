@@ -1082,6 +1082,10 @@ void *joystick_task() {
                             } else {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
+                                    JOYUP_pressed = 0;
+                                    JOYDOWN_pressed = 0;
+                                    nav_delay = UINT8_MAX;
+                                    nav_hold = 0;
                                 } else if (ev.code == NAV_A) {
                                     if (ui_count == 0) {
                                         goto nothing_ever_happens;
