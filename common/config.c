@@ -59,6 +59,7 @@ void load_config(struct mux_config *config) {
     config->SETTINGS.ADVANCED.OFFSET = get_ini_int(muos_config, "settings.advanced", "offset", 50);
     config->SETTINGS.ADVANCED.LOCK = get_ini_int(muos_config, "settings.advanced", "lock", 0);
     config->SETTINGS.ADVANCED.LED = get_ini_int(muos_config, "settings.advanced", "led", 0);
+    config->SETTINGS.ADVANCED.THEME = get_ini_int(muos_config, "settings.advanced", "random_theme", 0);
 
     strncpy(config->THEME.NAME, get_ini_string(muos_config, "theme", "name", "muOS"),
             MAX_BUFFER_SIZE - 1);

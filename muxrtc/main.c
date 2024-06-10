@@ -55,13 +55,13 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int lblYearValue;
-int lblMonthValue;
-int lblDayValue;
-int lblHourValue;
-int lblMinuteValue;
-int lblTimezoneValue = 0;
-int lblNotationValue = 0;
+int rtcYearValue;
+int rtcMonthValue;
+int rtcDayValue;
+int rtcHourValue;
+int rtcMinuteValue;
+int rtcTimezoneValue = 0;
+int rtcNotationValue = 0;
 
 char rtc_buffer[32];
 
@@ -104,145 +104,120 @@ void confirm_rtc_config() {
     mini_free(muos_config);
 
     system("hwclock -w");
-    system("hwclock -r");
-}
-
-void read_rtc_hardware() {
-    int rtc_fd = open(device.DEVICE.RTC, O_RDONLY);
-    if (rtc_fd == -1) {
-        perror("Failed to open RTC device");
-        return;
-    }
-
-    struct rtc_time rtc_tm;
-    int result = ioctl(rtc_fd, RTC_RD_TIME, &rtc_tm);
-    if (result == -1) {
-        perror("Failed to read hardware clock");
-        close(rtc_fd);
-        return;
-    }
-
-    lblYearValue = rtc_tm.tm_year;
-    lblMonthValue = rtc_tm.tm_mon;
-    lblDayValue = rtc_tm.tm_mday;
-    lblHourValue = rtc_tm.tm_hour;
-    lblMinuteValue = rtc_tm.tm_min;
-
-    close(rtc_fd);
 }
 
 void restore_clock_settings() {
-    read_rtc_hardware();
+    FILE * fp;
+    char date_output[100];
+    int attempts = 0;
 
-    if (lblYearValue < 110) {
-        // We can assume that it is at least the year 2020
-        lblYearValue = 120;
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "20%d", lblYearValue - 100);
-        lv_label_set_text(ui_lblYearValue, rtc_buffer);
-    } else {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "20%d", lblYearValue - 100);
+    char command[MAX_BUFFER_SIZE];
+    snprintf(command, sizeof(command), "date +\"%%Y %%m %%d %%H %%M\"");
+
+    while (attempts < RTC_MAX_RETRIES) {
+        fp = popen(command, "r");
+        if (fp == NULL) {
+            perror("Failed to run date command");
+            attempts++;
+            sleep(RTC_RETRY_DELAY);
+            continue;
+        }
+
+        if (fgets(date_output, sizeof(date_output) - 1, fp) != NULL) {
+            pclose(fp);
+            break;
+        } else {
+            perror("Failed to read date command output");
+            pclose(fp);
+            attempts++;
+            sleep(RTC_RETRY_DELAY);
+            continue;
+        }
     }
+
+    if (attempts == RTC_MAX_RETRIES) {
+        fprintf(stderr, "Attempts to read system date failed\n");
+        return;
+    }
+
+    int year, month, day, hour, minute;
+    if (sscanf(date_output, "%d %d %d %d %d", &year, &month, &day, &hour, &minute) != 5) {
+        fprintf(stderr, "Failed to parse date command output\n");
+        return;
+    }
+
+    rtcYearValue = year;
+    rtcMonthValue = month;
+    rtcDayValue = day;
+    rtcHourValue = hour;
+    rtcMinuteValue = minute;
+
+    snprintf(rtc_buffer, sizeof(rtc_buffer), "%04d", year);
     lv_label_set_text(ui_lblYearValue, rtc_buffer);
 
-    if (lblMonthValue < 9) {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMonthValue + 1);
-    } else {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMonthValue + 1);
-    }
+    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcMonthValue);
     lv_label_set_text(ui_lblMonthValue, rtc_buffer);
 
-    if (lblDayValue < 10) {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-    } else {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblDayValue);
-    }
+    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
     lv_label_set_text(ui_lblDayValue, rtc_buffer);
 
-    if (lblHourValue < 10) {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblHourValue);
-    } else {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblHourValue);
-    }
+    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcHourValue);
     lv_label_set_text(ui_lblHourValue, rtc_buffer);
 
-    if (lblMinuteValue < 10) {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMinuteValue);
-    } else {
-        snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMinuteValue);
-    }
+    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcMinuteValue);
     lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
 
-    lblNotationValue = config.CLOCK.NOTATION;
-    lv_label_set_text(ui_lblNotationValue, notation[lblNotationValue]);
+    rtcNotationValue = config.CLOCK.NOTATION;
+    lv_label_set_text(ui_lblNotationValue, notation[rtcNotationValue]);
 }
 
-void set_hardware_clock(struct rtc_time *rtc_tm) {
-    int rtc_fd = open(device.DEVICE.RTC, O_RDWR);
-    if (rtc_fd == -1) {
-        perror("Failed to open RTC device");
+void save_clock_settings(int year, int month, int day, int hour, int minute) {
+    FILE * fp;
+    int attempts = 0;
+
+    char command[MAX_BUFFER_SIZE];
+    snprintf(command, sizeof(command), "date \"%04d-%02d-%02d %02d:%02d:00\"",
+             year, month, day, hour, minute);
+
+    printf("SETTING DATE TO: %s\n", command);
+
+    while (attempts < RTC_MAX_RETRIES) {
+        fp = popen(command, "r");
+        if (fp == NULL) {
+            perror("Failed to run date command");
+            attempts++;
+            sleep(RTC_RETRY_DELAY);
+            continue;
+        }
+
+        if (pclose(fp) == -1) {
+            perror("Failed to close date command stream");
+            attempts++;
+            sleep(RTC_RETRY_DELAY);
+            continue;
+        }
+
         return;
     }
 
-    int result = ioctl(rtc_fd, RTC_SET_TIME, rtc_tm);
-    if (result == -1) {
-        perror("Failed to set hardware clock");
-        close(rtc_fd);
-        return;
-    }
-
-    close(rtc_fd);
-}
-
-void set_new_time() {
-    struct tm newTime;
-    struct timeval tv;
-    struct rtc_time rtc_tm;
-
-    newTime.tm_year = lblYearValue;
-    newTime.tm_mon = lblMonthValue;
-    newTime.tm_mday = lblDayValue;
-    newTime.tm_hour = lblHourValue;
-    newTime.tm_min = lblMinuteValue;
-    newTime.tm_sec = 0;
-    newTime.tm_isdst = -1;
-
-    time_t newTimeSeconds = mktime(&newTime);
-
-    tv.tv_sec = newTimeSeconds;
-    tv.tv_usec = 0;
-
-    rtc_tm.tm_sec = 0;
-    rtc_tm.tm_min = newTime.tm_min;
-    rtc_tm.tm_hour = newTime.tm_hour;
-    rtc_tm.tm_mday = newTime.tm_mday;
-    rtc_tm.tm_mon = newTime.tm_mon;
-    rtc_tm.tm_year = newTime.tm_year;
-    rtc_tm.tm_wday = newTime.tm_wday;
-    rtc_tm.tm_yday = newTime.tm_yday;
-    rtc_tm.tm_isdst = newTime.tm_isdst;
-
-    set_hardware_clock(&rtc_tm);
-    settimeofday(&tv, NULL);
-
-    confirm_rtc_config();
+    fprintf(stderr, "Attempts to set system date failed\n");
 }
 
 int days_in_month(int year, int month) {
     int max_days;
-    int sel_year = 1900 + year;
-    switch (month + 1) {
+    switch (month) {
+        case 2:  // February
+            if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
+                max_days = 29;
+            } else {
+                max_days = 28;
+            }
+            break;
         case 4:  // April
         case 6:  // June
         case 9:  // September
         case 11: // November
             max_days = 30;
-            break;
-        case 2:  // February
-            if ((sel_year % 4 == 0 && sel_year % 100 != 0) || sel_year % 400 == 0) {
-                max_days = 29;
-            } else {
-                max_days = 28;
-            }
             break;
         default:
             max_days = 31;
@@ -360,94 +335,66 @@ void *joystick_task() {
                                     if (element_focused == ui_lblTimezone) {
                                         play_sound("confirm", nav_sound);
                                         input_disable = 1;
-                                        set_new_time();
+                                        save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
+                                                            rtcHourValue, rtcMinuteValue);
                                         load_mux("timezone");
                                         safe_quit = 1;
                                     } else {
                                         play_sound("navigate", nav_sound);
                                         if (element_focused == ui_lblYear) {
-                                            if (lblYearValue >= 110 && lblYearValue < 199) {
-                                                lblYearValue++;
-                                                snprintf(rtc_buffer, sizeof(rtc_buffer), "20%d",
-                                                         lblYearValue - 100);
-                                                lv_label_set_text(ui_lblYearValue, rtc_buffer);
-                                                lblDayValue = 1;
-                                                snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                                lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                            if (rtcYearValue >= 1970 && rtcYearValue < 2199) {
+                                                rtcYearValue++;
+                                                rtcDayValue = 1;
                                             }
+                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%04d", rtcYearValue);
+                                            lv_label_set_text(ui_lblYearValue, rtc_buffer);
+                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                            lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                         } else if (element_focused == ui_lblMonth) {
-                                            if (lblMonthValue < 11) {
-                                                lblMonthValue++;
-                                                if (lblMonthValue < 9) {
-                                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d",
-                                                             lblMonthValue + 1);
-                                                } else {
-                                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%d",
-                                                             lblMonthValue + 1);
-                                                }
-                                                lv_label_set_text(ui_lblMonthValue, rtc_buffer);
-                                                lblDayValue = 1;
-                                                snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                                lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                            if (rtcMonthValue < 12) {
+                                                rtcMonthValue++;
+                                                rtcDayValue = 1;
                                             } else {
-                                                lblMonthValue = 0;
-                                                snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMonthValue + 1);
-                                                lv_label_set_text(ui_lblMonthValue, rtc_buffer);
-                                                lblDayValue = 1;
-                                                snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                                lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                                rtcMonthValue = 1;
+                                                rtcDayValue = 1;
                                             }
+                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcMonthValue);
+                                            lv_label_set_text(ui_lblMonthValue, rtc_buffer);
+                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                            lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                         } else if (element_focused == ui_lblDay) {
-                                            if (lblDayValue < days_in_month(lblYearValue, lblMonthValue)) {
-                                                lblDayValue++;
-                                                if (lblDayValue < 10) {
-                                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                                } else {
-                                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblDayValue);
-                                                }
-                                                lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                            if (rtcDayValue < days_in_month(rtcYearValue, rtcMonthValue)) {
+                                                rtcDayValue++;
                                             } else {
-                                                lblDayValue = 1;
-                                                snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                                lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                                rtcDayValue = 1;
                                             }
+                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                            lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                         } else if (element_focused == ui_lblHour) {
-                                            if (lblHourValue < 23) {
-                                                lblHourValue++;
-                                                if (lblHourValue < 10) {
-                                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblHourValue);
-                                                } else {
-                                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblHourValue);
-                                                }
-                                                lv_label_set_text(ui_lblHourValue, rtc_buffer);
+                                            if (rtcHourValue < 23) {
+                                                rtcHourValue++;
                                             } else {
-                                                lblHourValue = 0;
-                                                snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblHourValue);
-                                                lv_label_set_text(ui_lblHourValue, rtc_buffer);
+                                                rtcHourValue = 0;
                                             }
+                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcHourValue);
+                                            lv_label_set_text(ui_lblHourValue, rtc_buffer);
                                         } else if (element_focused == ui_lblMinute) {
-                                            if (lblMinuteValue < 59) {
-                                                lblMinuteValue++;
-                                                if (lblMinuteValue < 10) {
-                                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMinuteValue);
-                                                } else {
-                                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMinuteValue);
-                                                }
-                                                lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
+                                            if (rtcMinuteValue < 59) {
+                                                rtcMinuteValue++;
                                             } else {
-                                                lblMinuteValue = 0;
-                                                snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMinuteValue);
-                                                lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
+                                                rtcMinuteValue = 0;
                                             }
+                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcMinuteValue);
+                                            lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
                                         } else if (element_focused == ui_lblNotation) {
-                                            lblNotationValue++;
-                                            if (lblNotationValue < 0) {
-                                                lblNotationValue = 1;
+                                            rtcNotationValue++;
+                                            if (rtcNotationValue < 0) {
+                                                rtcNotationValue = 1;
                                             }
-                                            if (lblNotationValue > 1) {
-                                                lblNotationValue = 0;
+                                            if (rtcNotationValue > 1) {
+                                                rtcNotationValue = 0;
                                             }
-                                            lv_label_set_text(ui_lblNotationValue, notation[lblNotationValue]);
+                                            lv_label_set_text(ui_lblNotationValue, notation[rtcNotationValue]);
                                         }
                                     }
                                 } else if (ev.code == NAV_B) {
@@ -457,7 +404,11 @@ void *joystick_task() {
                                     osd_message = "Saving Changes";
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                    set_new_time();
+                                    save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
+                                                        rtcHourValue, rtcMinuteValue);
+
+                                    lv_task_handler();
+                                    usleep(device.SCREEN.WAIT);
 
                                     char config_file[MAX_BUFFER_SIZE];
                                     snprintf(config_file, sizeof(config_file),
@@ -488,8 +439,8 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 nav_prev(ui_group, 1);
                                 nav_prev(ui_group_value, 1);
@@ -506,176 +457,124 @@ void *joystick_task() {
                                 nav_moved = 1;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 play_sound("navigate", nav_sound);
                                 if (element_focused == ui_lblYear) {
-                                    if (lblYearValue > 110 && lblYearValue <= 199) {
-                                        lblYearValue--;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "20%d", lblYearValue - 100);
-                                        lv_label_set_text(ui_lblYearValue, rtc_buffer);
-                                        lblDayValue = 1;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                    if (rtcYearValue > 1970 && rtcYearValue <= 2199) {
+                                        rtcYearValue--;
+                                        rtcDayValue = 1;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%04d", rtcYearValue);
+                                    lv_label_set_text(ui_lblYearValue, rtc_buffer);
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                    lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                 } else if (element_focused == ui_lblMonth) {
-                                    if (lblMonthValue > 0) {
-                                        lblMonthValue--;
-                                        if (lblMonthValue < 9) {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMonthValue + 1);
-                                        } else {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMonthValue + 1);
-                                        }
-                                        lv_label_set_text(ui_lblMonthValue, rtc_buffer);
-                                        lblDayValue = 1;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                    if (rtcMonthValue > 1) {
+                                        rtcMonthValue--;
+                                        rtcDayValue = 1;
                                     } else {
-                                        lblMonthValue = 11;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMonthValue + 1);
-                                        lv_label_set_text(ui_lblMonthValue, rtc_buffer);
-                                        lblDayValue = 1;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                        rtcMonthValue = 12;
+                                        rtcDayValue = 1;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcMonthValue);
+                                    lv_label_set_text(ui_lblMonthValue, rtc_buffer);
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                    lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                 } else if (element_focused == ui_lblDay) {
-                                    if (lblDayValue > 1) {
-                                        lblDayValue--;
-                                        if (lblDayValue < 10) {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        } else {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblDayValue);
-                                        }
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                    if (rtcDayValue > 1) {
+                                        rtcDayValue--;
                                     } else {
-                                        lblDayValue = days_in_month(lblYearValue, lblMonthValue);
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblDayValue);
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                        rtcDayValue = days_in_month(rtcYearValue, rtcMonthValue);
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                    lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                 } else if (element_focused == ui_lblHour) {
-                                    if (lblHourValue > 0) {
-                                        lblHourValue--;
-                                        if (lblHourValue < 10) {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblHourValue);
-                                        } else {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblHourValue);
-                                        }
-                                        lv_label_set_text(ui_lblHourValue, rtc_buffer);
+                                    if (rtcHourValue > 0) {
+                                        rtcHourValue--;
                                     } else {
-                                        lblHourValue = 23;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblHourValue);
-                                        lv_label_set_text(ui_lblHourValue, rtc_buffer);
+                                        rtcHourValue = 23;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcHourValue);
+                                    lv_label_set_text(ui_lblHourValue, rtc_buffer);
                                 } else if (element_focused == ui_lblMinute) {
-                                    if (lblMinuteValue > 0) {
-                                        lblMinuteValue--;
-                                        if (lblMinuteValue < 10) {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMinuteValue);
-                                        } else {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMinuteValue);
-                                        }
-                                        lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
+                                    if (rtcMinuteValue > 0) {
+                                        rtcMinuteValue--;
                                     } else {
-                                        lblMinuteValue = 59;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMinuteValue);
-                                        lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
+                                        rtcMinuteValue = 59;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcMinuteValue);
+                                    lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
                                 } else if (element_focused == ui_lblNotation) {
-                                    lblNotationValue--;
-                                    if (lblNotationValue < 0) {
-                                        lblNotationValue = 1;
+                                    rtcNotationValue--;
+                                    if (rtcNotationValue < 0) {
+                                        rtcNotationValue = 1;
                                     }
-                                    if (lblNotationValue > 1) {
-                                        lblNotationValue = 0;
+                                    if (rtcNotationValue > 1) {
+                                        rtcNotationValue = 0;
                                     }
 
-                                    lv_label_set_text(ui_lblNotationValue, notation[lblNotationValue]);
+                                    lv_label_set_text(ui_lblNotationValue, notation[rtcNotationValue]);
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
                                 play_sound("navigate", nav_sound);
                                 if (element_focused == ui_lblYear) {
-                                    if (lblYearValue >= 110 && lblYearValue < 199) {
-                                        lblYearValue++;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "20%d", lblYearValue - 100);
-                                        lv_label_set_text(ui_lblYearValue, rtc_buffer);
-                                        lblDayValue = 1;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                    if (rtcYearValue >= 1970 && rtcYearValue < 2199) {
+                                        rtcYearValue++;
+                                        rtcDayValue = 1;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%04d", rtcYearValue);
+                                    lv_label_set_text(ui_lblYearValue, rtc_buffer);
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                    lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                 } else if (element_focused == ui_lblMonth) {
-                                    if (lblMonthValue < 11) {
-                                        lblMonthValue++;
-                                        if (lblMonthValue < 9) {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMonthValue + 1);
-                                        } else {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMonthValue + 1);
-                                        }
-                                        lv_label_set_text(ui_lblMonthValue, rtc_buffer);
-                                        lblDayValue = 1;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                    if (rtcMonthValue < 12) {
+                                        rtcMonthValue++;
+                                        rtcDayValue = 1;
                                     } else {
-                                        lblMonthValue = 0;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMonthValue + 1);
-                                        lv_label_set_text(ui_lblMonthValue, rtc_buffer);
-                                        lblDayValue = 1;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                        rtcMonthValue = 1;
+                                        rtcDayValue = 1;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcMonthValue);
+                                    lv_label_set_text(ui_lblMonthValue, rtc_buffer);
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                    lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                 } else if (element_focused == ui_lblDay) {
-                                    if (lblDayValue < days_in_month(lblYearValue, lblMonthValue)) {
-                                        lblDayValue++;
-                                        if (lblDayValue < 10) {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        } else {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblDayValue);
-                                        }
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                    if (rtcDayValue < days_in_month(rtcYearValue, rtcMonthValue)) {
+                                        rtcDayValue++;
                                     } else {
-                                        lblDayValue = 1;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblDayValue);
-                                        lv_label_set_text(ui_lblDayValue, rtc_buffer);
+                                        rtcDayValue = 1;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcDayValue);
+                                    lv_label_set_text(ui_lblDayValue, rtc_buffer);
                                 } else if (element_focused == ui_lblHour) {
-                                    if (lblHourValue < 23) {
-                                        lblHourValue++;
-                                        if (lblHourValue < 10) {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblHourValue);
-                                        } else {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblHourValue);
-                                        }
-                                        lv_label_set_text(ui_lblHourValue, rtc_buffer);
+                                    if (rtcHourValue < 23) {
+                                        rtcHourValue++;
                                     } else {
-                                        lblHourValue = 0;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblHourValue);
-                                        lv_label_set_text(ui_lblHourValue, rtc_buffer);
+                                        rtcHourValue = 0;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcHourValue);
+                                    lv_label_set_text(ui_lblHourValue, rtc_buffer);
                                 } else if (element_focused == ui_lblMinute) {
-                                    if (lblMinuteValue < 59) {
-                                        lblMinuteValue++;
-                                        if (lblMinuteValue < 10) {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMinuteValue);
-                                        } else {
-                                            snprintf(rtc_buffer, sizeof(rtc_buffer), "%d", lblMinuteValue);
-                                        }
-                                        lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
+                                    if (rtcMinuteValue < 59) {
+                                        rtcMinuteValue++;
                                     } else {
-                                        lblMinuteValue = 0;
-                                        snprintf(rtc_buffer, sizeof(rtc_buffer), "0%d", lblMinuteValue);
-                                        lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
+                                        rtcMinuteValue = 0;
                                     }
+                                    snprintf(rtc_buffer, sizeof(rtc_buffer), "%02d", rtcMinuteValue);
+                                    lv_label_set_text(ui_lblMinuteValue, rtc_buffer);
                                 } else if (element_focused == ui_lblNotation) {
-                                    lblNotationValue++;
-                                    if (lblNotationValue < 0) {
-                                        lblNotationValue = 1;
+                                    rtcNotationValue++;
+                                    if (rtcNotationValue < 0) {
+                                        rtcNotationValue = 1;
                                     }
-                                    if (lblNotationValue > 1) {
-                                        lblNotationValue = 0;
+                                    if (rtcNotationValue > 1) {
+                                        rtcNotationValue = 0;
                                     }
-                                    lv_label_set_text(ui_lblNotationValue, notation[lblNotationValue]);
+                                    lv_label_set_text(ui_lblNotationValue, notation[rtcNotationValue]);
                                 }
                             }
                         }
@@ -822,7 +721,7 @@ void ui_refresh_task() {
         if (lv_group_get_obj_count(ui_group) > 0) {
             if (config.BOOT.FACTORY_RESET) {
                 char init_wall[MAX_BUFFER_SIZE];
-                snprintf(init_wall, sizeof(init_wall), "M:/%s/theme/image/wall/default.png", INTERNAL_PATH);
+                snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/default.png", INTERNAL_PATH);
                 lv_img_set_src(ui_imgWall, init_wall);
             } else {
                 static char old_wall[MAX_BUFFER_SIZE];

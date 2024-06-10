@@ -185,7 +185,7 @@ void image_refresh() {
     if (file_exist(supporter_image)) {
         char supporter_image_path[MAX_BUFFER_SIZE];
         snprintf(supporter_image_path, sizeof(supporter_image_path),
-                 "M:/%s/%s.png",
+                 "M:%s/%s.png",
                  "opt/muos/supporter", supporter_name);
         lv_img_set_src(ui_imgBox, supporter_image_path);
     } else {
@@ -459,8 +459,8 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
                                     int y = (ui_count - 13) * 30;

@@ -138,8 +138,8 @@ void *joystick_task() {
                         }
                     case EV_ABS:
                         if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 nav_prev(ui_group, 1);
                                 play_sound("navigate", nav_sound);
@@ -151,8 +151,8 @@ void *joystick_task() {
                             }
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 lv_roller_set_selected(element_focused,
                                                        lv_roller_get_selected(element_focused) - 1,

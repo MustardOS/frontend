@@ -237,15 +237,15 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 nav_prev(ui_group, 1);
                                 nav_prev(ui_icon_group, 1);
                                 play_sound("navigate", nav_sound);
                                 nav_moved = 1;
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 nav_next(ui_group, 1);
                                 nav_next(ui_icon_group, 1);

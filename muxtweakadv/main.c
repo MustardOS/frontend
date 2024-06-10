@@ -49,7 +49,7 @@ int nav_moved = 1;
 char *current_wall = "";
 
 // Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
 
 lv_obj_t *msgbox_element = NULL;
@@ -63,13 +63,14 @@ int volume_total, volume_current;
 int offset_total, offset_current;
 int lockdown_total, lockdown_current;
 int led_total, led_current;
+int random_theme_total, random_theme_current;
 
 typedef struct {
     int *total;
     int *current;
 } Tweak;
 
-Tweak swap, thermal, font, volume, offset, lockdown, led;
+Tweak swap, thermal, font, volume, offset, lockdown, led, random_theme;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -92,6 +93,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKADV_LOCK;
     } else if (element_focused == ui_lblLED) {
         message = MUXTWEAKADV_LED;
+    } else if (element_focused == ui_lblTheme) {
+        message = MUXTWEAKADV_THEME;
     }
 
     if (strlen(message) <= 1) {
@@ -124,7 +127,8 @@ void elements_events_init() {
             ui_droVolume,
             ui_droOffset,
             ui_droPasscode,
-            ui_droLED
+            ui_droLED,
+            ui_droTheme
     };
 
     labels[0] = ui_droSwap;
@@ -134,6 +138,7 @@ void elements_events_init() {
     labels[4] = ui_droOffset;
     labels[5] = ui_droPasscode;
     labels[6] = ui_droLED;
+    labels[7] = ui_droTheme;
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
@@ -146,17 +151,19 @@ void elements_events_init() {
     init_pointers(&offset, &offset_total, &offset_current);
     init_pointers(&lockdown, &lockdown_total, &lockdown_current);
     init_pointers(&led, &led_total, &led_current);
+    init_pointers(&random_theme, &random_theme_total, &random_theme_current);
 }
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {swap.total,     swap.current},
-            {thermal.total,  thermal.current},
-            {font.total,     font.current},
-            {volume.total,   volume.current},
-            {offset.total,   offset.current},
-            {lockdown.total, lockdown.current},
-            {led.total,      led.current}
+            {swap.total,         swap.current},
+            {thermal.total,      thermal.current},
+            {font.total,         font.current},
+            {volume.total,       volume.current},
+            {offset.total,       offset.current},
+            {lockdown.total,     lockdown.current},
+            {led.total,          led.current},
+            {random_theme.total, random_theme.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -166,7 +173,8 @@ void init_dropdown_settings() {
             ui_droVolume,
             ui_droOffset,
             ui_droPasscode,
-            ui_droLED
+            ui_droLED,
+            ui_droTheme
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -183,6 +191,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droOffset, config.SETTINGS.ADVANCED.OFFSET);
     lv_dropdown_set_selected(ui_droPasscode, config.SETTINGS.ADVANCED.LOCK);
     lv_dropdown_set_selected(ui_droLED, config.SETTINGS.ADVANCED.LED);
+    lv_dropdown_set_selected(ui_droTheme, config.SETTINGS.ADVANCED.THEME);
 }
 
 void save_tweak_options() {
@@ -199,6 +208,7 @@ void save_tweak_options() {
     int idx_offset = lv_dropdown_get_selected(ui_droOffset);
     int idx_lockdown = lv_dropdown_get_selected(ui_droPasscode);
     int idx_led = lv_dropdown_get_selected(ui_droLED);
+    int idx_random_theme = lv_dropdown_get_selected(ui_droTheme);
 
     mini_set_int(muos_config, "settings.advanced", "swap", idx_swap);
     mini_set_int(muos_config, "settings.advanced", "thermal", idx_thermal);
@@ -207,6 +217,7 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
     mini_set_int(muos_config, "settings.advanced", "lock", idx_lockdown);
     mini_set_int(muos_config, "settings.advanced", "led", idx_led);
+    mini_set_int(muos_config, "settings.advanced", "random_theme", idx_random_theme);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
@@ -226,7 +237,8 @@ void init_navigation_groups() {
             ui_lblVolume,
             ui_lblOffset,
             ui_lblPasscode,
-            ui_lblLED
+            ui_lblLED,
+            ui_lblTheme
     };
 
     lv_obj_t *ui_objects_value[] = {
@@ -236,7 +248,8 @@ void init_navigation_groups() {
             ui_droVolume,
             ui_droOffset,
             ui_droPasscode,
-            ui_droLED
+            ui_droLED,
+            ui_droTheme
     };
 
     lv_obj_t *ui_objects_icon[] = {
@@ -246,7 +259,8 @@ void init_navigation_groups() {
             ui_icoVolume,
             ui_icoOffset,
             ui_icoPasscode,
-            ui_icoLED
+            ui_icoLED,
+            ui_icoTheme
     };
 
     ui_group = lv_group_create();
@@ -344,6 +358,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droLED,
                                                               &led_current,
                                                               led_total);
+                                    } else if (element_focused == ui_lblTheme) {
+                                        increase_option_value(ui_droTheme,
+                                                              &random_theme_current,
+                                                              random_theme_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                 } else if (ev.code == NAV_B) {
@@ -375,8 +393,8 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 nav_prev(ui_group, 1);
                                 nav_prev(ui_group_value, 1);
@@ -393,8 +411,8 @@ void *joystick_task() {
                                 nav_moved = 1;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 if (element_focused == ui_lblSwap) {
                                     decrease_option_value(ui_droSwap,
@@ -424,6 +442,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droLED,
                                                           &led_current,
                                                           led_total);
+                                } else if (element_focused == ui_lblTheme) {
+                                    decrease_option_value(ui_droTheme,
+                                                          &random_theme_current,
+                                                          random_theme_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
@@ -457,6 +479,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droLED,
                                                           &led_current,
                                                           led_total);
+                                } else if (element_focused == ui_lblTheme) {
+                                    increase_option_value(ui_droTheme,
+                                                          &random_theme_current,
+                                                          random_theme_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             }
@@ -549,6 +575,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblOffset, "offset");
     lv_obj_set_user_data(ui_lblPasscode, "lock");
     lv_obj_set_user_data(ui_lblLED, "led");
+    lv_obj_set_user_data(ui_lblTheme, "theme");
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {

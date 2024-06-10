@@ -335,8 +335,8 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
                                     int y = (ui_count - 13) * 30;
@@ -524,7 +524,7 @@ void ui_refresh_task() {
         if (lv_group_get_obj_count(ui_group) > 0) {
             if (config.BOOT.FACTORY_RESET) {
                 char init_wall[MAX_BUFFER_SIZE];
-                snprintf(init_wall, sizeof(init_wall), "M:/%s/theme/image/wall/default.png", INTERNAL_PATH);
+                snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/default.png", INTERNAL_PATH);
                 lv_img_set_src(ui_imgWall, init_wall);
             } else {
                 static char old_wall[MAX_BUFFER_SIZE];

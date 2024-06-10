@@ -47,6 +47,7 @@ struct mux_config {
             int16_t OFFSET;
             int16_t LOCK;
             int16_t LED;
+            int16_t THEME;
         } ADVANCED;
     } SETTINGS;
 

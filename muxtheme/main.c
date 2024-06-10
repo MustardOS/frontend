@@ -93,7 +93,7 @@ void image_refresh() {
     if (file_exist(theme_image)) {
         char theme_image_path[MAX_BUFFER_SIZE];
         snprintf(theme_image_path, sizeof(theme_image_path),
-                 "M:/%s/MUOS/theme/preview/%s.png",
+                 "M:%s/MUOS/theme/preview/%s.png",
                  device.STORAGE.ROM.MOUNT, theme_name);
         lv_img_set_src(ui_imgBox, theme_image_path);
     } else {
@@ -412,8 +412,8 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= (device.INPUT.AXIS_MAX * -1) &&
-                                 ev.value <= (device.INPUT.AXIS_MIN * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
                                     int y = (ui_count - 13) * 30;
