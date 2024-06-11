@@ -135,8 +135,6 @@
 #define MUXTWEAKGEN_BGM        ""
 #define MUXTWEAKGEN_SOUND      ""
 #define MUXTWEAKGEN_STARTUP    ""
-#define MUXTWEAKGEN_POWER      ""
-#define MUXTWEAKGEN_LOWBATTERY ""
 #define MUXTWEAKGEN_COLOUR     ""
 #define MUXTWEAKGEN_BRIGHTNESS ""
 #define MUXTWEAKGEN_HDMI       ""
