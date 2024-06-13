@@ -1,0 +1,16 @@
+{
+  "codename": "JGS_Ascii",
+  "ttf_path": "/assets/jgs5.ttf",
+  "bin_path": "/assets/ui_font_JGS_Ascii.bin",
+  "c_path": "/assets/ui_font_JGS_Ascii.c",
+  "cfg_path": "/assets/ui_font_JGS_Ascii.fcfg",
+  "size": 20,
+  "bpp": 2,
+  "letters": 3,
+  "ranges": [
+    "0x0-0xffff"
+  ],
+  "symbols": "",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

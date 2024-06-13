@@ -5012,7 +5012,7 @@
                   {
                     "nid": 488782751,
                     "strtype": "LABEL/Text",
-                    "strval": "Low Volume Boot",
+                    "strval": "Volume On Boot",
                     "InheritedType": 10
                   },
                   {
@@ -11724,7 +11724,7 @@
                   {
                     "nid": -1033738723,
                     "strtype": "DROPDOWN/Options",
-                    "strval": "Disabled\\nEnabled",
+                    "strval": "Previous\\nQuiet\\nLoud",
                     "InheritedType": 10
                   },
                   {
@@ -21807,7 +21807,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxtweakadv/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 508,
+    "backup_cnt": 509,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

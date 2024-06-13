@@ -37,6 +37,7 @@ LV_FONT_DECLARE(ui_font_GamepadNav);
 LV_FONT_DECLARE(ui_font_NotoSans);
 LV_FONT_DECLARE(ui_font_NotoSansBig);
 LV_FONT_DECLARE(ui_font_NotoSansSmall);
+LV_FONT_DECLARE(ui_font_JGS_Ascii);
 
 
 void ui_init(void);

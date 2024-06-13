@@ -187,7 +187,18 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droSwap, config.SETTINGS.ADVANCED.SWAP);
     lv_dropdown_set_selected(ui_droThermal, config.SETTINGS.ADVANCED.THERMAL);
     lv_dropdown_set_selected(ui_droFont, config.SETTINGS.ADVANCED.FONT);
-    lv_dropdown_set_selected(ui_droVolume, config.SETTINGS.ADVANCED.VOLUME_LOW);
+
+    const char *volume_type = config.SETTINGS.ADVANCED.VOLUME;
+    if (strcasecmp(volume_type, "previous") == 0) {
+        lv_dropdown_set_selected(ui_droVolume, 0);
+    } else if (strcasecmp(volume_type, "quiet") == 0) {
+        lv_dropdown_set_selected(ui_droVolume, 1);
+    } else if (strcasecmp(volume_type, "loud") == 0) {
+        lv_dropdown_set_selected(ui_droVolume, 2);
+    } else {
+        lv_dropdown_set_selected(ui_droVolume, 0);
+    }
+
     lv_dropdown_set_selected(ui_droOffset, config.SETTINGS.ADVANCED.OFFSET);
     lv_dropdown_set_selected(ui_droPasscode, config.SETTINGS.ADVANCED.LOCK);
     lv_dropdown_set_selected(ui_droLED, config.SETTINGS.ADVANCED.LED);
@@ -204,16 +215,31 @@ void save_tweak_options() {
     int idx_swap = lv_dropdown_get_selected(ui_droSwap);
     int idx_thermal = lv_dropdown_get_selected(ui_droThermal);
     int idx_font = lv_dropdown_get_selected(ui_droFont);
-    int idx_volume_low = lv_dropdown_get_selected(ui_droVolume);
     int idx_offset = lv_dropdown_get_selected(ui_droOffset);
     int idx_lockdown = lv_dropdown_get_selected(ui_droPasscode);
     int idx_led = lv_dropdown_get_selected(ui_droLED);
     int idx_random_theme = lv_dropdown_get_selected(ui_droTheme);
 
+    char *idx_volume;
+    switch (lv_dropdown_get_selected(ui_droVolume)) {
+        case 0:
+            idx_volume = "previous";
+            break;
+        case 1:
+            idx_volume = "quiet";
+            break;
+        case 2:
+            idx_volume = "loud";
+            break;
+        default:
+            idx_volume = "previous";
+            break;
+    }
+
     mini_set_int(muos_config, "settings.advanced", "swap", idx_swap);
     mini_set_int(muos_config, "settings.advanced", "thermal", idx_thermal);
     mini_set_int(muos_config, "settings.advanced", "font", idx_font);
-    mini_set_int(muos_config, "settings.advanced", "volume_low", idx_volume_low);
+    mini_set_string(muos_config, "settings.advanced", "volume", idx_volume);
     mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
     mini_set_int(muos_config, "settings.advanced", "lock", idx_lockdown);
     mini_set_int(muos_config, "settings.advanced", "led", idx_led);

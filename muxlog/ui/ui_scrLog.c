@@ -13,7 +13,7 @@ void ui_scrLog_screen_init(void)
     lv_obj_set_scrollbar_mode(ui_scrLog, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_bg_color(ui_scrLog, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_scrLog, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_scrLog, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_scrLog, &ui_font_JGS_Ascii, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlWall = lv_obj_create(ui_scrLog);
     lv_obj_set_width(ui_pnlWall, 640);
@@ -36,7 +36,8 @@ void ui_scrLog_screen_init(void)
     ui_txtInfo = lv_textarea_create(ui_scrLog);
     lv_obj_set_width(ui_txtInfo, 3840);
     lv_obj_set_height(ui_txtInfo, LV_SIZE_CONTENT);    /// 1
-    lv_textarea_set_placeholder_text(ui_txtInfo, "Waiting for input...");
+    lv_textarea_set_placeholder_text(ui_txtInfo,
+                                     "           ▒▒▒▒▒▒░░░░░ WAITING FOR INPUT ░░░░░▒▒▒▒▒▒");
     lv_obj_clear_flag(ui_txtInfo, LV_OBJ_FLAG_SCROLL_ELASTIC);      /// Flags
     lv_obj_set_scrollbar_mode(ui_txtInfo, LV_SCROLLBAR_MODE_ACTIVE);
     lv_obj_set_scroll_dir(ui_txtInfo, LV_DIR_VER);
@@ -51,9 +52,9 @@ void ui_scrLog_screen_init(void)
     lv_obj_set_style_border_width(ui_txtInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_txtInfo, LV_BORDER_SIDE_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_txtInfo, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_txtInfo, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_txtInfo, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_txtInfo, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_txtInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_txtInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_txtInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
     lv_obj_set_style_text_color(ui_txtInfo, lv_color_hex(0xF7E318), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);

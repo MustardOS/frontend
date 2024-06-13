@@ -145,6 +145,7 @@ void create_app_items() {
 
         lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
         lv_label_set_text(ui_lblAppItem, app_store);
+        lv_obj_set_user_data(ui_lblAppItem, app_store);
 
         lv_obj_set_width(ui_lblAppItem, 640);
         lv_obj_set_height(ui_lblAppItem, 28);
@@ -203,7 +204,7 @@ void create_app_items() {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF0C7");
         } else if (strcasecmp(app_store, "GMU Music Player") == 0) {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF001");
-        } else if (strcasecmp(app_store, "Portmaster") == 0) {
+        } else if (strcasecmp(app_store, "PortMaster") == 0) {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF21A");
         } else if (strcasecmp(app_store, "RetroArch") == 0) {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF6E2");

@@ -282,7 +282,7 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_x(ui_lblVolume, 100);
     lv_obj_set_y(ui_lblVolume, -70);
     lv_obj_set_align(ui_lblVolume, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblVolume, "Low Volume Boot");
+    lv_label_set_text(ui_lblVolume, "Volume On Boot");
     lv_obj_set_style_text_color(ui_lblVolume, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblVolume, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblVolume, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -675,7 +675,7 @@ void ui_scrTweakAdvanced_screen_init(void)
 
     ui_droVolume = lv_dropdown_create(ui_pnlHighlight);
     lv_dropdown_set_dir(ui_droVolume, LV_DIR_LEFT);
-    lv_dropdown_set_options(ui_droVolume, "Disabled\nEnabled");
+    lv_dropdown_set_options(ui_droVolume, "Previous\nQuiet\nLoud");
     lv_dropdown_set_selected_highlight(ui_droVolume, false);
     lv_obj_set_width(ui_droVolume, 640);
     lv_obj_set_height(ui_droVolume, 28);

@@ -197,6 +197,8 @@ void save_clock_settings(int year, int month, int day, int hour, int minute) {
             continue;
         }
 
+        confirm_rtc_config();
+
         return;
     }
 

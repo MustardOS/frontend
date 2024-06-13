@@ -43,7 +43,7 @@ struct mux_config {
             int16_t THERMAL;
             int16_t FONT;
             int16_t VERBOSE;
-            int16_t VOLUME_LOW;
+            char VOLUME[MAX_BUFFER_SIZE];
             int16_t OFFSET;
             int16_t LOCK;
             int16_t LED;

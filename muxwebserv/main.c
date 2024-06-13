@@ -553,7 +553,7 @@ void ui_refresh_task() {
 
             snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                    ui_staCapacity, ui_group, theme.MISC.ANIMATED_BACKGROUND));
+                    ui_scrWebServices, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
             if (strcmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);

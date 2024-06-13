@@ -14,6 +14,7 @@ SET(SOURCES ui_scrLog.c
     fonts/ui_font_GamepadNav.c
     fonts/ui_font_NotoSans.c
     fonts/ui_font_NotoSansBig.c
-    fonts/ui_font_NotoSansSmall.c)
+    fonts/ui_font_NotoSansSmall.c
+    fonts/ui_font_JGS_Ascii.c)
 
 add_library(ui ${SOURCES})

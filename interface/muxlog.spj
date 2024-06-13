@@ -933,9 +933,9 @@
                         "strtype": "_style/Padding",
                         "intarray": [
                           3,
-                          3,
-                          3,
-                          3
+                          0,
+                          0,
+                          0
                         ],
                         "InheritedType": 7
                       }
@@ -995,7 +995,7 @@
               {
                 "nid": -1434730353,
                 "strtype": "TEXTAREA/Placeholder",
-                "strval": "Waiting for input...",
+                "strval": "           ▒▒▒▒▒▒░░░░░ WAITING FOR INPUT ░░░░░▒▒▒▒▒▒",
                 "InheritedType": 10
               },
               {
@@ -1236,7 +1236,7 @@
                   {
                     "nid": 1124200862,
                     "strtype": "_style/Text_Font",
-                    "strval": "NotoSans",
+                    "strval": "JGS_Ascii",
                     "InheritedType": 3
                   }
                 ],
@@ -1304,7 +1304,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxlog/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 411,
+    "backup_cnt": 413,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",
