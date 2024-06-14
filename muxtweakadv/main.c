@@ -60,19 +60,20 @@ int offset_total, offset_current;
 int lockdown_total, lockdown_current;
 int led_total, led_current;
 int random_theme_total, random_theme_current;
+int retrowait_total, retrowait_current;
 
 typedef struct {
     int *total;
     int *current;
 } Tweak;
 
-Tweak swap, thermal, font, volume, offset, lockdown, led, random_theme;
+Tweak swap, thermal, font, volume, offset, lockdown, led, random_theme, retrowait;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 
-lv_obj_t *ui_objects[8];
+lv_obj_t *ui_objects[9];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -93,6 +94,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKADV_LED;
     } else if (element_focused == ui_lblTheme) {
         message = MUXTWEAKADV_THEME;
+    } else if (element_focused == ui_lblRetroWait) {
+        message = MUXTWEAKADV_RETRO;
     }
 
     if (strlen(message) <= 1) {
@@ -126,7 +129,8 @@ void elements_events_init() {
             ui_droOffset,
             ui_droPasscode,
             ui_droLED,
-            ui_droTheme
+            ui_droTheme,
+            ui_droRetroWait
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -141,6 +145,7 @@ void elements_events_init() {
     init_pointers(&lockdown, &lockdown_total, &lockdown_current);
     init_pointers(&led, &led_total, &led_current);
     init_pointers(&random_theme, &random_theme_total, &random_theme_current);
+    init_pointers(&retrowait, &retrowait_total, &retrowait_current);
 }
 
 void init_dropdown_settings() {
@@ -152,7 +157,8 @@ void init_dropdown_settings() {
             {offset.total,       offset.current},
             {lockdown.total,     lockdown.current},
             {led.total,          led.current},
-            {random_theme.total, random_theme.current}
+            {random_theme.total, random_theme.current},
+            {retrowait.total,    retrowait.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -163,7 +169,8 @@ void init_dropdown_settings() {
             ui_droOffset,
             ui_droPasscode,
             ui_droLED,
-            ui_droTheme
+            ui_droTheme,
+            ui_droRetroWait
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -192,6 +199,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droPasscode, config.SETTINGS.ADVANCED.LOCK);
     lv_dropdown_set_selected(ui_droLED, config.SETTINGS.ADVANCED.LED);
     lv_dropdown_set_selected(ui_droTheme, config.SETTINGS.ADVANCED.THEME);
+    lv_dropdown_set_selected(ui_droRetroWait, config.SETTINGS.ADVANCED.RETROWAIT);
 }
 
 void save_tweak_options() {
@@ -208,6 +216,7 @@ void save_tweak_options() {
     int idx_lockdown = lv_dropdown_get_selected(ui_droPasscode);
     int idx_led = lv_dropdown_get_selected(ui_droLED);
     int idx_random_theme = lv_dropdown_get_selected(ui_droTheme);
+    int idx_retrowait = lv_dropdown_get_selected(ui_droRetroWait);
 
     char *idx_volume;
     switch (lv_dropdown_get_selected(ui_droVolume)) {
@@ -233,6 +242,7 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.advanced", "lock", idx_lockdown);
     mini_set_int(muos_config, "settings.advanced", "led", idx_led);
     mini_set_int(muos_config, "settings.advanced", "random_theme", idx_random_theme);
+    mini_set_int(muos_config, "settings.advanced", "retrowait", idx_retrowait);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
@@ -253,6 +263,7 @@ void init_navigation_groups() {
     ui_objects[5] = ui_lblPasscode;
     ui_objects[6] = ui_lblLED;
     ui_objects[7] = ui_lblTheme;
+    ui_objects[8] = ui_lblRetroWait;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droSwap,
@@ -262,7 +273,8 @@ void init_navigation_groups() {
             ui_droOffset,
             ui_droPasscode,
             ui_droLED,
-            ui_droTheme
+            ui_droTheme,
+            ui_droRetroWait
     };
 
     lv_obj_t *ui_objects_icon[] = {
@@ -273,7 +285,8 @@ void init_navigation_groups() {
             ui_icoOffset,
             ui_icoPasscode,
             ui_icoLED,
-            ui_icoTheme
+            ui_icoTheme,
+            ui_icoRetroWait
     };
 
     ui_group = lv_group_create();
@@ -375,6 +388,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droTheme,
                                                               &random_theme_current,
                                                               random_theme_total);
+                                    } else if (element_focused == ui_lblRetroWait) {
+                                        increase_option_value(ui_droRetroWait,
+                                                              &retrowait_current,
+                                                              retrowait_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                 } else if (ev.code == NAV_B) {
@@ -461,6 +478,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droTheme,
                                                           &random_theme_current,
                                                           random_theme_total);
+                                } else if (element_focused == ui_lblRetroWait) {
+                                    decrease_option_value(ui_droRetroWait,
+                                                          &retrowait_current,
+                                                          retrowait_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
@@ -498,6 +519,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droTheme,
                                                           &random_theme_current,
                                                           random_theme_total);
+                                } else if (element_focused == ui_lblRetroWait) {
+                                    increase_option_value(ui_droRetroWait,
+                                                          &retrowait_current,
+                                                          retrowait_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             }
@@ -591,6 +616,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblPasscode, "lock");
     lv_obj_set_user_data(ui_lblLED, "led");
     lv_obj_set_user_data(ui_lblTheme, "theme");
+    lv_obj_set_user_data(ui_lblRetroWait, "retrowait");
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {

@@ -426,6 +426,36 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_style_border_color(ui_lblTheme, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_lblTheme, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_lblRetroWait = lv_label_create(ui_pnlContent);
+    lv_obj_set_width(ui_lblRetroWait, 640);
+    lv_obj_set_height(ui_lblRetroWait, 28);
+    lv_obj_set_align(ui_lblRetroWait, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblRetroWait, "RetroArch Network Wait");
+    lv_obj_set_style_text_color(ui_lblRetroWait, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblRetroWait, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblRetroWait, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblRetroWait, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblRetroWait, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblRetroWait, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblRetroWait, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblRetroWait, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui_lblRetroWait, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_width(ui_lblRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_pad(ui_lblRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblRetroWait, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblRetroWait, -3, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblRetroWait, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lblRetroWait, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_color(ui_lblRetroWait, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_opa(ui_lblRetroWait, 25, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(ui_lblRetroWait, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(ui_lblRetroWait, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     ui_pnlGlyph = lv_obj_create(ui_scrTweakAdvanced);
     lv_obj_set_width(ui_pnlGlyph, 640);
     lv_obj_set_height(ui_pnlGlyph, 400);
@@ -573,6 +603,22 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_style_pad_bottom(ui_icoTheme, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_icoTheme, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoTheme, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    ui_icoRetroWait = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoRetroWait, 640);
+    lv_obj_set_height(ui_icoRetroWait, 28);
+    lv_obj_set_align(ui_icoRetroWait, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_icoRetroWait, "");
+    lv_obj_set_style_text_color(ui_icoRetroWait, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_icoRetroWait, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_width(ui_icoRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_pad(ui_icoRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_icoRetroWait, 13, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_icoRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_icoRetroWait, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_icoRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_icoRetroWait, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_icoRetroWait, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_pnlHighlight = lv_obj_create(ui_scrTweakAdvanced);
     lv_obj_set_width(ui_pnlHighlight, 640);
@@ -804,6 +850,32 @@ void ui_scrTweakAdvanced_screen_init(void)
 
     lv_obj_set_style_text_color(ui_droTheme, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_droTheme, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
+
+    ui_droRetroWait = lv_dropdown_create(ui_pnlHighlight);
+    lv_dropdown_set_dir(ui_droRetroWait, LV_DIR_LEFT);
+    lv_dropdown_set_options(ui_droRetroWait, "Disabled\nEnabled");
+    lv_dropdown_set_selected_highlight(ui_droRetroWait, false);
+    lv_obj_set_width(ui_droRetroWait, 640);
+    lv_obj_set_height(ui_droRetroWait, 28);
+    lv_obj_set_align(ui_droRetroWait, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_droRetroWait, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_set_scrollbar_mode(ui_droRetroWait, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_scroll_dir(ui_droRetroWait, LV_DIR_RIGHT);
+    lv_obj_set_style_text_color(ui_droRetroWait, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_droRetroWait, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_droRetroWait, lv_color_hex(0x403A03), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_droRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_droRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_droRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_droRetroWait, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_droRetroWait, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_droRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_droRetroWait, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_SCROLLED);
+    lv_obj_set_style_text_opa(ui_droRetroWait, 255, LV_PART_MAIN | LV_STATE_SCROLLED);
+
+    lv_obj_set_style_text_color(ui_droRetroWait, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_droRetroWait, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
 
     ui_pnlFooter = lv_obj_create(ui_scrTweakAdvanced);

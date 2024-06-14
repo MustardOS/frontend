@@ -48,6 +48,7 @@ struct mux_config {
             int16_t LOCK;
             int16_t LED;
             int16_t THEME;
+            int16_t RETROWAIT;
         } ADVANCED;
     } SETTINGS;
 

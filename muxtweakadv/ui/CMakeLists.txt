@@ -12,6 +12,7 @@ SET(SOURCES ui_scrTweakAdvanced.c
     fonts/ui_font_AwesomeSmall.c
     fonts/ui_font_Gamepad.c
     fonts/ui_font_GamepadNav.c
+    fonts/ui_font_JGS_Ascii.c
     fonts/ui_font_NotoSans.c
     fonts/ui_font_NotoSansBig.c
     fonts/ui_font_NotoSansSmall.c)

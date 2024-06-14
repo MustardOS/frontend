@@ -129,6 +129,7 @@
 #define MUXTWEAKADV_LOCK    ""
 #define MUXTWEAKADV_LED     ""
 #define MUXTWEAKADV_THEME   ""
+#define MUXTWEAKADV_RETRO   ""
 
 // muxtweakgen
 #define MUXTWEAKGEN_HIDDEN     ""
