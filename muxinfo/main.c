@@ -47,16 +47,15 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
+
+// Modify the following integer to number of static menu elements
+lv_obj_t *ui_objects[3];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -77,11 +76,9 @@ void show_help(lv_obj_t *element_focused) {
 }
 
 void init_navigation_groups() {
-    lv_obj_t *ui_objects[] = {
-            ui_lblTester,
-            ui_lblSystem,
-            ui_lblCredits
-    };
+    ui_objects[0] = ui_lblTester;
+    ui_objects[1] = ui_lblSystem;
+    ui_objects[2] = ui_lblCredits;
 
     lv_obj_t *ui_objects_icon[] = {
             ui_icoTester,
@@ -164,6 +161,7 @@ void *joystick_task() {
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound);
+                                    write_text_to_file(MUOS_PDI_LOAD, "info", "w");
                                     safe_quit = 1;
                                 }
                             }
@@ -344,7 +342,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrInfo, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
@@ -401,6 +399,28 @@ void ui_refresh_task() {
         lv_obj_invalidate(ui_pnlContent);
         lv_task_handler();
         nav_moved = 0;
+    }
+}
+
+void direct_to_previous() {
+    if (file_exist(MUOS_PDI_LOAD)) {
+        char *prev = read_text_from_file(MUOS_PDI_LOAD);
+        int text_hit = 0;
+
+        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+            const char *u_data = lv_obj_get_user_data(ui_objects[i]);
+
+            if (strcasecmp(u_data, prev) == 0) {
+                text_hit = i;
+                break;
+            }
+        }
+
+        if (text_hit != 0) {
+            nav_next(ui_group, text_hit);
+            nav_next(ui_group_glyph, text_hit);
+            nav_moved = 1;
+        }
     }
 }
 
@@ -539,6 +559,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     init_elements();
+    direct_to_previous();
+
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

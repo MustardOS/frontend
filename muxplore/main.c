@@ -53,10 +53,6 @@ char *osd_message;
 struct mux_config config;
 struct mux_device device;
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
@@ -69,6 +65,11 @@ enum list_module {
     FAVOURITE,
     HISTORY
 } module;
+
+enum content_type {
+    FOLDER,
+    ROM
+} content;
 
 struct items content_items;
 struct items named_items;
@@ -88,9 +89,8 @@ char *current_wall = "";
 
 char *prev_dir;
 char *curr_dir;
-char *next_dir;
 
-int prev_index;
+int sys_index = -1;
 
 int ui_count = 0;
 int ui_file_count = 0;
@@ -350,7 +350,7 @@ void image_refresh(char *image_type) {
     }
 
     if (strcasecmp(image_type, "preview") == 0) {
-        if (strcmp(preview_image_previous_path, image) != 0) {
+        if (strcasecmp(preview_image_previous_path, image) != 0) {
             printf("LOADING PREVIEW ARTWORK AT: %s\n", image);
 
             if (file_exist(image)) {
@@ -362,7 +362,7 @@ void image_refresh(char *image_type) {
             }
         }
     } else {
-        if (strcmp(box_image_previous_path, image) != 0) {
+        if (strcasecmp(box_image_previous_path, image) != 0) {
             printf("LOADING BOX ARTWORK AT: %s\n", image);
 
             if (file_exist(image)) {
@@ -414,7 +414,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
     closedir(dir);
 }
 
-void gen_label(char *item_glyph, char *item_text) {
+void gen_label(int item_type, char *item_glyph, char *item_text) {
     lv_obj_t * ui_pnlExplore = lv_obj_create(ui_pnlContent);
     lv_obj_set_width(ui_pnlExplore, 640);
     lv_obj_set_height(ui_pnlExplore, 28);
@@ -506,6 +506,10 @@ void gen_label(char *item_glyph, char *item_text) {
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
+
+    if (item_type == FOLDER && strcasecmp(item_text, prev_dir) == 0) {
+        sys_index = ui_count;
+    }
 }
 
 void gen_item(char **file_names, int file_count) {
@@ -634,7 +638,7 @@ void gen_item(char **file_names, int file_count) {
 
         char *item_name = strip_label_placement(named_items.array[i]);
         if (strcasecmp(item_name, DUMMY_DIR) != 0) {
-            gen_label("\uF15B", item_name);
+            gen_label(ROM, "\uF15B", item_name);
         }
     }
 }
@@ -707,7 +711,7 @@ void create_explore_items(void *count) {
             push_string(&named_items, curr_dir);
             push_string(&content_items, DUMMY_DIR);
 
-            gen_label("\uF07B", dir_names[i]);
+            gen_label(FOLDER, "\uF07B", dir_names[i]);
             (*ui_count_ptr)++;
 
             free(dir_names[i]);
@@ -750,8 +754,8 @@ void explore_root() {
             safe_quit = 1;
             break;
         case 6:
-            gen_label("\uF07B", "SD1 (mmc)");
-            gen_label("\uF07B", "SD2 (sdcard)");
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)");
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)");
             ui_count += 2;
             break;
         case 8:
@@ -762,19 +766,19 @@ void explore_root() {
             safe_quit = 1;
             break;
         case 10:
-            gen_label("\uF07B", "SD1 (mmc)");
-            gen_label("\uF07B", "USB (external)");
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)");
+            gen_label(FOLDER, "\uF07B", "USB (external)");
             ui_count += 2;
             break;
         case 12:
-            gen_label("\uF07B", "SD2 (sdcard)");
-            gen_label("\uF07B", "USB (external)");
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)");
+            gen_label(FOLDER, "\uF07B", "USB (external)");
             ui_count += 2;
             break;
         case 14:
-            gen_label("\uF07B", "SD1 (mmc)");
-            gen_label("\uF07B", "SD2 (sdcard)");
-            gen_label("\uF07B", "USB (external)");
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)");
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)");
+            gen_label(FOLDER, "\uF07B", "USB (external)");
             ui_count += 3;
             break;
         default:
@@ -1760,7 +1764,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrExplore, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
@@ -1843,7 +1847,6 @@ int main(int argc, char *argv[]) {
                      "\t\tfavourite - List favourite items\n"
                      "\t\thistory - List history items\n\n";
 
-    int sys_index = -1;
     int opt;
     while ((opt = getopt(argc, argv, "i:m:")) != -1) {
         switch (opt) {
@@ -1889,6 +1892,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
+
+    printf("\t\tINDEX SHOULD BE: %d\n", sys_index);
 
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
     setenv("NO_COLOR", "1", 1);
@@ -1981,11 +1986,31 @@ int main(int argc, char *argv[]) {
     initialise_array(&named_items);
     initialise_array(&named_index);
 
+    if (file_exist(MUOS_PDI_LOAD)) {
+        prev_dir = read_text_from_file(MUOS_PDI_LOAD);
+    }
+
     pthread_t gen_item_thread;
 
     switch (module) {
         case ROOT:
             pthread_create(&gen_item_thread, NULL, (void *) explore_root, (void *) NULL);
+
+            char *SD2_lc = str_tolower(strcpy(malloc(strlen(SD2) + 1), SD2));
+            char *USB_lc = str_tolower(strcpy(malloc(strlen(E_USB) + 1), E_USB));
+
+            if (str_startswith(USB_lc, str_tolower(prev_dir))) {
+                sys_index = 2;
+            } else if (str_startswith(SD2_lc, str_tolower(prev_dir))) {
+                sys_index = 1;
+            } else {
+                sys_index = 0;
+            }
+
+            free(SD2_lc);
+            free(USB_lc);
+
+            write_text_to_file(MUOS_PDI_LOAD, "explore", "w");
             break;
         case MMC:
         case SDCARD:
@@ -2025,12 +2050,18 @@ int main(int argc, char *argv[]) {
                         break;
                 }
             }
+            write_text_to_file(MUOS_PDI_LOAD, get_last_dir(sd_dir), "w");
+            if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "roms") == 0) {
+                write_text_to_file(MUOS_PDI_LOAD, get_last_subdir(sd_dir, '/', 4), "w");
+            }
             break;
         case FAVOURITE:
             pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "favourite");
+            write_text_to_file(MUOS_PDI_LOAD, "favourite", "w");
             break;
         case HISTORY:
             pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "history");
+            write_text_to_file(MUOS_PDI_LOAD, "history", "w");
             break;
     }
 
@@ -2088,6 +2119,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
 
     init_elements();
+
+    printf("\t\tINDEX IS AT: %d\n", sys_index);
 
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);

@@ -18,13 +18,14 @@
 #define RA_CONFIG_FILE "/mnt/mmc/MUOS/.retroarch/retroarch.cfg"
 #define RA_CONFIG_CRC "59749d83"
 
-#define MUOS_ACT_LOAD "/tmp/act_go"
-#define MUOS_APP_LOAD "/tmp/app_go"
-#define MUOS_ASS_LOAD "/tmp/ass_go"
-#define MUOS_IDX_LOAD "/tmp/idx_go"
-#define MUOS_SAA_LOAD "/tmp/saa_go"
-#define MUOS_ROM_LOAD "/tmp/rom_go"
-#define MUOS_SYS_LOAD "/tmp/sys_go"
+#define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
+#define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
+#define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
+#define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
+#define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
+#define MUOS_ROM_LOAD "/tmp/rom_go" // ROM Content for Launching
+#define MUOS_SAA_LOAD "/tmp/saa_go" // Auto Assignment Flag
+#define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 
 #define BL_RST_FILE    "/opt/muos/config/brightness.txt"
 #define VOL_RST_FILE   "/opt/muos/config/volume.txt"

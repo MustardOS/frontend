@@ -48,16 +48,15 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
 lv_group_t *ui_group;
-lv_group_t *ui_icon_group;
+lv_group_t *ui_group_glyph;
+
+// Modify the following integer to number of static menu elements
+lv_obj_t *ui_objects[8];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -88,16 +87,14 @@ void show_help(lv_obj_t *element_focused) {
 }
 
 void init_navigation_groups() {
-    lv_obj_t *ui_objects[] = {
-            ui_lblContent,
-            ui_lblFavourites,
-            ui_lblHistory,
-            ui_lblApps,
-            ui_lblInfo,
-            ui_lblConfig,
-            ui_lblReboot,
-            ui_lblShutdown
-    };
+    ui_objects[0] = ui_lblContent;
+    ui_objects[1] = ui_lblFavourites;
+    ui_objects[2] = ui_lblHistory;
+    ui_objects[3] = ui_lblApps;
+    ui_objects[4] = ui_lblInfo;
+    ui_objects[5] = ui_lblConfig;
+    ui_objects[6] = ui_lblReboot;
+    ui_objects[7] = ui_lblShutdown;
 
     lv_obj_t *ui_icons[] = {
             ui_icoContent,
@@ -111,14 +108,14 @@ void init_navigation_groups() {
     };
 
     ui_group = lv_group_create();
-    ui_icon_group = lv_group_create();
+    ui_group_glyph = lv_group_create();
 
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
     }
 
     for (unsigned int i = 0; i < sizeof(ui_icons) / sizeof(ui_icons[0]); i++) {
-        lv_group_add_obj(ui_icon_group, ui_icons[i]);
+        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
     }
 }
 
@@ -241,14 +238,14 @@ void *joystick_task() {
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 nav_prev(ui_group, 1);
-                                nav_prev(ui_icon_group, 1);
+                                nav_prev(ui_group_glyph, 1);
                                 play_sound("navigate", nav_sound);
                                 nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 nav_next(ui_group, 1);
-                                nav_next(ui_icon_group, 1);
+                                nav_next(ui_group_glyph, 1);
                                 play_sound("navigate", nav_sound);
                                 nav_moved = 1;
                             }
@@ -402,7 +399,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrLaunch, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
@@ -459,6 +456,28 @@ void ui_refresh_task() {
         lv_obj_invalidate(ui_pnlContent);
         lv_task_handler();
         nav_moved = 0;
+    }
+}
+
+void direct_to_previous() {
+    if (file_exist(MUOS_PDI_LOAD)) {
+        char *prev = read_text_from_file(MUOS_PDI_LOAD);
+        int text_hit = 0;
+
+        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+            const char *u_data = lv_obj_get_user_data(ui_objects[i]);
+
+            if (strcasecmp(u_data, prev) == 0) {
+                text_hit = i;
+                break;
+            }
+        }
+
+        if (text_hit != 0) {
+            nav_next(ui_group, text_hit);
+            nav_next(ui_group_glyph, text_hit);
+            nav_moved = 1;
+        }
     }
 }
 
@@ -597,6 +616,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     init_elements();
+    direct_to_previous();
+
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

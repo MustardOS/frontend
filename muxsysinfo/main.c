@@ -48,10 +48,6 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
@@ -59,6 +55,8 @@ int progress_onscreen = -1;
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
+
+lv_obj_t *ui_objects[12];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -207,20 +205,18 @@ void update_system_info() {
 }
 
 void init_navigation_groups() {
-    lv_obj_t *ui_objects[] = {
-            ui_lblVersion,
-            ui_lblRetro,
-            ui_lblKernel,
-            ui_lblUptime,
-            ui_lblCPU,
-            ui_lblSpeed,
-            ui_lblGovernor,
-            ui_lblMemory,
-            ui_lblTemp,
-            ui_lblServices,
-            ui_lblBatteryCap,
-            ui_lblVoltage
-    };
+    ui_objects[0] = ui_lblVersion;
+    ui_objects[1] = ui_lblRetro;
+    ui_objects[2] = ui_lblKernel;
+    ui_objects[3] = ui_lblUptime;
+    ui_objects[4] = ui_lblCPU;
+    ui_objects[5] = ui_lblSpeed;
+    ui_objects[6] = ui_lblGovernor;
+    ui_objects[7] = ui_lblMemory;
+    ui_objects[8] = ui_lblTemp;
+    ui_objects[9] = ui_lblServices;
+    ui_objects[10] = ui_lblBatteryCap;
+    ui_objects[11] = ui_lblVoltage;
 
     lv_obj_t *ui_objects_value[] = {
             ui_lblVersionValue,
@@ -251,19 +247,6 @@ void init_navigation_groups() {
             ui_icoBatteryCap,
             ui_icoVoltage
     };
-
-    labels[0] = ui_lblVersionValue;
-    labels[1] = ui_lblRetroValue;
-    labels[2] = ui_lblKernelValue;
-    labels[3] = ui_lblUptimeValue;
-    labels[4] = ui_lblCPUValue;
-    labels[5] = ui_lblSpeedValue;
-    labels[6] = ui_lblGovernorValue;
-    labels[7] = ui_lblMemoryValue;
-    labels[8] = ui_lblTempValue;
-    labels[9] = ui_lblServicesValue;
-    labels[10] = ui_lblBatteryCapValue;
-    labels[11] = ui_lblVoltageValue;
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -340,6 +323,7 @@ void *joystick_task() {
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound);
                                     input_disable = 1;
+                                    write_text_to_file(MUOS_PDI_LOAD, "system", "w");
                                     safe_quit = 1;
                                 }
                             }
@@ -531,7 +515,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrSysInfo, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);

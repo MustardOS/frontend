@@ -35,10 +35,6 @@ struct mux_device device;
 
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 void setup_background_process() {

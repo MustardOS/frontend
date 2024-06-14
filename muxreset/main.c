@@ -46,9 +46,6 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-lv_obj_t *labels[] = {NULL};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
@@ -484,7 +481,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrReset, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);

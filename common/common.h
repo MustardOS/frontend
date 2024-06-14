@@ -5,8 +5,6 @@
 
 extern int msgbox_active;
 extern lv_obj_t *msgbox_element;
-extern lv_obj_t *labels[];
-extern unsigned int label_count;
 extern int turbo_mode;
 extern int input_disable;
 extern int nav_sound;
@@ -67,6 +65,8 @@ int time_compare_for_history(const void *a, const void *b);
 char *str_append(char *old_text, const char *new_text);
 
 int str_compare(const void *a, const void *b);
+
+int str_startswith(const char *a, const char *b);
 
 char *str_nonew(char *text);
 

@@ -162,6 +162,14 @@ int str_compare(const void *a, const void *b) {
     return 0;
 }
 
+int str_startswith(const char *a, const char *b) {
+    if (strncmp(a, b, strlen(b)) == 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
 char *str_nonew(char *text) {
     char *newline_pos = strchr(text, '\n');
 

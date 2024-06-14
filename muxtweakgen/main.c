@@ -48,10 +48,6 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
@@ -74,6 +70,8 @@ Tweak hidden, bgm, startup, colour, brightness, hdmi, shutdown;
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
+
+lv_obj_t *ui_objects[9];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -131,14 +129,6 @@ void elements_events_init() {
             ui_droShutdown
     };
 
-    labels[0] = ui_droHidden;
-    labels[1] = ui_droBGM;
-    labels[2] = ui_droStartup;
-    labels[3] = ui_droColour;
-    labels[4] = ui_droBrightness;
-    labels[5] = ui_droHDMI;
-    labels[6] = ui_droShutdown;
-
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
@@ -154,13 +144,13 @@ void elements_events_init() {
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {hidden.total,      hidden.current},
-            {bgm.total,         bgm.current},
-            {startup.total,     startup.current},
-            {colour.total,      colour.current},
-            {brightness.total,  brightness.current},
-            {hdmi.total,        hdmi.current},
-            {shutdown.total,    shutdown.current}
+            {hidden.total,     hidden.current},
+            {bgm.total,        bgm.current},
+            {startup.total,    startup.current},
+            {colour.total,     colour.current},
+            {brightness.total, brightness.current},
+            {hdmi.total,       hdmi.current},
+            {shutdown.total,   shutdown.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -429,17 +419,15 @@ void save_tweak_options() {
 }
 
 void init_navigation_groups() {
-    lv_obj_t *ui_objects[] = {
-            ui_lblHidden,
-            ui_lblBGM,
-            ui_lblStartup,
-            ui_lblColour,
-            ui_lblBrightness,
-            ui_lblHDMI,
-            ui_lblShutdown,
-            ui_lblInterface,
-            ui_lblAdvanced
-    };
+    ui_objects[0] = ui_lblHidden;
+    ui_objects[1] = ui_lblBGM;
+    ui_objects[2] = ui_lblStartup;
+    ui_objects[3] = ui_lblColour;
+    ui_objects[4] = ui_lblBrightness;
+    ui_objects[5] = ui_lblHDMI;
+    ui_objects[6] = ui_lblShutdown;
+    ui_objects[7] = ui_lblInterface;
+    ui_objects[8] = ui_lblAdvanced;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droHidden,
@@ -580,6 +568,8 @@ void *joystick_task() {
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     save_tweak_options();
+
+                                    write_text_to_file(MUOS_PDI_LOAD, "general", "w");
                                     safe_quit = 1;
                                 }
                             }
@@ -845,7 +835,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrTweakGeneral, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
@@ -902,6 +892,28 @@ void ui_refresh_task() {
         lv_obj_invalidate(ui_pnlContent);
         lv_task_handler();
         nav_moved = 0;
+    }
+}
+
+void direct_to_previous() {
+    if (file_exist(MUOS_PDI_LOAD)) {
+        char *prev = read_text_from_file(MUOS_PDI_LOAD);
+        int text_hit = 0;
+
+        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+            const char *u_data = lv_obj_get_user_data(ui_objects[i]);
+
+            if (strcasecmp(u_data, prev) == 0) {
+                text_hit = i;
+                break;
+            }
+        }
+
+        if (text_hit != 0) {
+            nav_next(ui_group, text_hit);
+            nav_next(ui_group_glyph, text_hit);
+            nav_moved = 1;
+        }
     }
 }
 
@@ -1044,6 +1056,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     init_elements();
+    direct_to_previous();
+
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

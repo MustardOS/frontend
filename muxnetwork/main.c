@@ -50,10 +50,6 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
@@ -74,6 +70,9 @@ lv_obj_t *num_entry;
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
+
+// Modify the following integer to number of static menu elements
+lv_obj_t *ui_objects[9];
 
 static const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
                                       "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
@@ -210,17 +209,15 @@ void save_network_config() {
 }
 
 void init_navigation_groups() {
-    lv_obj_t *ui_objects[] = {
-            ui_lblEnable,
-            ui_lblIdentifier,
-            ui_lblPassword,
-            ui_lblType,
-            ui_lblAddress,
-            ui_lblSubnet,
-            ui_lblGateway,
-            ui_lblDNS,
-            ui_lblConnect
-    };
+    ui_objects[0] = ui_lblEnable;
+    ui_objects[1] = ui_lblIdentifier;
+    ui_objects[2] = ui_lblPassword;
+    ui_objects[3] = ui_lblType;
+    ui_objects[4] = ui_lblAddress;
+    ui_objects[5] = ui_lblSubnet;
+    ui_objects[6] = ui_lblGateway;
+    ui_objects[7] = ui_lblDNS;
+    ui_objects[8] = ui_lblConnect;
 
     lv_obj_t *ui_objects_value[] = {
             ui_lblEnableValue,
@@ -245,16 +242,6 @@ void init_navigation_groups() {
             ui_icoDNS,
             ui_icoConnect
     };
-
-    labels[0] = ui_lblEnableValue;
-    labels[1] = ui_lblIdentifierValue;
-    labels[2] = ui_lblPasswordValue;
-    labels[3] = ui_lblTypeValue;
-    labels[4] = ui_lblAddressValue;
-    labels[5] = ui_lblSubnetValue;
-    labels[6] = ui_lblGatewayValue;
-    labels[7] = ui_lblDNSValue;
-    labels[8] = ui_lblStatusValue;
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -652,6 +639,7 @@ void *joystick_task() {
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
+                                    write_text_to_file(MUOS_PDI_LOAD, "network", "w");
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
@@ -660,6 +648,9 @@ void *joystick_task() {
                                         input_disable = 1;
                                         save_network_config();
                                         load_mux("net_scan");
+
+                                        const char *u_data = lv_obj_get_user_data(element_focused);
+                                        write_text_to_file(MUOS_PDI_LOAD, u_data, "w");
 
                                         safe_quit = 1;
                                     }
@@ -1650,7 +1641,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrNetwork, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
@@ -1707,6 +1698,28 @@ void ui_refresh_task() {
         lv_obj_invalidate(ui_pnlContent);
         lv_task_handler();
         nav_moved = 0;
+    }
+}
+
+void direct_to_previous() {
+    if (file_exist(MUOS_PDI_LOAD)) {
+        char *prev = read_text_from_file(MUOS_PDI_LOAD);
+        int text_hit = 0;
+
+        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+            const char *u_data = lv_obj_get_user_data(ui_objects[i]);
+
+            if (strcasecmp(u_data, prev) == 0) {
+                text_hit = i;
+                break;
+            }
+        }
+
+        if (text_hit != 0) {
+            nav_next(ui_group, text_hit);
+            nav_next(ui_group_glyph, text_hit);
+            nav_moved = 1;
+        }
     }
 }
 
@@ -1847,6 +1860,8 @@ int main(int argc, char *argv[]) {
 
     init_osk();
     init_elements();
+    direct_to_previous();
+
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

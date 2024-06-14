@@ -35,10 +35,6 @@ char *osd_message;
 struct mux_config config;
 struct mux_device device;
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int main(int argc, char *argv[]) {

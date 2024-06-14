@@ -48,16 +48,15 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
+
+// Modify the following integer to number of static menu elements
+lv_obj_t *ui_objects[5];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -82,13 +81,11 @@ void show_help(lv_obj_t *element_focused) {
 }
 
 void init_navigation_groups() {
-    lv_obj_t *ui_objects[] = {
-            ui_lblRG28XX,
-            ui_lblRG35XXH,
-            ui_lblRG35XXPLUS,
-            ui_lblRG35XXSP,
-            ui_lblRG35XX2024
-    };
+    ui_objects[0] = ui_lblRG28XX;
+    ui_objects[1] = ui_lblRG35XXH;
+    ui_objects[2] = ui_lblRG35XXPLUS;
+    ui_objects[3] = ui_lblRG35XXSP;
+    ui_objects[4] = ui_lblRG35XX2024;
 
     lv_obj_t *ui_objects_icon[] = {
             ui_icoRG28XX,
@@ -404,7 +401,7 @@ void ui_refresh_task() {
                 snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                         ui_scrDevice, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-                if (strcmp(new_wall, old_wall) != 0) {
+                if (strcasecmp(new_wall, old_wall) != 0) {
                     strcpy(current_wall, new_wall);
                     if (strlen(new_wall) > 3) {
                         printf("LOADING WALLPAPER: %s\n", new_wall);

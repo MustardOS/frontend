@@ -48,10 +48,6 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
@@ -118,12 +114,6 @@ void elements_events_init() {
             ui_droClock,
             ui_droBoxArt
     };
-
-    labels[0] = ui_droBattery;
-    labels[1] = ui_droNetwork;
-    labels[2] = ui_droBluetooth;
-    labels[3] = ui_droClock;
-    labels[4] = ui_droBoxArt;
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
@@ -313,6 +303,8 @@ void *joystick_task() {
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     save_visual_options();
+
+                                    write_text_to_file(MUOS_PDI_LOAD, "interface", "w");
                                     safe_quit = 1;
                                 }
                             }
@@ -567,7 +559,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrVisual, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);

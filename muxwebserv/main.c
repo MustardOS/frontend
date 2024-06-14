@@ -48,10 +48,6 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {NULL, NULL, NULL, NULL, NULL};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
@@ -72,6 +68,8 @@ WebServices shell, browser, terminal, syncthing, ntp;
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
+
+lv_obj_t *ui_objects[5];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -118,12 +116,6 @@ void elements_events_init() {
             ui_droSyncthing,
             ui_droNTP
     };
-
-    labels[0] = ui_droShell;
-    labels[1] = ui_droBrowser;
-    labels[2] = ui_droTerminal;
-    labels[3] = ui_droSyncthing;
-    labels[4] = ui_droNTP;
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
@@ -197,13 +189,11 @@ void save_web_options() {
 }
 
 void init_navigation_groups() {
-    lv_obj_t *ui_objects[] = {
-            ui_lblShell,
-            ui_lblBrowser,
-            ui_lblTerminal,
-            ui_lblSyncthing,
-            ui_lblNTP
-    };
+    ui_objects[0] = ui_lblShell;
+    ui_objects[1] = ui_lblBrowser;
+    ui_objects[2] = ui_lblTerminal;
+    ui_objects[3] = ui_lblSyncthing;
+    ui_objects[4] = ui_lblNTP;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droShell,
@@ -319,6 +309,8 @@ void *joystick_task() {
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     save_web_options();
+
+                                    write_text_to_file(MUOS_PDI_LOAD, "service", "w");
                                     safe_quit = 1;
                                 }
                             }
@@ -555,7 +547,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrWebServices, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);

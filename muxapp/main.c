@@ -48,10 +48,6 @@ struct mux_device device;
 int nav_moved = 1;
 char *current_wall = "";
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
@@ -145,7 +141,6 @@ void create_app_items() {
 
         lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
         lv_label_set_text(ui_lblAppItem, app_store);
-        lv_obj_set_user_data(ui_lblAppItem, app_store);
 
         lv_obj_set_width(ui_lblAppItem, 640);
         lv_obj_set_height(ui_lblAppItem, 28);
@@ -379,6 +374,7 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound);
+                                    write_text_to_file(MUOS_PDI_LOAD, "apps", "w");
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
@@ -419,6 +415,7 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
+                                    nav_moved = 1;
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
                                     JOYUP_pressed = (ev.value != 0);
@@ -434,6 +431,7 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
+                                    nav_moved = 1;
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count) {
                                     JOYDOWN_pressed = (ev.value != 0);
@@ -603,6 +601,9 @@ void glyph_task() {
 void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
+            struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+            lv_obj_set_user_data(element_focused, lv_label_get_text(element_focused));
+
             static char old_wall[MAX_BUFFER_SIZE];
             static char new_wall[MAX_BUFFER_SIZE];
 
@@ -610,7 +611,7 @@ void ui_refresh_task() {
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
                     ui_scrApp, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcmp(new_wall, old_wall) != 0) {
+            if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
@@ -739,6 +740,11 @@ int main(int argc, char *argv[]) {
             break;
     }
 
+    create_app_items();
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    lv_obj_set_user_data(element_focused, lv_label_get_text(element_focused));
+
     current_wall = load_wallpaper(ui_scrApp, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
@@ -756,8 +762,6 @@ int main(int argc, char *argv[]) {
     if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
     }
-
-    create_app_items();
 
     int sys_index = 0;
     if (file_exist(MUOS_IDX_LOAD)) {

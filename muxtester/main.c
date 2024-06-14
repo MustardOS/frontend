@@ -37,10 +37,6 @@ char *osd_message;
 struct mux_config config;
 struct mux_device device;
 
-// Place as many NULL as there are options!
-lv_obj_t *labels[] = {};
-unsigned int label_count = sizeof(labels) / sizeof(labels[0]);
-
 lv_obj_t *msgbox_element = NULL;
 
 void *joystick_task() {
@@ -91,6 +87,7 @@ void *joystick_task() {
                             lv_label_set_text(ui_lblButton, "⇽");
                             break;
                         case JOY_POWER:
+                            write_text_to_file(MUOS_PDI_LOAD, "tester", "w");
                             safe_quit = 1;
                             break;
                         case JOY_L2:
