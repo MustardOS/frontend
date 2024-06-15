@@ -33,6 +33,7 @@ lv_obj_t * ui_lblWizardRight;
 lv_obj_t * ui_conHero;
 lv_obj_t * ui_lblHeroTitle;
 lv_obj_t * ui_lblHeroLeft;
+lv_obj_t * ui_lblHeroCenter;
 lv_obj_t * ui_lblHeroRight;
 lv_obj_t * ui_conKnight;
 lv_obj_t * ui_lblKnightTitle;

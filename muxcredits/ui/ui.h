@@ -39,6 +39,7 @@ extern lv_obj_t * ui_lblWizardRight;
 extern lv_obj_t * ui_conHero;
 extern lv_obj_t * ui_lblHeroTitle;
 extern lv_obj_t * ui_lblHeroLeft;
+extern lv_obj_t * ui_lblHeroCenter;
 extern lv_obj_t * ui_lblHeroRight;
 extern lv_obj_t * ui_conKnight;
 extern lv_obj_t * ui_lblKnightTitle;

@@ -422,13 +422,13 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_style_text_opa(ui_lblHeroTitle, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_lblHeroLeft = lv_label_create(ui_conHero);
-    lv_obj_set_width(ui_lblHeroLeft, lv_pct(50));
+    lv_obj_set_width(ui_lblHeroLeft, lv_pct(33));
     lv_obj_set_height(ui_lblHeroLeft, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_lblHeroLeft, 0);
     lv_obj_set_y(ui_lblHeroLeft, 30);
     lv_obj_set_align(ui_lblHeroLeft, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblHeroLeft,
-                      "ninja.badger\nlmarcomiranda\nyouraveragelord\nkentonftw\nbazkart\nbtreecat\nzazouboy\ncombustify\nluzfcb\nzaka1w3\nndguardian\nnico_linber");
+                      "lmarcomiranda\nninja.badger\nyouraveragelord\nkentonftw\nbtreecat\nzazouboy\ncombustify\nluzfcb\nzaka1w3\nndguardian\nnico_linber");
     lv_obj_set_scroll_dir(ui_lblHeroLeft, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroLeft, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHeroLeft, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -448,14 +448,41 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_style_text_color(ui_lblHeroLeft, lv_color_hex(0xF8E008), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_lblHeroLeft, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_lblHeroCenter = lv_label_create(ui_conHero);
+    lv_obj_set_width(ui_lblHeroCenter, lv_pct(33));
+    lv_obj_set_height(ui_lblHeroCenter, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_lblHeroCenter, 0);
+    lv_obj_set_y(ui_lblHeroCenter, 30);
+    lv_obj_set_align(ui_lblHeroCenter, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblHeroCenter,
+                      "bazkart\nrobbiet480\nmeowman_\noates\nbenjaminbercy\nultra646464\nsunclutch\nlethargicdemigod\n._j0hn_.\nsnesfan1");
+    lv_obj_set_scroll_dir(ui_lblHeroCenter, LV_DIR_HOR);
+    lv_obj_set_style_text_color(ui_lblHeroCenter, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblHeroCenter, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_letter_space(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblHeroCenter, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_lblHeroCenter, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblHeroCenter, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblHeroCenter, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui_lblHeroCenter, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_row(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblHeroCenter, lv_color_hex(0xF8E008), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lblHeroCenter, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     ui_lblHeroRight = lv_label_create(ui_conHero);
-    lv_obj_set_width(ui_lblHeroRight, lv_pct(50));
+    lv_obj_set_width(ui_lblHeroRight, lv_pct(33));
     lv_obj_set_height(ui_lblHeroRight, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_lblHeroRight, 0);
     lv_obj_set_y(ui_lblHeroRight, 30);
     lv_obj_set_align(ui_lblHeroRight, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lblHeroRight,
-                      "x_tremis\njottenmiller\nintelliaim\nsethg911\njoeysretrohandhelds\nzadeis\nrobbiet480\nlasereverything\ntsuica\n_tresd\nnico_linber_36894\npr0j3kt2501");
+                      "x_tremis\njottenmiller\nintelliaim\nsethg911\njoeysretrohandhelds\nzadeis\nlasereverything\ntsuica\n_tresd\nnico_linber_36894\npr0j3kt2501");
     lv_obj_set_scroll_dir(ui_lblHeroRight, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroRight, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHeroRight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
