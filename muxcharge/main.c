@@ -58,6 +58,13 @@ void check_for_cable() {
     }
 }
 
+void set_brightness(int brightness) {
+    char command[MAX_BUFFER_SIZE];
+    snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
+             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), brightness);
+    system(command);
+}
+
 void *joystick_task() {
     struct input_event ev;
     int epoll_fd;
@@ -115,7 +122,7 @@ void *joystick_task() {
                                 }
 
                                 blank = 0;
-                                set_brightness(100);
+                                set_brightness(90);
                             }
                         }
                         break;
@@ -180,7 +187,7 @@ int main(int argc, char *argv[]) {
     load_config(&config);
 
     ui_init();
-    set_brightness(100);
+    set_brightness(90);
 
     load_theme(&theme, &config, &device, basename(argv[0]));
     apply_theme();

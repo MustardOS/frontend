@@ -6,7 +6,7 @@
 void load_config(struct mux_config *config) {
     static char config_file[MAX_BUFFER_SIZE];
     snprintf(config_file, sizeof(config_file),
-             "/%s/config/config.ini", INTERNAL_PATH);
+             "%s/config/config.ini", INTERNAL_PATH);
 
     mini_t * muos_config = mini_try_load(config_file);
 
@@ -58,6 +58,10 @@ void load_config(struct mux_config *config) {
     strncpy(config->SETTINGS.ADVANCED.VOLUME, get_ini_string(muos_config, "settings.advanced", "volume", "previous"),
             MAX_BUFFER_SIZE - 1);
     config->SETTINGS.ADVANCED.VOLUME[MAX_BUFFER_SIZE - 1] = '\0';
+    strncpy(config->SETTINGS.ADVANCED.BRIGHTNESS,
+            get_ini_string(muos_config, "settings.advanced", "brightness", "previous"),
+            MAX_BUFFER_SIZE - 1);
+    config->SETTINGS.ADVANCED.BRIGHTNESS[MAX_BUFFER_SIZE - 1] = '\0';
     config->SETTINGS.ADVANCED.OFFSET = get_ini_int(muos_config, "settings.advanced", "offset", 50);
     config->SETTINGS.ADVANCED.LOCK = get_ini_int(muos_config, "settings.advanced", "lock", 0);
     config->SETTINGS.ADVANCED.LED = get_ini_int(muos_config, "settings.advanced", "led", 0);

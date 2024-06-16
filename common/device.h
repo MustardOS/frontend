@@ -76,12 +76,20 @@ struct mux_device {
 
     struct {
         char DEVICE[MAX_BUFFER_SIZE];
+        int16_t BRIGHT;
         uint32_t BUFFER;
         int16_t WIDTH;
         int16_t HEIGHT;
         int16_t ROTATE;
         int16_t WAIT;
     } SCREEN;
+
+    struct {
+        char CONTROL[MAX_BUFFER_SIZE];
+        char CHANNEL[MAX_BUFFER_SIZE];
+        int16_t MIN;
+        int16_t MAX;
+    } AUDIO;
 
     struct {
         int16_t SCALER;

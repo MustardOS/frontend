@@ -6532,7 +6532,7 @@
                       {
                         "nid": 1957839928,
                         "strtype": "LABEL/Text",
-                        "strval": "bazkart\\nrobbiet480\\nmeowman_\\noates\\nbenjaminbercy\\nultra646464\\nsunclutch\\nlethargicdemigod\\n._j0hn_.\\nsnesfan1",
+                        "strval": "bazkart\\nrobbiet480\\nmeowman_\\noates\\nbenjaminbercy\\nultra646464\\nsunclutch\\nlethargicdemigod\\n._j0hn_.\\nsnesfan1\\nliloconf",
                         "InheritedType": 10
                       },
                       {
@@ -12490,7 +12490,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxcredits/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 755,
+    "backup_cnt": 758,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

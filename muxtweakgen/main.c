@@ -172,7 +172,7 @@ void init_dropdown_settings() {
 void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
     lv_dropdown_set_selected(ui_droBGM, config.SETTINGS.GENERAL.BGM);
-    lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BL_RST_FILE)) * 100 / 255);
+    lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BRIGHT_FILE)));
     lv_dropdown_set_selected(ui_droHDMI, config.SETTINGS.GENERAL.HDMI);
 
     const char *startup_type = config.SETTINGS.GENERAL.STARTUP;
@@ -196,20 +196,26 @@ void restore_tweak_options() {
         case -1:
             lv_dropdown_set_selected(ui_droShutdown, 0);
             break;
-        case 30:
+        case 2:
             lv_dropdown_set_selected(ui_droShutdown, 1);
             break;
-        case 60:
+        case 10:
             lv_dropdown_set_selected(ui_droShutdown, 2);
             break;
-        case 120:
+        case 30:
             lv_dropdown_set_selected(ui_droShutdown, 3);
             break;
-        case 300:
+        case 60:
             lv_dropdown_set_selected(ui_droShutdown, 4);
             break;
-        case 600:
+        case 120:
             lv_dropdown_set_selected(ui_droShutdown, 5);
+            break;
+        case 300:
+            lv_dropdown_set_selected(ui_droShutdown, 6);
+            break;
+        case 600:
+            lv_dropdown_set_selected(ui_droShutdown, 7);
             break;
         default:
             lv_dropdown_set_selected(ui_droShutdown, 0);
@@ -277,7 +283,7 @@ void restore_tweak_options() {
 void save_tweak_options() {
     static char config_file[MAX_BUFFER_SIZE];
     snprintf(config_file, sizeof(config_file),
-             "/%s/config/config.ini", INTERNAL_PATH);
+             "%s/config/config.ini", INTERNAL_PATH);
 
     mini_t * muos_config = mini_try_load(config_file);
 
@@ -317,18 +323,24 @@ void save_tweak_options() {
             idx_shutdown = -1;
             break;
         case 1:
-            idx_shutdown = 30;
+            idx_shutdown = 2;
             break;
         case 2:
-            idx_shutdown = 60;
+            idx_shutdown = 10;
             break;
         case 3:
-            idx_shutdown = 120;
+            idx_shutdown = 30;
             break;
         case 4:
-            idx_shutdown = 300;
+            idx_shutdown = 60;
             break;
         case 5:
+            idx_shutdown = 120;
+            break;
+        case 6:
+            idx_shutdown = 300;
+            break;
+        case 7:
             idx_shutdown = 600;
             break;
         default:
@@ -404,16 +416,14 @@ void save_tweak_options() {
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
 
-    int nb = ((idx_brightness + 1) * BL_MAX) / 100;
-    set_brightness(nb);
-
-    char nbs[8];
-    sprintf(nbs, "%d", nb);
-    write_text_to_file(BL_RST_FILE, nbs, "w");
+    char command[MAX_BUFFER_SIZE];
+    snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
+             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), idx_brightness);
+    system(command);
 
     static char tweak_script[MAX_BUFFER_SIZE];
     snprintf(tweak_script, sizeof(tweak_script),
-             "/%s/script/mux/tweak.sh", INTERNAL_PATH);
+             "%s/script/mux/tweak.sh", INTERNAL_PATH);
 
     system(tweak_script);
 }
@@ -571,6 +581,22 @@ void *joystick_task() {
 
                                     write_text_to_file(MUOS_PDI_LOAD, "general", "w");
                                     safe_quit = 1;
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
+                                    if (element_focused == ui_lblBrightness) {
+                                        for (i = 1; i <= 10; i++) {
+                                            decrease_option_value(ui_droBrightness,
+                                                                  &brightness_current,
+                                                                  brightness_total);
+                                        }
+                                    }
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.R1) {
+                                    if (element_focused == ui_lblBrightness) {
+                                        for (i = 1; i <= 10; i++) {
+                                            increase_option_value(ui_droBrightness,
+                                                                  &brightness_current,
+                                                                  brightness_total);
+                                        }
+                                    }
                                 }
                             }
                         } else {
@@ -690,9 +716,9 @@ void *joystick_task() {
             }
             if (JOYHOTKEY_pressed) {
                 lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, get_brightness_percentage(get_brightness()), LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
-                int volume = get_volume_percentage();
+                int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
                         lv_label_set_text(ui_icoProgress, "\uF6A9");
@@ -716,7 +742,36 @@ void *joystick_task() {
     }
 }
 
+void populate_brightness() {
+    int max_value = device.SCREEN.BRIGHT;
+    int max_digits = snprintf(NULL, 0, "%d", max_value);
+    int options_length = max_value * (max_digits + 1);
+
+    char *options = (char *) malloc(options_length * sizeof(char));
+    if (options == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return;
+    }
+
+    char *ptr = options;
+    for (int i = 1; i <= max_value; ++i) {
+        int chars_written = snprintf(ptr, options + options_length - ptr, "%d", i);
+        ptr += chars_written;
+        if (i < max_value) {
+            *ptr++ = '\n';
+        }
+    }
+    *ptr = '\0';
+
+    lv_dropdown_set_options(ui_droBrightness, options);
+    lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BRIGHT_FILE)));
+
+    free(options);
+}
+
 void init_elements() {
+    populate_brightness();
+
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
@@ -912,6 +967,7 @@ void direct_to_previous() {
         if (text_hit != 0) {
             nav_next(ui_group, text_hit);
             nav_next(ui_group_glyph, text_hit);
+            nav_next(ui_group_value, text_hit);
             nav_moved = 1;
         }
     }

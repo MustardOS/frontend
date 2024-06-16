@@ -198,12 +198,4 @@ int is_network_connected();
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
 
-int get_volume_percentage();
-
 int should_skip(char *name);
-
-int get_brightness_percentage(int brightness);
-
-int get_brightness();
-
-void set_brightness(int brightness);

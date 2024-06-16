@@ -27,8 +27,11 @@
 #define MUOS_SAA_LOAD "/tmp/saa_go" // Auto Assignment Flag
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 
-#define BL_RST_FILE    "/opt/muos/config/brightness.txt"
-#define VOL_RST_FILE   "/opt/muos/config/volume.txt"
+#define BRIGHT_FILE "/opt/muos/config/brightness.txt"
+#define VOLUME_FILE "/opt/muos/config/volume.txt"
+
+#define BRIGHT_PERC "/tmp/current_brightness_percent"
+#define VOLUME_PERC "/tmp/current_volume_percent"
 
 #if defined(RG35XX)
 #define BL_DEF      192

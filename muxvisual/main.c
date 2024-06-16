@@ -160,7 +160,7 @@ void restore_visual_options() {
 void save_visual_options() {
     static char config_file[MAX_BUFFER_SIZE];
     snprintf(config_file, sizeof(config_file),
-             "/%s/config/config.ini", INTERNAL_PATH);
+             "%s/config/config.ini", INTERNAL_PATH);
 
     mini_t * muos_config = mini_try_load(config_file);
 
@@ -409,9 +409,9 @@ void *joystick_task() {
             }
             if (JOYHOTKEY_pressed) {
                 lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, get_brightness_percentage(get_brightness()), LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
-                int volume = get_volume_percentage();
+                int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
                         lv_label_set_text(ui_icoProgress, "\uF6A9");

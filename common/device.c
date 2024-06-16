@@ -5,10 +5,10 @@
 
 void load_device(struct mux_device *device) {
     static char device_file[MAX_BUFFER_SIZE];
-    snprintf(device_file, sizeof(device_file), "/%s/config/device.txt", INTERNAL_PATH);
+    snprintf(device_file, sizeof(device_file), "%s/config/device.txt", INTERNAL_PATH);
 
     static char device_config[MAX_BUFFER_SIZE];
-    snprintf(device_config, sizeof(device_config), "/%s/device/%s/config.ini",
+    snprintf(device_config, sizeof(device_config), "%s/device/%s/config.ini",
              INTERNAL_PATH, str_tolower(read_text_from_file(device_file)));
 
     mini_t * muos_device = mini_try_load(device_config);
@@ -118,11 +118,21 @@ void load_device(struct mux_device *device) {
     strncpy(device->SCREEN.DEVICE, get_ini_string(muos_device, "screen", "device", "/dev/fb0"),
             MAX_BUFFER_SIZE - 1);
     device->SCREEN.DEVICE[MAX_BUFFER_SIZE - 1] = '\0';
+    device->SCREEN.BRIGHT = get_ini_int(muos_device, "screen", "bright", 90);
     device->SCREEN.BUFFER = get_ini_hex(muos_device, "screen", "buffer");
     device->SCREEN.WIDTH = get_ini_int(muos_device, "screen", "width", 640);
     device->SCREEN.HEIGHT = get_ini_int(muos_device, "screen", "height", 480);
     device->SCREEN.ROTATE = get_ini_int(muos_device, "screen", "rotate", 0);
-    device->SCREEN.WAIT = get_ini_int(muos_device, "screen", "wait", 256);
+    device->SCREEN.WAIT = get_ini_int(muos_device, "screen", "wait", 255);
+
+    strncpy(device->AUDIO.CONTROL, get_ini_string(muos_device, "audio", "control", "?"),
+            MAX_BUFFER_SIZE - 1);
+    device->AUDIO.CONTROL[MAX_BUFFER_SIZE - 1] = '\0';
+    strncpy(device->AUDIO.CHANNEL, get_ini_string(muos_device, "audio", "channel", "?"),
+            MAX_BUFFER_SIZE - 1);
+    device->AUDIO.CHANNEL[MAX_BUFFER_SIZE - 1] = '\0';
+    device->AUDIO.MIN = get_ini_int(muos_device, "audio", "min", 0);
+    device->AUDIO.MAX = get_ini_int(muos_device, "audio", "max", 255);
 
     device->SDL.SCALER = get_ini_int(muos_device, "sdl", "scaler", 0);
     device->SDL.ROTATE = get_ini_int(muos_device, "sdl", "rotate", 0);

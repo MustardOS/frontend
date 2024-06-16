@@ -171,11 +171,11 @@ void *joystick_task() {
                                 } else if (ev.code == NAV_A) {
                                     char address_file[MAX_BUFFER_SIZE];
                                     snprintf(address_file, sizeof(address_file),
-                                             "/%s/config/address.txt", INTERNAL_PATH);
+                                             "%s/config/address.txt", INTERNAL_PATH);
 
                                     char last_play_file[MAX_BUFFER_SIZE];
                                     snprintf(last_play_file, sizeof(last_play_file),
-                                             "/%s/config/lastplay.txt", INTERNAL_PATH);
+                                             "%s/config/lastplay.txt", INTERNAL_PATH);
 
                                     if (element_focused == ui_lblContent) {
                                         play_sound("confirm", nav_sound);
@@ -201,7 +201,6 @@ void *joystick_task() {
                                             write_text_to_file(last_play_file, "", "w");
                                         }
                                         write_text_to_file(address_file, "", "w");
-                                        system("/opt/muos/script/system/volume.sh save");
                                         sync();
                                         reboot(RB_AUTOBOOT);
                                     } else if (element_focused == ui_lblShutdown) {
@@ -210,10 +209,12 @@ void *joystick_task() {
                                             write_text_to_file(last_play_file, "", "w");
                                         }
                                         write_text_to_file(address_file, "", "w");
-                                        system("/opt/muos/script/system/volume.sh save");
                                         sync();
                                         reboot(RB_POWER_OFF);
                                     }
+                                    safe_quit = 1;
+                                } else if (ev.code == NAV_B) {
+                                    load_mux("launcher");
                                     safe_quit = 1;
                                 }
                             }
@@ -264,9 +265,9 @@ void *joystick_task() {
             }
             if (JOYHOTKEY_pressed) {
                 lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, get_brightness_percentage(get_brightness()), LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
-                int volume = get_volume_percentage();
+                int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
                         lv_label_set_text(ui_icoProgress, "\uF6A9");

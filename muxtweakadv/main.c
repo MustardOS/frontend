@@ -56,6 +56,7 @@ int swap_total, swap_current;
 int thermal_total, thermal_current;
 int font_total, font_current;
 int volume_total, volume_current;
+int brightness_total, brightness_current;
 int offset_total, offset_current;
 int lockdown_total, lockdown_current;
 int led_total, led_current;
@@ -67,13 +68,13 @@ typedef struct {
     int *current;
 } Tweak;
 
-Tweak swap, thermal, font, volume, offset, lockdown, led, random_theme, retrowait;
+Tweak swap, thermal, font, volume, brightness, offset, lockdown, led, random_theme, retrowait;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 
-lv_obj_t *ui_objects[9];
+lv_obj_t *ui_objects[10];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -86,6 +87,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKADV_FONT;
     } else if (element_focused == ui_lblVolume) {
         message = MUXTWEAKADV_VOLUME;
+    } else if (element_focused == ui_lblBrightness) {
+        message = MUXTWEAKADV_BRIGHT;
     } else if (element_focused == ui_lblOffset) {
         message = MUXTWEAKADV_OFFSET;
     } else if (element_focused == ui_lblPasscode) {
@@ -126,6 +129,7 @@ void elements_events_init() {
             ui_droThermal,
             ui_droFont,
             ui_droVolume,
+            ui_droBrightness,
             ui_droOffset,
             ui_droPasscode,
             ui_droLED,
@@ -141,6 +145,7 @@ void elements_events_init() {
     init_pointers(&thermal, &thermal_total, &thermal_current);
     init_pointers(&font, &font_total, &font_current);
     init_pointers(&volume, &volume_total, &volume_current);
+    init_pointers(&brightness, &brightness_total, &brightness_current);
     init_pointers(&offset, &offset_total, &offset_current);
     init_pointers(&lockdown, &lockdown_total, &lockdown_current);
     init_pointers(&led, &led_total, &led_current);
@@ -154,6 +159,7 @@ void init_dropdown_settings() {
             {thermal.total,      thermal.current},
             {font.total,         font.current},
             {volume.total,       volume.current},
+            {brightness.total,   brightness.current},
             {offset.total,       offset.current},
             {lockdown.total,     lockdown.current},
             {led.total,          led.current},
@@ -166,6 +172,7 @@ void init_dropdown_settings() {
             ui_droThermal,
             ui_droFont,
             ui_droVolume,
+            ui_droBrightness,
             ui_droOffset,
             ui_droPasscode,
             ui_droLED,
@@ -195,6 +202,17 @@ void restore_tweak_options() {
         lv_dropdown_set_selected(ui_droVolume, 0);
     }
 
+    const char *brightness_type = config.SETTINGS.ADVANCED.BRIGHTNESS;
+    if (strcasecmp(brightness_type, "previous") == 0) {
+        lv_dropdown_set_selected(ui_droBrightness, 0);
+    } else if (strcasecmp(brightness_type, "low") == 0) {
+        lv_dropdown_set_selected(ui_droBrightness, 1);
+    } else if (strcasecmp(brightness_type, "high") == 0) {
+        lv_dropdown_set_selected(ui_droBrightness, 2);
+    } else {
+        lv_dropdown_set_selected(ui_droBrightness, 0);
+    }
+
     lv_dropdown_set_selected(ui_droOffset, config.SETTINGS.ADVANCED.OFFSET);
     lv_dropdown_set_selected(ui_droPasscode, config.SETTINGS.ADVANCED.LOCK);
     lv_dropdown_set_selected(ui_droLED, config.SETTINGS.ADVANCED.LED);
@@ -205,7 +223,7 @@ void restore_tweak_options() {
 void save_tweak_options() {
     static char config_file[MAX_BUFFER_SIZE];
     snprintf(config_file, sizeof(config_file),
-             "/%s/config/config.ini", INTERNAL_PATH);
+             "%s/config/config.ini", INTERNAL_PATH);
 
     mini_t * muos_config = mini_try_load(config_file);
 
@@ -234,10 +252,27 @@ void save_tweak_options() {
             break;
     }
 
+    char *idx_brightness;
+    switch (lv_dropdown_get_selected(ui_droBrightness)) {
+        case 0:
+            idx_brightness = "previous";
+            break;
+        case 1:
+            idx_brightness = "low";
+            break;
+        case 2:
+            idx_brightness = "high";
+            break;
+        default:
+            idx_brightness = "previous";
+            break;
+    }
+
     mini_set_int(muos_config, "settings.advanced", "swap", idx_swap);
     mini_set_int(muos_config, "settings.advanced", "thermal", idx_thermal);
     mini_set_int(muos_config, "settings.advanced", "font", idx_font);
     mini_set_string(muos_config, "settings.advanced", "volume", idx_volume);
+    mini_set_string(muos_config, "settings.advanced", "brightness", idx_brightness);
     mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
     mini_set_int(muos_config, "settings.advanced", "lock", idx_lockdown);
     mini_set_int(muos_config, "settings.advanced", "led", idx_led);
@@ -249,7 +284,7 @@ void save_tweak_options() {
 
     static char tweak_script[MAX_BUFFER_SIZE];
     snprintf(tweak_script, sizeof(tweak_script),
-             "/%s/script/mux/tweak.sh", INTERNAL_PATH);
+             "%s/script/mux/tweak.sh", INTERNAL_PATH);
 
     system(tweak_script);
 }
@@ -259,17 +294,19 @@ void init_navigation_groups() {
     ui_objects[1] = ui_lblThermal;
     ui_objects[2] = ui_lblFont;
     ui_objects[3] = ui_lblVolume;
-    ui_objects[4] = ui_lblOffset;
-    ui_objects[5] = ui_lblPasscode;
-    ui_objects[6] = ui_lblLED;
-    ui_objects[7] = ui_lblTheme;
-    ui_objects[8] = ui_lblRetroWait;
+    ui_objects[4] = ui_lblBrightness;
+    ui_objects[5] = ui_lblOffset;
+    ui_objects[6] = ui_lblPasscode;
+    ui_objects[7] = ui_lblLED;
+    ui_objects[8] = ui_lblTheme;
+    ui_objects[9] = ui_lblRetroWait;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droSwap,
             ui_droThermal,
             ui_droFont,
             ui_droVolume,
+            ui_droBrightness,
             ui_droOffset,
             ui_droPasscode,
             ui_droLED,
@@ -282,6 +319,7 @@ void init_navigation_groups() {
             ui_icoThermal,
             ui_icoFont,
             ui_icoVolume,
+            ui_icoBrightness,
             ui_icoOffset,
             ui_icoPasscode,
             ui_icoLED,
@@ -372,6 +410,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droVolume,
                                                               &volume_current,
                                                               volume_total);
+                                    } else if (element_focused == ui_lblBrightness) {
+                                        increase_option_value(ui_droBrightness,
+                                                              &brightness_current,
+                                                              brightness_total);
                                     } else if (element_focused == ui_lblOffset) {
                                         increase_option_value(ui_droOffset,
                                                               &offset_current,
@@ -462,6 +504,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droVolume,
                                                           &volume_current,
                                                           volume_total);
+                                } else if (element_focused == ui_lblBrightness) {
+                                    decrease_option_value(ui_droBrightness,
+                                                          &brightness_current,
+                                                          brightness_total);
                                 } else if (element_focused == ui_lblOffset) {
                                     decrease_option_value(ui_droOffset,
                                                           &offset_current,
@@ -503,6 +549,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droVolume,
                                                           &volume_current,
                                                           volume_total);
+                                } else if (element_focused == ui_lblBrightness) {
+                                    increase_option_value(ui_droBrightness,
+                                                          &brightness_current,
+                                                          brightness_total);
                                 } else if (element_focused == ui_lblOffset) {
                                     increase_option_value(ui_droOffset,
                                                           &offset_current,
@@ -541,9 +591,9 @@ void *joystick_task() {
             }
             if (JOYHOTKEY_pressed) {
                 lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, get_brightness_percentage(get_brightness()), LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
-                int volume = get_volume_percentage();
+                int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
                         lv_label_set_text(ui_icoProgress, "\uF6A9");
@@ -612,6 +662,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblThermal, "thermal");
     lv_obj_set_user_data(ui_lblFont, "font");
     lv_obj_set_user_data(ui_lblVolume, "volume");
+    lv_obj_set_user_data(ui_lblBrightness, "brightness");
     lv_obj_set_user_data(ui_lblOffset, "offset");
     lv_obj_set_user_data(ui_lblPasscode, "lock");
     lv_obj_set_user_data(ui_lblLED, "led");

@@ -13774,7 +13774,7 @@
                   {
                     "nid": -241498320,
                     "strtype": "DROPDOWN/Options",
-                    "strval": "Disabled\\n30 Seconds\\n60 Seconds\\n2 Minutes\\n5 Minutes\\n10 Minutes",
+                    "strval": "Disabled\\nInstant\\n10 Seconds\\n30 Seconds\\n60 Seconds\\n2 Minutes\\n5 Minutes\\n10 Minutes",
                     "InheritedType": 10
                   },
                   {

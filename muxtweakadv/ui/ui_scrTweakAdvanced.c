@@ -306,6 +306,36 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_style_border_color(ui_lblVolume, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_lblVolume, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_lblBrightness = lv_label_create(ui_pnlContent);
+    lv_obj_set_width(ui_lblBrightness, 640);
+    lv_obj_set_height(ui_lblBrightness, 28);
+    lv_obj_set_x(ui_lblBrightness, 100);
+    lv_obj_set_y(ui_lblBrightness, -70);
+    lv_obj_set_align(ui_lblBrightness, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblBrightness, "Brightness On Boot");
+    lv_obj_set_style_text_color(ui_lblBrightness, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblBrightness, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblBrightness, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblBrightness, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblBrightness, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblBrightness, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblBrightness, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblBrightness, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui_lblBrightness, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblBrightness, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblBrightness, -3, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblBrightness, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lblBrightness, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_color(ui_lblBrightness, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_opa(ui_lblBrightness, 25, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(ui_lblBrightness, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(ui_lblBrightness, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     ui_lblOffset = lv_label_create(ui_pnlContent);
     lv_obj_set_width(ui_lblOffset, 640);
     lv_obj_set_height(ui_lblOffset, 28);
@@ -540,6 +570,22 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_style_text_color(ui_icoVolume, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoVolume, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_icoBrightness = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoBrightness, 640);
+    lv_obj_set_height(ui_icoBrightness, 28);
+    lv_obj_set_x(ui_icoBrightness, 100);
+    lv_obj_set_y(ui_icoBrightness, -70);
+    lv_obj_set_align(ui_icoBrightness, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_icoBrightness, "");
+    lv_obj_set_style_text_color(ui_icoBrightness, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_icoBrightness, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_icoBrightness, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_icoBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_icoBrightness, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_icoBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_icoBrightness, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_icoBrightness, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     ui_icoOffset = lv_label_create(ui_pnlGlyph);
     lv_obj_set_width(ui_icoOffset, 640);
     lv_obj_set_height(ui_icoOffset, 28);
@@ -744,6 +790,33 @@ void ui_scrTweakAdvanced_screen_init(void)
 
     lv_obj_set_style_text_color(ui_droVolume, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_droVolume, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
+
+    ui_droBrightness = lv_dropdown_create(ui_pnlHighlight);
+    lv_dropdown_set_dir(ui_droBrightness, LV_DIR_LEFT);
+    lv_dropdown_set_options(ui_droBrightness, "Previous\nLow\nHigh");
+    lv_dropdown_set_selected_highlight(ui_droBrightness, false);
+    lv_obj_set_width(ui_droBrightness, 640);
+    lv_obj_set_height(ui_droBrightness, 28);
+    lv_obj_set_x(ui_droBrightness, 100);
+    lv_obj_set_y(ui_droBrightness, -30);
+    lv_obj_set_align(ui_droBrightness, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_droBrightness, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_set_style_text_color(ui_droBrightness, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_droBrightness, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_droBrightness, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_droBrightness, lv_color_hex(0x403A03), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_droBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_droBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_droBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_droBrightness, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_droBrightness, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_droBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_droBrightness, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_SCROLLED);
+    lv_obj_set_style_text_opa(ui_droBrightness, 255, LV_PART_MAIN | LV_STATE_SCROLLED);
+
+    lv_obj_set_style_text_color(ui_droBrightness, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_droBrightness, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
 
     ui_droOffset = lv_dropdown_create(ui_pnlHighlight);

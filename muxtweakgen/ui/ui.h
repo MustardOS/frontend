@@ -96,6 +96,7 @@ LV_FONT_DECLARE(ui_font_AwesomeBrandSmall);
 LV_FONT_DECLARE(ui_font_AwesomeSmall);
 LV_FONT_DECLARE(ui_font_Gamepad);
 LV_FONT_DECLARE(ui_font_GamepadNav);
+LV_FONT_DECLARE(ui_font_JGS_Ascii);
 LV_FONT_DECLARE(ui_font_NotoSans);
 LV_FONT_DECLARE(ui_font_NotoSansBig);
 LV_FONT_DECLARE(ui_font_NotoSansSmall);

@@ -11,6 +11,7 @@ ui_font_AwesomeBrandSmall.c
 ui_font_AwesomeSmall.c
 ui_font_Gamepad.c
 ui_font_GamepadNav.c
+ui_font_JGS_Ascii.c
 ui_font_NotoSans.c
 ui_font_NotoSansBig.c
 ui_font_NotoSansSmall.c

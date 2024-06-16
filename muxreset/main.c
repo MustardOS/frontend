@@ -234,12 +234,12 @@ void *joystick_task() {
                                         system("rm -f /mnt/mmc/muos/retroarch/retroarch32.cfg");
 
                                         static char device_file[MAX_BUFFER_SIZE];
-                                        snprintf(device_file, sizeof(device_file), "/%s/config/device.txt",
+                                        snprintf(device_file, sizeof(device_file), "%s/config/device.txt",
                                                  INTERNAL_PATH);
 
                                         char run_device_init[MAX_BUFFER_SIZE];
                                         snprintf(run_device_init, sizeof(run_device_init),
-                                                 "/%s/device/%s/script/control.sh",
+                                                 "%s/device/%s/script/control.sh",
                                                  INTERNAL_PATH,
                                                  str_tolower(read_line_from_file(device_file, 1)));
                                         system(run_device_init);
@@ -251,7 +251,7 @@ void *joystick_task() {
 
                                         static char config_file[MAX_BUFFER_SIZE];
                                         snprintf(config_file, sizeof(config_file),
-                                                 "/%s/config/config.ini", INTERNAL_PATH);
+                                                 "%s/config/config.ini", INTERNAL_PATH);
 
                                         mini_t * muos_config = mini_try_load(config_file);
 
@@ -337,9 +337,9 @@ void *joystick_task() {
             }
             if (JOYHOTKEY_pressed) {
                 lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, get_brightness_percentage(get_brightness()), LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
-                int volume = get_volume_percentage();
+                int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
                         lv_label_set_text(ui_icoProgress, "\uF6A9");

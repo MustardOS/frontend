@@ -93,7 +93,7 @@ void confirm_rtc_config() {
 
     char config_file[MAX_BUFFER_SIZE];
     snprintf(config_file, sizeof(config_file),
-             "/%s/config/config.ini", INTERNAL_PATH);
+             "%s/config/config.ini", INTERNAL_PATH);
 
     mini_t * muos_config = mini_try_load(config_file);
 
@@ -404,7 +404,7 @@ void *joystick_task() {
 
                                     char config_file[MAX_BUFFER_SIZE];
                                     snprintf(config_file, sizeof(config_file),
-                                             "/%s/config/config.ini", INTERNAL_PATH);
+                                             "%s/config/config.ini", INTERNAL_PATH);
 
                                     mini_t * muos_config = mini_try_load(config_file);
                                     mini_set_int(muos_config, "boot", "clock_setup", 0);
@@ -585,9 +585,9 @@ void *joystick_task() {
             }
             if (JOYHOTKEY_pressed) {
                 lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, get_brightness_percentage(get_brightness()), LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
-                int volume = get_volume_percentage();
+                int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
                         lv_label_set_text(ui_icoProgress, "\uF6A9");
@@ -802,6 +802,7 @@ void direct_to_previous() {
         if (text_hit != 0) {
             nav_next(ui_group, text_hit);
             nav_next(ui_group_glyph, text_hit);
+            nav_next(ui_group_value, text_hit);
             nav_moved = 1;
         }
     }

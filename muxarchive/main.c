@@ -424,7 +424,7 @@ void *joystick_task() {
 
                                         static char extract_script[MAX_BUFFER_SIZE];
                                         snprintf(extract_script, sizeof(extract_script),
-                                                 "/%s/script/mux/extract.sh", INTERNAL_PATH);
+                                                 "%s/script/mux/extract.sh", INTERNAL_PATH);
 
                                         static char command[MAX_BUFFER_SIZE];
                                         snprintf(command, sizeof(command), "%s \"%s\"",
@@ -543,9 +543,9 @@ void *joystick_task() {
             }
             if (JOYHOTKEY_pressed) {
                 lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, get_brightness_percentage(get_brightness()), LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
-                int volume = get_volume_percentage();
+                int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
                         lv_label_set_text(ui_icoProgress, "\uF6A9");

@@ -125,6 +125,7 @@
 #define MUXTWEAKADV_THERMAL ""
 #define MUXTWEAKADV_FONT    ""
 #define MUXTWEAKADV_VOLUME  ""
+#define MUXTWEAKADV_BRIGHT  ""
 #define MUXTWEAKADV_OFFSET  ""
 #define MUXTWEAKADV_LOCK    ""
 #define MUXTWEAKADV_LED     ""

@@ -1270,35 +1270,6 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     }
 }
 
-int get_volume_percentage() {
-    char command[MAX_BUFFER_SIZE];
-    char result[MAX_BUFFER_SIZE];
-    int volume_percentage;
-
-    snprintf(command, sizeof(command),
-             "amixer get \"%s\" | grep -o '\\[[0-9]*%%' | tr -d '[]%%'",
-             VOL_SPK_MASTER);
-
-    FILE * pipe;
-    pipe = popen(command, "r");
-    if (pipe == NULL) {
-        fprintf(stderr, "Failed to run command\n");
-        return -1;
-    }
-
-    if (fgets(result, sizeof(result), pipe) != NULL) {
-        result[strcspn(result, "\n")] = '\0';
-        volume_percentage = atoi(result);
-    } else {
-        fprintf(stderr, "Failed to read output from command\n");
-        pclose(pipe);
-        return -1;
-    }
-
-    pclose(pipe);
-    return volume_percentage;
-}
-
 int should_skip(char *name) {
     const char skip_prefix[] = {
             '.', '_'
@@ -1340,46 +1311,6 @@ int should_skip(char *name) {
     }
 
     return 0;
-}
-
-int get_brightness_percentage(int brightness) {
-    int brightness_percentage;
-    brightness_percentage = (brightness * 100) / BL_MAX;
-
-    if (brightness_percentage < 0)
-        brightness_percentage = 0;
-    else if (brightness_percentage > 100)
-        brightness_percentage = 100;
-
-    return brightness_percentage;
-}
-
-int get_brightness() {
-    int current_brightness = -1;
-    int disp = open("/dev/disp", O_RDWR);
-
-    if (disp >= 0) {
-        unsigned long b_val[3];
-        memset(b_val, 0, sizeof(b_val));
-        b_val[0] = 0;
-        current_brightness = ioctl(disp, DISP_LCD_GET_BRIGHTNESS, (void *) b_val);
-        close(disp);
-    }
-
-    return current_brightness;
-}
-
-void set_brightness(int brightness) {
-    int disp = open("/dev/disp", O_RDWR);
-
-    if (disp >= 0) {
-        unsigned long b_val[3];
-        memset(b_val, 0, sizeof(b_val));
-        b_val[0] = 0;
-        b_val[1] = brightness;
-        ioctl(disp, DISP_LCD_SET_BRIGHTNESS, (void *) b_val);
-        close(disp);
-    }
 }
 
 void display_testing_message(lv_obj_t *screen) {
