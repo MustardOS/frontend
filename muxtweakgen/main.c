@@ -176,43 +176,43 @@ void restore_tweak_options() {
 
     switch (config.SETTINGS.GENERAL.HDMI) {
         case -1:
-            lv_dropdown_set_selected(ui_droShutdown, 0);
+            lv_dropdown_set_selected(ui_droHDMI, 0);
             break;
         case 0:
-            lv_dropdown_set_selected(ui_droShutdown, 1);
+            lv_dropdown_set_selected(ui_droHDMI, 1);
             break;
         case 1:
-            lv_dropdown_set_selected(ui_droShutdown, 2);
+            lv_dropdown_set_selected(ui_droHDMI, 2);
             break;
         case 2:
-            lv_dropdown_set_selected(ui_droShutdown, 3);
+            lv_dropdown_set_selected(ui_droHDMI, 3);
             break;
         case 3:
-            lv_dropdown_set_selected(ui_droShutdown, 4);
+            lv_dropdown_set_selected(ui_droHDMI, 4);
             break;
         case 4:
-            lv_dropdown_set_selected(ui_droShutdown, 5);
+            lv_dropdown_set_selected(ui_droHDMI, 5);
             break;
         case 5:
-            lv_dropdown_set_selected(ui_droShutdown, 6);
+            lv_dropdown_set_selected(ui_droHDMI, 6);
             break;
         case 6:
-            lv_dropdown_set_selected(ui_droShutdown, 7);
+            lv_dropdown_set_selected(ui_droHDMI, 7);
             break;
         case 7:
-            lv_dropdown_set_selected(ui_droShutdown, 8);
+            lv_dropdown_set_selected(ui_droHDMI, 8);
             break;
         case 8:
-            lv_dropdown_set_selected(ui_droShutdown, 9);
+            lv_dropdown_set_selected(ui_droHDMI, 9);
             break;
         case 9:
-            lv_dropdown_set_selected(ui_droShutdown, 10);
+            lv_dropdown_set_selected(ui_droHDMI, 10);
             break;
         case 10:
-            lv_dropdown_set_selected(ui_droShutdown, 11);
+            lv_dropdown_set_selected(ui_droHDMI, 11);
             break;
         default:
-            lv_dropdown_set_selected(ui_droShutdown, 0);
+            lv_dropdown_set_selected(ui_droHDMI, 0);
             break;
     }
 
