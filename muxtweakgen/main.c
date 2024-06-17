@@ -173,7 +173,48 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
     lv_dropdown_set_selected(ui_droBGM, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BRIGHT_FILE)));
-    lv_dropdown_set_selected(ui_droHDMI, config.SETTINGS.GENERAL.HDMI);
+
+    switch (config.SETTINGS.GENERAL.HDMI) {
+        case -1:
+            lv_dropdown_set_selected(ui_droShutdown, 0);
+            break;
+        case 0:
+            lv_dropdown_set_selected(ui_droShutdown, 1);
+            break;
+        case 1:
+            lv_dropdown_set_selected(ui_droShutdown, 2);
+            break;
+        case 2:
+            lv_dropdown_set_selected(ui_droShutdown, 3);
+            break;
+        case 3:
+            lv_dropdown_set_selected(ui_droShutdown, 4);
+            break;
+        case 4:
+            lv_dropdown_set_selected(ui_droShutdown, 5);
+            break;
+        case 5:
+            lv_dropdown_set_selected(ui_droShutdown, 6);
+            break;
+        case 6:
+            lv_dropdown_set_selected(ui_droShutdown, 7);
+            break;
+        case 7:
+            lv_dropdown_set_selected(ui_droShutdown, 8);
+            break;
+        case 8:
+            lv_dropdown_set_selected(ui_droShutdown, 9);
+            break;
+        case 9:
+            lv_dropdown_set_selected(ui_droShutdown, 10);
+            break;
+        case 10:
+            lv_dropdown_set_selected(ui_droShutdown, 11);
+            break;
+        default:
+            lv_dropdown_set_selected(ui_droShutdown, 0);
+            break;
+    }
 
     const char *startup_type = config.SETTINGS.GENERAL.STARTUP;
     if (strcasecmp(startup_type, "launcher") == 0) {
@@ -290,7 +331,49 @@ void save_tweak_options() {
     int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
     int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
     int idx_brightness = lv_dropdown_get_selected(ui_droBrightness);
-    int idx_hdmi = lv_dropdown_get_selected(ui_droHDMI);
+
+    int idx_hdmi;
+    switch (lv_dropdown_get_selected(ui_droHDMI)) {
+        case 0:
+            idx_hdmi = -1;
+            break;
+        case 1:
+            idx_hdmi = 0;
+            break;
+        case 2:
+            idx_hdmi = 1;
+            break;
+        case 3:
+            idx_hdmi = 2;
+            break;
+        case 4:
+            idx_hdmi = 3;
+            break;
+        case 5:
+            idx_hdmi = 4;
+            break;
+        case 6:
+            idx_hdmi = 5;
+            break;
+        case 7:
+            idx_hdmi = 6;
+            break;
+        case 8:
+            idx_hdmi = 7;
+            break;
+        case 9:
+            idx_hdmi = 8;
+            break;
+        case 10:
+            idx_hdmi = 9;
+            break;
+        case 11:
+            idx_hdmi = 10;
+            break;
+        default:
+            idx_hdmi = -1;
+            break;
+    }
 
     char *idx_startup;
     switch (lv_dropdown_get_selected(ui_droStartup)) {

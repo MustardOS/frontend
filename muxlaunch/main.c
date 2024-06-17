@@ -215,6 +215,7 @@ void *joystick_task() {
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
                                     load_mux("launcher");
+                                    write_text_to_file(MUOS_PDI_LOAD, "", "w");
                                     safe_quit = 1;
                                 }
                             }

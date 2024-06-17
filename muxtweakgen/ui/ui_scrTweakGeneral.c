@@ -782,7 +782,8 @@ void ui_scrTweakGeneral_screen_init(void)
 
     ui_droHDMI = lv_dropdown_create(ui_pnlHighlight);
     lv_dropdown_set_dir(ui_droHDMI, LV_DIR_LEFT);
-    lv_dropdown_set_options(ui_droHDMI, "Disabled\nEnabled");
+    lv_dropdown_set_options(ui_droHDMI,
+                            "Disabled\n480i\n576i\n480p\n576p\n720p + 50hz\n720p + 60hz\n1080i + 50hz\n1080i + 60hz\n1080p + 24hz\n1080p + 50hz\n1080p + 60hz");
     lv_dropdown_set_selected_highlight(ui_droHDMI, false);
     lv_obj_set_width(ui_droHDMI, 640);
     lv_obj_set_height(ui_droHDMI, 28);

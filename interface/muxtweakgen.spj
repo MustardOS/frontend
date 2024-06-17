@@ -13358,7 +13358,7 @@
                   {
                     "nid": -307515541,
                     "strtype": "DROPDOWN/Options",
-                    "strval": "Disabled\\nEnabled",
+                    "strval": "Disabled\\n480i\\n576i\\n480p\\n576p\\n720p + 50hz\\n720p + 60hz\\n1080i + 50hz\\n1080i + 60hz\\n1080p + 24hz\\n1080p + 50hz\\n1080p + 60hz",
                     "InheritedType": 10
                   },
                   {
@@ -23041,7 +23041,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxtweakgen/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 496,
+    "backup_cnt": 500,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",
