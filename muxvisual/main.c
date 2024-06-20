@@ -57,13 +57,14 @@ int network_total, network_current;
 int bluetooth_total, bluetooth_current;
 int mux_clock_total, mux_clock_current;
 int boxart_total, boxart_current;
+int name_total, name_current;
 
 typedef struct {
     int *total;
     int *current;
 } Visuals;
 
-Visuals battery, network, bluetooth, mux_clock, boxart;
+Visuals battery, network, bluetooth, mux_clock, boxart, name;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -82,6 +83,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXVISUAL_CLOCK;
     } else if (element_focused == ui_lblBoxArt) {
         message = MUXVISUAL_BOXART;
+    } else if (element_focused == ui_lblName) {
+        message = MUXVISUAL_NAME;
     }
 
     if (strlen(message) <= 1) {
@@ -112,7 +115,8 @@ void elements_events_init() {
             ui_droNetwork,
             ui_droBluetooth,
             ui_droClock,
-            ui_droBoxArt
+            ui_droBoxArt,
+            ui_droName
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -124,6 +128,7 @@ void elements_events_init() {
     init_pointers(&bluetooth, &bluetooth_total, &bluetooth_current);
     init_pointers(&mux_clock, &mux_clock_total, &mux_clock_current);
     init_pointers(&boxart, &boxart_total, &boxart_current);
+    init_pointers(&name, &name_total, &name_current);
 }
 
 void init_dropdown_settings() {
@@ -132,7 +137,8 @@ void init_dropdown_settings() {
             {network.total,   network.current},
             {bluetooth.total, bluetooth.current},
             {mux_clock.total, mux_clock.current},
-            {boxart.total,    boxart.current}
+            {boxart.total,    boxart.current},
+            {name.total,    name.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -140,7 +146,8 @@ void init_dropdown_settings() {
             ui_droNetwork,
             ui_droBluetooth,
             ui_droClock,
-            ui_droBoxArt
+            ui_droBoxArt,
+            ui_droName
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -155,6 +162,7 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droBluetooth, config.VISUAL.BLUETOOTH);
     lv_dropdown_set_selected(ui_droClock, config.VISUAL.CLOCK);
     lv_dropdown_set_selected(ui_droBoxArt, config.VISUAL.BOX_ART);
+    lv_dropdown_set_selected(ui_droName, config.VISUAL.NAME);
 }
 
 void save_visual_options() {
@@ -169,12 +177,14 @@ void save_visual_options() {
     int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
     int idx_clock = lv_dropdown_get_selected(ui_droClock);
     int idx_boxart = lv_dropdown_get_selected(ui_droBoxArt);
+    int idx_name = lv_dropdown_get_selected(ui_droName);
 
     mini_set_int(muos_config, "visual", "battery", idx_battery);
     mini_set_int(muos_config, "visual", "network", idx_network);
     mini_set_int(muos_config, "visual", "bluetooth", idx_bluetooth);
     mini_set_int(muos_config, "visual", "clock", idx_clock);
     mini_set_int(muos_config, "visual", "boxart", idx_boxart);
+    mini_set_int(muos_config, "visual", "name", idx_name);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
@@ -186,7 +196,8 @@ void init_navigation_groups() {
             ui_lblNetwork,
             ui_lblBluetooth,
             ui_lblClock,
-            ui_lblBoxArt
+            ui_lblBoxArt,
+            ui_lblName
     };
 
     lv_obj_t *ui_objects_value[] = {
@@ -194,7 +205,8 @@ void init_navigation_groups() {
             ui_droNetwork,
             ui_droBluetooth,
             ui_droClock,
-            ui_droBoxArt
+            ui_droBoxArt,
+            ui_droName
     };
 
     lv_obj_t *ui_objects_icon[] = {
@@ -202,7 +214,8 @@ void init_navigation_groups() {
             ui_icoNetwork,
             ui_icoBluetooth,
             ui_icoClock,
-            ui_icoBoxArt
+            ui_icoBoxArt,
+            ui_icoName
     };
 
     ui_group = lv_group_create();
@@ -292,6 +305,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droBoxArt,
                                                               &boxart_current,
                                                               boxart_total);
+                                    } else if (element_focused == ui_lblName) {
+                                        increase_option_value(ui_droName,
+                                                              &name_current,
+                                                              name_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                 } else if (ev.code == NAV_B) {
@@ -366,6 +383,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droBoxArt,
                                                           &boxart_current,
                                                           boxart_total);
+                                } else if (element_focused == ui_lblName) {
+                                    decrease_option_value(ui_droName,
+                                                          &name_current,
+                                                          name_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
@@ -391,6 +412,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droBoxArt,
                                                           &boxart_current,
                                                           boxart_total);
+                                } else if (element_focused == ui_lblName) {
+                                    increase_option_value(ui_droName,
+                                                          &name_current,
+                                                          name_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             }
@@ -481,6 +506,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBluetooth, "bluetooth");
     lv_obj_set_user_data(ui_lblClock, "clock");
     lv_obj_set_user_data(ui_lblBoxArt, "boxart");
+    lv_obj_set_user_data(ui_lblName, "name");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);

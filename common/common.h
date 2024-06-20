@@ -199,3 +199,5 @@ int is_network_connected();
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
 
 int should_skip(char *name);
+
+void adjust_visual_label(char *text, int method);

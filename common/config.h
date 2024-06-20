@@ -63,6 +63,7 @@ struct mux_config {
         int16_t BLUETOOTH;
         int16_t CLOCK;
         int16_t BOX_ART;
+        int16_t NAME;
     } VISUAL;
 
     struct {

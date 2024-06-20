@@ -430,6 +430,8 @@ void gen_label(int item_type, char *item_glyph, char *item_text) {
     lv_obj_set_style_pad_column(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t * ui_lblExploreItem = lv_label_create(ui_pnlExplore);
+
+    adjust_visual_label(item_text, config.VISUAL.NAME);
     lv_label_set_text(ui_lblExploreItem, item_text);
 
     lv_obj_set_width(ui_lblExploreItem, 640);

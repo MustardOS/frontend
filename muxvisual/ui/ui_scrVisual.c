@@ -333,6 +333,36 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_style_border_color(ui_lblBoxArt, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_lblBoxArt, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_lblName = lv_label_create(ui_pnlContent);
+    lv_obj_set_width(ui_lblName, 640);
+    lv_obj_set_height(ui_lblName, 28);
+    lv_obj_set_x(ui_lblName, 100);
+    lv_obj_set_y(ui_lblName, -70);
+    lv_obj_set_align(ui_lblName, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblName, "Content Name Scheme");
+    lv_obj_set_style_text_color(ui_lblName, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblName, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblName, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblName, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblName, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblName, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblName, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblName, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui_lblName, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblName, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblName, -3, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblName, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lblName, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_color(ui_lblName, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_opa(ui_lblName, 25, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(ui_lblName, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(ui_lblName, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     ui_pnlGlyph = lv_obj_create(ui_scrVisual);
     lv_obj_set_width(ui_pnlGlyph, 640);
     lv_obj_set_height(ui_pnlGlyph, 400);
@@ -431,6 +461,22 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_style_pad_bottom(ui_icoBoxArt, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_icoBoxArt, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoBoxArt, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    ui_icoName = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoName, 640);
+    lv_obj_set_height(ui_icoName, 28);
+    lv_obj_set_x(ui_icoName, 100);
+    lv_obj_set_y(ui_icoName, -70);
+    lv_obj_set_align(ui_icoName, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_icoName, "");
+    lv_obj_set_style_text_color(ui_icoName, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_icoName, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_icoName, 13, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_icoName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_icoName, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_icoName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_icoName, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_icoName, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_pnlHighlight = lv_obj_create(ui_scrVisual);
     lv_obj_set_width(ui_pnlHighlight, 640);
@@ -603,6 +649,33 @@ void ui_scrVisual_screen_init(void)
 
     lv_obj_set_style_text_color(ui_droBoxArt, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_droBoxArt, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
+
+    ui_droName = lv_dropdown_create(ui_pnlHighlight);
+    lv_dropdown_set_dir(ui_droName, LV_DIR_LEFT);
+    lv_dropdown_set_options(ui_droName, "Full Name\nRemove [ ]\nRemove ( )\nRemove [ ] and ( )");
+    lv_dropdown_set_selected_highlight(ui_droName, false);
+    lv_obj_set_width(ui_droName, 640);
+    lv_obj_set_height(ui_droName, 28);
+    lv_obj_set_x(ui_droName, 100);
+    lv_obj_set_y(ui_droName, -30);
+    lv_obj_set_align(ui_droName, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_droName, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_set_style_text_color(ui_droName, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_droName, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_droName, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_droName, lv_color_hex(0x403A03), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_droName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_droName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_droName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_droName, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_droName, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_droName, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_droName, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_SCROLLED);
+    lv_obj_set_style_text_opa(ui_droName, 255, LV_PART_MAIN | LV_STATE_SCROLLED);
+
+    lv_obj_set_style_text_color(ui_droName, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_droName, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
 
     ui_pnlFooter = lv_obj_create(ui_scrVisual);

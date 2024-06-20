@@ -8,15 +8,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <net/if.h>
-#include <sys/ioctl.h>
 #include "common.h"
 #include "options.h"
-#include "theme.h"
 #include "config.h"
 #include "device.h"
 #include "glyph.h"
@@ -1354,3 +1347,62 @@ void display_testing_message(lv_obj_t *screen) {
 
     lv_obj_move_foreground(ui_conTest);
 }
+
+void adjust_visual_label(char *text, int method) {
+    int text_index = 0;
+    int with_bracket = 0;
+
+    char b_open_1, b_open_2, b_close_1, b_close_2;
+    b_open_1 = b_open_2 = b_close_1 = b_close_2 = '\0';
+
+    if (method == 1) {
+        b_open_1 = '[';
+        b_close_1 = ']';
+    } else if (method == 2) {
+        b_open_1 = '(';
+        b_close_1 = ')';
+    } else if (method == 3) {
+        b_open_1 = '(';
+        b_open_2 = '[';
+        b_close_1 = ')';
+        b_close_2 = ']';
+    }
+
+    for (int i = 0; i < strlen(text); i++) {
+        if (text[i] == b_open_1 || (method == 3 && text[i] == b_open_2)) {
+            with_bracket = 1;
+        } else if (text[i] == b_close_1 || (method == 3 && text[i] == b_close_2)) {
+            with_bracket = 0;
+        } else if (!with_bracket) {
+            text[text_index++] = text[i];
+        }
+    }
+
+    text[text_index] = '\0';
+
+    int start = 0;
+    while (isspace((unsigned char)text[start])) {
+        start++;
+    }
+
+    int end = strlen(text) - 1;
+    while (end >= 0 && isspace((unsigned char)text[end])) {
+        end--;
+    }
+
+    if (start > 0 || end < (int)strlen(text) - 1) {
+        for (int i = start; i <= end; i++) {
+            text[i - start] = text[i];
+        }
+        text[end - start + 1] = '\0';
+    }
+
+    char *found = strstr(text, " - ");
+    if (found != NULL) {
+        size_t offset = found - text;
+        text[offset] = ':';
+        memmove(text + offset + 2, text + offset + 3, strlen(text) - offset - 2);
+        text[offset + 1] = ' ';
+    }
+}
+

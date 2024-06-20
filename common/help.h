@@ -150,6 +150,7 @@
 #define MUXVISUAL_BLUETOOTH ""
 #define MUXVISUAL_CLOCK     ""
 #define MUXVISUAL_BOXART    ""
+#define MUXVISUAL_NAME      ""
 
 // muxwebserv
 #define MUXWEBSERV_SHELL     ""
