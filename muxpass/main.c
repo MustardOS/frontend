@@ -139,8 +139,8 @@ void *joystick_task() {
                                 ev.value == -1) {
                                 nav_prev(ui_group, 1);
                                 play_sound("navigate", nav_sound);
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 nav_next(ui_group, 1);
                                 play_sound("navigate", nav_sound);
@@ -154,8 +154,8 @@ void *joystick_task() {
                                                        lv_roller_get_selected(element_focused) - 1,
                                                        LV_ANIM_ON);
                                 play_sound("navigate", nav_sound);
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 lv_roller_set_selected(element_focused,
                                                        lv_roller_get_selected(element_focused) + 1,
@@ -209,6 +209,7 @@ void init_elements() {
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();

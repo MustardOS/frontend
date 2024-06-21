@@ -64,6 +64,7 @@ struct mux_config {
         int16_t CLOCK;
         int16_t BOX_ART;
         int16_t NAME;
+        int16_t DASH;
     } VISUAL;
 
     struct {

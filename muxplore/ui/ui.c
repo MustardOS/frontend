@@ -56,9 +56,12 @@ lv_obj_t * ui_imgHelpPreviewImage;
 lv_obj_t * ui_pnlHelpPreviewInfo;
 lv_obj_t * ui_lblHelpPreviewInfoGlyph;
 lv_obj_t * ui_lblHelpPreviewInfoMessage;
-lv_obj_t * ui_pnlProgress;
-lv_obj_t * ui_icoProgress;
-lv_obj_t * ui_barProgress;
+lv_obj_t * ui_pnlProgressBrightness;
+lv_obj_t * ui_icoProgressBrightness;
+lv_obj_t * ui_barProgressBrightness;
+lv_obj_t * ui_pnlProgressVolume;
+lv_obj_t * ui_icoProgressVolume;
+lv_obj_t * ui_barProgressVolume;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////

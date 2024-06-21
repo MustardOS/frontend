@@ -79,8 +79,8 @@ int time_compare_for_history(const void *a, const void *b) {
     char mod_file_a[MAX_BUFFER_SIZE];
     char mod_file_b[MAX_BUFFER_SIZE];
 
-    snprintf(mod_file_a, sizeof(mod_file_a), "/%s/MUOS/info/history/%s.cfg", device.STORAGE.ROM.MOUNT, file_a);
-    snprintf(mod_file_b, sizeof(mod_file_b), "/%s/MUOS/info/history/%s.cfg", device.STORAGE.ROM.MOUNT, file_b);
+    snprintf(mod_file_a, sizeof(mod_file_a), "%s/MUOS/info/history/%s.cfg", device.STORAGE.ROM.MOUNT, file_a);
+    snprintf(mod_file_b, sizeof(mod_file_b), "%s/MUOS/info/history/%s.cfg", device.STORAGE.ROM.MOUNT, file_b);
 
     if (access(mod_file_a, F_OK) != 0) {
         printf("Error: %s does not exist\n", mod_file_a);
@@ -1348,7 +1348,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_obj_move_foreground(ui_conTest);
 }
 
-void adjust_visual_label(char *text, int method) {
+void adjust_visual_label(char *text, int method, int rep_dash) {
     int text_index = 0;
     int with_bracket = 0;
 
@@ -1397,12 +1397,14 @@ void adjust_visual_label(char *text, int method) {
         text[end - start + 1] = '\0';
     }
 
-    char *found = strstr(text, " - ");
-    if (found != NULL) {
-        size_t offset = found - text;
-        text[offset] = ':';
-        memmove(text + offset + 2, text + offset + 3, strlen(text) - offset - 2);
-        text[offset + 1] = ' ';
+    if (rep_dash) {
+        char *found = strstr(text, " - ");
+        if (found != NULL) {
+            size_t offset = found - text;
+            text[offset] = ':';
+            memmove(text + offset + 2, text + offset + 3, strlen(text) - offset - 2);
+            text[offset + 1] = ' ';
+        }
     }
 }
 

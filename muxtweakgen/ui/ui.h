@@ -80,9 +80,12 @@ extern lv_obj_t * ui_pnlHelp;
 extern lv_obj_t * ui_pnlHelpMessage;
 extern lv_obj_t * ui_lblHelpHeader;
 extern lv_obj_t * ui_lblHelpContent;
-extern lv_obj_t * ui_pnlProgress;
-extern lv_obj_t * ui_icoProgress;
-extern lv_obj_t * ui_barProgress;
+extern lv_obj_t * ui_pnlProgressBrightness;
+extern lv_obj_t * ui_icoProgressBrightness;
+extern lv_obj_t * ui_barProgressBrightness;
+extern lv_obj_t * ui_pnlProgressVolume;
+extern lv_obj_t * ui_icoProgressVolume;
+extern lv_obj_t * ui_barProgressVolume;
 extern lv_obj_t * ui____initial_actions0;
 
 LV_IMG_DECLARE(ui_img_nothing_png);    // assets/nothing.png

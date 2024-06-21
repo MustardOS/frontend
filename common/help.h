@@ -151,6 +151,7 @@
 #define MUXVISUAL_CLOCK     ""
 #define MUXVISUAL_BOXART    ""
 #define MUXVISUAL_NAME      ""
+#define MUXVISUAL_DASH      ""
 
 // muxwebserv
 #define MUXWEBSERV_SHELL     ""

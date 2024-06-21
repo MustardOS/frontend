@@ -30,6 +30,16 @@ void load_device(struct mux_device *device) {
             MAX_BUFFER_SIZE - 1);
     device->DEVICE.LED[MAX_BUFFER_SIZE - 1] = '\0';
 
+    device->MUX.WIDTH = get_ini_int(muos_device, "mux", "width", 640);
+    device->MUX.HEIGHT = get_ini_int(muos_device, "mux", "height", 480);
+    device->MUX.ITEM.COUNT = get_ini_int(muos_device, "mux", "item_count", 13);
+    device->MUX.ITEM.HEIGHT = get_ini_int(muos_device, "mux", "item_height", 28);
+    device->MUX.ITEM.PANEL = get_ini_int(muos_device, "mux", "item_panel", 30);
+    device->MUX.ITEM.PREV_LOW = get_ini_int(muos_device, "mux", "item_prev_low", 5);
+    device->MUX.ITEM.PREV_HIGH = get_ini_int(muos_device, "mux", "item_prev_high", 7);
+    device->MUX.ITEM.NEXT_LOW = get_ini_int(muos_device, "mux", "item_next_low", 6);
+    device->MUX.ITEM.NEXT_HIGH = get_ini_int(muos_device, "mux", "item_next_high", 7);
+
     strncpy(device->FIRMWARE.BOOT.OUT, get_ini_string(muos_device, "firmware.boot", "out", "?"),
             MAX_BUFFER_SIZE - 1);
     device->FIRMWARE.BOOT.OUT[MAX_BUFFER_SIZE - 1] = '\0';

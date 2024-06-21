@@ -19,6 +19,20 @@ struct mux_device {
     } DEVICE;
 
     struct {
+        int16_t WIDTH;
+        int16_t HEIGHT;
+        struct {
+            int16_t COUNT;
+            int16_t HEIGHT;
+            int16_t PANEL;
+            int16_t PREV_LOW;
+            int16_t PREV_HIGH;
+            int16_t NEXT_LOW;
+            int16_t NEXT_HIGH;
+        } ITEM;
+    } MUX;
+
+    struct {
         struct {
             char OUT[MAX_BUFFER_SIZE];
             int16_t SEEK;

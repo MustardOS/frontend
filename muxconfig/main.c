@@ -205,8 +205,8 @@ void *joystick_task() {
                                 nav_prev(ui_group_glyph, 1);
                                 play_sound("navigate", nav_sound);
                                 nav_moved = 1;
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 nav_next(ui_group, 1);
                                 nav_next(ui_group_glyph, 1);
@@ -222,30 +222,32 @@ void *joystick_task() {
 
         if (ev.type == EV_KEY && ev.value == 1 &&
             (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
-            progress_onscreen = 1;
-            if (lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
-                lv_obj_clear_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
-            }
             if (JOYHOTKEY_pressed) {
-                lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+                progress_onscreen = 1;
+                lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+                lv_label_set_text(ui_icoProgressBrightness, "\uF185");
+                lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
+                progress_onscreen = 2;
+                lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
                 int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
-                        lv_label_set_text(ui_icoProgress, "\uF6A9");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
                         break;
                     case 1 ... 46:
-                        lv_label_set_text(ui_icoProgress, "\uF026");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF026");
                         break;
                     case 47 ... 71:
-                        lv_label_set_text(ui_icoProgress, "\uF027");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF027");
                         break;
                     case 72 ... 100:
-                        lv_label_set_text(ui_icoProgress, "\uF028");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF028");
                         break;
                 }
-                lv_bar_set_value(ui_barProgress, volume, LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
             }
         }
 
@@ -258,7 +260,8 @@ void init_elements() {
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
-    lv_obj_move_foreground(ui_pnlProgress);
+    lv_obj_move_foreground(ui_pnlProgressBrightness);
+    lv_obj_move_foreground(ui_pnlProgressVolume);
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -277,7 +280,6 @@ void init_elements() {
 
     lv_label_set_text(ui_lblNavA, "Confirm");
     lv_label_set_text(ui_lblNavB, "Back");
-    lv_label_set_text(ui_lblNavMenu, "Help");
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -287,11 +289,14 @@ void init_elements() {
             ui_lblNavYGlyph,
             ui_lblNavY,
             ui_lblNavZGlyph,
-            ui_lblNavZ
+            ui_lblNavZ,
+            ui_lblNavMenuGlyph,
+            ui_lblNavMenu
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
     lv_obj_set_user_data(ui_lblTweakGeneral, "general");
@@ -303,9 +308,11 @@ void init_elements() {
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblServices, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblServices, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_icoServices, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_icoServices, LV_OBJ_FLAG_FLOATING);
     }
@@ -350,8 +357,11 @@ void glyph_task() {
     if (progress_onscreen > 0) {
         progress_onscreen -= 1;
     } else {
-        if (!lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
-            lv_obj_add_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
+        if (!lv_obj_has_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+        }
+        if (!lv_obj_has_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
         }
         if (!msgbox_active) {
             progress_onscreen = -1;
@@ -360,6 +370,9 @@ void glyph_task() {
 }
 
 void ui_refresh_task() {
+    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+    lv_bar_set_value(ui_barProgressVolume, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_OFF);
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             static char old_wall[MAX_BUFFER_SIZE];
@@ -406,13 +419,13 @@ void ui_refresh_task() {
                         lv_obj_move_foreground(ui_pnlBox);
                         break;
                     case 3: // Fullscreen + Behind
-                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_background(ui_pnlBox);
                         lv_obj_move_background(ui_pnlWall);
                         break;
                     case 4: // Fullscreen + Front
-                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_foreground(ui_pnlBox);
                         break;

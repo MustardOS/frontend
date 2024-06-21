@@ -58,13 +58,14 @@ int bluetooth_total, bluetooth_current;
 int mux_clock_total, mux_clock_current;
 int boxart_total, boxart_current;
 int name_total, name_current;
+int dash_total, dash_current;
 
 typedef struct {
     int *total;
     int *current;
 } Visuals;
 
-Visuals battery, network, bluetooth, mux_clock, boxart, name;
+Visuals battery, network, bluetooth, mux_clock, boxart, name, dash;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -85,6 +86,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXVISUAL_BOXART;
     } else if (element_focused == ui_lblName) {
         message = MUXVISUAL_NAME;
+    } else if (element_focused == ui_lblDash) {
+        message = MUXVISUAL_DASH;
     }
 
     if (strlen(message) <= 1) {
@@ -116,7 +119,8 @@ void elements_events_init() {
             ui_droBluetooth,
             ui_droClock,
             ui_droBoxArt,
-            ui_droName
+            ui_droName,
+            ui_droDash
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -129,6 +133,7 @@ void elements_events_init() {
     init_pointers(&mux_clock, &mux_clock_total, &mux_clock_current);
     init_pointers(&boxart, &boxart_total, &boxart_current);
     init_pointers(&name, &name_total, &name_current);
+    init_pointers(&dash, &dash_total, &dash_current);
 }
 
 void init_dropdown_settings() {
@@ -138,7 +143,8 @@ void init_dropdown_settings() {
             {bluetooth.total, bluetooth.current},
             {mux_clock.total, mux_clock.current},
             {boxart.total,    boxart.current},
-            {name.total,    name.current}
+            {name.total,      name.current},
+            {dash.total,      dash.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -147,7 +153,8 @@ void init_dropdown_settings() {
             ui_droBluetooth,
             ui_droClock,
             ui_droBoxArt,
-            ui_droName
+            ui_droName,
+            ui_droDash
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -163,6 +170,7 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droClock, config.VISUAL.CLOCK);
     lv_dropdown_set_selected(ui_droBoxArt, config.VISUAL.BOX_ART);
     lv_dropdown_set_selected(ui_droName, config.VISUAL.NAME);
+    lv_dropdown_set_selected(ui_droDash, config.VISUAL.DASH);
 }
 
 void save_visual_options() {
@@ -178,6 +186,7 @@ void save_visual_options() {
     int idx_clock = lv_dropdown_get_selected(ui_droClock);
     int idx_boxart = lv_dropdown_get_selected(ui_droBoxArt);
     int idx_name = lv_dropdown_get_selected(ui_droName);
+    int idx_dash = lv_dropdown_get_selected(ui_droDash);
 
     mini_set_int(muos_config, "visual", "battery", idx_battery);
     mini_set_int(muos_config, "visual", "network", idx_network);
@@ -185,6 +194,7 @@ void save_visual_options() {
     mini_set_int(muos_config, "visual", "clock", idx_clock);
     mini_set_int(muos_config, "visual", "boxart", idx_boxart);
     mini_set_int(muos_config, "visual", "name", idx_name);
+    mini_set_int(muos_config, "visual", "dash", idx_dash);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
@@ -197,7 +207,8 @@ void init_navigation_groups() {
             ui_lblBluetooth,
             ui_lblClock,
             ui_lblBoxArt,
-            ui_lblName
+            ui_lblName,
+            ui_lblDash
     };
 
     lv_obj_t *ui_objects_value[] = {
@@ -206,7 +217,8 @@ void init_navigation_groups() {
             ui_droBluetooth,
             ui_droClock,
             ui_droBoxArt,
-            ui_droName
+            ui_droName,
+            ui_droDash
     };
 
     lv_obj_t *ui_objects_icon[] = {
@@ -215,7 +227,8 @@ void init_navigation_groups() {
             ui_icoBluetooth,
             ui_icoClock,
             ui_icoBoxArt,
-            ui_icoName
+            ui_icoName,
+            ui_icoDash
     };
 
     ui_group = lv_group_create();
@@ -309,6 +322,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droName,
                                                               &name_current,
                                                               name_total);
+                                    } else if (element_focused == ui_lblDash) {
+                                        increase_option_value(ui_droDash,
+                                                              &dash_current,
+                                                              dash_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                 } else if (ev.code == NAV_B) {
@@ -350,8 +367,8 @@ void *joystick_task() {
                                 nav_prev(ui_group_icon, 1);
                                 play_sound("navigate", nav_sound);
                                 nav_moved = 1;
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 nav_next(ui_group, 1);
                                 nav_next(ui_group_value, 1);
@@ -387,10 +404,14 @@ void *joystick_task() {
                                     decrease_option_value(ui_droName,
                                                           &name_current,
                                                           name_total);
+                                } else if (element_focused == ui_lblDash) {
+                                    decrease_option_value(ui_droDash,
+                                                          &dash_current,
+                                                          dash_total);
                                 }
                                 play_sound("navigate", nav_sound);
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 if (element_focused == ui_lblBattery) {
                                     increase_option_value(ui_droBattery,
@@ -416,6 +437,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droName,
                                                           &name_current,
                                                           name_total);
+                                } else if (element_focused == ui_lblDash) {
+                                    increase_option_value(ui_droDash,
+                                                          &dash_current,
+                                                          dash_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             }
@@ -428,30 +453,32 @@ void *joystick_task() {
 
         if (ev.type == EV_KEY && ev.value == 1 &&
             (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
-            progress_onscreen = 1;
-            if (lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
-                lv_obj_clear_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
-            }
             if (JOYHOTKEY_pressed) {
-                lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+                progress_onscreen = 1;
+                lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+                lv_label_set_text(ui_icoProgressBrightness, "\uF185");
+                lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
+                progress_onscreen = 2;
+                lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
                 int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
-                        lv_label_set_text(ui_icoProgress, "\uF6A9");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
                         break;
                     case 1 ... 46:
-                        lv_label_set_text(ui_icoProgress, "\uF026");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF026");
                         break;
                     case 47 ... 71:
-                        lv_label_set_text(ui_icoProgress, "\uF027");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF027");
                         break;
                     case 72 ... 100:
-                        lv_label_set_text(ui_icoProgress, "\uF028");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF028");
                         break;
                 }
-                lv_bar_set_value(ui_barProgress, volume, LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
             }
         }
 
@@ -464,7 +491,8 @@ void init_elements() {
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
-    lv_obj_move_foreground(ui_pnlProgress);
+    lv_obj_move_foreground(ui_pnlProgressBrightness);
+    lv_obj_move_foreground(ui_pnlProgressVolume);
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -482,7 +510,6 @@ void init_elements() {
     lv_label_set_text(ui_lblMessage, osd_message);
 
     lv_label_set_text(ui_lblNavB, "Save");
-    lv_label_set_text(ui_lblNavMenu, "Help");
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -494,11 +521,14 @@ void init_elements() {
             ui_lblNavYGlyph,
             ui_lblNavY,
             ui_lblNavZGlyph,
-            ui_lblNavZ
+            ui_lblNavZ,
+            ui_lblNavMenuGlyph,
+            ui_lblNavMenu
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
     lv_obj_set_user_data(ui_lblBattery, "battery");
@@ -507,22 +537,23 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblClock, "clock");
     lv_obj_set_user_data(ui_lblBoxArt, "boxart");
     lv_obj_set_user_data(ui_lblName, "name");
+    lv_obj_set_user_data(ui_lblDash, "dash");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droNetwork, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_droNetwork, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_droNetwork, LV_OBJ_FLAG_FLOATING);
     }
 
     if (!device.DEVICE.HAS_BLUETOOTH) {
         lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_FLOATING);
     }
 
@@ -566,8 +597,11 @@ void glyph_task() {
     if (progress_onscreen > 0) {
         progress_onscreen -= 1;
     } else {
-        if (!lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
-            lv_obj_add_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
+        if (!lv_obj_has_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+        }
+        if (!lv_obj_has_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
         }
         if (!msgbox_active) {
             progress_onscreen = -1;
@@ -576,6 +610,9 @@ void glyph_task() {
 }
 
 void ui_refresh_task() {
+    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+    lv_bar_set_value(ui_barProgressVolume, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_OFF);
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             static char old_wall[MAX_BUFFER_SIZE];
@@ -622,13 +659,13 @@ void ui_refresh_task() {
                         lv_obj_move_foreground(ui_pnlBox);
                         break;
                     case 3: // Fullscreen + Behind
-                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_background(ui_pnlBox);
                         lv_obj_move_background(ui_pnlWall);
                         break;
                     case 4: // Fullscreen + Front
-                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_foreground(ui_pnlBox);
                         break;

@@ -126,8 +126,8 @@ void create_app_items() {
         ui_count++;
 
         lv_obj_t * ui_pnlApp = lv_obj_create(ui_pnlContent);
-        lv_obj_set_width(ui_pnlApp, 640);
-        lv_obj_set_height(ui_pnlApp, 28);
+        lv_obj_set_width(ui_pnlApp, device.MUX.WIDTH);
+        lv_obj_set_height(ui_pnlApp, device.MUX.ITEM.HEIGHT);
         lv_obj_set_scrollbar_mode(ui_pnlApp, LV_SCROLLBAR_MODE_OFF);
         lv_obj_set_style_align(ui_pnlApp, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_opa(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -142,8 +142,8 @@ void create_app_items() {
         lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
         lv_label_set_text(ui_lblAppItem, app_store);
 
-        lv_obj_set_width(ui_lblAppItem, 640);
-        lv_obj_set_height(ui_lblAppItem, 28);
+        lv_obj_set_width(ui_lblAppItem, device.MUX.WIDTH);
+        lv_obj_set_height(ui_lblAppItem, device.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblAppItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_side(ui_lblAppItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -211,8 +211,8 @@ void create_app_items() {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF04B");
         }
 
-        lv_obj_set_width(ui_lblAppItemGlyph, 640);
-        lv_obj_set_height(ui_lblAppItemGlyph, 28);
+        lv_obj_set_width(ui_lblAppItemGlyph, device.MUX.WIDTH);
+        lv_obj_set_height(ui_lblAppItemGlyph, device.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblAppItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -249,15 +249,16 @@ void create_app_items() {
 
 void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index >= 1 && ui_count > 13) {
+        if (current_item_index >= 1 && ui_count > device.MUX.ITEM.COUNT) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
-            if (current_item_index > 5 && current_item_index < (ui_count - 7)) {
-                content_panel_y -= 30;
+            if (current_item_index > device.MUX.ITEM.PREV_LOW &&
+                current_item_index < (ui_count - device.MUX.ITEM.PREV_HIGH)) {
+                content_panel_y -= device.MUX.ITEM.PANEL;
                 lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
             }
-        } else if (current_item_index >= 0 && ui_count <= 13) {
+        } else if (current_item_index >= 0 && ui_count <= device.MUX.ITEM.COUNT) {
             if (current_item_index > 0) {
                 current_item_index--;
                 nav_prev(ui_group, 1);
@@ -272,17 +273,18 @@ void list_nav_prev(int steps) {
 
 void list_nav_next(int steps) {
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index < (ui_count - 1) && ui_count > 13) {
+        if (current_item_index < (ui_count - 1) && ui_count > device.MUX.ITEM.COUNT) {
             if (current_item_index < (ui_count - 1)) {
                 current_item_index++;
                 nav_next(ui_group, 1);
                 nav_next(ui_group_glyph, 1);
-                if (current_item_index >= 7 && current_item_index < (ui_count - 6)) {
-                    content_panel_y += 30;
+                if (current_item_index >= device.MUX.ITEM.NEXT_HIGH &&
+                    current_item_index < (ui_count - device.MUX.ITEM.NEXT_LOW)) {
+                    content_panel_y += device.MUX.ITEM.PANEL;
                     lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
                 }
             }
-        } else if (current_item_index < ui_count && ui_count <= 13) {
+        } else if (current_item_index < ui_count && ui_count <= device.MUX.ITEM.COUNT) {
             if (current_item_index < (ui_count - 1)) {
                 current_item_index++;
                 nav_next(ui_group, 1);
@@ -409,7 +411,7 @@ void *joystick_task() {
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
-                                    int y = (ui_count - 13) * 30;
+                                    int y = (ui_count - device.MUX.ITEM.COUNT) * device.MUX.ITEM.PANEL;
                                     lv_obj_scroll_to_y(ui_pnlContent, y, LV_ANIM_OFF);
                                     content_panel_y = y;
                                     current_item_index = ui_count - 1;
@@ -422,8 +424,8 @@ void *joystick_task() {
                                     list_nav_prev(1);
                                     lv_task_handler();
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 if (current_item_index == ui_count - 1) {
                                     lv_obj_scroll_to_y(ui_pnlContent, 0, LV_ANIM_OFF);
@@ -449,7 +451,7 @@ void *joystick_task() {
             }
         }
 
-        if (ui_count > 13 && (JOYUP_pressed || JOYDOWN_pressed)) {
+        if (ui_count > device.MUX.ITEM.COUNT && (JOYUP_pressed || JOYDOWN_pressed)) {
             if (nav_hold > 2) {
                 if (nav_delay > 16) {
                     nav_delay -= 16;
@@ -469,30 +471,32 @@ void *joystick_task() {
 
         if (ev.type == EV_KEY && ev.value == 1 &&
             (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
-            progress_onscreen = 1;
-            if (lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
-                lv_obj_clear_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
-            }
             if (JOYHOTKEY_pressed) {
-                lv_label_set_text(ui_icoProgress, "\uF185");
-                lv_bar_set_value(ui_barProgress, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+                progress_onscreen = 1;
+                lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+                lv_label_set_text(ui_icoProgressBrightness, "\uF185");
+                lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
             } else {
+                progress_onscreen = 2;
+                lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
                 int volume = atoi(read_text_from_file(VOLUME_PERC));
                 switch (volume) {
                     case 0:
-                        lv_label_set_text(ui_icoProgress, "\uF6A9");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
                         break;
                     case 1 ... 46:
-                        lv_label_set_text(ui_icoProgress, "\uF026");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF026");
                         break;
                     case 47 ... 71:
-                        lv_label_set_text(ui_icoProgress, "\uF027");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF027");
                         break;
                     case 72 ... 100:
-                        lv_label_set_text(ui_icoProgress, "\uF028");
+                        lv_label_set_text(ui_icoProgressVolume, "\uF028");
                         break;
                 }
-                lv_bar_set_value(ui_barProgress, volume, LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
             }
         }
 
@@ -505,7 +509,8 @@ void init_elements() {
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
-    lv_obj_move_foreground(ui_pnlProgress);
+    lv_obj_move_foreground(ui_pnlProgressBrightness);
+    lv_obj_move_foreground(ui_pnlProgressVolume);
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -524,7 +529,6 @@ void init_elements() {
 
     lv_label_set_text(ui_lblNavA, "Launch");
     lv_label_set_text(ui_lblNavB, "Back");
-    lv_label_set_text(ui_lblNavMenu, "Info");
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -534,19 +538,26 @@ void init_elements() {
             ui_lblNavYGlyph,
             ui_lblNavY,
             ui_lblNavZGlyph,
-            ui_lblNavZ
+            ui_lblNavZ,
+            ui_lblNavMenuGlyph,
+            ui_lblNavMenu
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
     if (ui_count == 0) {
         lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
     } else {
         lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();
@@ -589,8 +600,11 @@ void glyph_task() {
     if (progress_onscreen > 0) {
         progress_onscreen -= 1;
     } else {
-        if (!lv_obj_has_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN)) {
-            lv_obj_add_flag(ui_pnlProgress, LV_OBJ_FLAG_HIDDEN);
+        if (!lv_obj_has_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+        }
+        if (!lv_obj_has_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
         }
         if (!msgbox_active) {
             progress_onscreen = -1;
@@ -599,6 +613,9 @@ void glyph_task() {
 }
 
 void ui_refresh_task() {
+    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+    lv_bar_set_value(ui_barProgressVolume, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_OFF);
+
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -648,13 +665,13 @@ void ui_refresh_task() {
                         lv_obj_move_foreground(ui_pnlBox);
                         break;
                     case 3: // Fullscreen + Behind
-                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_background(ui_pnlBox);
                         lv_obj_move_background(ui_pnlWall);
                         break;
                     case 4: // Fullscreen + Front
-                        lv_obj_set_height(ui_pnlBox, device.SCREEN.HEIGHT);
+                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
                         lv_obj_move_foreground(ui_pnlBox);
                         break;

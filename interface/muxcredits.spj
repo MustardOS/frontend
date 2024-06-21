@@ -3266,7 +3266,7 @@
                           {
                             "nid": -2035003639,
                             "strtype": "LABEL/Text",
-                            "strval": "acmeplus\\nilforhp5\\nbgelmini\\n",
+                            "strval": "acmeplus\\nilfordhp5\\nbgelmini\\n",
                             "InheritedType": 10
                           },
                           {
@@ -6150,7 +6150,7 @@
                       {
                         "nid": 1462717315,
                         "strtype": "LABEL/Text",
-                        "strval": "lmarcomiranda\\nninja.badger\\nyouraveragelord\\nkentonftw\\nbtreecat\\nzazouboy\\ncombustify\\nluzfcb\\nzaka1w3\\nndguardian\\nnico_linber",
+                        "strval": "lmarcomiranda\\nvagueparade\\nninja.badger\\nyouraveragelord\\nkentonftw\\nbtreecat\\nzazouboy\\ncombustify\\nluzfcb\\nzaka1w3\\nndguardian\\nnico_linber\\nbnnoirjean",
                         "InheritedType": 10
                       },
                       {
@@ -6532,7 +6532,7 @@
                       {
                         "nid": 1957839928,
                         "strtype": "LABEL/Text",
-                        "strval": "bazkart\\nrobbiet480\\nmeowman_\\noates\\nbenjaminbercy\\nultra646464\\nsunclutch\\nlethargicdemigod\\n._j0hn_.\\nsnesfan1\\nliloconf",
+                        "strval": "bazkart\\nrobbiet480\\nmeowman_\\noates\\nbenjaminbercy\\nultra646464\\nsunclutch\\nlethargicdemigod\\n._j0hn_.\\nsnesfan1\\nliloconf\\nrabite890\\nnacho_chicken",
                         "InheritedType": 10
                       },
                       {
@@ -6914,7 +6914,7 @@
                       {
                         "nid": 250774613,
                         "strtype": "LABEL/Text",
-                        "strval": "x_tremis\\njottenmiller\\nintelliaim\\nsethg911\\njoeysretrohandhelds\\nzadeis\\nlasereverything\\ntsuica\\n_tresd\\nnico_linber_36894\\npr0j3kt2501",
+                        "strval": "x_tremis\\njottenmiller\\nintelliaim\\nsethg911\\njoeysretrohandhelds\\nzadeis\\nlasereverything\\ntsuica\\n_tresd\\nnico_linber_36894\\npr0j3kt2501\\nalucard9964\\nsaniko.1",
                         "InheritedType": 10
                       },
                       {
@@ -8013,7 +8013,7 @@
                       {
                         "nid": -594472971,
                         "strtype": "LABEL/Text",
-                        "strval": "benzo1985\\ngalloc\\nben819.\\nstatus.quo.exile\\ndefensemechanism\\nhex_maniack\\nvagueparade\\nkiko_lake\\n.starship9\\ndrisc\\nallepac\\n.nickcs\\nnuke_67641\\nvj425.90",
+                        "strval": "galloc\\nben819.\\nstatus.quo.exile\\ndefensemechanism\\nhex_maniack\\nkiko_lake\\n.starship9\\ndrisc\\nallepac\\n.nickcs\\nnuke_67641\\nvj425.90\\nbillynaing\\nderekg496920",
                         "InheritedType": 10
                       },
                       {
@@ -8395,7 +8395,7 @@
                       {
                         "nid": 717475405,
                         "strtype": "LABEL/Text",
-                        "strval": "clempurp9868\\nabbbbb6590\\narobee\\nxluuke\\nbelakor6969\\nmrminholi\\n.ryspy\\naj15\\nrbndr_\\nmzasa\\nlillytheluckyrabbit\\npubsubdub\\nneokobe97\\nunentitled",
+                        "strval": "clempurp9868\\nabbbbb6590\\narobee\\nxluuke\\nmrminholi\\n.ryspy\\naj15\\nrbndr_\\nmzasa\\nlillytheluckyrabbit\\npubsubdub\\nneokobe97\\nunentitled\\nmilotorou",
                         "InheritedType": 10
                       },
                       {
@@ -12490,7 +12490,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxcredits/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 758,
+    "backup_cnt": 759,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",
