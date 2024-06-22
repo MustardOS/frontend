@@ -1239,7 +1239,8 @@ void *joystick_task() {
                                     char n_dir[MAX_BUFFER_SIZE];
                                     snprintf(n_dir, sizeof(n_dir), "%s", sd_dir);
 
-                                    const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
+                                    char *f_content = get_string_at_index(&content_items, atoi(
+                                            get_string_at_index(&named_index, current_item_index)));
 
                                     char cache_file[MAX_BUFFER_SIZE];
                                     switch (module) {
@@ -1272,7 +1273,7 @@ void *joystick_task() {
                                             play_sound("confirm", nav_sound);
 
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/favourite/%s.cfg",
-                                                     device.STORAGE.ROM.MOUNT, content_label);
+                                                     device.STORAGE.ROM.MOUNT, strip_ext(f_content));
 
                                             remove(cache_file);
                                             write_text_to_file("/tmp/mux_reload", "1", "w");
@@ -1283,7 +1284,7 @@ void *joystick_task() {
                                             play_sound("confirm", nav_sound);
 
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/history/%s.cfg",
-                                                     device.STORAGE.ROM.MOUNT, content_label);
+                                                     device.STORAGE.ROM.MOUNT, strip_ext(f_content));
 
                                             remove(cache_file);
                                             write_text_to_file("/tmp/mux_reload", "1", "w");
