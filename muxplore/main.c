@@ -814,7 +814,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
 
     char content_loader_file[MAX_BUFFER_SIZE];
     snprintf(content_loader_file, sizeof(content_loader_file), "%s/MUOS/info/core/%s/%s.cfg",
-             device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), content_name);
+             device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), strip_ext(content_name));
 
     printf("CONFIG FILE: %s\n", content_loader_file);
 
@@ -834,7 +834,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
     if (!file_exist(content_loader_file)) {
         char content_loader_data[MAX_BUFFER_SIZE];
         snprintf(content_loader_data, sizeof(content_loader_data), "%s\n%s\n/mnt/%s/roms/\n%s\n%s\n",
-                 content_name, assigned_core, curr_sd,
+                 strip_ext(content_name), assigned_core, curr_sd,
                  get_last_subdir(sd_dir, '/', 4),
                  get_string_at_index(&content_items, content_index));
 
@@ -850,7 +850,6 @@ int load_content(char *content_name, int content_index, int add_favourite) {
         char his_dir[MAX_BUFFER_SIZE];
         snprintf(fav_dir, sizeof(fav_dir), "%s/MUOS/info/favourite", device.STORAGE.ROM.MOUNT);
         snprintf(his_dir, sizeof(his_dir), "%s/MUOS/info/history", device.STORAGE.ROM.MOUNT);
-
 
         if (add_favourite) {
             hf_type = fav_dir;
@@ -880,9 +879,9 @@ int load_content(char *content_name, int content_index, int add_favourite) {
             char act_file[MAX_BUFFER_SIZE];
             char act_content[MAX_BUFFER_SIZE];
             snprintf(act_file, sizeof(act_file), "%s/MUOS/info/activity/%s.act",
-                     device.STORAGE.ROM.MOUNT, content_name);
+                     device.STORAGE.ROM.MOUNT, strip_ext(content_name));
             snprintf(act_content, sizeof(act_content), "%s\n%s\n%s",
-                     content_name, curr_sd, read_line_from_file(content_loader_file, 5));
+                     strip_ext(content_name), curr_sd, read_line_from_file(content_loader_file, 5));
             prepare_activity_file(act_content, act_file);
 
             write_text_to_file(add_to_hf, read_text_from_file(content_loader_file), "w");
@@ -1327,7 +1326,7 @@ void *joystick_task() {
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 break;
                                             } else {
-                                                if (load_content(lv_obj_get_user_data(lv_group_get_focused(ui_group)),
+                                                if (load_content(f_content,
                                                                  atoi(get_string_at_index(&named_index,
                                                                                           current_item_index)),
                                                                  1)) {
