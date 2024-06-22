@@ -187,7 +187,7 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_width(ui_lblOfficialLeftPeople, lv_pct(100));
     lv_obj_set_height(ui_lblOfficialLeftPeople, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_lblOfficialLeftPeople, LV_ALIGN_LEFT_MID);
-    lv_label_set_text(ui_lblOfficialLeftPeople, "xonglebongle\nantikk\nkoolkidkorey\n");
+    lv_label_set_text(ui_lblOfficialLeftPeople, "xonglebongle\nantikk\nCorey\n");
     lv_obj_set_scroll_dir(ui_lblOfficialLeftPeople, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblOfficialLeftPeople, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblOfficialLeftPeople, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -252,7 +252,7 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_width(ui_lblOfficialRightPeople, lv_pct(100));
     lv_obj_set_height(ui_lblOfficialRightPeople, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_lblOfficialRightPeople, LV_ALIGN_RIGHT_MID);
-    lv_label_set_text(ui_lblOfficialRightPeople, "acmeplus\nilfordhp5\nbgelmini\n");
+    lv_label_set_text(ui_lblOfficialRightPeople, "acmeplus\nCasey\nbgelmini\n");
     lv_obj_set_scroll_dir(ui_lblOfficialRightPeople, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblOfficialRightPeople, lv_color_hex(0xFF4500), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblOfficialRightPeople, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -428,12 +428,12 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_y(ui_lblHeroLeft, 30);
     lv_obj_set_align(ui_lblHeroLeft, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblHeroLeft,
-                      "lmarcomiranda\nvagueparade\nninja.badger\nyouraveragelord\nkentonftw\nbtreecat\nzazouboy\ncombustify\nluzfcb\nzaka1w3\nndguardian\nnico_linber\nbnnoirjean");
+                      "lmarcomiranda\nvagueparade\nninja.badger\nyouraveragelord\nkentonftw\nbtreecat\nzazouboy\ncombustify\nluzfcb\nzaka1w3\nndguardian\nnico_linber\nbnnoirjean\nitsgioshawn");
     lv_obj_set_scroll_dir(ui_lblHeroLeft, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroLeft, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHeroLeft, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lblHeroLeft, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblHeroLeft, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblHeroLeft, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblHeroLeft, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblHeroLeft, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblHeroLeft, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -460,7 +460,7 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_style_text_color(ui_lblHeroCenter, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHeroCenter, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblHeroCenter, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblHeroCenter, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblHeroCenter, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblHeroCenter, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblHeroCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -482,12 +482,12 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_y(ui_lblHeroRight, 30);
     lv_obj_set_align(ui_lblHeroRight, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lblHeroRight,
-                      "x_tremis\njottenmiller\nintelliaim\nsethg911\njoeysretrohandhelds\nzadeis\nlasereverything\ntsuica\n_tresd\nnico_linber_36894\npr0j3kt2501\nalucard9964\nsaniko.1");
+                      "x_tremis\njottenmiller\nintelliaim\nsethg911\njoeysretrohandhelds\nzadeis\nlasereverything\ntsuica\n_tresd\nnico_linber_36894\npr0j3kt2501\nalucard9964\nsaniko.1\nmiasophia");
     lv_obj_set_scroll_dir(ui_lblHeroRight, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroRight, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHeroRight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lblHeroRight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblHeroRight, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblHeroRight, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblHeroRight, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblHeroRight, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblHeroRight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -561,7 +561,7 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_style_text_color(ui_lblKnightLeft, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKnightLeft, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lblKnightLeft, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblKnightLeft, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblKnightLeft, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblKnightLeft, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblKnightLeft, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblKnightLeft, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -588,7 +588,7 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_style_text_color(ui_lblKnightCenter, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKnightCenter, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lblKnightCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblKnightCenter, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblKnightCenter, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblKnightCenter, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblKnightCenter, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblKnightCenter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -615,7 +615,7 @@ void ui_scrCredits_screen_init(void)
     lv_obj_set_style_text_color(ui_lblKnightRight, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKnightRight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_letter_space(ui_lblKnightRight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblKnightRight, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblKnightRight, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblKnightRight, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblKnightRight, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblKnightRight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

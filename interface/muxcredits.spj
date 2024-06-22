@@ -2188,7 +2188,7 @@
                           {
                             "nid": 2113283899,
                             "strtype": "LABEL/Text",
-                            "strval": "xonglebongle\\nantikk\\nkoolkidkorey\\n",
+                            "strval": "xonglebongle\\nantikk\\nCorey\\n",
                             "InheritedType": 10
                           },
                           {
@@ -3266,7 +3266,7 @@
                           {
                             "nid": -2035003639,
                             "strtype": "LABEL/Text",
-                            "strval": "acmeplus\\nilfordhp5\\nbgelmini\\n",
+                            "strval": "acmeplus\\nCasey\\nbgelmini\\n",
                             "InheritedType": 10
                           },
                           {
@@ -6150,7 +6150,7 @@
                       {
                         "nid": 1462717315,
                         "strtype": "LABEL/Text",
-                        "strval": "lmarcomiranda\\nvagueparade\\nninja.badger\\nyouraveragelord\\nkentonftw\\nbtreecat\\nzazouboy\\ncombustify\\nluzfcb\\nzaka1w3\\nndguardian\\nnico_linber\\nbnnoirjean",
+                        "strval": "lmarcomiranda\\nvagueparade\\nninja.badger\\nyouraveragelord\\nkentonftw\\nbtreecat\\nzazouboy\\ncombustify\\nluzfcb\\nzaka1w3\\nndguardian\\nnico_linber\\nbnnoirjean\\nitsgioshawn",
                         "InheritedType": 10
                       },
                       {
@@ -6177,7 +6177,7 @@
                                 "strtype": "_style/Text_Spacing",
                                 "intarray": [
                                   0,
-                                  2
+                                  1
                                 ],
                                 "InheritedType": 7
                               },
@@ -6559,7 +6559,7 @@
                                 "strtype": "_style/Text_Spacing",
                                 "intarray": [
                                   0,
-                                  2
+                                  1
                                 ],
                                 "InheritedType": 7
                               },
@@ -6914,7 +6914,7 @@
                       {
                         "nid": 250774613,
                         "strtype": "LABEL/Text",
-                        "strval": "x_tremis\\njottenmiller\\nintelliaim\\nsethg911\\njoeysretrohandhelds\\nzadeis\\nlasereverything\\ntsuica\\n_tresd\\nnico_linber_36894\\npr0j3kt2501\\nalucard9964\\nsaniko.1",
+                        "strval": "x_tremis\\njottenmiller\\nintelliaim\\nsethg911\\njoeysretrohandhelds\\nzadeis\\nlasereverything\\ntsuica\\n_tresd\\nnico_linber_36894\\npr0j3kt2501\\nalucard9964\\nsaniko.1\\nmiasophia",
                         "InheritedType": 10
                       },
                       {
@@ -6941,7 +6941,7 @@
                                 "strtype": "_style/Text_Spacing",
                                 "intarray": [
                                   0,
-                                  2
+                                  1
                                 ],
                                 "InheritedType": 7
                               },
@@ -8040,7 +8040,7 @@
                                 "strtype": "_style/Text_Spacing",
                                 "intarray": [
                                   0,
-                                  2
+                                  1
                                 ],
                                 "InheritedType": 7
                               },
@@ -8422,7 +8422,7 @@
                                 "strtype": "_style/Text_Spacing",
                                 "intarray": [
                                   0,
-                                  2
+                                  1
                                 ],
                                 "InheritedType": 7
                               },
@@ -8804,7 +8804,7 @@
                                 "strtype": "_style/Text_Spacing",
                                 "intarray": [
                                   0,
-                                  2
+                                  1
                                 ],
                                 "InheritedType": 7
                               },
@@ -12490,7 +12490,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxcredits/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 759,
+    "backup_cnt": 762,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",
