@@ -217,7 +217,17 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droPasscode, config.SETTINGS.ADVANCED.LOCK);
     lv_dropdown_set_selected(ui_droLED, config.SETTINGS.ADVANCED.LED);
     lv_dropdown_set_selected(ui_droTheme, config.SETTINGS.ADVANCED.THEME);
-    lv_dropdown_set_selected(ui_droRetroWait, config.SETTINGS.ADVANCED.RETROWAIT);
+
+    int retrowait_type = config.SETTINGS.ADVANCED.RETROWAIT;
+    if (retrowait_type == 15) {
+        lv_dropdown_set_selected(ui_droRetroWait, 1);
+    } else if (retrowait_type == 30) {
+        lv_dropdown_set_selected(ui_droRetroWait, 2);
+    } else if (retrowait_type == 60) {
+        lv_dropdown_set_selected(ui_droRetroWait, 3);
+    } else {
+        lv_dropdown_set_selected(ui_droRetroWait, 0);
+    }
 }
 
 void save_tweak_options() {
@@ -234,7 +244,22 @@ void save_tweak_options() {
     int idx_lockdown = lv_dropdown_get_selected(ui_droPasscode);
     int idx_led = lv_dropdown_get_selected(ui_droLED);
     int idx_random_theme = lv_dropdown_get_selected(ui_droTheme);
-    int idx_retrowait = lv_dropdown_get_selected(ui_droRetroWait);
+
+    int idx_retrowait;
+    switch (lv_dropdown_get_selected(ui_droRetroWait)) {
+        case 0:
+            idx_retrowait = 0;
+            break;
+        case 1:
+            idx_retrowait = 15;
+            break;
+        case 2:
+            idx_retrowait = 30;
+            break;
+        default:
+            idx_retrowait = 60;
+            break;
+    }
 
     char *idx_volume;
     switch (lv_dropdown_get_selected(ui_droVolume)) {

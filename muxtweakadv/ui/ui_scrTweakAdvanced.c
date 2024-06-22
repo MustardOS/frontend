@@ -927,7 +927,7 @@ void ui_scrTweakAdvanced_screen_init(void)
 
     ui_droRetroWait = lv_dropdown_create(ui_pnlHighlight);
     lv_dropdown_set_dir(ui_droRetroWait, LV_DIR_LEFT);
-    lv_dropdown_set_options(ui_droRetroWait, "Disabled\nEnabled");
+    lv_dropdown_set_options(ui_droRetroWait, "Disabled\n15 Seconds\n30 Seconds\n60 Seconds");
     lv_dropdown_set_selected_highlight(ui_droRetroWait, false);
     lv_obj_set_width(ui_droRetroWait, 640);
     lv_obj_set_height(ui_droRetroWait, 28);
