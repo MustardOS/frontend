@@ -205,7 +205,7 @@ void create_app_items() {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF6E2");
         } else if (strcasecmp(app_store, "Simple Terminal") == 0) {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF120");
-        } else if (strcasecmp(app_store, "Task Commander") == 0) {
+        } else if (strcasecmp(app_store, "Task Toolkit") == 0) {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF7D9");
         } else {
             lv_label_set_text(ui_lblAppItemGlyph, "\uF04B");
