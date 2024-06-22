@@ -119,7 +119,7 @@ void ui_scrTask_screen_init(void)
     lv_obj_set_height(ui_lblTitle, 42);
     lv_obj_set_align(ui_lblTitle, LV_ALIGN_TOP_MID);
     lv_label_set_long_mode(ui_lblTitle, LV_LABEL_LONG_DOT);
-    lv_label_set_text(ui_lblTitle, "TASK COMMANDER");
+    lv_label_set_text(ui_lblTitle, "TASK TOOLKIT");
     lv_obj_add_flag(ui_lblTitle, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_set_style_text_color(ui_lblTitle, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblTitle, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
