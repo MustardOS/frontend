@@ -674,6 +674,15 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblTheme, "theme");
     lv_obj_set_user_data(ui_lblRetroWait, "retrowait");
 
+    if (!device.DEVICE.HAS_NETWORK) {
+        lv_obj_add_flag(ui_lblRetroWait, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblRetroWait, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_icoRetroWait, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoRetroWait, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_droRetroWait, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_droRetroWait, LV_OBJ_FLAG_FLOATING);
+    }
+
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
         lv_obj_t * overlay_img = lv_img_create(ui_scrTweakAdvanced);
