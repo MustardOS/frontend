@@ -15729,7 +15729,7 @@
                   {
                     "nid": -753767186,
                     "strtype": "DROPDOWN/Options",
-                    "strval": "Disabled\\n15 Seconds\\n30 Seconds\\n60 Seconds",
+                    "strval": "Disabled\\nEnabled",
                     "InheritedType": 10
                   },
                   {
