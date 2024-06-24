@@ -12,9 +12,9 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (config->BOOT.FACTORY_RESET) {
         snprintf(scheme, sizeof(scheme), "%s/theme/scheme/default.txt", INTERNAL_PATH);
     } else {
-        snprintf(scheme, sizeof(scheme), "/%s/MUOS/theme/active/scheme/%s.txt", device->STORAGE.ROM.MOUNT, mux_name);
+        snprintf(scheme, sizeof(scheme), "%s/MUOS/theme/active/scheme/%s.txt", device->STORAGE.ROM.MOUNT, mux_name);
         if (!file_exist(scheme)) {
-            snprintf(scheme, sizeof(scheme), "/%s/MUOS/theme/active/scheme/default.txt", device->STORAGE.ROM.MOUNT);
+            snprintf(scheme, sizeof(scheme), "%s/MUOS/theme/active/scheme/default.txt", device->STORAGE.ROM.MOUNT);
         }
     }
 

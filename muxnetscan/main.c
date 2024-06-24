@@ -757,7 +757,7 @@ int main(int argc, char *argv[]) {
 
     create_network_items();
 
-    if (ui_count > 13) {
+    if (ui_count > device.MUX.ITEM.COUNT) {
         lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
         lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }

@@ -83,7 +83,7 @@ void image_refresh() {
     char theme_image[MAX_BUFFER_SIZE];
 
     snprintf(theme_image, sizeof(theme_image),
-             "/%s/MUOS/theme/preview/%s.png",
+             "%s/MUOS/theme/preview/%s.png",
              device.STORAGE.ROM.MOUNT, theme_name);
 
     if (file_exist(theme_image)) {
@@ -102,7 +102,7 @@ void create_theme_items() {
     struct dirent *tf;
 
     char theme_dir[PATH_MAX];
-    snprintf(theme_dir, sizeof(theme_dir), "/%s/MUOS/theme", device.STORAGE.ROM.MOUNT);
+    snprintf(theme_dir, sizeof(theme_dir), "%s/MUOS/theme", device.STORAGE.ROM.MOUNT);
 
     td = opendir(theme_dir);
     if (td == NULL) {
@@ -819,7 +819,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblThemeMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    if (ui_count > 13) {
+    if (ui_count > device.MUX.ITEM.COUNT) {
         lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
         lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }

@@ -637,13 +637,17 @@ void gen_item(char **file_names, int file_count) {
             break;
     }
 
+    char named_indices[named_items.size][MAX_BUFFER_SIZE];
+    char *stripped_names[named_items.size];
+
     for (int i = 0; i < named_items.size; i++) {
-        char n_index[MAX_BUFFER_SIZE];
-        snprintf(n_index, sizeof(n_index), "%d", get_label_placement(named_items.array[i]));
+        snprintf(named_indices[i], MAX_BUFFER_SIZE, "%d", get_label_placement(named_items.array[i]));
+        stripped_names[i] = strip_label_placement(named_items.array[i]);
+    }
 
-        push_string(&named_index, n_index);
-
-        char *item_name = strip_label_placement(named_items.array[i]);
+    for (int i = 0; i < named_items.size; i++) {
+        push_string(&named_index, named_indices[i]);
+        char *item_name = stripped_names[i];
         if (strcasecmp(item_name, DUMMY_DIR) != 0) {
             gen_label(ROM, "\uF15B", item_name);
         }
@@ -976,7 +980,7 @@ void list_nav_prev(int steps) {
 
 void list_nav_next(int steps) {
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index < (ui_count - 1) && ui_count > 13) {
+        if (current_item_index < (ui_count - 1) && ui_count > device.MUX.ITEM.COUNT) {
             if (current_item_index < (ui_count - 1)) {
                 current_item_index++;
                 nav_next(ui_group, 1);
@@ -1554,7 +1558,7 @@ void init_elements() {
             lv_obj_move_foreground(ui_pnlBox);
             break;
         case 6: // Fullscreen + Behind
-            lv_obj_set_height(ui_pnlBox, device.SCREEN.WIDTH);
+            lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
             lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
             lv_obj_move_background(ui_pnlBox);
             lv_obj_move_background(ui_pnlWall);
@@ -2115,7 +2119,7 @@ int main(int argc, char *argv[]) {
 
     pthread_join(gen_item_thread, NULL);
     if (ui_count > 0) {
-        if (ui_count > 13) {
+        if (ui_count > device.MUX.ITEM.COUNT) {
             lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
             lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
         }

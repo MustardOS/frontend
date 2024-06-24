@@ -74,7 +74,7 @@ void show_help() {
 void create_task_items() {
     char task_path[MAX_BUFFER_SIZE];
     snprintf(task_path, sizeof(task_path),
-             "/%s/MUOS/task", device.STORAGE.ROM.MOUNT);
+             "%s/MUOS/task", device.STORAGE.ROM.MOUNT);
 
     const char *task_directories[] = {
             task_path
@@ -344,7 +344,7 @@ void *joystick_task() {
 
                                         char task_path[MAX_BUFFER_SIZE];
                                         snprintf(task_path, sizeof(task_path),
-                                                 "/%s/MUOS/task", device.STORAGE.ROM.MOUNT);
+                                                 "%s/MUOS/task", device.STORAGE.ROM.MOUNT);
 
                                         static char command[MAX_BUFFER_SIZE];
                                         snprintf(command, sizeof(command), "\"%s/%s.sh\"",
@@ -805,7 +805,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblTaskMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    if (ui_count > 13) {
+    if (ui_count > device.MUX.ITEM.COUNT) {
         lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
         lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }

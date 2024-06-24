@@ -7,7 +7,7 @@
 
 void load_glyph(struct glyph_config *glyph, struct mux_device *device, char *mux_name) {
     char scheme[MAX_BUFFER_SIZE];
-    snprintf(scheme, sizeof(scheme), "/%s/MUOS/theme/active/glyph/%s.txt", device->STORAGE.ROM.MOUNT, mux_name);
+    snprintf(scheme, sizeof(scheme), "%s/MUOS/theme/active/glyph/%s.txt", device->STORAGE.ROM.MOUNT, mux_name);
     if (!file_exist(scheme)) {
         snprintf(scheme, sizeof(scheme), "%s/MUOS/theme/active/glyph/default.txt", device->STORAGE.ROM.MOUNT);
     }

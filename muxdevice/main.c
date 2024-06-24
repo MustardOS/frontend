@@ -107,6 +107,39 @@ void init_navigation_groups() {
     }
 }
 
+void device_change() {
+    play_sound("confirm", nav_sound);
+
+    static char device_file[MAX_BUFFER_SIZE];
+    snprintf(device_file, sizeof(device_file), "%s/config/device.txt", INTERNAL_PATH);
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+    if (element_focused == ui_lblRG28XX) {
+        write_text_to_file(device_file, "RG28XX", "w");
+    } else if (element_focused == ui_lblRG35XXH) {
+        write_text_to_file(device_file, "RG35XX-H", "w");
+    } else if (element_focused == ui_lblRG35XXPLUS) {
+        write_text_to_file(device_file, "RG35XX-PLUS", "w");
+    } else if (element_focused == ui_lblRG35XXSP) {
+        write_text_to_file(device_file, "RG35XX-SP", "w");
+    } else if (element_focused == ui_lblRG35XX2024) {
+        write_text_to_file(device_file, "RG35XX-2024", "w");
+    }
+
+    static char config_file[MAX_BUFFER_SIZE];
+    snprintf(config_file, sizeof(config_file),
+             "%s/config/config.ini", INTERNAL_PATH);
+
+    mini_t * muos_config = mini_try_load(config_file);
+    mini_set_int(muos_config, "boot", "firmware_done", 0);
+    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+    mini_free(muos_config);
+
+    sync();
+    reboot(RB_AUTOBOOT);
+}
+
 void *joystick_task() {
     struct input_event ev;
     int epoll_fd;
@@ -142,7 +175,6 @@ void *joystick_task() {
                     continue;
                 }
 
-                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
                 switch (ev.type) {
                     case EV_KEY:
                         if (ev.value == 1) {
@@ -157,34 +189,21 @@ void *joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
-                                    play_sound("confirm", nav_sound);
-
-                                    static char device_file[MAX_BUFFER_SIZE];
-                                    snprintf(device_file, sizeof(device_file), "%s/config/device.txt", INTERNAL_PATH);
-
-                                    if (element_focused == ui_lblRG28XX) {
-                                        write_text_to_file(device_file, "RG28XX", "w");
-                                    } else if (element_focused == ui_lblRG35XXH) {
-                                        write_text_to_file(device_file, "RG35XX-H", "w");
-                                    } else if (element_focused == ui_lblRG35XXPLUS) {
-                                        write_text_to_file(device_file, "RG35XX-PLUS", "w");
-                                    } else if (element_focused == ui_lblRG35XXSP) {
-                                        write_text_to_file(device_file, "RG35XX-SP", "w");
-                                    } else if (element_focused == ui_lblRG35XX2024) {
-                                        write_text_to_file(device_file, "RG35XX-2024", "w");
+                                    if (config.BOOT.FACTORY_RESET == 1) {
+                                        device_change();
                                     }
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
+                                    if (config.BOOT.FACTORY_RESET == 0) {
+                                        device_change();
+                                    }
+                                } else if (ev.code == NAV_B) {
+                                    if (config.BOOT.FACTORY_RESET == 0) {
+                                        play_sound("back", nav_sound);
+                                        input_disable = 1;
 
-                                    static char config_file[MAX_BUFFER_SIZE];
-                                    snprintf(config_file, sizeof(config_file),
-                                             "%s/config/config.ini", INTERNAL_PATH);
-
-                                    mini_t * muos_config = mini_try_load(config_file);
-                                    mini_set_int(muos_config, "boot", "firmware_done", 0);
-                                    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-                                    mini_free(muos_config);
-
-                                    sync();
-                                    reboot(RB_AUTOBOOT);
+                                        write_text_to_file(MUOS_PDI_LOAD, "device", "w");
+                                        safe_quit = 1;
+                                    }
                                 }
                             }
                         } else {
@@ -285,10 +304,9 @@ void init_elements() {
     lv_label_set_text(ui_lblMessage, osd_message);
 
     lv_label_set_text(ui_lblNavA, "Confirm");
+    lv_label_set_text(ui_lblNavB, "Back");
 
     lv_obj_t *nav_hide[] = {
-            ui_lblNavBGlyph,
-            ui_lblNavB,
             ui_lblNavCGlyph,
             ui_lblNavC,
             ui_lblNavXGlyph,
@@ -340,6 +358,15 @@ void init_elements() {
             nav_next(ui_group, 1);
             nav_next(ui_group_glyph, 1);
         }
+    }
+
+    if (config.BOOT.FACTORY_RESET == 1) {
+        lv_obj_add_flag(ui_lblNavB, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavB, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavBGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavBGlyph, LV_OBJ_FLAG_FLOATING);
+    } else {
+        lv_label_set_text(ui_lblNavAGlyph, lv_label_get_text(ui_lblNavXGlyph));
     }
 
     char *overlay = load_overlay_image();

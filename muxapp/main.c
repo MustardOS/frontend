@@ -74,7 +74,7 @@ void show_help() {
 void create_app_items() {
     char app_path[MAX_BUFFER_SIZE];
     snprintf(app_path, sizeof(app_path),
-             "/%s/MUOS/application", device.STORAGE.ROM.MOUNT);
+             "%s/MUOS/application", device.STORAGE.ROM.MOUNT);
 
     const char *app_directories[] = {
             app_path
@@ -364,7 +364,7 @@ void *joystick_task() {
                                         lv_task_handler();
 
                                         static char command[MAX_BUFFER_SIZE];
-                                        snprintf(command, sizeof(command), "/%s/MUOS/application/%s.sh",
+                                        snprintf(command, sizeof(command), "%s/MUOS/application/%s.sh",
                                                  device.STORAGE.ROM.MOUNT, lv_label_get_text(element_focused));
                                         write_text_to_file(MUOS_APP_LOAD, command, "w");
 
@@ -830,7 +830,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblAppMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    if (ui_count > 13) {
+    if (ui_count > device.MUX.ITEM.COUNT) {
         lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
         lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }

@@ -80,7 +80,7 @@ void show_help() {
 
 void create_core_assignment(const char *core, char *sys, int cache) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), "/%s/MUOS/info/core/%s/",
+    snprintf(core_dir, sizeof(core_dir), "%s/MUOS/info/core/%s/",
              device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
 
     create_directories(core_dir);
@@ -93,7 +93,7 @@ void create_core_assignment(const char *core, char *sys, int cache) {
     delete_files_of_type(core_dir, "cfg", NULL);
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "/%s/MUOS/info/core/%s/core.cfg",
+    snprintf(core_file, sizeof(core_file), "%s/MUOS/info/core/%s/core.cfg",
              device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
 
     FILE * file = fopen(core_file, "w");
@@ -157,7 +157,7 @@ void create_system_items() {
     struct dirent *tf;
 
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), "/%s/MUOS/info/assign",
+    snprintf(assign_dir, sizeof(assign_dir), "%s/MUOS/info/assign",
              device.STORAGE.ROM.MOUNT);
 
     td = opendir(assign_dir);
@@ -302,7 +302,7 @@ void create_system_items() {
 
 void create_core_items(const char *target) {
     char filename[FILENAME_MAX];
-    snprintf(filename, sizeof(filename), "/%s/MUOS/info/assign/%s.ini",
+    snprintf(filename, sizeof(filename), "%s/MUOS/info/assign/%s.ini",
              device.STORAGE.ROM.MOUNT, target);
 
     int cores;
@@ -560,7 +560,7 @@ void *joystick_task() {
                                     } else {
                                         char chosen_core_ini[FILENAME_MAX];
                                         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                                                 "/%s/MUOS/info/assign/%s.ini",
+                                                 "%s/MUOS/info/assign/%s.ini",
                                                  device.STORAGE.ROM.MOUNT, rom_system);
 
                                         mini_t * chosen_core = mini_load(chosen_core_ini);
@@ -921,7 +921,7 @@ int main(int argc, char *argv[]) {
         printf("ASSIGN AUTO INITIATED\n");
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "/%s/MUOS/info/core/%s/core.cfg",
+        snprintf(core_file, sizeof(core_file), "%s/MUOS/info/core/%s/core.cfg",
                  device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
@@ -931,7 +931,7 @@ int main(int argc, char *argv[]) {
         int auto_assign_good = 0;
 
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), "/%s/MUOS/info/assign.json",
+        snprintf(assign_file, sizeof(assign_file), "%s/MUOS/info/assign.json",
                  device.STORAGE.ROM.MOUNT);
 
         if (json_valid(read_text_from_file(assign_file))) {
@@ -946,7 +946,7 @@ int main(int argc, char *argv[]) {
                 printf("ASSIGN AUTO CORE: %s\n", ass_config);
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
-                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "/%s/MUOS/info/assign/%s",
+                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/MUOS/info/assign/%s",
                          device.STORAGE.ROM.MOUNT, ass_config);
 
                 printf("OBTAINING CORE INI: %s\n", assigned_core_ini);
@@ -1129,7 +1129,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblCoreMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    if (ui_count > 13) {
+    if (ui_count > device.MUX.ITEM.COUNT) {
         lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
         lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }
