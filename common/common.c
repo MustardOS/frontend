@@ -542,8 +542,9 @@ const char *get_random_int() {
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
     const char *meta = mini_get_string(ini_config, section, key, get_random_hex());
 
-    uint32_t
-            result = (uint32_t)
+    uint32_t result;
+
+    result = (uint32_t)
     strtoul(meta, NULL, 16);
     //printf("HEX\t%s: %s (%d)\n", key, meta, result);
 
@@ -556,6 +557,12 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, en
     int16_t result;
     if (strcmp(meta, "NOT FOUND") == 0) {
         switch (type) {
+            case MISC_PAD:
+                result = 0;
+                break;
+            case MISC_WIDTH:
+                result = device.SCREEN.WIDTH;
+                break;
             case LABEL:
                 result = (int16_t)
                 strtol("0", NULL, 10);
@@ -1381,16 +1388,16 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
     text[text_index] = '\0';
 
     int start = 0;
-    while (isspace((unsigned char)text[start])) {
+    while (isspace((unsigned char) text[start])) {
         start++;
     }
 
     int end = strlen(text) - 1;
-    while (end >= 0 && isspace((unsigned char)text[end])) {
+    while (end >= 0 && isspace((unsigned char) text[end])) {
         end--;
     }
 
-    if (start > 0 || end < (int)strlen(text) - 1) {
+    if (start > 0 || end < (int) strlen(text) - 1) {
         for (int i = start; i <= end; i++) {
             text[i - start] = text[i];
         }

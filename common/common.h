@@ -30,7 +30,7 @@ enum visual_type {
 };
 
 enum element_type {
-    LABEL, VALUE, IGNORE
+    LABEL, VALUE, IGNORE, MISC_PAD, MISC_WIDTH
 };
 
 struct dt_task_param {
