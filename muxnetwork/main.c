@@ -654,6 +654,18 @@ void *joystick_task() {
 
                                         safe_quit = 1;
                                     }
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
+                                    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
+                                        play_sound("confirm", nav_sound);
+
+                                        input_disable = 1;
+                                        load_mux("net_profile");
+
+                                        const char *u_data = lv_obj_get_user_data(element_focused);
+                                        write_text_to_file(MUOS_PDI_LOAD, u_data, "w");
+
+                                        safe_quit = 1;
+                                    }
                                 }
                             }
                         } else {
@@ -1286,14 +1298,13 @@ void init_elements() {
 
     lv_label_set_text(ui_lblNavB, "Back");
     lv_label_set_text(ui_lblNavX, "Scan");
+    lv_label_set_text(ui_lblNavY, "Profiles");
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
             ui_lblNavA,
             ui_lblNavCGlyph,
             ui_lblNavC,
-            ui_lblNavYGlyph,
-            ui_lblNavY,
             ui_lblNavZGlyph,
             ui_lblNavZ,
             ui_lblNavMenuGlyph,

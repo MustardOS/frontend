@@ -61,6 +61,9 @@
 #define MUXLAUNCH_REBOOT     ""
 #define MUXLAUNCH_SHUTDOWN   ""
 
+// muxnetprofile
+#define MUXNETPROFILE_GENERIC ""
+
 // muxnetscan
 #define MUXNETSCAN_GENERIC ""
 
