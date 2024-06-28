@@ -81,9 +81,9 @@ lv_group_t *ui_group_glyph;
 int sd_card;
 char *sd_dir = NULL;
 
-char *SD1 = "/mnt/mmc/ROMS/";
-char *SD2 = "/mnt/sdcard/ROMS/";
-char *E_USB = "/mnt/usb/ROMS/";
+static char SD1[MAX_BUFFER_SIZE];
+static char SD2[MAX_BUFFER_SIZE];
+static char E_USB[MAX_BUFFER_SIZE];
 
 char *current_wall = "";
 
@@ -647,9 +647,8 @@ void gen_item(char **file_names, int file_count) {
 
     for (int i = 0; i < named_items.size; i++) {
         push_string(&named_index, named_indices[i]);
-        char *item_name = stripped_names[i];
-        if (strcasecmp(item_name, DUMMY_DIR) != 0) {
-            gen_label(ROM, "\uF15B", item_name);
+        if (strcasecmp(stripped_names[i], DUMMY_DIR) != 0) {
+            gen_label(ROM, "\uF15B", stripped_names[i]);
         }
     }
 }
@@ -864,7 +863,11 @@ int load_content(char *content_name, int content_index, int add_favourite) {
         snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s.cfg", hf_type, strip_ext(content_name));
 
         if (add_favourite) {
-            write_text_to_file(add_to_hf, read_text_from_file(content_loader_file), "w");
+            char pointer[MAX_BUFFER_SIZE];
+            snprintf(pointer, sizeof(pointer), "%s/MUOS/info/core/%s/%s.cfg",
+                     device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), strip_ext(content_name));
+
+            write_text_to_file(add_to_hf, pointer, "w");
 
             char *hf_msg;
             if (file_exist(add_to_hf)) {
@@ -903,11 +906,15 @@ int load_content(char *content_name, int content_index, int add_favourite) {
 }
 
 int load_cached_content(const char *content_name, char *cache_type) {
-    char cache_file[MAX_BUFFER_SIZE];
-    snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/%s/%s",
+    char pointer_file[MAX_BUFFER_SIZE];
+    snprintf(pointer_file, sizeof(pointer_file), "%s/MUOS/info/%s/%s",
              device.STORAGE.ROM.MOUNT, cache_type, content_name);
 
-    if (file_exist(cache_file)) {
+    if (file_exist(pointer_file)) {
+        char cache_file[MAX_BUFFER_SIZE];
+        snprintf(cache_file, sizeof(cache_file), "%s",
+                 read_line_from_file(pointer_file, 1));
+
         char add_to_hf[MAX_BUFFER_SIZE];
 
         char *assigned_core = read_line_from_file(cache_file, 2);
@@ -1941,6 +1948,10 @@ int main(int argc, char *argv[]) {
     load_config(&config);
 
     ui_init();
+
+    snprintf(SD1, sizeof(SD1), "%s/ROMS/", device.STORAGE.ROM.MOUNT);
+    snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
+    snprintf(E_USB, sizeof(E_USB), "%s/ROMS/", device.STORAGE.USB.MOUNT);
 
     lv_obj_set_user_data(ui_scrExplore, mux_prog);
 
