@@ -1182,6 +1182,8 @@ void *joystick_task() {
                                                             snprintf(launch_script, sizeof(launch_script),
                                                                      "%s/script/mux/launch.sh", INTERNAL_PATH);
 
+                                                            write_text_to_file("/tmp/manual_launch", "1", "w");
+
                                                             system(launch_script);
                                                         }
                                                         break;
@@ -1191,11 +1193,13 @@ void *joystick_task() {
                                                     load_cached_content(f_content, "favourite");
                                                     write_text_to_file("/tmp/explore_card", "favourite", "w");
                                                     write_text_to_file("/tmp/explore_dir", "", "w");
+                                                    write_text_to_file("/tmp/manual_launch", "1", "w");
                                                     break;
                                                 case HISTORY:
                                                     load_cached_content(f_content, "history");
                                                     write_text_to_file("/tmp/explore_card", "history", "w");
                                                     write_text_to_file("/tmp/explore_dir", "", "w");
+                                                    write_text_to_file("/tmp/manual_launch", "1", "w");
                                                 default:
                                                     break;
                                             }
@@ -1948,6 +1952,10 @@ int main(int argc, char *argv[]) {
     load_config(&config);
 
     ui_init();
+
+    if (file_exist("/tmp/manual_launch")) {
+        remove("/tmp/manual_launch");
+    }
 
     snprintf(SD1, sizeof(SD1), "%s/ROMS/", device.STORAGE.ROM.MOUNT);
     snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
