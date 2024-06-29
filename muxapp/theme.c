@@ -20,6 +20,7 @@ void apply_theme() {
             {ui_scrApp,                theme.SYSTEM.BACKGROUND},
             {ui_pnlFooter,             theme.FOOTER.BACKGROUND},
             {ui_pnlHeader,             theme.HEADER.BACKGROUND},
+            {ui_pnlMessage,            theme.MESSAGE.BACKGROUND},
             {ui_pnlHelpMessage,        theme.HELP.BACKGROUND},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND},
