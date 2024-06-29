@@ -36,6 +36,7 @@ void apply_theme() {
             {ui_scrApp,                theme.SYSTEM.BACKGROUND_ALPHA},
             {ui_pnlFooter,             theme.FOOTER.BACKGROUND_ALPHA},
             {ui_pnlHeader,             theme.HEADER.BACKGROUND_ALPHA},
+            {ui_pnlMessage,            theme.MESSAGE.BACKGROUND_ALPHA},
             {ui_pnlHelpMessage,        theme.HELP.BACKGROUND_ALPHA},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND_ALPHA},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND_ALPHA},
