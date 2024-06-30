@@ -726,6 +726,7 @@ int main(int argc, char *argv[]) {
 
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
+        case 2:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
             NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
             NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
