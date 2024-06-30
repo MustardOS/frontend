@@ -165,21 +165,33 @@ char *load_content_description() {
             break;
         case FAVOURITE:
             char f_core_file[MAX_BUFFER_SIZE];
+            char f_pointer[MAX_BUFFER_SIZE];
+
             snprintf(f_core_file, sizeof(f_core_file), "%s/MUOS/info/favourite/%s",
                      device.STORAGE.ROM.MOUNT, get_string_at_index(&content_items, atoi(
                             get_string_at_index(&named_index, current_item_index))));
+
+            snprintf(f_pointer, sizeof(f_pointer), "%s/MUOS/info/core/%s",
+                     device.STORAGE.ROM.MOUNT, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
+
             snprintf(content_desc, sizeof(content_desc), "%s/MUOS/info/catalogue/%s/text/%s.txt",
-                     device.STORAGE.ROM.MOUNT, read_line_from_file(f_core_file, 5),
-                     strip_ext(read_line_from_file(f_core_file, 6)));
+                     device.STORAGE.ROM.MOUNT, read_line_from_file(f_pointer, 5),
+                     strip_ext(read_line_from_file(f_pointer, 6)));
             break;
         case HISTORY:
             char h_core_file[MAX_BUFFER_SIZE];
-            snprintf(h_core_file, sizeof(h_core_file), "%s/MUOS/info/favourite/%s",
+            char h_pointer[MAX_BUFFER_SIZE];
+
+            snprintf(h_core_file, sizeof(h_core_file), "%s/MUOS/info/history/%s",
                      device.STORAGE.ROM.MOUNT, get_string_at_index(&content_items, atoi(
                             get_string_at_index(&named_index, current_item_index))));
+
+            snprintf(h_pointer, sizeof(h_pointer), "%s/MUOS/info/core/%s",
+                     device.STORAGE.ROM.MOUNT, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
+
             snprintf(content_desc, sizeof(content_desc), "%s/MUOS/info/catalogue/%s/text/%s.txt",
-                     device.STORAGE.ROM.MOUNT, read_line_from_file(h_core_file, 5),
-                     strip_ext(read_line_from_file(h_core_file, 6)));
+                     device.STORAGE.ROM.MOUNT, read_line_from_file(h_pointer, 5),
+                     strip_ext(read_line_from_file(h_pointer, 6)));
             break;
         default:
             content_file_index = atoi(get_string_at_index(&named_index, current_item_index));
@@ -265,17 +277,22 @@ void image_refresh(char *image_type) {
             break;
         case FAVOURITE:
             char f_core_file[MAX_BUFFER_SIZE];
+            char f_pointer[MAX_BUFFER_SIZE];
+
             snprintf(f_core_file, sizeof(f_core_file), "%s/MUOS/info/favourite/%s",
                      device.STORAGE.ROM.MOUNT, get_string_at_index(&content_items, atoi(
                             get_string_at_index(&named_index, current_item_index))));
 
-            char *f_core_artwork = read_line_from_file(f_core_file, 3);
+            snprintf(f_pointer, sizeof(f_pointer), "%s/MUOS/info/core/%s",
+                     device.STORAGE.ROM.MOUNT, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
+
+            char *f_core_artwork = read_line_from_file(f_pointer, 3);
             if (strlen(f_core_artwork) <= 1) {
                 printf("CORE IS NOT SET - ARTWORK NOT LOADED\n");
                 return;
             }
 
-            char *f_file_name = strip_ext(read_line_from_file(f_core_file, 7));
+            char *f_file_name = strip_ext(read_line_from_file(f_pointer, 7));
 
             snprintf(image, sizeof(image), "%s/MUOS/info/catalogue/%s/%s/%s.png",
                      device.STORAGE.ROM.MOUNT, f_core_artwork, image_type, f_file_name);
@@ -284,17 +301,22 @@ void image_refresh(char *image_type) {
             break;
         case HISTORY:
             char h_core_file[MAX_BUFFER_SIZE];
+            char h_pointer[MAX_BUFFER_SIZE];
+
             snprintf(h_core_file, sizeof(h_core_file), "%s/MUOS/info/history/%s",
                      device.STORAGE.ROM.MOUNT, get_string_at_index(&content_items, atoi(
                             get_string_at_index(&named_index, current_item_index))));
 
-            char *h_core_artwork = read_line_from_file(h_core_file, 3);
+            snprintf(h_pointer, sizeof(h_pointer), "%s/MUOS/info/core/%s",
+                     device.STORAGE.ROM.MOUNT, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
+
+            char *h_core_artwork = read_line_from_file(h_pointer, 3);
             if (strlen(h_core_artwork) <= 1) {
                 printf("CORE IS NOT SET - ARTWORK NOT LOADED\n");
                 return;
             }
 
-            char *h_file_name = strip_ext(read_line_from_file(h_core_file, 7));
+            char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
 
             snprintf(image, sizeof(image), "%s/MUOS/info/catalogue/%s/%s/%s.png",
                      device.STORAGE.ROM.MOUNT, h_core_artwork, image_type, h_file_name);
@@ -836,7 +858,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
 
     if (!file_exist(content_loader_file)) {
         char content_loader_data[MAX_BUFFER_SIZE];
-        snprintf(content_loader_data, sizeof(content_loader_data), "%s\n%s\n/mnt/%s/roms/\n%s\n%s\n",
+        snprintf(content_loader_data, sizeof(content_loader_data), "%s\n%s\n/mnt/%s/ROMS/\n%s\n%s\n",
                  strip_ext(content_name), assigned_core, curr_sd,
                  get_last_subdir(sd_dir, '/', 4),
                  get_string_at_index(&content_items, content_index));
@@ -862,11 +884,11 @@ int load_content(char *content_name, int content_index, int add_favourite) {
 
         snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s.cfg", hf_type, strip_ext(content_name));
 
-        if (add_favourite) {
-            char pointer[MAX_BUFFER_SIZE];
-            snprintf(pointer, sizeof(pointer), "%s/MUOS/info/core/%s/%s.cfg",
-                     device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), strip_ext(content_name));
+        char pointer[MAX_BUFFER_SIZE];
+        snprintf(pointer, sizeof(pointer), "%s/MUOS/info/core/%s/%s.cfg",
+                 device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), strip_ext(content_name));
 
+        if (add_favourite) {
             write_text_to_file(add_to_hf, pointer, "w");
 
             char *hf_msg;
@@ -882,7 +904,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
             return 1;
         } else {
             printf("TRYING TO LOAD CONTENT...\n");
-
+/*
             char act_file[MAX_BUFFER_SIZE];
             char act_content[MAX_BUFFER_SIZE];
             snprintf(act_file, sizeof(act_file), "%s/MUOS/info/activity/%s.act",
@@ -890,8 +912,8 @@ int load_content(char *content_name, int content_index, int add_favourite) {
             snprintf(act_content, sizeof(act_content), "%s\n%s\n%s",
                      strip_ext(content_name), curr_sd, read_line_from_file(content_loader_file, 5));
             prepare_activity_file(act_content, act_file);
-
-            write_text_to_file(add_to_hf, read_text_from_file(content_loader_file), "w");
+*/
+            write_text_to_file(add_to_hf, pointer, "w");
             write_text_to_file(MUOS_ROM_LOAD, read_text_from_file(content_loader_file), "w");
         }
 
@@ -905,7 +927,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
     return 0;
 }
 
-int load_cached_content(const char *content_name, char *cache_type) {
+int load_cached_content(const char *content_name, char *cache_type, int add_favourite) {
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), "%s/MUOS/info/%s/%s",
              device.STORAGE.ROM.MOUNT, cache_type, content_name);
@@ -917,29 +939,23 @@ int load_cached_content(const char *content_name, char *cache_type) {
 
         char add_to_hf[MAX_BUFFER_SIZE];
 
-        char *assigned_core = read_line_from_file(cache_file, 2);
-        printf("ASSIGNED CORE: %s\n", assigned_core);
+        if (add_favourite) {
+            snprintf(add_to_hf, sizeof(add_to_hf), "%s/MUOS/info/favourite/%s",
+                     device.STORAGE.ROM.MOUNT, content_name);
 
-        printf("CONFIG FILE: %s\n", cache_file);
+            write_text_to_file(add_to_hf, read_text_from_file(pointer_file), "w");
 
-        snprintf(add_to_hf, sizeof(add_to_hf), "%s/MUOS/info/history/%s",
-                 device.STORAGE.ROM.MOUNT, content_name);
+            return 1;
+        } else {
+            char *assigned_core = read_line_from_file(cache_file, 2);
+            printf("ASSIGNED CORE: %s\n", assigned_core);
+            printf("CONFIG FILE: %s\n", cache_file);
 
-        printf("TRYING TO LOAD CONTENT...\n");
+            snprintf(add_to_hf, sizeof(add_to_hf), "%s/MUOS/info/history/%s",
+                     device.STORAGE.ROM.MOUNT, content_name);
 
-        char *curr_sd;
-        switch (module) {
-            case USB:
-                curr_sd = "usb";
-                break;
-            case SDCARD:
-                curr_sd = "sdcard";
-                break;
-            default:
-                curr_sd = "mmc";
-                break;
-        }
-
+            printf("TRYING TO LOAD CONTENT...\n");
+/*
         char act_file[MAX_BUFFER_SIZE];
         char act_content[MAX_BUFFER_SIZE];
         snprintf(act_file, sizeof(act_file), "%s/MUOS/info/activity/%s.act",
@@ -947,12 +963,13 @@ int load_cached_content(const char *content_name, char *cache_type) {
         snprintf(act_content, sizeof(act_content), "%s\n%s\n%s",
                  content_name, curr_sd, read_line_from_file(cache_file, 5));
         prepare_activity_file(act_content, act_file);
+*/
+            write_text_to_file(add_to_hf, read_text_from_file(pointer_file), "w");
+            write_text_to_file(MUOS_ROM_LOAD, read_text_from_file(cache_file), "w");
 
-        write_text_to_file(add_to_hf, read_text_from_file(cache_file), "w");
-        write_text_to_file(MUOS_ROM_LOAD, read_text_from_file(cache_file), "w");
-
-        printf("CONTENT LOADED SUCCESSFULLY\n");
-        return 1;
+            printf("CONTENT LOADED SUCCESSFULLY\n");
+            return 1;
+        }
     }
 
     lv_label_set_text(ui_lblMessage, "Could not load content!");
@@ -1190,13 +1207,13 @@ void *joystick_task() {
                                                     }
                                                     break;
                                                 case FAVOURITE:
-                                                    load_cached_content(f_content, "favourite");
+                                                    load_cached_content(f_content, "favourite", 0);
                                                     write_text_to_file("/tmp/explore_card", "favourite", "w");
                                                     write_text_to_file("/tmp/explore_dir", "", "w");
                                                     write_text_to_file("/tmp/manual_launch", "1", "w");
                                                     break;
                                                 case HISTORY:
-                                                    load_cached_content(f_content, "history");
+                                                    load_cached_content(f_content, "history", 0);
                                                     write_text_to_file("/tmp/explore_card", "history", "w");
                                                     write_text_to_file("/tmp/explore_dir", "", "w");
                                                     write_text_to_file("/tmp/manual_launch", "1", "w");
@@ -1329,13 +1346,13 @@ void *joystick_task() {
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     play_sound("confirm", nav_sound);
 
+                                    char *f_content = get_string_at_index(&content_items, atoi(
+                                            get_string_at_index(&named_index, current_item_index)));
+
                                     switch (module) {
                                         case MMC:
                                         case SDCARD:
                                         case USB:
-                                            char *f_content = get_string_at_index(&content_items, atoi(
-                                                    get_string_at_index(&named_index, current_item_index)));
-
                                             if (strcasecmp(f_content, DUMMY_DIR) == 0) {
                                                 lv_label_set_text(ui_lblMessage,
                                                                   "Directories cannot be added to Favourites");
@@ -1356,6 +1373,18 @@ void *joystick_task() {
                                                     remove(MUOS_ROM_LOAD);
                                                 }
                                                 break;
+                                            }
+                                            break;
+                                        case HISTORY:
+                                            if (load_cached_content(f_content, "history", 1)) {
+                                                lv_label_set_text(ui_lblMessage, "Added to Favourites");
+                                                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                            } else {
+                                                lv_label_set_text(ui_lblMessage, "Error adding to Favourites");
+                                                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                            }
+                                            if (file_exist(MUOS_ROM_LOAD)) {
+                                                remove(MUOS_ROM_LOAD);
                                             }
                                             break;
                                         default:
@@ -1539,6 +1568,25 @@ void *joystick_task() {
     }
 }
 
+void set_nav_text(const char *nav_a, const char *nav_b, const char *nav_x, const char *nav_y, const char *nav_menu) {
+    lv_label_set_text(ui_lblNavA, nav_a);
+    lv_label_set_text(ui_lblNavB, nav_b);
+    if (nav_x) lv_label_set_text(ui_lblNavX, nav_x);
+    if (nav_y) lv_label_set_text(ui_lblNavY, nav_y);
+    lv_label_set_text(ui_lblNavMenu, nav_menu);
+}
+
+void set_nav_flag(lv_obj_t *nav_keep[], size_t keep_size, lv_obj_t *nav_hide[], size_t hide_size) {
+    for (size_t i = 0; i < hide_size; i++) {
+        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
+    }
+    for (size_t i = 0; i < keep_size; i++) {
+        lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_FLOATING);
+    }
+}
+
 void init_elements() {
     switch (config.VISUAL.BOX_ART) {
         case 0: // Bottom + Behind
@@ -1608,10 +1656,8 @@ void init_elements() {
     }
 
     switch (module) {
-        case ROOT:
-            lv_label_set_text(ui_lblNavA, "Open");
-            lv_label_set_text(ui_lblNavB, "Back");
-            lv_label_set_text(ui_lblNavMenu, "Info");
+        case ROOT: {
+            set_nav_text("Open", "Back", NULL, NULL, "Info");
             lv_obj_t *nav_keep[] = {
                     ui_lblNavAGlyph, ui_lblNavA,
                     ui_lblNavBGlyph, ui_lblNavB,
@@ -1623,27 +1669,19 @@ void init_elements() {
                     ui_lblNavYGlyph, ui_lblNavY,
                     ui_lblNavZGlyph, ui_lblNavZ
             };
-            for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-                lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
-            }
-            for (int i = 0; i < sizeof(nav_keep) / sizeof(nav_keep[0]); i++) {
-                lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_FLOATING);
-            }
+            set_nav_flag(nav_keep, sizeof(nav_keep) / sizeof(nav_keep[0]), nav_hide,
+                          sizeof(nav_hide) / sizeof(nav_hide[0]));
             break;
+        }
         case MMC:
         case SDCARD:
         case USB:
-            lv_label_set_text(ui_lblNavA, "Open");
-            lv_label_set_text(ui_lblNavB, "Back");
-            lv_label_set_text(ui_lblNavX, "Refresh");
-            lv_label_set_text(ui_lblNavY, "Favourite");
-            lv_label_set_text(ui_lblNavMenu, "Info");
+        case FAVOURITE:
+        case HISTORY: {
+            set_nav_text("Open", "Back", module == ROOT ? NULL : "Refresh",
+                          module == ROOT ? NULL : "Favourite", "Info");
             if (lv_group_get_obj_count(ui_group) <= 0) {
-                lv_obj_t *nav_keep[] = {
-                        ui_lblNavBGlyph, ui_lblNavB
-                };
+                lv_obj_t *nav_keep[] = {ui_lblNavBGlyph, ui_lblNavB};
                 lv_obj_t *nav_hide[] = {
                         ui_lblNavAGlyph, ui_lblNavA,
                         ui_lblNavCGlyph, ui_lblNavC,
@@ -1652,14 +1690,8 @@ void init_elements() {
                         ui_lblNavZGlyph, ui_lblNavZ,
                         ui_lblNavMenuGlyph, ui_lblNavMenu
                 };
-                for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-                    lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
-                }
-                for (int i = 0; i < sizeof(nav_keep) / sizeof(nav_keep[0]); i++) {
-                    lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_FLOATING);
-                }
+                set_nav_flag(nav_keep, sizeof(nav_keep) / sizeof(nav_keep[0]), nav_hide,
+                              sizeof(nav_hide) / sizeof(nav_hide[0]));
             } else {
                 lv_obj_t *nav_keep[] = {
                         ui_lblNavAGlyph, ui_lblNavA,
@@ -1672,63 +1704,22 @@ void init_elements() {
                         ui_lblNavCGlyph, ui_lblNavC,
                         ui_lblNavZGlyph, ui_lblNavZ
                 };
-                for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-                    lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
-                }
-                for (int i = 0; i < sizeof(nav_keep) / sizeof(nav_keep[0]); i++) {
-                    lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_FLOATING);
-                }
+                set_nav_flag(nav_keep, sizeof(nav_keep) / sizeof(nav_keep[0]), nav_hide,
+                              sizeof(nav_hide) / sizeof(nav_hide[0]));
             }
             break;
+        }
+        default:
+            break;
+    }
+
+    // We'll fucking run it again to ensure 'Favourite' isn't visible in favourites (redundant!)
+    switch (module) {
         case FAVOURITE:
-        case HISTORY:
-            lv_label_set_text(ui_lblNavA, "Open");
-            lv_label_set_text(ui_lblNavB, "Back");
-            lv_label_set_text(ui_lblNavX, "Remove");
-            lv_label_set_text(ui_lblNavMenu, "Info");
-            if (lv_group_get_obj_count(ui_group) <= 0) {
-                lv_obj_t *nav_keep[] = {
-                        ui_lblNavBGlyph, ui_lblNavB
-                };
-                lv_obj_t *nav_hide[] = {
-                        ui_lblNavAGlyph, ui_lblNavA,
-                        ui_lblNavCGlyph, ui_lblNavC,
-                        ui_lblNavXGlyph, ui_lblNavX,
-                        ui_lblNavYGlyph, ui_lblNavY,
-                        ui_lblNavZGlyph, ui_lblNavZ,
-                        ui_lblNavMenuGlyph, ui_lblNavMenu
-                };
-                for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-                    lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
-                }
-                for (int i = 0; i < sizeof(nav_keep) / sizeof(nav_keep[0]); i++) {
-                    lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_FLOATING);
-                }
-            } else {
-                lv_obj_t *nav_keep[] = {
-                        ui_lblNavAGlyph, ui_lblNavA,
-                        ui_lblNavBGlyph, ui_lblNavB,
-                        ui_lblNavXGlyph, ui_lblNavX,
-                        ui_lblNavMenuGlyph, ui_lblNavMenu
-                };
-                lv_obj_t *nav_hide[] = {
-                        ui_lblNavCGlyph, ui_lblNavC,
-                        ui_lblNavYGlyph, ui_lblNavY,
-                        ui_lblNavZGlyph, ui_lblNavZ
-                };
-                for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-                    lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
-                }
-                for (int i = 0; i < sizeof(nav_keep) / sizeof(nav_keep[0]); i++) {
-                    lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(nav_keep[i], LV_OBJ_FLAG_FLOATING);
-                }
-            }
+            lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
+            lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
             break;
         default:
             break;
