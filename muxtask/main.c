@@ -450,34 +450,36 @@ void *joystick_task() {
             nav_hold = 0;
         }
 
-        if (ev.type == EV_KEY && ev.value == 1 &&
-            (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
-            if (JOYHOTKEY_pressed) {
-                progress_onscreen = 1;
-                lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-                lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-                lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-            } else {
-                progress_onscreen = 2;
-                lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-                int volume = atoi(read_text_from_file(VOLUME_PERC));
-                switch (volume) {
-                    case 0:
-                        lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
-                        break;
-                    case 1 ... 46:
-                        lv_label_set_text(ui_icoProgressVolume, "\uF026");
-                        break;
-                    case 47 ... 71:
-                        lv_label_set_text(ui_icoProgressVolume, "\uF027");
-                        break;
-                    case 72 ... 100:
-                        lv_label_set_text(ui_icoProgressVolume, "\uF028");
-                        break;
+        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1))) {
+            if (ev.type == EV_KEY && ev.value == 1 &&
+                (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
+                if (JOYHOTKEY_pressed) {
+                    progress_onscreen = 1;
+                    lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+                    lv_label_set_text(ui_icoProgressBrightness, "\uF185");
+                    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+                } else {
+                    progress_onscreen = 2;
+                    lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+                    int volume = atoi(read_text_from_file(VOLUME_PERC));
+                    switch (volume) {
+                        case 0:
+                            lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
+                            break;
+                        case 1 ... 46:
+                            lv_label_set_text(ui_icoProgressVolume, "\uF026");
+                            break;
+                        case 47 ... 71:
+                            lv_label_set_text(ui_icoProgressVolume, "\uF027");
+                            break;
+                        case 72 ... 100:
+                            lv_label_set_text(ui_icoProgressVolume, "\uF028");
+                            break;
+                    }
+                    lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
                 }
-                lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
             }
         }
 
