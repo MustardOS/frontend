@@ -1722,6 +1722,10 @@ void init_elements() {
             lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
+            lv_label_set_text(ui_lblNavX, "Remove");
+            break;
+        case HISTORY:
+            lv_label_set_text(ui_lblNavX, "Remove");
             break;
         default:
             break;
