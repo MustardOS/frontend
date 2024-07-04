@@ -49,7 +49,7 @@ void apply_theme() {
 
     struct big progress_elements[] = {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
-            {ui_barProgressVolume, theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
+            {ui_barProgressVolume,     theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(progress_elements) / sizeof(progress_elements[0]); ++i) {
         lv_obj_set_style_bg_color(progress_elements[i].e, lv_color_hex(progress_elements[i].c),
@@ -58,7 +58,7 @@ void apply_theme() {
 
     struct small progress_alpha_elements[] = {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
-            {ui_barProgressVolume, theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
+            {ui_barProgressVolume,     theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(progress_alpha_elements) / sizeof(progress_alpha_elements[0]); ++i) {
         lv_obj_set_style_bg_opa(progress_alpha_elements[i].e, progress_alpha_elements[i].c,
@@ -175,9 +175,18 @@ void apply_theme() {
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small image_alpha_elements[] = {
+            {ui_imgBox,              theme.IMAGE_LIST.ALPHA},
+            {ui_imgHelpPreviewImage, theme.IMAGE_PREVIEW.ALPHA},
+    };
+    for (size_t i = 0; i < sizeof(image_alpha_elements) / sizeof(image_alpha_elements[0]); ++i) {
+        lv_obj_set_style_img_opa(image_alpha_elements[i].e, image_alpha_elements[i].c,
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct big image_recolour_elements[] = {
             {ui_imgBox,              theme.IMAGE_LIST.RECOLOUR},
-            {ui_imgHelpPreviewImage, theme.IMAGE_LIST.RECOLOUR},
+            {ui_imgHelpPreviewImage, theme.IMAGE_PREVIEW.RECOLOUR},
     };
     for (size_t i = 0; i < sizeof(image_recolour_elements) / sizeof(image_recolour_elements[0]); ++i) {
         lv_obj_set_style_img_recolor(image_recolour_elements[i].e, lv_color_hex(image_recolour_elements[i].c),
@@ -186,7 +195,7 @@ void apply_theme() {
 
     struct small image_recolour_alpha_elements[] = {
             {ui_imgBox,              theme.IMAGE_LIST.RECOLOUR_ALPHA},
-            {ui_imgHelpPreviewImage, theme.IMAGE_LIST.RECOLOUR_ALPHA},
+            {ui_imgHelpPreviewImage, theme.IMAGE_PREVIEW.RECOLOUR_ALPHA},
     };
     for (size_t i = 0; i < sizeof(image_recolour_alpha_elements) / sizeof(image_recolour_alpha_elements[0]); ++i) {
         lv_obj_set_style_img_recolor_opa(image_recolour_alpha_elements[i].e, image_recolour_alpha_elements[i].c,

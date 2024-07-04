@@ -139,10 +139,12 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_FOCUS.TEXT = get_ini_hex(muos_theme, "list", "LIST_FOCUS_TEXT");
     theme->LIST_FOCUS.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_TEXT_ALPHA", VALUE);
 
+    theme->IMAGE_LIST.ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_ALPHA", VALUE);
     theme->IMAGE_LIST.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RADIUS", IGNORE);
     theme->IMAGE_LIST.RECOLOUR = get_ini_hex(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR");
     theme->IMAGE_LIST.RECOLOUR_ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR_ALPHA", IGNORE);
 
+    theme->IMAGE_PREVIEW.ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_ALPHA", VALUE);
     theme->IMAGE_PREVIEW.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RADIUS", IGNORE);
     theme->IMAGE_PREVIEW.RECOLOUR = get_ini_hex(muos_theme, "image_list", "IMAGE_PREVIEW_RECOLOUR");
     theme->IMAGE_PREVIEW.RECOLOUR_ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RECOLOUR_ALPHA", IGNORE);

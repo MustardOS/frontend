@@ -157,12 +157,14 @@ struct theme_config {
     } LIST_FOCUS;
 
     struct {
+        int16_t ALPHA;
         int16_t RADIUS;
         uint32_t RECOLOUR;
         int16_t RECOLOUR_ALPHA;
     } IMAGE_LIST;
 
     struct {
+        int16_t ALPHA;
         int16_t RADIUS;
         uint32_t RECOLOUR;
         int16_t RECOLOUR_ALPHA;
