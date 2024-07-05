@@ -7,6 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <sys/stat.h>
 #include "common.h"
 #include "options.h"
@@ -1270,45 +1271,75 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     }
 }
 
-int should_skip(char *name) {
-    const char skip_prefix[] = {
-            '.', '_'
-    };
-    for (int i = 0; i < sizeof(skip_prefix) / sizeof(skip_prefix[0]); i++) {
-        if (name[0] == skip_prefix[i] && !config.SETTINGS.GENERAL.HIDDEN) {
-            return 1;
-        }
+int should_skip(const char *name) {
+    char skip_ini[MAX_BUFFER_SIZE];
+    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+
+    FILE * file = fopen(skip_ini, "r");
+    if (!file) {
+        perror("Failed to open skip.ini file");
+        return 0;
     }
 
-    const char *skip_directories[] = {
-            DUMMY_DIR, "img", "imgs"
-    };
-    for (int i = 0; i < sizeof(skip_directories) / sizeof(skip_directories[0]); i++) {
-        if (strcasecmp(name, skip_directories[i]) == 0) {
-            return 1;
-        }
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    size_t allocated_patterns = 10;
+    char **skip_patterns = malloc(allocated_patterns * sizeof(char *));
+    if (!skip_patterns) {
+        perror("Failed to allocate memory for skip patterns (too many?)");
+        fclose(file);
+        return 0;
     }
 
-    const char *skip_files[] = {
-            "control.txt", "neogeo.zip", "easy_rpg.log"
-    };
-    for (int i = 0; i < sizeof(skip_files) / sizeof(skip_files[0]); i++) {
-        if (strcasecmp(name, skip_files[i]) == 0) {
-            return 1;
+    int pattern_count = 0;
+    while ((read = getline(&line, &len, file)) != -1) {
+        if (line[read - 1] == '\n') {
+            line[read - 1] = '\0';
         }
+
+        if (pattern_count >= allocated_patterns) {
+            allocated_patterns *= 2;
+            char **new_skip_patterns = realloc(skip_patterns, allocated_patterns * sizeof(char *));
+            if (!new_skip_patterns) {
+                free(line);
+                for (int i = 0; i < pattern_count; i++) {
+                    free(skip_patterns[i]);
+                }
+                free(skip_patterns);
+                fclose(file);
+                return 0;
+            }
+            skip_patterns = new_skip_patterns;
+        }
+
+        skip_patterns[pattern_count] = strdup(line);
+        if (!skip_patterns[pattern_count]) {
+            free(line);
+            for (int i = 0; i < pattern_count; i++) {
+                free(skip_patterns[i]);
+            }
+            free(skip_patterns);
+            fclose(file);
+            return 0;
+        }
+        pattern_count++;
     }
 
-    const char *skip_extensions[] = {
-            ".bps", ".ips", ".sav", ".srm",
-            ".ups", ".msu", ".pcm", ".xml",
-            ".state"
-    };
+    fclose(file);
+    free(line);
 
-    for (int i = 0; i < sizeof(skip_extensions) / sizeof(skip_extensions[0]); i++) {
-        if (strcasecmp(get_ext(name), skip_extensions[i]) == 0) {
+    for (int i = 0; i < pattern_count; i++) {
+        if (fnmatch(skip_patterns[i], name, 0) == 0) {
+            for (int j = 0; j < pattern_count; j++) {
+                free(skip_patterns[j]);
+            }
+            free(skip_patterns);
             return 1;
         }
+        free(skip_patterns[i]);
     }
+    free(skip_patterns);
 
     return 0;
 }
