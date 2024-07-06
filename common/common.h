@@ -116,7 +116,7 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, en
 
 int set_ini_int(mini_t *ini_config, const char *section, const char *key, int value);
 
-char* get_ini_string(mini_t* ini_config, const char* section, const char* key, char* default_value);
+char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value);
 
 const char *get_ini_unicode(mini_t *ini_config, const char *section, const char *key);
 
@@ -198,6 +198,6 @@ int is_network_connected();
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
 
-int should_skip(char *name);
+int should_skip(const char *name);
 
 void adjust_visual_label(char *text, int method, int rep_dash);
