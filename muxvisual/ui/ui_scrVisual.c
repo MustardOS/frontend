@@ -672,7 +672,7 @@ void ui_scrVisual_screen_init(void)
     ui_droBoxArt = lv_dropdown_create(ui_pnlHighlight);
     lv_dropdown_set_dir(ui_droBoxArt, LV_DIR_LEFT);
     lv_dropdown_set_options(ui_droBoxArt,
-                            "Bottom + Behind\nBottom + Front\nMiddle + Behind\nMiddle + Front\nTop + Behind\nTop + Front\nFullscreen + Behind\nFullscreen + Front");
+                            "Bottom + Behind\nBottom + Front\nMiddle + Behind\nMiddle + Front\nTop + Behind\nTop + Front\nFullscreen + Behind\nFullscreen + Front\nDisabled");
     lv_dropdown_set_selected_highlight(ui_droBoxArt, false);
     lv_obj_set_width(ui_droBoxArt, 640);
     lv_obj_set_height(ui_droBoxArt, 28);

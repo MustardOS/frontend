@@ -251,6 +251,11 @@ char *load_content_description() {
 }
 
 void image_refresh(char *image_type) {
+    if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
+        printf("BOX ART IS SET TO DISABLED\n");
+        return;
+    }
+
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
 
@@ -1629,6 +1634,10 @@ void init_elements() {
             lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
             lv_obj_move_foreground(ui_pnlBox);
             break;
+        case 8: // Disabled
+            lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_FLOATING);
+            break;
     }
 
     lv_obj_move_foreground(ui_pnlFooter);
@@ -1672,7 +1681,7 @@ void init_elements() {
                     ui_lblNavZGlyph, ui_lblNavZ
             };
             set_nav_flag(nav_keep, sizeof(nav_keep) / sizeof(nav_keep[0]), nav_hide,
-                          sizeof(nav_hide) / sizeof(nav_hide[0]));
+                         sizeof(nav_hide) / sizeof(nav_hide[0]));
             break;
         }
         case MMC:
@@ -1681,7 +1690,7 @@ void init_elements() {
         case FAVOURITE:
         case HISTORY: {
             set_nav_text("Open", "Back", module == ROOT ? NULL : "Refresh",
-                          module == ROOT ? NULL : "Favourite", "Info");
+                         module == ROOT ? NULL : "Favourite", "Info");
             if (lv_group_get_obj_count(ui_group) <= 0) {
                 lv_obj_t *nav_keep[] = {ui_lblNavBGlyph, ui_lblNavB};
                 lv_obj_t *nav_hide[] = {
@@ -1693,7 +1702,7 @@ void init_elements() {
                         ui_lblNavMenuGlyph, ui_lblNavMenu
                 };
                 set_nav_flag(nav_keep, sizeof(nav_keep) / sizeof(nav_keep[0]), nav_hide,
-                              sizeof(nav_hide) / sizeof(nav_hide[0]));
+                             sizeof(nav_hide) / sizeof(nav_hide[0]));
             } else {
                 lv_obj_t *nav_keep[] = {
                         ui_lblNavAGlyph, ui_lblNavA,
@@ -1707,7 +1716,7 @@ void init_elements() {
                         ui_lblNavZGlyph, ui_lblNavZ
                 };
                 set_nav_flag(nav_keep, sizeof(nav_keep) / sizeof(nav_keep[0]), nav_hide,
-                              sizeof(nav_hide) / sizeof(nav_hide[0]));
+                             sizeof(nav_hide) / sizeof(nav_hide[0]));
             }
             break;
         }
