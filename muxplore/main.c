@@ -621,7 +621,7 @@ void gen_item(char **file_names, int file_count) {
 
         push_string(&content_items, file_names[i]);
 
-        if (require_local_name_cache) {
+        if (require_local_name_cache || module == FAVOURITE || module == HISTORY) {
             if (is_cache) {
                 snprintf(fn_name, sizeof(fn_name), "%s", read_line_from_file(init_cache_file, i + 1));
             } else {
