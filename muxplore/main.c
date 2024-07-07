@@ -631,8 +631,7 @@ void gen_item(char **file_names, int file_count) {
                 snprintf(fn_name, sizeof(fn_name), "%s", read_line_from_file(init_cache_file, i + 1));
             } else {
                 if (fn_valid) {
-                    struct json good_name_json = json_object_get(fn_json,
-                                                                 strip_ext((char *) str_tolower(file_names[i])));
+                    struct json good_name_json = json_object_get(fn_json, strip_ext(file_names[i]));
                     if (json_exists(good_name_json)) {
                         json_string_copy(good_name_json, fn_name, sizeof(fn_name));
                         snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
