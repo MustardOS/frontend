@@ -571,7 +571,11 @@ void *joystick_task() {
 
                                         int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
 
-                                        create_core_assignment(raw_core, rom_system, name_cache);
+                                        static char core_catalogue[MAX_BUFFER_SIZE];
+                                        strcpy(core_catalogue, get_ini_string(chosen_core, "global",
+                                                                              "catalogue", rom_system));
+
+                                        create_core_assignment(raw_core, core_catalogue, name_cache);
 
                                         mini_free(chosen_core);
                                     }
