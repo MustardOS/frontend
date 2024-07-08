@@ -444,7 +444,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
     closedir(dir);
 }
 
-void gen_label(int item_type, char *item_glyph, char *item_text) {
+void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) {
     lv_obj_t * ui_pnlExplore = lv_obj_create(ui_pnlContent);
     lv_obj_set_width(ui_pnlExplore, device.MUX.WIDTH);
     lv_obj_set_height(ui_pnlExplore, device.MUX.ITEM.HEIGHT);
@@ -529,7 +529,7 @@ void gen_label(int item_type, char *item_glyph, char *item_text) {
                                 LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_lblExploreItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    lv_obj_set_style_pad_left(ui_lblExploreItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblExploreItemGlyph, glyph_pad, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblExploreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblExploreItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblExploreItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
@@ -674,7 +674,29 @@ void gen_item(char **file_names, int file_count) {
     for (int i = 0; i < named_items.size; i++) {
         push_string(&named_index, named_indices[i]);
         if (strcasecmp(stripped_names[i], DUMMY_DIR) != 0) {
-            gen_label(ROM, "\uF15B", stripped_names[i]);
+
+            char fav_dir[PATH_MAX];
+            snprintf(fav_dir, sizeof(fav_dir), "%s/MUOS/info/favourite/%s.cfg",
+                     device.STORAGE.ROM.MOUNT, strip_ext(get_string_at_index(&content_items, atoi(named_indices[i]))));
+
+            char hist_dir[PATH_MAX];
+            snprintf(hist_dir, sizeof(hist_dir), "%s/MUOS/info/history/%s.cfg",
+                     device.STORAGE.ROM.MOUNT, strip_ext(get_string_at_index(&content_items, atoi(named_indices[i]))));
+
+            char *glyph_icon;
+            int glyph_pad;
+            if (file_exist(fav_dir)) {
+                glyph_icon = "\uF005";
+                glyph_pad = 10;
+            } else if (file_exist(hist_dir)) {
+                glyph_icon = "\uE5A0";
+                glyph_pad = 12;
+            } else {
+                glyph_icon = "\uF15B";
+                glyph_pad = 12;
+            }
+
+            gen_label(ROM, glyph_icon, stripped_names[i], glyph_pad);
         }
     }
 }
@@ -744,7 +766,7 @@ void create_explore_items(void *count) {
             char curr_label[MAX_BUFFER_SIZE];
             snprintf(curr_label, sizeof(curr_label), "%s :: %d", DUMMY_DIR, *ui_count_ptr);
 
-            gen_label(FOLDER, "\uF07B", dir_names[i]);
+            gen_label(FOLDER, "\uF07B", dir_names[i], 12);
 
             push_string(&named_items, curr_label);
             push_string(&content_items, DUMMY_DIR);
@@ -791,8 +813,8 @@ void explore_root() {
             safe_quit = 1;
             break;
         case 6:
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)");
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)");
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
             ui_count += 2;
             break;
         case 8:
@@ -803,19 +825,19 @@ void explore_root() {
             safe_quit = 1;
             break;
         case 10:
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)");
-            gen_label(FOLDER, "\uF07B", "USB (external)");
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
             ui_count += 2;
             break;
         case 12:
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)");
-            gen_label(FOLDER, "\uF07B", "USB (external)");
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
             ui_count += 2;
             break;
         case 14:
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)");
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)");
-            gen_label(FOLDER, "\uF07B", "USB (external)");
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
             ui_count += 3;
             break;
         default:
