@@ -64,11 +64,8 @@ int main() {
     ui_init();
 
     animFade_Animation(ui_conStart, -1000);
-    animScroll_Animation(ui_conOfficial, 10000);
-    animScroll_Animation(ui_conWizard, 20500);
-    animScroll_Animation(ui_conHero, 31000);
-    animScroll_Animation(ui_conKnight, 41500);
-    animFade_Animation(ui_conKofi, 52000);
+    animScroll_Animation(ui_conScroll, 10000);
+    animFade_Animation(ui_conKofi, 50000);
 
     write_text_to_file(MUOS_PDI_LOAD, "credit", "w");
 
