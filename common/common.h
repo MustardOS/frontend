@@ -56,6 +56,8 @@ struct image_info {
 
 int file_exist(char *filename);
 
+int delete_file(const char *filename);
+
 int file_size(char *filename, int filesize);
 
 unsigned long long total_file_size(const char *path);

@@ -1440,3 +1440,10 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
     }
 }
 
+int delete_file(const char *filename) {
+    if (remove(filename) == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}

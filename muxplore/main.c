@@ -23,9 +23,10 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/glyph.h"
-#include "../common/array.h"
 #include "../common/json/json.h"
 #include "../common/mini/mini.h"
+#include "../common/content_item.h"
+#include "../common/content_items.h"
 
 char *mux_prog;
 struct glyph_config glyph;
@@ -71,9 +72,9 @@ enum content_type {
     ROM
 } content;
 
-struct items content_items;
-struct items named_items;
-struct items named_index;
+struct content_items g_file_list;
+struct content_items g_dir_list;
+struct ContentItem* g_selected_content_item;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
@@ -95,7 +96,6 @@ int sys_index = -1;
 int ui_count = 0;
 int ui_file_count = 0;
 int current_item_index = 0;
-int content_file_index = 0;
 int first_open = 1;
 int nav_moved = 1;
 int content_panel_y = 0;
@@ -149,6 +149,10 @@ char *load_content_core(int force) {
 }
 
 char *load_content_description() {
+    if (!g_selected_content_item) {
+        return "No Information Found";
+    }
+
     char content_desc[MAX_BUFFER_SIZE];
 
     const char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
@@ -168,8 +172,7 @@ char *load_content_description() {
             char f_pointer[MAX_BUFFER_SIZE];
 
             snprintf(f_core_file, sizeof(f_core_file), "%s/MUOS/info/favourite/%s",
-                     device.STORAGE.ROM.MOUNT, get_string_at_index(&content_items, atoi(
-                            get_string_at_index(&named_index, current_item_index))));
+                     device.STORAGE.ROM.MOUNT, g_selected_content_item->display_name);
 
             snprintf(f_pointer, sizeof(f_pointer), "%s/MUOS/info/core/%s",
                      device.STORAGE.ROM.MOUNT, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
@@ -183,8 +186,7 @@ char *load_content_description() {
             char h_pointer[MAX_BUFFER_SIZE];
 
             snprintf(h_core_file, sizeof(h_core_file), "%s/MUOS/info/history/%s",
-                     device.STORAGE.ROM.MOUNT, get_string_at_index(&content_items, atoi(
-                            get_string_at_index(&named_index, current_item_index))));
+                     device.STORAGE.ROM.MOUNT, g_selected_content_item->display_name);
 
             snprintf(h_pointer, sizeof(h_pointer), "%s/MUOS/info/core/%s",
                      device.STORAGE.ROM.MOUNT, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
@@ -194,8 +196,6 @@ char *load_content_description() {
                      strip_ext(read_line_from_file(h_pointer, 6)));
             break;
         default:
-            content_file_index = atoi(get_string_at_index(&named_index, current_item_index));
-
             char *card_full;
             switch (module) {
                 case MMC:
@@ -216,7 +216,7 @@ char *load_content_description() {
                 snprintf(content_desc, sizeof(content_desc), "%s/MUOS/info/catalogue/Root/text/%s.txt",
                          device.STORAGE.ROM.MOUNT, content_label);
             } else {
-                char *desc_name = strip_ext(get_string_at_index(&content_items, content_file_index));
+                char *desc_name = strip_ext(g_selected_content_item->display_name);
 
                 char core_file[MAX_BUFFER_SIZE];
                 snprintf(core_file, sizeof(core_file), "%s/MUOS/info/core/%s/core.cfg",
@@ -285,8 +285,7 @@ void image_refresh(char *image_type) {
             char f_pointer[MAX_BUFFER_SIZE];
 
             snprintf(f_core_file, sizeof(f_core_file), "%s/MUOS/info/favourite/%s",
-                     device.STORAGE.ROM.MOUNT, get_string_at_index(&content_items, atoi(
-                            get_string_at_index(&named_index, current_item_index))));
+                     device.STORAGE.ROM.MOUNT, g_selected_content_item->display_name);
 
             snprintf(f_pointer, sizeof(f_pointer), "%s/MUOS/info/core/%s",
                      device.STORAGE.ROM.MOUNT, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
@@ -309,8 +308,7 @@ void image_refresh(char *image_type) {
             char h_pointer[MAX_BUFFER_SIZE];
 
             snprintf(h_core_file, sizeof(h_core_file), "%s/MUOS/info/history/%s",
-                     device.STORAGE.ROM.MOUNT, get_string_at_index(&content_items, atoi(
-                            get_string_at_index(&named_index, current_item_index))));
+                     device.STORAGE.ROM.MOUNT, g_selected_content_item->display_name);
 
             snprintf(h_pointer, sizeof(h_pointer), "%s/MUOS/info/core/%s",
                      device.STORAGE.ROM.MOUNT, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
@@ -329,8 +327,6 @@ void image_refresh(char *image_type) {
                      device.STORAGE.ROM.MOUNT, h_core_artwork, image_type, h_file_name);
             break;
         default:
-            content_file_index = atoi(get_string_at_index(&named_index, current_item_index));
-
             char *card_full;
             switch (module) {
                 case MMC:
@@ -352,7 +348,7 @@ void image_refresh(char *image_type) {
                 snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Folder/%s/%s.png",
                          device.STORAGE.ROM.MOUNT, image_type, content_label);
             } else {
-                char *file_name = strip_ext(get_string_at_index(&content_items, content_file_index));
+                char *file_name = strip_ext(g_selected_content_item->display_name);
 
                 char core_file[MAX_BUFFER_SIZE];
                 snprintf(core_file, sizeof(core_file), "%s/muos/INFO/core/%s/core.cfg",
@@ -406,11 +402,10 @@ void image_refresh(char *image_type) {
     }
 }
 
-void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *dir_count,
-                                  char ***file_names, int *file_count) {
+void add_directory_and_file_names(const char *base_dir, int *dir_count, int *file_count) {
     struct dirent *entry;
-    DIR *dir = opendir(base_dir);
 
+    DIR *dir = opendir(base_dir);
     if (!dir) {
         perror("opendir");
         return;
@@ -418,24 +413,33 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
 
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
-            char full_path[PATH_MAX];
-            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
+            struct ContentItem* item = (struct ContentItem*)malloc(sizeof(struct ContentItem));
+            if (!item) {
+                perror("Memory allocation failed");
+                return;
+            }
+
+            char file_full_path[PATH_MAX];
             if (entry->d_type == DT_DIR) {
                 if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
                     char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
                     snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
-
-                    *dir_names = (char **) realloc(*dir_names, (*dir_count + 1) * sizeof(char *));
-                    (*dir_names)[*dir_count] = subdir_path;
                     (*dir_count)++;
+                    snprintf(file_full_path, sizeof(file_full_path), "%s/%s", base_dir, entry->d_name);
+                    item->path = strdup(file_full_path);
+                    item->type = 0;
+                    item->display_name = subdir_path;
+                    push_item(&g_dir_list, item);
                 }
             } else if (entry->d_type == DT_REG) {
                 char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
                 snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
-
-                *file_names = (char **) realloc(*file_names, (*file_count + 1) * sizeof(char *));
-                (*file_names)[*file_count] = file_path;
                 (*file_count)++;
+                snprintf(file_full_path, sizeof(file_full_path), "%s/%s", base_dir, entry->d_name);
+                item->path = strdup(file_full_path);
+                item->type = 1;
+                item->display_name = file_path;
+                push_item(&g_file_list, item);
             }
         }
     }
@@ -444,7 +448,12 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
     closedir(dir);
 }
 
-void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) {
+void content_item_focus_callback(lv_event_t* e) {
+    struct ContentItem* content_item = (struct ContentItem*)lv_event_get_user_data(e);
+    g_selected_content_item = content_item;
+}
+
+void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad, struct ContentItem **content_item) {
     lv_obj_t * ui_pnlExplore = lv_obj_create(ui_pnlContent);
     lv_obj_set_width(ui_pnlExplore, device.MUX.WIDTH);
     lv_obj_set_height(ui_pnlExplore, device.MUX.ITEM.HEIGHT);
@@ -538,6 +547,13 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     lv_obj_set_style_text_align(ui_lblExploreItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblExploreItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    if (content_item) {
+        (*content_item)->ui_item = ui_pnlExplore;
+        (*content_item)->ui_icon = ui_lblExploreItemGlyph;
+        (*content_item)->ui_description = ui_lblExploreItem;
+    }
+    lv_obj_add_event_cb(ui_lblExploreItem, content_item_focus_callback, LV_EVENT_FOCUSED, *content_item);
+
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
 
@@ -546,7 +562,7 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     }
 }
 
-void gen_item(char **file_names, int file_count) {
+void gen_item(int file_count) {
     char init_cache_file[MAX_BUFFER_SIZE];
     char init_meta_dir[MAX_BUFFER_SIZE];
 
@@ -624,20 +640,18 @@ void gen_item(char **file_names, int file_count) {
         char fn_name[MAX_BUFFER_SIZE];
         char cache_fn_name[MAX_BUFFER_SIZE];
 
-        push_string(&content_items, file_names[i]);
-
         if (require_local_name_cache || module == FAVOURITE || module == HISTORY) {
             if (is_cache) {
                 snprintf(fn_name, sizeof(fn_name), "%s", read_line_from_file(init_cache_file, i + 1));
             } else {
                 if (fn_valid) {
-                    struct json good_name_json = json_object_get(fn_json, strip_ext(file_names[i]));
+                    struct json good_name_json = json_object_get(fn_json, strip_ext(g_file_list.array[i]->display_name));
                     if (json_exists(good_name_json)) {
                         json_string_copy(good_name_json, fn_name, sizeof(fn_name));
                         snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
                         write_text_to_file(init_cache_file, cache_fn_name, "a");
                     } else {
-                        snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
+                        snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) g_file_list.array[i]->display_name));
                         snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
                         write_text_to_file(init_cache_file, cache_fn_name, "a");
                         printf("MISSING LABEL: %s", cache_fn_name);
@@ -645,59 +659,47 @@ void gen_item(char **file_names, int file_count) {
                 }
             }
         } else {
-            snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
+            snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) g_file_list.array[i]->display_name));
         }
 
         snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
 
         ui_count++;
-        push_string(&named_items, curr_item);
     }
 
     switch (module) {
         case HISTORY:
-            qsort(named_items.array, named_items.size, sizeof(char *), time_compare_for_history);
+            // TODO
+            //qsort(named_items.array, named_items.size, sizeof(char *), time_compare_for_history);
             break;
         default:
-            qsort(named_items.array, named_items.size, sizeof(char *), str_compare);
+            // TODO
+           // qsort(named_items.array, named_items.size, sizeof(char *), str_compare);
             break;
     }
 
-    char named_indices[named_items.size][MAX_BUFFER_SIZE];
-    char *stripped_names[named_items.size];
+    for (int i = 0; i < g_file_list.size; i++) {
+        char fav_dir[PATH_MAX];
+        snprintf(fav_dir, sizeof(fav_dir), "%s/MUOS/info/favourite/%s.cfg",
+                    device.STORAGE.ROM.MOUNT, strip_ext(g_file_list.array[i]->display_name));
 
-    for (int i = 0; i < named_items.size; i++) {
-        snprintf(named_indices[i], MAX_BUFFER_SIZE, "%d", get_label_placement(named_items.array[i]));
-        stripped_names[i] = strip_label_placement(named_items.array[i]);
-    }
+        char hist_dir[PATH_MAX];
+        snprintf(hist_dir, sizeof(hist_dir), "%s/MUOS/info/history/%s.cfg",
+                    device.STORAGE.ROM.MOUNT, strip_ext(g_file_list.array[i]->display_name));
 
-    for (int i = 0; i < named_items.size; i++) {
-        push_string(&named_index, named_indices[i]);
-        if (strcasecmp(stripped_names[i], DUMMY_DIR) != 0) {
-
-            char fav_dir[PATH_MAX];
-            snprintf(fav_dir, sizeof(fav_dir), "%s/MUOS/info/favourite/%s.cfg",
-                     device.STORAGE.ROM.MOUNT, strip_ext(get_string_at_index(&content_items, atoi(named_indices[i]))));
-
-            char hist_dir[PATH_MAX];
-            snprintf(hist_dir, sizeof(hist_dir), "%s/MUOS/info/history/%s.cfg",
-                     device.STORAGE.ROM.MOUNT, strip_ext(get_string_at_index(&content_items, atoi(named_indices[i]))));
-
-            char *glyph_icon;
-            int glyph_pad;
-            if (file_exist(fav_dir)) {
-                glyph_icon = "\uF005";
-                glyph_pad = 10;
-            } else if (file_exist(hist_dir)) {
-                glyph_icon = "\uE5A0";
-                glyph_pad = 12;
-            } else {
-                glyph_icon = "\uF15B";
-                glyph_pad = 12;
-            }
-
-            gen_label(ROM, glyph_icon, stripped_names[i], glyph_pad);
+        char *glyph_icon;
+        int glyph_pad;
+        if (file_exist(fav_dir)) {
+            glyph_icon = "\uF005";
+            glyph_pad = 10;
+        } else if (file_exist(hist_dir)) {
+            glyph_icon = "\uE5A0";
+            glyph_pad = 12;
+        } else {
+            glyph_icon = "\uF15B";
+            glyph_pad = 12;
         }
+        gen_label(ROM, glyph_icon, strip_ext(g_file_list.array[i]->display_name), glyph_pad, &g_file_list.array[i]);
     }
 }
 
@@ -706,10 +708,8 @@ void create_root_items(char *dir_name) {
     snprintf(spec_dir, sizeof(spec_dir), "%s/MUOS/info/%s",
              device.STORAGE.ROM.MOUNT, dir_name);
 
-    char **dir_names = NULL;
     int dir_count = 0;
 
-    char **file_names = NULL;
     int file_count = 0;
 
     switch (module) {
@@ -724,10 +724,10 @@ void create_root_items(char *dir_name) {
             break;
     }
 
-    add_directory_and_file_names(spec_dir, &dir_names, &dir_count, &file_names, &file_count);
+    add_directory_and_file_names(spec_dir, &dir_count, &file_count);
 
     if (dir_count > 0 || file_count > 0) {
-        gen_item(file_names, file_count);
+        gen_item(file_count);
     }
 }
 
@@ -737,10 +737,7 @@ void create_explore_items(void *count) {
     char curr_dir[PATH_MAX];
     snprintf(curr_dir, sizeof(curr_dir), "%s", sd_dir);
 
-    char **dir_names = NULL;
     int dir_count = 0;
-
-    char **file_names = NULL;
     int file_count = 0;
 
     switch (module) {
@@ -758,26 +755,20 @@ void create_explore_items(void *count) {
             break;
     }
 
-    add_directory_and_file_names(curr_dir, &dir_names, &dir_count, &file_names, &file_count);
+    add_directory_and_file_names(curr_dir, &dir_count, &file_count);
 
     if (dir_count > 0 || file_count > 0) {
-        qsort(dir_names, dir_count, sizeof(char *), str_compare);
+        // TODO
+        // qsort(dir_names, dir_count, sizeof(char *), str_compare);
         for (int i = 0; i < dir_count; i++) {
             char curr_label[MAX_BUFFER_SIZE];
             snprintf(curr_label, sizeof(curr_label), "%s :: %d", DUMMY_DIR, *ui_count_ptr);
 
-            gen_label(FOLDER, "\uF07B", dir_names[i], 12);
-
-            push_string(&named_items, curr_label);
-            push_string(&content_items, DUMMY_DIR);
+            gen_label(FOLDER, "\uF07B", g_dir_list.array[i]->display_name, 12, &g_dir_list.array[i]);
 
             (*ui_count_ptr)++;
-
-            free(dir_names[i]);
         }
-        free(dir_names);
-
-        gen_item(file_names, file_count);
+        gen_item(file_count);
     }
 }
 
@@ -813,8 +804,8 @@ void explore_root() {
             safe_quit = 1;
             break;
         case 6:
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12, NULL);
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12, NULL);
             ui_count += 2;
             break;
         case 8:
@@ -825,19 +816,19 @@ void explore_root() {
             safe_quit = 1;
             break;
         case 10:
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12, NULL);
+            gen_label(FOLDER, "\uF07B", "USB (external)", 12, NULL);
             ui_count += 2;
             break;
         case 12:
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12, NULL);
+            gen_label(FOLDER, "\uF07B", "USB (external)", 12, NULL);
             ui_count += 2;
             break;
         case 14:
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12, NULL);
+            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12, NULL);
+            gen_label(FOLDER, "\uF07B", "USB (external)", 12, NULL);
             ui_count += 3;
             break;
         default:
@@ -855,7 +846,24 @@ void prepare_activity_file(char *act_content, char *act_path) {
     }
 }
 
-int load_content(char *content_name, int content_index, int add_favourite) {
+int delete_content(struct ContentItem* item) {
+    int result = 1;
+    char *hf_msg;
+    if (file_exist(item->path)) {
+        if (delete_file(item->path)) {
+            hf_msg = "File deleted!";
+        } else {
+            hf_msg = "Cannot delete file!";
+            result = 0;
+        }
+        lv_label_set_text(ui_lblMessage, hf_msg);
+        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    return result;
+}
+
+int load_content(struct ContentItem *item, int add_favourite) {
     char *assigned_core = load_content_core(0);
     printf("ASSIGNED CORE: %s\n", assigned_core);
 
@@ -864,8 +872,9 @@ int load_content(char *content_name, int content_index, int add_favourite) {
     }
 
     char content_loader_file[MAX_BUFFER_SIZE];
+    char * stripped_display_name = strip_ext(item->display_name);
     snprintf(content_loader_file, sizeof(content_loader_file), "%s/MUOS/info/core/%s/%s.cfg",
-             device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), strip_ext(content_name));
+             device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), stripped_display_name);
 
     printf("CONFIG FILE: %s\n", content_loader_file);
 
@@ -885,9 +894,9 @@ int load_content(char *content_name, int content_index, int add_favourite) {
     if (!file_exist(content_loader_file)) {
         char content_loader_data[MAX_BUFFER_SIZE];
         snprintf(content_loader_data, sizeof(content_loader_data), "%s\n%s\n/mnt/%s/ROMS/\n%s\n%s\n",
-                 strip_ext(content_name), assigned_core, curr_sd,
+                 stripped_display_name, assigned_core, curr_sd,
                  get_last_subdir(sd_dir, '/', 4),
-                 get_string_at_index(&content_items, content_index));
+                 item->display_name);
 
         write_text_to_file(content_loader_file, content_loader_data, "w");
         printf("\nCONFIG DATA\n%s\n", content_loader_data);
@@ -908,11 +917,11 @@ int load_content(char *content_name, int content_index, int add_favourite) {
             hf_type = his_dir;
         }
 
-        snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s.cfg", hf_type, strip_ext(content_name));
+        snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s.cfg", hf_type, stripped_display_name);
 
         char pointer[MAX_BUFFER_SIZE];
         snprintf(pointer, sizeof(pointer), "%s/MUOS/info/core/%s/%s.cfg",
-                 device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), strip_ext(content_name));
+                 device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4), stripped_display_name);
 
         if (add_favourite) {
             write_text_to_file(add_to_hf, pointer, "w");
@@ -920,6 +929,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
             char *hf_msg;
             if (file_exist(add_to_hf)) {
                 hf_msg = "Added to favourites!";
+                lv_label_set_text(item->ui_icon, "\uF005");
             } else {
                 hf_msg = "Could not add to favourites!";
             }
@@ -1095,6 +1105,7 @@ void *joystick_task() {
     int JOYUP_pressed = 0;
     int JOYDOWN_pressed = 0;
     int JOYHOTKEY_pressed = 0;
+    int show_delete_confirm = 0;
 
     int nav_hold = 0;
     int nav_delay = UINT8_MAX;
@@ -1136,7 +1147,21 @@ void *joystick_task() {
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+                                    show_delete_confirm = 0;
                                 } else if (ev.code == NAV_A) {
+
+                                    if (show_delete_confirm) {
+                                        play_sound("confirm", nav_sound);
+                                        if (delete_content(g_selected_content_item)) {
+                                            msgbox_active = 0;
+                                            progress_onscreen = 0;
+                                            lv_obj_add_flag(g_selected_content_item->ui_item, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+                                            show_delete_confirm = 0;
+                                        }
+                                        goto nothing_ever_happens;
+                                    }
+
                                     play_sound("confirm", nav_sound);
                                     if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
                                         lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
@@ -1182,14 +1207,11 @@ void *joystick_task() {
                                             }
                                             break;
                                         default:
-                                            char *f_content = get_string_at_index(&content_items, atoi(
-                                                    get_string_at_index(&named_index, current_item_index)));
-
                                             switch (module) {
                                                 case MMC:
                                                 case SDCARD:
                                                 case USB:
-                                                    if (strcasecmp(f_content, DUMMY_DIR) == 0) {
+                                                    if (g_selected_content_item->type == 0) {
                                                         char n_dir[MAX_BUFFER_SIZE];
                                                         snprintf(n_dir, sizeof(n_dir), "%s/%s",
                                                                  sd_dir,
@@ -1218,9 +1240,7 @@ void *joystick_task() {
                                                                  current_item_index);
                                                         write_text_to_file(MUOS_IDX_LOAD, c_index, "w");
 
-                                                        if (load_content(f_content, atoi(
-                                                                get_string_at_index(&named_index,
-                                                                                    current_item_index)), 0)) {
+                                                        if (load_content(g_selected_content_item, 0)) {
                                                             static char launch_script[MAX_BUFFER_SIZE];
                                                             snprintf(launch_script, sizeof(launch_script),
                                                                      "%s/script/mux/launch.sh", INTERNAL_PATH);
@@ -1233,13 +1253,13 @@ void *joystick_task() {
                                                     }
                                                     break;
                                                 case FAVOURITE:
-                                                    load_cached_content(f_content, "favourite", 0);
+                                                    load_cached_content(g_selected_content_item->display_name, "favourite", 0);
                                                     write_text_to_file("/tmp/explore_card", "favourite", "w");
                                                     write_text_to_file("/tmp/explore_dir", "", "w");
                                                     write_text_to_file("/tmp/manual_launch", "1", "w");
                                                     break;
                                                 case HISTORY:
-                                                    load_cached_content(f_content, "history", 0);
+                                                    load_cached_content(g_selected_content_item->display_name, "history", 0);
                                                     write_text_to_file("/tmp/explore_card", "history", "w");
                                                     write_text_to_file("/tmp/explore_dir", "", "w");
                                                     write_text_to_file("/tmp/manual_launch", "1", "w");
@@ -1297,8 +1317,6 @@ void *joystick_task() {
                                     char n_dir[MAX_BUFFER_SIZE];
                                     snprintf(n_dir, sizeof(n_dir), "%s", sd_dir);
 
-                                    char *f_content = get_string_at_index(&content_items, atoi(
-                                            get_string_at_index(&named_index, current_item_index)));
 
                                     char cache_file[MAX_BUFFER_SIZE];
                                     switch (module) {
@@ -1331,7 +1349,7 @@ void *joystick_task() {
                                             play_sound("confirm", nav_sound);
 
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/favourite/%s.cfg",
-                                                     device.STORAGE.ROM.MOUNT, strip_ext(f_content));
+                                                     device.STORAGE.ROM.MOUNT, strip_ext(g_selected_content_item->display_name));
 
                                             remove(cache_file);
                                             write_text_to_file("/tmp/mux_reload", "1", "w");
@@ -1342,7 +1360,7 @@ void *joystick_task() {
                                             play_sound("confirm", nav_sound);
 
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/history/%s.cfg",
-                                                     device.STORAGE.ROM.MOUNT, strip_ext(f_content));
+                                                     device.STORAGE.ROM.MOUNT, strip_ext(g_selected_content_item->display_name));
 
                                             remove(cache_file);
                                             write_text_to_file("/tmp/mux_reload", "1", "w");
@@ -1371,24 +1389,17 @@ void *joystick_task() {
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     play_sound("confirm", nav_sound);
-
-                                    char *f_content = get_string_at_index(&content_items, atoi(
-                                            get_string_at_index(&named_index, current_item_index)));
-
                                     switch (module) {
                                         case MMC:
                                         case SDCARD:
                                         case USB:
-                                            if (strcasecmp(f_content, DUMMY_DIR) == 0) {
+                                            if (strcasecmp(g_selected_content_item->display_name, DUMMY_DIR) == 0) {
                                                 lv_label_set_text(ui_lblMessage,
                                                                   "Directories cannot be added to Favourites");
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 break;
                                             } else {
-                                                if (load_content(f_content,
-                                                                 atoi(get_string_at_index(&named_index,
-                                                                                          current_item_index)),
-                                                                 1)) {
+                                                if (load_content(g_selected_content_item, 1)) {
                                                     lv_label_set_text(ui_lblMessage, "Added to Favourites");
                                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 } else {
@@ -1402,7 +1413,7 @@ void *joystick_task() {
                                             }
                                             break;
                                         case HISTORY:
-                                            if (load_cached_content(f_content, "history", 1)) {
+                                            if (load_cached_content(g_selected_content_item->display_name, "history", 1)) {
                                                 lv_label_set_text(ui_lblMessage, "Added to Favourites");
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                             } else {
@@ -1457,6 +1468,34 @@ void *joystick_task() {
                                         list_nav_next(ITEM_SKIP);
                                         lv_task_handler();
                                     }
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.L2)
+                                {
+                                    JOYHOTKEY_pressed = 0;
+                                    if (progress_onscreen == -1) {
+                                        if (ui_count == 0) {
+                                            goto nothing_ever_happens;
+                                        }
+                                        show_delete_confirm = 1;
+                                        play_sound("confirm", nav_sound);
+                                        lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+                                        lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
+                                        lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
+
+                                        static lv_anim_t desc_anim;
+                                        static lv_style_t desc_style;
+                                        lv_anim_init(&desc_anim);
+                                        lv_anim_set_delay(&desc_anim, 2000);
+                                        lv_style_init(&desc_style);
+                                        lv_style_set_anim(&desc_style, &desc_anim);
+                                        lv_obj_add_style(ui_lblHelpDescription, &desc_style, LV_PART_MAIN);
+                                        lv_obj_set_style_anim_speed(ui_lblHelpDescription, 25, LV_PART_MAIN);
+
+                                        show_rom_info(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpPreviewHeader,
+                                                    ui_lblHelpDescription,
+                                                    lv_label_get_text(lv_group_get_focused(ui_group)),
+                                                    "Do you want to delete the content?");
+                                        lv_label_set_text(ui_lblPreviewHeader, "Confirm");
+                                    }
                                 }
                             }
                         } else {
@@ -1482,7 +1521,7 @@ void *joystick_task() {
                                     lv_style_set_anim(&desc_style, &desc_anim);
                                     lv_obj_add_style(ui_lblHelpDescription, &desc_style, LV_PART_MAIN);
                                     lv_obj_set_style_anim_speed(ui_lblHelpDescription, 25, LV_PART_MAIN);
-
+                                    lv_label_set_text(ui_lblPreviewHeader, "Switch to Preview Image");
                                     show_rom_info(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpPreviewHeader,
                                                   ui_lblHelpDescription,
                                                   lv_label_get_text(lv_group_get_focused(ui_group)),
@@ -2047,9 +2086,8 @@ int main(int argc, char *argv[]) {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
 
-    initialise_array(&content_items);
-    initialise_array(&named_items);
-    initialise_array(&named_index);
+    initialise_array(&g_file_list);
+    initialise_array(&g_dir_list);
 
     if (file_exist(MUOS_PDI_LOAD)) {
         prev_dir = read_text_from_file(MUOS_PDI_LOAD);
