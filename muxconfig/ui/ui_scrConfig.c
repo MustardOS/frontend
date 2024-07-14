@@ -331,36 +331,6 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_border_color(ui_lblRTC, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_lblRTC, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    ui_lblDevice = lv_label_create(ui_pnlContent);
-    lv_obj_set_width(ui_lblDevice, 640);
-    lv_obj_set_height(ui_lblDevice, 28);
-    lv_obj_set_align(ui_lblDevice, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblDevice, "Device Type");
-    lv_obj_set_style_text_color(ui_lblDevice, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblDevice, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_lblDevice, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblDevice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblDevice, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_main_stop(ui_lblDevice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(ui_lblDevice, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_lblDevice, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblDevice, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblDevice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblDevice, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblDevice, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblDevice, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblDevice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblDevice, -3, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblDevice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblDevice, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DISABLED);
-    lv_obj_set_style_text_opa(ui_lblDevice, 255, LV_PART_MAIN | LV_STATE_DISABLED);
-    lv_obj_set_style_text_color(ui_lblDevice, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_lblDevice, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_color(ui_lblDevice, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_opa(ui_lblDevice, 25, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_color(ui_lblDevice, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_opa(ui_lblDevice, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
-
     ui_pnlGlyph = lv_obj_create(ui_scrConfig);
     lv_obj_set_width(ui_pnlGlyph, 640);
     lv_obj_set_height(ui_pnlGlyph, 400);
@@ -456,22 +426,6 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_pad_bottom(ui_icoRTC, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_icoRTC, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoRTC, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-    ui_icoDevice = lv_label_create(ui_pnlGlyph);
-    lv_obj_set_width(ui_icoDevice, 640);
-    lv_obj_set_height(ui_icoDevice, 28);
-    lv_obj_set_align(ui_icoDevice, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_icoDevice, "");
-    lv_obj_set_style_text_color(ui_icoDevice, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_icoDevice, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_icoDevice, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_icoDevice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_icoDevice, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_icoDevice, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_icoDevice, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DISABLED);
-    lv_obj_set_style_text_opa(ui_icoDevice, 255, LV_PART_MAIN | LV_STATE_DISABLED);
-    lv_obj_set_style_text_color(ui_icoDevice, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_icoDevice, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_pnlFooter = lv_obj_create(ui_scrConfig);
     lv_obj_set_width(ui_pnlFooter, 640);

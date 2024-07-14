@@ -34,8 +34,6 @@
 #define MUXCONFIG_WIFI     ""
 #define MUXCONFIG_WEBSERV  ""
 #define MUXCONFIG_RTC      ""
-#define MUXCONFIG_DEVICE   ""
-#define MUXCONFIG_RESET    ""
 
 // muxdevice
 #define MUXDEVICE_RG28XX     ""
@@ -93,7 +91,6 @@
 
 // muxsysinfo
 #define MUXSYSINFO_VERSION  ""
-#define MUXSYSINFO_RETRO    ""
 #define MUXSYSINFO_KERNEL   ""
 #define MUXSYSINFO_UPTIME   ""
 #define MUXSYSINFO_CPU      ""

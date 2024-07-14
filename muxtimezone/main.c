@@ -306,12 +306,12 @@ void *joystick_task() {
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
-                                        list_nav_prev(ITEM_SKIP);
+                                        list_nav_prev(device.MUX.ITEM.COUNT);
                                         lv_task_handler();
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.R1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
-                                        list_nav_next(ITEM_SKIP);
+                                        list_nav_next(device.MUX.ITEM.COUNT);
                                         lv_task_handler();
                                     }
                                 }

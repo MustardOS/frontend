@@ -22,7 +22,6 @@ void apply_theme() {
             {ui_pnlHeader,             theme.HEADER.BACKGROUND},
             {ui_pnlHelpMessage,        theme.HELP.BACKGROUND},
             {ui_lblVersion,            theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblRetro,              theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblKernel,             theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblUptime,             theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblCPU,                theme.LIST_DEFAULT.BACKGROUND},
@@ -80,7 +79,6 @@ void apply_theme() {
 
     struct big background_focus_elements[] = {
             {ui_lblVersion,    theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblRetro,      theme.LIST_FOCUS.BACKGROUND},
             {ui_lblKernel,     theme.LIST_FOCUS.BACKGROUND},
             {ui_lblUptime,     theme.LIST_FOCUS.BACKGROUND},
             {ui_lblCPU,        theme.LIST_FOCUS.BACKGROUND},
@@ -99,7 +97,6 @@ void apply_theme() {
 
     struct big gradient_elements[] = {
             {ui_lblVersion,    theme.SYSTEM.BACKGROUND},
-            {ui_lblRetro,      theme.SYSTEM.BACKGROUND},
             {ui_lblKernel,     theme.SYSTEM.BACKGROUND},
             {ui_lblUptime,     theme.SYSTEM.BACKGROUND},
             {ui_lblCPU,        theme.SYSTEM.BACKGROUND},
@@ -118,7 +115,6 @@ void apply_theme() {
 
     struct big indicator_elements[] = {
             {ui_lblVersion,    theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblRetro,      theme.LIST_DEFAULT.INDICATOR},
             {ui_lblKernel,     theme.LIST_DEFAULT.INDICATOR},
             {ui_lblUptime,     theme.LIST_DEFAULT.INDICATOR},
             {ui_lblCPU,        theme.LIST_DEFAULT.INDICATOR},
@@ -137,7 +133,6 @@ void apply_theme() {
 
     struct big indicator_focus_elements[] = {
             {ui_lblVersion,    theme.LIST_FOCUS.INDICATOR},
-            {ui_lblRetro,      theme.LIST_FOCUS.INDICATOR},
             {ui_lblKernel,     theme.LIST_FOCUS.INDICATOR},
             {ui_lblUptime,     theme.LIST_FOCUS.INDICATOR},
             {ui_lblCPU,        theme.LIST_FOCUS.INDICATOR},
@@ -156,7 +151,6 @@ void apply_theme() {
 
     struct big default_elements[] = {
             {ui_lblVersion,            theme.LIST_DEFAULT.TEXT},
-            {ui_lblRetro,              theme.LIST_DEFAULT.TEXT},
             {ui_lblKernel,             theme.LIST_DEFAULT.TEXT},
             {ui_lblUptime,             theme.LIST_DEFAULT.TEXT},
             {ui_lblCPU,                theme.LIST_DEFAULT.TEXT},
@@ -168,7 +162,6 @@ void apply_theme() {
             {ui_lblBatteryCap,         theme.LIST_DEFAULT.TEXT},
             {ui_lblVoltage,            theme.LIST_DEFAULT.TEXT},
             {ui_icoVersion,            theme.LIST_DEFAULT.TEXT},
-            {ui_icoRetro,              theme.LIST_DEFAULT.TEXT},
             {ui_icoKernel,             theme.LIST_DEFAULT.TEXT},
             {ui_icoUptime,             theme.LIST_DEFAULT.TEXT},
             {ui_icoCPU,                theme.LIST_DEFAULT.TEXT},
@@ -180,7 +173,6 @@ void apply_theme() {
             {ui_icoBatteryCap,         theme.LIST_DEFAULT.TEXT},
             {ui_icoVoltage,            theme.LIST_DEFAULT.TEXT},
             {ui_lblVersionValue,       theme.LIST_DEFAULT.TEXT},
-            {ui_lblRetroValue,         theme.LIST_DEFAULT.TEXT},
             {ui_lblKernelValue,        theme.LIST_DEFAULT.TEXT},
             {ui_lblUptimeValue,        theme.LIST_DEFAULT.TEXT},
             {ui_lblCPUValue,           theme.LIST_DEFAULT.TEXT},
@@ -223,7 +215,6 @@ void apply_theme() {
 
     struct big focus_elements[] = {
             {ui_lblVersion,         theme.LIST_FOCUS.TEXT},
-            {ui_lblRetro,           theme.LIST_FOCUS.TEXT},
             {ui_lblKernel,          theme.LIST_FOCUS.TEXT},
             {ui_lblUptime,          theme.LIST_FOCUS.TEXT},
             {ui_lblCPU,             theme.LIST_FOCUS.TEXT},
@@ -235,7 +226,6 @@ void apply_theme() {
             {ui_lblBatteryCap,      theme.LIST_FOCUS.TEXT},
             {ui_lblVoltage,         theme.LIST_FOCUS.TEXT},
             {ui_icoVersion,         theme.LIST_FOCUS.TEXT},
-            {ui_icoRetro,           theme.LIST_FOCUS.TEXT},
             {ui_icoKernel,          theme.LIST_FOCUS.TEXT},
             {ui_icoUptime,          theme.LIST_FOCUS.TEXT},
             {ui_icoCPU,             theme.LIST_FOCUS.TEXT},
@@ -247,7 +237,6 @@ void apply_theme() {
             {ui_icoBatteryCap,      theme.LIST_FOCUS.TEXT},
             {ui_icoVoltage,         theme.LIST_FOCUS.TEXT},
             {ui_lblVersionValue,    theme.LIST_FOCUS.TEXT},
-            {ui_lblRetroValue,      theme.LIST_FOCUS.TEXT},
             {ui_lblKernelValue,     theme.LIST_FOCUS.TEXT},
             {ui_lblUptimeValue,     theme.LIST_FOCUS.TEXT},
             {ui_lblCPUValue,        theme.LIST_FOCUS.TEXT},
@@ -288,7 +277,6 @@ void apply_theme() {
 
     struct small text_default_alpha_elements[] = {
             {ui_lblVersion,            theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblRetro,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblKernel,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblUptime,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblCPU,                theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -300,7 +288,6 @@ void apply_theme() {
             {ui_lblBatteryCap,         theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblVoltage,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoVersion,            theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoRetro,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoKernel,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoUptime,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoCPU,                theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -312,7 +299,6 @@ void apply_theme() {
             {ui_icoBatteryCap,         theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoVoltage,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblVersionValue,       theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblRetroValue,         theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblKernelValue,        theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblUptimeValue,        theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblCPUValue,           theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -353,7 +339,6 @@ void apply_theme() {
 
     struct small text_focus_alpha_elements[] = {
             {ui_lblVersion,         theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblRetro,           theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblKernel,          theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblUptime,          theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblCPU,             theme.LIST_FOCUS.TEXT_ALPHA},
@@ -365,7 +350,6 @@ void apply_theme() {
             {ui_lblBatteryCap,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblVoltage,         theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoVersion,         theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoRetro,           theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoKernel,          theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoUptime,          theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoCPU,             theme.LIST_FOCUS.TEXT_ALPHA},
@@ -377,7 +361,6 @@ void apply_theme() {
             {ui_icoBatteryCap,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoVoltage,         theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblVersionValue,    theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblRetroValue,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblKernelValue,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblUptimeValue,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblCPUValue,        theme.LIST_FOCUS.TEXT_ALPHA},
@@ -396,7 +379,6 @@ void apply_theme() {
 
     struct small indicator_default_alpha_elements[] = {
             {ui_lblVersion,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblRetro,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblKernel,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblUptime,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblCPU,        theme.LIST_DEFAULT.INDICATOR_ALPHA},
@@ -416,7 +398,6 @@ void apply_theme() {
 
     struct small indicator_focus_alpha_elements[] = {
             {ui_lblVersion,    theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblRetro,      theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblKernel,     theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblUptime,     theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblCPU,        theme.LIST_FOCUS.INDICATOR_ALPHA},
@@ -435,7 +416,6 @@ void apply_theme() {
 
     struct small gradient_stop_default_elements[] = {
             {ui_lblVersion,    theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblRetro,      theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblKernel,     theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblUptime,     theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblCPU,        theme.LIST_DEFAULT.GRADIENT_STOP},
@@ -454,7 +434,6 @@ void apply_theme() {
 
     struct small gradient_stop_focus_elements[] = {
             {ui_lblVersion,    theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblRetro,      theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblKernel,     theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblUptime,     theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblCPU,        theme.LIST_FOCUS.GRADIENT_STOP},
@@ -473,7 +452,6 @@ void apply_theme() {
 
     struct small background_alpha_default_elements[] = {
             {ui_lblVersion,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblRetro,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblKernel,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblUptime,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblCPU,        theme.LIST_DEFAULT.BACKGROUND_ALPHA},
@@ -493,7 +471,6 @@ void apply_theme() {
 
     struct small background_alpha_focus_elements[] = {
             {ui_lblVersion,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblRetro,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblKernel,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblUptime,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblCPU,        theme.LIST_FOCUS.BACKGROUND_ALPHA},
@@ -604,7 +581,6 @@ void apply_theme() {
 
     struct small font_pad_list_top_elements[] = {
             {ui_lblVersion,    theme.FONT.LIST_PAD_TOP},
-            {ui_lblRetro,      theme.FONT.LIST_PAD_TOP},
             {ui_lblKernel,     theme.FONT.LIST_PAD_TOP},
             {ui_lblUptime,     theme.FONT.LIST_PAD_TOP},
             {ui_lblCPU,        theme.FONT.LIST_PAD_TOP},
@@ -623,7 +599,6 @@ void apply_theme() {
 
     struct small font_pad_list_bottom_elements[] = {
             {ui_lblVersion,    theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblRetro,      theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblKernel,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblUptime,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblCPU,        theme.FONT.LIST_PAD_BOTTOM},
@@ -642,7 +617,6 @@ void apply_theme() {
 
     struct small font_pad_top_dropdown_elements[] = {
             {ui_lblVersionValue,    theme.FONT.LIST_PAD_TOP},
-            {ui_lblRetroValue,      theme.FONT.LIST_PAD_TOP},
             {ui_lblKernelValue,     theme.FONT.LIST_PAD_TOP},
             {ui_lblUptimeValue,     theme.FONT.LIST_PAD_TOP},
             {ui_lblCPUValue,        theme.FONT.LIST_PAD_TOP},
@@ -662,7 +636,6 @@ void apply_theme() {
 
     struct small font_pad_bottom_dropdown_elements[] = {
             {ui_lblVersionValue,    theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblRetroValue,      theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblKernelValue,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblUptimeValue,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblCPUValue,        theme.FONT.LIST_PAD_BOTTOM},
@@ -683,7 +656,6 @@ void apply_theme() {
 
     struct small font_pad_top_list_icon_elements[] = {
             {ui_icoVersion,    theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoRetro,      theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoKernel,     theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoUptime,     theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoCPU,        theme.FONT.LIST_ICON_PAD_TOP},
@@ -702,7 +674,6 @@ void apply_theme() {
 
     struct small font_pad_bottom_list_icon_elements[] = {
             {ui_icoVersion,    theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoRetro,      theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoKernel,     theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoUptime,     theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoCPU,        theme.FONT.LIST_ICON_PAD_BOTTOM},

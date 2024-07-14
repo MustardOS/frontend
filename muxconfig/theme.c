@@ -26,7 +26,6 @@ void apply_theme() {
             {ui_lblNetwork,            theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblServices,           theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblRTC,                theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblDevice,             theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,            theme.MESSAGE.BACKGROUND},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND},
@@ -78,7 +77,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_FOCUS.BACKGROUND},
             {ui_lblServices,     theme.LIST_FOCUS.BACKGROUND},
             {ui_lblRTC,          theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblDevice,       theme.LIST_FOCUS.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(background_focus_elements) / sizeof(background_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_color(background_focus_elements[i].e, lv_color_hex(background_focus_elements[i].c),
@@ -91,7 +89,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.SYSTEM.BACKGROUND},
             {ui_lblServices,     theme.SYSTEM.BACKGROUND},
             {ui_lblRTC,          theme.SYSTEM.BACKGROUND},
-            {ui_lblDevice,       theme.SYSTEM.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
@@ -104,7 +101,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_DEFAULT.INDICATOR},
             {ui_lblServices,     theme.LIST_DEFAULT.INDICATOR},
             {ui_lblRTC,          theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblDevice,       theme.LIST_DEFAULT.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_elements) / sizeof(indicator_elements[0]); ++i) {
         lv_obj_set_style_border_color(indicator_elements[i].e, lv_color_hex(indicator_elements[i].c),
@@ -117,7 +113,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_FOCUS.INDICATOR},
             {ui_lblServices,     theme.LIST_FOCUS.INDICATOR},
             {ui_lblRTC,          theme.LIST_FOCUS.INDICATOR},
-            {ui_lblDevice,       theme.LIST_FOCUS.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_elements) / sizeof(indicator_focus_elements[0]); ++i) {
         lv_obj_set_style_border_color(indicator_focus_elements[i].e, lv_color_hex(indicator_focus_elements[i].c),
@@ -130,13 +125,11 @@ void apply_theme() {
             {ui_lblNetwork,            theme.LIST_DEFAULT.TEXT},
             {ui_lblServices,           theme.LIST_DEFAULT.TEXT},
             {ui_lblRTC,                theme.LIST_DEFAULT.TEXT},
-            {ui_lblDevice,             theme.LIST_DEFAULT.TEXT},
             {ui_icoTweakGeneral,       theme.LIST_DEFAULT.TEXT},
             {ui_icoTheme,              theme.LIST_DEFAULT.TEXT},
             {ui_icoNetwork,            theme.LIST_DEFAULT.TEXT},
             {ui_icoServices,           theme.LIST_DEFAULT.TEXT},
             {ui_icoRTC,                theme.LIST_DEFAULT.TEXT},
-            {ui_icoDevice,             theme.LIST_DEFAULT.TEXT},
             {ui_staCapacity,           theme.STATUS.BATTERY.NORMAL},
             {ui_lblDatetime,           theme.DATETIME.TEXT},
             {ui_lblMessage,            theme.MESSAGE.TEXT},
@@ -174,13 +167,11 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_FOCUS.TEXT},
             {ui_lblServices,     theme.LIST_FOCUS.TEXT},
             {ui_lblRTC,          theme.LIST_FOCUS.TEXT},
-            {ui_lblDevice,       theme.LIST_FOCUS.TEXT},
             {ui_icoTweakGeneral, theme.LIST_FOCUS.TEXT},
             {ui_icoTheme,        theme.LIST_FOCUS.TEXT},
             {ui_icoNetwork,      theme.LIST_FOCUS.TEXT},
             {ui_icoServices,     theme.LIST_FOCUS.TEXT},
             {ui_icoRTC,          theme.LIST_FOCUS.TEXT},
-            {ui_icoDevice,       theme.LIST_FOCUS.TEXT},
     };
     for (size_t i = 0; i < sizeof(focus_elements) / sizeof(focus_elements[0]); ++i) {
         lv_obj_set_style_text_color(focus_elements[i].e, lv_color_hex(focus_elements[i].c),
@@ -215,13 +206,11 @@ void apply_theme() {
             {ui_lblNetwork,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblServices,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblRTC,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblDevice,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoTweakGeneral,       theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoNetwork,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoServices,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRTC,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoDevice,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTitle,              theme.HEADER.TEXT_ALPHA},
             {ui_staCapacity,           theme.STATUS.BATTERY.NORMAL_ALPHA},
             {ui_lblMessage,            theme.MESSAGE.TEXT_ALPHA},
@@ -259,13 +248,11 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblServices,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblRTC,          theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblDevice,       theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoTweakGeneral, theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoTheme,        theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoNetwork,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoServices,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRTC,          theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoDevice,       theme.LIST_FOCUS.TEXT_ALPHA},
     };
     for (size_t i = 0; i < sizeof(text_focus_alpha_elements) / sizeof(text_focus_alpha_elements[0]); ++i) {
         lv_obj_set_style_text_opa(text_focus_alpha_elements[i].e, text_focus_alpha_elements[i].c,
@@ -278,7 +265,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblServices,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblRTC,          theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblDevice,       theme.LIST_DEFAULT.INDICATOR_ALPHA},
     };
     for (size_t i = 0;
          i < sizeof(indicator_default_alpha_elements) / sizeof(indicator_default_alpha_elements[0]); ++i) {
@@ -292,7 +278,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblServices,     theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblRTC,          theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblDevice,       theme.LIST_FOCUS.INDICATOR_ALPHA},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_alpha_elements) / sizeof(indicator_focus_alpha_elements[0]); ++i) {
         lv_obj_set_style_border_opa(indicator_focus_alpha_elements[i].e, indicator_focus_alpha_elements[i].c,
@@ -305,7 +290,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblServices,     theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblRTC,          theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblDevice,       theme.LIST_DEFAULT.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_default_elements) / sizeof(gradient_stop_default_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_stop(gradient_stop_default_elements[i].e, gradient_stop_default_elements[i].c,
@@ -318,7 +302,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblServices,     theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblRTC,          theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblDevice,       theme.LIST_FOCUS.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_focus_elements) / sizeof(gradient_stop_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_stop(gradient_stop_focus_elements[i].e, gradient_stop_focus_elements[i].c,
@@ -331,7 +314,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblServices,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblRTC,          theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblDevice,       theme.LIST_DEFAULT.BACKGROUND_ALPHA},
     };
     for (size_t i = 0;
          i < sizeof(background_alpha_default_elements) / sizeof(background_alpha_default_elements[0]); ++i) {
@@ -345,7 +327,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblServices,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblRTC,          theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblDevice,       theme.LIST_FOCUS.BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(background_alpha_focus_elements) / sizeof(background_alpha_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_opa(background_alpha_focus_elements[i].e, background_alpha_focus_elements[i].c,
@@ -450,7 +431,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.FONT.LIST_PAD_TOP},
             {ui_lblServices,     theme.FONT.LIST_PAD_TOP},
             {ui_lblRTC,          theme.FONT.LIST_PAD_TOP},
-            {ui_lblDevice,       theme.FONT.LIST_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_top_elements) / sizeof(font_pad_list_top_elements[0]); ++i) {
         lv_obj_set_style_pad_top(font_pad_list_top_elements[i].e, font_pad_list_top_elements[i].c,
@@ -463,7 +443,6 @@ void apply_theme() {
             {ui_lblNetwork,      theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblServices,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblRTC,          theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblDevice,       theme.FONT.LIST_PAD_BOTTOM},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_bottom_elements) / sizeof(font_pad_list_bottom_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_list_bottom_elements[i].e, font_pad_list_bottom_elements[i].c,
@@ -476,7 +455,6 @@ void apply_theme() {
             {ui_icoNetwork,      theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoServices,     theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoRTC,          theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoDevice,       theme.FONT.LIST_ICON_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_top_list_icon_elements) / sizeof(font_pad_top_list_icon_elements[0]); ++i) {
         lv_obj_set_style_pad_top(font_pad_top_list_icon_elements[i].e, font_pad_top_list_icon_elements[i].c,
@@ -489,7 +467,6 @@ void apply_theme() {
             {ui_icoNetwork,      theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoServices,     theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoRTC,          theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoDevice,       theme.FONT.LIST_ICON_PAD_BOTTOM},
     };
     for (size_t i = 0;
          i < sizeof(font_pad_bottom_list_icon_elements) / sizeof(font_pad_bottom_list_icon_elements[0]); ++i) {

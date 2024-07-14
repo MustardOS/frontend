@@ -56,15 +56,13 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 
-lv_obj_t *ui_objects[12];
+lv_obj_t *ui_objects[11];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
 
     if (element_focused == ui_lblVersion) {
         message = MUXSYSINFO_VERSION;
-    } else if (element_focused == ui_lblRetro) {
-        message = MUXSYSINFO_RETRO;
     } else if (element_focused == ui_lblKernel) {
         message = MUXSYSINFO_KERNEL;
     } else if (element_focused == ui_lblUptime) {
@@ -107,32 +105,6 @@ void text_replace(char *str, const char *find, const char *replace) {
 
 int compare(const void *a, const void *b) {
     return strcasecmp(*(const char **) a, *(const char **) b);
-}
-
-const char *ra_config_c32_check() {
-    char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "crc32 %s", RA_CONFIG_FILE);
-
-    FILE * pipe = popen(command, "r");
-    if (!pipe) {
-        perror("Error opening pipe");
-        return "Unknown";
-    }
-
-    char crc[10];
-    if (fgets(crc, sizeof(crc), pipe) == NULL) {
-        perror("Error reading result");
-        return "Unknown";
-    }
-
-    pclose(pipe);
-
-    crc[strlen(crc) - 1] = '\0';
-    if (strcmp(crc, RA_CONFIG_CRC) == 0) {
-        return "Original";
-    } else {
-        return "Modified";
-    }
 }
 
 char *remove_comma(const char *str) {
@@ -186,7 +158,6 @@ void update_system_info() {
             read_line_from_file("/opt/muos/config/version.txt", 2));
 
     lv_label_set_text(ui_lblVersionValue, build_version);
-    lv_label_set_text(ui_lblRetroValue, ra_config_c32_check());
     lv_label_set_text(ui_lblKernelValue, get_execute_result("uname -rs"));
     lv_label_set_text(ui_lblUptimeValue, format_uptime(remove_comma(get_execute_result("uptime | awk '{print $3}'"))));
     lv_label_set_text(ui_lblCPUValue, "Cortex A53");
@@ -206,21 +177,19 @@ void update_system_info() {
 
 void init_navigation_groups() {
     ui_objects[0] = ui_lblVersion;
-    ui_objects[1] = ui_lblRetro;
-    ui_objects[2] = ui_lblKernel;
-    ui_objects[3] = ui_lblUptime;
-    ui_objects[4] = ui_lblCPU;
-    ui_objects[5] = ui_lblSpeed;
-    ui_objects[6] = ui_lblGovernor;
-    ui_objects[7] = ui_lblMemory;
-    ui_objects[8] = ui_lblTemp;
-    ui_objects[9] = ui_lblServices;
-    ui_objects[10] = ui_lblBatteryCap;
-    ui_objects[11] = ui_lblVoltage;
+    ui_objects[1] = ui_lblKernel;
+    ui_objects[2] = ui_lblUptime;
+    ui_objects[3] = ui_lblCPU;
+    ui_objects[4] = ui_lblSpeed;
+    ui_objects[5] = ui_lblGovernor;
+    ui_objects[6] = ui_lblMemory;
+    ui_objects[7] = ui_lblTemp;
+    ui_objects[8] = ui_lblServices;
+    ui_objects[9] = ui_lblBatteryCap;
+    ui_objects[10] = ui_lblVoltage;
 
     lv_obj_t *ui_objects_value[] = {
             ui_lblVersionValue,
-            ui_lblRetroValue,
             ui_lblKernelValue,
             ui_lblUptimeValue,
             ui_lblCPUValue,
@@ -235,7 +204,6 @@ void init_navigation_groups() {
 
     lv_obj_t *ui_objects_icon[] = {
             ui_icoVersion,
-            ui_icoRetro,
             ui_icoKernel,
             ui_icoUptime,
             ui_icoCPU,
@@ -451,7 +419,6 @@ void init_elements() {
     }
 
     lv_obj_set_user_data(ui_lblVersion, "version");
-    lv_obj_set_user_data(ui_lblRetro, "retroarch");
     lv_obj_set_user_data(ui_lblKernel, "kernel");
     lv_obj_set_user_data(ui_lblUptime, "uptime");
     lv_obj_set_user_data(ui_lblCPU, "cpu");

@@ -43,65 +43,50 @@ void *joystick_task() {
     struct input_event ev;
 
     while (1) {
-        if (input_disable) {
-            continue;
-        }
         read(js_fd, &ev, sizeof(struct input_event));
         switch (ev.type) {
             case EV_KEY:
                 if (ev.value == 1) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    switch (ev.code) {
-                        case JOY_A:
-                            lv_label_set_text(ui_lblButton, "↦⇓");
-                            break;
-                        case JOY_B:
-                            lv_label_set_text(ui_lblButton, "↧⇒");
-                            break;
-                        case JOY_X:
-                            lv_label_set_text(ui_lblButton, "↥⇐");
-                            break;
-                        case JOY_Y:
-                            lv_label_set_text(ui_lblButton, "↤⇑");
-                            break;
-                        case JOY_L1:
-                            lv_label_set_text(ui_lblButton, "↖");
-                            break;
-                        case JOY_R1:
-                            lv_label_set_text(ui_lblButton, "↗");
-                            break;
-                        case JOY_SELECT:
-                            lv_label_set_text(ui_lblButton, "⇷");
-                            break;
-                        case JOY_START:
-                            lv_label_set_text(ui_lblButton, "⇸");
-                            break;
-                        case JOY_MENU:
-                            lv_label_set_text(ui_lblButton, "⇹");
-                            break;
-                        case JOY_PLUS:
-                            lv_label_set_text(ui_lblButton, "⇾");
-                            break;
-                        case JOY_MINUS:
-                            lv_label_set_text(ui_lblButton, "⇽");
-                            break;
-                        case JOY_POWER:
-                            write_text_to_file(MUOS_PDI_LOAD, "tester", "w");
-                            safe_quit = 1;
-                            break;
-                        case JOY_L2:
-                            lv_label_set_text(ui_lblButton, "↲");
-                            break;
-                        case JOY_R2:
-                            lv_label_set_text(ui_lblButton, "↳");
-                            break;
-                        case BTN_TR2:
-                            lv_label_set_text(ui_lblButton, "↺");
-                            break;
-                        case BTN_MODE:
-                            lv_label_set_text(ui_lblButton, "↻");
-                            break;
+                    if (ev.code == device.RAW_INPUT.BUTTON.A) {
+                        lv_label_set_text(ui_lblButton, "↦⇓");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.B) {
+                        lv_label_set_text(ui_lblButton, "↧⇒");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.C) {
+                        // TODO:
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
+                        lv_label_set_text(ui_lblButton, "↥⇐");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
+                        lv_label_set_text(ui_lblButton, "↤⇑");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.Z) {
+                        // TODO:
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
+                        lv_label_set_text(ui_lblButton, "↖");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.R1) {
+                        lv_label_set_text(ui_lblButton, "↗");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.L2) {
+                        lv_label_set_text(ui_lblButton, "↲");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.R2) {
+                        lv_label_set_text(ui_lblButton, "↳");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
+                               ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
+                        lv_label_set_text(ui_lblButton, "⇹");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT ||
+                               ev.code == device.RAW_INPUT.BUTTON.POWER_LONG) {
+                        lv_label_set_text(ui_lblButton, "↧⇒");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP) {
+                        lv_label_set_text(ui_lblButton, "⇾");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN) {
+                        lv_label_set_text(ui_lblButton, "⇽");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.START) {
+                        lv_label_set_text(ui_lblButton, "⇸");
+                    } else if (ev.code == device.RAW_INPUT.BUTTON.SELECT) {
+                        lv_label_set_text(ui_lblButton, "⇷");
+                    } else if (ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
+                        lv_label_set_text(ui_lblButton, "↺");
+                    } else if (ev.code == device.RAW_INPUT.ANALOG.RIGHT.CLICK) {
+                        lv_label_set_text(ui_lblButton, "↻");
                     }
                 } else {
                     lv_label_set_text(ui_lblButton, " ");
@@ -191,10 +176,10 @@ void *joystick_system_task() {
         switch (ev.type) {
             case EV_KEY:
                 if (ev.value == 1) {
-                    switch (ev.code) {
-                        case JOY_POWER:
-                            safe_quit = 1;
-                            break;
+                    if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT ||
+                        ev.code == device.RAW_INPUT.BUTTON.POWER_LONG) {
+                        write_text_to_file(MUOS_PDI_LOAD, "tester", "w");
+                        safe_quit = 1;
                     }
                 }
                 break;
@@ -208,11 +193,12 @@ void glyph_task() {
     // TODO: Bluetooth connectivity!
 
     if (is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-    else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
@@ -221,7 +207,8 @@ void glyph_task() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
