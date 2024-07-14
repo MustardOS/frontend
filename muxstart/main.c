@@ -50,7 +50,6 @@ void setup_background_process() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
-
     srand(time(NULL));
 
     if (argc != 2) {
@@ -59,9 +58,6 @@ int main(int argc, char *argv[]) {
     }
 
     setup_background_process();
-
-    setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
-    setenv("NO_COLOR", "1", 1);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);

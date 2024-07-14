@@ -246,11 +246,7 @@ void init_elements() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
-
     srand(time(NULL));
-
-    setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
-    setenv("NO_COLOR", "1", 1);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);

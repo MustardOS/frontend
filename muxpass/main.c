@@ -252,7 +252,6 @@ void glyph_task() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
-
     srand(time(NULL));
 
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
@@ -292,9 +291,6 @@ int main(int argc, char *argv[]) {
     }
 
     if (strcasecmp(p_code, "000000") == 0) return 1;
-
-    setenv("PATH", "/bin:/sbin:/usr/bin:/usr/sbin:/system/bin", 1);
-    setenv("NO_COLOR", "1", 1);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
