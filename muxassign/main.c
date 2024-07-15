@@ -942,7 +942,7 @@ int main(int argc, char *argv[]) {
         if (json_valid(read_text_from_file(assign_file))) {
             struct json auto_assign_config = json_object_get(
                     json_parse(read_text_from_file(assign_file)),
-                    str_tolower(get_last_dir(rom_dir)));
+                    str_tolower(str_remchar(get_last_dir(rom_dir), ' ')));
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];
