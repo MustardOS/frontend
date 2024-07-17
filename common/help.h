@@ -89,6 +89,16 @@
 // muxrtc
 #define MUXRTC_GENERIC ""
 
+// muxstorage
+#define MUXSTORAGE_BIOS       ""
+#define MUXSTORAGE_CONFIG     ""
+#define MUXSTORAGE_CATALOGUE  ""
+#define MUXSTORAGE_FAV        ""
+#define MUXSTORAGE_MUSIC      ""
+#define MUXSTORAGE_SAVE       ""
+#define MUXSTORAGE_SCREENSHOT ""
+#define MUXSTORAGE_THEME      ""
+
 // muxsysinfo
 #define MUXSYSINFO_VERSION  ""
 #define MUXSYSINFO_KERNEL   ""
@@ -142,6 +152,7 @@
 #define MUXTWEAKGEN_HDMI       ""
 #define MUXTWEAKGEN_SHUTDOWN   ""
 #define MUXTWEAKGEN_INTERFACE  ""
+#define MUXTWEAKGEN_STORAGE    ""
 #define MUXTWEAKGEN_ADVANCED   ""
 
 // muxvisual

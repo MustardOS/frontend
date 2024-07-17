@@ -71,7 +71,7 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 
-lv_obj_t *ui_objects[9];
+lv_obj_t *ui_objects[10];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -92,6 +92,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKGEN_SHUTDOWN;
     } else if (element_focused == ui_lblInterface) {
         message = MUXTWEAKGEN_INTERFACE;
+    } else if (element_focused == ui_lblStorage) {
+        message = MUXTWEAKGEN_STORAGE;
     } else if (element_focused == ui_lblAdvanced) {
         message = MUXTWEAKGEN_ADVANCED;
     }
@@ -520,7 +522,8 @@ void init_navigation_groups() {
     ui_objects[5] = ui_lblHDMI;
     ui_objects[6] = ui_lblShutdown;
     ui_objects[7] = ui_lblInterface;
-    ui_objects[8] = ui_lblAdvanced;
+    ui_objects[8] = ui_lblStorage;
+    ui_objects[9] = ui_lblAdvanced;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droHidden,
@@ -531,6 +534,7 @@ void init_navigation_groups() {
             ui_droHDMI,
             ui_droShutdown,
             ui_droInterface,
+            ui_droStorage,
             ui_droAdvanced
     };
 
@@ -543,6 +547,7 @@ void init_navigation_groups() {
             ui_icoHDMI,
             ui_icoShutdown,
             ui_icoInterface,
+            ui_icoStorage,
             ui_icoAdvanced
     };
 
@@ -645,6 +650,11 @@ void *joystick_task() {
                                         save_tweak_options();
 
                                         load_mux("visual");
+                                        safe_quit = 1;
+                                    } else if (element_focused == ui_lblStorage) {
+                                        save_tweak_options();
+
+                                        load_mux("storage");
                                         safe_quit = 1;
                                     } else if (element_focused == ui_lblAdvanced) {
                                         save_tweak_options();
@@ -910,6 +920,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblHDMI, "hdmi");
     lv_obj_set_user_data(ui_lblShutdown, "shutdown");
     lv_obj_set_user_data(ui_lblInterface, "interface");
+    lv_obj_set_user_data(ui_lblStorage, "storage");
     lv_obj_set_user_data(ui_lblAdvanced, "advanced");
 
     if (!device.DEVICE.HAS_HDMI) {

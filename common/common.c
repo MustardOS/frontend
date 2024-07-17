@@ -16,6 +16,22 @@
 #include "glyph.h"
 #include "mini/mini.h"
 
+const char *get_default_storage(int store_type) {
+    switch (store_type) {
+        case 0:
+            return device.STORAGE.ROM.MOUNT;
+            break;
+        case 1:
+            return device.STORAGE.SDCARD.MOUNT;
+            break;
+        case 2:
+            return device.STORAGE.USB.MOUNT;
+            break;
+        default:
+            return device.STORAGE.ROM.MOUNT;
+    }
+}
+
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
 }
@@ -1281,60 +1297,21 @@ int should_skip(const char *name) {
         return 0;
     }
 
-    size_t pattern_count = 0;
-    char pattern;
-    while ((pattern = fgetc(file)) != EOF) {
-        if (pattern == '\n') {
-            pattern_count++;
-        }
-    }
-
-    char **skip_patterns = malloc(pattern_count * sizeof(char *));
-    if (!skip_patterns) {
-        perror("Failed to allocate memory for skip patterns (too many?)");
-        fclose(file);
-        return 0;
-    }
-
-    rewind(file);
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-    size_t i = 0;
-    while ((read = getline(&line, &len, file)) != -1) {
-        if (line[read - 1] == '\n') {
-            line[read - 1] = '\0';
-        }
-        skip_patterns[i] = strdup(line);
-        if (!skip_patterns[i]) {
-            perror("Failed to get string for skip pattern");
-            free(line);
-            for (size_t j = 0; j < i; j++) {
-                free(skip_patterns[j]);
-            }
-            free(skip_patterns);
-            fclose(file);
-            return 0;
-        }
-        i++;
-    }
-
-    free(line);
-    fclose(file);
-
+    char line[MAX_BUFFER_SIZE];
     int result = 0;
-    for (size_t i = 0; i < pattern_count; i++) {
-        if (fnmatch(skip_patterns[i], name, 0) == 0) {
+    while (fgets(line, sizeof(line), file)) {
+        size_t len = strlen(line);
+        if (line[len - 1] == '\n') {
+            line[len - 1] = '\0';
+        }
+
+        if (fnmatch(line, name, 0) == 0) {
             result = 1;
             break;
         }
     }
 
-    for (size_t i = 0; i < pattern_count; i++) {
-        free(skip_patterns[i]);
-    }
-    free(skip_patterns);
-
+    fclose(file);
     return result;
 }
 

@@ -29,6 +29,7 @@ void apply_theme() {
             {ui_lblHDMI,               theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblShutdown,           theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblInterface,          theme.LIST_DEFAULT.BACKGROUND},
+            {ui_lblStorage,            theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblAdvanced,           theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,            theme.MESSAGE.BACKGROUND},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND},
@@ -59,7 +60,7 @@ void apply_theme() {
 
     struct big progress_elements[] = {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
-            {ui_barProgressVolume, theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
+            {ui_barProgressVolume,     theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(progress_elements) / sizeof(progress_elements[0]); ++i) {
         lv_obj_set_style_bg_color(progress_elements[i].e, lv_color_hex(progress_elements[i].c),
@@ -68,7 +69,7 @@ void apply_theme() {
 
     struct small progress_alpha_elements[] = {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
-            {ui_barProgressVolume, theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
+            {ui_barProgressVolume,     theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(progress_alpha_elements) / sizeof(progress_alpha_elements[0]); ++i) {
         lv_obj_set_style_bg_opa(progress_alpha_elements[i].e, progress_alpha_elements[i].c,
@@ -84,6 +85,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_FOCUS.BACKGROUND},
             {ui_lblShutdown,   theme.LIST_FOCUS.BACKGROUND},
             {ui_lblInterface,  theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblStorage,    theme.LIST_FOCUS.BACKGROUND},
             {ui_lblAdvanced,   theme.LIST_FOCUS.BACKGROUND},
 
     };
@@ -101,6 +103,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.SYSTEM.BACKGROUND},
             {ui_lblShutdown,   theme.SYSTEM.BACKGROUND},
             {ui_lblInterface,  theme.SYSTEM.BACKGROUND},
+            {ui_lblStorage,    theme.SYSTEM.BACKGROUND},
             {ui_lblAdvanced,   theme.SYSTEM.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
@@ -117,6 +120,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_DEFAULT.INDICATOR},
             {ui_lblShutdown,   theme.LIST_DEFAULT.INDICATOR},
             {ui_lblInterface,  theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblStorage,    theme.LIST_DEFAULT.INDICATOR},
             {ui_lblAdvanced,   theme.LIST_DEFAULT.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_elements) / sizeof(indicator_elements[0]); ++i) {
@@ -133,6 +137,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_FOCUS.INDICATOR},
             {ui_lblShutdown,   theme.LIST_FOCUS.INDICATOR},
             {ui_lblInterface,  theme.LIST_FOCUS.INDICATOR},
+            {ui_lblStorage,    theme.LIST_FOCUS.INDICATOR},
             {ui_lblAdvanced,   theme.LIST_FOCUS.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_elements) / sizeof(indicator_focus_elements[0]); ++i) {
@@ -149,6 +154,7 @@ void apply_theme() {
             {ui_lblHDMI,               theme.LIST_DEFAULT.TEXT},
             {ui_lblShutdown,           theme.LIST_DEFAULT.TEXT},
             {ui_lblInterface,          theme.LIST_DEFAULT.TEXT},
+            {ui_lblStorage,            theme.LIST_DEFAULT.TEXT},
             {ui_lblAdvanced,           theme.LIST_DEFAULT.TEXT},
             {ui_icoHidden,             theme.LIST_DEFAULT.TEXT},
             {ui_icoBGM,                theme.LIST_DEFAULT.TEXT},
@@ -158,6 +164,7 @@ void apply_theme() {
             {ui_icoHDMI,               theme.LIST_DEFAULT.TEXT},
             {ui_icoShutdown,           theme.LIST_DEFAULT.TEXT},
             {ui_icoInterface,          theme.LIST_DEFAULT.TEXT},
+            {ui_icoStorage,            theme.LIST_DEFAULT.TEXT},
             {ui_icoAdvanced,           theme.LIST_DEFAULT.TEXT},
             {ui_droHidden,             theme.LIST_DEFAULT.TEXT},
             {ui_droBGM,                theme.LIST_DEFAULT.TEXT},
@@ -205,6 +212,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_FOCUS.TEXT},
             {ui_lblShutdown,   theme.LIST_FOCUS.TEXT},
             {ui_lblInterface,  theme.LIST_FOCUS.TEXT},
+            {ui_lblStorage,    theme.LIST_FOCUS.TEXT},
             {ui_lblAdvanced,   theme.LIST_FOCUS.TEXT},
             {ui_icoHidden,     theme.LIST_FOCUS.TEXT},
             {ui_icoBGM,        theme.LIST_FOCUS.TEXT},
@@ -214,6 +222,7 @@ void apply_theme() {
             {ui_icoHDMI,       theme.LIST_FOCUS.TEXT},
             {ui_icoShutdown,   theme.LIST_FOCUS.TEXT},
             {ui_icoInterface,  theme.LIST_FOCUS.TEXT},
+            {ui_icoStorage,    theme.LIST_FOCUS.TEXT},
             {ui_icoAdvanced,   theme.LIST_FOCUS.TEXT},
             {ui_droHidden,     theme.LIST_FOCUS.TEXT},
             {ui_droBGM,        theme.LIST_FOCUS.TEXT},
@@ -259,6 +268,7 @@ void apply_theme() {
             {ui_lblHDMI,               theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblShutdown,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblInterface,          theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_lblStorage,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblAdvanced,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoHidden,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoBGM,                theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -268,6 +278,7 @@ void apply_theme() {
             {ui_icoHDMI,               theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoShutdown,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoInterface,          theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoStorage,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoAdvanced,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droHidden,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droBGM,                theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -313,6 +324,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblShutdown,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblInterface,  theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblStorage,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblAdvanced,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoHidden,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoBGM,        theme.LIST_FOCUS.TEXT_ALPHA},
@@ -322,6 +334,7 @@ void apply_theme() {
             {ui_icoHDMI,       theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoShutdown,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoInterface,  theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoStorage,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoAdvanced,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droHidden,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droBGM,        theme.LIST_FOCUS.TEXT_ALPHA},
@@ -345,6 +358,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblShutdown,   theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblInterface,  theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblStorage,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblAdvanced,   theme.LIST_DEFAULT.INDICATOR_ALPHA},
     };
     for (size_t i = 0;
@@ -362,6 +376,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblShutdown,   theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblInterface,  theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblStorage,    theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblAdvanced,   theme.LIST_FOCUS.INDICATOR_ALPHA},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_alpha_elements) / sizeof(indicator_focus_alpha_elements[0]); ++i) {
@@ -378,6 +393,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblShutdown,   theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblInterface,  theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblStorage,    theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblAdvanced,   theme.LIST_DEFAULT.GRADIENT_START},
     };
     for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
@@ -394,6 +410,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblShutdown,   theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblInterface,  theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblStorage,    theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblAdvanced,   theme.LIST_FOCUS.GRADIENT_START},
     };
     for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
@@ -410,6 +427,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblShutdown,   theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblInterface,  theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblStorage,    theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblAdvanced,   theme.LIST_DEFAULT.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_default_elements) / sizeof(gradient_stop_default_elements[0]); ++i) {
@@ -426,6 +444,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblShutdown,   theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblInterface,  theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblStorage,    theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblAdvanced,   theme.LIST_FOCUS.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_focus_elements) / sizeof(gradient_stop_focus_elements[0]); ++i) {
@@ -442,6 +461,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblShutdown,   theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblInterface,  theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblStorage,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblAdvanced,   theme.LIST_DEFAULT.BACKGROUND_ALPHA},
     };
     for (size_t i = 0;
@@ -459,6 +479,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblShutdown,   theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblInterface,  theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblStorage,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblAdvanced,   theme.LIST_FOCUS.BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(background_alpha_focus_elements) / sizeof(background_alpha_focus_elements[0]); ++i) {
@@ -567,6 +588,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.FONT.LIST_PAD_TOP},
             {ui_lblShutdown,   theme.FONT.LIST_PAD_TOP},
             {ui_lblInterface,  theme.FONT.LIST_PAD_TOP},
+            {ui_lblStorage,    theme.FONT.LIST_PAD_TOP},
             {ui_lblAdvanced,   theme.FONT.LIST_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_top_elements) / sizeof(font_pad_list_top_elements[0]); ++i) {
@@ -583,6 +605,7 @@ void apply_theme() {
             {ui_lblHDMI,       theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblShutdown,   theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblInterface,  theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblStorage,    theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblAdvanced,   theme.FONT.LIST_PAD_BOTTOM},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_bottom_elements) / sizeof(font_pad_list_bottom_elements[0]); ++i) {
@@ -630,6 +653,7 @@ void apply_theme() {
             {ui_icoHDMI,       theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoShutdown,   theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoInterface,  theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoStorage,    theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoAdvanced,   theme.FONT.LIST_ICON_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_top_list_icon_elements) / sizeof(font_pad_top_list_icon_elements[0]); ++i) {
@@ -646,6 +670,7 @@ void apply_theme() {
             {ui_icoHDMI,       theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoShutdown,   theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoInterface,  theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoStorage,    theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoAdvanced,   theme.FONT.LIST_ICON_PAD_BOTTOM},
     };
     for (size_t i = 0;

@@ -86,5 +86,14 @@ void load_config(struct mux_config *config) {
     config->WEB.SYNCTHING = get_ini_int(muos_config, "web", "syncthing", 0);
     config->WEB.NTP = get_ini_int(muos_config, "web", "ntp", 1);
 
+    config->STORAGE.BIOS = get_ini_int(muos_config, "storage", "bios", 0);
+    config->STORAGE.CONFIG = get_ini_int(muos_config, "storage", "config", 0);
+    config->STORAGE.CATALOGUE = get_ini_int(muos_config, "storage", "catalogue", 0);
+    config->STORAGE.FAV = get_ini_int(muos_config, "storage", "fav", 0);
+    config->STORAGE.MUSIC = get_ini_int(muos_config, "storage", "music", 0);
+    config->STORAGE.SAVE = get_ini_int(muos_config, "storage", "save", 0);
+    config->STORAGE.SCREENSHOT = get_ini_int(muos_config, "storage", "screenshot", 0);
+    config->STORAGE.THEME = get_ini_int(muos_config, "storage", "theme", 0);
+
     mini_free(muos_config);
 }
