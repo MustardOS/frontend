@@ -16,6 +16,8 @@
 #include "glyph.h"
 #include "mini/mini.h"
 
+struct pattern skip_pattern_list = {NULL, 0, 0};
+
 const char *get_default_storage(int store_type) {
     switch (store_type) {
         case 0:
@@ -752,6 +754,10 @@ int count_items(const char *path, enum count_type type) {
         return 0;
     }
 
+    char skip_ini[MAX_BUFFER_SIZE];
+    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+    load_skip_patterns(skip_ini);
+
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
             char full_path[PATH_MAX];
@@ -1287,32 +1293,50 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     }
 }
 
-int should_skip(const char *name) {
-    char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
-
-    FILE * file = fopen(skip_ini, "r");
+void load_skip_patterns(const char *file_path) {
+    FILE * file = fopen(file_path, "r");
     if (!file) {
         perror("Failed to open skip.ini file");
-        return 0;
+        return;
     }
 
+    for (size_t i = 0; i < skip_pattern_list.count; i++) {
+        free(skip_pattern_list.patterns[i]);
+    }
+
+    free(skip_pattern_list.patterns);
+
+    skip_pattern_list.count = 0;
+    skip_pattern_list.capacity = 2;
+    skip_pattern_list.patterns = malloc(skip_pattern_list.capacity * sizeof(char *));
+
     char line[MAX_BUFFER_SIZE];
-    int result = 0;
     while (fgets(line, sizeof(line), file)) {
         size_t len = strlen(line);
-        if (line[len - 1] == '\n') {
+        if (len > 0 && line[len - 1] == '\n') {
             line[len - 1] = '\0';
         }
 
-        if (fnmatch(line, name, 0) == 0) {
-            result = 1;
-            break;
+        if (skip_pattern_list.count >= skip_pattern_list.capacity) {
+            skip_pattern_list.capacity *= 2;
+            skip_pattern_list.patterns = realloc(skip_pattern_list.patterns,
+                                                 skip_pattern_list.capacity * sizeof(char *));
         }
+
+        skip_pattern_list.patterns[skip_pattern_list.count] = strdup(line);
+        skip_pattern_list.count++;
     }
 
     fclose(file);
-    return result;
+}
+
+int should_skip(const char *name) {
+    for (size_t i = 0; i < skip_pattern_list.count; i++) {
+        if (fnmatch(skip_pattern_list.patterns[i], name, 0) == 0) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 void display_testing_message(lv_obj_t *screen) {

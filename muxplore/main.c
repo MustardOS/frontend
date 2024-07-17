@@ -111,6 +111,9 @@ lv_timer_t *osd_timer;
 lv_timer_t *glyph_timer;
 lv_timer_t *ui_refresh_timer;
 
+const char *store_catalogue;
+const char *store_favourite;
+
 char *load_content_core(int force) {
     char content_core[MAX_BUFFER_SIZE];
 
@@ -150,9 +153,6 @@ char *load_content_core(int force) {
 
 char *load_content_description() {
     char content_desc[MAX_BUFFER_SIZE];
-
-    const char *store_catalogue = get_default_storage(config.STORAGE.CATALOGUE);
-    const char *store_favourite = get_default_storage(config.STORAGE.FAV);
 
     const char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
@@ -261,9 +261,6 @@ void image_refresh(char *image_type) {
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
-
-    const char *store_catalogue = get_default_storage(config.STORAGE.CATALOGUE);
-    const char *store_favourite = get_default_storage(config.STORAGE.FAV);
 
     const char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
@@ -421,6 +418,10 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
         perror("opendir");
         return;
     }
+
+    char skip_ini[MAX_BUFFER_SIZE];
+    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+    load_skip_patterns(skip_ini);
 
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
@@ -677,12 +678,10 @@ void gen_item(char **file_names, int file_count) {
         stripped_names[i] = strip_label_placement(named_items.array[i]);
     }
 
+    puts("START GEN");
     for (int i = 0; i < named_items.size; i++) {
         push_string(&named_index, named_indices[i]);
         if (strcasecmp(stripped_names[i], DUMMY_DIR) != 0) {
-
-            const char *store_favourite = get_default_storage(config.STORAGE.FAV);
-
             char fav_dir[PATH_MAX];
             snprintf(fav_dir, sizeof(fav_dir), "%s/MUOS/info/favourite/%s.cfg",
                      store_favourite, strip_ext(get_string_at_index(&content_items, atoi(named_indices[i]))));
@@ -707,12 +706,11 @@ void gen_item(char **file_names, int file_count) {
             gen_label(ROM, glyph_icon, stripped_names[i], glyph_pad);
         }
     }
+    puts("FINISH GEN");
 }
 
 void create_root_items(char *dir_name) {
     char spec_dir[PATH_MAX];
-
-    const char *store_favourite = get_default_storage(config.STORAGE.FAV);
 
     char **dir_names = NULL;
     int dir_count = 0;
@@ -914,8 +912,6 @@ int load_content(char *content_name, int content_index, int add_favourite) {
         char add_to_hf[MAX_BUFFER_SIZE];
         char *hf_type;
 
-        const char *store_favourite = get_default_storage(config.STORAGE.FAV);
-
         char fav_dir[MAX_BUFFER_SIZE];
         char his_dir[MAX_BUFFER_SIZE];
         snprintf(fav_dir, sizeof(fav_dir), "%s/MUOS/info/favourite", store_favourite);
@@ -983,7 +979,6 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
                  read_line_from_file(pointer_file, 1));
 
         char add_to_hf[MAX_BUFFER_SIZE];
-        const char *store_favourite = get_default_storage(config.STORAGE.FAV);
 
         if (add_favourite) {
             snprintf(add_to_hf, sizeof(add_to_hf), "%s/MUOS/info/favourite/%s",
@@ -1319,8 +1314,6 @@ void *joystick_task() {
 
                                     char *f_content = get_string_at_index(&content_items, atoi(
                                             get_string_at_index(&named_index, current_item_index)));
-
-                                    const char *store_favourite = get_default_storage(config.STORAGE.FAV);
 
                                     char cache_file[MAX_BUFFER_SIZE];
                                     switch (module) {
@@ -2001,6 +1994,9 @@ int main(int argc, char *argv[]) {
     if (file_exist("/tmp/manual_launch")) {
         remove("/tmp/manual_launch");
     }
+
+    store_catalogue = get_default_storage(config.STORAGE.CATALOGUE);
+    store_favourite = get_default_storage(config.STORAGE.FAV);
 
     snprintf(SD1, sizeof(SD1), "%s/ROMS/", device.STORAGE.ROM.MOUNT);
     snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);

@@ -54,6 +54,12 @@ struct image_info {
     lv_obj_t *ui_panel;
 };
 
+struct pattern {
+    char **patterns;
+    size_t count;
+    size_t capacity;
+};
+
 const char* get_default_storage(int store_type);
 
 int file_exist(char *filename);
@@ -199,6 +205,8 @@ void load_font_glyph(const char *program, lv_obj_t *element);
 int is_network_connected();
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
+
+void load_skip_patterns(const char *file_path);
 
 int should_skip(const char *name);
 
