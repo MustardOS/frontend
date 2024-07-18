@@ -940,9 +940,14 @@ int main(int argc, char *argv[]) {
                  device.STORAGE.ROM.MOUNT);
 
         if (json_valid(read_text_from_file(assign_file))) {
+            static char assign_check[MAX_BUFFER_SIZE];
+            snprintf(assign_check, sizeof(assign_check), "%s",
+                     str_tolower(get_last_dir(rom_dir)));
+            str_remchars(assign_check, " -_+");
+
             struct json auto_assign_config = json_object_get(
                     json_parse(read_text_from_file(assign_file)),
-                    str_tolower(get_last_dir(rom_dir)));
+                    assign_check);
 
             if (json_exists(auto_assign_config)) {
                 char ass_config[MAX_BUFFER_SIZE];

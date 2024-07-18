@@ -80,6 +80,8 @@ char *str_nonew(char *text);
 
 char *str_remchar(char *text, char c);
 
+char *str_remchars(char *text, char *c);
+
 char *str_trim(char *text);
 
 char *str_replace(char *orig, char *rep, char *with);

@@ -221,6 +221,34 @@ char *str_remchar(char *text, char c) {
     return text;
 }
 
+char *str_remchars(char *text, char *c) {
+    char *r_ptr = text;
+    char *w_ptr = text;
+
+    while (*r_ptr != '\0') {
+        char *d_ptr = c;
+        int remove = 0;
+
+        while (*d_ptr != '\0') {
+            if (*r_ptr == *d_ptr) {
+                remove = 1;
+                break;
+            }
+            d_ptr++;
+        }
+
+        if (!remove) {
+            *w_ptr = *r_ptr;
+            w_ptr++;
+        }
+        r_ptr++;
+    }
+
+    *w_ptr = '\0';
+    return text;
+}
+
+
 char *str_trim(char *text) {
     if (!text || !*text) {
         return text;
