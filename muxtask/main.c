@@ -127,7 +127,7 @@ void create_task_items() {
 
         lv_obj_t * ui_pnlTask = lv_obj_create(ui_pnlContent);
         lv_obj_set_width(ui_pnlTask, device.MUX.WIDTH);
-        lv_obj_set_height(ui_pnlTask, device.MUX.ITEM.HEIGHT);
+        lv_obj_set_height(ui_pnlTask, theme.MUX.ITEM.HEIGHT);
         lv_obj_set_scrollbar_mode(ui_pnlTask, LV_SCROLLBAR_MODE_OFF);
         lv_obj_set_style_align(ui_pnlTask, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_opa(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -143,7 +143,7 @@ void create_task_items() {
         lv_label_set_text(ui_lblTaskItem, task_store);
 
         lv_obj_set_width(ui_lblTaskItem, device.MUX.WIDTH);
-        lv_obj_set_height(ui_lblTaskItem, device.MUX.ITEM.HEIGHT);
+        lv_obj_set_height(ui_lblTaskItem, theme.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblTaskItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_side(ui_lblTaskItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -195,7 +195,7 @@ void create_task_items() {
         lv_label_set_text(ui_lblTaskItemGlyph, "\uF56E");
 
         lv_obj_set_width(ui_lblTaskItemGlyph, device.MUX.WIDTH);
-        lv_obj_set_height(ui_lblTaskItemGlyph, device.MUX.ITEM.HEIGHT);
+        lv_obj_set_height(ui_lblTaskItemGlyph, theme.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -232,16 +232,16 @@ void create_task_items() {
 
 void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index >= 1 && ui_count > device.MUX.ITEM.COUNT) {
+        if (current_item_index >= 1 && ui_count > theme.MUX.ITEM.COUNT) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
-            if (current_item_index > device.MUX.ITEM.PREV_LOW &&
-                current_item_index < (ui_count - device.MUX.ITEM.PREV_HIGH)) {
-                content_panel_y -= device.MUX.ITEM.PANEL;
+            if (current_item_index > theme.MUX.ITEM.PREV_LOW &&
+                current_item_index < (ui_count - theme.MUX.ITEM.PREV_HIGH)) {
+                content_panel_y -= theme.MUX.ITEM.PANEL;
                 lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
             }
-        } else if (current_item_index >= 0 && ui_count <= device.MUX.ITEM.COUNT) {
+        } else if (current_item_index >= 0 && ui_count <= theme.MUX.ITEM.COUNT) {
             if (current_item_index > 0) {
                 current_item_index--;
                 nav_prev(ui_group, 1);
@@ -256,18 +256,18 @@ void list_nav_prev(int steps) {
 
 void list_nav_next(int steps) {
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index < (ui_count - 1) && ui_count > device.MUX.ITEM.COUNT) {
+        if (current_item_index < (ui_count - 1) && ui_count > theme.MUX.ITEM.COUNT) {
             if (current_item_index < (ui_count - 1)) {
                 current_item_index++;
                 nav_next(ui_group, 1);
                 nav_next(ui_group_glyph, 1);
-                if (current_item_index >= device.MUX.ITEM.NEXT_HIGH &&
-                    current_item_index < (ui_count - device.MUX.ITEM.NEXT_LOW)) {
-                    content_panel_y += device.MUX.ITEM.PANEL;
+                if (current_item_index >= theme.MUX.ITEM.NEXT_HIGH &&
+                    current_item_index < (ui_count - theme.MUX.ITEM.NEXT_LOW)) {
+                    content_panel_y += theme.MUX.ITEM.PANEL;
                     lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
                 }
             }
-        } else if (current_item_index < ui_count && ui_count <= device.MUX.ITEM.COUNT) {
+        } else if (current_item_index < ui_count && ui_count <= theme.MUX.ITEM.COUNT) {
             if (current_item_index < (ui_count - 1)) {
                 current_item_index++;
                 nav_next(ui_group, 1);
@@ -363,12 +363,12 @@ void *joystick_task() {
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
-                                        list_nav_prev(device.MUX.ITEM.COUNT);
+                                        list_nav_prev(theme.MUX.ITEM.COUNT);
                                         lv_task_handler();
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.R1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
-                                        list_nav_next(device.MUX.ITEM.COUNT);
+                                        list_nav_next(theme.MUX.ITEM.COUNT);
                                         lv_task_handler();
                                     }
                                 }
@@ -394,7 +394,7 @@ void *joystick_task() {
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
-                                    int y = (ui_count - device.MUX.ITEM.COUNT) * device.MUX.ITEM.PANEL;
+                                    int y = (ui_count - theme.MUX.ITEM.COUNT) * theme.MUX.ITEM.PANEL;
                                     lv_obj_scroll_to_y(ui_pnlContent, y, LV_ANIM_OFF);
                                     content_panel_y = y;
                                     current_item_index = ui_count - 1;
@@ -432,7 +432,7 @@ void *joystick_task() {
             }
         }
 
-        if (ui_count > device.MUX.ITEM.COUNT && (JOYUP_pressed || JOYDOWN_pressed)) {
+        if (ui_count > theme.MUX.ITEM.COUNT && (JOYUP_pressed || JOYDOWN_pressed)) {
             if (nav_hold > 2) {
                 if (nav_delay > 16) {
                     nav_delay -= 16;
@@ -803,7 +803,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblTaskMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    if (ui_count > device.MUX.ITEM.COUNT) {
+    if (ui_count > theme.MUX.ITEM.COUNT) {
         lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
         lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }
