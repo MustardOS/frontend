@@ -857,7 +857,7 @@ void ui_scrTweakGeneral_screen_init(void)
     ui_droShutdown = lv_dropdown_create(ui_pnlHighlight);
     lv_dropdown_set_dir(ui_droShutdown, LV_DIR_LEFT);
     lv_dropdown_set_options(ui_droShutdown,
-                            "Disabled\nInstant\n10 Seconds\n30 Seconds\n60 Seconds\n2 Minutes\n5 Minutes\n10 Minutes");
+                            "Disabled\nInstant\n10 Seconds\n30 Seconds\n60 Seconds\n2 Minutes\n5 Minutes\n10 Minutes\n20 Minutes\n30 Minutes\n45 Minutes\n1 Hour\n2 Hours\n3 Hours\n4 Hours");
     lv_dropdown_set_selected_highlight(ui_droShutdown, false);
     lv_obj_set_width(ui_droShutdown, 640);
     lv_obj_set_height(ui_droShutdown, 28);

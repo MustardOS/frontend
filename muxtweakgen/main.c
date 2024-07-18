@@ -260,6 +260,27 @@ void restore_tweak_options() {
         case 600:
             lv_dropdown_set_selected(ui_droShutdown, 7);
             break;
+        case 1200:
+            lv_dropdown_set_selected(ui_droShutdown, 8);
+            break;
+        case 1800:
+            lv_dropdown_set_selected(ui_droShutdown, 9);
+            break;
+        case 2700:
+            lv_dropdown_set_selected(ui_droShutdown, 10);
+            break;
+        case 3600:
+            lv_dropdown_set_selected(ui_droShutdown, 11);
+            break;
+        case 7200:
+            lv_dropdown_set_selected(ui_droShutdown, 12);
+            break;
+        case 10800:
+            lv_dropdown_set_selected(ui_droShutdown, 13);
+            break;
+        case 14400:
+            lv_dropdown_set_selected(ui_droShutdown, 14);
+            break;
         default:
             lv_dropdown_set_selected(ui_droShutdown, 0);
             break;
@@ -427,6 +448,27 @@ void save_tweak_options() {
             break;
         case 7:
             idx_shutdown = 600;
+            break;
+        case 8:
+            idx_shutdown = 1200;
+            break;
+        case 9:
+            idx_shutdown = 1800;
+            break;
+        case 10:
+            idx_shutdown = 2700;
+            break;
+        case 11:
+            idx_shutdown = 3600;
+            break;
+        case 12:
+            idx_shutdown = 7200;
+            break;
+        case 13:
+            idx_shutdown = 10800;
+            break;
+        case 14:
+            idx_shutdown = 14400;
             break;
         default:
             idx_shutdown = -1;
