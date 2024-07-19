@@ -62,19 +62,20 @@ int lockdown_total, lockdown_current;
 int led_total, led_current;
 int random_theme_total, random_theme_current;
 int retrowait_total, retrowait_current;
+int android_total, android_current;
 
 typedef struct {
     int *total;
     int *current;
 } Tweak;
 
-Tweak swap, thermal, font, volume, brightness, offset, lockdown, led, random_theme, retrowait;
+Tweak swap, thermal, font, volume, brightness, offset, lockdown, led, random_theme, retrowait, android;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 
-lv_obj_t *ui_objects[10];
+lv_obj_t *ui_objects[11];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -99,6 +100,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKADV_THEME;
     } else if (element_focused == ui_lblRetroWait) {
         message = MUXTWEAKADV_RETRO;
+    } else if (element_focused == ui_lblAndroid) {
+        message = MUXTWEAKADV_ANDROID;
     }
 
     if (strlen(message) <= 1) {
@@ -134,7 +137,8 @@ void elements_events_init() {
             ui_droPasscode,
             ui_droLED,
             ui_droTheme,
-            ui_droRetroWait
+            ui_droRetroWait,
+            ui_droAndroid
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -151,6 +155,7 @@ void elements_events_init() {
     init_pointers(&led, &led_total, &led_current);
     init_pointers(&random_theme, &random_theme_total, &random_theme_current);
     init_pointers(&retrowait, &retrowait_total, &retrowait_current);
+    init_pointers(&android, &android_total, &android_current);
 }
 
 void init_dropdown_settings() {
@@ -164,7 +169,8 @@ void init_dropdown_settings() {
             {lockdown.total,     lockdown.current},
             {led.total,          led.current},
             {random_theme.total, random_theme.current},
-            {retrowait.total,    retrowait.current}
+            {retrowait.total,    retrowait.current},
+            {android.total,    android.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -177,7 +183,8 @@ void init_dropdown_settings() {
             ui_droPasscode,
             ui_droLED,
             ui_droTheme,
-            ui_droRetroWait
+            ui_droRetroWait,
+            ui_droAndroid
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -218,6 +225,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droLED, config.SETTINGS.ADVANCED.LED);
     lv_dropdown_set_selected(ui_droTheme, config.SETTINGS.ADVANCED.THEME);
     lv_dropdown_set_selected(ui_droRetroWait, config.SETTINGS.ADVANCED.RETROWAIT);
+    lv_dropdown_set_selected(ui_droAndroid, config.SETTINGS.ADVANCED.ANDROID);
 }
 
 void save_tweak_options() {
@@ -235,6 +243,7 @@ void save_tweak_options() {
     int idx_led = lv_dropdown_get_selected(ui_droLED);
     int idx_random_theme = lv_dropdown_get_selected(ui_droTheme);
     int idx_retrowait = lv_dropdown_get_selected(ui_droRetroWait);
+    int idx_android = lv_dropdown_get_selected(ui_droAndroid);
 
     char *idx_volume;
     switch (lv_dropdown_get_selected(ui_droVolume)) {
@@ -278,6 +287,7 @@ void save_tweak_options() {
     mini_set_int(muos_config, "settings.advanced", "led", idx_led);
     mini_set_int(muos_config, "settings.advanced", "random_theme", idx_random_theme);
     mini_set_int(muos_config, "settings.advanced", "retrowait", idx_retrowait);
+    mini_set_int(muos_config, "settings.advanced", "android", idx_android);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
@@ -300,6 +310,7 @@ void init_navigation_groups() {
     ui_objects[7] = ui_lblLED;
     ui_objects[8] = ui_lblTheme;
     ui_objects[9] = ui_lblRetroWait;
+    ui_objects[10] = ui_lblAndroid;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droSwap,
@@ -311,7 +322,8 @@ void init_navigation_groups() {
             ui_droPasscode,
             ui_droLED,
             ui_droTheme,
-            ui_droRetroWait
+            ui_droRetroWait,
+            ui_droAndroid
     };
 
     lv_obj_t *ui_objects_icon[] = {
@@ -324,7 +336,8 @@ void init_navigation_groups() {
             ui_icoPasscode,
             ui_icoLED,
             ui_icoTheme,
-            ui_icoRetroWait
+            ui_icoRetroWait,
+            ui_icoAndroid
     };
 
     ui_group = lv_group_create();
@@ -434,6 +447,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droRetroWait,
                                                               &retrowait_current,
                                                               retrowait_total);
+                                    } else if (element_focused == ui_lblAndroid) {
+                                        increase_option_value(ui_droAndroid,
+                                                              &android_current,
+                                                              android_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                 } else if (ev.code == NAV_B) {
@@ -528,6 +545,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droRetroWait,
                                                           &retrowait_current,
                                                           retrowait_total);
+                                } else if (element_focused == ui_lblAndroid) {
+                                    decrease_option_value(ui_droAndroid,
+                                                          &android_current,
+                                                          android_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
@@ -573,6 +594,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droRetroWait,
                                                           &retrowait_current,
                                                           retrowait_total);
+                                } else if (element_focused == ui_lblAndroid) {
+                                    increase_option_value(ui_droAndroid,
+                                                          &android_current,
+                                                          android_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             }
@@ -675,6 +700,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblLED, "led");
     lv_obj_set_user_data(ui_lblTheme, "theme");
     lv_obj_set_user_data(ui_lblRetroWait, "retrowait");
+    lv_obj_set_user_data(ui_lblAndroid, "android");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_lblRetroWait, LV_OBJ_FLAG_HIDDEN);

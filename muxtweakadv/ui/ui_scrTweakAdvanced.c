@@ -486,6 +486,36 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_style_border_color(ui_lblRetroWait, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_lblRetroWait, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_lblAndroid = lv_label_create(ui_pnlContent);
+    lv_obj_set_width(ui_lblAndroid, 640);
+    lv_obj_set_height(ui_lblAndroid, 28);
+    lv_obj_set_align(ui_lblAndroid, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblAndroid, "Android Debug Bridge");
+    lv_obj_set_style_text_color(ui_lblAndroid, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblAndroid, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblAndroid, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_lblAndroid, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_lblAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_lblAndroid, 200, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_lblAndroid, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblAndroid, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblAndroid, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_side(ui_lblAndroid, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_width(ui_lblAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_pad(ui_lblAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblAndroid, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblAndroid, -3, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblAndroid, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lblAndroid, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_color(ui_lblAndroid, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_opa(ui_lblAndroid, 25, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(ui_lblAndroid, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(ui_lblAndroid, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     ui_pnlGlyph = lv_obj_create(ui_scrTweakAdvanced);
     lv_obj_set_width(ui_pnlGlyph, 640);
     lv_obj_set_height(ui_pnlGlyph, 400);
@@ -665,6 +695,22 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_style_pad_bottom(ui_icoRetroWait, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_icoRetroWait, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(ui_icoRetroWait, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    ui_icoAndroid = lv_label_create(ui_pnlGlyph);
+    lv_obj_set_width(ui_icoAndroid, 640);
+    lv_obj_set_height(ui_icoAndroid, 28);
+    lv_obj_set_align(ui_icoAndroid, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_icoAndroid, "");
+    lv_obj_set_style_text_color(ui_icoAndroid, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_icoAndroid, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_width(ui_icoAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_outline_pad(ui_icoAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_icoAndroid, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_icoAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_icoAndroid, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_icoAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_icoAndroid, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_icoAndroid, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_pnlHighlight = lv_obj_create(ui_scrTweakAdvanced);
     lv_obj_set_width(ui_pnlHighlight, 640);
@@ -949,6 +995,32 @@ void ui_scrTweakAdvanced_screen_init(void)
 
     lv_obj_set_style_text_color(ui_droRetroWait, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_droRetroWait, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
+
+    ui_droAndroid = lv_dropdown_create(ui_pnlHighlight);
+    lv_dropdown_set_dir(ui_droAndroid, LV_DIR_LEFT);
+    lv_dropdown_set_options(ui_droAndroid, "Disabled\nEnabled");
+    lv_dropdown_set_selected_highlight(ui_droAndroid, false);
+    lv_obj_set_width(ui_droAndroid, 640);
+    lv_obj_set_height(ui_droAndroid, 28);
+    lv_obj_set_align(ui_droAndroid, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_droAndroid, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_set_scrollbar_mode(ui_droAndroid, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_scroll_dir(ui_droAndroid, LV_DIR_RIGHT);
+    lv_obj_set_style_text_color(ui_droAndroid, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_droAndroid, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_droAndroid, lv_color_hex(0x403A03), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_droAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_droAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_droAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_droAndroid, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_droAndroid, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_droAndroid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_droAndroid, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_SCROLLED);
+    lv_obj_set_style_text_opa(ui_droAndroid, 255, LV_PART_MAIN | LV_STATE_SCROLLED);
+
+    lv_obj_set_style_text_color(ui_droAndroid, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_droAndroid, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
 
     ui_pnlFooter = lv_obj_create(ui_scrTweakAdvanced);

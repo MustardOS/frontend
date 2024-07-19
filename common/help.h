@@ -141,6 +141,7 @@
 #define MUXTWEAKADV_LED     ""
 #define MUXTWEAKADV_THEME   ""
 #define MUXTWEAKADV_RETRO   ""
+#define MUXTWEAKADV_ANDROID ""
 
 // muxtweakgen
 #define MUXTWEAKGEN_HIDDEN     ""
