@@ -13,14 +13,6 @@ extern int bar_footer;
 extern char *osd_message;
 extern struct mux_config config;
 
-#define DISP_LCD_SET_BRIGHTNESS 0x102
-#define DISP_LCD_GET_BRIGHTNESS 0x103
-
-struct disp_bright_value {
-    int screen;
-    int brightness;
-};
-
 enum count_type {
     FILES_ONLY, DIRECTORIES_ONLY, BOTH
 };

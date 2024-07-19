@@ -904,12 +904,15 @@ char *get_datetime() {
     struct tm *time_info = localtime(&now);
 
     static char datetime_str[MAX_BUFFER_SIZE];
+    char* notation;
 
     if (config.CLOCK.NOTATION) {
-        strftime(datetime_str, sizeof(datetime_str), TIME_STRING_24, time_info);
+        notation = TIME_STRING_24;
     } else {
-        strftime(datetime_str, sizeof(datetime_str), TIME_STRING_12, time_info);
+        notation = TIME_STRING_12;
     }
+
+    strftime(datetime_str, sizeof(datetime_str), notation, time_info);
 
     return datetime_str;
 }
@@ -1289,8 +1292,8 @@ int is_network_connected() {
     if (!config.NETWORK.ENABLED) return 0;
     if (!config.VISUAL.NETWORK) return 0;
 
-    if (file_exist("/tmp/mux_ping")) {
-        return atoi(read_text_from_file("/tmp/mux_ping"));
+    if (file_exist(device.NETWORK.STATE)) {
+        if (strcasecmp("up", read_text_from_file(device.NETWORK.STATE)) == 0) return 1;
     }
 
     return 0;

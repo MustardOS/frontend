@@ -355,7 +355,7 @@ void *joystick_task() {
 
                                     save_storage_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "interface", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "storage", "w");
                                     safe_quit = 1;
                                 }
                             }

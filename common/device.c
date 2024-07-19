@@ -112,18 +112,21 @@ void load_device(struct mux_device *device) {
             MAX_BUFFER_SIZE - 1);
     device->CPU.SCALER[MAX_BUFFER_SIZE - 1] = '\0';
 
-    strncpy(device->NETWORK.MODULE, get_ini_string(muos_device, "network", "governor", "?"),
+    strncpy(device->NETWORK.MODULE, get_ini_string(muos_device, "network", "module", "?"),
             MAX_BUFFER_SIZE - 1);
     device->NETWORK.MODULE[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(device->NETWORK.NAME, get_ini_string(muos_device, "network", "scaler", "?"),
+    strncpy(device->NETWORK.NAME, get_ini_string(muos_device, "network", "name", "?"),
             MAX_BUFFER_SIZE - 1);
     device->NETWORK.NAME[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(device->NETWORK.TYPE, get_ini_string(muos_device, "network", "governor", "?"),
+    strncpy(device->NETWORK.TYPE, get_ini_string(muos_device, "network", "type", "?"),
             MAX_BUFFER_SIZE - 1);
     device->NETWORK.TYPE[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(device->NETWORK.INTERFACE, get_ini_string(muos_device, "network", "scaler", "?"),
+    strncpy(device->NETWORK.INTERFACE, get_ini_string(muos_device, "network", "iface", "?"),
             MAX_BUFFER_SIZE - 1);
     device->NETWORK.INTERFACE[MAX_BUFFER_SIZE - 1] = '\0';
+    strncpy(device->NETWORK.STATE, get_ini_string(muos_device, "network", "state", "?"),
+            MAX_BUFFER_SIZE - 1);
+    device->NETWORK.STATE[MAX_BUFFER_SIZE - 1] = '\0';
 
     strncpy(device->SCREEN.DEVICE, get_ini_string(muos_device, "screen", "device", "/dev/fb0"),
             MAX_BUFFER_SIZE - 1);

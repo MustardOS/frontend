@@ -86,6 +86,7 @@ struct mux_device {
         char NAME[MAX_BUFFER_SIZE];
         char TYPE[MAX_BUFFER_SIZE];
         char INTERFACE[MAX_BUFFER_SIZE];
+        char STATE[MAX_BUFFER_SIZE];
     } NETWORK;
 
     struct {
