@@ -122,9 +122,7 @@ const char *get_random_int();
 
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key);
 
-int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, enum element_type type);
-
-int16_t get_ini_int_default(mini_t *ini_config, const char *section, const char *key, int16_t default_value);
+int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value);
 
 int set_ini_int(mini_t *ini_config, const char *section, const char *key, int value);
 
