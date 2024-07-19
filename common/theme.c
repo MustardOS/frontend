@@ -23,13 +23,13 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->SYSTEM.BACKGROUND = get_ini_hex(muos_theme, "background", "BACKGROUND");
     theme->SYSTEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "background", "BACKGROUND_ALPHA", IGNORE);
 
-    theme->MUX.ITEM.COUNT = get_ini_int(muos_theme, "mux", "item_count", device->MUX.ITEM.COUNT);
-    theme->MUX.ITEM.HEIGHT = get_ini_int(muos_theme, "mux", "item_height", device->MUX.ITEM.HEIGHT);
-    theme->MUX.ITEM.PANEL = get_ini_int(muos_theme, "mux", "item_panel", device->MUX.ITEM.PANEL);
-    theme->MUX.ITEM.PREV_LOW = get_ini_int(muos_theme, "mux", "item_prev_low", device->MUX.ITEM.PREV_LOW);
-    theme->MUX.ITEM.PREV_HIGH = get_ini_int(muos_theme, "mux", "item_prev_high", device->MUX.ITEM.PREV_HIGH);
-    theme->MUX.ITEM.NEXT_LOW = get_ini_int(muos_theme, "mux", "item_next_low", device->MUX.ITEM.NEXT_LOW);
-    theme->MUX.ITEM.NEXT_HIGH = get_ini_int(muos_theme, "mux", "item_next_high", device->MUX.ITEM.NEXT_HIGH);
+    theme->MUX.ITEM.COUNT = get_ini_int_default(muos_theme, "mux", "item_count", device->MUX.ITEM.COUNT);
+    theme->MUX.ITEM.HEIGHT = get_ini_int_default(muos_theme, "mux", "item_height", device->MUX.ITEM.HEIGHT);
+    theme->MUX.ITEM.PANEL = get_ini_int_default(muos_theme, "mux", "item_panel", device->MUX.ITEM.PANEL);
+    theme->MUX.ITEM.PREV_LOW = get_ini_int_default(muos_theme, "mux", "item_prev_low", device->MUX.ITEM.PREV_LOW);
+    theme->MUX.ITEM.PREV_HIGH = get_ini_int_default(muos_theme, "mux", "item_prev_high", device->MUX.ITEM.PREV_HIGH);
+    theme->MUX.ITEM.NEXT_LOW = get_ini_int_default(muos_theme, "mux", "item_next_low", device->MUX.ITEM.NEXT_LOW);
+    theme->MUX.ITEM.NEXT_HIGH = get_ini_int_default(muos_theme, "mux", "item_next_high", device->MUX.ITEM.NEXT_HIGH);
 
     theme->FONT.HEADER_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_TOP", LABEL);
     theme->FONT.HEADER_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_BOTTOM", LABEL);

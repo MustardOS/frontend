@@ -634,6 +634,20 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, en
     return result;
 }
 
+int16_t get_ini_int_default(mini_t *ini_config, const char *section, const char *key, int16_t default_value) {
+    const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
+
+    int16_t result;
+    if (strcmp(meta, "NOT FOUND") == 0) {
+        result = default_value;
+    } else {
+        result = (int16_t)
+        strtol(meta, NULL, 10);
+    }
+
+    return result;
+}
+
 int set_ini_int(mini_t *ini_config, const char *section, const char *key, int value) {
     int meta = mini_set_int(ini_config, section, key, value);
     return meta;
