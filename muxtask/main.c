@@ -347,8 +347,10 @@ void *joystick_task() {
                                                  "%s/MUOS/task", device.STORAGE.ROM.MOUNT);
 
                                         static char command[MAX_BUFFER_SIZE];
-                                        snprintf(command, sizeof(command), "\"%s/%s.sh\"",
+                                        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad \"%s/%s.sh\"",
                                                  task_path, lv_label_get_text(element_focused));
+                                        setenv("TERM", "xterm-256color", 1);
+                                        printf("RUNNING: %s\n", command);
                                         system(command);
 
                                         char c_index[MAX_BUFFER_SIZE];

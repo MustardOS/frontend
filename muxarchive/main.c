@@ -429,9 +429,10 @@ void *joystick_task() {
                                                  "%s/script/mux/extract.sh", INTERNAL_PATH);
 
                                         static char command[MAX_BUFFER_SIZE];
-                                        snprintf(command, sizeof(command), "%s \"%s\"",
-                                                 extract_script,
-                                                 lv_label_get_text(data_focused));
+                                        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad %s \"%s\"",
+                                                 extract_script, lv_label_get_text(data_focused));
+                                        setenv("TERM", "xterm-256color", 1);
+                                        printf("RUNNING: %s\n", command);
                                         system(command);
 
                                         char c_index[MAX_BUFFER_SIZE];
