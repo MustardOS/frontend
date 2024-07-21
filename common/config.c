@@ -68,6 +68,9 @@ void load_config(struct mux_config *config) {
     config->SETTINGS.ADVANCED.THEME = get_ini_int(muos_config, "settings.advanced", "random_theme", 0);
     config->SETTINGS.ADVANCED.RETROWAIT = get_ini_int(muos_config, "settings.advanced", "retrowait", 0);
     config->SETTINGS.ADVANCED.ANDROID = get_ini_int(muos_config, "settings.advanced", "android", 0);
+    strncpy(config->SETTINGS.ADVANCED.STATE, get_ini_string(muos_config, "settings.advanced", "state", "mem"),
+            MAX_BUFFER_SIZE - 1);
+    config->SETTINGS.ADVANCED.STATE[MAX_BUFFER_SIZE - 1] = '\0';
 
     strncpy(config->THEME.NAME, get_ini_string(muos_config, "theme", "name", "muOS"),
             MAX_BUFFER_SIZE - 1);

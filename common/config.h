@@ -51,6 +51,7 @@ struct mux_config {
             int16_t THEME;
             int16_t RETROWAIT;
             int16_t ANDROID;
+            char STATE[MAX_BUFFER_SIZE];
         } ADVANCED;
     } SETTINGS;
 

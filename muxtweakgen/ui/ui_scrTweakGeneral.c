@@ -362,7 +362,7 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_x(ui_lblShutdown, 100);
     lv_obj_set_y(ui_lblShutdown, -70);
     lv_obj_set_align(ui_lblShutdown, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblShutdown, "Sleep Shutdown");
+    lv_label_set_text(ui_lblShutdown, "Sleep Function");
     lv_obj_set_style_text_color(ui_lblShutdown, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblShutdown, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblShutdown, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -857,7 +857,7 @@ void ui_scrTweakGeneral_screen_init(void)
     ui_droShutdown = lv_dropdown_create(ui_pnlHighlight);
     lv_dropdown_set_dir(ui_droShutdown, LV_DIR_LEFT);
     lv_dropdown_set_options(ui_droShutdown,
-                            "Disabled\nInstant\n10 Seconds\n30 Seconds\n60 Seconds\n2 Minutes\n5 Minutes\n10 Minutes");
+                            "Disabled\nSleep Suspend\nInstant Shutdown\nSleep 10s + Shutdown\nSleep 30s + Shutdown\nSleep 60s + Shutdown\nSleep 2m + Shutdown\nSleep 5m + Shutdown\nSleep 10m + Shutdown\nSleep 30m + Shutdown\nSleep 60m + Shutdown");
     lv_dropdown_set_selected_highlight(ui_droShutdown, false);
     lv_obj_set_width(ui_droShutdown, 640);
     lv_obj_set_height(ui_droShutdown, 28);

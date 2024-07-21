@@ -31,7 +31,8 @@ void apply_theme() {
             {ui_lblLED,                theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblTheme,              theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblRetroWait,          theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblAndroid,          theme.LIST_DEFAULT.BACKGROUND},
+            {ui_lblAndroid,            theme.LIST_DEFAULT.BACKGROUND},
+            {ui_lblState,              theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,            theme.MESSAGE.BACKGROUND},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND},
@@ -61,7 +62,7 @@ void apply_theme() {
 
     struct big progress_elements[] = {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
-            {ui_barProgressVolume, theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
+            {ui_barProgressVolume,     theme.BAR.PROGRESS_ACTIVE_BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(progress_elements) / sizeof(progress_elements[0]); ++i) {
         lv_obj_set_style_bg_color(progress_elements[i].e, lv_color_hex(progress_elements[i].c),
@@ -70,7 +71,7 @@ void apply_theme() {
 
     struct small progress_alpha_elements[] = {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
-            {ui_barProgressVolume, theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
+            {ui_barProgressVolume,     theme.BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(progress_alpha_elements) / sizeof(progress_alpha_elements[0]); ++i) {
         lv_obj_set_style_bg_opa(progress_alpha_elements[i].e, progress_alpha_elements[i].c,
@@ -88,7 +89,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_FOCUS.BACKGROUND},
             {ui_lblTheme,      theme.LIST_FOCUS.BACKGROUND},
             {ui_lblRetroWait,  theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblAndroid,  theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblAndroid,    theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblState,      theme.LIST_FOCUS.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(background_focus_elements) / sizeof(background_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_color(background_focus_elements[i].e, lv_color_hex(background_focus_elements[i].c),
@@ -106,7 +108,8 @@ void apply_theme() {
             {ui_lblLED,        theme.SYSTEM.BACKGROUND},
             {ui_lblTheme,      theme.SYSTEM.BACKGROUND},
             {ui_lblRetroWait,  theme.SYSTEM.BACKGROUND},
-            {ui_lblAndroid,  theme.SYSTEM.BACKGROUND},
+            {ui_lblAndroid,    theme.SYSTEM.BACKGROUND},
+            {ui_lblState,      theme.SYSTEM.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
@@ -124,7 +127,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_DEFAULT.INDICATOR},
             {ui_lblTheme,      theme.LIST_DEFAULT.INDICATOR},
             {ui_lblRetroWait,  theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblAndroid,  theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblAndroid,    theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblState,      theme.LIST_DEFAULT.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_elements) / sizeof(indicator_elements[0]); ++i) {
         lv_obj_set_style_border_color(indicator_elements[i].e, lv_color_hex(indicator_elements[i].c),
@@ -142,7 +146,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_FOCUS.INDICATOR},
             {ui_lblTheme,      theme.LIST_FOCUS.INDICATOR},
             {ui_lblRetroWait,  theme.LIST_FOCUS.INDICATOR},
-            {ui_lblAndroid,  theme.LIST_FOCUS.INDICATOR},
+            {ui_lblAndroid,    theme.LIST_FOCUS.INDICATOR},
+            {ui_lblState,      theme.LIST_FOCUS.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_elements) / sizeof(indicator_focus_elements[0]); ++i) {
         lv_obj_set_style_border_color(indicator_focus_elements[i].e, lv_color_hex(indicator_focus_elements[i].c),
@@ -160,7 +165,8 @@ void apply_theme() {
             {ui_lblLED,                theme.LIST_DEFAULT.TEXT},
             {ui_lblTheme,              theme.LIST_DEFAULT.TEXT},
             {ui_lblRetroWait,          theme.LIST_DEFAULT.TEXT},
-            {ui_lblAndroid,          theme.LIST_DEFAULT.TEXT},
+            {ui_lblAndroid,            theme.LIST_DEFAULT.TEXT},
+            {ui_lblState,              theme.LIST_DEFAULT.TEXT},
             {ui_icoSwap,               theme.LIST_DEFAULT.TEXT},
             {ui_icoThermal,            theme.LIST_DEFAULT.TEXT},
             {ui_icoFont,               theme.LIST_DEFAULT.TEXT},
@@ -171,7 +177,8 @@ void apply_theme() {
             {ui_icoLED,                theme.LIST_DEFAULT.TEXT},
             {ui_icoTheme,              theme.LIST_DEFAULT.TEXT},
             {ui_icoRetroWait,          theme.LIST_DEFAULT.TEXT},
-            {ui_icoAndroid,          theme.LIST_DEFAULT.TEXT},
+            {ui_icoAndroid,            theme.LIST_DEFAULT.TEXT},
+            {ui_icoState,              theme.LIST_DEFAULT.TEXT},
             {ui_droSwap,               theme.LIST_DEFAULT.TEXT},
             {ui_droThermal,            theme.LIST_DEFAULT.TEXT},
             {ui_droFont,               theme.LIST_DEFAULT.TEXT},
@@ -182,7 +189,8 @@ void apply_theme() {
             {ui_droLED,                theme.LIST_DEFAULT.TEXT},
             {ui_droTheme,              theme.LIST_DEFAULT.TEXT},
             {ui_droRetroWait,          theme.LIST_DEFAULT.TEXT},
-            {ui_droAndroid,          theme.LIST_DEFAULT.TEXT},
+            {ui_droAndroid,            theme.LIST_DEFAULT.TEXT},
+            {ui_droState,              theme.LIST_DEFAULT.TEXT},
             {ui_lblDatetime,           theme.DATETIME.TEXT},
             {ui_lblMessage,            theme.MESSAGE.TEXT},
             {ui_lblTitle,              theme.HEADER.TEXT},
@@ -224,7 +232,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_FOCUS.TEXT},
             {ui_lblTheme,      theme.LIST_FOCUS.TEXT},
             {ui_lblRetroWait,  theme.LIST_FOCUS.TEXT},
-            {ui_lblAndroid,  theme.LIST_FOCUS.TEXT},
+            {ui_lblAndroid,    theme.LIST_FOCUS.TEXT},
+            {ui_lblState,      theme.LIST_FOCUS.TEXT},
             {ui_icoSwap,       theme.LIST_FOCUS.TEXT},
             {ui_icoThermal,    theme.LIST_FOCUS.TEXT},
             {ui_icoFont,       theme.LIST_FOCUS.TEXT},
@@ -235,7 +244,8 @@ void apply_theme() {
             {ui_icoLED,        theme.LIST_FOCUS.TEXT},
             {ui_icoTheme,      theme.LIST_FOCUS.TEXT},
             {ui_icoRetroWait,  theme.LIST_FOCUS.TEXT},
-            {ui_icoAndroid,  theme.LIST_FOCUS.TEXT},
+            {ui_icoAndroid,    theme.LIST_FOCUS.TEXT},
+            {ui_icoState,      theme.LIST_FOCUS.TEXT},
             {ui_droSwap,       theme.LIST_FOCUS.TEXT},
             {ui_droThermal,    theme.LIST_FOCUS.TEXT},
             {ui_droFont,       theme.LIST_FOCUS.TEXT},
@@ -246,7 +256,8 @@ void apply_theme() {
             {ui_droLED,        theme.LIST_FOCUS.TEXT},
             {ui_droTheme,      theme.LIST_FOCUS.TEXT},
             {ui_droRetroWait,  theme.LIST_FOCUS.TEXT},
-            {ui_droAndroid,  theme.LIST_FOCUS.TEXT},
+            {ui_droAndroid,    theme.LIST_FOCUS.TEXT},
+            {ui_droState,      theme.LIST_FOCUS.TEXT},
     };
     for (size_t i = 0; i < sizeof(focus_elements) / sizeof(focus_elements[0]); ++i) {
         lv_obj_set_style_text_color(focus_elements[i].e, lv_color_hex(focus_elements[i].c),
@@ -286,7 +297,8 @@ void apply_theme() {
             {ui_lblLED,                theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblRetroWait,          theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblAndroid,          theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_lblAndroid,            theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_lblState,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoSwap,               theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoThermal,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoFont,               theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -297,7 +309,8 @@ void apply_theme() {
             {ui_icoLED,                theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoRetroWait,          theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoAndroid,          theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoAndroid,            theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoState,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droSwap,               theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droThermal,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droFont,               theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -308,7 +321,8 @@ void apply_theme() {
             {ui_droLED,                theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droRetroWait,          theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droAndroid,          theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_droAndroid,            theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_droState,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTitle,              theme.HEADER.TEXT_ALPHA},
             {ui_lblMessage,            theme.MESSAGE.TEXT_ALPHA},
             {ui_lblDatetime,           theme.DATETIME.ALPHA},
@@ -348,7 +362,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblTheme,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblRetroWait,  theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblAndroid,  theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblAndroid,    theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblState,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoSwap,       theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoThermal,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoFont,       theme.LIST_FOCUS.TEXT_ALPHA},
@@ -359,7 +374,8 @@ void apply_theme() {
             {ui_icoLED,        theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoTheme,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoRetroWait,  theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoAndroid,  theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoAndroid,    theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoState,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droSwap,       theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droThermal,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droFont,       theme.LIST_FOCUS.TEXT_ALPHA},
@@ -370,7 +386,8 @@ void apply_theme() {
             {ui_droLED,        theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droTheme,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droRetroWait,  theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droAndroid,  theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droAndroid,    theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droState,      theme.LIST_FOCUS.TEXT_ALPHA},
     };
     for (size_t i = 0; i < sizeof(text_focus_alpha_elements) / sizeof(text_focus_alpha_elements[0]); ++i) {
         lv_obj_set_style_text_opa(text_focus_alpha_elements[i].e, text_focus_alpha_elements[i].c,
@@ -388,7 +405,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblTheme,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblRetroWait,  theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblAndroid,  theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblAndroid,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblState,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
     };
     for (size_t i = 0;
          i < sizeof(indicator_default_alpha_elements) / sizeof(indicator_default_alpha_elements[0]); ++i) {
@@ -407,7 +425,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblTheme,      theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblRetroWait,  theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblAndroid,  theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblAndroid,    theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblState,      theme.LIST_FOCUS.INDICATOR_ALPHA},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_alpha_elements) / sizeof(indicator_focus_alpha_elements[0]); ++i) {
         lv_obj_set_style_border_opa(indicator_focus_alpha_elements[i].e, indicator_focus_alpha_elements[i].c,
@@ -425,7 +444,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblTheme,      theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblRetroWait,  theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblAndroid,  theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblAndroid,    theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblState,      theme.LIST_DEFAULT.GRADIENT_START},
     };
     for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
         lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
@@ -443,7 +463,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblTheme,      theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblRetroWait,  theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblAndroid,  theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblAndroid,    theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblState,      theme.LIST_FOCUS.GRADIENT_START},
     };
     for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
@@ -461,7 +482,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblTheme,      theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblRetroWait,  theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblAndroid,  theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblAndroid,    theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblState,      theme.LIST_DEFAULT.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_default_elements) / sizeof(gradient_stop_default_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_stop(gradient_stop_default_elements[i].e, gradient_stop_default_elements[i].c,
@@ -479,7 +501,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblTheme,      theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblRetroWait,  theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblAndroid,  theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblAndroid,    theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblState,      theme.LIST_FOCUS.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_focus_elements) / sizeof(gradient_stop_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_stop(gradient_stop_focus_elements[i].e, gradient_stop_focus_elements[i].c,
@@ -497,7 +520,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblTheme,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblRetroWait,  theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblAndroid,  theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblAndroid,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblState,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
     };
     for (size_t i = 0;
          i < sizeof(background_alpha_default_elements) / sizeof(background_alpha_default_elements[0]); ++i) {
@@ -516,7 +540,8 @@ void apply_theme() {
             {ui_lblLED,        theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblTheme,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblRetroWait,  theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblAndroid,  theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblAndroid,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblState,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(background_alpha_focus_elements) / sizeof(background_alpha_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_opa(background_alpha_focus_elements[i].e, background_alpha_focus_elements[i].c,
@@ -626,7 +651,8 @@ void apply_theme() {
             {ui_lblLED,        theme.FONT.LIST_PAD_TOP},
             {ui_lblTheme,      theme.FONT.LIST_PAD_TOP},
             {ui_lblRetroWait,  theme.FONT.LIST_PAD_TOP},
-            {ui_lblAndroid,  theme.FONT.LIST_PAD_TOP},
+            {ui_lblAndroid,    theme.FONT.LIST_PAD_TOP},
+            {ui_lblState,      theme.FONT.LIST_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_top_elements) / sizeof(font_pad_list_top_elements[0]); ++i) {
         lv_obj_set_style_pad_top(font_pad_list_top_elements[i].e, font_pad_list_top_elements[i].c,
@@ -644,7 +670,8 @@ void apply_theme() {
             {ui_lblLED,        theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblTheme,      theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblRetroWait,  theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblAndroid,  theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblAndroid,    theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblState,      theme.FONT.LIST_PAD_BOTTOM},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_bottom_elements) / sizeof(font_pad_list_bottom_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_list_bottom_elements[i].e, font_pad_list_bottom_elements[i].c,
@@ -662,7 +689,8 @@ void apply_theme() {
             {ui_droLED,        theme.FONT.LIST_PAD_TOP},
             {ui_droTheme,      theme.FONT.LIST_PAD_TOP},
             {ui_droRetroWait,  theme.FONT.LIST_PAD_TOP},
-            {ui_droAndroid,  theme.FONT.LIST_PAD_TOP},
+            {ui_droAndroid,    theme.FONT.LIST_PAD_TOP},
+            {ui_droState,      theme.FONT.LIST_PAD_TOP},
     };
     for (size_t i = 0;
          i < sizeof(font_pad_top_dropdown_elements) / sizeof(font_pad_top_dropdown_elements[0]); ++i) {
@@ -681,7 +709,8 @@ void apply_theme() {
             {ui_droLED,        theme.FONT.LIST_PAD_BOTTOM},
             {ui_droTheme,      theme.FONT.LIST_PAD_BOTTOM},
             {ui_droRetroWait,  theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droAndroid,  theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droAndroid,    theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droState,      theme.FONT.LIST_PAD_BOTTOM},
     };
     for (size_t i = 0;
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
@@ -701,7 +730,8 @@ void apply_theme() {
             {ui_icoLED,        theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoTheme,      theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoRetroWait,  theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoAndroid,  theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoAndroid,    theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoState,      theme.FONT.LIST_ICON_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_top_list_icon_elements) / sizeof(font_pad_top_list_icon_elements[0]); ++i) {
         lv_obj_set_style_pad_top(font_pad_top_list_icon_elements[i].e, font_pad_top_list_icon_elements[i].c,
@@ -719,7 +749,8 @@ void apply_theme() {
             {ui_icoLED,        theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoTheme,      theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoRetroWait,  theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoAndroid,  theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoAndroid,    theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoState,      theme.FONT.LIST_ICON_PAD_BOTTOM},
     };
     for (size_t i = 0;
          i < sizeof(font_pad_bottom_list_icon_elements) / sizeof(font_pad_bottom_list_icon_elements[0]); ++i) {

@@ -6249,7 +6249,7 @@
                   {
                     "nid": -1474416761,
                     "strtype": "LABEL/Text",
-                    "strval": "Sleep Shutdown",
+                    "strval": "Sleep Function",
                     "InheritedType": 10
                   },
                   {
@@ -14525,7 +14525,7 @@
                   {
                     "nid": -241498320,
                     "strtype": "DROPDOWN/Options",
-                    "strval": "Disabled\\nInstant\\n10 Seconds\\n30 Seconds\\n60 Seconds\\n2 Minutes\\n5 Minutes\\n10 Minutes",
+                    "strval": "Disabled\\nSleep Suspend\\nInstant Shutdown\\nSleep 10s + Shutdown\\nSleep 30s + Shutdown\\nSleep 60s + Shutdown\\nSleep 2m + Shutdown\\nSleep 5m + Shutdown\\nSleep 10m + Shutdown\\nSleep 30m + Shutdown\\nSleep 60m + Shutdown",
                     "InheritedType": 10
                   },
                   {
@@ -25164,7 +25164,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxtweakgen/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 502,
+    "backup_cnt": 503,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

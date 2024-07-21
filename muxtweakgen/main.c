@@ -236,29 +236,38 @@ void restore_tweak_options() {
     }
 
     switch (config.SETTINGS.GENERAL.SHUTDOWN) {
-        case -1:
+        case -2:
             lv_dropdown_set_selected(ui_droShutdown, 0);
             break;
-        case 2:
+        case -1:
             lv_dropdown_set_selected(ui_droShutdown, 1);
             break;
-        case 10:
+        case 2:
             lv_dropdown_set_selected(ui_droShutdown, 2);
             break;
-        case 30:
+        case 10:
             lv_dropdown_set_selected(ui_droShutdown, 3);
             break;
-        case 60:
+        case 30:
             lv_dropdown_set_selected(ui_droShutdown, 4);
             break;
-        case 120:
+        case 60:
             lv_dropdown_set_selected(ui_droShutdown, 5);
             break;
-        case 300:
+        case 120:
             lv_dropdown_set_selected(ui_droShutdown, 6);
             break;
-        case 600:
+        case 300:
             lv_dropdown_set_selected(ui_droShutdown, 7);
+            break;
+        case 600:
+            lv_dropdown_set_selected(ui_droShutdown, 8);
+            break;
+        case 1800:
+            lv_dropdown_set_selected(ui_droShutdown, 9);
+            break;
+        case 3600:
+            lv_dropdown_set_selected(ui_droShutdown, 10);
             break;
         default:
             lv_dropdown_set_selected(ui_droShutdown, 0);
@@ -405,31 +414,40 @@ void save_tweak_options() {
     int idx_shutdown;
     switch (lv_dropdown_get_selected(ui_droShutdown)) {
         case 0:
-            idx_shutdown = -1;
+            idx_shutdown = -2;
             break;
         case 1:
-            idx_shutdown = 2;
+            idx_shutdown = -1;
             break;
         case 2:
-            idx_shutdown = 10;
+            idx_shutdown = 2;
             break;
         case 3:
-            idx_shutdown = 30;
+            idx_shutdown = 10;
             break;
         case 4:
-            idx_shutdown = 60;
+            idx_shutdown = 30;
             break;
         case 5:
-            idx_shutdown = 120;
+            idx_shutdown = 60;
             break;
         case 6:
-            idx_shutdown = 300;
+            idx_shutdown = 120;
             break;
         case 7:
+            idx_shutdown = 300;
+            break;
+        case 8:
             idx_shutdown = 600;
             break;
+        case 9:
+            idx_shutdown = 1800;
+            break;
+        case 10:
+            idx_shutdown = 3600;
+            break;
         default:
-            idx_shutdown = -1;
+            idx_shutdown = -2;
             break;
     }
 

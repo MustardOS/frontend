@@ -142,6 +142,7 @@
 #define MUXTWEAKADV_THEME   ""
 #define MUXTWEAKADV_RETRO   ""
 #define MUXTWEAKADV_ANDROID ""
+#define MUXTWEAKADV_STATE   ""
 
 // muxtweakgen
 #define MUXTWEAKGEN_HIDDEN     ""
