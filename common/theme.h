@@ -142,6 +142,7 @@ struct theme_config {
     } NAV;
 
     struct {
+        int16_t RADIUS;
         uint32_t BACKGROUND;
         int16_t BACKGROUND_ALPHA;
         int16_t GRADIENT_START;
