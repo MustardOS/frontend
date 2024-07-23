@@ -1781,6 +1781,7 @@ void init_elements() {
 
 void init_fonts() {
     load_font_text(mux_prog, ui_scrExplore);
+    load_font_section(mux_prog, "panel", ui_pnlContent);
 }
 
 void glyph_task() {

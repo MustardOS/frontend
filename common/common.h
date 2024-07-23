@@ -196,6 +196,8 @@ void load_font_text(const char *program, lv_obj_t *screen);
 
 void load_font_glyph(const char *program, lv_obj_t *element);
 
+void load_font_section(const char *program, const char *section, lv_obj_t *element);
+
 int is_network_connected();
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
