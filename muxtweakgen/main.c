@@ -1178,7 +1178,8 @@ int main(int argc, char *argv[]) {
     }
 
     load_font_text(basename(argv[0]), ui_scrTweakGeneral);
-    load_font_section(basename(argv[0]), "panel", ui_pnlContent);
+    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
 
     if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;
