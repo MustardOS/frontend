@@ -11,6 +11,18 @@ struct theme_config {
     } SYSTEM;
 
     struct {
+        struct {
+            int16_t COUNT;
+            int16_t HEIGHT;
+            int16_t PANEL;
+            int16_t PREV_LOW;
+            int16_t PREV_HIGH;
+            int16_t NEXT_LOW;
+            int16_t NEXT_HIGH;
+        } ITEM;
+    } MUX;
+
+    struct {
         int16_t HEADER_PAD_TOP;
         int16_t HEADER_PAD_BOTTOM;
         int16_t HEADER_ICON_PAD_TOP;
@@ -130,6 +142,7 @@ struct theme_config {
     } NAV;
 
     struct {
+        int16_t RADIUS;
         uint32_t BACKGROUND;
         int16_t BACKGROUND_ALPHA;
         int16_t GRADIENT_START;

@@ -598,32 +598,12 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
     return result;
 }
 
-int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, enum element_type type) {
+int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value) {
     const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
 
     int16_t result;
     if (strcmp(meta, "NOT FOUND") == 0) {
-        switch (type) {
-            case MISC_PAD:
-                result = 0;
-                break;
-            case MISC_WIDTH:
-                result = device.SCREEN.WIDTH;
-                break;
-            case LABEL:
-                result = (int16_t)
-                strtol("0", NULL, 10);
-                break;
-            case VALUE:
-                result = (int16_t)
-                strtol("255", NULL, 10);
-                break;
-            case IGNORE:
-            default:
-                result = (int16_t)
-                strtol(get_random_int(), NULL, 10);
-                break;
-        }
+        result = default_value;
     } else {
         result = (int16_t)
         strtol(meta, NULL, 10);

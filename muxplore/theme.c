@@ -353,14 +353,6 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
     struct small datetime_pad_left_element[] = {
             {ui_lblDatetime, theme.DATETIME.PADDING_LEFT},
     };
