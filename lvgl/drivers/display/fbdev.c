@@ -17,6 +17,8 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
+#include "../../../common/device.h"
+
 #if USE_BSD_FBDEV
 #include <sys/fcntl.h>
 #include <sys/time.h>
@@ -169,6 +171,30 @@ void fbdev_exit(void)
 }
 
 /**
+ * Check for hdmi state and adapt according to the current device
+ * @param disp driver pointer to display driver which active screen should be get.
+ */
+void fbdev_hdmi_rotate(lv_disp_drv_t * driver)
+{
+    char * hdmi_state_file=device.SCREEN.HDMI;
+    FILE * f = fopen(hdmi_state_file, "r");
+    char state[7];
+    fgets(state,7,f);
+    fclose(f);
+
+    if (strstr(state,"HDMI=1") && strstr(device.DEVICE.NAME,"RG28XX")){
+        printf("hdmi on \n");
+        driver->hor_res = device.SCREEN.HEIGHT;
+        driver->ver_res = device.SCREEN.WIDTH;
+        driver->sw_rotate = LV_DISP_ROT_NONE;
+        driver->rotated = LV_DISP_ROT_NONE;
+        vinfo.xres = driver->hor_res;
+        vinfo.yres = driver->ver_res;
+    }
+
+}
+
+/**
  * Flush a buffer to the marked area
  * @param drv pointer to driver where this function belongs
  * @param area an area where to copy `color_p`
@@ -191,18 +217,20 @@ void fbdev_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color
     int32_t act_x2 = area->x2 > (int32_t)vinfo.xres - 1 ? (int32_t)vinfo.xres - 1 : area->x2;
     int32_t act_y2 = area->y2 > (int32_t)vinfo.yres - 1 ? (int32_t)vinfo.yres - 1 : area->y2;
 
-
     lv_coord_t w = (act_x2 - act_x1 + 1);
     long int location = 0;
     long int byte_location = 0;
     unsigned char bit_location = 0;
+
+    //Calculate the line length manually to accomedate for resolution changes in runtime
+    uint16_t line_length = vinfo.xres * (vinfo.bits_per_pixel/8);
 
     /*32 or 24 bit per pixel*/
     if(vinfo.bits_per_pixel == 32 || vinfo.bits_per_pixel == 24) {
         uint32_t * fbp32 = (uint32_t *)fbp;
         int32_t y;
         for(y = act_y1; y <= act_y2; y++) {
-            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * finfo.line_length / 4;
+            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length / 4;
             memcpy(&fbp32[location], (uint32_t *)color_p, (act_x2 - act_x1 + 1) * 4);
             color_p += w;
         }
@@ -212,7 +240,7 @@ void fbdev_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color
         uint16_t * fbp16 = (uint16_t *)fbp;
         int32_t y;
         for(y = act_y1; y <= act_y2; y++) {
-            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * finfo.line_length / 2;
+            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length / 2;
             memcpy(&fbp16[location], (uint32_t *)color_p, (act_x2 - act_x1 + 1) * 2);
             color_p += w;
         }
@@ -222,7 +250,7 @@ void fbdev_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color
         uint8_t * fbp8 = (uint8_t *)fbp;
         int32_t y;
         for(y = act_y1; y <= act_y2; y++) {
-            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * finfo.line_length;
+            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length;
             memcpy(&fbp8[location], (uint32_t *)color_p, (act_x2 - act_x1 + 1));
             color_p += w;
         }
@@ -269,6 +297,7 @@ void fbdev_set_offset(uint32_t xoffset, uint32_t yoffset) {
     vinfo.xoffset = xoffset;
     vinfo.yoffset = yoffset;
 }
+
 
 /**********************
  *   STATIC FUNCTIONS

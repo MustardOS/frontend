@@ -49,6 +49,11 @@ typedef enum {
  **********************/
 
 /**
+ * Check for hdmi state and adapt according to the current device
+ * @param disp driver pointer to display driver which active screen should be get.
+ */
+
+/**
  * Return with a pointer to the active screen
  * @param disp pointer to display which active screen should be get. (NULL to use the default
  * screen)

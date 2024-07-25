@@ -131,6 +131,9 @@ void load_device(struct mux_device *device) {
     strncpy(device->SCREEN.DEVICE, get_ini_string(muos_device, "screen", "device", "/dev/fb0"),
             MAX_BUFFER_SIZE - 1);
     device->SCREEN.DEVICE[MAX_BUFFER_SIZE - 1] = '\0';
+    strncpy(device->SCREEN.HDMI, get_ini_string(muos_device, "screen", "hdmi", "/sys/devices/platform/soc/6000000.hdmi/extcon/hdmi/state"),
+            MAX_BUFFER_SIZE - 1);
+    device->SCREEN.HDMI[MAX_BUFFER_SIZE - 1] = '\0';
     device->SCREEN.BRIGHT = get_ini_int(muos_device, "screen", "bright", 90);
     device->SCREEN.BUFFER = get_ini_hex(muos_device, "screen", "buffer");
     device->SCREEN.WIDTH = get_ini_int(muos_device, "screen", "width", 640);
