@@ -270,6 +270,8 @@ struct theme_config {
         int16_t NAVIGATION_TYPE;
         struct {
             int16_t PADDING_LEFT;
+            int16_t PADDING_TOP;
+            int16_t HEIGHT;
             int16_t WIDTH;
         } CONTENT;
     } MISC;

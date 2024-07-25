@@ -353,6 +353,9 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    lv_obj_set_height(ui_pnlContent, theme.MISC.CONTENT.HEIGHT);
+    lv_obj_set_y(ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP);
+
     struct small datetime_pad_left_element[] = {
             {ui_lblDatetime, theme.DATETIME.PADDING_LEFT},
     };
