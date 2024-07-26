@@ -147,6 +147,8 @@ void create_timezone_items() {
         lv_obj_set_style_text_line_space(ui_lblTimezoneItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_long_mode(ui_lblTimezoneItem, LV_LABEL_LONG_WRAP);
 
+        lv_obj_set_style_radius(ui_lblTimezoneItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+
         lv_obj_t * ui_lblTimezoneGlyph = lv_label_create(ui_pnlTimezone);
         lv_label_set_text(ui_lblTimezoneGlyph, "\uF0AC");
 

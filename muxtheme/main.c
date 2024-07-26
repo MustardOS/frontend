@@ -208,6 +208,8 @@ void create_theme_items() {
             lv_obj_set_style_text_line_space(ui_lblThemeItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_label_set_long_mode(ui_lblThemeItem, LV_LABEL_LONG_WRAP);
 
+            lv_obj_set_style_radius(ui_lblThemeItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+
             lv_obj_t * ui_lblThemeItemGlyph = lv_label_create(ui_pnlTheme);
             lv_label_set_text(ui_lblThemeItemGlyph, "\uF53F");
 

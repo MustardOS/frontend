@@ -176,6 +176,8 @@ void create_network_items() {
         lv_obj_set_style_text_line_space(ui_lblNetScanItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_long_mode(ui_lblNetScanItem, LV_LABEL_LONG_WRAP);
 
+        lv_obj_set_style_radius(ui_lblNetScanItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+
         lv_obj_t * ui_lblNetScanGlyph = lv_label_create(ui_pnlNetScan);
         lv_label_set_text(ui_lblNetScanGlyph, "\uF0AC");
 

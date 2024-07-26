@@ -380,6 +380,11 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_lblShell,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBrowser,   theme.LIST_DEFAULT.RADIUS},
+            {ui_lblTerminal,  theme.LIST_DEFAULT.RADIUS},
+            {ui_lblSyncthing, theme.LIST_DEFAULT.RADIUS},
+            {ui_lblNTP,       theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,

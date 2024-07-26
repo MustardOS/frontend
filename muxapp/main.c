@@ -191,6 +191,8 @@ void create_app_items() {
         lv_obj_set_style_text_line_space(ui_lblAppItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_long_mode(ui_lblAppItem, LV_LABEL_LONG_WRAP);
 
+        lv_obj_set_style_radius(ui_lblAppItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+
         lv_obj_t * ui_lblAppItemGlyph = lv_label_create(ui_pnlApp);
 
         if (strcasecmp(app_store, "Archive Manager") == 0) {
