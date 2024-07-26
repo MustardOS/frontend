@@ -267,6 +267,28 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small gradient_start_default_elements[] = {
+            {ui_lblTracker, theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblTester,  theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblSystem,  theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblCredits, theme.LIST_DEFAULT.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small gradient_start_focus_elements[] = {
+            {ui_lblTracker, theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblTester,  theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblSystem,  theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblCredits, theme.LIST_FOCUS.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+    }
+
     struct small gradient_stop_default_elements[] = {
             {ui_lblTracker, theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblTester,  theme.LIST_DEFAULT.GRADIENT_STOP},

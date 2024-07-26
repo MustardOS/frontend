@@ -437,6 +437,40 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small gradient_start_default_elements[] = {
+            {ui_lblEnable,     theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblIdentifier, theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblPassword,   theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblType,       theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblAddress,    theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblSubnet,     theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblGateway,    theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblDNS,        theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblStatus,     theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblConnect,    theme.LIST_DEFAULT.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small gradient_start_focus_elements[] = {
+            {ui_lblEnable,     theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblIdentifier, theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblPassword,   theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblType,       theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblAddress,    theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblSubnet,     theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblGateway,    theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblDNS,        theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblStatus,     theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblConnect,    theme.LIST_FOCUS.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+    }
+
     struct small gradient_stop_default_elements[] = {
             {ui_lblEnable,     theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblIdentifier, theme.LIST_DEFAULT.GRADIENT_STOP},
