@@ -478,11 +478,9 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
 
     lv_obj_set_style_border_width(ui_lblExploreItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_lblExploreItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    uint32_t DEFAULT_BACKGROUND_GRADIENT = (theme.LIST_DEFAULT.GRADIENT_START == 255) ? theme.LIST_DEFAULT.BACKGROUND : theme.SYSTEM.BACKGROUND;
-    lv_obj_set_style_bg_grad_color(ui_lblExploreItem, lv_color_hex(DEFAULT_BACKGROUND_GRADIENT),
+    lv_obj_set_style_bg_grad_color(ui_lblExploreItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND_GRADIENT),
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    uint32_t FOCUS_BACKGROUND_GRADIENT = (theme.LIST_FOCUS.GRADIENT_START == 255) ? theme.LIST_FOCUS.BACKGROUND : theme.SYSTEM.BACKGROUND;
-    lv_obj_set_style_bg_grad_color(ui_lblExploreItem, lv_color_hex(FOCUS_BACKGROUND_GRADIENT),
+    lv_obj_set_style_bg_grad_color(ui_lblExploreItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND_GRADIENT),
                                    LV_PART_MAIN | LV_STATE_FOCUSED);     
     lv_obj_set_style_bg_main_stop(ui_lblExploreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblExploreItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);

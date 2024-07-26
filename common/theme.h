@@ -144,6 +144,7 @@ struct theme_config {
     struct {
         int16_t RADIUS;
         uint32_t BACKGROUND;
+        uint32_t BACKGROUND_GRADIENT;
         int16_t BACKGROUND_ALPHA;
         int16_t GRADIENT_START;
         int16_t GRADIENT_STOP;
@@ -160,6 +161,7 @@ struct theme_config {
 
     struct {
         uint32_t BACKGROUND;
+        uint32_t BACKGROUND_GRADIENT;
         int16_t BACKGROUND_ALPHA;
         int16_t GRADIENT_START;
         int16_t GRADIENT_STOP;

@@ -96,21 +96,39 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblVersion,    theme.SYSTEM.BACKGROUND},
-            {ui_lblKernel,     theme.SYSTEM.BACKGROUND},
-            {ui_lblUptime,     theme.SYSTEM.BACKGROUND},
-            {ui_lblCPU,        theme.SYSTEM.BACKGROUND},
-            {ui_lblSpeed,      theme.SYSTEM.BACKGROUND},
-            {ui_lblGovernor,   theme.SYSTEM.BACKGROUND},
-            {ui_lblMemory,     theme.SYSTEM.BACKGROUND},
-            {ui_lblTemp,       theme.SYSTEM.BACKGROUND},
-            {ui_lblServices,   theme.SYSTEM.BACKGROUND},
-            {ui_lblBatteryCap, theme.SYSTEM.BACKGROUND},
-            {ui_lblVoltage,    theme.SYSTEM.BACKGROUND},
+            {ui_lblVersion,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblKernel,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblUptime,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblCPU,        theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblSpeed,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblGovernor,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblMemory,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblTemp,       theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblServices,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblBatteryCap, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblVoltage,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct big gradient_focused_elements[] = {
+            {ui_lblVersion,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblKernel,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblUptime,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblCPU,        theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblSpeed,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblGovernor,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblMemory,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblTemp,       theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblServices,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblBatteryCap, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblVoltage,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+    };
+    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
+        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
+                                       LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct big indicator_elements[] = {

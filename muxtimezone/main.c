@@ -103,8 +103,10 @@ void create_timezone_items() {
 
         lv_obj_set_style_border_width(ui_lblTimezoneItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_side(ui_lblTimezoneItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblTimezoneItem, lv_color_hex(theme.SYSTEM.BACKGROUND),
+        lv_obj_set_style_bg_grad_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND_GRADIENT),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_grad_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND_GRADIENT),
+                                       LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_bg_main_stop(ui_lblTimezoneItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_bg_grad_dir(ui_lblTimezoneItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
 
