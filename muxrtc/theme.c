@@ -88,17 +88,31 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblYear,     theme.SYSTEM.BACKGROUND},
-            {ui_lblMonth,    theme.SYSTEM.BACKGROUND},
-            {ui_lblDay,      theme.SYSTEM.BACKGROUND},
-            {ui_lblHour,     theme.SYSTEM.BACKGROUND},
-            {ui_lblMinute,   theme.SYSTEM.BACKGROUND},
-            {ui_lblNotation, theme.SYSTEM.BACKGROUND},
-            {ui_lblTimezone, theme.SYSTEM.BACKGROUND},
+            {ui_lblYear,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblMonth,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblDay,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblHour,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblMinute,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblNotation, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblTimezone, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct big gradient_focused_elements[] = {
+            {ui_lblYear,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblMonth,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblDay,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblHour,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblMinute,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblNotation, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblTimezone, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+    };
+    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
+        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
+                                       LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct big indicator_elements[] = {

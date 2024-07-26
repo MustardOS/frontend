@@ -95,20 +95,37 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblHidden,     theme.SYSTEM.BACKGROUND},
-            {ui_lblBGM,        theme.SYSTEM.BACKGROUND},
-            {ui_lblStartup,    theme.SYSTEM.BACKGROUND},
-            {ui_lblColour,     theme.SYSTEM.BACKGROUND},
-            {ui_lblBrightness, theme.SYSTEM.BACKGROUND},
-            {ui_lblHDMI,       theme.SYSTEM.BACKGROUND},
-            {ui_lblShutdown,   theme.SYSTEM.BACKGROUND},
-            {ui_lblInterface,  theme.SYSTEM.BACKGROUND},
-            {ui_lblStorage,    theme.SYSTEM.BACKGROUND},
-            {ui_lblAdvanced,   theme.SYSTEM.BACKGROUND},
+            {ui_lblHidden,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblBGM,        theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblStartup,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblColour,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblBrightness, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblHDMI,       theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblShutdown,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblInterface,  theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblStorage,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblAdvanced,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct big gradient_focused_elements[] = {
+            {ui_lblHidden,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblBGM,        theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblStartup,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblColour,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblBrightness, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblHDMI,       theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblShutdown,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblInterface,  theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblStorage,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblAdvanced,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+    };
+    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
+        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
+                                       LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct big indicator_elements[] = {
