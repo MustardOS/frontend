@@ -23,14 +23,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->SYSTEM.BACKGROUND = get_ini_hex(muos_theme, "background", "BACKGROUND");
     theme->SYSTEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "background", "BACKGROUND_ALPHA", 255);
 
-    theme->MUX.ITEM.COUNT = get_ini_int(muos_theme, "mux", "item_count", device->MUX.ITEM.COUNT);
-    theme->MUX.ITEM.HEIGHT = get_ini_int(muos_theme, "mux", "item_height", device->MUX.ITEM.HEIGHT);
-    theme->MUX.ITEM.PANEL = get_ini_int(muos_theme, "mux", "item_panel", device->MUX.ITEM.PANEL);
-    theme->MUX.ITEM.PREV_LOW = get_ini_int(muos_theme, "mux", "item_prev_low", device->MUX.ITEM.PREV_LOW);
-    theme->MUX.ITEM.PREV_HIGH = get_ini_int(muos_theme, "mux", "item_prev_high", device->MUX.ITEM.PREV_HIGH);
-    theme->MUX.ITEM.NEXT_LOW = get_ini_int(muos_theme, "mux", "item_next_low", device->MUX.ITEM.NEXT_LOW);
-    theme->MUX.ITEM.NEXT_HIGH = get_ini_int(muos_theme, "mux", "item_next_high", device->MUX.ITEM.NEXT_HIGH);
-
     theme->FONT.HEADER_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_TOP", 0);
     theme->FONT.HEADER_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_BOTTOM", 0);
     theme->FONT.HEADER_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_HEADER_ICON_PAD_TOP", 0);
@@ -225,6 +217,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->ROLL.BORDER_RADIUS = get_ini_int(muos_theme, "roll", "ROLL_BORDER_RADIUS", 255);
 
     theme->MISC.STATIC_ALIGNMENT = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", 255);
+    theme->MUX.ITEM.COUNT = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_COUNT", device->MUX.ITEM.COUNT);
     theme->MISC.CONTENT.PADDING_LEFT = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_LEFT", 0);
     theme->MISC.CONTENT.PADDING_TOP = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_TOP", 0);
     theme->MISC.CONTENT.HEIGHT = get_ini_int(muos_theme, "misc", "CONTENT_HEIGHT", 392);
@@ -232,6 +225,17 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MISC.ANIMATED_BACKGROUND = get_ini_int(muos_theme, "misc", "ANIMATED_BACKGROUND", 255);
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", 255);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", 255);
+
+    if (theme->MISC.CONTENT.HEIGHT < 100) theme->MISC.CONTENT.HEIGHT = 100;
+    if (theme->MISC.CONTENT.HEIGHT > device->SCREEN.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->SCREEN.HEIGHT;
+    if (theme->MUX.ITEM.COUNT < 5) theme->MUX.ITEM.COUNT = 5;
+    if (theme->MUX.ITEM.COUNT > 13) theme->MUX.ITEM.COUNT = 13;
+    theme->MUX.ITEM.PANEL = theme->MISC.CONTENT.HEIGHT /  theme->MUX.ITEM.COUNT;
+    theme->MUX.ITEM.HEIGHT = theme->MUX.ITEM.PANEL - 2;
+    theme->MUX.ITEM.PREV_LOW = theme->MUX.ITEM.COUNT / 2 - 1;
+    theme->MUX.ITEM.PREV_HIGH = theme->MUX.ITEM.COUNT / 2 + 1;
+    theme->MUX.ITEM.NEXT_LOW = theme->MUX.ITEM.COUNT / 2;
+    theme->MUX.ITEM.NEXT_HIGH = theme->MUX.ITEM.COUNT / 2 + 1;
 
     mini_free(muos_theme);
 }
