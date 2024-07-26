@@ -215,6 +215,8 @@ void create_profile_items() {
             lv_obj_set_style_text_line_space(ui_lblNetProfileItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_label_set_long_mode(ui_lblNetProfileItem, LV_LABEL_LONG_WRAP);
 
+            lv_obj_set_style_radius(ui_lblNetProfileItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+
             lv_obj_t * ui_lblNetProfileItemGlyph = lv_label_create(ui_pnlNetProfile);
             lv_label_set_text(ui_lblNetProfileItemGlyph, "\uF53F");
 

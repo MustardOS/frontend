@@ -262,6 +262,8 @@ void create_system_items() {
             lv_obj_set_style_text_line_space(ui_lblCoreItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_label_set_long_mode(ui_lblCoreItem, LV_LABEL_LONG_WRAP);
 
+            lv_obj_set_style_radius(ui_lblCoreItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+
             lv_obj_t * ui_lblCoreItemGlyph = lv_label_create(ui_pnlCore);
             lv_label_set_text(ui_lblCoreItemGlyph, "\uF233");
 

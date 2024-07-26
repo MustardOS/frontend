@@ -430,6 +430,13 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_lblYear,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblMonth,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblDay,      theme.LIST_DEFAULT.RADIUS},
+            {ui_lblHour,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblMinute,   theme.LIST_DEFAULT.RADIUS},
+            {ui_lblNotation, theme.LIST_DEFAULT.RADIUS},
+            {ui_lblTimezone, theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,

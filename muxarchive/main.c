@@ -227,6 +227,8 @@ void create_archive_items() {
         lv_obj_set_style_text_line_space(ui_lblArchiveItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_long_mode(ui_lblArchiveItem, LV_LABEL_LONG_WRAP);
 
+        lv_obj_set_style_radius(ui_lblArchiveItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+
         lv_obj_t * ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
 
         lv_label_set_text(ui_lblArchiveItemInstalled, is_installed);
@@ -256,6 +258,8 @@ void create_archive_items() {
         lv_obj_set_style_text_line_space(ui_lblArchiveItemInstalled, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_text_align(ui_lblArchiveItemInstalled, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_long_mode(ui_lblArchiveItemInstalled, LV_LABEL_LONG_WRAP);
+
+        lv_obj_set_style_radius(ui_lblArchiveItemInstalled, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_t * ui_lblArchiveItemData = lv_label_create(ui_pnlArchive);
         lv_label_set_text(ui_lblArchiveItemData, base_filename);

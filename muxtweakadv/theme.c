@@ -505,6 +505,18 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_lblSwap,       theme.LIST_DEFAULT.RADIUS},
+            {ui_lblThermal,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblFont,       theme.LIST_DEFAULT.RADIUS},
+            {ui_lblVolume,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBrightness, theme.LIST_DEFAULT.RADIUS},
+            {ui_lblOffset,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblPasscode,   theme.LIST_DEFAULT.RADIUS},
+            {ui_lblLED,        theme.LIST_DEFAULT.RADIUS},
+            {ui_lblTheme,      theme.LIST_DEFAULT.RADIUS},
+            {ui_lblRetroWait,  theme.LIST_DEFAULT.RADIUS},
+            {ui_lblAndroid,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblState,      theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,

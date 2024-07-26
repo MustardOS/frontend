@@ -530,6 +530,17 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_lblVersion,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblKernel,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblUptime,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblCPU,        theme.LIST_DEFAULT.RADIUS},
+            {ui_lblSpeed,      theme.LIST_DEFAULT.RADIUS},
+            {ui_lblGovernor,   theme.LIST_DEFAULT.RADIUS},
+            {ui_lblMemory,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblTemp,       theme.LIST_DEFAULT.RADIUS},
+            {ui_lblServices,   theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBatteryCap, theme.LIST_DEFAULT.RADIUS},
+            {ui_lblVoltage,    theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,
