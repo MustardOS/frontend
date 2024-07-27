@@ -598,32 +598,12 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
     return result;
 }
 
-int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, enum element_type type) {
+int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value) {
     const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
 
     int16_t result;
     if (strcmp(meta, "NOT FOUND") == 0) {
-        switch (type) {
-            case MISC_PAD:
-                result = 0;
-                break;
-            case MISC_WIDTH:
-                result = device.SCREEN.WIDTH;
-                break;
-            case LABEL:
-                result = (int16_t)
-                strtol("0", NULL, 10);
-                break;
-            case VALUE:
-                result = (int16_t)
-                strtol("255", NULL, 10);
-                break;
-            case IGNORE:
-            default:
-                result = (int16_t)
-                strtol(get_random_int(), NULL, 10);
-                break;
-        }
+        result = default_value;
     } else {
         result = (int16_t)
         strtol(meta, NULL, 10);
@@ -1283,6 +1263,35 @@ void load_font_glyph(const char *program, lv_obj_t *element) {
                 lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
                 printf("\t\t\t\tLOADED DEFAULT GLYPH FONT (%s)\n", theme_font_glyph_default_fs);
+            }
+        }
+    }
+}
+
+void load_font_section(const char *program, const char *section, lv_obj_t *element) {
+    printf("\t\t\t\tTRYING TO LOAD %s FONT\n", section);
+
+    if (config.SETTINGS.ADVANCED.FONT) {
+        char theme_font_section_default[MAX_BUFFER_SIZE];
+        char theme_font_section[MAX_BUFFER_SIZE];
+        snprintf(theme_font_section_default, sizeof(theme_font_section_default),
+                 "%s/MUOS/theme/active/font/%s/default.bin", device.STORAGE.ROM.MOUNT, section);
+        snprintf(theme_font_section, sizeof(theme_font_section),
+                 "%s/MUOS/theme/active/font/%s/%s.bin", device.STORAGE.ROM.MOUNT, section, program);
+        if (file_exist(theme_font_section)) {
+            char theme_font_section_fs[MAX_BUFFER_SIZE];
+            snprintf(theme_font_section_fs, sizeof(theme_font_section_fs),
+                     "M:%s/MUOS/theme/active/font/%s/%s.bin", device.STORAGE.ROM.MOUNT, section, program);
+            lv_obj_set_style_text_font(element, lv_font_load(theme_font_section_fs),
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+        } else {
+            if (file_exist(theme_font_section_default)) {
+                char theme_font_section_default_fs[MAX_BUFFER_SIZE];
+                snprintf(theme_font_section_default_fs, sizeof(theme_font_section_default_fs),
+                         "M:%s/MUOS/theme/active/font/%s/default.bin", device.STORAGE.ROM.MOUNT, section);
+                lv_obj_set_style_text_font(element, lv_font_load(theme_font_section_default_fs),
+                                           LV_PART_MAIN | LV_STATE_DEFAULT);
+                printf("\t\t\t\tLOADED DEFAULT %s FONT (%s)\n", section, theme_font_section_default_fs);
             }
         }
     }

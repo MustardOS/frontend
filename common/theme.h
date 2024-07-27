@@ -11,6 +11,18 @@ struct theme_config {
     } SYSTEM;
 
     struct {
+        struct {
+            int16_t COUNT;
+            int16_t HEIGHT;
+            int16_t PANEL;
+            int16_t PREV_LOW;
+            int16_t PREV_HIGH;
+            int16_t NEXT_LOW;
+            int16_t NEXT_HIGH;
+        } ITEM;
+    } MUX;
+
+    struct {
         int16_t HEADER_PAD_TOP;
         int16_t HEADER_PAD_BOTTOM;
         int16_t HEADER_ICON_PAD_TOP;
@@ -130,7 +142,9 @@ struct theme_config {
     } NAV;
 
     struct {
+        int16_t RADIUS;
         uint32_t BACKGROUND;
+        uint32_t BACKGROUND_GRADIENT;
         int16_t BACKGROUND_ALPHA;
         int16_t GRADIENT_START;
         int16_t GRADIENT_STOP;
@@ -147,6 +161,7 @@ struct theme_config {
 
     struct {
         uint32_t BACKGROUND;
+        uint32_t BACKGROUND_GRADIENT;
         int16_t BACKGROUND_ALPHA;
         int16_t GRADIENT_START;
         int16_t GRADIENT_STOP;
@@ -257,6 +272,8 @@ struct theme_config {
         int16_t NAVIGATION_TYPE;
         struct {
             int16_t PADDING_LEFT;
+            int16_t PADDING_TOP;
+            int16_t HEIGHT;
             int16_t WIDTH;
         } CONTENT;
     } MISC;

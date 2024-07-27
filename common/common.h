@@ -114,7 +114,7 @@ const char *get_random_int();
 
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key);
 
-int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, enum element_type type);
+int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value);
 
 int set_ini_int(mini_t *ini_config, const char *section, const char *key, int value);
 
@@ -195,6 +195,8 @@ char *load_overlay_image();
 void load_font_text(const char *program, lv_obj_t *screen);
 
 void load_font_glyph(const char *program, lv_obj_t *element);
+
+void load_font_section(const char *program, const char *section, lv_obj_t *element);
 
 int is_network_connected();
 

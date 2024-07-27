@@ -90,18 +90,33 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblContent,    theme.SYSTEM.BACKGROUND},
-            {ui_lblFavourites, theme.SYSTEM.BACKGROUND},
-            {ui_lblHistory,    theme.SYSTEM.BACKGROUND},
-            {ui_lblApps,       theme.SYSTEM.BACKGROUND},
-            {ui_lblInfo,       theme.SYSTEM.BACKGROUND},
-            {ui_lblConfig,     theme.SYSTEM.BACKGROUND},
-            {ui_lblReboot,     theme.SYSTEM.BACKGROUND},
-            {ui_lblShutdown,   theme.SYSTEM.BACKGROUND},
+            {ui_lblContent,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblFavourites, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblHistory,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblApps,       theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblInfo,       theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblConfig,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblReboot,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblShutdown,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct big gradient_focused_elements[] = {
+            {ui_lblContent,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblFavourites, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblHistory,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblApps,       theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblInfo,       theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblConfig,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblReboot,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblShutdown,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+    };
+    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
+        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
+                                       LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct big indicator_elements[] = {
@@ -349,6 +364,36 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small gradient_start_default_elements[] = {
+            {ui_lblContent,    theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblFavourites, theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblHistory,    theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblApps,       theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblInfo,       theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblConfig,     theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblReboot,     theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblShutdown,   theme.LIST_DEFAULT.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small gradient_start_focus_elements[] = {
+            {ui_lblContent,    theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblFavourites, theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblHistory,    theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblApps,       theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblInfo,       theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblConfig,     theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblReboot,     theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblShutdown,   theme.LIST_FOCUS.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+    }
+
     struct small gradient_stop_default_elements[] = {
             {ui_lblContent,    theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblFavourites, theme.LIST_DEFAULT.GRADIENT_STOP},
@@ -417,6 +462,14 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_lblContent,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblFavourites, theme.LIST_DEFAULT.RADIUS},
+            {ui_lblHistory,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblApps,       theme.LIST_DEFAULT.RADIUS},
+            {ui_lblInfo,       theme.LIST_DEFAULT.RADIUS},
+            {ui_lblConfig,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblReboot,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblShutdown,   theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,

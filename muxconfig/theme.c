@@ -84,15 +84,27 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblTweakGeneral, theme.SYSTEM.BACKGROUND},
-            {ui_lblTheme,        theme.SYSTEM.BACKGROUND},
-            {ui_lblNetwork,      theme.SYSTEM.BACKGROUND},
-            {ui_lblServices,     theme.SYSTEM.BACKGROUND},
-            {ui_lblRTC,          theme.SYSTEM.BACKGROUND},
+            {ui_lblTweakGeneral, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblTheme,        theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblNetwork,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblServices,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblRTC,          theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct big gradient_focused_elements[] = {
+            {ui_lblTweakGeneral, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblTheme,        theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblNetwork,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblServices,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblRTC,          theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+    };
+    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
+        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
+                                       LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct big indicator_elements[] = {
@@ -284,6 +296,30 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small gradient_start_default_elements[] = {
+            {ui_lblTweakGeneral, theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblTheme,        theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblNetwork,      theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblServices,     theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblRTC,          theme.LIST_DEFAULT.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small gradient_start_focus_elements[] = {
+            {ui_lblTweakGeneral, theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblTheme,        theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblNetwork,      theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblServices,     theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblRTC,          theme.LIST_FOCUS.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+    }
+
     struct small gradient_stop_default_elements[] = {
             {ui_lblTweakGeneral, theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblTheme,        theme.LIST_DEFAULT.GRADIENT_STOP},
@@ -340,6 +376,11 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_lblTweakGeneral, theme.LIST_DEFAULT.RADIUS},
+            {ui_lblTheme,        theme.LIST_DEFAULT.RADIUS},
+            {ui_lblNetwork,      theme.LIST_DEFAULT.RADIUS},
+            {ui_lblServices,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblRTC,          theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,

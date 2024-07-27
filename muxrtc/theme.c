@@ -88,17 +88,31 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblYear,     theme.SYSTEM.BACKGROUND},
-            {ui_lblMonth,    theme.SYSTEM.BACKGROUND},
-            {ui_lblDay,      theme.SYSTEM.BACKGROUND},
-            {ui_lblHour,     theme.SYSTEM.BACKGROUND},
-            {ui_lblMinute,   theme.SYSTEM.BACKGROUND},
-            {ui_lblNotation, theme.SYSTEM.BACKGROUND},
-            {ui_lblTimezone, theme.SYSTEM.BACKGROUND},
+            {ui_lblYear,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblMonth,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblDay,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblHour,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblMinute,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblNotation, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblTimezone, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct big gradient_focused_elements[] = {
+            {ui_lblYear,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblMonth,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblDay,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblHour,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblMinute,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblNotation, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblTimezone, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+    };
+    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
+        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
+                                       LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct big indicator_elements[] = {
@@ -338,6 +352,34 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small gradient_start_default_elements[] = {
+            {ui_lblYear,     theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblMonth,    theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblDay,      theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblHour,     theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblMinute,   theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblNotation, theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblTimezone, theme.LIST_DEFAULT.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small gradient_start_focus_elements[] = {
+            {ui_lblYear,     theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblMonth,    theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblDay,      theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblHour,     theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblMinute,   theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblNotation, theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblTimezone, theme.LIST_FOCUS.GRADIENT_START},
+    };
+    for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
+        lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
+                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+    }
+
     struct small gradient_stop_default_elements[] = {
             {ui_lblYear,     theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblMonth,    theme.LIST_DEFAULT.GRADIENT_STOP},
@@ -402,6 +444,13 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_lblYear,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblMonth,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblDay,      theme.LIST_DEFAULT.RADIUS},
+            {ui_lblHour,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblMinute,   theme.LIST_DEFAULT.RADIUS},
+            {ui_lblNotation, theme.LIST_DEFAULT.RADIUS},
+            {ui_lblTimezone, theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,

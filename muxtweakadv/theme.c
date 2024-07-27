@@ -98,22 +98,41 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblSwap,       theme.SYSTEM.BACKGROUND},
-            {ui_lblThermal,    theme.SYSTEM.BACKGROUND},
-            {ui_lblFont,       theme.SYSTEM.BACKGROUND},
-            {ui_lblVolume,     theme.SYSTEM.BACKGROUND},
-            {ui_lblBrightness, theme.SYSTEM.BACKGROUND},
-            {ui_lblOffset,     theme.SYSTEM.BACKGROUND},
-            {ui_lblPasscode,   theme.SYSTEM.BACKGROUND},
-            {ui_lblLED,        theme.SYSTEM.BACKGROUND},
-            {ui_lblTheme,      theme.SYSTEM.BACKGROUND},
-            {ui_lblRetroWait,  theme.SYSTEM.BACKGROUND},
-            {ui_lblAndroid,    theme.SYSTEM.BACKGROUND},
-            {ui_lblState,      theme.SYSTEM.BACKGROUND},
+            {ui_lblSwap,       theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblThermal,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblFont,       theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblVolume,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblBrightness, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblOffset,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblPasscode,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblLED,        theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblTheme,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblRetroWait,  theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblAndroid,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblState,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct big gradient_focused_elements[] = {
+            {ui_lblSwap,       theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblThermal,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblFont,       theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblVolume,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblBrightness, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblOffset,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblPasscode,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblLED,        theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblTheme,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblRetroWait,  theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblAndroid,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblState,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+    };
+    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
+        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
+                                       LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct big indicator_elements[] = {
@@ -555,6 +574,18 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_lblSwap,       theme.LIST_DEFAULT.RADIUS},
+            {ui_lblThermal,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblFont,       theme.LIST_DEFAULT.RADIUS},
+            {ui_lblVolume,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBrightness, theme.LIST_DEFAULT.RADIUS},
+            {ui_lblOffset,     theme.LIST_DEFAULT.RADIUS},
+            {ui_lblPasscode,   theme.LIST_DEFAULT.RADIUS},
+            {ui_lblLED,        theme.LIST_DEFAULT.RADIUS},
+            {ui_lblTheme,      theme.LIST_DEFAULT.RADIUS},
+            {ui_lblRetroWait,  theme.LIST_DEFAULT.RADIUS},
+            {ui_lblAndroid,    theme.LIST_DEFAULT.RADIUS},
+            {ui_lblState,      theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,
