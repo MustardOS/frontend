@@ -171,7 +171,7 @@ int str_compare(const void *a, const void *b) {
         str2++;
     }
 
-    return 0;
+    return *str1 - *str2;
 }
 
 int str_startswith(const char *a, const char *b) {
