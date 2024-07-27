@@ -252,6 +252,23 @@ void *joystick_task() {
                                 nav_moved = 1;
                             }
                         }
+                        if (theme.MISC.NAVIGATION_TYPE == 2 && (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
+                                ev.value == -1) {
+                                nav_prev(ui_group, 4);
+                                nav_prev(ui_group_glyph, 4);
+                                play_sound("navigate", nav_sound);
+                                nav_moved = 1;
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
+                                       ev.value == 1) {
+                                nav_next(ui_group, 4);
+                                nav_next(ui_group_glyph, 4);
+                                play_sound("navigate", nav_sound);
+                                nav_moved = 1;
+                            }
+                        }
                     default:
                         break;
                 }
@@ -536,6 +553,7 @@ int main(int argc, char *argv[]) {
 
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
+        case 2:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
             NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
             NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
