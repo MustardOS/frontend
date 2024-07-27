@@ -91,6 +91,7 @@ struct mux_device {
 
     struct {
         char DEVICE[MAX_BUFFER_SIZE];
+        char HDMI[MAX_BUFFER_SIZE];
         int16_t BRIGHT;
         uint32_t BUFFER;
         int16_t WIDTH;

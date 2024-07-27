@@ -52,6 +52,13 @@ void fbdev_get_sizes(uint32_t *width, uint32_t *height, uint32_t *dpi);
 void fbdev_set_offset(uint32_t xoffset, uint32_t yoffset);
 
 
+/**
+ * Check for hdmi state and adapt according to the current device
+ * @param disp driver pointer to display driver which active screen should be get.
+ */
+
+void fbdev_hdmi_rotate(lv_disp_drv_t * driver);
+
 /**********************
  *      MACROS
  **********************/
