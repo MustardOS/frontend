@@ -648,8 +648,8 @@
                 "Flow": 0,
                 "Wrap": true,
                 "Reversed": false,
-                "MainAlignment": 1,
-                "CrossAlignment": 1,
+                "MainAlignment": 0,
+                "CrossAlignment": 0,
                 "TrackAlignment": 0,
                 "LayoutType": 1,
                 "nid": 1678361576,
@@ -685,7 +685,7 @@
               {
                 "nid": -531255437,
                 "strtype": "OBJECT/Align",
-                "strval": "TOP_MID",
+                "strval": "TOP_LEFT",
                 "InheritedType": 3
               },
               {
