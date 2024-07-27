@@ -83,6 +83,38 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblTweakGeneral, theme.MUX.ITEM.HEIGHT},
+            {ui_lblTheme,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblNetwork,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblServices,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblRTC,          theme.MUX.ITEM.HEIGHT},
+            {ui_icoTweakGeneral, theme.MUX.ITEM.HEIGHT},
+            {ui_icoTheme,        theme.MUX.ITEM.HEIGHT},
+            {ui_icoNetwork,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoServices,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoRTC,          theme.MUX.ITEM.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblTweakGeneral, theme.MISC.CONTENT.WIDTH},
+            {ui_lblTheme,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblNetwork,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblServices,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblRTC,          theme.MISC.CONTENT.WIDTH},
+            {ui_icoTweakGeneral, theme.MISC.CONTENT.WIDTH},
+            {ui_icoTheme,        theme.MISC.CONTENT.WIDTH},
+            {ui_icoNetwork,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoServices,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoRTC,          theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }
+
     struct big gradient_elements[] = {
             {ui_lblTweakGeneral, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
             {ui_lblTheme,        theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
@@ -564,13 +596,12 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent, theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,   theme.MISC.CONTENT.WIDTH},
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 34 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   34 + theme.MISC.CONTENT.PADDING_TOP},
     };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small datetime_pad_left_element[] = {

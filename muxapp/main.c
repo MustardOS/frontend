@@ -142,7 +142,7 @@ void create_app_items() {
         lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
         lv_label_set_text(ui_lblAppItem, app_store);
 
-        lv_obj_set_width(ui_lblAppItem, device.MUX.WIDTH);
+        lv_obj_set_width(ui_lblAppItem, theme.MISC.CONTENT.WIDTH);
         lv_obj_set_height(ui_lblAppItem, theme.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblAppItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);

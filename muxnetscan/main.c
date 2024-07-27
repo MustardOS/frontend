@@ -127,7 +127,7 @@ void create_network_items() {
         lv_obj_t * ui_lblNetScanItem = lv_label_create(ui_pnlNetScan);
         lv_label_set_text(ui_lblNetScanItem, str_nonew(ssid));
 
-        lv_obj_set_width(ui_lblNetScanItem, device.MUX.WIDTH);
+        lv_obj_set_width(ui_lblNetScanItem, theme.MISC.CONTENT.WIDTH);
         lv_obj_set_height(ui_lblNetScanItem, theme.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblNetScanItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);

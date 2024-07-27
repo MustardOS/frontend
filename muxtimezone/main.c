@@ -98,7 +98,7 @@ void create_timezone_items() {
         lv_obj_t * ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
         lv_label_set_text(ui_lblTimezoneItem, base_key);
 
-        lv_obj_set_width(ui_lblTimezoneItem, device.MUX.WIDTH);
+        lv_obj_set_width(ui_lblTimezoneItem, theme.MISC.CONTENT.WIDTH);
         lv_obj_set_height(ui_lblTimezoneItem, theme.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblTimezoneItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);

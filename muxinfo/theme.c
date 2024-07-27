@@ -81,6 +81,34 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblTracker, theme.MUX.ITEM.HEIGHT},
+            {ui_lblTester,  theme.MUX.ITEM.HEIGHT},
+            {ui_lblSystem,  theme.MUX.ITEM.HEIGHT},
+            {ui_lblCredits, theme.MUX.ITEM.HEIGHT},
+            {ui_icoTracker, theme.MUX.ITEM.HEIGHT},
+            {ui_icoTester,  theme.MUX.ITEM.HEIGHT},
+            {ui_icoSystem,  theme.MUX.ITEM.HEIGHT},
+            {ui_icoCredits, theme.MUX.ITEM.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblTracker, theme.MISC.CONTENT.WIDTH},
+            {ui_lblTester,  theme.MISC.CONTENT.WIDTH},
+            {ui_lblSystem,  theme.MISC.CONTENT.WIDTH},
+            {ui_lblCredits, theme.MISC.CONTENT.WIDTH},
+            {ui_icoTracker, theme.MISC.CONTENT.WIDTH},
+            {ui_icoTester,  theme.MISC.CONTENT.WIDTH},
+            {ui_icoSystem,  theme.MISC.CONTENT.WIDTH},
+            {ui_icoCredits, theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }   
+
     struct big gradient_elements[] = {
             {ui_lblTracker, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
             {ui_lblTester,  theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
@@ -535,13 +563,12 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent, theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,   theme.MISC.CONTENT.WIDTH},
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 34 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   34 + theme.MISC.CONTENT.PADDING_TOP},
     };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small datetime_pad_left_element[] = {
