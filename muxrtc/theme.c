@@ -352,6 +352,60 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblYear,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblMonth,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblDay,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblHour,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblMinute,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblNotation, theme.MUX.ITEM.HEIGHT},
+            {ui_lblTimezone, theme.MUX.ITEM.HEIGHT},
+            {ui_icoYear,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoMonth,    theme.MUX.ITEM.HEIGHT},
+            {ui_icoDay,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoHour,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoMinute,   theme.MUX.ITEM.HEIGHT},
+            {ui_icoNotation, theme.MUX.ITEM.HEIGHT},
+            {ui_icoTimezone, theme.MUX.ITEM.HEIGHT},
+            {ui_lblYearValue,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblMonthValue,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblDayValue,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblHourValue,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblMinuteValue,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblNotationValue, theme.MUX.ITEM.HEIGHT},
+            {ui_lblTimezoneValue, theme.MUX.ITEM.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblYear,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblMonth,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblDay,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblHour,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblMinute,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblNotation, theme.MISC.CONTENT.WIDTH},
+            {ui_lblTimezone, theme.MISC.CONTENT.WIDTH},
+            {ui_icoYear,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoMonth,    theme.MISC.CONTENT.WIDTH},
+            {ui_icoDay,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoHour,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoMinute,   theme.MISC.CONTENT.WIDTH},
+            {ui_icoNotation, theme.MISC.CONTENT.WIDTH},
+            {ui_icoTimezone, theme.MISC.CONTENT.WIDTH},
+            {ui_lblYearValue,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblMonthValue,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblDayValue,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblHourValue,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblMinuteValue,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblNotationValue, theme.MISC.CONTENT.WIDTH},
+            {ui_lblTimezoneValue, theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }
+
     struct small gradient_start_default_elements[] = {
             {ui_lblYear,     theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblMonth,    theme.LIST_DEFAULT.GRADIENT_START},
@@ -667,10 +721,20 @@ void apply_theme() {
     struct small content_pad_left_element[] = {
             {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
             {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlHighlight,   theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 34 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   34 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlHighlight,   34 + theme.MISC.CONTENT.PADDING_TOP},
+    };
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small highlight_pad_right_element[] = {
@@ -679,16 +743,6 @@ void apply_theme() {
     for (size_t i = 0; i < sizeof(highlight_pad_right_element) / sizeof(highlight_pad_right_element[0]); ++i) {
         lv_obj_set_style_pad_right(highlight_pad_right_element[i].e, (highlight_pad_right_element[i].c / 2) + 4,
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent,   theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,     theme.MISC.CONTENT.WIDTH},
-            {ui_pnlHighlight, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     struct small datetime_pad_left_element[] = {
