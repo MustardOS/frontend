@@ -106,6 +106,8 @@ void apply_theme() {
             {ui_icoConfig,     theme.MUX.ITEM.HEIGHT},
             {ui_icoReboot,     theme.MUX.ITEM.HEIGHT},
             {ui_icoShutdown,   theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,    theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,      theme.MISC.CONTENT.HEIGHT},
     };
     for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
         lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
@@ -710,8 +712,8 @@ void apply_theme() {
     }
 
     struct small content_padding_top_element[] = {
-            {ui_pnlContent, 34 + theme.MISC.CONTENT.PADDING_TOP},
-            {ui_pnlGlyph,   34 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
     };
     for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
         lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
