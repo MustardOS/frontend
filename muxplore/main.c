@@ -742,8 +742,6 @@ void gen_item(char **file_names, int file_count) {
             gen_label(ROM, glyph_icon, stripped_names[i], glyph_pad);
         }
     }
-    lv_refr_now(NULL); //When using LV_LABEL_LONG_DOT refresh required here in order for all labels to return correct text
-    set_label_long_mode();
     puts("FINISH GEN");
 }
 
@@ -2237,6 +2235,8 @@ int main(int argc, char *argv[]) {
         } else {
             image_refresh("box");
         }
+        lv_refr_now(NULL); //When using LV_LABEL_LONG_DOT refresh required here in order for all labels to return correct text
+        set_label_long_mode();
     } else {
         nav_moved = 0;
         lv_obj_clear_flag(ui_lblExploreMessage, LV_OBJ_FLAG_HIDDEN);
