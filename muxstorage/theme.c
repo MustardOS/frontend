@@ -397,6 +397,9 @@ void apply_theme() {
             {ui_droSave,       theme.MUX.ITEM.HEIGHT},
             {ui_droScreenshot, theme.MUX.ITEM.HEIGHT},
             {ui_droTheme,      theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,    theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,      theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlHighlight,  theme.MISC.CONTENT.HEIGHT},
     };
     for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
         lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
