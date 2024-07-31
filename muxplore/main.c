@@ -253,6 +253,29 @@ char *load_content_description() {
     return "No Information Found";
 }
 
+void reset_label_long_mode() {
+    lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_DOT);
+}
+
+void set_label_long_mode() {
+    char *name_index = get_string_at_index(&named_index, current_item_index);
+
+    if (name_index != NULL) {
+        char *item_name = strip_ext(get_string_at_index(&content_items, atoi(name_index)));
+        char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
+        size_t len = strlen(content_label);
+
+        bool is_dir = strcasecmp(item_name, DUMMY_DIR) == 0;
+        bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
+        bool is_long_folder_name = is_dir && ends_with_ellipse;
+        bool is_long_file_name = !is_dir && strcasecmp(item_name, content_label) != 0 && ends_with_ellipse;
+
+        if (is_long_folder_name || is_long_file_name) {
+            lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
+        }
+    }
+}
+
 void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
         printf("BOX ART IS SET TO DISABLED\n");
@@ -516,7 +539,16 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     lv_obj_set_style_pad_bottom(ui_lblExploreItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_text_line_space(ui_lblExploreItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_label_set_long_mode(ui_lblExploreItem, LV_LABEL_LONG_WRAP);
+
+    lv_label_set_long_mode(ui_lblExploreItem, LV_LABEL_LONG_DOT);
+    static lv_anim_t desc_anim;
+    static lv_style_t desc_style;
+    lv_anim_init(&desc_anim);
+    lv_anim_set_delay(&desc_anim, 250);
+    lv_style_init(&desc_style);
+    lv_style_set_anim(&desc_style, &desc_anim);
+    lv_obj_add_style(ui_lblExploreItem, &desc_style, LV_PART_MAIN);
+    lv_obj_set_style_anim_speed(ui_lblExploreItem, 70, LV_PART_MAIN);
 
     lv_obj_set_style_radius(ui_lblExploreItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -1025,10 +1057,12 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
 
 void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
+        reset_label_long_mode();
         if (current_item_index >= 1 && ui_count > theme.MUX.ITEM.COUNT) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
+            set_label_long_mode();
             if (current_item_index > theme.MUX.ITEM.PREV_LOW &&
                 current_item_index < (ui_count - theme.MUX.ITEM.PREV_HIGH)) {
                 content_panel_y -= theme.MUX.ITEM.PANEL;
@@ -1039,6 +1073,7 @@ void list_nav_prev(int steps) {
                 current_item_index--;
                 nav_prev(ui_group, 1);
                 nav_prev(ui_group_glyph, 1);
+                set_label_long_mode();
             }
         }
     }
@@ -1049,11 +1084,13 @@ void list_nav_prev(int steps) {
 
 void list_nav_next(int steps) {
     for (int step = 0; step < steps; ++step) {
+        reset_label_long_mode();
         if (current_item_index < (ui_count - 1) && ui_count > theme.MUX.ITEM.COUNT) {
             if (current_item_index < (ui_count - 1)) {
                 current_item_index++;
                 nav_next(ui_group, 1);
                 nav_next(ui_group_glyph, 1);
+                set_label_long_mode();
                 if (current_item_index >= theme.MUX.ITEM.NEXT_HIGH &&
                     current_item_index < (ui_count - theme.MUX.ITEM.NEXT_LOW)) {
                     content_panel_y += theme.MUX.ITEM.PANEL;
@@ -1065,6 +1102,7 @@ void list_nav_next(int steps) {
                 current_item_index++;
                 nav_next(ui_group, 1);
                 nav_next(ui_group_glyph, 1);
+                set_label_long_mode();
             }
         }
     }
@@ -1518,12 +1556,14 @@ void *joystick_task() {
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
+                                    reset_label_long_mode();
                                     int y = (ui_count - theme.MUX.ITEM.COUNT) * theme.MUX.ITEM.PANEL;
                                     lv_obj_scroll_to_y(ui_pnlContent, y, LV_ANIM_OFF);
                                     content_panel_y = y;
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
+                                    set_label_long_mode();
                                     image_refresh("box");
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
@@ -1535,11 +1575,13 @@ void *joystick_task() {
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 if (current_item_index == ui_count - 1) {
+                                    reset_label_long_mode();
                                     lv_obj_scroll_to_y(ui_pnlContent, 0, LV_ANIM_OFF);
                                     content_panel_y = 0;
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
+                                    set_label_long_mode();
                                     image_refresh("box");
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count - 1) {
@@ -2193,6 +2235,8 @@ int main(int argc, char *argv[]) {
         } else {
             image_refresh("box");
         }
+        lv_refr_now(NULL); //When using LV_LABEL_LONG_DOT refresh required here in order for all labels to return correct text
+        set_label_long_mode();
     } else {
         nav_moved = 0;
         lv_obj_clear_flag(ui_lblExploreMessage, LV_OBJ_FLAG_HIDDEN);
