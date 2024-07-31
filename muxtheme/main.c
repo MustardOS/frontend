@@ -66,7 +66,7 @@ void show_help() {
 
     char command[MAX_BUFFER_SIZE];
     snprintf(command, sizeof(command), "unzip -p /%s/MUOS/theme/%s.zip credits.txt",
-             device.STORAGE.ROM.MOUNT, lv_label_get_text(lv_group_get_focused(ui_group)));
+             get_default_storage(config.STORAGE.THEME), lv_label_get_text(lv_group_get_focused(ui_group)));
 
     FILE * fp = popen(command, "r");
     if (fp != NULL) {
@@ -84,13 +84,13 @@ void image_refresh() {
 
     snprintf(theme_image, sizeof(theme_image),
              "%s/MUOS/theme/preview/%s.png",
-             device.STORAGE.ROM.MOUNT, theme_name);
+             get_default_storage(config.STORAGE.THEME), theme_name);
 
     if (file_exist(theme_image)) {
         char theme_image_path[MAX_BUFFER_SIZE];
         snprintf(theme_image_path, sizeof(theme_image_path),
                  "M:%s/MUOS/theme/preview/%s.png",
-                 device.STORAGE.ROM.MOUNT, theme_name);
+                 get_default_storage(config.STORAGE.THEME), theme_name);
         lv_img_set_src(ui_imgBox, theme_image_path);
     } else {
         lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
@@ -102,7 +102,7 @@ void create_theme_items() {
     struct dirent *tf;
 
     char theme_dir[PATH_MAX];
-    snprintf(theme_dir, sizeof(theme_dir), "%s/MUOS/theme", device.STORAGE.ROM.MOUNT);
+    snprintf(theme_dir, sizeof(theme_dir), "%s/MUOS/theme", get_default_storage(config.STORAGE.THEME));
 
     td = opendir(theme_dir);
     if (td == NULL) {

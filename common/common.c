@@ -98,8 +98,10 @@ int time_compare_for_history(const void *a, const void *b) {
     char mod_file_a[MAX_BUFFER_SIZE];
     char mod_file_b[MAX_BUFFER_SIZE];
 
-    snprintf(mod_file_a, sizeof(mod_file_a), "%s/MUOS/info/history/%s.cfg", device.STORAGE.ROM.MOUNT, file_a);
-    snprintf(mod_file_b, sizeof(mod_file_b), "%s/MUOS/info/history/%s.cfg", device.STORAGE.ROM.MOUNT, file_b);
+    snprintf(mod_file_a, sizeof(mod_file_a), "%s/MUOS/info/history/%s.cfg",
+             get_default_storage(config.STORAGE.FAV), file_a);
+    snprintf(mod_file_b, sizeof(mod_file_b), "%s/MUOS/info/history/%s.cfg",
+             get_default_storage(config.STORAGE.FAV), file_b);
 
     if (access(mod_file_a, F_OK) != 0) {
         printf("Error: %s does not exist\n", mod_file_a);
@@ -884,7 +886,7 @@ char *get_datetime() {
     struct tm *time_info = localtime(&now);
 
     static char datetime_str[MAX_BUFFER_SIZE];
-    char* notation;
+    char *notation;
 
     if (config.CLOCK.NOTATION) {
         notation = TIME_STRING_24;
@@ -1145,26 +1147,27 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
             const char *element = lv_obj_get_user_data(element_focused);
 
             if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/MUOS/theme/active/image/wall/%s/%s.%s",
-                         device.STORAGE.ROM.MOUNT, program, element,
+                         get_default_storage(config.STORAGE.THEME), program, element,
                          wall_extension) >= 0 && file_exist(wall_image_path)) {
                 snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/%s/%s.%s",
-                         device.STORAGE.ROM.MOUNT, program, element, wall_extension);
+                         get_default_storage(config.STORAGE.THEME), program, element, wall_extension);
                 return wall_image_embed;
             }
         }
     }
 
     if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/MUOS/theme/active/image/wall/%s.%s",
-                 device.STORAGE.ROM.MOUNT, program, wall_extension) >= 0 && file_exist(wall_image_path)) {
+                 get_default_storage(config.STORAGE.THEME), program, wall_extension) >= 0 &&
+        file_exist(wall_image_path)) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/%s.%s",
-                 device.STORAGE.ROM.MOUNT, program, wall_extension);
+                 get_default_storage(config.STORAGE.THEME), program, wall_extension);
         return wall_image_embed;
     }
 
     if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/MUOS/theme/active/image/wall/default.%s",
-                 device.STORAGE.ROM.MOUNT, wall_extension) >= 0 && file_exist(wall_image_path)) {
+                 get_default_storage(config.STORAGE.THEME), wall_extension) >= 0 && file_exist(wall_image_path)) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/default.%s",
-                 device.STORAGE.ROM.MOUNT, wall_extension);
+                 get_default_storage(config.STORAGE.THEME), wall_extension);
         return wall_image_embed;
     }
 
@@ -1182,15 +1185,16 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
         const char *element = lv_obj_get_user_data(element_focused);
 
         if (snprintf(static_image_path, sizeof(static_image_path), "%s/MUOS/theme/active/image/static/%s.png",
-                     device.STORAGE.ROM.MOUNT, program) >= 0 && file_exist(static_image_path)) {
+                     get_default_storage(config.STORAGE.THEME), program) >= 0 && file_exist(static_image_path)) {
             snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/static/%s.png",
-                     device.STORAGE.ROM.MOUNT, program);
+                     get_default_storage(config.STORAGE.THEME), program);
             return static_image_embed;
         } else if (snprintf(static_image_path, sizeof(static_image_path),
                             "%s/MUOS/theme/active/image/static/%s/%s.png",
-                            device.STORAGE.ROM.MOUNT, program, element) >= 0 && file_exist(static_image_path)) {
+                            get_default_storage(config.STORAGE.THEME), program, element) >= 0 &&
+                   file_exist(static_image_path)) {
             snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/static/%s/%s.png",
-                     device.STORAGE.ROM.MOUNT, program, element);
+                     get_default_storage(config.STORAGE.THEME), program, element);
             return static_image_embed;
         }
     }
@@ -1203,10 +1207,10 @@ char *load_overlay_image() {
     static char static_image_embed[MAX_BUFFER_SIZE];
 
     if (snprintf(static_image_path, sizeof(static_image_path), "%s/MUOS/theme/active/image/overlay.png",
-                 device.STORAGE.ROM.MOUNT) >= 0 &&
+                 get_default_storage(config.STORAGE.THEME)) >= 0 &&
         file_exist(static_image_path)) {
         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/overlay.png",
-                 device.STORAGE.ROM.MOUNT);
+                 get_default_storage(config.STORAGE.THEME));
         return static_image_embed;
     }
 
@@ -1218,20 +1222,20 @@ void load_font_text(const char *program, lv_obj_t *screen) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
         char theme_font_text[MAX_BUFFER_SIZE];
         snprintf(theme_font_text_default, sizeof(theme_font_text_default),
-                 "%s/MUOS/theme/active/font/default.bin", device.STORAGE.ROM.MOUNT);
+                 "%s/MUOS/theme/active/font/default.bin", get_default_storage(config.STORAGE.THEME));
         snprintf(theme_font_text, sizeof(theme_font_text),
-                 "%s/MUOS/theme/active/font/%s.bin", device.STORAGE.ROM.MOUNT, program);
+                 "%s/MUOS/theme/active/font/%s.bin", get_default_storage(config.STORAGE.THEME), program);
         if (file_exist(theme_font_text)) {
             char theme_font_text_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
-                     "M:%s/MUOS/theme/active/font/%s.bin", device.STORAGE.ROM.MOUNT, program);
+                     "M:%s/MUOS/theme/active/font/%s.bin", get_default_storage(config.STORAGE.THEME), program);
             lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             if (file_exist(theme_font_text_default)) {
                 char theme_font_text_default_fs[MAX_BUFFER_SIZE];
                 snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                         "M:%s/MUOS/theme/active/font/default.bin", device.STORAGE.ROM.MOUNT);
+                         "M:%s/MUOS/theme/active/font/default.bin", get_default_storage(config.STORAGE.THEME));
                 lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
             }
@@ -1246,20 +1250,20 @@ void load_font_glyph(const char *program, lv_obj_t *element) {
         char theme_font_glyph_default[MAX_BUFFER_SIZE];
         char theme_font_glyph[MAX_BUFFER_SIZE];
         snprintf(theme_font_glyph_default, sizeof(theme_font_glyph_default),
-                 "%s/MUOS/theme/active/font/glyph/default.bin", device.STORAGE.ROM.MOUNT);
+                 "%s/MUOS/theme/active/font/glyph/default.bin", get_default_storage(config.STORAGE.THEME));
         snprintf(theme_font_glyph, sizeof(theme_font_glyph),
-                 "%s/MUOS/theme/active/font/glyph/%s.bin", device.STORAGE.ROM.MOUNT, program);
+                 "%s/MUOS/theme/active/font/glyph/%s.bin", get_default_storage(config.STORAGE.THEME), program);
         if (file_exist(theme_font_glyph)) {
             char theme_font_glyph_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_glyph_fs, sizeof(theme_font_glyph_fs),
-                     "M:%s/MUOS/theme/active/font/glyph/%s.bin", device.STORAGE.ROM.MOUNT, program);
+                     "M:%s/MUOS/theme/active/font/glyph/%s.bin", get_default_storage(config.STORAGE.THEME), program);
             lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             if (file_exist(theme_font_glyph_default)) {
                 char theme_font_glyph_default_fs[MAX_BUFFER_SIZE];
                 snprintf(theme_font_glyph_default_fs, sizeof(theme_font_glyph_default_fs),
-                         "M:%s/MUOS/theme/active/font/glyph/default.bin", device.STORAGE.ROM.MOUNT);
+                         "M:%s/MUOS/theme/active/font/glyph/default.bin", get_default_storage(config.STORAGE.THEME));
                 lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
                 printf("\t\t\t\tLOADED DEFAULT GLYPH FONT (%s)\n", theme_font_glyph_default_fs);
@@ -1275,20 +1279,22 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
         char theme_font_section_default[MAX_BUFFER_SIZE];
         char theme_font_section[MAX_BUFFER_SIZE];
         snprintf(theme_font_section_default, sizeof(theme_font_section_default),
-                 "%s/MUOS/theme/active/font/%s/default.bin", device.STORAGE.ROM.MOUNT, section);
+                 "%s/MUOS/theme/active/font/%s/default.bin", get_default_storage(config.STORAGE.THEME), section);
         snprintf(theme_font_section, sizeof(theme_font_section),
-                 "%s/MUOS/theme/active/font/%s/%s.bin", device.STORAGE.ROM.MOUNT, section, program);
+                 "%s/MUOS/theme/active/font/%s/%s.bin", get_default_storage(config.STORAGE.THEME), section, program);
         if (file_exist(theme_font_section)) {
             char theme_font_section_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_section_fs, sizeof(theme_font_section_fs),
-                     "M:%s/MUOS/theme/active/font/%s/%s.bin", device.STORAGE.ROM.MOUNT, section, program);
+                     "M:%s/MUOS/theme/active/font/%s/%s.bin",
+                     get_default_storage(config.STORAGE.THEME), section, program);
             lv_obj_set_style_text_font(element, lv_font_load(theme_font_section_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             if (file_exist(theme_font_section_default)) {
                 char theme_font_section_default_fs[MAX_BUFFER_SIZE];
                 snprintf(theme_font_section_default_fs, sizeof(theme_font_section_default_fs),
-                         "M:%s/MUOS/theme/active/font/%s/default.bin", device.STORAGE.ROM.MOUNT, section);
+                         "M:%s/MUOS/theme/active/font/%s/default.bin",
+                         get_default_storage(config.STORAGE.THEME), section);
                 lv_obj_set_style_text_font(element, lv_font_load(theme_font_section_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
                 printf("\t\t\t\tLOADED DEFAULT %s FONT (%s)\n", section, theme_font_section_default_fs);
