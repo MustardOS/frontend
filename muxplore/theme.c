@@ -24,6 +24,7 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BACKGROUND},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_MAIN_BACKGROUND},
+            {ui_pnlCounter,            theme.COUNTER.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(background_elements) / sizeof(background_elements[0]); ++i) {
         lv_obj_set_style_bg_color(background_elements[i].e, lv_color_hex(background_elements[i].c),
@@ -41,6 +42,7 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND_ALPHA},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BACKGROUND_ALPHA},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_MAIN_BACKGROUND_ALPHA},
+            {ui_pnlCounter,            theme.COUNTER.BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(background_alpha_elements) / sizeof(background_alpha_elements[0]); ++i) {
         lv_obj_set_style_bg_opa(background_alpha_elements[i].e, background_alpha_elements[i].c,
@@ -95,6 +97,7 @@ void apply_theme() {
             {ui_lblHelpPreviewInfoMessage, theme.NAV.A.TEXT},
             {ui_icoProgressBrightness,     theme.BAR.ICON},
             {ui_icoProgressVolume,         theme.BAR.ICON},
+            {ui_pnlCounter,                theme.COUNTER.TEXT},
     };
     for (size_t i = 0; i < sizeof(default_elements) / sizeof(default_elements[0]); ++i) {
         lv_obj_set_style_text_color(default_elements[i].e, lv_color_hex(default_elements[i].c),
@@ -153,6 +156,7 @@ void apply_theme() {
             {ui_lblHelpPreviewInfoMessage, theme.NAV.A.TEXT_ALPHA},
             {ui_icoProgressBrightness,     theme.BAR.ICON_ALPHA},
             {ui_icoProgressVolume,         theme.BAR.ICON_ALPHA},
+            {ui_pnlCounter,                theme.COUNTER.TEXT_ALPHA},
     };
     for (size_t i = 0; i < sizeof(text_default_alpha_elements) / sizeof(text_default_alpha_elements[0]); ++i) {
         lv_obj_set_style_text_opa(text_default_alpha_elements[i].e, text_default_alpha_elements[i].c,
@@ -169,6 +173,7 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
+            {ui_pnlCounter,            theme.COUNTER.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,
@@ -398,5 +403,24 @@ void apply_theme() {
                 break;
         }
         lv_obj_set_style_flex_main_place(navigation_alignment_element[i].e, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    lv_obj_set_y(ui_pnlCounter, theme.COUNTER.PADDING_TOP);
+
+    if (!theme.COUNTER.ENABLED) {
+        lv_obj_add_flag(ui_pnlCounter, LV_OBJ_FLAG_HIDDEN);
+    }
+    switch (theme.COUNTER.ALIGNMENT) {
+            case 1:
+            lv_obj_set_align(ui_pnlCounter, LV_ALIGN_TOP_MID);
+            break;
+            case 2:
+            lv_obj_set_align(ui_pnlCounter, LV_ALIGN_TOP_RIGHT);
+            lv_obj_set_x(ui_pnlCounter, -theme.COUNTER.PADDING_SIDE);
+            break;
+            default:
+            lv_obj_set_align(ui_pnlCounter, LV_ALIGN_TOP_LEFT);
+            lv_obj_set_x(ui_pnlCounter, theme.COUNTER.PADDING_SIDE);
+            break;
     }
 }

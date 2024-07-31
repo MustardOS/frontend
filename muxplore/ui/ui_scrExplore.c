@@ -32,6 +32,18 @@ void ui_scrExplore_screen_init(void)
     lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlWall, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
 
+    ui_pnlCounter = lv_label_create(ui_scrExplore);
+    lv_obj_set_width(ui_pnlCounter, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_pnlCounter, LV_SIZE_CONTENT);
+    lv_label_set_text(ui_pnlCounter, " / ");
+    lv_obj_set_style_bg_color(ui_pnlCounter, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlCounter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_pnlCounter, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_pnlCounter, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlCounter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_pnlCounter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_clear_flag(ui_pnlCounter, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
     ui_imgWall = lv_img_create(ui_pnlWall);
     lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     lv_obj_set_width(ui_imgWall, LV_SIZE_CONTENT);   /// 1

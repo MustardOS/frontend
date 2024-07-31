@@ -12,6 +12,7 @@
 // SCREEN: ui_scrExplore
 void ui_scrExplore_screen_init(void);
 lv_obj_t * ui_scrExplore;
+lv_obj_t * ui_pnlCounter;
 lv_obj_t * ui_pnlWall;
 lv_obj_t * ui_imgWall;
 lv_obj_t * ui_pnlContent;

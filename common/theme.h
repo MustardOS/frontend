@@ -277,6 +277,19 @@ struct theme_config {
             int16_t WIDTH;
         } CONTENT;
     } MISC;
+
+    struct {
+        int16_t ENABLED;
+        uint16_t ALIGNMENT;
+        int16_t PADDING_SIDE;
+        int16_t PADDING_TOP;
+        int16_t RADIUS;
+        uint32_t BACKGROUND;
+        uint32_t BACKGROUND_GRADIENT;
+        int16_t BACKGROUND_ALPHA;
+        uint32_t TEXT;
+        int16_t TEXT_ALPHA;
+    } COUNTER;
 };
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name);
