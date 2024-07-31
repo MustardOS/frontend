@@ -975,7 +975,7 @@ int load_content(char *content_name, int content_index, int add_favourite) {
 int load_cached_content(const char *content_name, char *cache_type, int add_favourite) {
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), "%s/MUOS/info/%s/%s",
-             device.STORAGE.ROM.MOUNT, cache_type, content_name);
+             store_favourite, cache_type, content_name);
 
     if (file_exist(pointer_file)) {
         char cache_file[MAX_BUFFER_SIZE];
