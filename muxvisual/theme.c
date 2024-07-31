@@ -352,6 +352,63 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblBattery,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblNetwork,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblBluetooth, theme.MUX.ITEM.HEIGHT},
+            {ui_lblClock,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblBoxArt,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblName,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblDash,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoBattery,   theme.MUX.ITEM.HEIGHT},
+            {ui_icoNetwork,   theme.MUX.ITEM.HEIGHT},
+            {ui_icoBluetooth, theme.MUX.ITEM.HEIGHT},
+            {ui_icoClock,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoBoxArt,    theme.MUX.ITEM.HEIGHT},
+            {ui_icoName,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoDash,      theme.MUX.ITEM.HEIGHT},
+            {ui_droBattery,   theme.MUX.ITEM.HEIGHT},
+            {ui_droNetwork,   theme.MUX.ITEM.HEIGHT},
+            {ui_droBluetooth, theme.MUX.ITEM.HEIGHT},
+            {ui_droClock,     theme.MUX.ITEM.HEIGHT},
+            {ui_droBoxArt,    theme.MUX.ITEM.HEIGHT},
+            {ui_droName,      theme.MUX.ITEM.HEIGHT},
+            {ui_droDash,      theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,   theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,     theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlHighlight, theme.MISC.CONTENT.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblBattery,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblNetwork,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblBluetooth, theme.MISC.CONTENT.WIDTH},
+            {ui_lblClock,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblBoxArt,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblName,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblDash,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoBattery,   theme.MISC.CONTENT.WIDTH},
+            {ui_icoNetwork,   theme.MISC.CONTENT.WIDTH},
+            {ui_icoBluetooth, theme.MISC.CONTENT.WIDTH},
+            {ui_icoClock,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoBoxArt,    theme.MISC.CONTENT.WIDTH},
+            {ui_icoName,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoDash,      theme.MISC.CONTENT.WIDTH},
+            {ui_droBattery,   theme.MISC.CONTENT.WIDTH},
+            {ui_droNetwork,   theme.MISC.CONTENT.WIDTH},
+            {ui_droBluetooth, theme.MISC.CONTENT.WIDTH},
+            {ui_droClock,     theme.MISC.CONTENT.WIDTH},
+            {ui_droBoxArt,    theme.MISC.CONTENT.WIDTH},
+            {ui_droName,      theme.MISC.CONTENT.WIDTH},
+            {ui_droDash,      theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }
+
     struct small gradient_start_default_elements[] = {
             {ui_lblBattery,   theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblNetwork,   theme.LIST_DEFAULT.GRADIENT_START},
@@ -677,12 +734,22 @@ void apply_theme() {
     }
 
     struct small content_pad_left_element[] = {
-            {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlContent,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlGlyph,     theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlHighlight, theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlHighlight,   44 + theme.MISC.CONTENT.PADDING_TOP},
+    };
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small highlight_pad_right_element[] = {
@@ -691,16 +758,6 @@ void apply_theme() {
     for (size_t i = 0; i < sizeof(highlight_pad_right_element) / sizeof(highlight_pad_right_element[0]); ++i) {
         lv_obj_set_style_pad_right(highlight_pad_right_element[i].e, (highlight_pad_right_element[i].c / 2) + 4,
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent,   theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,     theme.MISC.CONTENT.WIDTH},
-            {ui_pnlHighlight, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     struct small datetime_pad_left_element[] = {

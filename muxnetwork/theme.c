@@ -454,6 +454,81 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblEnable,          theme.MUX.ITEM.HEIGHT},
+            {ui_lblIdentifier,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblPassword,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblType,            theme.MUX.ITEM.HEIGHT},
+            {ui_lblAddress,         theme.MUX.ITEM.HEIGHT},
+            {ui_lblSubnet,          theme.MUX.ITEM.HEIGHT},
+            {ui_lblGateway,         theme.MUX.ITEM.HEIGHT},
+            {ui_lblDNS,             theme.MUX.ITEM.HEIGHT},
+            {ui_lblStatus,          theme.MUX.ITEM.HEIGHT},
+            {ui_lblConnect,         theme.MUX.ITEM.HEIGHT},
+            {ui_icoEnable,          theme.MUX.ITEM.HEIGHT},
+            {ui_icoIdentifier,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoPassword,        theme.MUX.ITEM.HEIGHT},
+            {ui_icoType,            theme.MUX.ITEM.HEIGHT},
+            {ui_icoAddress,         theme.MUX.ITEM.HEIGHT},
+            {ui_icoSubnet,          theme.MUX.ITEM.HEIGHT},
+            {ui_icoGateway,         theme.MUX.ITEM.HEIGHT},
+            {ui_icoDNS,             theme.MUX.ITEM.HEIGHT},
+            {ui_icoStatus,          theme.MUX.ITEM.HEIGHT},
+            {ui_icoConnect,         theme.MUX.ITEM.HEIGHT},
+            {ui_lblEnableValue,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblIdentifierValue, theme.MUX.ITEM.HEIGHT},
+            {ui_lblPasswordValue,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblTypeValue,       theme.MUX.ITEM.HEIGHT},
+            {ui_lblAddressValue,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblSubnetValue,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblGatewayValue,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblDNSValue,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblStatusValue,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblConnectValue,    theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,         theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,           theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlHighlight,       theme.MISC.CONTENT.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblEnable,          theme.MISC.CONTENT.WIDTH},
+            {ui_lblIdentifier,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblPassword,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblType,            theme.MISC.CONTENT.WIDTH},
+            {ui_lblAddress,         theme.MISC.CONTENT.WIDTH},
+            {ui_lblSubnet,          theme.MISC.CONTENT.WIDTH},
+            {ui_lblGateway,         theme.MISC.CONTENT.WIDTH},
+            {ui_lblDNS,             theme.MISC.CONTENT.WIDTH},
+            {ui_lblStatus,          theme.MISC.CONTENT.WIDTH},
+            {ui_lblConnect,         theme.MISC.CONTENT.WIDTH},
+            {ui_icoEnable,          theme.MISC.CONTENT.WIDTH},
+            {ui_icoIdentifier,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoPassword,        theme.MISC.CONTENT.WIDTH},
+            {ui_icoType,            theme.MISC.CONTENT.WIDTH},
+            {ui_icoAddress,         theme.MISC.CONTENT.WIDTH},
+            {ui_icoSubnet,          theme.MISC.CONTENT.WIDTH},
+            {ui_icoGateway,         theme.MISC.CONTENT.WIDTH},
+            {ui_icoDNS,             theme.MISC.CONTENT.WIDTH},
+            {ui_icoStatus,          theme.MISC.CONTENT.WIDTH},
+            {ui_icoConnect,         theme.MISC.CONTENT.WIDTH},
+            {ui_lblEnableValue,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblIdentifierValue, theme.MISC.CONTENT.WIDTH},
+            {ui_lblPasswordValue,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblTypeValue,       theme.MISC.CONTENT.WIDTH},
+            {ui_lblAddressValue,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblSubnetValue,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblGatewayValue,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblDNSValue,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblStatusValue,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblConnectValue,    theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }
+
     struct small gradient_start_default_elements[] = {
             {ui_lblEnable,     theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblIdentifier, theme.LIST_DEFAULT.GRADIENT_START},
@@ -694,6 +769,43 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_top_dropdown_elements[] = {
+            {ui_lblEnableValue,     theme.FONT.LIST_PAD_TOP},
+            {ui_lblIdentifierValue, theme.FONT.LIST_PAD_TOP},
+            {ui_lblPasswordValue,   theme.FONT.LIST_PAD_TOP},
+            {ui_lblTypeValue,       theme.FONT.LIST_PAD_TOP},
+            {ui_lblAddressValue,    theme.FONT.LIST_PAD_TOP},
+            {ui_lblSubnetValue,     theme.FONT.LIST_PAD_TOP},
+            {ui_lblGatewayValue,    theme.FONT.LIST_PAD_TOP},
+            {ui_lblDNSValue,        theme.FONT.LIST_PAD_TOP},
+            {ui_lblStatusValue,     theme.FONT.LIST_PAD_TOP},
+            {ui_lblConnectValue,    theme.FONT.LIST_PAD_TOP},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_top_dropdown_elements) / sizeof(font_pad_top_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_top(font_pad_top_dropdown_elements[i].e, font_pad_top_dropdown_elements[i].c + 5,
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_bottom_dropdown_elements[] = {
+            {ui_lblEnableValue,     theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblIdentifierValue, theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblPasswordValue,   theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblTypeValue,       theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblAddressValue,    theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblSubnetValue,     theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblGatewayValue,    theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblDNSValue,        theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblStatusValue,     theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblConnectValue,    theme.FONT.LIST_PAD_BOTTOM},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
+                                    font_pad_bottom_dropdown_elements[i].c + 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_list_icon_elements[] = {
             {ui_icoEnable,     theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoIdentifier, theme.FONT.LIST_ICON_PAD_TOP},
@@ -770,12 +882,25 @@ void apply_theme() {
     }
 
     struct small content_pad_left_element[] = {
-            {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlContent,         theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlGlyph,           theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlHighlight,       theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlStatus,          theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlStatusGlyph,     theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlStatusHighlight, theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlHighlight,   44 + theme.MISC.CONTENT.PADDING_TOP},
+    };
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small highlight_pad_right_element[] = {
@@ -784,16 +909,6 @@ void apply_theme() {
     for (size_t i = 0; i < sizeof(highlight_pad_right_element) / sizeof(highlight_pad_right_element[0]); ++i) {
         lv_obj_set_style_pad_right(highlight_pad_right_element[i].e, (highlight_pad_right_element[i].c / 2) + 4,
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent,   theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,     theme.MISC.CONTENT.WIDTH},
-            {ui_pnlHighlight, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     struct small datetime_pad_left_element[] = {

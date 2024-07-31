@@ -432,6 +432,87 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblVersion,         theme.MUX.ITEM.HEIGHT},
+            {ui_lblKernel,          theme.MUX.ITEM.HEIGHT},
+            {ui_lblUptime,          theme.MUX.ITEM.HEIGHT},
+            {ui_lblCPU,             theme.MUX.ITEM.HEIGHT},
+            {ui_lblSpeed,           theme.MUX.ITEM.HEIGHT},
+            {ui_lblGovernor,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblMemory,          theme.MUX.ITEM.HEIGHT},
+            {ui_lblTemp,            theme.MUX.ITEM.HEIGHT},
+            {ui_lblServices,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblBatteryCap,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblVoltage,         theme.MUX.ITEM.HEIGHT},
+            {ui_icoVersion,         theme.MUX.ITEM.HEIGHT},
+            {ui_icoKernel,          theme.MUX.ITEM.HEIGHT},
+            {ui_icoUptime,          theme.MUX.ITEM.HEIGHT},
+            {ui_icoCPU,             theme.MUX.ITEM.HEIGHT},
+            {ui_icoSpeed,           theme.MUX.ITEM.HEIGHT},
+            {ui_icoGovernor,        theme.MUX.ITEM.HEIGHT},
+            {ui_icoMemory,          theme.MUX.ITEM.HEIGHT},
+            {ui_icoTemp,            theme.MUX.ITEM.HEIGHT},
+            {ui_icoServices,        theme.MUX.ITEM.HEIGHT},
+            {ui_icoBatteryCap,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoVoltage,         theme.MUX.ITEM.HEIGHT},
+            {ui_lblVersionValue,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblKernelValue,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblUptimeValue,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblCPUValue,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblSpeedValue,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblGovernorValue,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblMemoryValue,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblTempValue,       theme.MUX.ITEM.HEIGHT},
+            {ui_lblServicesValue,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblBatteryCapValue, theme.MUX.ITEM.HEIGHT},
+            {ui_lblVoltageValue,    theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,         theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,           theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlHighlight,       theme.MISC.CONTENT.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblVersion,         theme.MISC.CONTENT.WIDTH},
+            {ui_lblKernel,          theme.MISC.CONTENT.WIDTH},
+            {ui_lblUptime,          theme.MISC.CONTENT.WIDTH},
+            {ui_lblCPU,             theme.MISC.CONTENT.WIDTH},
+            {ui_lblSpeed,           theme.MISC.CONTENT.WIDTH},
+            {ui_lblGovernor,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblMemory,          theme.MISC.CONTENT.WIDTH},
+            {ui_lblTemp,            theme.MISC.CONTENT.WIDTH},
+            {ui_lblServices,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblBatteryCap,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblVoltage,         theme.MISC.CONTENT.WIDTH},
+            {ui_icoVersion,         theme.MISC.CONTENT.WIDTH},
+            {ui_icoKernel,          theme.MISC.CONTENT.WIDTH},
+            {ui_icoUptime,          theme.MISC.CONTENT.WIDTH},
+            {ui_icoCPU,             theme.MISC.CONTENT.WIDTH},
+            {ui_icoSpeed,           theme.MISC.CONTENT.WIDTH},
+            {ui_icoGovernor,        theme.MISC.CONTENT.WIDTH},
+            {ui_icoMemory,          theme.MISC.CONTENT.WIDTH},
+            {ui_icoTemp,            theme.MISC.CONTENT.WIDTH},
+            {ui_icoServices,        theme.MISC.CONTENT.WIDTH},
+            {ui_icoBatteryCap,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoVoltage,         theme.MISC.CONTENT.WIDTH},
+            {ui_lblVersionValue,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblKernelValue,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblUptimeValue,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblCPUValue,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblSpeedValue,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblGovernorValue,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblMemoryValue,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblTempValue,       theme.MISC.CONTENT.WIDTH},
+            {ui_lblServicesValue,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblBatteryCapValue, theme.MISC.CONTENT.WIDTH},
+            {ui_lblVoltageValue,    theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }
+
     struct small gradient_start_default_elements[] = {
             {ui_lblVersion,    theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblKernel,     theme.LIST_DEFAULT.GRADIENT_START},
@@ -799,10 +880,20 @@ void apply_theme() {
     struct small content_pad_left_element[] = {
             {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
             {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlHighlight,   theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlHighlight,   44 + theme.MISC.CONTENT.PADDING_TOP},
+    };
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small highlight_pad_right_element[] = {
@@ -811,16 +902,6 @@ void apply_theme() {
     for (size_t i = 0; i < sizeof(highlight_pad_right_element) / sizeof(highlight_pad_right_element[0]); ++i) {
         lv_obj_set_style_pad_right(highlight_pad_right_element[i].e, (highlight_pad_right_element[i].c / 2) + 4,
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent,   theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,     theme.MISC.CONTENT.WIDTH},
-            {ui_pnlHighlight, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     struct small datetime_pad_left_element[] = {

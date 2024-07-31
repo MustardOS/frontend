@@ -213,7 +213,7 @@ void create_system_items() {
             lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
             lv_label_set_text(ui_lblCoreItem, base_filename);
 
-            lv_obj_set_width(ui_lblCoreItem, device.MUX.WIDTH);
+            lv_obj_set_width(ui_lblCoreItem, theme.MISC.CONTENT.WIDTH);
             lv_obj_set_height(ui_lblCoreItem, theme.MUX.ITEM.HEIGHT);
 
             lv_obj_set_style_border_width(ui_lblCoreItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -354,7 +354,7 @@ void create_core_items(const char *target) {
         lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
         lv_label_set_text(ui_lblCoreItem, core_headers[i]);
 
-        lv_obj_set_width(ui_lblCoreItem, device.MUX.WIDTH);
+        lv_obj_set_width(ui_lblCoreItem, theme.MISC.CONTENT.WIDTH);
         lv_obj_set_height(ui_lblCoreItem, theme.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblCoreItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);

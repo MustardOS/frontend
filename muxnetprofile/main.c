@@ -162,7 +162,7 @@ void create_profile_items() {
             lv_obj_t * ui_lblNetProfileItem = lv_label_create(ui_pnlNetProfile);
             lv_label_set_text(ui_lblNetProfileItem, base_filename);
 
-            lv_obj_set_width(ui_lblNetProfileItem, device.MUX.WIDTH);
+            lv_obj_set_width(ui_lblNetProfileItem, theme.MISC.CONTENT.WIDTH);
             lv_obj_set_height(ui_lblNetProfileItem, theme.MUX.ITEM.HEIGHT);
 
             lv_obj_set_style_border_width(ui_lblNetProfileItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);

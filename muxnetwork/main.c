@@ -49,6 +49,9 @@ struct mux_device device;
 
 int nav_moved = 1;
 char *current_wall = "";
+int current_item_index = 0;
+int content_panel_y = 0;
+int ui_count = 0;
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -163,8 +166,10 @@ void restore_network_values() {
 
     if (config.NETWORK.TYPE) {
         lv_label_set_text(ui_lblTypeValue, "Static");
+        ui_count = 9;
     } else {
         lv_label_set_text(ui_lblTypeValue, "DHCP");
+        ui_count = 5;
     }
 
     lv_label_set_text(ui_lblPasswordValue, "");
@@ -268,6 +273,40 @@ void reset_osk() {
     lv_btnmatrix_set_selected_btn(num_entry, key_curr);
     lv_btnmatrix_set_btn_ctrl(key_entry, lv_btnmatrix_get_selected_btn(key_entry), LV_BTNMATRIX_CTRL_CHECKED);
     lv_btnmatrix_set_btn_ctrl(num_entry, lv_btnmatrix_get_selected_btn(num_entry), LV_BTNMATRIX_CTRL_CHECKED);
+}
+
+void update_scroll_position() {
+    int scrollMultiplier = (current_item_index > theme.MUX.ITEM.NEXT_LOW) ? (current_item_index - theme.MUX.ITEM.NEXT_LOW) : 0;
+    if (scrollMultiplier > (ui_count - theme.MUX.ITEM.COUNT)) scrollMultiplier = (ui_count - theme.MUX.ITEM.COUNT);
+    content_panel_y = scrollMultiplier * theme.MUX.ITEM.PANEL;
+    lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
+    lv_obj_scroll_to_y(ui_pnlGlyph, content_panel_y, LV_ANIM_OFF);
+    lv_obj_scroll_to_y(ui_pnlHighlight, content_panel_y, LV_ANIM_OFF);
+}
+
+void list_nav_prev(int steps) {
+    for (int step = 0; step < steps; ++step) {
+        current_item_index--;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_value, 1);
+        nav_prev(ui_group_glyph, 1);
+        update_scroll_position();
+    }
+
+    play_sound("navigate", nav_sound);
+    nav_moved = 1;
+}
+
+void list_nav_next(int steps) {
+    for (int step = 0; step < steps; ++step) {
+        current_item_index++;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_value, 1);
+        nav_next(ui_group_glyph, 1);
+        update_scroll_position();
+    }
+    play_sound("navigate", nav_sound);
+    nav_moved = 1;
 }
 
 void *joystick_task() {
@@ -464,6 +503,7 @@ void *joystick_task() {
                                     } else if (strcasecmp(lv_label_get_text(element_focused), "Network Type") == 0) {
                                         if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
                                             lv_label_set_text(ui_lblTypeValue, "DHCP");
+                                            ui_count = 5;
                                             lv_obj_add_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
@@ -488,32 +528,9 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_lblSubnetValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_lblGatewayValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_lblDNSValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_FLOATING);
                                         } else {
                                             lv_label_set_text(ui_lblTypeValue, "static");
+                                            ui_count = 9;
                                             lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
@@ -538,30 +555,6 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_FLOATING);
                                         }
                                     } else if (strcasecmp(lv_label_get_text(element_focused), "Connect") == 0) {
                                         lv_label_set_text(ui_lblStatusValue, "Trying to Connect...");
@@ -731,12 +724,16 @@ void *joystick_task() {
                                     lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
                                     lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
                                 } else {
-                                    nav_prev(ui_group, 1);
-                                    nav_prev(ui_group_value, 1);
-                                    nav_prev(ui_group_glyph, 1);
+                                    if (current_item_index == 0) {
+                                        current_item_index = ui_count - 1;
+                                        nav_prev(ui_group, 1);
+                                        nav_prev(ui_group_value, 1);
+                                        nav_prev(ui_group_glyph, 1);
+                                        update_scroll_position();
+                                    } else if (current_item_index > 0) {
+                                        list_nav_prev(1);
+                                    }
                                     lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
-                                    play_sound("navigate", nav_sound);
-                                    nav_moved = 1;
                                     break;
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
@@ -793,12 +790,16 @@ void *joystick_task() {
                                     lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
                                     lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
                                 } else {
-                                    nav_next(ui_group, 1);
-                                    nav_next(ui_group_value, 1);
-                                    nav_next(ui_group_glyph, 1);
+                                    if (current_item_index == ui_count - 1) {
+                                        current_item_index = 0;
+                                        nav_next(ui_group, 1);
+                                        nav_next(ui_group_value, 1);
+                                        nav_next(ui_group_glyph, 1);
+                                        update_scroll_position();
+                                    } else if (current_item_index < ui_count - 1) {
+                                        list_nav_next(1);
+                                    }
                                     lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
-                                    play_sound("navigate", nav_sound);
-                                    nav_moved = 1;
                                     break;
                                 }
                             }
@@ -894,6 +895,7 @@ void *joystick_task() {
 
                                         if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
                                             lv_label_set_text(ui_lblTypeValue, "DHCP");
+                                            ui_count = 5;
                                             lv_obj_add_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
@@ -918,32 +920,9 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_lblSubnetValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_lblGatewayValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_lblDNSValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_FLOATING);
                                         } else {
                                             lv_label_set_text(ui_lblTypeValue, "Static");
+                                            ui_count = 9;
                                             lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
@@ -968,30 +947,6 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_FLOATING);
                                         }
                                         break;
                                     }
@@ -1093,6 +1048,7 @@ void *joystick_task() {
 
                                         if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
                                             lv_label_set_text(ui_lblTypeValue, "DHCP");
+                                            ui_count = 5;
                                             lv_obj_add_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
@@ -1117,32 +1073,9 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_lblSubnetValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_lblGatewayValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_lblDNSValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_icoBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_icoBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_FLOATING);
                                         } else {
                                             lv_label_set_text(ui_lblTypeValue, "Static");
+                                            ui_count = 9;
                                             lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblGateway, LV_OBJ_FLAG_HIDDEN);
@@ -1167,30 +1100,6 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankFour, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankFive, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankSix, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_icoBlankSeven, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankFour, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankFive, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankSix, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_icoBlankSeven, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_FLOATING);
                                         }
                                         break;
                                     }
@@ -1425,30 +1334,6 @@ void init_elements() {
         lv_obj_add_flag(ui_lblSubnetValue, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblGatewayValue, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblDNSValue, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblBlankFour, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblBlankFive, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblBlankSix, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblBlankSeven, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_icoBlankFour, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_icoBlankFive, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_icoBlankSix, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_icoBlankSeven, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblBlankFour, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblBlankFive, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblBlankSix, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblBlankSeven, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_icoBlankFour, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_icoBlankFive, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_icoBlankSix, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_icoBlankSeven, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_FLOATING);
     } else {
         lv_obj_clear_flag(ui_lblAddress, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -1474,30 +1359,6 @@ void init_elements() {
         lv_obj_clear_flag(ui_lblSubnetValue, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblGatewayValue, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblDNSValue, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblBlankFour, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBlankFive, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBlankSix, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBlankSeven, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoBlankFour, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoBlankFive, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoBlankSix, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoBlankSeven, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBlankFour, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblBlankFive, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblBlankSix, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblBlankSeven, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoBlankFour, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoBlankFive, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoBlankSix, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoBlankSeven, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblBlankFourValue, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblBlankFiveValue, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblBlankSixValue, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblBlankSevenValue, LV_OBJ_FLAG_FLOATING);
     }
 
     if (TEST_IMAGE) display_testing_message(ui_scrNetwork);
@@ -1740,9 +1601,7 @@ void direct_to_previous() {
         }
 
         if (text_hit != 0) {
-            nav_next(ui_group, text_hit);
-            nav_next(ui_group_glyph, text_hit);
-            nav_next(ui_group_value, text_hit);
+            list_nav_next(text_hit);
             nav_moved = 1;
         }
     }
@@ -1830,6 +1689,8 @@ int main(int argc, char *argv[]) {
     load_font_text(basename(argv[0]), ui_scrNetwork);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
+    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlStatus);
+    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlStatusHighlight);
 
     if (config.SETTINGS.GENERAL.SOUND == 2) {
         nav_sound = 1;

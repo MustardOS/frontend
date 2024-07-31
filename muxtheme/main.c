@@ -158,7 +158,7 @@ void create_theme_items() {
             lv_obj_t * ui_lblThemeItem = lv_label_create(ui_pnlTheme);
             lv_label_set_text(ui_lblThemeItem, base_filename);
 
-            lv_obj_set_width(ui_lblThemeItem, device.MUX.WIDTH);
+            lv_obj_set_width(ui_lblThemeItem, theme.MISC.CONTENT.WIDTH);
             lv_obj_set_height(ui_lblThemeItem, theme.MUX.ITEM.HEIGHT);
 
             lv_obj_set_style_border_width(ui_lblThemeItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);

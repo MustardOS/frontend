@@ -401,6 +401,78 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblHidden,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblBGM,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblStartup,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblColour,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblBrightness, theme.MUX.ITEM.HEIGHT},
+            {ui_lblHDMI,       theme.MUX.ITEM.HEIGHT},
+            {ui_lblShutdown,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblInterface,  theme.MUX.ITEM.HEIGHT},
+            {ui_lblStorage,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblAdvanced,   theme.MUX.ITEM.HEIGHT},
+            {ui_icoHidden,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoBGM,        theme.MUX.ITEM.HEIGHT},
+            {ui_icoStartup,    theme.MUX.ITEM.HEIGHT},
+            {ui_icoColour,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoBrightness, theme.MUX.ITEM.HEIGHT},
+            {ui_icoHDMI,       theme.MUX.ITEM.HEIGHT},
+            {ui_icoShutdown,   theme.MUX.ITEM.HEIGHT},
+            {ui_icoInterface,  theme.MUX.ITEM.HEIGHT},
+            {ui_icoStorage,    theme.MUX.ITEM.HEIGHT},
+            {ui_icoAdvanced,   theme.MUX.ITEM.HEIGHT},
+            {ui_droHidden,     theme.MUX.ITEM.HEIGHT},
+            {ui_droBGM,        theme.MUX.ITEM.HEIGHT},
+            {ui_droStartup,    theme.MUX.ITEM.HEIGHT},
+            {ui_droColour,     theme.MUX.ITEM.HEIGHT},
+            {ui_droBrightness, theme.MUX.ITEM.HEIGHT},
+            {ui_droHDMI,       theme.MUX.ITEM.HEIGHT},
+            {ui_droShutdown,   theme.MUX.ITEM.HEIGHT},
+            {ui_droInterface,  theme.MUX.ITEM.HEIGHT},
+            {ui_droStorage,    theme.MUX.ITEM.HEIGHT},
+            {ui_droAdvanced,   theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,    theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,      theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlHighlight,  theme.MISC.CONTENT.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblHidden,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblBGM,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblStartup,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblColour,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblBrightness, theme.MISC.CONTENT.WIDTH},
+            {ui_lblHDMI,       theme.MISC.CONTENT.WIDTH},
+            {ui_lblShutdown,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblInterface,  theme.MISC.CONTENT.WIDTH},
+            {ui_lblStorage,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblAdvanced,   theme.MISC.CONTENT.WIDTH},
+            {ui_icoHidden,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoBGM,        theme.MISC.CONTENT.WIDTH},
+            {ui_icoStartup,    theme.MISC.CONTENT.WIDTH},
+            {ui_icoColour,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoBrightness, theme.MISC.CONTENT.WIDTH},
+            {ui_icoHDMI,       theme.MISC.CONTENT.WIDTH},
+            {ui_icoShutdown,   theme.MISC.CONTENT.WIDTH},
+            {ui_icoInterface,  theme.MISC.CONTENT.WIDTH},
+            {ui_icoStorage,    theme.MISC.CONTENT.WIDTH},
+            {ui_icoAdvanced,   theme.MISC.CONTENT.WIDTH},
+            {ui_droHidden,     theme.MISC.CONTENT.WIDTH},
+            {ui_droBGM,        theme.MISC.CONTENT.WIDTH},
+            {ui_droStartup,    theme.MISC.CONTENT.WIDTH},
+            {ui_droColour,     theme.MISC.CONTENT.WIDTH},
+            {ui_droBrightness, theme.MISC.CONTENT.WIDTH},
+            {ui_droHDMI,       theme.MISC.CONTENT.WIDTH},
+            {ui_droShutdown,   theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }
+
     struct small gradient_start_default_elements[] = {
             {ui_lblHidden,     theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblBGM,        theme.LIST_DEFAULT.GRADIENT_START},
@@ -749,10 +821,20 @@ void apply_theme() {
     struct small content_pad_left_element[] = {
             {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
             {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlHighlight,   theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlHighlight,   44 + theme.MISC.CONTENT.PADDING_TOP},
+    };
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small highlight_pad_right_element[] = {
@@ -761,16 +843,6 @@ void apply_theme() {
     for (size_t i = 0; i < sizeof(highlight_pad_right_element) / sizeof(highlight_pad_right_element[0]); ++i) {
         lv_obj_set_style_pad_right(highlight_pad_right_element[i].e, (highlight_pad_right_element[i].c / 2) + 4,
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent,   theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,     theme.MISC.CONTENT.WIDTH},
-            {ui_pnlHighlight, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     struct small datetime_pad_left_element[] = {

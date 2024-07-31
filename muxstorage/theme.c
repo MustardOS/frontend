@@ -372,6 +372,69 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblBIOS,       theme.MUX.ITEM.HEIGHT},
+            {ui_lblConfig,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblCatalogue,  theme.MUX.ITEM.HEIGHT},
+            {ui_lblFav,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblMusic,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblSave,       theme.MUX.ITEM.HEIGHT},
+            {ui_lblScreenshot, theme.MUX.ITEM.HEIGHT},
+            {ui_lblTheme,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoBIOS,       theme.MUX.ITEM.HEIGHT},
+            {ui_icoConfig,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoCatalogue,  theme.MUX.ITEM.HEIGHT},
+            {ui_icoFav,        theme.MUX.ITEM.HEIGHT},
+            {ui_icoMusic,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoSave,       theme.MUX.ITEM.HEIGHT},
+            {ui_icoScreenshot, theme.MUX.ITEM.HEIGHT},
+            {ui_icoTheme,      theme.MUX.ITEM.HEIGHT},
+            {ui_droBIOS,       theme.MUX.ITEM.HEIGHT},
+            {ui_droConfig,     theme.MUX.ITEM.HEIGHT},
+            {ui_droCatalogue,  theme.MUX.ITEM.HEIGHT},
+            {ui_droFav,        theme.MUX.ITEM.HEIGHT},
+            {ui_droMusic,      theme.MUX.ITEM.HEIGHT},
+            {ui_droSave,       theme.MUX.ITEM.HEIGHT},
+            {ui_droScreenshot, theme.MUX.ITEM.HEIGHT},
+            {ui_droTheme,      theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,    theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,      theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlHighlight,  theme.MISC.CONTENT.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblBIOS,       theme.MISC.CONTENT.WIDTH},
+            {ui_lblConfig,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblCatalogue,  theme.MISC.CONTENT.WIDTH},
+            {ui_lblFav,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblMusic,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblSave,       theme.MISC.CONTENT.WIDTH},
+            {ui_lblScreenshot, theme.MISC.CONTENT.WIDTH},
+            {ui_lblTheme,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoBIOS,       theme.MISC.CONTENT.WIDTH},
+            {ui_icoConfig,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoCatalogue,  theme.MISC.CONTENT.WIDTH},
+            {ui_icoFav,        theme.MISC.CONTENT.WIDTH},
+            {ui_icoMusic,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoSave,       theme.MISC.CONTENT.WIDTH},
+            {ui_icoScreenshot, theme.MISC.CONTENT.WIDTH},
+            {ui_icoTheme,      theme.MISC.CONTENT.WIDTH},
+            {ui_droBIOS,       theme.MISC.CONTENT.WIDTH},
+            {ui_droConfig,     theme.MISC.CONTENT.WIDTH},
+            {ui_droCatalogue,  theme.MISC.CONTENT.WIDTH},
+            {ui_droFav,        theme.MISC.CONTENT.WIDTH},
+            {ui_droMusic,      theme.MISC.CONTENT.WIDTH},
+            {ui_droSave,       theme.MISC.CONTENT.WIDTH},
+            {ui_droScreenshot, theme.MISC.CONTENT.WIDTH},
+            {ui_droTheme,      theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }
+
     struct small gradient_start_default_elements[] = {
             {ui_lblBIOS,       theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblConfig,     theme.LIST_DEFAULT.GRADIENT_START},
@@ -701,10 +764,20 @@ void apply_theme() {
     struct small content_pad_left_element[] = {
             {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
             {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlHighlight,   theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlHighlight,   44 + theme.MISC.CONTENT.PADDING_TOP},
+    };
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small highlight_pad_right_element[] = {
@@ -713,16 +786,6 @@ void apply_theme() {
     for (size_t i = 0; i < sizeof(highlight_pad_right_element) / sizeof(highlight_pad_right_element[0]); ++i) {
         lv_obj_set_style_pad_right(highlight_pad_right_element[i].e, (highlight_pad_right_element[i].c / 2) + 4,
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent,   theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,     theme.MISC.CONTENT.WIDTH},
-            {ui_pnlHighlight, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     struct small datetime_pad_left_element[] = {

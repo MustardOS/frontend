@@ -17,7 +17,8 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_width(ui_pnlWall, 640);
     lv_obj_set_height(ui_pnlWall, 480);
     lv_obj_set_align(ui_pnlWall, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_pnlWall, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_pnlWall, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
+                      LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlWall, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_pnlWall, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -40,7 +41,8 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_width(ui_pnlBox, 640);
     lv_obj_set_height(ui_pnlBox, 400);
     lv_obj_set_align(ui_pnlBox, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
+                      LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlBox, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlBox, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_pnlBox, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -167,17 +169,16 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_width(ui_pnlContent, 640);
     lv_obj_set_height(ui_pnlContent, 400);
     lv_obj_set_x(ui_pnlContent, 0);
-    lv_obj_set_y(ui_pnlContent, 34);
-    lv_obj_set_align(ui_pnlContent, LV_ALIGN_TOP_MID);
+    lv_obj_set_y(ui_pnlContent, 44);
     lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_pnlContent, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_clear_flag(ui_pnlContent, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlContent, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(ui_pnlContent, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -430,10 +431,9 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_width(ui_pnlGlyph, 640);
     lv_obj_set_height(ui_pnlGlyph, 400);
     lv_obj_set_x(ui_pnlGlyph, 0);
-    lv_obj_set_y(ui_pnlGlyph, 34);
-    lv_obj_set_align(ui_pnlGlyph, LV_ALIGN_TOP_MID);
+    lv_obj_set_y(ui_pnlGlyph, 44);
     lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -441,7 +441,7 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_border_width(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlGlyph, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(ui_pnlGlyph, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

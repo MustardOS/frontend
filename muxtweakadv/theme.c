@@ -452,6 +452,93 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
+    struct small item_height_elements[] = {
+            {ui_lblSwap,       theme.MUX.ITEM.HEIGHT},
+            {ui_lblThermal,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblFont,       theme.MUX.ITEM.HEIGHT},
+            {ui_lblVolume,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblBrightness, theme.MUX.ITEM.HEIGHT},
+            {ui_lblOffset,     theme.MUX.ITEM.HEIGHT},
+            {ui_lblPasscode,   theme.MUX.ITEM.HEIGHT},
+            {ui_lblLED,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblTheme,      theme.MUX.ITEM.HEIGHT},
+            {ui_lblRetroWait,  theme.MUX.ITEM.HEIGHT},
+            {ui_lblAndroid,    theme.MUX.ITEM.HEIGHT},
+            {ui_lblState,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoSwap,       theme.MUX.ITEM.HEIGHT},
+            {ui_icoThermal,    theme.MUX.ITEM.HEIGHT},
+            {ui_icoFont,       theme.MUX.ITEM.HEIGHT},
+            {ui_icoVolume,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoBrightness, theme.MUX.ITEM.HEIGHT},
+            {ui_icoOffset,     theme.MUX.ITEM.HEIGHT},
+            {ui_icoPasscode,   theme.MUX.ITEM.HEIGHT},
+            {ui_icoLED,        theme.MUX.ITEM.HEIGHT},
+            {ui_icoTheme,      theme.MUX.ITEM.HEIGHT},
+            {ui_icoRetroWait,  theme.MUX.ITEM.HEIGHT},
+            {ui_icoAndroid,    theme.MUX.ITEM.HEIGHT},
+            {ui_icoState,      theme.MUX.ITEM.HEIGHT},
+            {ui_droSwap,       theme.MUX.ITEM.HEIGHT},
+            {ui_droThermal,    theme.MUX.ITEM.HEIGHT},
+            {ui_droFont,       theme.MUX.ITEM.HEIGHT},
+            {ui_droVolume,     theme.MUX.ITEM.HEIGHT},
+            {ui_droBrightness, theme.MUX.ITEM.HEIGHT},
+            {ui_droOffset,     theme.MUX.ITEM.HEIGHT},
+            {ui_droPasscode,   theme.MUX.ITEM.HEIGHT},
+            {ui_droLED,        theme.MUX.ITEM.HEIGHT},
+            {ui_droTheme,      theme.MUX.ITEM.HEIGHT},
+            {ui_droRetroWait,  theme.MUX.ITEM.HEIGHT},
+            {ui_droAndroid,    theme.MUX.ITEM.HEIGHT},
+            {ui_droState,      theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,    theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,      theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlHighlight,  theme.MISC.CONTENT.HEIGHT},
+    };
+    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
+        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
+    }
+
+    struct small item_width_elements[] = {
+            {ui_lblSwap,       theme.MISC.CONTENT.WIDTH},
+            {ui_lblThermal,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblFont,       theme.MISC.CONTENT.WIDTH},
+            {ui_lblVolume,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblBrightness, theme.MISC.CONTENT.WIDTH},
+            {ui_lblOffset,     theme.MISC.CONTENT.WIDTH},
+            {ui_lblPasscode,   theme.MISC.CONTENT.WIDTH},
+            {ui_lblLED,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblTheme,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblRetroWait,  theme.MISC.CONTENT.WIDTH},
+            {ui_lblAndroid,    theme.MISC.CONTENT.WIDTH},
+            {ui_lblState,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoSwap,       theme.MISC.CONTENT.WIDTH},
+            {ui_icoThermal,    theme.MISC.CONTENT.WIDTH},
+            {ui_icoFont,       theme.MISC.CONTENT.WIDTH},
+            {ui_icoVolume,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoBrightness, theme.MISC.CONTENT.WIDTH},
+            {ui_icoOffset,     theme.MISC.CONTENT.WIDTH},
+            {ui_icoPasscode,   theme.MISC.CONTENT.WIDTH},
+            {ui_icoLED,        theme.MISC.CONTENT.WIDTH},
+            {ui_icoTheme,      theme.MISC.CONTENT.WIDTH},
+            {ui_icoRetroWait,  theme.MISC.CONTENT.WIDTH},
+            {ui_icoAndroid,    theme.MISC.CONTENT.WIDTH},
+            {ui_icoState,      theme.MISC.CONTENT.WIDTH},
+            {ui_droSwap,       theme.MISC.CONTENT.WIDTH},
+            {ui_droThermal,    theme.MISC.CONTENT.WIDTH},
+            {ui_droFont,       theme.MISC.CONTENT.WIDTH},
+            {ui_droVolume,     theme.MISC.CONTENT.WIDTH},
+            {ui_droBrightness, theme.MISC.CONTENT.WIDTH},
+            {ui_droOffset,     theme.MISC.CONTENT.WIDTH},
+            {ui_droPasscode,   theme.MISC.CONTENT.WIDTH},
+            {ui_droLED,        theme.MISC.CONTENT.WIDTH},
+            {ui_droTheme,      theme.MISC.CONTENT.WIDTH},
+            {ui_droRetroWait,  theme.MISC.CONTENT.WIDTH},
+            {ui_droAndroid,    theme.MISC.CONTENT.WIDTH},
+            {ui_droState,      theme.MISC.CONTENT.WIDTH},
+    };
+    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
+        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
+    }
+
     struct small gradient_start_default_elements[] = {
             {ui_lblSwap,       theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblThermal,    theme.LIST_DEFAULT.GRADIENT_START},
@@ -832,10 +919,20 @@ void apply_theme() {
     struct small content_pad_left_element[] = {
             {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
             {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlHighlight,   theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small content_padding_top_element[] = {
+            {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlHighlight,   44 + theme.MISC.CONTENT.PADDING_TOP},
+    };
+    for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
+        lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
     }
 
     struct small highlight_pad_right_element[] = {
@@ -844,16 +941,6 @@ void apply_theme() {
     for (size_t i = 0; i < sizeof(highlight_pad_right_element) / sizeof(highlight_pad_right_element[0]); ++i) {
         lv_obj_set_style_pad_right(highlight_pad_right_element[i].e, (highlight_pad_right_element[i].c / 2) + 4,
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small content_pad_right_element[] = {
-            {ui_pnlContent,   theme.MISC.CONTENT.WIDTH},
-            {ui_pnlGlyph,     theme.MISC.CONTENT.WIDTH},
-            {ui_pnlHighlight, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_right_element) / sizeof(content_pad_right_element[0]); ++i) {
-        lv_obj_set_style_width(content_pad_right_element[i].e, content_pad_right_element[i].c,
-                               LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     struct small datetime_pad_left_element[] = {

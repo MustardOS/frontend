@@ -178,7 +178,7 @@ void create_archive_items() {
         lv_obj_t * ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
         lv_label_set_text(ui_lblArchiveItem, archive_store);
 
-        lv_obj_set_width(ui_lblArchiveItem, device.MUX.WIDTH);
+        lv_obj_set_width(ui_lblArchiveItem, theme.MISC.CONTENT.WIDTH);
         lv_obj_set_height(ui_lblArchiveItem, theme.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblArchiveItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -235,7 +235,7 @@ void create_archive_items() {
 
         lv_label_set_text(ui_lblArchiveItemInstalled, is_installed);
 
-        lv_obj_set_width(ui_lblArchiveItemInstalled, device.MUX.WIDTH);
+        lv_obj_set_width(ui_lblArchiveItemInstalled, theme.MISC.CONTENT.WIDTH);
         lv_obj_set_height(ui_lblArchiveItemInstalled, theme.MUX.ITEM.HEIGHT);
 
         lv_obj_set_style_border_width(ui_lblArchiveItemInstalled, 5, LV_PART_MAIN | LV_STATE_DEFAULT);

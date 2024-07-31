@@ -64,9 +64,8 @@ void ui_scrNetScan_screen_init(void)
     lv_obj_set_height(ui_pnlContent, 392);
     lv_obj_set_x(ui_pnlContent, 0);
     lv_obj_set_y(ui_pnlContent, 44);
-    lv_obj_set_align(ui_pnlContent, LV_ALIGN_TOP_MID);
     lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_clear_flag(ui_pnlContent, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
     lv_obj_set_scrollbar_mode(ui_pnlContent, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlContent, LV_DIR_VER);
