@@ -277,10 +277,11 @@ void set_label_long_mode() {
 }
 
 void update_file_counter() {
-    if (ui_count < 1) {
-        lv_label_set_text(ui_pnlCounter, "0 / 0");
+    if (ui_count > 0) {
+        lv_label_set_text_fmt(ui_lblCounter, "%d%s%d",
+                              current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
     } else {
-        lv_label_set_text_fmt(ui_pnlCounter, "%d / %d", current_item_index + 1, ui_count);
+        lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -1737,7 +1738,7 @@ void init_elements() {
     lv_obj_move_foreground(ui_pnlHelp);
     lv_obj_move_foreground(ui_pnlProgressBrightness);
     lv_obj_move_foreground(ui_pnlProgressVolume);
-    lv_obj_move_foreground(ui_pnlCounter);
+    lv_obj_move_foreground(ui_lblCounter);
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

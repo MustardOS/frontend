@@ -18,7 +18,7 @@ extern "C" {
 // SCREEN: ui_scrExplore
 void ui_scrExplore_screen_init(void);
 extern lv_obj_t * ui_scrExplore;
-extern lv_obj_t * ui_pnlCounter;
+extern lv_obj_t * ui_lblCounter;
 extern lv_obj_t * ui_pnlWall;
 extern lv_obj_t * ui_imgWall;
 extern lv_obj_t * ui_pnlContent;

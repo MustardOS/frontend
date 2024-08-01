@@ -1,5 +1,7 @@
 #pragma once
 
+#include "options.h"
+
 extern struct theme_config theme;
 extern struct mux_config config;
 extern struct mux_device device;
@@ -266,6 +268,23 @@ struct theme_config {
     } ROLL;
 
     struct {
+        uint16_t ALIGNMENT;
+        int16_t PADDING_AROUND;
+        int16_t PADDING_SIDE;
+        int16_t PADDING_TOP;
+        uint32_t BORDER_COLOUR;
+        int16_t BORDER_ALPHA;
+        int16_t BORDER_WIDTH;
+        int16_t RADIUS;
+        uint32_t BACKGROUND;
+        uint32_t BACKGROUND_GRADIENT;
+        int16_t BACKGROUND_ALPHA;
+        uint32_t TEXT;
+        int16_t TEXT_ALPHA;
+        char TEXT_SEPARATOR[MAX_BUFFER_SIZE];
+    } COUNTER;
+
+    struct {
         int16_t STATIC_ALIGNMENT;
         int16_t ANIMATED_BACKGROUND;
         int16_t IMAGE_OVERLAY;
@@ -277,19 +296,6 @@ struct theme_config {
             int16_t WIDTH;
         } CONTENT;
     } MISC;
-
-    struct {
-        int16_t ENABLED;
-        uint16_t ALIGNMENT;
-        int16_t PADDING_SIDE;
-        int16_t PADDING_TOP;
-        int16_t RADIUS;
-        uint32_t BACKGROUND;
-        uint32_t BACKGROUND_GRADIENT;
-        int16_t BACKGROUND_ALPHA;
-        uint32_t TEXT;
-        int16_t TEXT_ALPHA;
-    } COUNTER;
 };
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name);
