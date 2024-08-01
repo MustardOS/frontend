@@ -513,7 +513,7 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     lv_obj_set_style_bg_grad_color(ui_lblExploreItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND_GRADIENT),
                                    LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_color(ui_lblExploreItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND_GRADIENT),
-                                   LV_PART_MAIN | LV_STATE_FOCUSED);     
+                                   LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_bg_main_stop(ui_lblExploreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_lblExploreItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -1735,10 +1735,10 @@ void init_elements() {
 
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
+    lv_obj_move_foreground(ui_lblCounter);
     lv_obj_move_foreground(ui_pnlHelp);
     lv_obj_move_foreground(ui_pnlProgressBrightness);
     lv_obj_move_foreground(ui_pnlProgressVolume);
-    lv_obj_move_foreground(ui_lblCounter);
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -2249,7 +2249,8 @@ int main(int argc, char *argv[]) {
         } else {
             image_refresh("box");
         }
-        lv_refr_now(NULL); //When using LV_LABEL_LONG_DOT refresh required here in order for all labels to return correct text
+        // When using LV_LABEL_LONG_DOT refresh required here in order for all labels to return correct text
+        lv_refr_now(NULL);
         set_label_long_mode();
     } else {
         nav_moved = 0;
