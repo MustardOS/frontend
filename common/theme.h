@@ -281,6 +281,7 @@ struct theme_config {
         int16_t BACKGROUND_ALPHA;
         uint32_t TEXT;
         int16_t TEXT_ALPHA;
+        int16_t TEXT_FADE_TIME;
         char TEXT_SEPARATOR[MAX_BUFFER_SIZE];
     } COUNTER;
 

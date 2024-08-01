@@ -99,6 +99,8 @@ int content_file_index = 0;
 int first_open = 1;
 int nav_moved = 1;
 int content_panel_y = 0;
+int counter_fade = 0;
+int fade_timeout = 3;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
@@ -278,6 +280,11 @@ void set_label_long_mode() {
 
 void update_file_counter() {
     if (ui_count > 0) {
+        fade_timeout = 3;
+        lv_obj_clear_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
+        counter_fade = (theme.COUNTER.BORDER_ALPHA + theme.COUNTER.BACKGROUND_ALPHA + theme.COUNTER.TEXT_ALPHA);
+        if (counter_fade > 255) counter_fade = 255;
+        lv_obj_set_style_opa(ui_lblCounter, counter_fade, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_text_fmt(ui_lblCounter, "%d%s%d",
                               current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
     } else {
@@ -1881,6 +1888,20 @@ void glyph_task() {
         if (!msgbox_active) {
             progress_onscreen = -1;
         }
+    }
+
+    if (!nav_moved & !fade_timeout) {
+        if (counter_fade > 0) {
+            lv_obj_set_style_opa(ui_lblCounter, counter_fade - theme.COUNTER.TEXT_FADE_TIME,
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+            counter_fade -= theme.COUNTER.TEXT_FADE_TIME;
+        }
+        if (counter_fade < 0) {
+            lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
+            counter_fade = 0;
+        }
+    } else {
+        fade_timeout--;
     }
 }
 

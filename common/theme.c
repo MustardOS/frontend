@@ -236,6 +236,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->COUNTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BACKGROUND_ALPHA", 0);
     theme->COUNTER.TEXT = get_ini_hex(muos_theme, "counter", "COUNTER_TEXT");
     theme->COUNTER.TEXT_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_ALPHA", 0);
+    theme->COUNTER.TEXT_FADE_TIME = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_FADE_TIME", 0);
     strncpy(theme->COUNTER.TEXT_SEPARATOR, get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", " / "),
             MAX_BUFFER_SIZE - 1);
     theme->COUNTER.TEXT_SEPARATOR[MAX_BUFFER_SIZE - 1] = '\0';
