@@ -276,6 +276,14 @@ void set_label_long_mode() {
     }
 }
 
+void update_file_counter() {
+    if (ui_count < 1) {
+        lv_label_set_text(ui_pnlCounter, "0 / 0");
+    } else {
+        lv_label_set_text_fmt(ui_pnlCounter, "%d / %d", current_item_index + 1, ui_count);
+    }
+}
+
 void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
         printf("BOX ART IS SET TO DISABLED\n");
@@ -1564,6 +1572,7 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
                                     set_label_long_mode();
+                                    update_file_counter();
                                     image_refresh("box");
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
@@ -1582,6 +1591,7 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
                                     set_label_long_mode();
+                                    update_file_counter();
                                     image_refresh("box");
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count - 1) {
@@ -1727,6 +1737,7 @@ void init_elements() {
     lv_obj_move_foreground(ui_pnlHelp);
     lv_obj_move_foreground(ui_pnlProgressBrightness);
     lv_obj_move_foreground(ui_pnlProgressVolume);
+    lv_obj_move_foreground(ui_pnlCounter);
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1948,6 +1959,8 @@ void ui_refresh_task() {
         if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         }
+
+        update_file_counter();
 
         nav_moved = 0;
     }
@@ -2241,6 +2254,7 @@ int main(int argc, char *argv[]) {
         nav_moved = 0;
         lv_obj_clear_flag(ui_lblExploreMessage, LV_OBJ_FLAG_HIDDEN);
     }
+    update_file_counter();
     pthread_cancel(gen_item_thread);
 
     pthread_t joystick_thread;

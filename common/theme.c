@@ -234,6 +234,16 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", 255);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", 255);
 
+    theme->COUNTER.ENABLED = get_ini_int(muos_theme, "counter", "ENABLED", 0);
+    theme->COUNTER.ALIGNMENT = get_ini_int(muos_theme, "counter", "ALIGNMENT", 0);
+    theme->COUNTER.PADDING_SIDE = get_ini_int(muos_theme, "counter", "PADDING_SIDE", 15);
+    theme->COUNTER.PADDING_TOP = get_ini_int(muos_theme, "counter", "PADDING_TOP", 0);
+    theme->COUNTER.RADIUS = get_ini_int(muos_theme, "counter", "RADIUS", 0);
+    theme->COUNTER.BACKGROUND = get_ini_hex(muos_theme, "counter", "BACKGROUND");
+    theme->COUNTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "counter", "BACKGROUND_ALPHA", 255);
+    theme->COUNTER.TEXT = get_ini_hex(muos_theme, "counter", "TEXT");
+    theme->COUNTER.TEXT_ALPHA = get_ini_int(muos_theme, "counter", "TEXT_ALPHA", 255);
+
     if (theme->MISC.CONTENT.HEIGHT < 100) theme->MISC.CONTENT.HEIGHT = 100;
     if (theme->MISC.CONTENT.HEIGHT > device->SCREEN.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->SCREEN.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 5) theme->MUX.ITEM.COUNT = 5;
