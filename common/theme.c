@@ -229,13 +229,13 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->COUNTER.PADDING_SIDE = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_SIDE", 15);
     theme->COUNTER.PADDING_TOP = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_TOP", 0);
     theme->COUNTER.BORDER_COLOUR = get_ini_hex(muos_theme, "counter", "COUNTER_BORDER_COLOUR");
-    theme->COUNTER.BORDER_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BORDER_ALPHA", 255);
+    theme->COUNTER.BORDER_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BORDER_ALPHA", 0);
     theme->COUNTER.BORDER_WIDTH = get_ini_int(muos_theme, "counter", "COUNTER_BORDER_WIDTH", 2);
     theme->COUNTER.RADIUS = get_ini_int(muos_theme, "counter", "COUNTER_RADIUS", 0);
     theme->COUNTER.BACKGROUND = get_ini_hex(muos_theme, "counter", "COUNTER_BACKGROUND");
-    theme->COUNTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BACKGROUND_ALPHA", 255);
+    theme->COUNTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BACKGROUND_ALPHA", 0);
     theme->COUNTER.TEXT = get_ini_hex(muos_theme, "counter", "COUNTER_TEXT");
-    theme->COUNTER.TEXT_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_ALPHA", 255);
+    theme->COUNTER.TEXT_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_ALPHA", 0);
     strncpy(theme->COUNTER.TEXT_SEPARATOR, get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", " / "),
             MAX_BUFFER_SIZE - 1);
     theme->COUNTER.TEXT_SEPARATOR[MAX_BUFFER_SIZE - 1] = '\0';
