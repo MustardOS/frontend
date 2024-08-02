@@ -729,9 +729,11 @@ void *joystick_task() {
                                         nav_prev(ui_group, 1);
                                         nav_prev(ui_group_value, 1);
                                         nav_prev(ui_group_glyph, 1);
+                                        nav_moved = 1;
                                         update_scroll_position();
                                     } else if (current_item_index > 0) {
                                         list_nav_prev(1);
+                                        nav_moved = 1;
                                     }
                                     lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
                                     break;
@@ -795,9 +797,11 @@ void *joystick_task() {
                                         nav_next(ui_group, 1);
                                         nav_next(ui_group_value, 1);
                                         nav_next(ui_group_glyph, 1);
+                                        nav_moved = 1;
                                         update_scroll_position();
                                     } else if (current_item_index < ui_count - 1) {
                                         list_nav_next(1);
+                                        nav_moved = 1;
                                     }
                                     lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
                                     break;

@@ -101,6 +101,7 @@ int nav_moved = 1;
 int content_panel_y = 0;
 int counter_fade = 0;
 int fade_timeout = 3;
+int starter_image = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
@@ -439,6 +440,7 @@ void image_refresh(char *image_type) {
             printf("LOADING BOX ARTWORK AT: %s\n", image);
 
             if (file_exist(image)) {
+                starter_image = 1;
                 lv_img_set_src(ui_imgBox, image_path);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
@@ -846,6 +848,8 @@ void create_explore_items(void *count) {
         free(dir_names);
 
         gen_item(file_names, file_count);
+        image_refresh("box");
+        nav_moved = 1;
     }
 }
 
@@ -884,6 +888,7 @@ void explore_root() {
             gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
             gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
             ui_count += 2;
+            nav_moved = 1;
             break;
         case 8:
             write_text_to_file("/tmp/explore_card", "usb", "w");
@@ -896,17 +901,20 @@ void explore_root() {
             gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
             gen_label(FOLDER, "\uF07B", "USB (external)", 12);
             ui_count += 2;
+            nav_moved = 1;
             break;
         case 12:
             gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
             gen_label(FOLDER, "\uF07B", "USB (external)", 12);
             ui_count += 2;
+            nav_moved = 1;
             break;
         case 14:
             gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
             gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
             gen_label(FOLDER, "\uF07B", "USB (external)", 12);
             ui_count += 3;
+            nav_moved = 1;
             break;
         default:
             nav_moved = 0;
@@ -1580,13 +1588,15 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
+                                    nav_moved = 1;
+                                    image_refresh("box");
                                     set_label_long_mode();
                                     update_file_counter();
-                                    image_refresh("box");
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
                                     JOYUP_pressed = (ev.value != 0);
                                     list_nav_prev(1);
+                                    nav_moved = 1;
                                     lv_task_handler();
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
@@ -1599,13 +1609,15 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
+                                    nav_moved = 1;
+                                    image_refresh("box");
                                     set_label_long_mode();
                                     update_file_counter();
-                                    image_refresh("box");
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count - 1) {
                                     JOYDOWN_pressed = (ev.value != 0);
                                     list_nav_next(1);
+                                    nav_moved = 1;
                                     lv_task_handler();
                                 }
                             } else {
@@ -1970,7 +1982,10 @@ void ui_refresh_task() {
 
                 lv_img_set_src(ui_imgBox, static_image);
             } else {
-                lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
+                if (!starter_image) {
+                    lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
+                    starter_image = 0; // Reset back for static image loading
+                }
             }
         }
         image_refresh("box");
@@ -2095,6 +2110,26 @@ int main(int argc, char *argv[]) {
 
     apply_theme();
     init_fonts();
+
+    struct dt_task_param dt_par;
+    struct bat_task_param bat_par;
+
+    dt_par.lblDatetime = ui_lblDatetime;
+    bat_par.staCapacity = ui_staCapacity;
+
+    datetime_timer = lv_timer_create(datetime_task, UINT16_MAX / 2, &dt_par);
+    lv_timer_ready(datetime_timer);
+
+    capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
+    lv_timer_ready(capacity_timer);
+
+    glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
+    lv_timer_ready(glyph_timer);
+
+    ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
+    lv_timer_ready(ui_refresh_timer);
+
+    init_elements();
 
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
@@ -2227,12 +2262,6 @@ int main(int argc, char *argv[]) {
             break;
     }
 
-    struct dt_task_param dt_par;
-    struct bat_task_param bat_par;
-
-    dt_par.lblDatetime = ui_lblDatetime;
-    bat_par.staCapacity = ui_staCapacity;
-
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
         perror("Failed to open joystick device");
@@ -2247,18 +2276,6 @@ int main(int argc, char *argv[]) {
     indev_drv.user_data = (void *) (intptr_t) js_fd;
 
     lv_indev_drv_register(&indev_drv);
-
-    datetime_timer = lv_timer_create(datetime_task, UINT16_MAX / 2, &dt_par);
-    lv_timer_ready(datetime_timer);
-
-    capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
-    lv_timer_ready(capacity_timer);
-
-    glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
-    lv_timer_ready(glyph_timer);
-
-    ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
-    lv_timer_ready(ui_refresh_timer);
 
     pthread_join(gen_item_thread, NULL);
     if (ui_count > 0) {
@@ -2278,13 +2295,12 @@ int main(int argc, char *argv[]) {
         nav_moved = 0;
         lv_obj_clear_flag(ui_lblExploreMessage, LV_OBJ_FLAG_HIDDEN);
     }
-    update_file_counter();
     pthread_cancel(gen_item_thread);
+
+    update_file_counter();
 
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
-
-    init_elements();
 
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);

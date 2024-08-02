@@ -291,8 +291,10 @@ void *joystick_task() {
                                     current_item_index = UI_COUNT - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
+                                    nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
+                                    nav_moved = 1;
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
@@ -304,8 +306,10 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
+                                    nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);
+                                    nav_moved = 1;
                                 }
                             }
                         }
