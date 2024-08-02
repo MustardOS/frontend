@@ -223,14 +223,6 @@ void *joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
-                                    char address_file[MAX_BUFFER_SIZE];
-                                    snprintf(address_file, sizeof(address_file),
-                                             "%s/config/address.txt", INTERNAL_PATH);
-
-                                    char last_play_file[MAX_BUFFER_SIZE];
-                                    snprintf(last_play_file, sizeof(last_play_file),
-                                             "%s/config/lastplay.txt", INTERNAL_PATH);
-
                                     if (element_focused == ui_lblContent) {
                                         play_sound("confirm", nav_sound);
                                         load_mux("explore");
