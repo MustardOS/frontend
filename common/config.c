@@ -83,6 +83,8 @@ void load_config(struct mux_config *config) {
     config->VISUAL.BOX_ART = get_ini_int(muos_config, "visual", "boxart", 1);
     config->VISUAL.NAME = get_ini_int(muos_config, "visual", "name", 0);
     config->VISUAL.DASH = get_ini_int(muos_config, "visual", "dash", 0);
+    config->VISUAL.COUNTERFOLDER = get_ini_int(muos_config, "visual", "counterfolder", 1);
+    config->VISUAL.COUNTERFILE = get_ini_int(muos_config, "visual", "counterfile", 1);
 
     config->WEB.SHELL = get_ini_int(muos_config, "web", "shell", 1);
     config->WEB.BROWSER = get_ini_int(muos_config, "web", "browser", 0);

@@ -49,7 +49,7 @@ int nav_moved = 1;
 char *current_wall = "";
 int current_item_index = 0;
 int content_panel_y = 0;
-#define UI_COUNT 6
+#define UI_COUNT 8
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -62,13 +62,15 @@ int mux_clock_total, mux_clock_current;
 int boxart_total, boxart_current;
 int name_total, name_current;
 int dash_total, dash_current;
+int menu_counter_folder_total, menu_counter_folder_current;
+int menu_counter_file_total, menu_counter_file_current;
 
 typedef struct {
     int *total;
     int *current;
 } Visuals;
 
-Visuals battery, network, bluetooth, mux_clock, boxart, name, dash;
+Visuals battery, network, bluetooth, mux_clock, boxart, name, dash, counterfolder, counterfile;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -91,6 +93,10 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXVISUAL_NAME;
     } else if (element_focused == ui_lblDash) {
         message = MUXVISUAL_DASH;
+    } else if (element_focused == ui_lblMenuCounterFolder) {
+        message = MUXVISUAL_MENU_COUNTER_FOLDERS;
+    } else if (element_focused == ui_lblMenuCounterFile) {
+        message = MUXVISUAL_MENU_COUNTER_FILES;
     }
 
     if (strlen(message) <= 1) {
@@ -123,7 +129,9 @@ void elements_events_init() {
             ui_droClock,
             ui_droBoxArt,
             ui_droName,
-            ui_droDash
+            ui_droDash,
+            ui_droMenuCounterFolder,
+            ui_droMenuCounterFile,
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -137,6 +145,8 @@ void elements_events_init() {
     init_pointers(&boxart, &boxart_total, &boxart_current);
     init_pointers(&name, &name_total, &name_current);
     init_pointers(&dash, &dash_total, &dash_current);
+    init_pointers(&counterfolder, &menu_counter_folder_total, &menu_counter_folder_current);
+    init_pointers(&counterfile, &menu_counter_file_total, &menu_counter_file_current);
 }
 
 void init_dropdown_settings() {
@@ -147,7 +157,9 @@ void init_dropdown_settings() {
             {mux_clock.total, mux_clock.current},
             {boxart.total,    boxart.current},
             {name.total,      name.current},
-            {dash.total,      dash.current}
+            {dash.total,      dash.current},
+            {counterfolder.total, counterfolder.current},
+            {counterfile.total,   counterfile.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -157,7 +169,9 @@ void init_dropdown_settings() {
             ui_droClock,
             ui_droBoxArt,
             ui_droName,
-            ui_droDash
+            ui_droDash,
+            ui_droMenuCounterFolder,
+            ui_droMenuCounterFile
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -174,6 +188,8 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droBoxArt, config.VISUAL.BOX_ART);
     lv_dropdown_set_selected(ui_droName, config.VISUAL.NAME);
     lv_dropdown_set_selected(ui_droDash, config.VISUAL.DASH);
+    lv_dropdown_set_selected(ui_droMenuCounterFolder, config.VISUAL.COUNTERFOLDER);
+    lv_dropdown_set_selected(ui_droMenuCounterFile, config.VISUAL.COUNTERFILE);
 }
 
 void save_visual_options() {
@@ -190,6 +206,8 @@ void save_visual_options() {
     int idx_boxart = lv_dropdown_get_selected(ui_droBoxArt);
     int idx_name = lv_dropdown_get_selected(ui_droName);
     int idx_dash = lv_dropdown_get_selected(ui_droDash);
+    int idx_foldercounter = lv_dropdown_get_selected(ui_droMenuCounterFolder);
+    int idx_filecounter = lv_dropdown_get_selected(ui_droMenuCounterFile);
 
     mini_set_int(muos_config, "visual", "battery", idx_battery);
     mini_set_int(muos_config, "visual", "network", idx_network);
@@ -198,6 +216,8 @@ void save_visual_options() {
     mini_set_int(muos_config, "visual", "boxart", idx_boxart);
     mini_set_int(muos_config, "visual", "name", idx_name);
     mini_set_int(muos_config, "visual", "dash", idx_dash);
+    mini_set_int(muos_config, "visual", "counterfolder", idx_foldercounter);
+    mini_set_int(muos_config, "visual", "counterfile", idx_filecounter);
 
     mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(muos_config);
@@ -211,7 +231,9 @@ void init_navigation_groups() {
             ui_lblClock,
             ui_lblBoxArt,
             ui_lblName,
-            ui_lblDash
+            ui_lblDash,
+            ui_lblMenuCounterFolder,
+            ui_lblMenuCounterFile
     };
 
     lv_obj_t *ui_objects_value[] = {
@@ -221,7 +243,9 @@ void init_navigation_groups() {
             ui_droClock,
             ui_droBoxArt,
             ui_droName,
-            ui_droDash
+            ui_droDash,
+            ui_droMenuCounterFolder,
+            ui_droMenuCounterFile
     };
 
     lv_obj_t *ui_objects_icon[] = {
@@ -231,7 +255,9 @@ void init_navigation_groups() {
             ui_icoClock,
             ui_icoBoxArt,
             ui_icoName,
-            ui_icoDash
+            ui_icoDash,
+            ui_icoMenuCounterFolder,
+            ui_icoMenuCounterFile
     };
 
     ui_group = lv_group_create();
@@ -386,6 +412,14 @@ void *joystick_task() {
                                         increase_option_value(ui_droDash,
                                                               &dash_current,
                                                               dash_total);
+                                    } else if (element_focused == ui_lblMenuCounterFolder) {
+                                        increase_option_value(ui_droMenuCounterFolder,
+                                                              &menu_counter_folder_current,
+                                                              menu_counter_folder_total);
+                                    } else if (element_focused == ui_lblMenuCounterFile) {
+                                        increase_option_value(ui_droMenuCounterFile,
+                                                              &menu_counter_file_current,
+                                                              menu_counter_file_total);
                                     }
                                     play_sound("navigate", nav_sound);
                                 } else if (ev.code == NAV_B) {
@@ -483,6 +517,14 @@ void *joystick_task() {
                                     decrease_option_value(ui_droDash,
                                                           &dash_current,
                                                           dash_total);
+                                } else if (element_focused == ui_lblMenuCounterFolder) {
+                                    decrease_option_value(ui_droMenuCounterFolder,
+                                                          &menu_counter_folder_current,
+                                                          menu_counter_folder_total);
+                                } else if (element_focused == ui_lblMenuCounterFile) {
+                                    decrease_option_value(ui_droMenuCounterFile,
+                                                          &menu_counter_file_current,
+                                                          menu_counter_file_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
@@ -516,6 +558,14 @@ void *joystick_task() {
                                     increase_option_value(ui_droDash,
                                                           &dash_current,
                                                           dash_total);
+                                } else if (element_focused == ui_lblMenuCounterFolder) {
+                                    increase_option_value(ui_droMenuCounterFolder,
+                                                          &menu_counter_folder_current,
+                                                          menu_counter_folder_total);
+                                } else if (element_focused == ui_lblMenuCounterFile) {
+                                    increase_option_value(ui_droMenuCounterFile,
+                                                          &menu_counter_file_current,
+                                                          menu_counter_file_total);
                                 }
                                 play_sound("navigate", nav_sound);
                             }
@@ -615,6 +665,8 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBoxArt, "boxart");
     lv_obj_set_user_data(ui_lblName, "name");
     lv_obj_set_user_data(ui_lblDash, "dash");
+    lv_obj_set_user_data(ui_lblMenuCounterFolder, "counterfolder");
+    lv_obj_set_user_data(ui_lblMenuCounterFile, "counterfile");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);

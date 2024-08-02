@@ -28,6 +28,8 @@ void apply_theme() {
             {ui_lblBoxArt,             theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblName,               theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblDash,               theme.LIST_DEFAULT.BACKGROUND},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.BACKGROUND},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,            theme.MESSAGE.BACKGROUND},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND},
@@ -74,13 +76,15 @@ void apply_theme() {
     }
 
     struct big background_focus_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblNetwork,   theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblBluetooth, theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblClock,     theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblName,      theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblDash,      theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblBattery,            theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblNetwork,            theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblClock,              theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblName,               theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblDash,               theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.BACKGROUND},
     };
     for (size_t i = 0; i < sizeof(background_focus_elements) / sizeof(background_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_color(background_focus_elements[i].e, lv_color_hex(background_focus_elements[i].c),
@@ -88,13 +92,15 @@ void apply_theme() {
     }
 
     struct big gradient_elements[] = {
-            {ui_lblBattery,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblNetwork,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblBluetooth, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblClock,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblBoxArt,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblName,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblDash,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblBattery,            theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblNetwork,            theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblBluetooth,          theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblClock,              theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblBoxArt,             theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblName,               theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblDash,               theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
@@ -102,13 +108,15 @@ void apply_theme() {
     }
 
     struct big gradient_focused_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblNetwork,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblBluetooth, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblClock,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblName,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblDash,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblBattery,            theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblNetwork,            theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblClock,              theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblName,               theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblDash,               theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
     };
     for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
@@ -116,13 +124,15 @@ void apply_theme() {
     }
 
     struct big indicator_elements[] = {
-            {ui_lblBattery,   theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblNetwork,   theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblBluetooth, theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblClock,     theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblBoxArt,    theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblName,      theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblDash,      theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblBattery,            theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblNetwork,            theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblBluetooth,          theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblClock,              theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblBoxArt,             theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblName,               theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblDash,               theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_elements) / sizeof(indicator_elements[0]); ++i) {
         lv_obj_set_style_border_color(indicator_elements[i].e, lv_color_hex(indicator_elements[i].c),
@@ -130,13 +140,15 @@ void apply_theme() {
     }
 
     struct big indicator_focus_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.INDICATOR},
-            {ui_lblNetwork,   theme.LIST_FOCUS.INDICATOR},
-            {ui_lblBluetooth, theme.LIST_FOCUS.INDICATOR},
-            {ui_lblClock,     theme.LIST_FOCUS.INDICATOR},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.INDICATOR},
-            {ui_lblName,      theme.LIST_FOCUS.INDICATOR},
-            {ui_lblDash,      theme.LIST_FOCUS.INDICATOR},
+            {ui_lblBattery,            theme.LIST_FOCUS.INDICATOR},
+            {ui_lblNetwork,            theme.LIST_FOCUS.INDICATOR},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.INDICATOR},
+            {ui_lblClock,              theme.LIST_FOCUS.INDICATOR},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.INDICATOR},
+            {ui_lblName,               theme.LIST_FOCUS.INDICATOR},
+            {ui_lblDash,               theme.LIST_FOCUS.INDICATOR},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.INDICATOR},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.INDICATOR},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_elements) / sizeof(indicator_focus_elements[0]); ++i) {
         lv_obj_set_style_border_color(indicator_focus_elements[i].e, lv_color_hex(indicator_focus_elements[i].c),
@@ -151,6 +163,8 @@ void apply_theme() {
             {ui_lblBoxArt,             theme.LIST_DEFAULT.TEXT},
             {ui_lblName,               theme.LIST_DEFAULT.TEXT},
             {ui_lblDash,               theme.LIST_DEFAULT.TEXT},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.TEXT},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.TEXT},
             {ui_icoBattery,            theme.LIST_DEFAULT.TEXT},
             {ui_icoNetwork,            theme.LIST_DEFAULT.TEXT},
             {ui_icoBluetooth,          theme.LIST_DEFAULT.TEXT},
@@ -158,6 +172,8 @@ void apply_theme() {
             {ui_icoBoxArt,             theme.LIST_DEFAULT.TEXT},
             {ui_icoName,               theme.LIST_DEFAULT.TEXT},
             {ui_icoDash,               theme.LIST_DEFAULT.TEXT},
+            {ui_icoMenuCounterFolder,  theme.LIST_DEFAULT.TEXT},
+            {ui_icoMenuCounterFile,    theme.LIST_DEFAULT.TEXT},
             {ui_droBattery,            theme.LIST_DEFAULT.TEXT},
             {ui_droNetwork,            theme.LIST_DEFAULT.TEXT},
             {ui_droBluetooth,          theme.LIST_DEFAULT.TEXT},
@@ -165,6 +181,8 @@ void apply_theme() {
             {ui_droBoxArt,             theme.LIST_DEFAULT.TEXT},
             {ui_droName,               theme.LIST_DEFAULT.TEXT},
             {ui_droDash,               theme.LIST_DEFAULT.TEXT},
+            {ui_droMenuCounterFolder,  theme.LIST_DEFAULT.TEXT},
+            {ui_droMenuCounterFile,    theme.LIST_DEFAULT.TEXT},
             {ui_lblDatetime,           theme.DATETIME.TEXT},
             {ui_lblMessage,            theme.MESSAGE.TEXT},
             {ui_lblTitle,              theme.HEADER.TEXT},
@@ -196,27 +214,33 @@ void apply_theme() {
     }
 
     struct big focus_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.TEXT},
-            {ui_lblNetwork,   theme.LIST_FOCUS.TEXT},
-            {ui_lblBluetooth, theme.LIST_FOCUS.TEXT},
-            {ui_lblClock,     theme.LIST_FOCUS.TEXT},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.TEXT},
-            {ui_lblName,      theme.LIST_FOCUS.TEXT},
-            {ui_lblDash,      theme.LIST_FOCUS.TEXT},
-            {ui_icoBattery,   theme.LIST_FOCUS.TEXT},
-            {ui_icoNetwork,   theme.LIST_FOCUS.TEXT},
-            {ui_icoBluetooth, theme.LIST_FOCUS.TEXT},
-            {ui_icoClock,     theme.LIST_FOCUS.TEXT},
-            {ui_icoBoxArt,    theme.LIST_FOCUS.TEXT},
-            {ui_icoName,      theme.LIST_FOCUS.TEXT},
-            {ui_icoDash,      theme.LIST_FOCUS.TEXT},
-            {ui_droBattery,   theme.LIST_FOCUS.TEXT},
-            {ui_droNetwork,   theme.LIST_FOCUS.TEXT},
-            {ui_droBluetooth, theme.LIST_FOCUS.TEXT},
-            {ui_droClock,     theme.LIST_FOCUS.TEXT},
-            {ui_droBoxArt,    theme.LIST_FOCUS.TEXT},
-            {ui_droName,      theme.LIST_FOCUS.TEXT},
-            {ui_droDash,      theme.LIST_FOCUS.TEXT},
+            {ui_lblBattery,            theme.LIST_FOCUS.TEXT},
+            {ui_lblNetwork,            theme.LIST_FOCUS.TEXT},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.TEXT},
+            {ui_lblClock,              theme.LIST_FOCUS.TEXT},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.TEXT},
+            {ui_lblName,               theme.LIST_FOCUS.TEXT},
+            {ui_lblDash,               theme.LIST_FOCUS.TEXT},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.TEXT},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.TEXT},
+            {ui_icoBattery,            theme.LIST_FOCUS.TEXT},
+            {ui_icoNetwork,            theme.LIST_FOCUS.TEXT},
+            {ui_icoBluetooth,          theme.LIST_FOCUS.TEXT},
+            {ui_icoClock,              theme.LIST_FOCUS.TEXT},
+            {ui_icoBoxArt,             theme.LIST_FOCUS.TEXT},
+            {ui_icoName,               theme.LIST_FOCUS.TEXT},
+            {ui_icoDash,               theme.LIST_FOCUS.TEXT},
+            {ui_icoMenuCounterFolder,  theme.LIST_FOCUS.TEXT},
+            {ui_icoMenuCounterFile,    theme.LIST_FOCUS.TEXT},
+            {ui_droBattery,            theme.LIST_FOCUS.TEXT},
+            {ui_droNetwork,            theme.LIST_FOCUS.TEXT},
+            {ui_droBluetooth,          theme.LIST_FOCUS.TEXT},
+            {ui_droClock,              theme.LIST_FOCUS.TEXT},
+            {ui_droBoxArt,             theme.LIST_FOCUS.TEXT},
+            {ui_droName,               theme.LIST_FOCUS.TEXT},
+            {ui_droDash,               theme.LIST_FOCUS.TEXT},
+            {ui_droMenuCounterFolder,  theme.LIST_FOCUS.TEXT},
+            {ui_droMenuCounterFile,    theme.LIST_FOCUS.TEXT},
     };
     for (size_t i = 0; i < sizeof(focus_elements) / sizeof(focus_elements[0]); ++i) {
         lv_obj_set_style_text_color(focus_elements[i].e, lv_color_hex(focus_elements[i].c),
@@ -253,6 +277,8 @@ void apply_theme() {
             {ui_lblBoxArt,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblName,               theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblDash,               theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoBattery,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoNetwork,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoBluetooth,          theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -260,6 +286,8 @@ void apply_theme() {
             {ui_icoBoxArt,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoName,               theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoDash,               theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoMenuCounterFolder,  theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoMenuCounterFile,    theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droBattery,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droNetwork,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droBluetooth,          theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -267,6 +295,8 @@ void apply_theme() {
             {ui_droBoxArt,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droName,               theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droDash,               theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_droMenuCounterFolder,  theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_droMenuCounterFile,    theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTitle,              theme.HEADER.TEXT_ALPHA},
             {ui_lblMessage,            theme.MESSAGE.TEXT_ALPHA},
             {ui_lblDatetime,           theme.DATETIME.ALPHA},
@@ -296,27 +326,33 @@ void apply_theme() {
     }
 
     struct small text_focus_alpha_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblNetwork,   theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblBluetooth, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblClock,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblName,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblDash,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoBattery,   theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoNetwork,   theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoBluetooth, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoClock,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoBoxArt,    theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoName,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoDash,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droBattery,   theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droNetwork,   theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droBluetooth, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droClock,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droBoxArt,    theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droName,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droDash,      theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblBattery,            theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblNetwork,            theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblClock,              theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblName,               theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblDash,               theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoBattery,            theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoNetwork,            theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoBluetooth,          theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoClock,              theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoBoxArt,             theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoName,               theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoDash,               theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoMenuCounterFolder,  theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoMenuCounterFile,    theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droBattery,            theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droNetwork,            theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droBluetooth,          theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droClock,              theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droBoxArt,             theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droName,               theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droDash,               theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droMenuCounterFolder,  theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droMenuCounterFile,    theme.LIST_FOCUS.TEXT_ALPHA},
     };
     for (size_t i = 0; i < sizeof(text_focus_alpha_elements) / sizeof(text_focus_alpha_elements[0]); ++i) {
         lv_obj_set_style_text_opa(text_focus_alpha_elements[i].e, text_focus_alpha_elements[i].c,
@@ -324,13 +360,15 @@ void apply_theme() {
     }
 
     struct small indicator_default_alpha_elements[] = {
-            {ui_lblBattery,   theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblNetwork,   theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblBluetooth, theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblClock,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblBoxArt,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblName,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblDash,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblBattery,            theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblNetwork,            theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblBluetooth,          theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblClock,              theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblBoxArt,             theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblName,               theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblDash,               theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
     };
     for (size_t i = 0;
          i < sizeof(indicator_default_alpha_elements) / sizeof(indicator_default_alpha_elements[0]); ++i) {
@@ -339,13 +377,15 @@ void apply_theme() {
     }
 
     struct small indicator_focus_alpha_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblNetwork,   theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblBluetooth, theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblClock,     theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblName,      theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblDash,      theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblBattery,            theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblNetwork,            theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblClock,              theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblName,               theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblDash,               theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.INDICATOR_ALPHA},
     };
     for (size_t i = 0; i < sizeof(indicator_focus_alpha_elements) / sizeof(indicator_focus_alpha_elements[0]); ++i) {
         lv_obj_set_style_border_opa(indicator_focus_alpha_elements[i].e, indicator_focus_alpha_elements[i].c,
@@ -353,70 +393,84 @@ void apply_theme() {
     }
 
     struct small item_height_elements[] = {
-            {ui_lblBattery,   theme.MUX.ITEM.HEIGHT},
-            {ui_lblNetwork,   theme.MUX.ITEM.HEIGHT},
-            {ui_lblBluetooth, theme.MUX.ITEM.HEIGHT},
-            {ui_lblClock,     theme.MUX.ITEM.HEIGHT},
-            {ui_lblBoxArt,    theme.MUX.ITEM.HEIGHT},
-            {ui_lblName,      theme.MUX.ITEM.HEIGHT},
-            {ui_lblDash,      theme.MUX.ITEM.HEIGHT},
-            {ui_icoBattery,   theme.MUX.ITEM.HEIGHT},
-            {ui_icoNetwork,   theme.MUX.ITEM.HEIGHT},
-            {ui_icoBluetooth, theme.MUX.ITEM.HEIGHT},
-            {ui_icoClock,     theme.MUX.ITEM.HEIGHT},
-            {ui_icoBoxArt,    theme.MUX.ITEM.HEIGHT},
-            {ui_icoName,      theme.MUX.ITEM.HEIGHT},
-            {ui_icoDash,      theme.MUX.ITEM.HEIGHT},
-            {ui_droBattery,   theme.MUX.ITEM.HEIGHT},
-            {ui_droNetwork,   theme.MUX.ITEM.HEIGHT},
-            {ui_droBluetooth, theme.MUX.ITEM.HEIGHT},
-            {ui_droClock,     theme.MUX.ITEM.HEIGHT},
-            {ui_droBoxArt,    theme.MUX.ITEM.HEIGHT},
-            {ui_droName,      theme.MUX.ITEM.HEIGHT},
-            {ui_droDash,      theme.MUX.ITEM.HEIGHT},
-            {ui_pnlContent,   theme.MISC.CONTENT.HEIGHT},
-            {ui_pnlGlyph,     theme.MISC.CONTENT.HEIGHT},
-            {ui_pnlHighlight, theme.MISC.CONTENT.HEIGHT},
+            {ui_lblBattery,            theme.MUX.ITEM.HEIGHT},
+            {ui_lblNetwork,            theme.MUX.ITEM.HEIGHT},
+            {ui_lblBluetooth,          theme.MUX.ITEM.HEIGHT},
+            {ui_lblClock,              theme.MUX.ITEM.HEIGHT},
+            {ui_lblBoxArt,             theme.MUX.ITEM.HEIGHT},
+            {ui_lblName,               theme.MUX.ITEM.HEIGHT},
+            {ui_lblDash,               theme.MUX.ITEM.HEIGHT},
+            {ui_lblMenuCounterFolder,  theme.MUX.ITEM.HEIGHT},
+            {ui_lblMenuCounterFile,    theme.MUX.ITEM.HEIGHT},
+            {ui_icoBattery,            theme.MUX.ITEM.HEIGHT},
+            {ui_icoNetwork,            theme.MUX.ITEM.HEIGHT},
+            {ui_icoBluetooth,          theme.MUX.ITEM.HEIGHT},
+            {ui_icoClock,              theme.MUX.ITEM.HEIGHT},
+            {ui_icoBoxArt,             theme.MUX.ITEM.HEIGHT},
+            {ui_icoName,               theme.MUX.ITEM.HEIGHT},
+            {ui_icoDash,               theme.MUX.ITEM.HEIGHT},
+            {ui_icoMenuCounterFolder,  theme.MUX.ITEM.HEIGHT},
+            {ui_icoMenuCounterFile,    theme.MUX.ITEM.HEIGHT},
+            {ui_droBattery,            theme.MUX.ITEM.HEIGHT},
+            {ui_droNetwork,            theme.MUX.ITEM.HEIGHT},
+            {ui_droBluetooth,          theme.MUX.ITEM.HEIGHT},
+            {ui_droClock,              theme.MUX.ITEM.HEIGHT},
+            {ui_droBoxArt,             theme.MUX.ITEM.HEIGHT},
+            {ui_droName,               theme.MUX.ITEM.HEIGHT},
+            {ui_droDash,               theme.MUX.ITEM.HEIGHT},
+            {ui_droMenuCounterFolder,  theme.MUX.ITEM.HEIGHT},
+            {ui_droMenuCounterFile,    theme.MUX.ITEM.HEIGHT},
+            {ui_pnlContent,            theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlGlyph,              theme.MISC.CONTENT.HEIGHT},
+            {ui_pnlHighlight,          theme.MISC.CONTENT.HEIGHT},
     };
     for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
         lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
     }
 
     struct small item_width_elements[] = {
-            {ui_lblBattery,   theme.MISC.CONTENT.WIDTH},
-            {ui_lblNetwork,   theme.MISC.CONTENT.WIDTH},
-            {ui_lblBluetooth, theme.MISC.CONTENT.WIDTH},
-            {ui_lblClock,     theme.MISC.CONTENT.WIDTH},
-            {ui_lblBoxArt,    theme.MISC.CONTENT.WIDTH},
-            {ui_lblName,      theme.MISC.CONTENT.WIDTH},
-            {ui_lblDash,      theme.MISC.CONTENT.WIDTH},
-            {ui_icoBattery,   theme.MISC.CONTENT.WIDTH},
-            {ui_icoNetwork,   theme.MISC.CONTENT.WIDTH},
-            {ui_icoBluetooth, theme.MISC.CONTENT.WIDTH},
-            {ui_icoClock,     theme.MISC.CONTENT.WIDTH},
-            {ui_icoBoxArt,    theme.MISC.CONTENT.WIDTH},
-            {ui_icoName,      theme.MISC.CONTENT.WIDTH},
-            {ui_icoDash,      theme.MISC.CONTENT.WIDTH},
-            {ui_droBattery,   theme.MISC.CONTENT.WIDTH},
-            {ui_droNetwork,   theme.MISC.CONTENT.WIDTH},
-            {ui_droBluetooth, theme.MISC.CONTENT.WIDTH},
-            {ui_droClock,     theme.MISC.CONTENT.WIDTH},
-            {ui_droBoxArt,    theme.MISC.CONTENT.WIDTH},
-            {ui_droName,      theme.MISC.CONTENT.WIDTH},
-            {ui_droDash,      theme.MISC.CONTENT.WIDTH},
+            {ui_lblBattery,            theme.MISC.CONTENT.WIDTH},
+            {ui_lblNetwork,            theme.MISC.CONTENT.WIDTH},
+            {ui_lblBluetooth,          theme.MISC.CONTENT.WIDTH},
+            {ui_lblClock,              theme.MISC.CONTENT.WIDTH},
+            {ui_lblBoxArt,             theme.MISC.CONTENT.WIDTH},
+            {ui_lblName,               theme.MISC.CONTENT.WIDTH},
+            {ui_lblDash,               theme.MISC.CONTENT.WIDTH},
+            {ui_lblMenuCounterFolder,  theme.MISC.CONTENT.WIDTH},
+            {ui_lblMenuCounterFile,    theme.MISC.CONTENT.WIDTH},
+            {ui_icoBattery,            theme.MISC.CONTENT.WIDTH},
+            {ui_icoNetwork,            theme.MISC.CONTENT.WIDTH},
+            {ui_icoBluetooth,          theme.MISC.CONTENT.WIDTH},
+            {ui_icoClock,              theme.MISC.CONTENT.WIDTH},
+            {ui_icoBoxArt,             theme.MISC.CONTENT.WIDTH},
+            {ui_icoName,               theme.MISC.CONTENT.WIDTH},
+            {ui_icoDash,               theme.MISC.CONTENT.WIDTH},
+            {ui_icoMenuCounterFolder,  theme.MISC.CONTENT.WIDTH},
+            {ui_icoMenuCounterFile,    theme.MISC.CONTENT.WIDTH},
+            {ui_droBattery,            theme.MISC.CONTENT.WIDTH},
+            {ui_droNetwork,            theme.MISC.CONTENT.WIDTH},
+            {ui_droBluetooth,          theme.MISC.CONTENT.WIDTH},
+            {ui_droClock,              theme.MISC.CONTENT.WIDTH},
+            {ui_droBoxArt,             theme.MISC.CONTENT.WIDTH},
+            {ui_droName,               theme.MISC.CONTENT.WIDTH},
+            {ui_droDash,               theme.MISC.CONTENT.WIDTH},
+            {ui_droMenuCounterFolder,  theme.MISC.CONTENT.WIDTH},
+            {ui_droMenuCounterFile,    theme.MISC.CONTENT.WIDTH},
     };
     for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
         lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
     }
 
     struct small gradient_start_default_elements[] = {
-            {ui_lblBattery,   theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblNetwork,   theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblBluetooth, theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblClock,     theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblBoxArt,    theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblName,      theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblDash,      theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblBattery,            theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblNetwork,            theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblBluetooth,          theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblClock,              theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblBoxArt,             theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblName,               theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblDash,               theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.GRADIENT_START},
     };
     for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
         lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
@@ -424,13 +478,15 @@ void apply_theme() {
     }
 
     struct small gradient_start_focus_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblNetwork,   theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblBluetooth, theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblClock,     theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblName,      theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblDash,      theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblBattery,            theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblNetwork,            theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblClock,              theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblName,               theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblDash,               theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.GRADIENT_START},
     };
     for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
@@ -438,13 +494,15 @@ void apply_theme() {
     }
 
     struct small gradient_stop_default_elements[] = {
-            {ui_lblBattery,   theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblNetwork,   theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblBluetooth, theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblClock,     theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblBoxArt,    theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblName,      theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblDash,      theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblBattery,            theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblNetwork,            theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblBluetooth,          theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblClock,              theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblBoxArt,             theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblName,               theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblDash,               theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_default_elements) / sizeof(gradient_stop_default_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_stop(gradient_stop_default_elements[i].e, gradient_stop_default_elements[i].c,
@@ -452,13 +510,15 @@ void apply_theme() {
     }
 
     struct small gradient_stop_focus_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblNetwork,   theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblBluetooth, theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblClock,     theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblName,      theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblDash,      theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblBattery,            theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblNetwork,            theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblClock,              theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblName,               theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblDash,               theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.GRADIENT_STOP},
     };
     for (size_t i = 0; i < sizeof(gradient_stop_focus_elements) / sizeof(gradient_stop_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_grad_stop(gradient_stop_focus_elements[i].e, gradient_stop_focus_elements[i].c,
@@ -466,13 +526,15 @@ void apply_theme() {
     }
 
     struct small background_alpha_default_elements[] = {
-            {ui_lblBattery,   theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblNetwork,   theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblBluetooth, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblClock,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblBoxArt,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblName,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblDash,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblBattery,            theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblNetwork,            theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblBluetooth,          theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblClock,              theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblBoxArt,             theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblName,               theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblDash,               theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
     };
     for (size_t i = 0;
          i < sizeof(background_alpha_default_elements) / sizeof(background_alpha_default_elements[0]); ++i) {
@@ -481,13 +543,15 @@ void apply_theme() {
     }
 
     struct small background_alpha_focus_elements[] = {
-            {ui_lblBattery,   theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblNetwork,   theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblBluetooth, theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblClock,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblBoxArt,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblName,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblDash,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblBattery,            theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblNetwork,            theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblBluetooth,          theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblClock,              theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblBoxArt,             theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblName,               theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblDash,               theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblMenuCounterFolder,  theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblMenuCounterFile,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
     };
     for (size_t i = 0; i < sizeof(background_alpha_focus_elements) / sizeof(background_alpha_focus_elements[0]); ++i) {
         lv_obj_set_style_bg_opa(background_alpha_focus_elements[i].e, background_alpha_focus_elements[i].c,
@@ -501,13 +565,15 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
-            {ui_lblBattery,   theme.LIST_DEFAULT.RADIUS},
-            {ui_lblNetwork,   theme.LIST_DEFAULT.RADIUS},
-            {ui_lblBluetooth, theme.LIST_DEFAULT.RADIUS},
-            {ui_lblClock,     theme.LIST_DEFAULT.RADIUS},
-            {ui_lblBoxArt,    theme.LIST_DEFAULT.RADIUS},
-            {ui_lblName,      theme.LIST_DEFAULT.RADIUS},
-            {ui_lblDash,      theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBattery,            theme.LIST_DEFAULT.RADIUS},
+            {ui_lblNetwork,            theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBluetooth,          theme.LIST_DEFAULT.RADIUS},
+            {ui_lblClock,              theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBoxArt,             theme.LIST_DEFAULT.RADIUS},
+            {ui_lblName,               theme.LIST_DEFAULT.RADIUS},
+            {ui_lblDash,               theme.LIST_DEFAULT.RADIUS},
+            {ui_lblMenuCounterFolder,  theme.LIST_DEFAULT.RADIUS},
+            {ui_lblMenuCounterFile,    theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,
@@ -594,13 +660,15 @@ void apply_theme() {
     }
 
     struct small font_pad_list_top_elements[] = {
-            {ui_lblBattery,   theme.FONT.LIST_PAD_TOP},
-            {ui_lblNetwork,   theme.FONT.LIST_PAD_TOP},
-            {ui_lblBluetooth, theme.FONT.LIST_PAD_TOP},
-            {ui_lblClock,     theme.FONT.LIST_PAD_TOP},
-            {ui_lblBoxArt,    theme.FONT.LIST_PAD_TOP},
-            {ui_lblName,      theme.FONT.LIST_PAD_TOP},
-            {ui_lblDash,      theme.FONT.LIST_PAD_TOP},
+            {ui_lblBattery,            theme.FONT.LIST_PAD_TOP},
+            {ui_lblNetwork,            theme.FONT.LIST_PAD_TOP},
+            {ui_lblBluetooth,          theme.FONT.LIST_PAD_TOP},
+            {ui_lblClock,              theme.FONT.LIST_PAD_TOP},
+            {ui_lblBoxArt,             theme.FONT.LIST_PAD_TOP},
+            {ui_lblName,               theme.FONT.LIST_PAD_TOP},
+            {ui_lblDash,               theme.FONT.LIST_PAD_TOP},
+            {ui_lblMenuCounterFolder,  theme.FONT.LIST_PAD_TOP},
+            {ui_lblMenuCounterFile,    theme.FONT.LIST_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_top_elements) / sizeof(font_pad_list_top_elements[0]); ++i) {
         lv_obj_set_style_pad_top(font_pad_list_top_elements[i].e, font_pad_list_top_elements[i].c,
@@ -608,13 +676,15 @@ void apply_theme() {
     }
 
     struct small font_pad_list_bottom_elements[] = {
-            {ui_lblBattery,   theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblNetwork,   theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblBluetooth, theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblClock,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblBoxArt,    theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblName,      theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblDash,      theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblBattery,            theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblNetwork,            theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblBluetooth,          theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblClock,              theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblBoxArt,             theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblName,               theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblDash,               theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblMenuCounterFolder,  theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblMenuCounterFile,    theme.FONT.LIST_PAD_BOTTOM},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_bottom_elements) / sizeof(font_pad_list_bottom_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_list_bottom_elements[i].e, font_pad_list_bottom_elements[i].c,
@@ -622,13 +692,15 @@ void apply_theme() {
     }
 
     struct small font_pad_top_dropdown_elements[] = {
-            {ui_droBattery,   theme.FONT.LIST_PAD_TOP},
-            {ui_droNetwork,   theme.FONT.LIST_PAD_TOP},
-            {ui_droBluetooth, theme.FONT.LIST_PAD_TOP},
-            {ui_droClock,     theme.FONT.LIST_PAD_TOP},
-            {ui_droBoxArt,    theme.FONT.LIST_PAD_TOP},
-            {ui_droName,      theme.FONT.LIST_PAD_TOP},
-            {ui_droDash,      theme.FONT.LIST_PAD_TOP},
+            {ui_droBattery,            theme.FONT.LIST_PAD_TOP},
+            {ui_droNetwork,            theme.FONT.LIST_PAD_TOP},
+            {ui_droBluetooth,          theme.FONT.LIST_PAD_TOP},
+            {ui_droClock,              theme.FONT.LIST_PAD_TOP},
+            {ui_droBoxArt,             theme.FONT.LIST_PAD_TOP},
+            {ui_droName,               theme.FONT.LIST_PAD_TOP},
+            {ui_droDash,               theme.FONT.LIST_PAD_TOP},
+            {ui_droMenuCounterFolder,  theme.FONT.LIST_PAD_TOP},
+            {ui_droMenuCounterFile,    theme.FONT.LIST_PAD_TOP},
     };
     for (size_t i = 0;
          i < sizeof(font_pad_top_dropdown_elements) / sizeof(font_pad_top_dropdown_elements[0]); ++i) {
@@ -637,13 +709,15 @@ void apply_theme() {
     }
 
     struct small font_pad_bottom_dropdown_elements[] = {
-            {ui_droBattery,   theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droNetwork,   theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droBluetooth, theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droClock,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droBoxArt,    theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droName,      theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droDash,      theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droBattery,            theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droNetwork,            theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droBluetooth,          theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droClock,              theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droBoxArt,             theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droName,               theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droDash,               theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droMenuCounterFolder,  theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droMenuCounterFile,    theme.FONT.LIST_PAD_BOTTOM},
     };
     for (size_t i = 0;
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
@@ -653,13 +727,15 @@ void apply_theme() {
     }
 
     struct small font_pad_list_icon_top_elements[] = {
-            {ui_icoBattery,   theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoNetwork,   theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoBluetooth, theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoClock,     theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoBoxArt,    theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoName,      theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoDash,      theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoBattery,           theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoNetwork,           theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoBluetooth,         theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoClock,             theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoBoxArt,            theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoName,              theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoDash,              theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoMenuCounterFolder, theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoMenuCounterFile, theme.FONT.LIST_ICON_PAD_TOP},
     };
     for (size_t i = 0; i < sizeof(font_pad_list_icon_top_elements) / sizeof(font_pad_list_icon_top_elements[0]); ++i) {
         if (font_pad_list_icon_top_elements[i].e == ui_icoBluetooth) {
@@ -672,13 +748,15 @@ void apply_theme() {
     }
 
     struct small font_pad_list_icon_bottom_elements[] = {
-            {ui_icoBattery,   theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoNetwork,   theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoBluetooth, theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoClock,     theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoBoxArt,    theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoName,      theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoDash,      theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoBattery,           theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoNetwork,           theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoBluetooth,         theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoClock,             theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoBoxArt,            theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoName,              theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoDash,              theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoMenuCounterFolder, theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoMenuCounterFile, theme.FONT.LIST_ICON_PAD_BOTTOM},
     };
     for (size_t i = 0;
          i < sizeof(font_pad_list_icon_bottom_elements) / sizeof(font_pad_list_icon_bottom_elements[0]); ++i) {

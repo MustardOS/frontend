@@ -165,6 +165,8 @@
 #define MUXVISUAL_BOXART    ""
 #define MUXVISUAL_NAME      ""
 #define MUXVISUAL_DASH      ""
+#define MUXVISUAL_MENU_COUNTER_FOLDERS ""
+#define MUXVISUAL_MENU_COUNTER_FILES ""
 
 // muxwebserv
 #define MUXWEBSERV_SHELL     ""

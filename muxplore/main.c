@@ -279,7 +279,8 @@ void set_label_long_mode() {
 }
 
 void update_file_counter() {
-    if (ui_count > 0) {
+    if ((ui_count > 0 && ui_file_count == 0 && config.VISUAL.COUNTERFOLDER) ||
+        (ui_file_count > 0 && config.VISUAL.COUNTERFILE)) {
         fade_timeout = 3;
         lv_obj_clear_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
         counter_fade = (theme.COUNTER.BORDER_ALPHA + theme.COUNTER.BACKGROUND_ALPHA + theme.COUNTER.TEXT_ALPHA);
