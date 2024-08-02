@@ -251,20 +251,10 @@ void *joystick_task() {
                                         load_mux("config");
                                     } else if (element_focused == ui_lblReboot) {
                                         play_sound("reboot", nav_sound);
-                                        if (strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") == 0) {
-                                            write_text_to_file(last_play_file, "", "w");
-                                        }
-                                        write_text_to_file(address_file, "", "w");
-                                        sync();
-                                        reboot(RB_AUTOBOOT);
+                                        load_mux("reboot");
                                     } else if (element_focused == ui_lblShutdown) {
                                         play_sound("shutdown", nav_sound);
-                                        if (strcasecmp(config.SETTINGS.GENERAL.STARTUP, "resume") == 0) {
-                                            write_text_to_file(last_play_file, "", "w");
-                                        }
-                                        write_text_to_file(address_file, "", "w");
-                                        sync();
-                                        reboot(RB_POWER_OFF);
+                                        load_mux("shutdown");
                                     }
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
