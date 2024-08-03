@@ -980,7 +980,6 @@
               },
               {
                 "nid": 590827662,
-                "flags": 1048576,
                 "strtype": "OBJECT/Flags",
                 "InheritedType": 1
               },
@@ -1065,19 +1064,19 @@
               {
                 "nid": 427304707,
                 "strtype": "OBJECT/Scrollable",
-                "strval": "False",
+                "strval": "True",
                 "InheritedType": 2
               },
               {
                 "nid": 1648735073,
                 "strtype": "OBJECT/Scroll_elastic",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
                 "nid": -844649362,
                 "strtype": "OBJECT/Scroll_momentum",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
@@ -1089,7 +1088,7 @@
               {
                 "nid": -1589418221,
                 "strtype": "OBJECT/Scroll_chain",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
@@ -8997,8 +8996,8 @@
                 "Flow": 0,
                 "Wrap": true,
                 "Reversed": false,
-                "MainAlignment": 1,
-                "CrossAlignment": 1,
+                "MainAlignment": 0,
+                "CrossAlignment": 0,
                 "TrackAlignment": 0,
                 "LayoutType": 1,
                 "nid": 1678361576,
@@ -9017,7 +9016,7 @@
                 "strtype": "OBJECT/Position",
                 "intarray": [
                   0,
-                  34
+                  44
                 ],
                 "InheritedType": 7
               },
@@ -9039,7 +9038,6 @@
               },
               {
                 "nid": -123253682,
-                "flags": 1048576,
                 "strtype": "OBJECT/Flags",
                 "InheritedType": 1
               },
@@ -9124,19 +9122,19 @@
               {
                 "nid": -1023693337,
                 "strtype": "OBJECT/Scrollable",
-                "strval": "False",
+                "strval": "True",
                 "InheritedType": 2
               },
               {
                 "nid": -266277534,
                 "strtype": "OBJECT/Scroll_elastic",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
                 "nid": 253144934,
                 "strtype": "OBJECT/Scroll_momentum",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
@@ -9148,7 +9146,7 @@
               {
                 "nid": -1840420759,
                 "strtype": "OBJECT/Scroll_chain",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
@@ -9259,7 +9257,7 @@
                         "intarray": [
                           0,
                           0,
-                          10,
+                          0,
                           0
                         ],
                         "InheritedType": 7
@@ -9291,7 +9289,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID64779941-1182086S677370",
@@ -13752,8 +13751,8 @@
                 "Flow": 0,
                 "Wrap": true,
                 "Reversed": false,
-                "MainAlignment": 1,
-                "CrossAlignment": 1,
+                "MainAlignment": 0,
+                "CrossAlignment": 0,
                 "TrackAlignment": 0,
                 "LayoutType": 1,
                 "nid": 435486862,
@@ -13772,7 +13771,7 @@
                 "strtype": "OBJECT/Position",
                 "intarray": [
                   0,
-                  34
+                  44
                 ],
                 "InheritedType": 7
               },
@@ -13794,7 +13793,6 @@
               },
               {
                 "nid": -1329703585,
-                "flags": 1048576,
                 "strtype": "OBJECT/Flags",
                 "InheritedType": 1
               },
@@ -13879,19 +13877,19 @@
               {
                 "nid": 2138693120,
                 "strtype": "OBJECT/Scrollable",
-                "strval": "False",
+                "strval": "True",
                 "InheritedType": 2
               },
               {
                 "nid": -2011984665,
                 "strtype": "OBJECT/Scroll_elastic",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
                 "nid": -337037487,
                 "strtype": "OBJECT/Scroll_momentum",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
@@ -13903,7 +13901,7 @@
               {
                 "nid": 407257027,
                 "strtype": "OBJECT/Scroll_chain",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
@@ -14014,7 +14012,7 @@
                         "intarray": [
                           0,
                           0,
-                          10,
+                          0,
                           0
                         ],
                         "InheritedType": 7
@@ -14052,7 +14050,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID90165618-716649S521326",
@@ -19444,8 +19443,8 @@
                 "Flow": 0,
                 "Wrap": true,
                 "Reversed": false,
-                "MainAlignment": 1,
-                "CrossAlignment": 1,
+                "MainAlignment": 0,
+                "CrossAlignment": 0,
                 "TrackAlignment": 0,
                 "LayoutType": 1,
                 "nid": 2144370199,
@@ -19464,7 +19463,7 @@
                 "strtype": "OBJECT/Position",
                 "intarray": [
                   0,
-                  34
+                  44
                 ],
                 "InheritedType": 7
               },
@@ -19486,7 +19485,6 @@
               },
               {
                 "nid": 467803832,
-                "flags": 1048576,
                 "strtype": "OBJECT/Flags",
                 "InheritedType": 1
               },
@@ -19571,19 +19569,19 @@
               {
                 "nid": 370079112,
                 "strtype": "OBJECT/Scrollable",
-                "strval": "False",
+                "strval": "True",
                 "InheritedType": 2
               },
               {
                 "nid": 1271381559,
                 "strtype": "OBJECT/Scroll_elastic",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
                 "nid": 1988005397,
                 "strtype": "OBJECT/Scroll_momentum",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
@@ -19595,7 +19593,7 @@
               {
                 "nid": -1550231274,
                 "strtype": "OBJECT/Scroll_chain",
-                "strval": "True",
+                "strval": "False",
                 "InheritedType": 2
               },
               {
@@ -19706,7 +19704,7 @@
                         "intarray": [
                           0,
                           0,
-                          10,
+                          0,
                           0
                         ],
                         "InheritedType": 7
@@ -19738,7 +19736,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL"
+            "saved_objtypeKey": "PANEL",
+            "tree_closed": true
           },
           {
             "guid": "GUID64809051-811690S1252268",
