@@ -143,6 +143,7 @@
 #define MUXTWEAKADV_RETRO   ""
 #define MUXTWEAKADV_ANDROID ""
 #define MUXTWEAKADV_STATE   ""
+#define MUXTWEAKADV_VERBOSE ""
 
 // muxtweakgen
 #define MUXTWEAKGEN_HIDDEN     ""

@@ -54,7 +54,6 @@ void load_config(struct mux_config *config) {
     config->SETTINGS.ADVANCED.SWAP = get_ini_int(muos_config, "settings.advanced", "swap", 0);
     config->SETTINGS.ADVANCED.THERMAL = get_ini_int(muos_config, "settings.advanced", "thermal", 0);
     config->SETTINGS.ADVANCED.FONT = get_ini_int(muos_config, "settings.advanced", "font", 1);
-    config->SETTINGS.ADVANCED.VERBOSE = get_ini_int(muos_config, "settings.advanced", "verbose", 0);
     strncpy(config->SETTINGS.ADVANCED.VOLUME, get_ini_string(muos_config, "settings.advanced", "volume", "previous"),
             MAX_BUFFER_SIZE - 1);
     config->SETTINGS.ADVANCED.VOLUME[MAX_BUFFER_SIZE - 1] = '\0';
@@ -71,6 +70,7 @@ void load_config(struct mux_config *config) {
     strncpy(config->SETTINGS.ADVANCED.STATE, get_ini_string(muos_config, "settings.advanced", "state", "mem"),
             MAX_BUFFER_SIZE - 1);
     config->SETTINGS.ADVANCED.STATE[MAX_BUFFER_SIZE - 1] = '\0';
+    config->SETTINGS.ADVANCED.VERBOSE = get_ini_int(muos_config, "settings.advanced", "verbose", 0);
 
     strncpy(config->THEME.NAME, get_ini_string(muos_config, "theme", "name", "muOS"),
             MAX_BUFFER_SIZE - 1);

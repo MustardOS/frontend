@@ -42,7 +42,6 @@ struct mux_config {
             int16_t SWAP;
             int16_t THERMAL;
             int16_t FONT;
-            int16_t VERBOSE;
             char VOLUME[MAX_BUFFER_SIZE];
             char BRIGHTNESS[MAX_BUFFER_SIZE];
             int16_t OFFSET;
@@ -52,6 +51,7 @@ struct mux_config {
             int16_t RETROWAIT;
             int16_t ANDROID;
             char STATE[MAX_BUFFER_SIZE];
+            int16_t VERBOSE;
         } ADVANCED;
     } SETTINGS;
 
