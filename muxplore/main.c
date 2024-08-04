@@ -850,7 +850,6 @@ void create_explore_items(void *count) {
         free(dir_names);
 
         gen_item(file_names, file_count);
-        image_refresh("box");
         nav_moved = 1;
     }
 }
@@ -1104,6 +1103,7 @@ void list_nav_prev(int steps) {
     }
 
     play_sound("navigate", nav_sound);
+    image_refresh("box");
     set_label_long_mode();
     nav_moved = 1;
 }
@@ -1136,6 +1136,7 @@ void list_nav_next(int steps) {
     } else {
         play_sound("navigate", nav_sound);
     }
+    image_refresh("box");
     set_label_long_mode();
     nav_moved = 1;
 }
