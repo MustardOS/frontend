@@ -1602,7 +1602,22 @@
                   },
                   {
                     "part": "lv.PART.MAIN",
-                    "childs": [],
+                    "childs": [
+                      {
+                        "nid": 962925043,
+                        "strtype": "_style/StyleState",
+                        "strval": "DEFAULT",
+                        "childs": [
+                          {
+                            "nid": -1100283858,
+                            "strtype": "_style/Clip_corner",
+                            "strval": "True",
+                            "InheritedType": 2
+                          }
+                        ],
+                        "InheritedType": 1
+                      }
+                    ],
                     "nid": -1274277946,
                     "strtype": "IMAGE/Style_main",
                     "strval": "lv.PART.MAIN, Rectangle, Image",
@@ -16673,7 +16688,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/muxplore/ui",
     "projectExportFolderPath": "/home/adixal/Repo/MustardOS/frontend/interface",
-    "backup_cnt": 716,
+    "backup_cnt": 717,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.6",
     "callfuncsexport": "C_FILE",

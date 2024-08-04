@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <time.h>
 #include <libgen.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -1102,7 +1104,7 @@ void list_nav_prev(int steps) {
         }
     }
 
-    play_sound("navigate", nav_sound);
+    play_sound("navigate", nav_sound, 0);
     image_refresh("box");
     set_label_long_mode();
     nav_moved = 1;
@@ -1134,7 +1136,7 @@ void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
-        play_sound("navigate", nav_sound);
+        play_sound("navigate", nav_sound, 0);
     }
     image_refresh("box");
     set_label_long_mode();
@@ -1215,12 +1217,12 @@ void *joystick_task() {
                         if (ev.value == 1) {
                             if (msgbox_active) {
                                 if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
                                 } else if (ev.code == NAV_A) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
                                         lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
                                         lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
@@ -1241,7 +1243,7 @@ void *joystick_task() {
                                         goto nothing_ever_happens;
                                     }
 
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
 
                                     char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
@@ -1333,7 +1335,7 @@ void *joystick_task() {
                                     }
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
-                                    play_sound("back", nav_sound);
+                                    play_sound("back", nav_sound, 1);
 
                                     switch (module) {
                                         case FAVOURITE:
@@ -1386,7 +1388,7 @@ void *joystick_task() {
                                     char cache_file[MAX_BUFFER_SIZE];
                                     switch (module) {
                                         case MMC:
-                                            play_sound("confirm", nav_sound);
+                                            play_sound("confirm", nav_sound, 1);
 
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/mmc/%s.ini",
                                                      device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
@@ -1394,7 +1396,7 @@ void *joystick_task() {
                                             write_text_to_file("/tmp/explore_card", "mmc", "w");
                                             break;
                                         case SDCARD:
-                                            play_sound("confirm", nav_sound);
+                                            play_sound("confirm", nav_sound, 1);
 
                                             snprintf(cache_file, sizeof(cache_file),
                                                      "%s/MUOS/info/cache/sdcard/%s.ini",
@@ -1403,7 +1405,7 @@ void *joystick_task() {
                                             write_text_to_file("/tmp/explore_card", "sdcard", "w");
                                             break;
                                         case USB:
-                                            play_sound("confirm", nav_sound);
+                                            play_sound("confirm", nav_sound, 1);
 
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/usb/%s.ini",
                                                      device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
@@ -1411,7 +1413,7 @@ void *joystick_task() {
                                             write_text_to_file("/tmp/explore_card", "usb", "w");
                                             break;
                                         case FAVOURITE:
-                                            play_sound("confirm", nav_sound);
+                                            play_sound("confirm", nav_sound, 1);
 
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/favourite/%s.cfg",
                                                      store_favourite, strip_ext(f_content));
@@ -1422,7 +1424,7 @@ void *joystick_task() {
                                             goto ttq;
                                             break;
                                         case HISTORY:
-                                            play_sound("confirm", nav_sound);
+                                            play_sound("confirm", nav_sound, 1);
 
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/history/%s.cfg",
                                                      store_favourite, strip_ext(f_content));
@@ -1453,7 +1455,7 @@ void *joystick_task() {
                                     ttq:
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
 
                                     char *f_content = get_string_at_index(&content_items, atoi(
                                             get_string_at_index(&named_index, current_item_index)));
@@ -1504,7 +1506,7 @@ void *joystick_task() {
                                         case MMC:
                                         case SDCARD:
                                         case USB:
-                                            play_sound("confirm", nav_sound);
+                                            play_sound("confirm", nav_sound, 1);
 
                                             write_text_to_file("/tmp/explore_card", "root", "w");
                                             remove("/tmp/explore_dir");
@@ -1517,7 +1519,7 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.SELECT) {
                                     if (ui_file_count > 0) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
 
                                         switch (module) {
                                             case MMC:
@@ -1550,7 +1552,7 @@ void *joystick_task() {
                                         goto nothing_ever_happens;
                                     }
 
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     image_refresh("preview");
 
                                     lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
@@ -2173,8 +2175,15 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    if (config.SETTINGS.GENERAL.SOUND == 2) {
-        nav_sound = 1;
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            nav_sound = 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
     }
 
     ui_group = lv_group_create();

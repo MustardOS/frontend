@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <sys/stat.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "common.h"
 #include "options.h"
 #include "config.h"
@@ -1022,11 +1024,27 @@ void load_mux(const char *value) {
     fclose(file);
 }
 
-void play_sound(const char *sound, int enabled) {
+void play_sound(const char *sound, int enabled, int wait) {
     if (enabled) {
-        char send_sound[MAX_BUFFER_SIZE];
-        snprintf(send_sound, sizeof(send_sound), "echo %s > /tmp/muplay_pipe", sound);
-        system(send_sound);
+        const char *theme_path = get_default_storage(config.STORAGE.THEME);
+
+        char ns_file[MAX_BUFFER_SIZE];
+        snprintf(ns_file, sizeof(ns_file), "%s/MUOS/theme/active/sound/%s.wav", theme_path, sound);
+
+        if (file_exist(ns_file)) {
+            printf("PLAYING SOUND: %s\n", ns_file);
+            Mix_Chunk *sound_chunk = Mix_LoadWAV(ns_file);
+
+            if (sound_chunk) {
+                int sound_play = Mix_PlayChannel(-1, sound_chunk, 0);
+
+                if (wait) {
+                    while (Mix_Playing(sound_play)) {
+                        SDL_Delay(MAX_BUFFER_SIZE); // Could be shorter but some sounds get cut off so I'm cheating!~~
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1134,12 +1152,7 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
     static char wall_image_path[MAX_BUFFER_SIZE];
     static char wall_image_embed[MAX_BUFFER_SIZE];
 
-    char *wall_extension;
-    if (animated) {
-        wall_extension = "gif";
-    } else {
-        wall_extension = "png";
-    }
+    const char *wall_extension = animated ? "gif" : "png";
 
     if (ui_group != NULL) {
         if (lv_group_get_obj_count(ui_group) > 0) {

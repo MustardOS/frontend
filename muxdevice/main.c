@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -108,7 +110,7 @@ void init_navigation_groups() {
 }
 
 void device_change() {
-    play_sound("confirm", nav_sound);
+    play_sound("confirm", nav_sound, 1);
 
     static char device_file[MAX_BUFFER_SIZE];
     snprintf(device_file, sizeof(device_file), "%s/config/device.txt", INTERNAL_PATH);
@@ -180,7 +182,7 @@ void *joystick_task() {
                         if (ev.value == 1) {
                             if (msgbox_active) {
                                 if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -198,7 +200,7 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == NAV_B) {
                                     if (config.BOOT.FACTORY_RESET == 0) {
-                                        play_sound("back", nav_sound);
+                                        play_sound("back", nav_sound, 1);
                                         input_disable = 1;
 
                                         write_text_to_file(MUOS_PDI_LOAD, "device", "w");
@@ -212,7 +214,7 @@ void *joystick_task() {
                                 JOYHOTKEY_pressed = 0;
                                 /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     show_help(element_focused);
                                 }
                                 */
@@ -228,14 +230,14 @@ void *joystick_task() {
                                 ev.value == -1) {
                                 nav_prev(ui_group, 1);
                                 nav_prev(ui_group_glyph, 1);
-                                play_sound("navigate", nav_sound);
+                                play_sound("navigate", nav_sound, 0);
                                 nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 nav_next(ui_group, 1);
                                 nav_next(ui_group_glyph, 1);
-                                play_sound("navigate", nav_sound);
+                                play_sound("navigate", nav_sound, 0);
                                 nav_moved = 1;
                             }
                         }
@@ -584,8 +586,15 @@ int main(int argc, char *argv[]) {
     load_font_text(basename(argv[0]), ui_scrDevice);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
 
-    if (config.SETTINGS.GENERAL.SOUND == 2) {
-        nav_sound = 1;
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            nav_sound = 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
     }
 
     init_navigation_groups();

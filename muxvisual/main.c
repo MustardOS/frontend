@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -301,7 +303,7 @@ void list_nav_prev(int steps) {
         }
     }
 
-    play_sound("navigate", nav_sound);
+    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -330,7 +332,7 @@ void list_nav_next(int steps) {
             }
         }
     }
-    play_sound("navigate", nav_sound);
+    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -375,7 +377,7 @@ void *joystick_task() {
                         if (ev.value == 1) {
                             if (msgbox_active) {
                                 if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -421,9 +423,9 @@ void *joystick_task() {
                                                               &menu_counter_file_current,
                                                               menu_counter_file_total);
                                     }
-                                    play_sound("navigate", nav_sound);
+                                    play_sound("navigate", nav_sound, 0);
                                 } else if (ev.code == NAV_B) {
-                                    play_sound("back", nav_sound);
+                                    play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
                                     osd_message = "Saving Changes";
@@ -442,7 +444,7 @@ void *joystick_task() {
                                 JOYHOTKEY_pressed = 0;
                                 /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     show_help(element_focused);
                                 }
                                 */
@@ -530,7 +532,7 @@ void *joystick_task() {
                                                           &menu_counter_file_current,
                                                           menu_counter_file_total);
                                 }
-                                play_sound("navigate", nav_sound);
+                                play_sound("navigate", nav_sound, 0);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
@@ -571,7 +573,7 @@ void *joystick_task() {
                                                           &menu_counter_file_current,
                                                           menu_counter_file_total);
                                 }
-                                play_sound("navigate", nav_sound);
+                                play_sound("navigate", nav_sound, 0);
                             }
                         }
                     default:
@@ -898,8 +900,15 @@ int main(int argc, char *argv[]) {
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
 
-    if (config.SETTINGS.GENERAL.SOUND == 2) {
-        nav_sound = 1;
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            nav_sound = 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
     }
 
     init_navigation_groups();

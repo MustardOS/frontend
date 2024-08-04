@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -143,7 +145,6 @@ void list_nav_prev(int steps) {
         }
     }
 
-    play_sound("navigate", nav_sound);
     nav_moved = 1;
 }
 
@@ -169,7 +170,7 @@ void list_nav_next(int steps) {
             }
         }
     }
-    play_sound("navigate", nav_sound);
+
     nav_moved = 1;
 }
 
@@ -214,7 +215,7 @@ void *joystick_task() {
                         if (ev.value == 1) {
                             if (msgbox_active) {
                                 if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 0);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -224,28 +225,28 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
                                     if (element_focused == ui_lblContent) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
                                         load_mux("explore");
                                     } else if (element_focused == ui_lblFavourites) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
                                         load_mux("favourite");
                                     } else if (element_focused == ui_lblHistory) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
                                         load_mux("history");
                                     } else if (element_focused == ui_lblApps) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
                                         load_mux("app");
                                     } else if (element_focused == ui_lblInfo) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
                                         load_mux("info");
                                     } else if (element_focused == ui_lblConfig) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
                                         load_mux("config");
                                     } else if (element_focused == ui_lblReboot) {
-                                        play_sound("reboot", nav_sound);
+                                        play_sound("reboot", nav_sound, 1);
                                         load_mux("reboot");
                                     } else if (element_focused == ui_lblShutdown) {
-                                        play_sound("shutdown", nav_sound);
+                                        play_sound("shutdown", nav_sound, 1);
                                         load_mux("shutdown");
                                     }
                                     safe_quit = 1;
@@ -261,7 +262,7 @@ void *joystick_task() {
                                 JOYHOTKEY_pressed = 0;
                                 /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 0);
                                     show_help(element_focused);
                                 }
                                 */
@@ -277,6 +278,7 @@ void *joystick_task() {
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
                                     int y = (UI_COUNT - theme.MUX.ITEM.COUNT) * theme.MUX.ITEM.PANEL;
+                                    play_sound("navigate", nav_sound, 0);
                                     lv_obj_scroll_to_y(ui_pnlContent, y, LV_ANIM_OFF);
                                     lv_obj_scroll_to_y(ui_pnlGlyph, y, LV_ANIM_OFF);
                                     content_panel_y = y;
@@ -285,6 +287,7 @@ void *joystick_task() {
                                     nav_prev(ui_group_glyph, 1);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
+                                    play_sound("navigate", nav_sound, 0);
                                     list_nav_prev(1);
                                     nav_moved = 1;
                                 }
@@ -292,6 +295,7 @@ void *joystick_task() {
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 if (current_item_index == UI_COUNT - 1) {
+                                    play_sound("navigate", nav_sound, 0);
                                     lv_obj_scroll_to_y(ui_pnlContent, 0, LV_ANIM_OFF);
                                     lv_obj_scroll_to_y(ui_pnlGlyph, 0, LV_ANIM_OFF);
                                     content_panel_y = 0;
@@ -300,6 +304,7 @@ void *joystick_task() {
                                     nav_next(ui_group_glyph, 1);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
+                                    play_sound("navigate", nav_sound, 0);
                                     list_nav_next(1);
                                     nav_moved = 1;
                                 }
@@ -309,16 +314,16 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
+                                play_sound("navigate", nav_sound, 0);
                                 nav_prev(ui_group, 4);
                                 nav_prev(ui_group_glyph, 4);
-                                play_sound("navigate", nav_sound);
                                 nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
+                                play_sound("navigate", nav_sound, 0);
                                 nav_next(ui_group, 4);
                                 nav_next(ui_group_glyph, 4);
-                                play_sound("navigate", nav_sound);
                                 nav_moved = 1;
                             }
                         }
@@ -648,8 +653,15 @@ int main(int argc, char *argv[]) {
     load_font_text(basename(argv[0]), ui_scrLaunch);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
 
-    if (config.SETTINGS.GENERAL.SOUND == 2) {
-        nav_sound = 1;
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            nav_sound = 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
     }
 
     init_navigation_groups();

@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -138,12 +140,12 @@ void *joystick_task() {
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 nav_prev(ui_group, 1);
-                                play_sound("navigate", nav_sound);
+                                play_sound("navigate", nav_sound, 0);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 nav_next(ui_group, 1);
-                                play_sound("navigate", nav_sound);
+                                play_sound("navigate", nav_sound, 0);
                             }
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
@@ -153,14 +155,14 @@ void *joystick_task() {
                                 lv_roller_set_selected(element_focused,
                                                        lv_roller_get_selected(element_focused) - 1,
                                                        LV_ANIM_ON);
-                                play_sound("navigate", nav_sound);
+                                play_sound("navigate", nav_sound, 0);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 lv_roller_set_selected(element_focused,
                                                        lv_roller_get_selected(element_focused) + 1,
                                                        LV_ANIM_ON);
-                                play_sound("navigate", nav_sound);
+                                play_sound("navigate", nav_sound, 0);
                             }
                         }
                     default:
@@ -345,8 +347,15 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrPass);
 
-    if (config.SETTINGS.GENERAL.SOUND == 2) {
-        nav_sound = 1;
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            nav_sound = 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
     }
 
     init_navigation_groups();
@@ -385,8 +394,15 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrPass);
 
-    if (config.SETTINGS.GENERAL.SOUND == 2) {
-        nav_sound = 1;
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            nav_sound = 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
     }
 
     struct dt_task_param dt_par;
