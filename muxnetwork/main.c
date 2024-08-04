@@ -16,6 +16,8 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <libgen.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -293,7 +295,7 @@ void list_nav_prev(int steps) {
         update_scroll_position();
     }
 
-    play_sound("navigate", nav_sound);
+    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -305,7 +307,7 @@ void list_nav_next(int steps) {
         nav_next(ui_group_glyph, 1);
         update_scroll_position();
     }
-    play_sound("navigate", nav_sound);
+    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -350,7 +352,7 @@ void *joystick_task() {
                         if (ev.value == 1) {
                             if (msgbox_active) {
                                 if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -432,7 +434,7 @@ void *joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
 
                                     if (strcasecmp(lv_label_get_text(element_focused), "Enabled") == 0) {
                                         if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
@@ -602,7 +604,7 @@ void *joystick_task() {
                                         }
                                     }
                                 } else if (ev.code == NAV_B) {
-                                    play_sound("back", nav_sound);
+                                    play_sound("back", nav_sound, 1);
 
                                     input_disable = 1;
                                     save_network_config();
@@ -636,7 +638,7 @@ void *joystick_task() {
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
 
                                         input_disable = 1;
                                         save_network_config();
@@ -649,7 +651,7 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
 
                                         input_disable = 1;
                                         load_mux("net_profile");
@@ -667,7 +669,7 @@ void *joystick_task() {
                                 JOYHOTKEY_pressed = 0;
                                 /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     show_help(element_focused);
                                 }
                                 */
@@ -825,7 +827,7 @@ void *joystick_task() {
                                     }
                                 } else {
                                     if (element_focused == ui_lblEnable) {
-                                        play_sound("navigate", nav_sound);
+                                        play_sound("navigate", nav_sound, 0);
 
                                         if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
                                             lv_label_set_text(ui_lblEnableValue, "False");
@@ -895,7 +897,7 @@ void *joystick_task() {
                                         break;
                                     }
                                     if (element_focused == ui_lblType) {
-                                        play_sound("navigate", nav_sound);
+                                        play_sound("navigate", nav_sound, 0);
 
                                         if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
                                             lv_label_set_text(ui_lblTypeValue, "DHCP");
@@ -978,7 +980,7 @@ void *joystick_task() {
                                     }
                                 } else {
                                     if (element_focused == ui_lblEnable) {
-                                        play_sound("navigate", nav_sound);
+                                        play_sound("navigate", nav_sound, 0);
 
                                         if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
                                             lv_label_set_text(ui_lblEnableValue, "False");
@@ -1048,7 +1050,7 @@ void *joystick_task() {
                                         break;
                                     }
                                     if (element_focused == ui_lblType) {
-                                        play_sound("navigate", nav_sound);
+                                        play_sound("navigate", nav_sound, 0);
 
                                         if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
                                             lv_label_set_text(ui_lblTypeValue, "DHCP");
@@ -1696,8 +1698,15 @@ int main(int argc, char *argv[]) {
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlStatus);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlStatusHighlight);
 
-    if (config.SETTINGS.GENERAL.SOUND == 2) {
-        nav_sound = 1;
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            nav_sound = 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
     }
 
     init_navigation_groups();

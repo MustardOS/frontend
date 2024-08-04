@@ -15,13 +15,13 @@ endif
 
 TARGET = ${shell basename $$(pwd)}
 
-CC = ccache $(CROSS_COMPILE)gcc -static -O3
+CC = ccache $(CROSS_COMPILE)gcc -O3
 
 CFLAGS  = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
 	-flto -finline-functions -Wall -Wno-format-zero-length \
 	-Wno-implicit-function-declaration
 
-LDFLAGS = $(CFLAGS) -lpthread -Wl,--gc-sections -s
+LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fno-unroll-loops -fmerge-all-constants -fno-ident \

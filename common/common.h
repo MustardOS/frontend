@@ -174,7 +174,7 @@ void load_assign(const char *dir, const char *sys);
 
 void load_mux(const char *value);
 
-void play_sound(const char *filename, int nav_sound);
+void play_sound(const char *sound, int enabled, int wait);
 
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[]);
 

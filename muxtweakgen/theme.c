@@ -23,6 +23,7 @@ void apply_theme() {
             {ui_pnlHelpMessage,        theme.HELP.BACKGROUND},
             {ui_lblHidden,             theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblBGM,                theme.LIST_DEFAULT.BACKGROUND},
+            {ui_lblSound,              theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblStartup,            theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblColour,             theme.LIST_DEFAULT.BACKGROUND},
             {ui_lblBrightness,         theme.LIST_DEFAULT.BACKGROUND},
@@ -79,6 +80,7 @@ void apply_theme() {
     struct big background_focus_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.BACKGROUND},
             {ui_lblBGM,        theme.LIST_FOCUS.BACKGROUND},
+            {ui_lblSound,      theme.LIST_FOCUS.BACKGROUND},
             {ui_lblStartup,    theme.LIST_FOCUS.BACKGROUND},
             {ui_lblColour,     theme.LIST_FOCUS.BACKGROUND},
             {ui_lblBrightness, theme.LIST_FOCUS.BACKGROUND},
@@ -97,6 +99,7 @@ void apply_theme() {
     struct big gradient_elements[] = {
             {ui_lblHidden,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
             {ui_lblBGM,        theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
+            {ui_lblSound,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
             {ui_lblStartup,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
             {ui_lblColour,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
             {ui_lblBrightness, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
@@ -114,6 +117,7 @@ void apply_theme() {
     struct big gradient_focused_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
             {ui_lblBGM,        theme.LIST_FOCUS.BACKGROUND_GRADIENT},
+            {ui_lblSound,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
             {ui_lblStartup,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
             {ui_lblColour,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
             {ui_lblBrightness, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
@@ -131,6 +135,7 @@ void apply_theme() {
     struct big indicator_elements[] = {
             {ui_lblHidden,     theme.LIST_DEFAULT.INDICATOR},
             {ui_lblBGM,        theme.LIST_DEFAULT.INDICATOR},
+            {ui_lblSound,      theme.LIST_DEFAULT.INDICATOR},
             {ui_lblStartup,    theme.LIST_DEFAULT.INDICATOR},
             {ui_lblColour,     theme.LIST_DEFAULT.INDICATOR},
             {ui_lblBrightness, theme.LIST_DEFAULT.INDICATOR},
@@ -148,6 +153,7 @@ void apply_theme() {
     struct big indicator_focus_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.INDICATOR},
             {ui_lblBGM,        theme.LIST_FOCUS.INDICATOR},
+            {ui_lblSound,      theme.LIST_FOCUS.INDICATOR},
             {ui_lblStartup,    theme.LIST_FOCUS.INDICATOR},
             {ui_lblColour,     theme.LIST_FOCUS.INDICATOR},
             {ui_lblBrightness, theme.LIST_FOCUS.INDICATOR},
@@ -165,6 +171,7 @@ void apply_theme() {
     struct big default_elements[] = {
             {ui_lblHidden,             theme.LIST_DEFAULT.TEXT},
             {ui_lblBGM,                theme.LIST_DEFAULT.TEXT},
+            {ui_lblSound,              theme.LIST_DEFAULT.TEXT},
             {ui_lblStartup,            theme.LIST_DEFAULT.TEXT},
             {ui_lblColour,             theme.LIST_DEFAULT.TEXT},
             {ui_lblBrightness,         theme.LIST_DEFAULT.TEXT},
@@ -175,6 +182,7 @@ void apply_theme() {
             {ui_lblAdvanced,           theme.LIST_DEFAULT.TEXT},
             {ui_icoHidden,             theme.LIST_DEFAULT.TEXT},
             {ui_icoBGM,                theme.LIST_DEFAULT.TEXT},
+            {ui_icoSound,              theme.LIST_DEFAULT.TEXT},
             {ui_icoStartup,            theme.LIST_DEFAULT.TEXT},
             {ui_icoColour,             theme.LIST_DEFAULT.TEXT},
             {ui_icoBrightness,         theme.LIST_DEFAULT.TEXT},
@@ -185,6 +193,7 @@ void apply_theme() {
             {ui_icoAdvanced,           theme.LIST_DEFAULT.TEXT},
             {ui_droHidden,             theme.LIST_DEFAULT.TEXT},
             {ui_droBGM,                theme.LIST_DEFAULT.TEXT},
+            {ui_droSound,              theme.LIST_DEFAULT.TEXT},
             {ui_droStartup,            theme.LIST_DEFAULT.TEXT},
             {ui_droColour,             theme.LIST_DEFAULT.TEXT},
             {ui_droBrightness,         theme.LIST_DEFAULT.TEXT},
@@ -223,6 +232,7 @@ void apply_theme() {
     struct big focus_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.TEXT},
             {ui_lblBGM,        theme.LIST_FOCUS.TEXT},
+            {ui_lblSound,      theme.LIST_FOCUS.TEXT},
             {ui_lblStartup,    theme.LIST_FOCUS.TEXT},
             {ui_lblColour,     theme.LIST_FOCUS.TEXT},
             {ui_lblBrightness, theme.LIST_FOCUS.TEXT},
@@ -233,6 +243,7 @@ void apply_theme() {
             {ui_lblAdvanced,   theme.LIST_FOCUS.TEXT},
             {ui_icoHidden,     theme.LIST_FOCUS.TEXT},
             {ui_icoBGM,        theme.LIST_FOCUS.TEXT},
+            {ui_icoSound,      theme.LIST_FOCUS.TEXT},
             {ui_icoStartup,    theme.LIST_FOCUS.TEXT},
             {ui_icoColour,     theme.LIST_FOCUS.TEXT},
             {ui_icoBrightness, theme.LIST_FOCUS.TEXT},
@@ -243,6 +254,7 @@ void apply_theme() {
             {ui_icoAdvanced,   theme.LIST_FOCUS.TEXT},
             {ui_droHidden,     theme.LIST_FOCUS.TEXT},
             {ui_droBGM,        theme.LIST_FOCUS.TEXT},
+            {ui_droSound,      theme.LIST_FOCUS.TEXT},
             {ui_droStartup,    theme.LIST_FOCUS.TEXT},
             {ui_droColour,     theme.LIST_FOCUS.TEXT},
             {ui_droBrightness, theme.LIST_FOCUS.TEXT},
@@ -279,6 +291,7 @@ void apply_theme() {
     struct small text_default_alpha_elements[] = {
             {ui_lblHidden,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblBGM,                theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_lblSound,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblStartup,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblColour,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblBrightness,         theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -289,6 +302,7 @@ void apply_theme() {
             {ui_lblAdvanced,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoHidden,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoBGM,                theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoSoundM,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoStartup,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoColour,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoBrightness,         theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -299,6 +313,7 @@ void apply_theme() {
             {ui_icoAdvanced,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droHidden,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droBGM,                theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_droSound,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droStartup,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droColour,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_droBrightness,         theme.LIST_DEFAULT.TEXT_ALPHA},
@@ -335,6 +350,7 @@ void apply_theme() {
     struct small text_focus_alpha_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblBGM,        theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_lblSound,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblStartup,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblColour,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_lblBrightness, theme.LIST_FOCUS.TEXT_ALPHA},
@@ -345,6 +361,7 @@ void apply_theme() {
             {ui_lblAdvanced,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoHidden,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoBGM,        theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_icoSound,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoStartup,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoColour,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_icoBrightness, theme.LIST_FOCUS.TEXT_ALPHA},
@@ -355,6 +372,7 @@ void apply_theme() {
             {ui_icoAdvanced,   theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droHidden,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droBGM,        theme.LIST_FOCUS.TEXT_ALPHA},
+            {ui_droSound,      theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droStartup,    theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droColour,     theme.LIST_FOCUS.TEXT_ALPHA},
             {ui_droBrightness, theme.LIST_FOCUS.TEXT_ALPHA},
@@ -369,6 +387,7 @@ void apply_theme() {
     struct small indicator_default_alpha_elements[] = {
             {ui_lblHidden,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblBGM,        theme.LIST_DEFAULT.INDICATOR_ALPHA},
+            {ui_lblSound,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblStartup,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblColour,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
             {ui_lblBrightness, theme.LIST_DEFAULT.INDICATOR_ALPHA},
@@ -387,6 +406,7 @@ void apply_theme() {
     struct small indicator_focus_alpha_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblBGM,        theme.LIST_FOCUS.INDICATOR_ALPHA},
+            {ui_lblSound,      theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblStartup,    theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblColour,     theme.LIST_FOCUS.INDICATOR_ALPHA},
             {ui_lblBrightness, theme.LIST_FOCUS.INDICATOR_ALPHA},
@@ -404,6 +424,7 @@ void apply_theme() {
     struct small item_height_elements[] = {
             {ui_lblHidden,     theme.MUX.ITEM.HEIGHT},
             {ui_lblBGM,        theme.MUX.ITEM.HEIGHT},
+            {ui_lblSound,      theme.MUX.ITEM.HEIGHT},
             {ui_lblStartup,    theme.MUX.ITEM.HEIGHT},
             {ui_lblColour,     theme.MUX.ITEM.HEIGHT},
             {ui_lblBrightness, theme.MUX.ITEM.HEIGHT},
@@ -414,6 +435,7 @@ void apply_theme() {
             {ui_lblAdvanced,   theme.MUX.ITEM.HEIGHT},
             {ui_icoHidden,     theme.MUX.ITEM.HEIGHT},
             {ui_icoBGM,        theme.MUX.ITEM.HEIGHT},
+            {ui_icoSound,      theme.MUX.ITEM.HEIGHT},
             {ui_icoStartup,    theme.MUX.ITEM.HEIGHT},
             {ui_icoColour,     theme.MUX.ITEM.HEIGHT},
             {ui_icoBrightness, theme.MUX.ITEM.HEIGHT},
@@ -424,6 +446,7 @@ void apply_theme() {
             {ui_icoAdvanced,   theme.MUX.ITEM.HEIGHT},
             {ui_droHidden,     theme.MUX.ITEM.HEIGHT},
             {ui_droBGM,        theme.MUX.ITEM.HEIGHT},
+            {ui_droSound,      theme.MUX.ITEM.HEIGHT},
             {ui_droStartup,    theme.MUX.ITEM.HEIGHT},
             {ui_droColour,     theme.MUX.ITEM.HEIGHT},
             {ui_droBrightness, theme.MUX.ITEM.HEIGHT},
@@ -443,6 +466,7 @@ void apply_theme() {
     struct small item_width_elements[] = {
             {ui_lblHidden,     theme.MISC.CONTENT.WIDTH},
             {ui_lblBGM,        theme.MISC.CONTENT.WIDTH},
+            {ui_lblSound,      theme.MISC.CONTENT.WIDTH},
             {ui_lblStartup,    theme.MISC.CONTENT.WIDTH},
             {ui_lblColour,     theme.MISC.CONTENT.WIDTH},
             {ui_lblBrightness, theme.MISC.CONTENT.WIDTH},
@@ -453,6 +477,7 @@ void apply_theme() {
             {ui_lblAdvanced,   theme.MISC.CONTENT.WIDTH},
             {ui_icoHidden,     theme.MISC.CONTENT.WIDTH},
             {ui_icoBGM,        theme.MISC.CONTENT.WIDTH},
+            {ui_icoSound,      theme.MISC.CONTENT.WIDTH},
             {ui_icoStartup,    theme.MISC.CONTENT.WIDTH},
             {ui_icoColour,     theme.MISC.CONTENT.WIDTH},
             {ui_icoBrightness, theme.MISC.CONTENT.WIDTH},
@@ -463,6 +488,7 @@ void apply_theme() {
             {ui_icoAdvanced,   theme.MISC.CONTENT.WIDTH},
             {ui_droHidden,     theme.MISC.CONTENT.WIDTH},
             {ui_droBGM,        theme.MISC.CONTENT.WIDTH},
+            {ui_droSound,      theme.MISC.CONTENT.WIDTH},
             {ui_droStartup,    theme.MISC.CONTENT.WIDTH},
             {ui_droColour,     theme.MISC.CONTENT.WIDTH},
             {ui_droBrightness, theme.MISC.CONTENT.WIDTH},
@@ -476,6 +502,7 @@ void apply_theme() {
     struct small gradient_start_default_elements[] = {
             {ui_lblHidden,     theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblBGM,        theme.LIST_DEFAULT.GRADIENT_START},
+            {ui_lblSound,      theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblStartup,    theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblColour,     theme.LIST_DEFAULT.GRADIENT_START},
             {ui_lblBrightness, theme.LIST_DEFAULT.GRADIENT_START},
@@ -493,6 +520,7 @@ void apply_theme() {
     struct small gradient_start_focus_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblBGM,        theme.LIST_FOCUS.GRADIENT_START},
+            {ui_lblSound,      theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblStartup,    theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblColour,     theme.LIST_FOCUS.GRADIENT_START},
             {ui_lblBrightness, theme.LIST_FOCUS.GRADIENT_START},
@@ -510,6 +538,7 @@ void apply_theme() {
     struct small gradient_stop_default_elements[] = {
             {ui_lblHidden,     theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblBGM,        theme.LIST_DEFAULT.GRADIENT_STOP},
+            {ui_lblSound,      theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblStartup,    theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblColour,     theme.LIST_DEFAULT.GRADIENT_STOP},
             {ui_lblBrightness, theme.LIST_DEFAULT.GRADIENT_STOP},
@@ -527,6 +556,7 @@ void apply_theme() {
     struct small gradient_stop_focus_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblBGM,        theme.LIST_FOCUS.GRADIENT_STOP},
+            {ui_lblSound,      theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblStartup,    theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblColour,     theme.LIST_FOCUS.GRADIENT_STOP},
             {ui_lblBrightness, theme.LIST_FOCUS.GRADIENT_STOP},
@@ -544,6 +574,7 @@ void apply_theme() {
     struct small background_alpha_default_elements[] = {
             {ui_lblHidden,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblBGM,        theme.LIST_DEFAULT.BACKGROUND_ALPHA},
+            {ui_lblSound,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblStartup,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblColour,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
             {ui_lblBrightness, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
@@ -562,6 +593,7 @@ void apply_theme() {
     struct small background_alpha_focus_elements[] = {
             {ui_lblHidden,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblBGM,        theme.LIST_FOCUS.BACKGROUND_ALPHA},
+            {ui_lblSound,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblStartup,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblColour,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
             {ui_lblBrightness, theme.LIST_FOCUS.BACKGROUND_ALPHA},
@@ -583,16 +615,17 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
-            {ui_lblHidden,     theme.LIST_DEFAULT.RADIUS},
-            {ui_lblBGM,        theme.LIST_DEFAULT.RADIUS},
-            {ui_lblStartup,    theme.LIST_DEFAULT.RADIUS},
-            {ui_lblColour,     theme.LIST_DEFAULT.RADIUS},
-            {ui_lblBrightness, theme.LIST_DEFAULT.RADIUS},
-            {ui_lblHDMI,       theme.LIST_DEFAULT.RADIUS},
-            {ui_lblShutdown,   theme.LIST_DEFAULT.RADIUS},
-            {ui_lblInterface,  theme.LIST_DEFAULT.RADIUS},
-            {ui_lblStorage,    theme.LIST_DEFAULT.RADIUS},
-            {ui_lblAdvanced,   theme.LIST_DEFAULT.RADIUS},
+            {ui_lblHidden,             theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBGM,                theme.LIST_DEFAULT.RADIUS},
+            {ui_lblSound,              theme.LIST_DEFAULT.RADIUS},
+            {ui_lblStartup,            theme.LIST_DEFAULT.RADIUS},
+            {ui_lblColour,             theme.LIST_DEFAULT.RADIUS},
+            {ui_lblBrightness,         theme.LIST_DEFAULT.RADIUS},
+            {ui_lblHDMI,               theme.LIST_DEFAULT.RADIUS},
+            {ui_lblShutdown,           theme.LIST_DEFAULT.RADIUS},
+            {ui_lblInterface,          theme.LIST_DEFAULT.RADIUS},
+            {ui_lblStorage,            theme.LIST_DEFAULT.RADIUS},
+            {ui_lblAdvanced,           theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,
@@ -681,6 +714,7 @@ void apply_theme() {
     struct small font_pad_list_top_elements[] = {
             {ui_lblHidden,     theme.FONT.LIST_PAD_TOP},
             {ui_lblBGM,        theme.FONT.LIST_PAD_TOP},
+            {ui_lblSound,      theme.FONT.LIST_PAD_TOP},
             {ui_lblStartup,    theme.FONT.LIST_PAD_TOP},
             {ui_lblColour,     theme.FONT.LIST_PAD_TOP},
             {ui_lblBrightness, theme.FONT.LIST_PAD_TOP},
@@ -698,6 +732,7 @@ void apply_theme() {
     struct small font_pad_list_bottom_elements[] = {
             {ui_lblHidden,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblBGM,        theme.FONT.LIST_PAD_BOTTOM},
+            {ui_lblSound,      theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblStartup,    theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblColour,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_lblBrightness, theme.FONT.LIST_PAD_BOTTOM},
@@ -715,6 +750,7 @@ void apply_theme() {
     struct small font_pad_top_dropdown_elements[] = {
             {ui_droHidden,     theme.FONT.LIST_PAD_TOP},
             {ui_droBGM,        theme.FONT.LIST_PAD_TOP},
+            {ui_droSound,      theme.FONT.LIST_PAD_TOP},
             {ui_droStartup,    theme.FONT.LIST_PAD_TOP},
             {ui_droColour,     theme.FONT.LIST_PAD_TOP},
             {ui_droBrightness, theme.FONT.LIST_PAD_TOP},
@@ -730,6 +766,7 @@ void apply_theme() {
     struct small font_pad_bottom_dropdown_elements[] = {
             {ui_droHidden,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_droBGM,        theme.FONT.LIST_PAD_BOTTOM},
+            {ui_droSound,      theme.FONT.LIST_PAD_BOTTOM},
             {ui_droStartup,    theme.FONT.LIST_PAD_BOTTOM},
             {ui_droColour,     theme.FONT.LIST_PAD_BOTTOM},
             {ui_droBrightness, theme.FONT.LIST_PAD_BOTTOM},
@@ -746,6 +783,7 @@ void apply_theme() {
     struct small font_pad_top_list_icon_elements[] = {
             {ui_icoHidden,     theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoBGM,        theme.FONT.LIST_ICON_PAD_TOP},
+            {ui_icoSound,      theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoStartup,    theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoColour,     theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoBrightness, theme.FONT.LIST_ICON_PAD_TOP},
@@ -763,6 +801,7 @@ void apply_theme() {
     struct small font_pad_bottom_list_icon_elements[] = {
             {ui_icoHidden,     theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoBGM,        theme.FONT.LIST_ICON_PAD_BOTTOM},
+            {ui_icoSound,      theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoStartup,    theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoColour,     theme.FONT.LIST_ICON_PAD_BOTTOM},
             {ui_icoBrightness, theme.FONT.LIST_ICON_PAD_BOTTOM},
@@ -819,9 +858,9 @@ void apply_theme() {
     }
 
     struct small content_pad_left_element[] = {
-            {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlGlyph,   theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlHighlight,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlContent,   theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlGlyph,     theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlHighlight, theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
@@ -829,9 +868,9 @@ void apply_theme() {
     }
 
     struct small content_padding_top_element[] = {
-            {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
-            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
-            {ui_pnlHighlight,   44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlContent,   44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlGlyph,     44 + theme.MISC.CONTENT.PADDING_TOP},
+            {ui_pnlHighlight, 44 + theme.MISC.CONTENT.PADDING_TOP},
     };
     for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
         lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);

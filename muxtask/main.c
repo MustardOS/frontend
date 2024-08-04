@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -254,7 +256,7 @@ void list_nav_prev(int steps) {
         }
     }
 
-    play_sound("navigate", nav_sound);
+    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -283,7 +285,7 @@ void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
-        play_sound("navigate", nav_sound);
+        play_sound("navigate", nav_sound, 0);
     }
     nav_moved = 1;
 }
@@ -334,7 +336,7 @@ void *joystick_task() {
                         if (ev.value == 1) {
                             if (msgbox_active) {
                                 if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -344,7 +346,7 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
                                     if (ui_count > 0) {
-                                        play_sound("confirm", nav_sound);
+                                        play_sound("confirm", nav_sound, 1);
 
                                         char task_path[MAX_BUFFER_SIZE];
                                         snprintf(task_path, sizeof(task_path),
@@ -365,7 +367,7 @@ void *joystick_task() {
                                         safe_quit = 1;
                                     }
                                 } else if (ev.code == NAV_B) {
-                                    play_sound("back", nav_sound);
+                                    play_sound("back", nav_sound, 1);
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
@@ -385,7 +387,7 @@ void *joystick_task() {
                                 JOYHOTKEY_pressed = 0;
                                 /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
-                                    play_sound("confirm", nav_sound);
+                                    play_sound("confirm", nav_sound, 1);
                                     show_help();
                                 }
                                 */
@@ -754,8 +756,15 @@ int main(int argc, char *argv[]) {
     load_font_text(basename(argv[0]), ui_scrTask);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
 
-    if (config.SETTINGS.GENERAL.SOUND == 2) {
-        nav_sound = 1;
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            nav_sound = 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
     }
 
     create_task_items();

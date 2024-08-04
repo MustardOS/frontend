@@ -2,7 +2,7 @@ ifeq ($(DEVICE), RG35XX)
 	ARCH = -march=armv7-a \
 		-mtune=cortex-a9 \
 		-mfpu=neon-vfpv3 \
-		-mfloat-abi=softfp 
+		-mfloat-abi=softfp
 else ifeq ($(DEVICE), RG35XXPLUS)
 	ARCH = -march=armv8-a+simd \
 		-mtune=cortex-a53
@@ -15,13 +15,13 @@ endif
 
 TARGET = ${shell basename $$(pwd)}
 
-CC = ccache $(CROSS_COMPILE)gcc -static -O3
+CC = ccache $(CROSS_COMPILE)gcc -O3
 
 CFLAGS  = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
 	-flto -finline-functions -Wall -Wno-format-zero-length \
 	-Wno-implicit-function-declaration
 
-LDFLAGS = $(CFLAGS) -lpthread -Wl,--gc-sections -s
+LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fno-unroll-loops -fmerge-all-constants -fno-ident \
