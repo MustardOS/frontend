@@ -94,8 +94,8 @@ unsigned long long total_file_size(const char *path) {
 }
 
 int time_compare_for_history(const void *a, const void *b) {
-    const char *file_a = strip_label_placement(strip_ext(*(char **) a));
-    const char *file_b = strip_label_placement(strip_ext(*(char **) b));
+    char *file_a = strip_label_placement(strdup(*(const char **)a));
+    char *file_b = strip_label_placement(strdup(*(const char **)b));
 
     char mod_file_a[MAX_BUFFER_SIZE];
     char mod_file_b[MAX_BUFFER_SIZE];
@@ -104,6 +104,9 @@ int time_compare_for_history(const void *a, const void *b) {
              get_default_storage(config.STORAGE.FAV), file_a);
     snprintf(mod_file_b, sizeof(mod_file_b), "%s/MUOS/info/history/%s.cfg",
              get_default_storage(config.STORAGE.FAV), file_b);
+
+    free(file_a);
+    free(file_b);
 
     if (access(mod_file_a, F_OK) != 0) {
         printf("Error: %s does not exist\n", mod_file_a);
