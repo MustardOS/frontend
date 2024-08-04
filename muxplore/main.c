@@ -261,6 +261,7 @@ void reset_label_long_mode() {
 }
 
 void set_label_long_mode() {
+    lv_task_handler();
     char *name_index = get_string_at_index(&named_index, current_item_index);
 
     if (name_index != NULL) {
@@ -299,6 +300,7 @@ void image_refresh(char *image_type) {
         printf("BOX ART IS SET TO DISABLED\n");
         return;
     }
+    lv_task_handler();
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
@@ -513,6 +515,7 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     if (item_type == ROM) {
         adjust_visual_label(item_text, config.VISUAL.NAME, config.VISUAL.DASH);
     }
+    lv_label_set_long_mode(ui_lblExploreItem, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblExploreItem, item_text);
 
     lv_obj_set_width(ui_lblExploreItem, theme.MISC.CONTENT.WIDTH);
@@ -558,8 +561,7 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     lv_obj_set_style_pad_bottom(ui_lblExploreItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_text_line_space(ui_lblExploreItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_label_set_long_mode(ui_lblExploreItem, LV_LABEL_LONG_DOT);
+    
     static lv_anim_t desc_anim;
     static lv_style_t desc_style;
     lv_anim_init(&desc_anim);
@@ -1087,7 +1089,6 @@ void list_nav_prev(int steps) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
-            set_label_long_mode();
             if (current_item_index > theme.MUX.ITEM.PREV_LOW &&
                 current_item_index < (ui_count - theme.MUX.ITEM.PREV_HIGH)) {
                 content_panel_y -= theme.MUX.ITEM.PANEL;
@@ -1098,12 +1099,12 @@ void list_nav_prev(int steps) {
                 current_item_index--;
                 nav_prev(ui_group, 1);
                 nav_prev(ui_group_glyph, 1);
-                set_label_long_mode();
             }
         }
     }
 
     play_sound("navigate", nav_sound);
+    set_label_long_mode();
     nav_moved = 1;
 }
 
@@ -1115,7 +1116,6 @@ void list_nav_next(int steps) {
                 current_item_index++;
                 nav_next(ui_group, 1);
                 nav_next(ui_group_glyph, 1);
-                set_label_long_mode();
                 if (current_item_index >= theme.MUX.ITEM.NEXT_HIGH &&
                     current_item_index < (ui_count - theme.MUX.ITEM.NEXT_LOW)) {
                     content_panel_y += theme.MUX.ITEM.PANEL;
@@ -1127,7 +1127,6 @@ void list_nav_next(int steps) {
                 current_item_index++;
                 nav_next(ui_group, 1);
                 nav_next(ui_group_glyph, 1);
-                set_label_long_mode();
             }
         }
     }
@@ -1137,6 +1136,7 @@ void list_nav_next(int steps) {
     } else {
         play_sound("navigate", nav_sound);
     }
+    set_label_long_mode();
     nav_moved = 1;
 }
 
@@ -2288,9 +2288,6 @@ int main(int argc, char *argv[]) {
         } else {
             image_refresh("box");
         }
-        // When using LV_LABEL_LONG_DOT refresh required here in order for all labels to return correct text
-        lv_refr_now(NULL);
-        set_label_long_mode();
     } else {
         nav_moved = 0;
         lv_obj_clear_flag(ui_lblExploreMessage, LV_OBJ_FLAG_HIDDEN);
