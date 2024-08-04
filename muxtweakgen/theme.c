@@ -302,7 +302,7 @@ void apply_theme() {
             {ui_lblAdvanced,           theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoHidden,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoBGM,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoSoundM,             theme.LIST_DEFAULT.TEXT_ALPHA},
+            {ui_icoSound,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoStartup,            theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoColour,             theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_icoBrightness,         theme.LIST_DEFAULT.TEXT_ALPHA},
