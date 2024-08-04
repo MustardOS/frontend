@@ -177,7 +177,7 @@ void apply_theme() {
             {ui_pnlHelpMessage,        theme.HELP.RADIUS},
             {ui_pnlHelpPreview,        theme.HELP.RADIUS},
             {ui_imgBox,                theme.IMAGE_LIST.RADIUS},
-            {ui_imgHelpPreviewImage,   theme.IMAGE_LIST.RADIUS},
+            {ui_imgHelpPreviewImage,   theme.IMAGE_PREVIEW.RADIUS},
             {ui_pnlMessage,            theme.MESSAGE.RADIUS},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
