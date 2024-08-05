@@ -310,20 +310,69 @@ void *joystick_task() {
                                 }
                             }
                         }
+                        // Horizontal Navigation with 2 rows of 4 items
                         if (theme.MISC.NAVIGATION_TYPE == 2 && (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
                                 play_sound("navigate", nav_sound, 0);
-                                nav_prev(ui_group, 4);
-                                nav_prev(ui_group_glyph, 4);
+                                if (current_item_index > 3) {
+                                    nav_prev(ui_group, 4);
+                                    nav_prev(ui_group_glyph, 4);
+                                }
                                 nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
                                 play_sound("navigate", nav_sound, 0);
-                                nav_next(ui_group, 4);
-                                nav_next(ui_group_glyph, 4);
+                                if (current_item_index < 4) {
+                                    nav_next(ui_group, 4);
+                                    nav_next(ui_group_glyph, 4);
+                                }
+                                nav_moved = 1;
+                            }
+                        }
+                        // Horizontal Navigation with 3 item first row, 5 item second row
+                        if (theme.MISC.NAVIGATION_TYPE == 3 && (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
+                                ev.value == -1) {
+                                    switch (current_item_index) {
+                                        case 3:
+                                        case 4:
+                                            nav_prev(ui_group, 3);
+                                            nav_prev(ui_group_glyph, 3);
+                                            break;
+                                        case 5:
+                                            nav_prev(ui_group, 4);
+                                            nav_prev(ui_group_glyph, 4);
+                                            break;
+                                        case 6:
+                                        case 7:
+                                            nav_prev(ui_group, 5);
+                                            nav_prev(ui_group_glyph, 5);
+                                            break;
+                                    }
+                                play_sound("navigate", nav_sound, 0);
+                                nav_moved = 1;
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
+                                ev.value == 1) {
+                                    switch (current_item_index) {
+                                        case 0:
+                                            nav_next(ui_group, 3);
+                                            nav_next(ui_group_glyph, 3);
+                                            break;
+                                        case 1:
+                                            nav_next(ui_group, 4);
+                                            nav_next(ui_group_glyph, 4);
+                                            break;
+                                        case 2:
+                                            nav_next(ui_group, 5);
+                                            nav_next(ui_group_glyph, 5);
+                                            break;
+                                    }
+                                play_sound("navigate", nav_sound, 0);
                                 nav_moved = 1;
                             }
                         }
@@ -611,6 +660,7 @@ int main(int argc, char *argv[]) {
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
         case 2:
+        case 3:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
             NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
             NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
