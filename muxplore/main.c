@@ -1818,6 +1818,10 @@ void init_elements() {
         lv_obj_move_foreground(overlay_img);
     }
 
+    if (TEST_IMAGE) display_testing_message(ui_scrExplore);
+}
+
+void init_footer_elements() {
     switch (module) {
         case ROOT: {
             set_nav_text("Open", "Back", NULL, NULL, "Info");
@@ -1891,8 +1895,6 @@ void init_elements() {
         default:
             break;
     }
-
-    if (TEST_IMAGE) display_testing_message(ui_scrExplore);
 }
 
 void init_fonts() {
@@ -2344,6 +2346,8 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
 
+    init_footer_elements();
+    
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }
