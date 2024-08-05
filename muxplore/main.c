@@ -119,6 +119,32 @@ lv_timer_t *ui_refresh_timer;
 const char *store_catalogue;
 const char *store_favourite;
 
+bool is_directory(char *desc_name) {
+    size_t dummy_dir_len = strlen(DUMMY_DIR);
+    return strncasecmp(desc_name, DUMMY_DIR, dummy_dir_len) == 0;
+}
+
+void add_root_item_to_names(char *dir_name, char *index) {
+    char curr_label[MAX_BUFFER_SIZE];
+    snprintf(curr_label, sizeof(curr_label), "%s%s", DUMMY_DIR, dir_name);
+
+    push_string(&named_items, curr_label);
+    push_string(&named_index, index);
+    push_string(&content_items, DUMMY_DIR);
+}
+
+char *get_current_named_item() {
+    char *label_text = get_string_at_index(&named_items, atoi(
+            get_string_at_index(&named_index, current_item_index)));
+
+    if (is_directory(label_text)) {
+        size_t dummy_dir_len = strlen(DUMMY_DIR);
+        return label_text + dummy_dir_len;
+    } else {
+        return label_text;
+    }        
+}
+
 char *load_content_core(int force) {
     char content_core[MAX_BUFFER_SIZE];
 
@@ -159,7 +185,7 @@ char *load_content_core(int force) {
 char *load_content_description() {
     char content_desc[MAX_BUFFER_SIZE];
 
-    const char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
+    const char *content_label = get_current_named_item();
 
     switch (module) {
         case ROOT:
@@ -232,13 +258,13 @@ char *load_content_description() {
 
                 printf("TRYING TO READ CORE CONFIG META: %s\n", core_file);
                 char *core_desc = read_line_from_file(core_file, 2);
-                if (strlen(core_desc) <= 1 && strcasecmp(desc_name, DUMMY_DIR) != 0) {
+                if (strlen(core_desc) <= 1 && !is_directory(desc_name)) {
                     printf("CORE IS NOT SET - TEXT NOT LOADED\n");
                     return "No Information Found";
                 }
                 printf("TEXT IS STORED AT: %s\n", core_desc);
 
-                if (strcasecmp(desc_name, DUMMY_DIR) == 0) {
+                if (is_directory(desc_name)) {
                     snprintf(content_desc, sizeof(content_desc), "%s/MUOS/info/catalogue/Folder/text/%s.txt",
                              store_catalogue, content_label);
                 } else {
@@ -268,10 +294,10 @@ void set_label_long_mode() {
 
     if (name_index != NULL) {
         char *item_name = strip_ext(get_string_at_index(&content_items, atoi(name_index)));
-        char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
+        char *content_label = get_current_named_item();
         size_t len = strlen(content_label);
 
-        bool is_dir = strcasecmp(item_name, DUMMY_DIR) == 0;
+        bool is_dir = is_directory(item_name);
         bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
         bool is_long_folder_name = is_dir && ends_with_ellipse;
         bool is_long_file_name = !is_dir && strcasecmp(item_name, content_label) != 0 && ends_with_ellipse;
@@ -302,12 +328,11 @@ void image_refresh(char *image_type) {
         printf("BOX ART IS SET TO DISABLED\n");
         return;
     }
-    lv_task_handler();
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
 
-    const char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
+    const char *content_label = get_current_named_item();
 
     switch (module) {
         case ROOT:
@@ -407,12 +432,12 @@ void image_refresh(char *image_type) {
                          device.STORAGE.ROM.MOUNT, get_last_subdir(sd_dir, '/', 4));
 
                 char *core_artwork = read_line_from_file(core_file, 2);
-                if (strlen(core_artwork) <= 1 && strcasecmp(file_name, DUMMY_DIR) != 0) {
+                if (strlen(core_artwork) <= 1 && !is_directory(file_name)) {
                     printf("CORE IS NOT SET - ARTWORK NOT LOADED\n");
                     return;
                 }
 
-                if (strcasecmp(file_name, DUMMY_DIR) == 0) {
+                if (is_directory(file_name)) {
                     snprintf(image, sizeof(image), "%s/MUOS/info/catalogue/Folder/%s/%s.png",
                              store_catalogue, image_type, content_label);
                     snprintf(image_path, sizeof(image_path), "M:%s/MUOS/info/catalogue/Folder/%s/%s.png",
@@ -740,7 +765,7 @@ void gen_item(char **file_names, int file_count) {
     puts("START GEN");
     for (int i = 0; i < named_items.size; i++) {
         push_string(&named_index, named_indices[i]);
-        if (strcasecmp(stripped_names[i], DUMMY_DIR) != 0) {
+        if (!is_directory(stripped_names[i])) {
             char fav_dir[PATH_MAX];
             snprintf(fav_dir, sizeof(fav_dir), "%s/MUOS/info/favourite/%s.cfg",
                      store_favourite, strip_ext(get_string_at_index(&content_items, atoi(named_indices[i]))));
@@ -838,7 +863,7 @@ void create_explore_items(void *count) {
         qsort(dir_names, dir_count, sizeof(char *), str_compare);
         for (int i = 0; i < dir_count; i++) {
             char curr_label[MAX_BUFFER_SIZE];
-            snprintf(curr_label, sizeof(curr_label), "%s :: %d", DUMMY_DIR, *ui_count_ptr);
+            snprintf(curr_label, sizeof(curr_label), "%s%s :: %d", DUMMY_DIR, dir_names[i], *ui_count_ptr);
 
             gen_label(FOLDER, "\uF07B", dir_names[i], 12);
 
@@ -852,6 +877,7 @@ void create_explore_items(void *count) {
         free(dir_names);
 
         gen_item(file_names, file_count);
+        image_refresh("box");
         nav_moved = 1;
     }
 }
@@ -888,6 +914,8 @@ void explore_root() {
             safe_quit = 1;
             break;
         case 6:
+            add_root_item_to_names("SD1 (mmc)", "0");
+            add_root_item_to_names("SD2 (sdcard)", "1");
             gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
             gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
             ui_count += 2;
@@ -901,18 +929,25 @@ void explore_root() {
             safe_quit = 1;
             break;
         case 10:
+            add_root_item_to_names("SD1 (mmc)", "0");
+            add_root_item_to_names("USB (external)", "1");
             gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
             gen_label(FOLDER, "\uF07B", "USB (external)", 12);
             ui_count += 2;
             nav_moved = 1;
             break;
         case 12:
+            add_root_item_to_names("SD2 (sdcard)", "0");
+            add_root_item_to_names("USB (external)", "1");
             gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
             gen_label(FOLDER, "\uF07B", "USB (external)", 12);
             ui_count += 2;
             nav_moved = 1;
             break;
         case 14:
+            add_root_item_to_names("SD1 (mmc)", "0");
+            add_root_item_to_names("SD2 (sdcard)", "1");
+            add_root_item_to_names("USB (external)", "2");
             gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
             gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
             gen_label(FOLDER, "\uF07B", "USB (external)", 12);
@@ -1245,7 +1280,7 @@ void *joystick_task() {
 
                                     play_sound("confirm", nav_sound, 1);
 
-                                    char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
+                                    char *content_label = get_current_named_item();
 
                                     switch (module) {
                                         case ROOT:
@@ -1274,11 +1309,11 @@ void *joystick_task() {
                                                 case MMC:
                                                 case SDCARD:
                                                 case USB:
-                                                    if (strcasecmp(f_content, DUMMY_DIR) == 0) {
+                                                    if (is_directory(f_content)) {
                                                         char n_dir[MAX_BUFFER_SIZE];
                                                         snprintf(n_dir, sizeof(n_dir), "%s/%s",
                                                                  sd_dir,
-                                                                 lv_label_get_text(lv_group_get_focused(ui_group)));
+                                                                 get_current_named_item());
 
                                                         write_text_to_file("/tmp/explore_dir", n_dir, "w");
                                                         load_mux("explore");
@@ -1464,7 +1499,7 @@ void *joystick_task() {
                                         case MMC:
                                         case SDCARD:
                                         case USB:
-                                            if (strcasecmp(f_content, DUMMY_DIR) == 0) {
+                                            if (is_directory(f_content)) {
                                                 lv_label_set_text(ui_lblMessage,
                                                                   "Directories cannot be added to Favourites");
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
@@ -1570,7 +1605,7 @@ void *joystick_task() {
 
                                     show_rom_info(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpPreviewHeader,
                                                   ui_lblHelpDescription,
-                                                  lv_label_get_text(lv_group_get_focused(ui_group)),
+                                                  get_current_named_item(),
                                                   load_content_description());
                                 }
                             }
