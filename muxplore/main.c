@@ -533,7 +533,7 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
 
     lv_obj_t * ui_lblExploreItem = lv_label_create(ui_pnlExplore);
 
-    if (item_type == ROM) {
+    if (module != ROOT) {
         adjust_visual_label(item_text, config.VISUAL.NAME, config.VISUAL.DASH);
     }
     lv_label_set_long_mode(ui_lblExploreItem, LV_LABEL_LONG_DOT);
