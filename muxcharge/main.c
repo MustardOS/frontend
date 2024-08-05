@@ -4,7 +4,6 @@
 #include "ui/ui.h"
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/reboot.h>
 #include <string.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -33,7 +32,7 @@ int msgbox_active = 0;
 int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
-int safe_quit = 0;
+int exit_status = -1;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
@@ -54,8 +53,7 @@ lv_timer_t *battery_timer;
 void check_for_cable() {
     if (file_exist(device.BATTERY.CHARGER)) {
         if (atoi(read_line_from_file(device.BATTERY.CHARGER, 1)) == 0) {
-            sync();
-            reboot(RB_POWER_OFF);
+            exit_status = 1;
         }
     }
 }
@@ -120,7 +118,7 @@ void *joystick_task() {
                                     lv_task_handler();
                                     usleep(device.SCREEN.WAIT);
 
-                                    safe_quit = 1;
+                                    exit_status = 0;
                                 }
 
                                 blank = 0;
@@ -242,7 +240,7 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    while (!safe_quit) {
+    while (exit_status < 0) {
         usleep(device.SCREEN.WAIT);
     }
 
@@ -250,7 +248,7 @@ int main(int argc, char *argv[]) {
 
     close(js_fd);
 
-    return 0;
+    return exit_status;
 }
 
 uint32_t mux_tick(void) {
