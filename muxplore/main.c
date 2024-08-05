@@ -290,21 +290,15 @@ void reset_label_long_mode() {
 
 void set_label_long_mode() {
     lv_task_handler();
-    char *name_index = get_string_at_index(&named_index, current_item_index);
 
-    if (name_index != NULL) {
-        char *item_name = strip_ext(get_string_at_index(&content_items, atoi(name_index)));
-        char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
-        size_t len = strlen(content_label);
+    char *item_name = get_current_named_item();
+    char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
-        bool is_dir = is_directory(item_name);
-        bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
-        bool is_long_folder_name = is_dir && ends_with_ellipse;
-        bool is_long_file_name = !is_dir && strcasecmp(item_name, content_label) != 0 && ends_with_ellipse;
+    size_t len = strlen(content_label);
+    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
 
-        if (is_long_folder_name || is_long_file_name) {
-            lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
-        }
+    if (strcasecmp(item_name, content_label) != 0 && ends_with_ellipse) {
+        lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
     }
 }
 
