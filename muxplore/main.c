@@ -2325,6 +2325,7 @@ int main(int argc, char *argv[]) {
     lv_indev_drv_register(&indev_drv);
 
     pthread_join(gen_item_thread, NULL);
+    init_footer_elements();
     if (ui_count > 0) {
         if (ui_count > theme.MUX.ITEM.COUNT) {
             lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
@@ -2345,8 +2346,6 @@ int main(int argc, char *argv[]) {
 
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
-
-    init_footer_elements();
     
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
