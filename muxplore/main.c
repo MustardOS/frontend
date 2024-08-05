@@ -294,7 +294,7 @@ void set_label_long_mode() {
 
     if (name_index != NULL) {
         char *item_name = strip_ext(get_string_at_index(&content_items, atoi(name_index)));
-        char *content_label = get_current_named_item();
+        char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
         size_t len = strlen(content_label);
 
         bool is_dir = is_directory(item_name);
