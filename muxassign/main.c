@@ -302,6 +302,9 @@ void create_system_items() {
 
             lv_group_add_obj(ui_group, ui_lblCoreItem);
             lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
+
+            int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblCoreItem, base_filename);
+            apply_align(&theme, &device, ui_lblCoreItemGlyph, ui_lblCoreItem, item_width);
         }
     }
 }
@@ -445,6 +448,9 @@ void create_core_items(const char *target) {
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
+
+        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblCoreItem, core_headers[i]);
+        apply_align(&theme, &device, ui_lblCoreItemGlyph, ui_lblCoreItem, item_width);
 
         free(core_headers[i]);
     }

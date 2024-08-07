@@ -534,6 +534,13 @@ int main(int argc, char *argv[]) {
 
     init_navigation_groups();
 
+    int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTester, "Input Tester");
+    apply_align(&theme, &device, ui_icoTester, ui_lblTester, item_width);
+    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblSystem, "System Details");
+    apply_align(&theme, &device, ui_icoSystem, ui_lblSystem, item_width);
+    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblCredits, "Supporters");
+    apply_align(&theme, &device, ui_icoCredits, ui_lblCredits, item_width);
+
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
     struct osd_task_param osd_par;

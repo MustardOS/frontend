@@ -247,6 +247,9 @@ void create_app_items() {
         lv_group_add_obj(ui_group, ui_lblAppItem);
         lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
 
+        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblAppItem, app_store);
+        apply_align(&theme, &device, ui_lblAppItemGlyph, ui_lblAppItem, item_width);
+
         free(base_filename);
     }
 
@@ -761,6 +764,9 @@ int main(int argc, char *argv[]) {
             break;
     }
 
+    load_font_text(basename(argv[0]), ui_scrApp);
+    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
+
     create_app_items();
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -777,9 +783,6 @@ int main(int argc, char *argv[]) {
     } else {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
-
-    load_font_text(basename(argv[0]), ui_scrApp);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {

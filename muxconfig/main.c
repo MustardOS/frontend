@@ -556,6 +556,17 @@ int main(int argc, char *argv[]) {
 
     init_navigation_groups();
 
+    int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTweakGeneral, "General Settings");
+    apply_align(&theme, &device, ui_icoTweakGeneral, ui_lblTweakGeneral, item_width);
+    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTheme, "Theme Picker");
+    apply_align(&theme, &device, ui_icoTheme, ui_lblTheme, item_width);
+    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblNetwork, "Wi-Fi Network");
+    apply_align(&theme, &device, ui_icoNetwork, ui_lblNetwork, item_width);
+    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblServices, "Web Services");
+    apply_align(&theme, &device, ui_icoServices, ui_lblServices, item_width);
+    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblRTC, "Date and Time");
+    apply_align(&theme, &device, ui_icoRTC, ui_lblRTC, item_width);
+
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
     struct osd_task_param osd_par;

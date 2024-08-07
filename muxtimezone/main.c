@@ -184,6 +184,9 @@ void create_timezone_items() {
 
         lv_group_add_obj(ui_group, ui_lblTimezoneItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);
+
+        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTimezoneItem, base_key);
+        apply_align(&theme, &device, ui_lblTimezoneGlyph, ui_lblTimezoneItem, item_width);
     }
 }
 

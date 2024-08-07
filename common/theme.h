@@ -291,6 +291,8 @@ struct theme_config {
         int16_t IMAGE_OVERLAY;
         int16_t NAVIGATION_TYPE;
         struct {
+            int16_t SIZE_TO_CONTENT;
+            int16_t ALIGNMENT;
             int16_t PADDING_LEFT;
             int16_t PADDING_TOP;
             int16_t HEIGHT;
@@ -300,3 +302,5 @@ struct theme_config {
 };
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name);
+int apply_size_to_content(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_pnlContent, lv_obj_t * ui_lblItem, const char *item_text);
+void apply_align(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_lblItemIcon, lv_obj_t * ui_lblItem, int item_width);
