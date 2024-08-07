@@ -263,6 +263,10 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MUX.ITEM.PREV_HIGH = theme->MUX.ITEM.COUNT / 2 + 1;
     theme->MUX.ITEM.NEXT_LOW = theme->MUX.ITEM.COUNT / 2;
     theme->MUX.ITEM.NEXT_HIGH = theme->MUX.ITEM.COUNT / 2 + 1;
+    if (theme->MUX.ITEM.COUNT % 2 == 0)  {
+        theme->MUX.ITEM.NEXT_LOW--;
+        theme->MUX.ITEM.PREV_HIGH--;
+    }
 
     mini_free(muos_theme);
 }
