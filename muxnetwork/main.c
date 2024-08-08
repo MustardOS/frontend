@@ -78,6 +78,8 @@ lv_group_t *ui_group_glyph;
 
 // Modify the following integer to number of static menu elements
 lv_obj_t *ui_objects[9];
+lv_obj_t *ui_values[9];
+lv_obj_t *ui_icons[9];
 
 static const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
                                       "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
@@ -226,29 +228,25 @@ void init_navigation_groups() {
     ui_objects[7] = ui_lblDNS;
     ui_objects[8] = ui_lblConnect;
 
-    lv_obj_t *ui_objects_value[] = {
-            ui_lblEnableValue,
-            ui_lblIdentifierValue,
-            ui_lblPasswordValue,
-            ui_lblTypeValue,
-            ui_lblAddressValue,
-            ui_lblSubnetValue,
-            ui_lblGatewayValue,
-            ui_lblDNSValue,
-            ui_lblConnectValue
-    };
+    ui_values[0] = ui_lblEnableValue;
+    ui_values[1] = ui_lblIdentifierValue;
+    ui_values[2] = ui_lblPasswordValue;
+    ui_values[3] = ui_lblTypeValue;
+    ui_values[4] = ui_lblAddressValue;
+    ui_values[5] = ui_lblSubnetValue;
+    ui_values[6] = ui_lblGatewayValue;
+    ui_values[7] = ui_lblDNSValue;
+    ui_values[8] = ui_lblConnectValue;
 
-    lv_obj_t *ui_objects_icon[] = {
-            ui_icoEnable,
-            ui_icoIdentifier,
-            ui_icoPassword,
-            ui_icoType,
-            ui_icoAddress,
-            ui_icoSubnet,
-            ui_icoGateway,
-            ui_icoDNS,
-            ui_icoConnect
-    };
+    ui_icons[0] = ui_icoEnable;
+    ui_icons[1] = ui_icoIdentifier;
+    ui_icons[2] = ui_icoPassword;
+    ui_icons[3] = ui_icoType;
+    ui_icons[4] = ui_icoAddress;
+    ui_icons[5] = ui_icoSubnet;
+    ui_icons[6] = ui_icoGateway;
+    ui_icons[7] = ui_icoDNS;
+    ui_icons[8] = ui_icoConnect;
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -256,14 +254,8 @@ void init_navigation_groups() {
 
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
-    }
-
-    for (unsigned int i = 0; i < sizeof(ui_objects_value) / sizeof(ui_objects_value[0]); i++) {
-        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-    }
-
-    for (unsigned int i = 0; i < sizeof(ui_objects_icon) / sizeof(ui_objects_icon[0]); i++) {
-        lv_group_add_obj(ui_group_glyph, ui_objects_icon[i]);
+        lv_group_add_obj(ui_group_value, ui_values[i]);
+        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
     }
 }
 

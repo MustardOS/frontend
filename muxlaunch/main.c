@@ -62,6 +62,7 @@ lv_group_t *ui_group_glyph;
 // Modify the following integer to number of static menu elements
 #define UI_COUNT 8
 lv_obj_t *ui_objects[UI_COUNT];
+lv_obj_t *ui_icons[UI_COUNT];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -101,26 +102,25 @@ void init_navigation_groups() {
     ui_objects[6] = ui_lblReboot;
     ui_objects[7] = ui_lblShutdown;
 
-    lv_obj_t *ui_icons[] = {
-            ui_icoContent,
-            ui_icoFavourites,
-            ui_icoHistory,
-            ui_icoApps,
-            ui_icoInfo,
-            ui_icoConfig,
-            ui_icoReboot,
-            ui_icoShutdown
-    };
+    ui_icons[0] = ui_icoContent;
+    ui_icons[1] = ui_icoFavourites;
+    ui_icons[2] = ui_icoHistory;
+    ui_icons[3] = ui_icoApps;
+    ui_icons[4] = ui_icoInfo;
+    ui_icons[5] = ui_icoConfig;
+    ui_icons[6] = ui_icoReboot;
+    ui_icons[7] = ui_icoShutdown;
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
 
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
-    }
-
-    for (unsigned int i = 0; i < sizeof(ui_icons) / sizeof(ui_icons[0]); i++) {
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
+
+        apply_align(&theme, &device, ui_icons[i], ui_objects[i],
+                    apply_size_to_content(&theme, &device, ui_pnlContent,
+                                          ui_objects[i], lv_label_get_text(ui_objects[i])));
     }
 }
 
@@ -715,23 +715,6 @@ int main(int argc, char *argv[]) {
     }
 
     init_navigation_groups();
-    
-    int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblContent, "Explore Content");
-    apply_align(&theme, &device, ui_icoContent, ui_lblContent, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblFavourites, "Favourites");
-    apply_align(&theme, &device, ui_icoFavourites, ui_lblFavourites, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblHistory, "History");
-    apply_align(&theme, &device, ui_icoHistory, ui_lblHistory, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblApps, "Applications");
-    apply_align(&theme, &device, ui_icoApps, ui_lblApps, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblInfo, "Information");
-    apply_align(&theme, &device, ui_icoInfo, ui_lblInfo, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblConfig, "Configuration");
-    apply_align(&theme, &device, ui_icoConfig, ui_lblConfig, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblReboot, "Reboot");
-    apply_align(&theme, &device, ui_icoReboot, ui_lblReboot, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblShutdown, "Shutdown");
-    apply_align(&theme, &device, ui_icoShutdown, ui_lblShutdown, item_width);
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;

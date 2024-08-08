@@ -158,7 +158,7 @@ void init_dropdown_settings() {
     Tweak settings[] = {
             {hidden.total,     hidden.current},
             {bgm.total,        bgm.current},
-            {sound.total,        sound.current},
+            {sound.total,      sound.current},
             {startup.total,    startup.current},
             {colour.total,     colour.current},
             {brightness.total, brightness.current},
@@ -593,13 +593,7 @@ void init_navigation_groups() {
 
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
-    }
-
-    for (unsigned int i = 0; i < sizeof(ui_objects_value) / sizeof(ui_objects_value[0]); i++) {
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-    }
-
-    for (unsigned int i = 0; i < sizeof(ui_objects_icon) / sizeof(ui_objects_icon[0]); i++) {
         lv_group_add_obj(ui_group_glyph, ui_objects_icon[i]);
     }
 }

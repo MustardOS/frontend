@@ -59,15 +59,17 @@ lv_obj_t *msgbox_element = NULL;
 
 lv_group_t *ui_group;
 
+// Modify the following integer to number of static menu elements
+#define UI_COUNT 6
+lv_obj_t *ui_objects[UI_COUNT];
+
 void init_navigation_groups() {
-    lv_obj_t *ui_objects[] = {
-            ui_rolComboOne,
-            ui_rolComboTwo,
-            ui_rolComboThree,
-            ui_rolComboFour,
-            ui_rolComboFive,
-            ui_rolComboSix
-    };
+    ui_objects[0] = ui_rolComboOne;
+    ui_objects[1] = ui_rolComboTwo;
+    ui_objects[2] = ui_rolComboThree;
+    ui_objects[3] = ui_rolComboFour;
+    ui_objects[4] = ui_rolComboFive;
+    ui_objects[5] = ui_rolComboSix;
 
     ui_group = lv_group_create();
 

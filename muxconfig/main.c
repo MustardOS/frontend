@@ -58,6 +58,7 @@ lv_group_t *ui_group_glyph;
 
 // Modify the following integer to number of static menu elements
 lv_obj_t *ui_objects[5];
+lv_obj_t *ui_icons[5];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -88,23 +89,22 @@ void init_navigation_groups() {
     ui_objects[3] = ui_lblServices;
     ui_objects[4] = ui_lblRTC;
 
-    lv_obj_t *ui_objects_icon[] = {
-            ui_icoTweakGeneral,
-            ui_icoTheme,
-            ui_icoNetwork,
-            ui_icoServices,
-            ui_icoRTC,
-    };
+    ui_icons[0] = ui_icoTweakGeneral;
+    ui_icons[1] = ui_icoTheme;
+    ui_icons[2] = ui_icoNetwork;
+    ui_icons[3] = ui_icoServices;
+    ui_icons[4] = ui_icoRTC;
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
 
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
-    }
+        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
 
-    for (unsigned int i = 0; i < sizeof(ui_objects_icon) / sizeof(ui_objects_icon[0]); i++) {
-        lv_group_add_obj(ui_group_glyph, ui_objects_icon[i]);
+        apply_align(&theme, &device, ui_icons[i], ui_objects[i],
+                    apply_size_to_content(&theme, &device, ui_pnlContent,
+                                          ui_objects[i], lv_label_get_text(ui_objects[i])));
     }
 }
 
@@ -555,17 +555,6 @@ int main(int argc, char *argv[]) {
     }
 
     init_navigation_groups();
-
-    int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTweakGeneral, "General Settings");
-    apply_align(&theme, &device, ui_icoTweakGeneral, ui_lblTweakGeneral, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTheme, "Theme Picker");
-    apply_align(&theme, &device, ui_icoTheme, ui_lblTheme, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblNetwork, "Wi-Fi Network");
-    apply_align(&theme, &device, ui_icoNetwork, ui_lblNetwork, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblServices, "Web Services");
-    apply_align(&theme, &device, ui_icoServices, ui_lblServices, item_width);
-    item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblRTC, "Date and Time");
-    apply_align(&theme, &device, ui_icoRTC, ui_lblRTC, item_width);
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
