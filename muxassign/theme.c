@@ -294,14 +294,6 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct small content_pad_left_element[] = {
-            {ui_pnlContent, theme.MISC.CONTENT.PADDING_LEFT},
-    };
-    for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
-        lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
     lv_obj_set_height(ui_pnlContent, theme.MISC.CONTENT.HEIGHT);
     lv_obj_set_y(ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP);
 

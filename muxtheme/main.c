@@ -249,6 +249,9 @@ void create_theme_items() {
             lv_group_add_obj(ui_group, ui_lblThemeItem);
             lv_group_add_obj(ui_group_glyph, ui_lblThemeItemGlyph);
 
+            int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblThemeItem, base_filename);
+            apply_align(&theme, &device, ui_lblThemeItemGlyph, ui_lblThemeItem, item_width);
+
             free(base_filename);
         }
 

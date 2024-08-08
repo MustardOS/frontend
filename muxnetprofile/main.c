@@ -257,6 +257,9 @@ void create_profile_items() {
             lv_group_add_obj(ui_group, ui_lblNetProfileItem);
             lv_group_add_obj(ui_group_glyph, ui_lblNetProfileItemGlyph);
 
+            int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblNetProfileItem, base_filename);
+            apply_align(&theme, &device, ui_lblNetProfileItemGlyph, ui_lblNetProfileItem, item_width);
+
             free(base_filename);
         }
 

@@ -243,6 +243,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     theme->MISC.STATIC_ALIGNMENT = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", 255);
     theme->MUX.ITEM.COUNT = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_COUNT", device->MUX.ITEM.COUNT);
+    theme->MISC.CONTENT.SIZE_TO_CONTENT = get_ini_int(muos_theme, "misc", "CONTENT_SIZE_TO_CONTENT", 0);
+    theme->MISC.CONTENT.ALIGNMENT = get_ini_int(muos_theme, "misc", "CONTENT_ALIGNMENT", 0);
     theme->MISC.CONTENT.PADDING_LEFT = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_LEFT", 0);
     theme->MISC.CONTENT.PADDING_TOP = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_TOP", 0);
     theme->MISC.CONTENT.HEIGHT = get_ini_int(muos_theme, "misc", "CONTENT_HEIGHT", 392);
@@ -261,6 +263,39 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MUX.ITEM.PREV_HIGH = theme->MUX.ITEM.COUNT / 2 + 1;
     theme->MUX.ITEM.NEXT_LOW = theme->MUX.ITEM.COUNT / 2;
     theme->MUX.ITEM.NEXT_HIGH = theme->MUX.ITEM.COUNT / 2 + 1;
+    if (theme->MUX.ITEM.COUNT % 2 == 0)  {
+        theme->MUX.ITEM.NEXT_LOW--;
+        theme->MUX.ITEM.PREV_HIGH--;
+    }
 
     mini_free(muos_theme);
+}
+
+int apply_size_to_content(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_pnlContent, lv_obj_t * ui_lblItem, const char *item_text) {
+    int item_width = theme->MISC.CONTENT.WIDTH;
+    if (theme->MISC.CONTENT.SIZE_TO_CONTENT) {
+        const lv_font_t * font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
+        const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
+        lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space, LV_TEXT_FLAG_EXPAND);
+        item_width = LV_MIN(act_line_length + 64, theme->MISC.CONTENT.WIDTH);
+        lv_obj_set_width(ui_lblItem, item_width);
+    }
+    return item_width;
+}
+
+void apply_align(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_lblItemIcon, lv_obj_t * ui_lblItem, int item_width) {
+    if (theme->MISC.CONTENT.ALIGNMENT == 1) {
+        int x = ((device->SCREEN.WIDTH - item_width) / 2) + theme->MISC.CONTENT.PADDING_LEFT;
+        lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
+        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
+    } else if (theme->MISC.CONTENT.ALIGNMENT == 2) {
+        int x = device->SCREEN.WIDTH - item_width + theme->MISC.CONTENT.PADDING_LEFT;
+        lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
+        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
+    } else {
+        int x = theme->MISC.CONTENT.PADDING_LEFT;
+        lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
+        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);        
+    }
+
 }

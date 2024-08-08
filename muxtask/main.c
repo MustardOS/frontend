@@ -230,6 +230,9 @@ void create_task_items() {
         lv_group_add_obj(ui_group, ui_lblTaskItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);
 
+        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTaskItem, task_store);
+        apply_align(&theme, &device, ui_lblTaskItemGlyph, ui_lblTaskItem, item_width);
+
         free(base_filename);
     }
 

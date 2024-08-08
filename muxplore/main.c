@@ -626,6 +626,9 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
 
+    int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblExploreItem, item_text);
+    apply_align(&theme, &device, ui_lblExploreItemGlyph, ui_lblExploreItem, item_width);
+
     if (item_type == FOLDER && strcasecmp(item_text, prev_dir) == 0) {
         sys_index = ui_count;
     }

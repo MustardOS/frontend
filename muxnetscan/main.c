@@ -213,6 +213,9 @@ void create_network_items() {
 
         lv_group_add_obj(ui_group, ui_lblNetScanItem);
         lv_group_add_obj(ui_group_glyph, ui_lblNetScanGlyph);
+
+        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblNetScanItem, str_nonew(ssid));
+        apply_align(&theme, &device, ui_lblNetScanGlyph, ui_lblNetScanItem, item_width);
     }
 
     fclose(file);
