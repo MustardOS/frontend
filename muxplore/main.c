@@ -103,6 +103,7 @@ int nav_moved = 1;
 int content_panel_y = 0;
 int counter_fade = 0;
 int fade_timeout = 3;
+int swap_timeout = 3;
 int starter_image = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
@@ -142,7 +143,7 @@ char *get_current_named_item() {
         return label_text + dummy_dir_len;
     } else {
         return label_text;
-    }        
+    }
 }
 
 char *load_content_core(int force) {
@@ -582,14 +583,14 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     lv_obj_set_style_pad_bottom(ui_lblExploreItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_text_line_space(ui_lblExploreItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
-    static lv_anim_t desc_anim;
-    static lv_style_t desc_style;
-    lv_anim_init(&desc_anim);
-    lv_anim_set_delay(&desc_anim, 250);
-    lv_style_init(&desc_style);
-    lv_style_set_anim(&desc_style, &desc_anim);
-    lv_obj_add_style(ui_lblExploreItem, &desc_style, LV_PART_MAIN);
+
+    static lv_anim_t item_anim;
+    static lv_style_t item_style;
+    lv_anim_init(&item_anim);
+    lv_anim_set_delay(&item_anim, 250);
+    lv_style_init(&item_style);
+    lv_style_set_anim(&item_style, &item_anim);
+    lv_obj_add_style(ui_lblExploreItem, &item_style, LV_PART_MAIN);
     lv_obj_set_style_anim_speed(ui_lblExploreItem, 70, LV_PART_MAIN);
 
     lv_obj_set_style_radius(ui_lblExploreItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1953,6 +1954,33 @@ void glyph_task() {
     } else {
         fade_timeout--;
     }
+
+    if (!swap_timeout) {
+        char *last_dir = get_last_dir(sd_dir);
+        if (strcasecmp(lv_label_get_text(ui_lblTitle), last_dir) == 0) {
+            switch (module) {
+                case MMC:
+                    lv_label_set_text(ui_lblTitle, "EXPLORE (SD1)");
+                    break;
+                case SDCARD:
+                    lv_label_set_text(ui_lblTitle, "EXPLORE (SD2)");
+                    break;
+                case USB:
+                    lv_label_set_text(ui_lblTitle, "EXPLORE (USB)");
+                    break;
+                default:
+                    lv_label_set_text(ui_lblTitle, "EXPLORE");
+                    break;
+            }
+        } else {
+            if (!strcasecmp(last_dir, "ROMS") == 0) {
+                lv_label_set_text(ui_lblTitle, last_dir);
+            }
+        }
+        swap_timeout = 3;
+    } else {
+        swap_timeout--;
+    }
 }
 
 void ui_refresh_task() {
@@ -2343,7 +2371,7 @@ int main(int argc, char *argv[]) {
 
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
-    
+
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }
