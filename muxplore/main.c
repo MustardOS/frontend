@@ -100,7 +100,6 @@ int current_item_index = 0;
 int content_file_index = 0;
 int first_open = 1;
 int nav_moved = 1;
-int content_panel_y = 0;
 int counter_fade = 0;
 int fade_timeout = 3;
 int swap_timeout = 3;
@@ -1119,24 +1118,13 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
 void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
         reset_label_long_mode();
-        if (current_item_index >= 1 && ui_count > theme.MUX.ITEM.COUNT) {
+        if (current_item_index > 0) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
-            if (current_item_index > theme.MUX.ITEM.PREV_LOW &&
-                current_item_index < (ui_count - theme.MUX.ITEM.PREV_HIGH)) {
-                content_panel_y -= theme.MUX.ITEM.PANEL;
-                lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
-            }
-        } else if (current_item_index >= 0 && ui_count <= theme.MUX.ITEM.COUNT) {
-            if (current_item_index > 0) {
-                current_item_index--;
-                nav_prev(ui_group, 1);
-                nav_prev(ui_group_glyph, 1);
-            }
         }
     }
-
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
     play_sound("navigate", nav_sound, 0);
     image_refresh("box");
     set_label_long_mode();
@@ -1146,26 +1134,13 @@ void list_nav_prev(int steps) {
 void list_nav_next(int steps) {
     for (int step = 0; step < steps; ++step) {
         reset_label_long_mode();
-        if (current_item_index < (ui_count - 1) && ui_count > theme.MUX.ITEM.COUNT) {
-            if (current_item_index < (ui_count - 1)) {
-                current_item_index++;
-                nav_next(ui_group, 1);
-                nav_next(ui_group_glyph, 1);
-                if (current_item_index >= theme.MUX.ITEM.NEXT_HIGH &&
-                    current_item_index < (ui_count - theme.MUX.ITEM.NEXT_LOW)) {
-                    content_panel_y += theme.MUX.ITEM.PANEL;
-                    lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
-                }
-            }
-        } else if (current_item_index < ui_count && ui_count <= theme.MUX.ITEM.COUNT) {
-            if (current_item_index < (ui_count - 1)) {
-                current_item_index++;
-                nav_next(ui_group, 1);
-                nav_next(ui_group_glyph, 1);
-            }
+        if (current_item_index < (ui_count - 1)) {
+            current_item_index++;
+            nav_next(ui_group, 1);
+            nav_next(ui_group_glyph, 1);
         }
     }
-
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
     if (first_open) {
         first_open = 0;
     } else {
@@ -1618,12 +1593,10 @@ void *joystick_task() {
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
                                     reset_label_long_mode();
-                                    int y = (ui_count - theme.MUX.ITEM.COUNT) * theme.MUX.ITEM.PANEL;
-                                    lv_obj_scroll_to_y(ui_pnlContent, y, LV_ANIM_OFF);
-                                    content_panel_y = y;
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
                                     nav_moved = 1;
                                     image_refresh("box");
                                     set_label_long_mode();
@@ -1640,11 +1613,10 @@ void *joystick_task() {
                                        ev.value == 1) {
                                 if (current_item_index == ui_count - 1) {
                                     reset_label_long_mode();
-                                    lv_obj_scroll_to_y(ui_pnlContent, 0, LV_ANIM_OFF);
-                                    content_panel_y = 0;
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
                                     nav_moved = 1;
                                     image_refresh("box");
                                     set_label_long_mode();

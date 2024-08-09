@@ -257,16 +257,10 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (theme->MISC.CONTENT.HEIGHT > device->SCREEN.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->SCREEN.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 5) theme->MUX.ITEM.COUNT = 5;
     if (theme->MUX.ITEM.COUNT > 13) theme->MUX.ITEM.COUNT = 13;
-    theme->MUX.ITEM.PANEL = theme->MISC.CONTENT.HEIGHT /  theme->MUX.ITEM.COUNT;
+    theme->MUX.ITEM.PANEL = theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.COUNT;
     theme->MUX.ITEM.HEIGHT = theme->MUX.ITEM.PANEL - 2;
-    theme->MUX.ITEM.PREV_LOW = theme->MUX.ITEM.COUNT / 2 - 1;
-    theme->MUX.ITEM.PREV_HIGH = theme->MUX.ITEM.COUNT / 2 + 1;
-    theme->MUX.ITEM.NEXT_LOW = theme->MUX.ITEM.COUNT / 2;
-    theme->MUX.ITEM.NEXT_HIGH = theme->MUX.ITEM.COUNT / 2 + 1;
-    if (theme->MUX.ITEM.COUNT % 2 == 0)  {
-        theme->MUX.ITEM.NEXT_LOW--;
-        theme->MUX.ITEM.PREV_HIGH--;
-    }
+    // Adjusts height if user picks a height that is not evenly divisible by item count.  Prevents seeing a few pixels of the next game.
+    theme->MISC.CONTENT.HEIGHT = theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT;
 
     mini_free(muos_theme);
 }
