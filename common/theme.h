@@ -17,10 +17,6 @@ struct theme_config {
             int16_t COUNT;
             int16_t HEIGHT;
             int16_t PANEL;
-            int16_t PREV_LOW;
-            int16_t PREV_HIGH;
-            int16_t NEXT_LOW;
-            int16_t NEXT_HIGH;
         } ITEM;
     } MUX;
 
