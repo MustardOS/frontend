@@ -2324,10 +2324,7 @@ int main(int argc, char *argv[]) {
     pthread_join(gen_item_thread, NULL);
     init_footer_elements();
     if (ui_count > 0) {
-        if (ui_count > theme.MUX.ITEM.COUNT) {
-            lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
-            lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
-        }
+        lv_obj_update_layout(ui_pnlContent);
         if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
             list_nav_next(sys_index);
         } else {

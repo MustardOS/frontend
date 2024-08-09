@@ -216,7 +216,7 @@ void create_network_items() {
         int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblNetScanItem, str_nonew(ssid));
         apply_align(&theme, &device, ui_lblNetScanGlyph, ui_lblNetScanItem, item_width);
     }
-
+    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     fclose(file);
 }
 
@@ -743,11 +743,6 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     create_network_items();
-
-    if (ui_count > theme.MUX.ITEM.COUNT) {
-        lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
-        lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
-    }
 
     init_elements();
     while (!safe_quit) {

@@ -305,6 +305,7 @@ void create_system_items() {
             int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblCoreItem, base_filename);
             apply_align(&theme, &device, ui_lblCoreItemGlyph, ui_lblCoreItem, item_width);
         }
+        if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     }
 }
 
@@ -453,7 +454,7 @@ void create_core_items(const char *target) {
 
         free(core_headers[i]);
     }
-
+    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     free(core_headers);
 }
 
@@ -1129,11 +1130,6 @@ int main(int argc, char *argv[]) {
         lv_label_set_text(ui_lblTitle, title);
     } else {
         lv_obj_clear_flag(ui_lblCoreMessage, LV_OBJ_FLAG_HIDDEN);
-    }
-
-    if (ui_count > theme.MUX.ITEM.COUNT) {
-        lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
-        lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }
 
     init_elements();

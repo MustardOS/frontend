@@ -187,6 +187,7 @@ void create_timezone_items() {
         int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTimezoneItem, base_key);
         apply_align(&theme, &device, ui_lblTimezoneGlyph, ui_lblTimezoneItem, item_width);
     }
+    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
 
 void list_nav_prev(int steps) {
@@ -725,11 +726,6 @@ int main(int argc, char *argv[]) {
 
     if (ui_count == 0) {
         lv_obj_clear_flag(ui_lblTimezoneMessage, LV_OBJ_FLAG_HIDDEN);
-    }
-
-    if (ui_count > theme.MUX.ITEM.COUNT) {
-        lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
-        lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }
 
     init_elements();
