@@ -43,6 +43,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->FONT.MESSAGE_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_MESSAGE_ICON_PAD_BOTTOM", 0);
     theme->FONT.LIST_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_TOP", 0);
     theme->FONT.LIST_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_BOTTOM", 0);
+    theme->FONT.LIST_PAD_LEFT = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_LEFT", 32);
+    theme->FONT.LIST_PAD_RIGHT = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_RIGHT", 6);
     theme->FONT.LIST_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_LIST_ICON_PAD_TOP", 0);
     theme->FONT.LIST_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_LIST_ICON_PAD_BOTTOM", 0);
 
@@ -271,7 +273,11 @@ int apply_size_to_content(struct theme_config *theme, struct mux_device *device,
         const lv_font_t * font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
         lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space, LV_TEXT_FLAG_EXPAND);
-        item_width = LV_MIN(act_line_length + 64, theme->MISC.CONTENT.WIDTH);
+        int extra_padding = 11; // to prevent LVGL from thinking the text is too long and converting the end to ...
+        item_width = LV_MIN(theme->FONT.LIST_PAD_LEFT + act_line_length + theme->FONT.LIST_PAD_RIGHT + extra_padding, theme->MISC.CONTENT.WIDTH);
+        // When using size to content right padding needs to be zero to prevent text from wrapping.
+        // The overall width of the control will include the right padding
+        lv_obj_set_style_pad_right(ui_lblItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_width(ui_lblItem, item_width);
     }
     return item_width;

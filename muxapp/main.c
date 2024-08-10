@@ -186,8 +186,8 @@ void create_app_items() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_text_opa(ui_lblAppItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-        lv_obj_set_style_pad_left(ui_lblAppItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblAppItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(ui_lblAppItem, theme.FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_lblAppItem, theme.FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_top(ui_lblAppItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_bottom(ui_lblAppItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 

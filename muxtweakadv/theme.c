@@ -831,6 +831,26 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_list_left_elements[] = {
+            {ui_lblSwap,       theme.FONT.LIST_PAD_LEFT},
+            {ui_lblThermal,    theme.FONT.LIST_PAD_LEFT},
+            {ui_lblFont,       theme.FONT.LIST_PAD_LEFT},
+            {ui_lblVolume,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblBrightness, theme.FONT.LIST_PAD_LEFT},
+            {ui_lblOffset,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblPasscode,   theme.FONT.LIST_PAD_LEFT},
+            {ui_lblLED,        theme.FONT.LIST_PAD_LEFT},
+            {ui_lblTheme,      theme.FONT.LIST_PAD_LEFT},
+            {ui_lblRetroWait,  theme.FONT.LIST_PAD_LEFT},
+            {ui_lblAndroid,    theme.FONT.LIST_PAD_LEFT},
+            {ui_lblState,      theme.FONT.LIST_PAD_LEFT},
+            {ui_lblVerbose,    theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_dropdown_elements[] = {
             {ui_droSwap,       theme.FONT.LIST_PAD_TOP},
             {ui_droThermal,    theme.FONT.LIST_PAD_TOP},
@@ -871,6 +891,28 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
                                     font_pad_bottom_dropdown_elements[i].c + 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_right_dropdown_elements[] = {
+            {ui_droSwap,       theme.FONT.LIST_PAD_RIGHT},
+            {ui_droThermal,    theme.FONT.LIST_PAD_RIGHT},
+            {ui_droFont,       theme.FONT.LIST_PAD_RIGHT},
+            {ui_droVolume,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_droBrightness, theme.FONT.LIST_PAD_RIGHT},
+            {ui_droOffset,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_droPasscode,   theme.FONT.LIST_PAD_RIGHT},
+            {ui_droLED,        theme.FONT.LIST_PAD_RIGHT},
+            {ui_droTheme,      theme.FONT.LIST_PAD_RIGHT},
+            {ui_droRetroWait,  theme.FONT.LIST_PAD_RIGHT},
+            {ui_droAndroid,    theme.FONT.LIST_PAD_RIGHT},
+            {ui_droState,      theme.FONT.LIST_PAD_RIGHT},
+            {ui_droVerbose,    theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
+                                    font_pad_right_dropdown_elements[i].c + 5,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

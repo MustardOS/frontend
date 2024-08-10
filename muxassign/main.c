@@ -353,8 +353,8 @@ void create_system_items() {
                                         LV_PART_MAIN | LV_STATE_FOCUSED);
             lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-            lv_obj_set_style_pad_left(ui_lblCoreItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_right(ui_lblCoreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(ui_lblCoreItem, theme.FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(ui_lblCoreItem, theme.FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_pad_top(ui_lblCoreItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_set_style_pad_bottom(ui_lblCoreItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -501,8 +501,8 @@ void create_core_items(const char *target) {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_text_opa(ui_lblCoreItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-        lv_obj_set_style_pad_left(ui_lblCoreItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblCoreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(ui_lblCoreItem, theme.FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_lblCoreItem, theme.FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_top(ui_lblCoreItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_bottom(ui_lblCoreItem, theme.FONT.LIST_PAD_BOTTOM,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);

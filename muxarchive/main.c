@@ -222,8 +222,8 @@ void create_archive_items() {
                                     LV_PART_MAIN | LV_STATE_FOCUSED);
         lv_obj_set_style_text_opa(ui_lblArchiveItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
-        lv_obj_set_style_pad_left(ui_lblArchiveItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblArchiveItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_left(ui_lblArchiveItem, theme.FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_lblArchiveItem, theme.FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_top(ui_lblArchiveItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_bottom(ui_lblArchiveItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -253,7 +253,7 @@ void create_archive_items() {
                                   LV_PART_MAIN | LV_STATE_FOCUSED);
 
         lv_obj_set_style_pad_left(ui_lblArchiveItemInstalled, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblArchiveItemInstalled, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_lblArchiveItemInstalled, theme.FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_top(ui_lblArchiveItemInstalled, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_pad_bottom(ui_lblArchiveItemInstalled, theme.FONT.LIST_PAD_BOTTOM,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);

@@ -691,6 +691,22 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_list_left_elements[] = {
+            {ui_lblBattery,            theme.FONT.LIST_PAD_LEFT},
+            {ui_lblNetwork,            theme.FONT.LIST_PAD_LEFT},
+            {ui_lblBluetooth,          theme.FONT.LIST_PAD_LEFT},
+            {ui_lblClock,              theme.FONT.LIST_PAD_LEFT},
+            {ui_lblBoxArt,             theme.FONT.LIST_PAD_LEFT},
+            {ui_lblName,               theme.FONT.LIST_PAD_LEFT},
+            {ui_lblDash,               theme.FONT.LIST_PAD_LEFT},
+            {ui_lblMenuCounterFolder,  theme.FONT.LIST_PAD_LEFT},
+            {ui_lblMenuCounterFile,    theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_dropdown_elements[] = {
             {ui_droBattery,            theme.FONT.LIST_PAD_TOP},
             {ui_droNetwork,            theme.FONT.LIST_PAD_TOP},
@@ -723,6 +739,24 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
                                     font_pad_bottom_dropdown_elements[i].c + 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_right_dropdown_elements[] = {
+            {ui_droBattery,            theme.FONT.LIST_PAD_RIGHT},
+            {ui_droNetwork,            theme.FONT.LIST_PAD_RIGHT},
+            {ui_droBluetooth,          theme.FONT.LIST_PAD_RIGHT},
+            {ui_droClock,              theme.FONT.LIST_PAD_RIGHT},
+            {ui_droBoxArt,             theme.FONT.LIST_PAD_RIGHT},
+            {ui_droName,               theme.FONT.LIST_PAD_RIGHT},
+            {ui_droDash,               theme.FONT.LIST_PAD_RIGHT},
+            {ui_droMenuCounterFolder,  theme.FONT.LIST_PAD_RIGHT},
+            {ui_droMenuCounterFile,    theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
+                                    font_pad_right_dropdown_elements[i].c + 5,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

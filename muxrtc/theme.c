@@ -621,6 +621,20 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_list_left_elements[] = {
+            {ui_lblYear,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblMonth,    theme.FONT.LIST_PAD_LEFT},
+            {ui_lblDay,      theme.FONT.LIST_PAD_LEFT},
+            {ui_lblHour,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblMinute,   theme.FONT.LIST_PAD_LEFT},
+            {ui_lblNotation, theme.FONT.LIST_PAD_LEFT},
+            {ui_lblTimezone, theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_dropdown_elements[] = {
             {ui_lblYearValue,     theme.FONT.LIST_PAD_TOP},
             {ui_lblMonthValue,    theme.FONT.LIST_PAD_TOP},
@@ -649,6 +663,22 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
                                     font_pad_bottom_dropdown_elements[i].c + 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_right_dropdown_elements[] = {
+            {ui_lblYearValue,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblMonthValue,    theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblDayValue,      theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblHourValue,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblMinuteValue,   theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblNotationValue, theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblTimezoneValue, theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
+                                    font_pad_right_dropdown_elements[i].c + 5,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

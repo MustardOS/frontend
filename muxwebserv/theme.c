@@ -548,6 +548,18 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_left_list_elements[] = {
+            {ui_lblShell,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblBrowser,   theme.FONT.LIST_PAD_LEFT},
+            {ui_lblTerminal,  theme.FONT.LIST_PAD_LEFT},
+            {ui_lblSyncthing, theme.FONT.LIST_PAD_LEFT},
+            {ui_lblNTP,       theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_left_list_elements) / sizeof(font_pad_left_list_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_left_list_elements[i].e, font_pad_left_list_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_list_icon_elements[] = {
             {ui_icoShell,     theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoBrowser,   theme.FONT.LIST_ICON_PAD_TOP},
@@ -597,6 +609,20 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
                                     font_pad_bottom_dropdown_elements[i].c + 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_right_dropdown_elements[] = {
+            {ui_droShell,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_droBrowser,   theme.FONT.LIST_PAD_RIGHT},
+            {ui_droTerminal,  theme.FONT.LIST_PAD_RIGHT},
+            {ui_droSyncthing, theme.FONT.LIST_PAD_RIGHT},
+            {ui_droNTP,       theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
+                                    font_pad_right_dropdown_elements[i].c + 5,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

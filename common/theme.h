@@ -35,6 +35,8 @@ struct theme_config {
         int16_t MESSAGE_ICON_PAD_BOTTOM;
         int16_t LIST_PAD_TOP;
         int16_t LIST_PAD_BOTTOM;
+        int16_t LIST_PAD_LEFT;
+        int16_t LIST_PAD_RIGHT;
         int16_t LIST_ICON_PAD_TOP;
         int16_t LIST_ICON_PAD_BOTTOM;
     } FONT;

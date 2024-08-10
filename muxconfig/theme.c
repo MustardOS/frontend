@@ -522,6 +522,30 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_list_left_elements[] = {
+            {ui_lblTweakGeneral, theme.FONT.LIST_PAD_LEFT},
+            {ui_lblTheme,        theme.FONT.LIST_PAD_LEFT},
+            {ui_lblNetwork,      theme.FONT.LIST_PAD_LEFT},
+            {ui_lblServices,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblRTC,          theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_list_right_elements[] = {
+            {ui_lblTweakGeneral, theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblTheme,        theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblNetwork,      theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblServices,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblRTC,          theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_list_right_elements) / sizeof(font_pad_list_right_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_list_right_elements[i].e, font_pad_list_right_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_list_icon_elements[] = {
             {ui_icoTweakGeneral, theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoTheme,        theme.FONT.LIST_ICON_PAD_TOP},
