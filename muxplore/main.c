@@ -1124,7 +1124,8 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                           current_item_index, ui_pnlContent, NULL, NULL);
     play_sound("navigate", nav_sound, 0);
     image_refresh("box");
     set_label_long_mode();
@@ -1140,7 +1141,8 @@ void list_nav_next(int steps) {
             nav_next(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                           current_item_index, ui_pnlContent, NULL, NULL);
     if (first_open) {
         first_open = 0;
     } else {
@@ -1596,7 +1598,8 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent, NULL, NULL);
                                     nav_moved = 1;
                                     image_refresh("box");
                                     set_label_long_mode();
@@ -1616,7 +1619,8 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent, NULL, NULL);
                                     nav_moved = 1;
                                     image_refresh("box");
                                     set_label_long_mode();
@@ -1928,25 +1932,27 @@ void glyph_task() {
     }
 
     if (!swap_timeout) {
-        char *last_dir = get_last_dir(sd_dir);
-        if (strcasecmp(lv_label_get_text(ui_lblTitle), last_dir) == 0) {
-            switch (module) {
-                case MMC:
-                    lv_label_set_text(ui_lblTitle, "EXPLORE (SD1)");
-                    break;
-                case SDCARD:
-                    lv_label_set_text(ui_lblTitle, "EXPLORE (SD2)");
-                    break;
-                case USB:
-                    lv_label_set_text(ui_lblTitle, "EXPLORE (USB)");
-                    break;
-                default:
-                    lv_label_set_text(ui_lblTitle, "EXPLORE");
-                    break;
-            }
-        } else {
-            if (!strcasecmp(last_dir, "ROMS") == 0) {
-                lv_label_set_text(ui_lblTitle, last_dir);
+        if (module != ROOT && module != FAVOURITE && module != HISTORY) {
+            char *last_dir = get_last_dir(sd_dir);
+            if (strcasecmp(lv_label_get_text(ui_lblTitle), last_dir) == 0) {
+                switch (module) {
+                    case MMC:
+                        lv_label_set_text(ui_lblTitle, "EXPLORE (SD1)");
+                        break;
+                    case SDCARD:
+                        lv_label_set_text(ui_lblTitle, "EXPLORE (SD2)");
+                        break;
+                    case USB:
+                        lv_label_set_text(ui_lblTitle, "EXPLORE (USB)");
+                        break;
+                    default:
+                        lv_label_set_text(ui_lblTitle, "EXPLORE");
+                        break;
+                }
+            } else {
+                if (!strcasecmp(last_dir, "ROMS") == 0) {
+                    lv_label_set_text(ui_lblTitle, last_dir);
+                }
             }
         }
         swap_timeout = 3;
