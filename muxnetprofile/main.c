@@ -147,111 +147,13 @@ void create_profile_items() {
             ui_count++;
 
             lv_obj_t * ui_pnlNetProfile = lv_obj_create(ui_pnlContent);
-            lv_obj_set_width(ui_pnlNetProfile, device.MUX.WIDTH);
-            lv_obj_set_height(ui_pnlNetProfile, theme.MUX.ITEM.HEIGHT);
-            lv_obj_set_scrollbar_mode(ui_pnlNetProfile, LV_SCROLLBAR_MODE_OFF);
-            lv_obj_set_style_align(ui_pnlNetProfile, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_opa(ui_pnlNetProfile, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_border_width(ui_pnlNetProfile, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_left(ui_pnlNetProfile, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_right(ui_pnlNetProfile, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_top(ui_pnlNetProfile, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_bottom(ui_pnlNetProfile, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_row(ui_pnlNetProfile, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_column(ui_pnlNetProfile, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            apply_theme_list_panel(&theme, &device, ui_pnlNetProfile);
 
             lv_obj_t * ui_lblNetProfileItem = lv_label_create(ui_pnlNetProfile);
-            lv_label_set_text(ui_lblNetProfileItem, base_filename);
-
-            lv_obj_set_width(ui_lblNetProfileItem, theme.MISC.CONTENT.WIDTH);
-            lv_obj_set_height(ui_lblNetProfileItem, theme.MUX.ITEM.HEIGHT);
-
-            lv_obj_set_style_border_width(ui_lblNetProfileItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_border_side(ui_lblNetProfileItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_grad_color(ui_lblNetProfileItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND_GRADIENT),
-                                           LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_grad_color(ui_lblNetProfileItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND_GRADIENT),
-                                           LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_bg_main_stop(ui_lblNetProfileItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_grad_dir(ui_lblNetProfileItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-            lv_obj_set_style_bg_color(ui_lblNetProfileItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_opa(ui_lblNetProfileItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_main_stop(ui_lblNetProfileItem, theme.LIST_DEFAULT.GRADIENT_START,
-                                          LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_bg_grad_stop(ui_lblNetProfileItem, theme.LIST_DEFAULT.GRADIENT_STOP,
-                                          LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_border_color(ui_lblNetProfileItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
-                                          LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_border_opa(ui_lblNetProfileItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(ui_lblNetProfileItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_opa(ui_lblNetProfileItem, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-
-            lv_obj_set_style_bg_color(ui_lblNetProfileItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_bg_opa(ui_lblNetProfileItem, theme.LIST_FOCUS.BACKGROUND_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_bg_main_stop(ui_lblNetProfileItem, theme.LIST_FOCUS.GRADIENT_START,
-                                          LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_bg_grad_stop(ui_lblNetProfileItem, theme.LIST_FOCUS.GRADIENT_STOP,
-                                          LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_border_color(ui_lblNetProfileItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
-                                          LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_border_opa(ui_lblNetProfileItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
-                                        LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_text_color(ui_lblNetProfileItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                        LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_text_opa(ui_lblNetProfileItem, theme.LIST_FOCUS.TEXT_ALPHA,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-
-            lv_obj_set_style_pad_left(ui_lblNetProfileItem, theme.FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_right(ui_lblNetProfileItem, theme.FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_top(ui_lblNetProfileItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_bottom(ui_lblNetProfileItem, theme.FONT.LIST_PAD_BOTTOM,
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-
-            lv_obj_set_style_text_line_space(ui_lblNetProfileItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_label_set_long_mode(ui_lblNetProfileItem, LV_LABEL_LONG_WRAP);
-
-            lv_obj_set_style_radius(ui_lblNetProfileItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+            apply_theme_list_item(&theme, ui_lblNetProfileItem, base_filename, false, false, false);
 
             lv_obj_t * ui_lblNetProfileItemGlyph = lv_label_create(ui_pnlNetProfile);
-            lv_label_set_text(ui_lblNetProfileItemGlyph, "\uF53F");
-
-            lv_obj_set_width(ui_lblNetProfileItemGlyph, device.MUX.WIDTH);
-            lv_obj_set_height(ui_lblNetProfileItemGlyph, theme.MUX.ITEM.HEIGHT);
-
-            lv_obj_set_style_border_width(ui_lblNetProfileItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-            lv_obj_set_style_bg_opa(ui_lblNetProfileItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_border_opa(ui_lblNetProfileItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(ui_lblNetProfileItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_opa(ui_lblNetProfileItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-
-            lv_obj_set_style_bg_opa(ui_lblNetProfileItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_border_opa(ui_lblNetProfileItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_text_color(ui_lblNetProfileItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                        LV_PART_MAIN | LV_STATE_FOCUSED);
-            lv_obj_set_style_text_opa(ui_lblNetProfileItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-
-            lv_obj_set_style_pad_left(ui_lblNetProfileItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_right(ui_lblNetProfileItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_top(ui_lblNetProfileItemGlyph, theme.FONT.LIST_ICON_PAD_TOP,
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_pad_bottom(ui_lblNetProfileItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-
-            lv_obj_set_style_text_align(ui_lblNetProfileItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_font(ui_lblNetProfileItemGlyph, &ui_font_AwesomeSmall,
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblNetProfileItemGlyph, "\uF53F", 12);
 
             lv_group_add_obj(ui_group, ui_lblNetProfileItem);
             lv_group_add_obj(ui_group_glyph, ui_lblNetProfileItemGlyph);

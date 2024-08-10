@@ -127,104 +127,13 @@ void create_task_items() {
         ui_count++;
 
         lv_obj_t * ui_pnlTask = lv_obj_create(ui_pnlContent);
-        lv_obj_set_width(ui_pnlTask, device.MUX.WIDTH);
-        lv_obj_set_height(ui_pnlTask, theme.MUX.ITEM.HEIGHT);
-        lv_obj_set_scrollbar_mode(ui_pnlTask, LV_SCROLLBAR_MODE_OFF);
-        lv_obj_set_style_align(ui_pnlTask, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_width(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_left(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_row(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_column(ui_pnlTask, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_panel(&theme, &device, ui_pnlTask);
 
         lv_obj_t * ui_lblTaskItem = lv_label_create(ui_pnlTask);
-        lv_label_set_text(ui_lblTaskItem, task_store);
-
-        lv_obj_set_width(ui_lblTaskItem, theme.MISC.CONTENT.WIDTH);
-        lv_obj_set_height(ui_lblTaskItem, theme.MUX.ITEM.HEIGHT);
-
-        lv_obj_set_style_border_width(ui_lblTaskItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_lblTaskItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblTaskItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND_GRADIENT),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblTaskItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND_GRADIENT),
-                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblTaskItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_dir(ui_lblTaskItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_color(ui_lblTaskItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_lblTaskItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_main_stop(ui_lblTaskItem, theme.LIST_DEFAULT.GRADIENT_START,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_stop(ui_lblTaskItem, theme.LIST_DEFAULT.GRADIENT_STOP,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_color(ui_lblTaskItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblTaskItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblTaskItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblTaskItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_color(ui_lblTaskItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_opa(ui_lblTaskItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblTaskItem, theme.LIST_FOCUS.GRADIENT_START,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_grad_stop(ui_lblTaskItem, theme.LIST_FOCUS.GRADIENT_STOP,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_color(ui_lblTaskItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblTaskItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblTaskItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblTaskItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-        lv_obj_set_style_pad_left(ui_lblTaskItem, theme.FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblTaskItem, theme.FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblTaskItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblTaskItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_text_line_space(ui_lblTaskItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_label_set_long_mode(ui_lblTaskItem, LV_LABEL_LONG_WRAP);
-
-        lv_obj_set_style_radius(ui_lblTaskItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_item(&theme, ui_lblTaskItem, task_store, false, false, false);
 
         lv_obj_t * ui_lblTaskItemGlyph = lv_label_create(ui_pnlTask);
-        lv_label_set_text(ui_lblTaskItemGlyph, "\uF56E");
-
-        lv_obj_set_width(ui_lblTaskItemGlyph, device.MUX.WIDTH);
-        lv_obj_set_height(ui_lblTaskItemGlyph, theme.MUX.ITEM.HEIGHT);
-
-        lv_obj_set_style_border_width(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_opa(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblTaskItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblTaskItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_opa(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblTaskItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblTaskItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-        lv_obj_set_style_pad_left(ui_lblTaskItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblTaskItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblTaskItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblTaskItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_text_align(ui_lblTaskItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_font(ui_lblTaskItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblTaskItemGlyph, "\uF56E", 12);
 
         lv_group_add_obj(ui_group, ui_lblTaskItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);

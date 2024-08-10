@@ -127,121 +127,33 @@ void create_app_items() {
         ui_count++;
 
         lv_obj_t * ui_pnlApp = lv_obj_create(ui_pnlContent);
-        lv_obj_set_width(ui_pnlApp, device.MUX.WIDTH);
-        lv_obj_set_height(ui_pnlApp, theme.MUX.ITEM.HEIGHT);
-        lv_obj_set_scrollbar_mode(ui_pnlApp, LV_SCROLLBAR_MODE_OFF);
-        lv_obj_set_style_align(ui_pnlApp, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_width(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_left(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_row(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_column(ui_pnlApp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_panel(&theme, &device, ui_pnlApp);
 
         lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
-        lv_label_set_text(ui_lblAppItem, app_store);
-
-        lv_obj_set_width(ui_lblAppItem, theme.MISC.CONTENT.WIDTH);
-        lv_obj_set_height(ui_lblAppItem, theme.MUX.ITEM.HEIGHT);
-
-        lv_obj_set_style_border_width(ui_lblAppItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_lblAppItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblAppItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND_GRADIENT),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblAppItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND_GRADIENT),
-                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblAppItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_dir(ui_lblAppItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_color(ui_lblAppItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_lblAppItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_main_stop(ui_lblAppItem, theme.LIST_DEFAULT.GRADIENT_START,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_stop(ui_lblAppItem, theme.LIST_DEFAULT.GRADIENT_STOP,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_color(ui_lblAppItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblAppItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblAppItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblAppItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_color(ui_lblAppItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_opa(ui_lblAppItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblAppItem, theme.LIST_FOCUS.GRADIENT_START,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_grad_stop(ui_lblAppItem, theme.LIST_FOCUS.GRADIENT_STOP,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_color(ui_lblAppItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblAppItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblAppItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblAppItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-        lv_obj_set_style_pad_left(ui_lblAppItem, theme.FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblAppItem, theme.FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblAppItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblAppItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_text_line_space(ui_lblAppItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_label_set_long_mode(ui_lblAppItem, LV_LABEL_LONG_WRAP);
-
-        lv_obj_set_style_radius(ui_lblAppItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_item(&theme, ui_lblAppItem, app_store, false, false, false);
 
         lv_obj_t * ui_lblAppItemGlyph = lv_label_create(ui_pnlApp);
 
+        char *item_glyph;
         if (strcasecmp(app_store, "Archive Manager") == 0) {
-            lv_label_set_text(ui_lblAppItemGlyph, "\uF187");
+            item_glyph = "\uF187";
         } else if (strcasecmp(app_store, "Dingux Commander") == 0) {
-            lv_label_set_text(ui_lblAppItemGlyph, "\uF0C7");
+            item_glyph = "\uF0C7";
         } else if (strcasecmp(app_store, "GMU Music Player") == 0) {
-            lv_label_set_text(ui_lblAppItemGlyph, "\uF001");
+            item_glyph = "\uF001";
         } else if (strcasecmp(app_store, "PortMaster") == 0) {
-            lv_label_set_text(ui_lblAppItemGlyph, "\uF21A");
+            item_glyph = "\uF21A";
         } else if (strcasecmp(app_store, "RetroArch") == 0) {
-            lv_label_set_text(ui_lblAppItemGlyph, "\uF6E2");
+            item_glyph = "\uF6E2";
         } else if (strcasecmp(app_store, "Simple Terminal") == 0) {
-            lv_label_set_text(ui_lblAppItemGlyph, "\uF120");
+            item_glyph = "\uF120";
         } else if (strcasecmp(app_store, "Task Toolkit") == 0) {
-            lv_label_set_text(ui_lblAppItemGlyph, "\uF7D9");
+            item_glyph = "\uF7D9";
         } else {
-            lv_label_set_text(ui_lblAppItemGlyph, "\uF04B");
+            item_glyph = "\uF04B";
         }
 
-        lv_obj_set_width(ui_lblAppItemGlyph, device.MUX.WIDTH);
-        lv_obj_set_height(ui_lblAppItemGlyph, theme.MUX.ITEM.HEIGHT);
-
-        lv_obj_set_style_border_width(ui_lblAppItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_opa(ui_lblAppItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblAppItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblAppItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblAppItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_opa(ui_lblAppItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblAppItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblAppItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblAppItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-        lv_obj_set_style_pad_left(ui_lblAppItemGlyph, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblAppItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblAppItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblAppItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_text_align(ui_lblAppItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_font(ui_lblAppItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblAppItemGlyph, item_glyph, 12);
 
         lv_group_add_obj(ui_group, ui_lblAppItem);
         lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);

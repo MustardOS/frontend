@@ -315,11 +315,15 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
     lv_obj_set_style_pad_column(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);    
 }
 
-void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, char *item_text, 
+void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, const char *item_text, 
     bool apply_visual_label, bool enable_scrolling_text, bool is_config_menu) 
 {
     if (apply_visual_label) {
-        adjust_visual_label(item_text, config.VISUAL.NAME, config.VISUAL.DASH);
+        char *visual_item_text = (char *)item_text;
+        adjust_visual_label(visual_item_text, config.VISUAL.NAME, config.VISUAL.DASH);
+        lv_label_set_text(ui_lblItem, visual_item_text);
+    } else {
+        lv_label_set_text(ui_lblItem, item_text);
     }
 
     if (enable_scrolling_text) {
@@ -335,8 +339,6 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, ch
     } else {
         lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
     }
-    
-    lv_label_set_text(ui_lblItem, item_text);
 
     lv_obj_set_width(ui_lblItem, theme->MISC.CONTENT.WIDTH);
     lv_obj_set_height(ui_lblItem, theme->MUX.ITEM.HEIGHT);
