@@ -1528,7 +1528,8 @@ void *joystick_task() {
                                             break;
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.SELECT) {
-                                    if (ui_file_count > 0) {
+                                    if (module != ROOT && module != FAVOURITE && module != HISTORY
+                                        && !strcasecmp(get_last_dir(sd_dir), "ROMS") == 0) {
                                         play_sound("confirm", nav_sound, 1);
 
                                         switch (module) {
@@ -2297,7 +2298,9 @@ int main(int argc, char *argv[]) {
                         break;
                 }
             }
-            write_text_to_file(MUOS_PDI_LOAD, get_last_dir(sd_dir), "w");
+            if (sd_dir != NULL) {
+                write_text_to_file(MUOS_PDI_LOAD, get_last_dir(sd_dir), "w");
+            }
             if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "roms") == 0) {
                 write_text_to_file(MUOS_PDI_LOAD, get_last_subdir(sd_dir, '/', 4), "w");
             }

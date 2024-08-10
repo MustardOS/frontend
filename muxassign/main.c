@@ -68,6 +68,12 @@ char *auto_assign;
 char *rom_dir;
 char *rom_system;
 
+enum core_gen_type {
+    SINGLE,
+    DIRECTORY,
+    PARENT
+} gen_method;
+
 void show_help() {
     char *title = "ASSIGN CORE";
     char *message = MUXASSIGN_GENERIC;
@@ -79,38 +85,128 @@ void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
 }
 
-void create_core_assignment(const char *core, char *sys, int cache) {
+char **get_subdirectories(const char *base_dir) {
+    struct dirent *entry;
+    DIR *dir = opendir(base_dir);
+    char **dir_names = NULL;
+    int dir_count = 0;
+
+    if (!dir) {
+        perror("opendir");
+        return NULL;
+    }
+
+    char skip_ini[MAX_BUFFER_SIZE];
+    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+    load_skip_patterns(skip_ini);
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (!should_skip(entry->d_name)) {
+            if (entry->d_type == DT_DIR) {
+                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
+                    char *subdir_name = (char *) malloc(strlen(entry->d_name) + 1);
+                    if (!subdir_name) {
+                        perror("malloc");
+                        closedir(dir);
+                        return NULL;
+                    }
+                    snprintf(subdir_name, strlen(entry->d_name) + 1, "%s", entry->d_name);
+
+                    dir_names = (char **) realloc(dir_names, (dir_count + 1) * sizeof(char *));
+                    if (!dir_names) {
+                        perror("realloc");
+                        closedir(dir);
+                        return NULL;
+                    }
+                    dir_names[dir_count] = subdir_name;
+                    dir_count++;
+                }
+            }
+        }
+    }
+
+    dir_names = (char **) realloc(dir_names, (dir_count + 1) * sizeof(char *));
+    if (!dir_names) {
+        perror("realloc");
+        closedir(dir);
+        return NULL;
+    }
+    dir_names[dir_count] = NULL;
+
+    closedir(dir);
+    return dir_names;
+}
+
+void free_subdirectories(char **dir_names) {
+    if (dir_names == NULL) return;
+
+    for (int i = 0; dir_names[i] != NULL; i++) {
+        free(dir_names[i]);
+    }
+    free(dir_names);
+}
+
+void create_core_assignment(const char *core, char *sys, int cache, enum core_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/MUOS/info/core/%s/",
              device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
 
     create_directories(core_dir);
+    //delete_files_of_type(core_dir, "cfg", NULL);
 
-    /*
-     * The following is a temporary solution until core locking has been implemented.
-     * Will be removed in the future
-     * TODO: Individual core locking mechanism
-     */
-    delete_files_of_type(core_dir, "cfg", NULL);
+    switch (method) {
+        case SINGLE:
+            // TODO: Capture name of content and assign core to file only
+            break;
+        case PARENT: {
+            char subdir_path[MAX_BUFFER_SIZE];
+            snprintf(subdir_path, sizeof(subdir_path), "%s/MUOS/info/core/%s/",
+                     device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
 
-    char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/MUOS/info/core/%s/core.cfg",
-             device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
+            char **subdirs = get_subdirectories(rom_dir);
+            if (subdirs != NULL) {
+                for (int i = 0; subdirs[i] != NULL; i++) {
+                    char subdir_file[MAX_BUFFER_SIZE];
+                    snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.cfg", core_dir, subdirs[i]);
 
-    FILE * file = fopen(core_file, "w");
-    if (file == NULL) {
-        printf("Error opening file at: %s\n", core_file);
-        return;
+                    create_directories(strip_dir(subdir_file));
+
+                    FILE * subdir_file_handle = fopen(subdir_file, "w");
+                    if (subdir_file_handle == NULL) {
+                        perror("Error opening file");
+                        continue;
+                    }
+
+                    fprintf(subdir_file_handle, "%s\n%s\n%d\n", core, str_trim(sys), cache);
+                    fclose(subdir_file_handle);
+                }
+                free_subdirectories(subdirs);
+            }
+        }
+            break;
+        case DIRECTORY:
+        default: {
+            char core_file[MAX_BUFFER_SIZE];
+            snprintf(core_file, sizeof(core_file), "%s/MUOS/info/core/%s/core.cfg",
+                     device.STORAGE.ROM.MOUNT, get_last_subdir(rom_dir, '/', 4));
+
+            FILE * file = fopen(core_file, "w");
+            if (file == NULL) {
+                perror("Error opening file");
+                return;
+            }
+
+            fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
+            fclose(file);
+        }
+            break;
     }
 
-    fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
-    fclose(file);
-
     char pico8_splore[MAX_BUFFER_SIZE];
-    sprintf(pico8_splore, "%s/Splore.p8", rom_dir);
+    snprintf(pico8_splore, sizeof(pico8_splore), "%s/Splore.p8", rom_dir);
     if (strcasecmp(core, "ext-pico8") == 0 && !file_exist(pico8_splore)) {
         char pico8_splore_create[MAX_BUFFER_SIZE];
-        sprintf(pico8_splore_create, "touch %s", pico8_splore);
+        snprintf(pico8_splore_create, sizeof(pico8_splore_create), "touch %s", pico8_splore);
         system(pico8_splore_create);
     }
 
@@ -466,7 +562,8 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent,
+                           NULL, NULL);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -479,7 +576,8 @@ void list_nav_next(int steps) {
             nav_next(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent,
+                           NULL, NULL);
     if (first_open) {
         first_open = 0;
     } else {
@@ -543,6 +641,60 @@ void *joystick_task() {
                             } else {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
+                                    if (strcasecmp(rom_system, "none") != 0) {
+                                        play_sound("confirm", nav_sound, 1);
+
+                                        char chosen_core_ini[FILENAME_MAX];
+                                        snprintf(chosen_core_ini, sizeof(chosen_core_ini),
+                                                 "%s/MUOS/info/assign/%s.ini",
+                                                 device.STORAGE.ROM.MOUNT, rom_system);
+
+                                        mini_t * chosen_core = mini_load(chosen_core_ini);
+
+                                        const char *raw_core = mini_get_string(
+                                                chosen_core, str_trim(lv_label_get_text(element_focused)),
+                                                "core", "none");
+
+                                        int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
+
+                                        static char core_catalogue[MAX_BUFFER_SIZE];
+                                        strcpy(core_catalogue, get_ini_string(chosen_core, "global",
+                                                                              "catalogue", rom_system));
+
+                                        create_core_assignment(raw_core, core_catalogue, name_cache, PARENT);
+
+                                        mini_free(chosen_core);
+
+                                        safe_quit = 1;
+                                    }
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
+                                    if (strcasecmp(rom_system, "none") != 0) {
+                                        play_sound("confirm", nav_sound, 1);
+
+                                        char chosen_core_ini[FILENAME_MAX];
+                                        snprintf(chosen_core_ini, sizeof(chosen_core_ini),
+                                                 "%s/MUOS/info/assign/%s.ini",
+                                                 device.STORAGE.ROM.MOUNT, rom_system);
+
+                                        mini_t * chosen_core = mini_load(chosen_core_ini);
+
+                                        const char *raw_core = mini_get_string(
+                                                chosen_core, str_trim(lv_label_get_text(element_focused)),
+                                                "core", "none");
+
+                                        int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
+
+                                        static char core_catalogue[MAX_BUFFER_SIZE];
+                                        strcpy(core_catalogue, get_ini_string(chosen_core, "global",
+                                                                              "catalogue", rom_system));
+
+                                        create_core_assignment(raw_core, core_catalogue, name_cache, SINGLE);
+
+                                        mini_free(chosen_core);
+
+                                        safe_quit = 1;
+                                    }
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
 
@@ -566,7 +718,7 @@ void *joystick_task() {
                                         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
                                                                               "catalogue", rom_system));
 
-                                        create_core_assignment(raw_core, core_catalogue, name_cache);
+                                        create_core_assignment(raw_core, core_catalogue, name_cache, DIRECTORY);
 
                                         mini_free(chosen_core);
                                     }
@@ -621,7 +773,8 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent, NULL, NULL);
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
                                     JOYUP_pressed = (ev.value != 0);
@@ -635,7 +788,8 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent, NULL, NULL);
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count) {
                                     JOYDOWN_pressed = (ev.value != 0);
@@ -750,6 +904,22 @@ void init_elements() {
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
+    }
+
+    if (strcasecmp(rom_system, "none") != 0) {
+        lv_label_set_text(ui_lblNavA, "Directory");
+        lv_label_set_text(ui_lblNavX, "Selected");
+        lv_label_set_text(ui_lblNavY, "Parent");
+
+        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+
+        lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();
@@ -971,7 +1141,7 @@ int main(int argc, char *argv[]) {
                         printf("ASSIGN CORE CACHE: %d\n", name_cache);
                         printf("ASSIGN CORE CATALOGUE: %s\n", core_catalogue);
 
-                        create_core_assignment(auto_core, core_catalogue, name_cache);
+                        create_core_assignment(auto_core, core_catalogue, name_cache, DIRECTORY);
 
                         auto_assign_good = 1;
                     }
