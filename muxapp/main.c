@@ -251,7 +251,7 @@ void create_app_items() {
 
         free(base_filename);
     }
-
+    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     free(file_names);
 }
 
@@ -815,11 +815,6 @@ int main(int argc, char *argv[]) {
         }
     } else {
         lv_obj_clear_flag(ui_lblAppMessage, LV_OBJ_FLAG_HIDDEN);
-    }
-
-    if (ui_count > theme.MUX.ITEM.COUNT) {
-        lv_obj_t * last_item = lv_obj_get_child(ui_pnlContent, -1);
-        lv_obj_set_height(last_item, lv_obj_get_height(last_item) + 50); // Don't bother asking...
     }
 
     init_elements();
