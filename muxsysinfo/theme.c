@@ -761,6 +761,24 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_list_left_elements[] = {
+            {ui_lblVersion,    theme.FONT.LIST_PAD_LEFT},
+            {ui_lblKernel,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblUptime,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblCPU,        theme.FONT.LIST_PAD_LEFT},
+            {ui_lblSpeed,      theme.FONT.LIST_PAD_LEFT},
+            {ui_lblGovernor,   theme.FONT.LIST_PAD_LEFT},
+            {ui_lblMemory,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblTemp,       theme.FONT.LIST_PAD_LEFT},
+            {ui_lblServices,   theme.FONT.LIST_PAD_LEFT},
+            {ui_lblBatteryCap, theme.FONT.LIST_PAD_LEFT},
+            {ui_lblVoltage,    theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_dropdown_elements[] = {
             {ui_lblVersionValue,    theme.FONT.LIST_PAD_TOP},
             {ui_lblKernelValue,     theme.FONT.LIST_PAD_TOP},
@@ -797,6 +815,26 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
                                     font_pad_bottom_dropdown_elements[i].c + 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_right_dropdown_elements[] = {
+            {ui_lblVersionValue,    theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblKernelValue,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblUptimeValue,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblCPUValue,        theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblSpeedValue,      theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblGovernorValue,   theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblMemoryValue,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblTempValue,       theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblServicesValue,   theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblBatteryCapValue, theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblVoltageValue,    theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
+                                    font_pad_right_dropdown_elements[i].c + 5,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

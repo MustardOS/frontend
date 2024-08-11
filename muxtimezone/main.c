@@ -83,103 +83,13 @@ void create_timezone_items() {
         ui_count++;
 
         lv_obj_t * ui_pnlTimezone = lv_obj_create(ui_pnlContent);
-        lv_obj_set_width(ui_pnlTimezone, device.MUX.WIDTH);
-        lv_obj_set_height(ui_pnlTimezone, theme.MUX.ITEM.HEIGHT);
-        lv_obj_set_scrollbar_mode(ui_pnlTimezone, LV_SCROLLBAR_MODE_OFF);
-        lv_obj_set_style_align(ui_pnlTimezone, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_pnlTimezone, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_width(ui_pnlTimezone, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_left(ui_pnlTimezone, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_pnlTimezone, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_pnlTimezone, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_pnlTimezone, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_row(ui_pnlTimezone, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_column(ui_pnlTimezone, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_panel(&theme, &device, ui_pnlTimezone);
 
         lv_obj_t * ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
-        lv_label_set_text(ui_lblTimezoneItem, base_key);
-
-        lv_obj_set_width(ui_lblTimezoneItem, theme.MISC.CONTENT.WIDTH);
-        lv_obj_set_height(ui_lblTimezoneItem, theme.MUX.ITEM.HEIGHT);
-
-        lv_obj_set_style_border_width(ui_lblTimezoneItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_lblTimezoneItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND_GRADIENT),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND_GRADIENT),
-                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblTimezoneItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_dir(ui_lblTimezoneItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_opa(ui_lblTimezoneItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_main_stop(ui_lblTimezoneItem, theme.LIST_DEFAULT.GRADIENT_START,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_bg_grad_stop(ui_lblTimezoneItem, theme.LIST_DEFAULT.GRADIENT_STOP,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblTimezoneItem, theme.LIST_DEFAULT.INDICATOR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblTimezoneItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_opa(ui_lblTimezoneItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_main_stop(ui_lblTimezoneItem, theme.LIST_FOCUS.GRADIENT_START,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_bg_grad_stop(ui_lblTimezoneItem, theme.LIST_FOCUS.GRADIENT_STOP,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblTimezoneItem, theme.LIST_FOCUS.INDICATOR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblTimezoneItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblTimezoneItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-        lv_obj_set_style_pad_left(ui_lblTimezoneItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblTimezoneItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblTimezoneItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblTimezoneItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_text_line_space(ui_lblTimezoneItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_label_set_long_mode(ui_lblTimezoneItem, LV_LABEL_LONG_WRAP);
-
-        lv_obj_set_style_radius(ui_lblTimezoneItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_item(&theme, ui_lblTimezoneItem, base_key, false, false, false);
 
         lv_obj_t * ui_lblTimezoneGlyph = lv_label_create(ui_pnlTimezone);
-        lv_label_set_text(ui_lblTimezoneGlyph, "\uF0AC");
-
-        lv_obj_set_width(ui_lblTimezoneGlyph, device.MUX.WIDTH);
-        lv_obj_set_height(ui_lblTimezoneGlyph, theme.MUX.ITEM.HEIGHT);
-
-        lv_obj_set_style_border_width(ui_lblTimezoneGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_opa(ui_lblTimezoneGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_lblTimezoneGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_color(ui_lblTimezoneGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_opa(ui_lblTimezoneGlyph, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_bg_opa(ui_lblTimezoneGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_border_opa(ui_lblTimezoneGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_color(ui_lblTimezoneGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-        lv_obj_set_style_text_opa(ui_lblTimezoneGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-        lv_obj_set_style_pad_left(ui_lblTimezoneGlyph, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_right(ui_lblTimezoneGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_top(ui_lblTimezoneGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_pad_bottom(ui_lblTimezoneGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-
-        lv_obj_set_style_text_align(ui_lblTimezoneGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_text_font(ui_lblTimezoneGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblTimezoneGlyph, "\uF0AC", 9);
 
         lv_group_add_obj(ui_group, ui_lblTimezoneItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);

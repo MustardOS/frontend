@@ -518,110 +518,14 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
 
 void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) {
     lv_obj_t * ui_pnlExplore = lv_obj_create(ui_pnlContent);
-    lv_obj_set_width(ui_pnlExplore, device.MUX.WIDTH);
-    lv_obj_set_height(ui_pnlExplore, theme.MUX.ITEM.HEIGHT);
-    lv_obj_set_scrollbar_mode(ui_pnlExplore, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_set_style_align(ui_pnlExplore, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlExplore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    apply_theme_list_panel(&theme, &device, ui_pnlExplore);
 
     lv_obj_t * ui_lblExploreItem = lv_label_create(ui_pnlExplore);
-
-    if (module != ROOT) {
-        adjust_visual_label(item_text, config.VISUAL.NAME, config.VISUAL.DASH);
-    }
-    lv_label_set_long_mode(ui_lblExploreItem, LV_LABEL_LONG_DOT);
-    lv_label_set_text(ui_lblExploreItem, item_text);
-
-    lv_obj_set_width(ui_lblExploreItem, theme.MISC.CONTENT.WIDTH);
-    lv_obj_set_height(ui_lblExploreItem, theme.MUX.ITEM.HEIGHT);
-
-    lv_obj_set_style_border_width(ui_lblExploreItem, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_lblExploreItem, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblExploreItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND_GRADIENT),
-                                   LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_lblExploreItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND_GRADIENT),
-                                   LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_main_stop(ui_lblExploreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_lblExploreItem, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(ui_lblExploreItem, lv_color_hex(theme.LIST_DEFAULT.BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblExploreItem, theme.LIST_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_main_stop(ui_lblExploreItem, theme.LIST_DEFAULT.GRADIENT_START,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(ui_lblExploreItem, theme.LIST_DEFAULT.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblExploreItem, lv_color_hex(theme.LIST_DEFAULT.INDICATOR),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblExploreItem, theme.LIST_DEFAULT.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblExploreItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblExploreItem, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(ui_lblExploreItem, lv_color_hex(theme.LIST_FOCUS.BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_opa(ui_lblExploreItem, theme.LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_main_stop(ui_lblExploreItem, theme.LIST_FOCUS.GRADIENT_START, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_grad_stop(ui_lblExploreItem, theme.LIST_FOCUS.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_color(ui_lblExploreItem, lv_color_hex(theme.LIST_FOCUS.INDICATOR),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_opa(ui_lblExploreItem, theme.LIST_FOCUS.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_color(ui_lblExploreItem, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_lblExploreItem, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-    lv_obj_set_style_pad_left(ui_lblExploreItem, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblExploreItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblExploreItem, theme.FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblExploreItem, theme.FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_text_line_space(ui_lblExploreItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    static lv_anim_t item_anim;
-    static lv_style_t item_style;
-    lv_anim_init(&item_anim);
-    lv_anim_set_delay(&item_anim, 250);
-    lv_style_init(&item_style);
-    lv_style_set_anim(&item_style, &item_anim);
-    lv_obj_add_style(ui_lblExploreItem, &item_style, LV_PART_MAIN);
-    lv_obj_set_style_anim_speed(ui_lblExploreItem, 70, LV_PART_MAIN);
-
-    lv_obj_set_style_radius(ui_lblExploreItem, theme.LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    const bool apply_visual_label = module != ROOT;
+    apply_theme_list_item(&theme, ui_lblExploreItem, item_text, apply_visual_label, true, false);
 
     lv_obj_t * ui_lblExploreItemGlyph = lv_label_create(ui_pnlExplore);
-    lv_label_set_text(ui_lblExploreItemGlyph, item_glyph);
-
-    lv_obj_set_width(ui_lblExploreItemGlyph, device.MUX.WIDTH);
-    lv_obj_set_height(ui_lblExploreItemGlyph, theme.MUX.ITEM.HEIGHT);
-
-    lv_obj_set_style_border_width(ui_lblExploreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_opa(ui_lblExploreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblExploreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblExploreItemGlyph, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblExploreItemGlyph, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_opa(ui_lblExploreItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_opa(ui_lblExploreItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_color(ui_lblExploreItemGlyph, lv_color_hex(theme.LIST_FOCUS.TEXT),
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_lblExploreItemGlyph, theme.LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-    lv_obj_set_style_pad_left(ui_lblExploreItemGlyph, glyph_pad, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblExploreItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblExploreItemGlyph, theme.FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblExploreItemGlyph, theme.FONT.LIST_ICON_PAD_BOTTOM,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_text_align(ui_lblExploreItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblExploreItemGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblExploreItemGlyph, item_glyph, glyph_pad);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);

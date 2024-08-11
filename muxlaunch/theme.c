@@ -631,6 +631,36 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_left_list_elements[] = {
+            {ui_lblContent,    theme.FONT.LIST_PAD_LEFT},
+            {ui_lblFavourites, theme.FONT.LIST_PAD_LEFT},
+            {ui_lblHistory,    theme.FONT.LIST_PAD_LEFT},
+            {ui_lblApps,       theme.FONT.LIST_PAD_LEFT},
+            {ui_lblInfo,       theme.FONT.LIST_PAD_LEFT},
+            {ui_lblConfig,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblReboot,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblShutdown,   theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_left_list_elements) / sizeof(font_pad_left_list_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_left_list_elements[i].e, font_pad_left_list_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_right_list_elements[] = {
+            {ui_lblContent,    theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblFavourites, theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblHistory,    theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblApps,       theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblInfo,       theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblConfig,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblReboot,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblShutdown,   theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_right_list_elements) / sizeof(font_pad_right_list_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_right_list_elements[i].e, font_pad_right_list_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_list_icon_elements[] = {
             {ui_icoContent,    theme.FONT.LIST_ICON_PAD_TOP},
             {ui_icoFavourites, theme.FONT.LIST_ICON_PAD_TOP},

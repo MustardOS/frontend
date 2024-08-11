@@ -769,6 +769,23 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_list_left_elements[] = {
+            {ui_lblEnable,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblIdentifier, theme.FONT.LIST_PAD_LEFT},
+            {ui_lblPassword,   theme.FONT.LIST_PAD_LEFT},
+            {ui_lblType,       theme.FONT.LIST_PAD_LEFT},
+            {ui_lblAddress,    theme.FONT.LIST_PAD_LEFT},
+            {ui_lblSubnet,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblGateway,    theme.FONT.LIST_PAD_LEFT},
+            {ui_lblDNS,        theme.FONT.LIST_PAD_LEFT},
+            {ui_lblStatus,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblConnect,    theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_dropdown_elements[] = {
             {ui_lblEnableValue,     theme.FONT.LIST_PAD_TOP},
             {ui_lblIdentifierValue, theme.FONT.LIST_PAD_TOP},
@@ -803,6 +820,25 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
                                     font_pad_bottom_dropdown_elements[i].c + 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_right_dropdown_elements[] = {
+            {ui_lblEnableValue,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblIdentifierValue, theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblPasswordValue,   theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblTypeValue,       theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblAddressValue,    theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblSubnetValue,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblGatewayValue,    theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblDNSValue,        theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblStatusValue,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_lblConnectValue,    theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
+                                    font_pad_right_dropdown_elements[i].c + 5,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

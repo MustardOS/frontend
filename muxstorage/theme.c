@@ -656,6 +656,21 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    struct small font_pad_list_left_elements[] = {
+            {ui_lblBIOS,       theme.FONT.LIST_PAD_LEFT},
+            {ui_lblConfig,     theme.FONT.LIST_PAD_LEFT},
+            {ui_lblCatalogue,  theme.FONT.LIST_PAD_LEFT},
+            {ui_lblFav,        theme.FONT.LIST_PAD_LEFT},
+            {ui_lblMusic,      theme.FONT.LIST_PAD_LEFT},
+            {ui_lblSave,       theme.FONT.LIST_PAD_LEFT},
+            {ui_lblScreenshot, theme.FONT.LIST_PAD_LEFT},
+            {ui_lblTheme,      theme.FONT.LIST_PAD_LEFT},
+    };
+    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
+        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
     struct small font_pad_top_dropdown_elements[] = {
             {ui_droBIOS,       theme.FONT.LIST_PAD_TOP},
             {ui_droConfig,     theme.FONT.LIST_PAD_TOP},
@@ -686,6 +701,23 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
                                     font_pad_bottom_dropdown_elements[i].c + 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    struct small font_pad_right_dropdown_elements[] = {
+            {ui_droBIOS,       theme.FONT.LIST_PAD_RIGHT},
+            {ui_droConfig,     theme.FONT.LIST_PAD_RIGHT},
+            {ui_droCatalogue,  theme.FONT.LIST_PAD_RIGHT},
+            {ui_droFav,        theme.FONT.LIST_PAD_RIGHT},
+            {ui_droMusic,      theme.FONT.LIST_PAD_RIGHT},
+            {ui_droSave,       theme.FONT.LIST_PAD_RIGHT},
+            {ui_droScreenshot, theme.FONT.LIST_PAD_RIGHT},
+            {ui_droTheme,      theme.FONT.LIST_PAD_RIGHT},
+    };
+    for (size_t i = 0;
+         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
+        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
+                                    font_pad_right_dropdown_elements[i].c + 5,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
