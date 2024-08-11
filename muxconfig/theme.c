@@ -21,11 +21,6 @@ void apply_theme() {
             {ui_pnlFooter,             theme.FOOTER.BACKGROUND},
             {ui_pnlHeader,             theme.HEADER.BACKGROUND},
             {ui_pnlHelpMessage,        theme.HELP.BACKGROUND},
-            {ui_lblTweakGeneral,       theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblTheme,              theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblNetwork,            theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblServices,           theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblRTC,                theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,            theme.MESSAGE.BACKGROUND},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND},
@@ -71,109 +66,7 @@ void apply_theme() {
                                 LV_PART_INDICATOR | LV_STATE_DEFAULT);
     }
 
-    struct big background_focus_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblTheme,        theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblNetwork,      theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblServices,     theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblRTC,          theme.LIST_FOCUS.BACKGROUND},
-    };
-    for (size_t i = 0; i < sizeof(background_focus_elements) / sizeof(background_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_color(background_focus_elements[i].e, lv_color_hex(background_focus_elements[i].c),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small item_height_elements[] = {
-            {ui_lblTweakGeneral, theme.MUX.ITEM.HEIGHT},
-            {ui_lblTheme,        theme.MUX.ITEM.HEIGHT},
-            {ui_lblNetwork,      theme.MUX.ITEM.HEIGHT},
-            {ui_lblServices,     theme.MUX.ITEM.HEIGHT},
-            {ui_lblRTC,          theme.MUX.ITEM.HEIGHT},
-            {ui_icoTweakGeneral, theme.MUX.ITEM.HEIGHT},
-            {ui_icoTheme,        theme.MUX.ITEM.HEIGHT},
-            {ui_icoNetwork,      theme.MUX.ITEM.HEIGHT},
-            {ui_icoServices,     theme.MUX.ITEM.HEIGHT},
-            {ui_icoRTC,          theme.MUX.ITEM.HEIGHT},
-    };
-    for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
-        lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
-    }
-
-    struct small item_width_elements[] = {
-            {ui_lblTweakGeneral, theme.MISC.CONTENT.WIDTH},
-            {ui_lblTheme,        theme.MISC.CONTENT.WIDTH},
-            {ui_lblNetwork,      theme.MISC.CONTENT.WIDTH},
-            {ui_lblServices,     theme.MISC.CONTENT.WIDTH},
-            {ui_lblRTC,          theme.MISC.CONTENT.WIDTH},
-            {ui_icoTweakGeneral, theme.MISC.CONTENT.WIDTH},
-            {ui_icoTheme,        theme.MISC.CONTENT.WIDTH},
-            {ui_icoNetwork,      theme.MISC.CONTENT.WIDTH},
-            {ui_icoServices,     theme.MISC.CONTENT.WIDTH},
-            {ui_icoRTC,          theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
-        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
-    }
-
-    struct big gradient_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblTheme,        theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblNetwork,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblServices,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblRTC,          theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-    };
-    for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct big gradient_focused_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblTheme,        theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblNetwork,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblServices,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblRTC,          theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-    };
-    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
-                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct big indicator_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblTheme,        theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblNetwork,      theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblServices,     theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblRTC,          theme.LIST_DEFAULT.INDICATOR},
-    };
-    for (size_t i = 0; i < sizeof(indicator_elements) / sizeof(indicator_elements[0]); ++i) {
-        lv_obj_set_style_border_color(indicator_elements[i].e, lv_color_hex(indicator_elements[i].c),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct big indicator_focus_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.INDICATOR},
-            {ui_lblTheme,        theme.LIST_FOCUS.INDICATOR},
-            {ui_lblNetwork,      theme.LIST_FOCUS.INDICATOR},
-            {ui_lblServices,     theme.LIST_FOCUS.INDICATOR},
-            {ui_lblRTC,          theme.LIST_FOCUS.INDICATOR},
-    };
-    for (size_t i = 0; i < sizeof(indicator_focus_elements) / sizeof(indicator_focus_elements[0]); ++i) {
-        lv_obj_set_style_border_color(indicator_focus_elements[i].e, lv_color_hex(indicator_focus_elements[i].c),
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct big default_elements[] = {
-            {ui_lblTweakGeneral,       theme.LIST_DEFAULT.TEXT},
-            {ui_lblTheme,              theme.LIST_DEFAULT.TEXT},
-            {ui_lblNetwork,            theme.LIST_DEFAULT.TEXT},
-            {ui_lblServices,           theme.LIST_DEFAULT.TEXT},
-            {ui_lblRTC,                theme.LIST_DEFAULT.TEXT},
-            {ui_icoTweakGeneral,       theme.LIST_DEFAULT.TEXT},
-            {ui_icoTheme,              theme.LIST_DEFAULT.TEXT},
-            {ui_icoNetwork,            theme.LIST_DEFAULT.TEXT},
-            {ui_icoServices,           theme.LIST_DEFAULT.TEXT},
-            {ui_icoRTC,                theme.LIST_DEFAULT.TEXT},
             {ui_staCapacity,           theme.STATUS.BATTERY.NORMAL},
             {ui_lblDatetime,           theme.DATETIME.TEXT},
             {ui_lblMessage,            theme.MESSAGE.TEXT},
@@ -205,23 +98,6 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct big focus_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.TEXT},
-            {ui_lblTheme,        theme.LIST_FOCUS.TEXT},
-            {ui_lblNetwork,      theme.LIST_FOCUS.TEXT},
-            {ui_lblServices,     theme.LIST_FOCUS.TEXT},
-            {ui_lblRTC,          theme.LIST_FOCUS.TEXT},
-            {ui_icoTweakGeneral, theme.LIST_FOCUS.TEXT},
-            {ui_icoTheme,        theme.LIST_FOCUS.TEXT},
-            {ui_icoNetwork,      theme.LIST_FOCUS.TEXT},
-            {ui_icoServices,     theme.LIST_FOCUS.TEXT},
-            {ui_icoRTC,          theme.LIST_FOCUS.TEXT},
-    };
-    for (size_t i = 0; i < sizeof(focus_elements) / sizeof(focus_elements[0]); ++i) {
-        lv_obj_set_style_text_color(focus_elements[i].e, lv_color_hex(focus_elements[i].c),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct big border_elements[] = {
             {ui_pnlHelpMessage,        theme.HELP.BORDER},
             {ui_pnlMessage,            theme.MESSAGE.BORDER},
@@ -245,16 +121,6 @@ void apply_theme() {
     }
 
     struct small text_default_alpha_elements[] = {
-            {ui_lblTweakGeneral,       theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblNetwork,            theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblServices,           theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblRTC,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoTweakGeneral,       theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoNetwork,            theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoServices,           theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoRTC,                theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTitle,              theme.HEADER.TEXT_ALPHA},
             {ui_staCapacity,           theme.STATUS.BATTERY.NORMAL_ALPHA},
             {ui_lblMessage,            theme.MESSAGE.TEXT_ALPHA},
@@ -286,121 +152,6 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct small text_focus_alpha_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblTheme,        theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblNetwork,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblServices,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblRTC,          theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoTweakGeneral, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoTheme,        theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoNetwork,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoServices,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoRTC,          theme.LIST_FOCUS.TEXT_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(text_focus_alpha_elements) / sizeof(text_focus_alpha_elements[0]); ++i) {
-        lv_obj_set_style_text_opa(text_focus_alpha_elements[i].e, text_focus_alpha_elements[i].c,
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small indicator_default_alpha_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblTheme,        theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblNetwork,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblServices,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblRTC,          theme.LIST_DEFAULT.INDICATOR_ALPHA},
-    };
-    for (size_t i = 0;
-         i < sizeof(indicator_default_alpha_elements) / sizeof(indicator_default_alpha_elements[0]); ++i) {
-        lv_obj_set_style_border_opa(indicator_default_alpha_elements[i].e, indicator_default_alpha_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small indicator_focus_alpha_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblTheme,        theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblNetwork,      theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblServices,     theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblRTC,          theme.LIST_FOCUS.INDICATOR_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(indicator_focus_alpha_elements) / sizeof(indicator_focus_alpha_elements[0]); ++i) {
-        lv_obj_set_style_border_opa(indicator_focus_alpha_elements[i].e, indicator_focus_alpha_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small gradient_start_default_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblTheme,        theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblNetwork,      theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblServices,     theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblRTC,          theme.LIST_DEFAULT.GRADIENT_START},
-    };
-    for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small gradient_start_focus_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblTheme,        theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblNetwork,      theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblServices,     theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblRTC,          theme.LIST_FOCUS.GRADIENT_START},
-    };
-    for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small gradient_stop_default_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblTheme,        theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblNetwork,      theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblServices,     theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblRTC,          theme.LIST_DEFAULT.GRADIENT_STOP},
-    };
-    for (size_t i = 0; i < sizeof(gradient_stop_default_elements) / sizeof(gradient_stop_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_stop(gradient_stop_default_elements[i].e, gradient_stop_default_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small gradient_stop_focus_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblTheme,        theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblNetwork,      theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblServices,     theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblRTC,          theme.LIST_FOCUS.GRADIENT_STOP},
-    };
-    for (size_t i = 0; i < sizeof(gradient_stop_focus_elements) / sizeof(gradient_stop_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_stop(gradient_stop_focus_elements[i].e, gradient_stop_focus_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small background_alpha_default_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblTheme,        theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblNetwork,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblServices,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblRTC,          theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-    };
-    for (size_t i = 0;
-         i < sizeof(background_alpha_default_elements) / sizeof(background_alpha_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_opa(background_alpha_default_elements[i].e, background_alpha_default_elements[i].c,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small background_alpha_focus_elements[] = {
-            {ui_lblTweakGeneral, theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblTheme,        theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblNetwork,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblServices,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblRTC,          theme.LIST_FOCUS.BACKGROUND_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(background_alpha_focus_elements) / sizeof(background_alpha_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_opa(background_alpha_focus_elements[i].e, background_alpha_focus_elements[i].c,
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct small radius_elements[] = {
             {ui_pnlHelpMessage,        theme.HELP.RADIUS},
             {ui_pnlMessage,            theme.MESSAGE.RADIUS},
@@ -408,11 +159,6 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
-            {ui_lblTweakGeneral, theme.LIST_DEFAULT.RADIUS},
-            {ui_lblTheme,        theme.LIST_DEFAULT.RADIUS},
-            {ui_lblNetwork,      theme.LIST_DEFAULT.RADIUS},
-            {ui_lblServices,     theme.LIST_DEFAULT.RADIUS},
-            {ui_lblRTC,          theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,
@@ -495,79 +241,6 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_footer_icon_elements) / sizeof(font_pad_bottom_footer_icon_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_footer_icon_elements[i].e,
                                     font_pad_bottom_footer_icon_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_top_elements[] = {
-            {ui_lblTweakGeneral, theme.FONT.LIST_PAD_TOP},
-            {ui_lblTheme,        theme.FONT.LIST_PAD_TOP},
-            {ui_lblNetwork,      theme.FONT.LIST_PAD_TOP},
-            {ui_lblServices,     theme.FONT.LIST_PAD_TOP},
-            {ui_lblRTC,          theme.FONT.LIST_PAD_TOP},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_top_elements) / sizeof(font_pad_list_top_elements[0]); ++i) {
-        lv_obj_set_style_pad_top(font_pad_list_top_elements[i].e, font_pad_list_top_elements[i].c,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_bottom_elements[] = {
-            {ui_lblTweakGeneral, theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblTheme,        theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblNetwork,      theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblServices,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblRTC,          theme.FONT.LIST_PAD_BOTTOM},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_bottom_elements) / sizeof(font_pad_list_bottom_elements[0]); ++i) {
-        lv_obj_set_style_pad_bottom(font_pad_list_bottom_elements[i].e, font_pad_list_bottom_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_left_elements[] = {
-            {ui_lblTweakGeneral, theme.FONT.LIST_PAD_LEFT},
-            {ui_lblTheme,        theme.FONT.LIST_PAD_LEFT},
-            {ui_lblNetwork,      theme.FONT.LIST_PAD_LEFT},
-            {ui_lblServices,     theme.FONT.LIST_PAD_LEFT},
-            {ui_lblRTC,          theme.FONT.LIST_PAD_LEFT},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
-        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_right_elements[] = {
-            {ui_lblTweakGeneral, theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblTheme,        theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblNetwork,      theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblServices,     theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblRTC,          theme.FONT.LIST_PAD_RIGHT},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_right_elements) / sizeof(font_pad_list_right_elements[0]); ++i) {
-        lv_obj_set_style_pad_right(font_pad_list_right_elements[i].e, font_pad_list_right_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_top_list_icon_elements[] = {
-            {ui_icoTweakGeneral, theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoTheme,        theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoNetwork,      theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoServices,     theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoRTC,          theme.FONT.LIST_ICON_PAD_TOP},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_top_list_icon_elements) / sizeof(font_pad_top_list_icon_elements[0]); ++i) {
-        lv_obj_set_style_pad_top(font_pad_top_list_icon_elements[i].e, font_pad_top_list_icon_elements[i].c,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_bottom_list_icon_elements[] = {
-            {ui_icoTweakGeneral, theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoTheme,        theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoNetwork,      theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoServices,     theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoRTC,          theme.FONT.LIST_ICON_PAD_BOTTOM},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_bottom_list_icon_elements) / sizeof(font_pad_bottom_list_icon_elements[0]); ++i) {
-        lv_obj_set_style_pad_bottom(font_pad_bottom_list_icon_elements[i].e, font_pad_bottom_list_icon_elements[i].c,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
