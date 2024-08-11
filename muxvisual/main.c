@@ -271,13 +271,13 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblMenuCounterFolder, "Menu Counter Folder", false, false, true);
     apply_theme_list_item(&theme, ui_lblMenuCounterFile, "Menu Counter File", false, false, true);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBattery, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBattery, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 9);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBluetooth, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoClock, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBoxArt, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoName, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDash, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoName, "", 13);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDash, "", 13);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMenuCounterFolder, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMenuCounterFile, "", 12);
 

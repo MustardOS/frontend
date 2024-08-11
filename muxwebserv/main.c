@@ -219,11 +219,11 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblSyncthing, "Syncthing", false, false, true);
     apply_theme_list_item(&theme, ui_lblNTP, "Network Time Sync", false, false, true);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoShell, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBrowser, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTerminal, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSyncthing, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNTP, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoShell, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBrowser, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTerminal, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSyncthing, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNTP, "", 11);
 
     apply_theme_list_drop_down(&theme, ui_droShell, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droBrowser, "Disabled\nEnabled");

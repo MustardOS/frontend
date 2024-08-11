@@ -271,10 +271,10 @@ void init_navigation_groups() {
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoYear, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMonth, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDay, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHour, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMinute, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNotation, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTimezone, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHour, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMinute, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNotation, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTimezone, "", 10);
 
     apply_theme_list_value(&theme, ui_lblYearValue, "");
     apply_theme_list_value(&theme, ui_lblMonthValue, "");

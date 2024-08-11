@@ -257,12 +257,12 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblScreenshot, "Screenshots", false, false, true);
     apply_theme_list_item(&theme, ui_lblTheme, "Themes", false, false, true);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBIOS, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConfig, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCatalogue, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFav, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMusic, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSave, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBIOS, "", 13);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConfig, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCatalogue, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFav, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMusic, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSave, "", 13);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoScreenshot, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTheme, "", 12);
 

@@ -233,16 +233,16 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblVoltage, "Battery Voltage", false, false, true);
 
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVersion, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoKernel, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoKernel, "", 9);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoUptime, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCPU, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSpeed, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoGovernor, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMemory, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTemp, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCPU, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSpeed, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoGovernor, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMemory, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTemp, "", 14);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoServices, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBatteryCap, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVoltage, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBatteryCap, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVoltage, "", 11);
 
     apply_theme_list_value(&theme, ui_lblVersionValue, "");
     apply_theme_list_value(&theme, ui_lblKernelValue, "");

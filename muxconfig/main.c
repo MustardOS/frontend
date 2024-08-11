@@ -103,8 +103,8 @@ void init_navigation_groups() {
 
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTweakGeneral, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTheme, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoServices, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoServices, "", 11);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoRTC, "", 12);
 
     ui_group = lv_group_create();

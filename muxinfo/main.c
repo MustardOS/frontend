@@ -93,9 +93,9 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblCredits, "Supporters", false, false, false);
 
     //apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTracker, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTester, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSystem, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCredits, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTester, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSystem, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCredits, "", 10);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();

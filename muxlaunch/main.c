@@ -119,7 +119,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblReboot, "Reboot", false, false, false);
     apply_theme_list_item(&theme, ui_lblShutdown, "Shutdown", false, false, false);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoContent, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoContent, "", 14);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFavourites, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHistory, "", 12);
     apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoApps, "", 12);
