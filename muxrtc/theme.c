@@ -21,13 +21,6 @@ void apply_theme() {
             {ui_pnlFooter,             theme.FOOTER.BACKGROUND},
             {ui_pnlHeader,             theme.HEADER.BACKGROUND},
             {ui_pnlHelpMessage,        theme.HELP.BACKGROUND},
-            {ui_lblYear,               theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblMonth,              theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblDay,                theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblHour,               theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblMinute,             theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblNotation,           theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblTimezone,           theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,            theme.MESSAGE.BACKGROUND},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND},
@@ -73,98 +66,7 @@ void apply_theme() {
                                 LV_PART_INDICATOR | LV_STATE_DEFAULT);
     }
 
-    struct big background_focus_elements[] = {
-            {ui_lblYear,     theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblMonth,    theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblDay,      theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblHour,     theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblMinute,   theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblNotation, theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblTimezone, theme.LIST_FOCUS.BACKGROUND},
-    };
-    for (size_t i = 0; i < sizeof(background_focus_elements) / sizeof(background_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_color(background_focus_elements[i].e, lv_color_hex(background_focus_elements[i].c),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct big gradient_elements[] = {
-            {ui_lblYear,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblMonth,    theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblDay,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblHour,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblMinute,   theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblNotation, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblTimezone, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-    };
-    for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct big gradient_focused_elements[] = {
-            {ui_lblYear,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblMonth,    theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblDay,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblHour,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblMinute,   theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblNotation, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblTimezone, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-    };
-    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
-                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct big indicator_elements[] = {
-            {ui_lblYear,     theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblMonth,    theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblDay,      theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblHour,     theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblMinute,   theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblNotation, theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblTimezone, theme.LIST_DEFAULT.INDICATOR},
-    };
-    for (size_t i = 0; i < sizeof(indicator_elements) / sizeof(indicator_elements[0]); ++i) {
-        lv_obj_set_style_border_color(indicator_elements[i].e, lv_color_hex(indicator_elements[i].c),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct big indicator_focus_elements[] = {
-            {ui_lblYear,     theme.LIST_FOCUS.INDICATOR},
-            {ui_lblMonth,    theme.LIST_FOCUS.INDICATOR},
-            {ui_lblDay,      theme.LIST_FOCUS.INDICATOR},
-            {ui_lblHour,     theme.LIST_FOCUS.INDICATOR},
-            {ui_lblMinute,   theme.LIST_FOCUS.INDICATOR},
-            {ui_lblNotation, theme.LIST_FOCUS.INDICATOR},
-            {ui_lblTimezone, theme.LIST_FOCUS.INDICATOR},
-    };
-    for (size_t i = 0; i < sizeof(indicator_focus_elements) / sizeof(indicator_focus_elements[0]); ++i) {
-        lv_obj_set_style_border_color(indicator_focus_elements[i].e, lv_color_hex(indicator_focus_elements[i].c),
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct big default_elements[] = {
-            {ui_lblYear,               theme.LIST_DEFAULT.TEXT},
-            {ui_lblMonth,              theme.LIST_DEFAULT.TEXT},
-            {ui_lblDay,                theme.LIST_DEFAULT.TEXT},
-            {ui_lblHour,               theme.LIST_DEFAULT.TEXT},
-            {ui_lblMinute,             theme.LIST_DEFAULT.TEXT},
-            {ui_lblNotation,           theme.LIST_DEFAULT.TEXT},
-            {ui_lblTimezone,           theme.LIST_DEFAULT.TEXT},
-            {ui_icoYear,               theme.LIST_DEFAULT.TEXT},
-            {ui_icoMonth,              theme.LIST_DEFAULT.TEXT},
-            {ui_icoDay,                theme.LIST_DEFAULT.TEXT},
-            {ui_icoHour,               theme.LIST_DEFAULT.TEXT},
-            {ui_icoMinute,             theme.LIST_DEFAULT.TEXT},
-            {ui_icoNotation,           theme.LIST_DEFAULT.TEXT},
-            {ui_icoTimezone,           theme.LIST_DEFAULT.TEXT},
-            {ui_lblYearValue,          theme.LIST_DEFAULT.TEXT},
-            {ui_lblMonthValue,         theme.LIST_DEFAULT.TEXT},
-            {ui_lblDayValue,           theme.LIST_DEFAULT.TEXT},
-            {ui_lblHourValue,          theme.LIST_DEFAULT.TEXT},
-            {ui_lblMinuteValue,        theme.LIST_DEFAULT.TEXT},
-            {ui_lblNotationValue,      theme.LIST_DEFAULT.TEXT},
-            {ui_lblTimezoneValue,      theme.LIST_DEFAULT.TEXT},
             {ui_lblDatetime,           theme.DATETIME.TEXT},
             {ui_lblMessage,            theme.MESSAGE.TEXT},
             {ui_lblTitle,              theme.HEADER.TEXT},
@@ -195,34 +97,6 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct big focus_elements[] = {
-            {ui_lblYear,          theme.LIST_FOCUS.TEXT},
-            {ui_lblMonth,         theme.LIST_FOCUS.TEXT},
-            {ui_lblDay,           theme.LIST_FOCUS.TEXT},
-            {ui_lblHour,          theme.LIST_FOCUS.TEXT},
-            {ui_lblMinute,        theme.LIST_FOCUS.TEXT},
-            {ui_lblNotation,      theme.LIST_FOCUS.TEXT},
-            {ui_lblTimezone,      theme.LIST_FOCUS.TEXT},
-            {ui_icoYear,          theme.LIST_FOCUS.TEXT},
-            {ui_icoMonth,         theme.LIST_FOCUS.TEXT},
-            {ui_icoDay,           theme.LIST_FOCUS.TEXT},
-            {ui_icoHour,          theme.LIST_FOCUS.TEXT},
-            {ui_icoMinute,        theme.LIST_FOCUS.TEXT},
-            {ui_icoNotation,      theme.LIST_FOCUS.TEXT},
-            {ui_icoTimezone,      theme.LIST_FOCUS.TEXT},
-            {ui_lblYearValue,     theme.LIST_FOCUS.TEXT},
-            {ui_lblMonthValue,    theme.LIST_FOCUS.TEXT},
-            {ui_lblDayValue,      theme.LIST_FOCUS.TEXT},
-            {ui_lblHourValue,     theme.LIST_FOCUS.TEXT},
-            {ui_lblMinuteValue,   theme.LIST_FOCUS.TEXT},
-            {ui_lblNotationValue, theme.LIST_FOCUS.TEXT},
-            {ui_lblTimezoneValue, theme.LIST_FOCUS.TEXT},
-    };
-    for (size_t i = 0; i < sizeof(focus_elements) / sizeof(focus_elements[0]); ++i) {
-        lv_obj_set_style_text_color(focus_elements[i].e, lv_color_hex(focus_elements[i].c),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct big border_elements[] = {
             {ui_pnlHelpMessage,        theme.HELP.BORDER},
             {ui_pnlMessage,            theme.MESSAGE.BORDER},
@@ -246,27 +120,6 @@ void apply_theme() {
     }
 
     struct small text_default_alpha_elements[] = {
-            {ui_lblYear,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblMonth,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblDay,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblHour,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblMinute,             theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblNotation,           theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblTimezone,           theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoYear,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoMonth,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoDay,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoHour,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoMinute,             theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoNotation,           theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoTimezone,           theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblYearValue,          theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblMonthValue,         theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblDayValue,           theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblHourValue,          theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblMinuteValue,        theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblNotationValue,      theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblTimezoneValue,      theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTitle,              theme.HEADER.TEXT_ALPHA},
             {ui_lblMessage,            theme.MESSAGE.TEXT_ALPHA},
             {ui_lblDatetime,           theme.DATETIME.ALPHA},
@@ -295,203 +148,13 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct small text_focus_alpha_elements[] = {
-            {ui_lblYear,          theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblMonth,         theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblDay,           theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblHour,          theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblMinute,        theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblNotation,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblTimezone,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoYear,          theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoMonth,         theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoDay,           theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoHour,          theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoMinute,        theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoNotation,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoTimezone,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblYearValue,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblMonthValue,    theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblDayValue,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblHourValue,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblMinuteValue,   theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblNotationValue, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblTimezoneValue, theme.LIST_FOCUS.TEXT_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(text_focus_alpha_elements) / sizeof(text_focus_alpha_elements[0]); ++i) {
-        lv_obj_set_style_text_opa(text_focus_alpha_elements[i].e, text_focus_alpha_elements[i].c,
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small indicator_default_alpha_elements[] = {
-            {ui_lblYear,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblMonth,    theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblDay,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblHour,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblMinute,   theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblNotation, theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblTimezone, theme.LIST_DEFAULT.INDICATOR_ALPHA},
-    };
-    for (size_t i = 0;
-         i < sizeof(indicator_default_alpha_elements) / sizeof(indicator_default_alpha_elements[0]); ++i) {
-        lv_obj_set_style_border_opa(indicator_default_alpha_elements[i].e, indicator_default_alpha_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small indicator_focus_alpha_elements[] = {
-            {ui_lblYear,     theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblMonth,    theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblDay,      theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblHour,     theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblMinute,   theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblNotation, theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblTimezone, theme.LIST_FOCUS.INDICATOR_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(indicator_focus_alpha_elements) / sizeof(indicator_focus_alpha_elements[0]); ++i) {
-        lv_obj_set_style_border_opa(indicator_focus_alpha_elements[i].e, indicator_focus_alpha_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct small item_height_elements[] = {
-            {ui_lblYear,     theme.MUX.ITEM.HEIGHT},
-            {ui_lblMonth,    theme.MUX.ITEM.HEIGHT},
-            {ui_lblDay,      theme.MUX.ITEM.HEIGHT},
-            {ui_lblHour,     theme.MUX.ITEM.HEIGHT},
-            {ui_lblMinute,   theme.MUX.ITEM.HEIGHT},
-            {ui_lblNotation, theme.MUX.ITEM.HEIGHT},
-            {ui_lblTimezone, theme.MUX.ITEM.HEIGHT},
-            {ui_icoYear,     theme.MUX.ITEM.HEIGHT},
-            {ui_icoMonth,    theme.MUX.ITEM.HEIGHT},
-            {ui_icoDay,      theme.MUX.ITEM.HEIGHT},
-            {ui_icoHour,     theme.MUX.ITEM.HEIGHT},
-            {ui_icoMinute,   theme.MUX.ITEM.HEIGHT},
-            {ui_icoNotation, theme.MUX.ITEM.HEIGHT},
-            {ui_icoTimezone, theme.MUX.ITEM.HEIGHT},
-            {ui_lblYearValue,     theme.MUX.ITEM.HEIGHT},
-            {ui_lblMonthValue,    theme.MUX.ITEM.HEIGHT},
-            {ui_lblDayValue,      theme.MUX.ITEM.HEIGHT},
-            {ui_lblHourValue,     theme.MUX.ITEM.HEIGHT},
-            {ui_lblMinuteValue,   theme.MUX.ITEM.HEIGHT},
-            {ui_lblNotationValue, theme.MUX.ITEM.HEIGHT},
-            {ui_lblTimezoneValue, theme.MUX.ITEM.HEIGHT},
             {ui_pnlContent,       theme.MISC.CONTENT.HEIGHT},
             {ui_pnlGlyph,         theme.MISC.CONTENT.HEIGHT},
             {ui_pnlHighlight,     theme.MISC.CONTENT.HEIGHT},
     };
     for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
         lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
-    }
-
-    struct small item_width_elements[] = {
-            {ui_lblYear,     theme.MISC.CONTENT.WIDTH},
-            {ui_lblMonth,    theme.MISC.CONTENT.WIDTH},
-            {ui_lblDay,      theme.MISC.CONTENT.WIDTH},
-            {ui_lblHour,     theme.MISC.CONTENT.WIDTH},
-            {ui_lblMinute,   theme.MISC.CONTENT.WIDTH},
-            {ui_lblNotation, theme.MISC.CONTENT.WIDTH},
-            {ui_lblTimezone, theme.MISC.CONTENT.WIDTH},
-            {ui_icoYear,     theme.MISC.CONTENT.WIDTH},
-            {ui_icoMonth,    theme.MISC.CONTENT.WIDTH},
-            {ui_icoDay,      theme.MISC.CONTENT.WIDTH},
-            {ui_icoHour,     theme.MISC.CONTENT.WIDTH},
-            {ui_icoMinute,   theme.MISC.CONTENT.WIDTH},
-            {ui_icoNotation, theme.MISC.CONTENT.WIDTH},
-            {ui_icoTimezone, theme.MISC.CONTENT.WIDTH},
-            {ui_lblYearValue,     theme.MISC.CONTENT.WIDTH},
-            {ui_lblMonthValue,    theme.MISC.CONTENT.WIDTH},
-            {ui_lblDayValue,      theme.MISC.CONTENT.WIDTH},
-            {ui_lblHourValue,     theme.MISC.CONTENT.WIDTH},
-            {ui_lblMinuteValue,   theme.MISC.CONTENT.WIDTH},
-            {ui_lblNotationValue, theme.MISC.CONTENT.WIDTH},
-            {ui_lblTimezoneValue, theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
-        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
-    }
-
-    struct small gradient_start_default_elements[] = {
-            {ui_lblYear,     theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblMonth,    theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblDay,      theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblHour,     theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblMinute,   theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblNotation, theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblTimezone, theme.LIST_DEFAULT.GRADIENT_START},
-    };
-    for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small gradient_start_focus_elements[] = {
-            {ui_lblYear,     theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblMonth,    theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblDay,      theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblHour,     theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblMinute,   theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblNotation, theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblTimezone, theme.LIST_FOCUS.GRADIENT_START},
-    };
-    for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small gradient_stop_default_elements[] = {
-            {ui_lblYear,     theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblMonth,    theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblDay,      theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblHour,     theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblMinute,   theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblNotation, theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblTimezone, theme.LIST_DEFAULT.GRADIENT_STOP},
-    };
-    for (size_t i = 0; i < sizeof(gradient_stop_default_elements) / sizeof(gradient_stop_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_stop(gradient_stop_default_elements[i].e, gradient_stop_default_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small gradient_stop_focus_elements[] = {
-            {ui_lblYear,     theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblMonth,    theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblDay,      theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblHour,     theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblMinute,   theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblNotation, theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblTimezone, theme.LIST_FOCUS.GRADIENT_STOP},
-    };
-    for (size_t i = 0; i < sizeof(gradient_stop_focus_elements) / sizeof(gradient_stop_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_stop(gradient_stop_focus_elements[i].e, gradient_stop_focus_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small background_alpha_default_elements[] = {
-            {ui_lblYear,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblMonth,    theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblDay,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblHour,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblMinute,   theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblNotation, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblTimezone, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-    };
-    for (size_t i = 0;
-         i < sizeof(background_alpha_default_elements) / sizeof(background_alpha_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_opa(background_alpha_default_elements[i].e, background_alpha_default_elements[i].c,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small background_alpha_focus_elements[] = {
-            {ui_lblYear,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblMonth,    theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblDay,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblHour,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblMinute,   theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblNotation, theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblTimezone, theme.LIST_FOCUS.BACKGROUND_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(background_alpha_focus_elements) / sizeof(background_alpha_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_opa(background_alpha_focus_elements[i].e, background_alpha_focus_elements[i].c,
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct small radius_elements[] = {
@@ -501,13 +164,6 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
-            {ui_lblYear,     theme.LIST_DEFAULT.RADIUS},
-            {ui_lblMonth,    theme.LIST_DEFAULT.RADIUS},
-            {ui_lblDay,      theme.LIST_DEFAULT.RADIUS},
-            {ui_lblHour,     theme.LIST_DEFAULT.RADIUS},
-            {ui_lblMinute,   theme.LIST_DEFAULT.RADIUS},
-            {ui_lblNotation, theme.LIST_DEFAULT.RADIUS},
-            {ui_lblTimezone, theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,
@@ -590,124 +246,6 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_footer_icon_elements) / sizeof(font_pad_bottom_footer_icon_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_footer_icon_elements[i].e,
                                     font_pad_bottom_footer_icon_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_top_elements[] = {
-            {ui_lblYear,     theme.FONT.LIST_PAD_TOP},
-            {ui_lblMonth,    theme.FONT.LIST_PAD_TOP},
-            {ui_lblDay,      theme.FONT.LIST_PAD_TOP},
-            {ui_lblHour,     theme.FONT.LIST_PAD_TOP},
-            {ui_lblMinute,   theme.FONT.LIST_PAD_TOP},
-            {ui_lblNotation, theme.FONT.LIST_PAD_TOP},
-            {ui_lblTimezone, theme.FONT.LIST_PAD_TOP},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_top_elements) / sizeof(font_pad_list_top_elements[0]); ++i) {
-        lv_obj_set_style_pad_top(font_pad_list_top_elements[i].e, font_pad_list_top_elements[i].c,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_bottom_elements[] = {
-            {ui_lblYear,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblMonth,    theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblDay,      theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblHour,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblMinute,   theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblNotation, theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblTimezone, theme.FONT.LIST_PAD_BOTTOM},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_bottom_elements) / sizeof(font_pad_list_bottom_elements[0]); ++i) {
-        lv_obj_set_style_pad_bottom(font_pad_list_bottom_elements[i].e, font_pad_list_bottom_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_left_elements[] = {
-            {ui_lblYear,     theme.FONT.LIST_PAD_LEFT},
-            {ui_lblMonth,    theme.FONT.LIST_PAD_LEFT},
-            {ui_lblDay,      theme.FONT.LIST_PAD_LEFT},
-            {ui_lblHour,     theme.FONT.LIST_PAD_LEFT},
-            {ui_lblMinute,   theme.FONT.LIST_PAD_LEFT},
-            {ui_lblNotation, theme.FONT.LIST_PAD_LEFT},
-            {ui_lblTimezone, theme.FONT.LIST_PAD_LEFT},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
-        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_top_dropdown_elements[] = {
-            {ui_lblYearValue,     theme.FONT.LIST_PAD_TOP},
-            {ui_lblMonthValue,    theme.FONT.LIST_PAD_TOP},
-            {ui_lblDayValue,      theme.FONT.LIST_PAD_TOP},
-            {ui_lblHourValue,     theme.FONT.LIST_PAD_TOP},
-            {ui_lblMinuteValue,   theme.FONT.LIST_PAD_TOP},
-            {ui_lblNotationValue, theme.FONT.LIST_PAD_TOP},
-            {ui_lblTimezoneValue, theme.FONT.LIST_PAD_TOP},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_top_dropdown_elements) / sizeof(font_pad_top_dropdown_elements[0]); ++i) {
-        lv_obj_set_style_pad_top(font_pad_top_dropdown_elements[i].e, font_pad_top_dropdown_elements[i].c + 5,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_bottom_dropdown_elements[] = {
-            {ui_lblYearValue,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblMonthValue,    theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblDayValue,      theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblHourValue,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblMinuteValue,   theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblNotationValue, theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblTimezoneValue, theme.FONT.LIST_PAD_BOTTOM},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
-        lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
-                                    font_pad_bottom_dropdown_elements[i].c + 5,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_right_dropdown_elements[] = {
-            {ui_lblYearValue,     theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblMonthValue,    theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblDayValue,      theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblHourValue,     theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblMinuteValue,   theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblNotationValue, theme.FONT.LIST_PAD_RIGHT},
-            {ui_lblTimezoneValue, theme.FONT.LIST_PAD_RIGHT},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
-        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
-                                    font_pad_right_dropdown_elements[i].c + 5,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_top_list_icon_elements[] = {
-            {ui_icoYear,     theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoMonth,    theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoDay,      theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoHour,     theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoMinute,   theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoNotation, theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoTimezone, theme.FONT.LIST_ICON_PAD_TOP},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_top_list_icon_elements) / sizeof(font_pad_top_list_icon_elements[0]); ++i) {
-        lv_obj_set_style_pad_top(font_pad_top_list_icon_elements[i].e, font_pad_top_list_icon_elements[i].c,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_bottom_list_icon_elements[] = {
-            {ui_icoYear,     theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoMonth,    theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoDay,      theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoHour,     theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoMinute,   theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoNotation, theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoTimezone, theme.FONT.LIST_ICON_PAD_BOTTOM},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_bottom_list_icon_elements) / sizeof(font_pad_bottom_list_icon_elements[0]); ++i) {
-        lv_obj_set_style_pad_bottom(font_pad_bottom_list_icon_elements[i].e, font_pad_bottom_list_icon_elements[i].c,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
