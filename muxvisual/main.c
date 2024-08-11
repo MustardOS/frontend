@@ -261,6 +261,37 @@ void init_navigation_groups() {
             ui_icoMenuCounterFile
     };
 
+    apply_theme_list_item(&theme, ui_lblBattery, "Battery", false, false, true);
+    apply_theme_list_item(&theme, ui_lblNetwork, "Network", false, false, true);
+    apply_theme_list_item(&theme, ui_lblBluetooth, "Bluetooth", false, false, true);
+    apply_theme_list_item(&theme, ui_lblClock, "Clock", false, false, true);
+    apply_theme_list_item(&theme, ui_lblBoxArt, "Content Box Art", false, false, true);
+    apply_theme_list_item(&theme, ui_lblName, "Content Name Scheme", false, false, true);
+    apply_theme_list_item(&theme, ui_lblDash, "Content Dash Replacement", false, false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, "Menu Counter Folder", false, false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFile, "Menu Counter File", false, false, true);
+
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBattery, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBluetooth, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoClock, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBoxArt, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoName, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDash, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMenuCounterFolder, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMenuCounterFile, "", 12);
+
+    apply_theme_list_drop_down(&theme, ui_droBattery, "Hidden\nVisible");
+    apply_theme_list_drop_down(&theme, ui_droNetwork, "Hidden\nVisible");
+    apply_theme_list_drop_down(&theme, ui_droBluetooth, "Hidden\nVisible");
+    apply_theme_list_drop_down(&theme, ui_droClock, "Hidden\nVisible");
+    apply_theme_list_drop_down(&theme, ui_droBoxArt, 
+        "Bottom + Behind\nBottom + Front\nMiddle + Behind\nMiddle + Front\nTop + Behind\nTop + Front\nFullscreen + Behind\nFullscreen + Front\nDisabled");
+    apply_theme_list_drop_down(&theme, ui_droName, "Full Name\nRemove [ ]\nRemove ( )\nRemove [ ] and ( )");
+    apply_theme_list_drop_down(&theme, ui_droDash, "Disabled\nEnabled");
+    apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, "Hidden\nVisible");
+    apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, "Hidden\nVisible");
+
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_icon = lv_group_create();
