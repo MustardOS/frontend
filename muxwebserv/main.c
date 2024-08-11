@@ -213,6 +213,24 @@ void init_navigation_groups() {
             ui_icoNTP
     };
 
+    apply_theme_list_item(&theme, ui_lblShell, "Secure Shell", false, false, true);
+    apply_theme_list_item(&theme, ui_lblBrowser, "SFTP + Filebrowser", false, false, true);
+    apply_theme_list_item(&theme, ui_lblTerminal, "Virtual Terminal", false, false, true);
+    apply_theme_list_item(&theme, ui_lblSyncthing, "Syncthing", false, false, true);
+    apply_theme_list_item(&theme, ui_lblNTP, "Network Time Sync", false, false, true);
+
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoShell, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBrowser, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTerminal, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSyncthing, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNTP, "", 12);
+
+    apply_theme_list_drop_down(&theme, ui_droShell, "Disabled\nEnabled");
+    apply_theme_list_drop_down(&theme, ui_droBrowser, "Disabled\nEnabled");
+    apply_theme_list_drop_down(&theme, ui_droTerminal, "Disabled\nEnabled");
+    apply_theme_list_drop_down(&theme, ui_droSyncthing, "Disabled\nEnabled");
+    apply_theme_list_drop_down(&theme, ui_droNTP, "Disabled\nEnabled");
+
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
