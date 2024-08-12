@@ -21,14 +21,6 @@ void apply_theme() {
             {ui_pnlFooter,             theme.FOOTER.BACKGROUND},
             {ui_pnlHeader,             theme.HEADER.BACKGROUND},
             {ui_pnlHelpMessage,        theme.HELP.BACKGROUND},
-            {ui_lblBIOS,               theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblConfig,             theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblCatalogue,          theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblFav,                theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblMusic,              theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblSave,               theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblScreenshot,         theme.LIST_DEFAULT.BACKGROUND},
-            {ui_lblTheme,              theme.LIST_DEFAULT.BACKGROUND},
             {ui_pnlMessage,            theme.MESSAGE.BACKGROUND},
             {ui_pnlProgressBrightness, theme.BAR.PANEL_BACKGROUND},
             {ui_barProgressBrightness, theme.BAR.PROGRESS_MAIN_BACKGROUND},
@@ -74,106 +66,7 @@ void apply_theme() {
                                 LV_PART_INDICATOR | LV_STATE_DEFAULT);
     }
 
-    struct big background_focus_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblConfig,     theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblFav,        theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblMusic,      theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblSave,       theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblScreenshot, theme.LIST_FOCUS.BACKGROUND},
-            {ui_lblTheme,      theme.LIST_FOCUS.BACKGROUND},
-    };
-    for (size_t i = 0; i < sizeof(background_focus_elements) / sizeof(background_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_color(background_focus_elements[i].e, lv_color_hex(background_focus_elements[i].c),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct big gradient_elements[] = {
-            {ui_lblBIOS,       theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblConfig,     theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblCatalogue,  theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblFav,        theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblMusic,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblSave,       theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblScreenshot, theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-            {ui_lblTheme,      theme.LIST_DEFAULT.BACKGROUND_GRADIENT},
-    };
-    for (size_t i = 0; i < sizeof(gradient_elements) / sizeof(gradient_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_color(gradient_elements[i].e, lv_color_hex(gradient_elements[i].c),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct big gradient_focused_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblConfig,     theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblFav,        theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblMusic,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblSave,       theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblScreenshot, theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-            {ui_lblTheme,      theme.LIST_FOCUS.BACKGROUND_GRADIENT},
-    };
-    for (size_t i = 0; i < sizeof(gradient_focused_elements) / sizeof(gradient_focused_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_color(gradient_focused_elements[i].e, lv_color_hex(gradient_focused_elements[i].c),
-                                       LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct big indicator_elements[] = {
-            {ui_lblBIOS,       theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblConfig,     theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblCatalogue,  theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblFav,        theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblMusic,      theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblSave,       theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblScreenshot, theme.LIST_DEFAULT.INDICATOR},
-            {ui_lblTheme,      theme.LIST_DEFAULT.INDICATOR},
-    };
-    for (size_t i = 0; i < sizeof(indicator_elements) / sizeof(indicator_elements[0]); ++i) {
-        lv_obj_set_style_border_color(indicator_elements[i].e, lv_color_hex(indicator_elements[i].c),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct big indicator_focus_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.INDICATOR},
-            {ui_lblConfig,     theme.LIST_FOCUS.INDICATOR},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.INDICATOR},
-            {ui_lblFav,        theme.LIST_FOCUS.INDICATOR},
-            {ui_lblMusic,      theme.LIST_FOCUS.INDICATOR},
-            {ui_lblSave,       theme.LIST_FOCUS.INDICATOR},
-            {ui_lblScreenshot, theme.LIST_FOCUS.INDICATOR},
-            {ui_lblTheme,      theme.LIST_FOCUS.INDICATOR},
-    };
-    for (size_t i = 0; i < sizeof(indicator_focus_elements) / sizeof(indicator_focus_elements[0]); ++i) {
-        lv_obj_set_style_border_color(indicator_focus_elements[i].e, lv_color_hex(indicator_focus_elements[i].c),
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct big default_elements[] = {
-            {ui_lblBIOS,               theme.LIST_DEFAULT.TEXT},
-            {ui_lblConfig,             theme.LIST_DEFAULT.TEXT},
-            {ui_lblCatalogue,          theme.LIST_DEFAULT.TEXT},
-            {ui_lblFav,                theme.LIST_DEFAULT.TEXT},
-            {ui_lblMusic,              theme.LIST_DEFAULT.TEXT},
-            {ui_lblSave,               theme.LIST_DEFAULT.TEXT},
-            {ui_lblScreenshot,         theme.LIST_DEFAULT.TEXT},
-            {ui_lblTheme,              theme.LIST_DEFAULT.TEXT},
-            {ui_icoBIOS,               theme.LIST_DEFAULT.TEXT},
-            {ui_icoConfig,             theme.LIST_DEFAULT.TEXT},
-            {ui_icoCatalogue,          theme.LIST_DEFAULT.TEXT},
-            {ui_icoFav,                theme.LIST_DEFAULT.TEXT},
-            {ui_icoMusic,              theme.LIST_DEFAULT.TEXT},
-            {ui_icoSave,               theme.LIST_DEFAULT.TEXT},
-            {ui_icoScreenshot,         theme.LIST_DEFAULT.TEXT},
-            {ui_icoTheme,              theme.LIST_DEFAULT.TEXT},
-            {ui_droBIOS,               theme.LIST_DEFAULT.TEXT},
-            {ui_droConfig,             theme.LIST_DEFAULT.TEXT},
-            {ui_droCatalogue,          theme.LIST_DEFAULT.TEXT},
-            {ui_droFav,                theme.LIST_DEFAULT.TEXT},
-            {ui_droMusic,              theme.LIST_DEFAULT.TEXT},
-            {ui_droSave,               theme.LIST_DEFAULT.TEXT},
-            {ui_droScreenshot,         theme.LIST_DEFAULT.TEXT},
-            {ui_droTheme,              theme.LIST_DEFAULT.TEXT},
             {ui_lblDatetime,           theme.DATETIME.TEXT},
             {ui_lblMessage,            theme.MESSAGE.TEXT},
             {ui_lblTitle,              theme.HEADER.TEXT},
@@ -204,37 +97,6 @@ void apply_theme() {
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct big focus_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.TEXT},
-            {ui_lblConfig,     theme.LIST_FOCUS.TEXT},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.TEXT},
-            {ui_lblFav,        theme.LIST_FOCUS.TEXT},
-            {ui_lblMusic,      theme.LIST_FOCUS.TEXT},
-            {ui_lblSave,       theme.LIST_FOCUS.TEXT},
-            {ui_lblScreenshot, theme.LIST_FOCUS.TEXT},
-            {ui_lblTheme,      theme.LIST_FOCUS.TEXT},
-            {ui_icoBIOS,       theme.LIST_FOCUS.TEXT},
-            {ui_icoConfig,     theme.LIST_FOCUS.TEXT},
-            {ui_icoCatalogue,  theme.LIST_FOCUS.TEXT},
-            {ui_icoFav,        theme.LIST_FOCUS.TEXT},
-            {ui_icoMusic,      theme.LIST_FOCUS.TEXT},
-            {ui_icoSave,       theme.LIST_FOCUS.TEXT},
-            {ui_icoScreenshot, theme.LIST_FOCUS.TEXT},
-            {ui_icoTheme,      theme.LIST_FOCUS.TEXT},
-            {ui_droBIOS,       theme.LIST_FOCUS.TEXT},
-            {ui_droConfig,     theme.LIST_FOCUS.TEXT},
-            {ui_droCatalogue,  theme.LIST_FOCUS.TEXT},
-            {ui_droFav,        theme.LIST_FOCUS.TEXT},
-            {ui_droMusic,      theme.LIST_FOCUS.TEXT},
-            {ui_droSave,       theme.LIST_FOCUS.TEXT},
-            {ui_droScreenshot, theme.LIST_FOCUS.TEXT},
-            {ui_droTheme,      theme.LIST_FOCUS.TEXT},
-    };
-    for (size_t i = 0; i < sizeof(focus_elements) / sizeof(focus_elements[0]); ++i) {
-        lv_obj_set_style_text_color(focus_elements[i].e, lv_color_hex(focus_elements[i].c),
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct big border_elements[] = {
             {ui_pnlHelpMessage,        theme.HELP.BORDER},
             {ui_pnlMessage,            theme.MESSAGE.BORDER},
@@ -258,30 +120,6 @@ void apply_theme() {
     }
 
     struct small text_default_alpha_elements[] = {
-            {ui_lblBIOS,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblConfig,             theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblCatalogue,          theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblFav,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblMusic,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblSave,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblScreenshot,         theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_lblTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoBIOS,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoConfig,             theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoCatalogue,          theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoFav,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoMusic,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoSave,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoScreenshot,         theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_icoTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droBIOS,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droConfig,             theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droCatalogue,          theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droFav,                theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droMusic,              theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droSave,               theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droScreenshot,         theme.LIST_DEFAULT.TEXT_ALPHA},
-            {ui_droTheme,              theme.LIST_DEFAULT.TEXT_ALPHA},
             {ui_lblTitle,              theme.HEADER.TEXT_ALPHA},
             {ui_lblMessage,            theme.MESSAGE.TEXT_ALPHA},
             {ui_lblDatetime,           theme.DATETIME.ALPHA},
@@ -310,220 +148,13 @@ void apply_theme() {
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    struct small text_focus_alpha_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblConfig,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblFav,        theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblMusic,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblSave,       theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblScreenshot, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_lblTheme,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoBIOS,       theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoConfig,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoCatalogue,  theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoFav,        theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoMusic,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoSave,       theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoScreenshot, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_icoTheme,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droBIOS,       theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droConfig,     theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droCatalogue,  theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droFav,        theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droMusic,      theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droSave,       theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droScreenshot, theme.LIST_FOCUS.TEXT_ALPHA},
-            {ui_droTheme,      theme.LIST_FOCUS.TEXT_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(text_focus_alpha_elements) / sizeof(text_focus_alpha_elements[0]); ++i) {
-        lv_obj_set_style_text_opa(text_focus_alpha_elements[i].e, text_focus_alpha_elements[i].c,
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small indicator_default_alpha_elements[] = {
-            {ui_lblBIOS,       theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblConfig,     theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblCatalogue,  theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblFav,        theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblMusic,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblSave,       theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblScreenshot, theme.LIST_DEFAULT.INDICATOR_ALPHA},
-            {ui_lblTheme,      theme.LIST_DEFAULT.INDICATOR_ALPHA},
-    };
-    for (size_t i = 0;
-         i < sizeof(indicator_default_alpha_elements) / sizeof(indicator_default_alpha_elements[0]); ++i) {
-        lv_obj_set_style_border_opa(indicator_default_alpha_elements[i].e, indicator_default_alpha_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small indicator_focus_alpha_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblConfig,     theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblFav,        theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblMusic,      theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblSave,       theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblScreenshot, theme.LIST_FOCUS.INDICATOR_ALPHA},
-            {ui_lblTheme,      theme.LIST_FOCUS.INDICATOR_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(indicator_focus_alpha_elements) / sizeof(indicator_focus_alpha_elements[0]); ++i) {
-        lv_obj_set_style_border_opa(indicator_focus_alpha_elements[i].e, indicator_focus_alpha_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
     struct small item_height_elements[] = {
-            {ui_lblBIOS,       theme.MUX.ITEM.HEIGHT},
-            {ui_lblConfig,     theme.MUX.ITEM.HEIGHT},
-            {ui_lblCatalogue,  theme.MUX.ITEM.HEIGHT},
-            {ui_lblFav,        theme.MUX.ITEM.HEIGHT},
-            {ui_lblMusic,      theme.MUX.ITEM.HEIGHT},
-            {ui_lblSave,       theme.MUX.ITEM.HEIGHT},
-            {ui_lblScreenshot, theme.MUX.ITEM.HEIGHT},
-            {ui_lblTheme,      theme.MUX.ITEM.HEIGHT},
-            {ui_icoBIOS,       theme.MUX.ITEM.HEIGHT},
-            {ui_icoConfig,     theme.MUX.ITEM.HEIGHT},
-            {ui_icoCatalogue,  theme.MUX.ITEM.HEIGHT},
-            {ui_icoFav,        theme.MUX.ITEM.HEIGHT},
-            {ui_icoMusic,      theme.MUX.ITEM.HEIGHT},
-            {ui_icoSave,       theme.MUX.ITEM.HEIGHT},
-            {ui_icoScreenshot, theme.MUX.ITEM.HEIGHT},
-            {ui_icoTheme,      theme.MUX.ITEM.HEIGHT},
-            {ui_droBIOS,       theme.MUX.ITEM.HEIGHT},
-            {ui_droConfig,     theme.MUX.ITEM.HEIGHT},
-            {ui_droCatalogue,  theme.MUX.ITEM.HEIGHT},
-            {ui_droFav,        theme.MUX.ITEM.HEIGHT},
-            {ui_droMusic,      theme.MUX.ITEM.HEIGHT},
-            {ui_droSave,       theme.MUX.ITEM.HEIGHT},
-            {ui_droScreenshot, theme.MUX.ITEM.HEIGHT},
-            {ui_droTheme,      theme.MUX.ITEM.HEIGHT},
             {ui_pnlContent,    theme.MISC.CONTENT.HEIGHT},
             {ui_pnlGlyph,      theme.MISC.CONTENT.HEIGHT},
             {ui_pnlHighlight,  theme.MISC.CONTENT.HEIGHT},
     };
     for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
         lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
-    }
-
-    struct small item_width_elements[] = {
-            {ui_lblBIOS,       theme.MISC.CONTENT.WIDTH},
-            {ui_lblConfig,     theme.MISC.CONTENT.WIDTH},
-            {ui_lblCatalogue,  theme.MISC.CONTENT.WIDTH},
-            {ui_lblFav,        theme.MISC.CONTENT.WIDTH},
-            {ui_lblMusic,      theme.MISC.CONTENT.WIDTH},
-            {ui_lblSave,       theme.MISC.CONTENT.WIDTH},
-            {ui_lblScreenshot, theme.MISC.CONTENT.WIDTH},
-            {ui_lblTheme,      theme.MISC.CONTENT.WIDTH},
-            {ui_icoBIOS,       theme.MISC.CONTENT.WIDTH},
-            {ui_icoConfig,     theme.MISC.CONTENT.WIDTH},
-            {ui_icoCatalogue,  theme.MISC.CONTENT.WIDTH},
-            {ui_icoFav,        theme.MISC.CONTENT.WIDTH},
-            {ui_icoMusic,      theme.MISC.CONTENT.WIDTH},
-            {ui_icoSave,       theme.MISC.CONTENT.WIDTH},
-            {ui_icoScreenshot, theme.MISC.CONTENT.WIDTH},
-            {ui_icoTheme,      theme.MISC.CONTENT.WIDTH},
-            {ui_droBIOS,       theme.MISC.CONTENT.WIDTH},
-            {ui_droConfig,     theme.MISC.CONTENT.WIDTH},
-            {ui_droCatalogue,  theme.MISC.CONTENT.WIDTH},
-            {ui_droFav,        theme.MISC.CONTENT.WIDTH},
-            {ui_droMusic,      theme.MISC.CONTENT.WIDTH},
-            {ui_droSave,       theme.MISC.CONTENT.WIDTH},
-            {ui_droScreenshot, theme.MISC.CONTENT.WIDTH},
-            {ui_droTheme,      theme.MISC.CONTENT.WIDTH},
-    };
-    for (size_t i = 0; i < sizeof(item_width_elements) / sizeof(item_width_elements[0]); ++i) {
-        lv_obj_set_width(item_width_elements[i].e, item_width_elements[i].c);
-    }
-
-    struct small gradient_start_default_elements[] = {
-            {ui_lblBIOS,       theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblConfig,     theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblCatalogue,  theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblFav,        theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblMusic,      theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblSave,       theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblScreenshot, theme.LIST_DEFAULT.GRADIENT_START},
-            {ui_lblTheme,      theme.LIST_DEFAULT.GRADIENT_START},
-    };
-    for (size_t i = 0; i < sizeof(gradient_start_default_elements) / sizeof(gradient_start_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_main_stop(gradient_start_default_elements[i].e, gradient_start_default_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small gradient_start_focus_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblConfig,     theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblFav,        theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblMusic,      theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblSave,       theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblScreenshot, theme.LIST_FOCUS.GRADIENT_START},
-            {ui_lblTheme,      theme.LIST_FOCUS.GRADIENT_START},
-    };
-    for (size_t i = 0; i < sizeof(gradient_start_focus_elements) / sizeof(gradient_start_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_main_stop(gradient_start_focus_elements[i].e, gradient_start_focus_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small gradient_stop_default_elements[] = {
-            {ui_lblBIOS,       theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblConfig,     theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblCatalogue,  theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblFav,        theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblMusic,      theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblSave,       theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblScreenshot, theme.LIST_DEFAULT.GRADIENT_STOP},
-            {ui_lblTheme,      theme.LIST_DEFAULT.GRADIENT_STOP},
-    };
-    for (size_t i = 0; i < sizeof(gradient_stop_default_elements) / sizeof(gradient_stop_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_stop(gradient_stop_default_elements[i].e, gradient_stop_default_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small gradient_stop_focus_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblConfig,     theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblFav,        theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblMusic,      theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblSave,       theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblScreenshot, theme.LIST_FOCUS.GRADIENT_STOP},
-            {ui_lblTheme,      theme.LIST_FOCUS.GRADIENT_STOP},
-    };
-    for (size_t i = 0; i < sizeof(gradient_stop_focus_elements) / sizeof(gradient_stop_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_grad_stop(gradient_stop_focus_elements[i].e, gradient_stop_focus_elements[i].c,
-                                      LV_PART_MAIN | LV_STATE_FOCUSED);
-    }
-
-    struct small background_alpha_default_elements[] = {
-            {ui_lblBIOS,       theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblConfig,     theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblCatalogue,  theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblFav,        theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblMusic,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblSave,       theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblScreenshot, theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-            {ui_lblTheme,      theme.LIST_DEFAULT.BACKGROUND_ALPHA},
-    };
-    for (size_t i = 0;
-         i < sizeof(background_alpha_default_elements) / sizeof(background_alpha_default_elements[0]); ++i) {
-        lv_obj_set_style_bg_opa(background_alpha_default_elements[i].e, background_alpha_default_elements[i].c,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small background_alpha_focus_elements[] = {
-            {ui_lblBIOS,       theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblConfig,     theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblCatalogue,  theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblFav,        theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblMusic,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblSave,       theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblScreenshot, theme.LIST_FOCUS.BACKGROUND_ALPHA},
-            {ui_lblTheme,      theme.LIST_FOCUS.BACKGROUND_ALPHA},
-    };
-    for (size_t i = 0; i < sizeof(background_alpha_focus_elements) / sizeof(background_alpha_focus_elements[0]); ++i) {
-        lv_obj_set_style_bg_opa(background_alpha_focus_elements[i].e, background_alpha_focus_elements[i].c,
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
     }
 
     struct small radius_elements[] = {
@@ -533,14 +164,6 @@ void apply_theme() {
             {ui_barProgressBrightness, theme.BAR.PROGRESS_RADIUS},
             {ui_pnlProgressVolume,     theme.BAR.PANEL_BORDER_RADIUS},
             {ui_barProgressVolume,     theme.BAR.PROGRESS_RADIUS},
-            {ui_lblBIOS,       theme.LIST_DEFAULT.RADIUS},
-            {ui_lblConfig,     theme.LIST_DEFAULT.RADIUS},
-            {ui_lblCatalogue,  theme.LIST_DEFAULT.RADIUS},
-            {ui_lblFav,        theme.LIST_DEFAULT.RADIUS},
-            {ui_lblMusic,      theme.LIST_DEFAULT.RADIUS},
-            {ui_lblSave,       theme.LIST_DEFAULT.RADIUS},
-            {ui_lblScreenshot, theme.LIST_DEFAULT.RADIUS},
-            {ui_lblTheme,      theme.LIST_DEFAULT.RADIUS},
     };
     for (size_t i = 0; i < sizeof(radius_elements) / sizeof(radius_elements[0]); ++i) {
         lv_obj_set_style_radius(radius_elements[i].e, radius_elements[i].c,
@@ -623,133 +246,6 @@ void apply_theme() {
          i < sizeof(font_pad_bottom_footer_icon_elements) / sizeof(font_pad_bottom_footer_icon_elements[0]); ++i) {
         lv_obj_set_style_pad_bottom(font_pad_bottom_footer_icon_elements[i].e,
                                     font_pad_bottom_footer_icon_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_top_elements[] = {
-            {ui_lblBIOS,       theme.FONT.LIST_PAD_TOP},
-            {ui_lblConfig,     theme.FONT.LIST_PAD_TOP},
-            {ui_lblCatalogue,  theme.FONT.LIST_PAD_TOP},
-            {ui_lblFav,        theme.FONT.LIST_PAD_TOP},
-            {ui_lblMusic,      theme.FONT.LIST_PAD_TOP},
-            {ui_lblSave,       theme.FONT.LIST_PAD_TOP},
-            {ui_lblScreenshot, theme.FONT.LIST_PAD_TOP},
-            {ui_lblTheme,      theme.FONT.LIST_PAD_TOP},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_top_elements) / sizeof(font_pad_list_top_elements[0]); ++i) {
-        lv_obj_set_style_pad_top(font_pad_list_top_elements[i].e, font_pad_list_top_elements[i].c,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_bottom_elements[] = {
-            {ui_lblBIOS,       theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblConfig,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblCatalogue,  theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblFav,        theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblMusic,      theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblSave,       theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblScreenshot, theme.FONT.LIST_PAD_BOTTOM},
-            {ui_lblTheme,      theme.FONT.LIST_PAD_BOTTOM},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_bottom_elements) / sizeof(font_pad_list_bottom_elements[0]); ++i) {
-        lv_obj_set_style_pad_bottom(font_pad_list_bottom_elements[i].e, font_pad_list_bottom_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_left_elements[] = {
-            {ui_lblBIOS,       theme.FONT.LIST_PAD_LEFT},
-            {ui_lblConfig,     theme.FONT.LIST_PAD_LEFT},
-            {ui_lblCatalogue,  theme.FONT.LIST_PAD_LEFT},
-            {ui_lblFav,        theme.FONT.LIST_PAD_LEFT},
-            {ui_lblMusic,      theme.FONT.LIST_PAD_LEFT},
-            {ui_lblSave,       theme.FONT.LIST_PAD_LEFT},
-            {ui_lblScreenshot, theme.FONT.LIST_PAD_LEFT},
-            {ui_lblTheme,      theme.FONT.LIST_PAD_LEFT},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_left_elements) / sizeof(font_pad_list_left_elements[0]); ++i) {
-        lv_obj_set_style_pad_left(font_pad_list_left_elements[i].e, font_pad_list_left_elements[i].c,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_top_dropdown_elements[] = {
-            {ui_droBIOS,       theme.FONT.LIST_PAD_TOP},
-            {ui_droConfig,     theme.FONT.LIST_PAD_TOP},
-            {ui_droCatalogue,  theme.FONT.LIST_PAD_TOP},
-            {ui_droFav,        theme.FONT.LIST_PAD_TOP},
-            {ui_droMusic,      theme.FONT.LIST_PAD_TOP},
-            {ui_droSave,       theme.FONT.LIST_PAD_TOP},
-            {ui_droScreenshot, theme.FONT.LIST_PAD_TOP},
-            {ui_droTheme,      theme.FONT.LIST_PAD_TOP},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_top_dropdown_elements) / sizeof(font_pad_top_dropdown_elements[0]); ++i) {
-        lv_obj_set_style_pad_top(font_pad_top_dropdown_elements[i].e, font_pad_top_dropdown_elements[i].c + 5,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_bottom_dropdown_elements[] = {
-            {ui_droBIOS,       theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droConfig,     theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droCatalogue,  theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droFav,        theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droMusic,      theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droSave,       theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droScreenshot, theme.FONT.LIST_PAD_BOTTOM},
-            {ui_droTheme,      theme.FONT.LIST_PAD_BOTTOM},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_bottom_dropdown_elements) / sizeof(font_pad_bottom_dropdown_elements[0]); ++i) {
-        lv_obj_set_style_pad_bottom(font_pad_bottom_dropdown_elements[i].e,
-                                    font_pad_bottom_dropdown_elements[i].c + 5,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_right_dropdown_elements[] = {
-            {ui_droBIOS,       theme.FONT.LIST_PAD_RIGHT},
-            {ui_droConfig,     theme.FONT.LIST_PAD_RIGHT},
-            {ui_droCatalogue,  theme.FONT.LIST_PAD_RIGHT},
-            {ui_droFav,        theme.FONT.LIST_PAD_RIGHT},
-            {ui_droMusic,      theme.FONT.LIST_PAD_RIGHT},
-            {ui_droSave,       theme.FONT.LIST_PAD_RIGHT},
-            {ui_droScreenshot, theme.FONT.LIST_PAD_RIGHT},
-            {ui_droTheme,      theme.FONT.LIST_PAD_RIGHT},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_right_dropdown_elements) / sizeof(font_pad_right_dropdown_elements[0]); ++i) {
-        lv_obj_set_style_pad_right(font_pad_right_dropdown_elements[i].e,
-                                    font_pad_right_dropdown_elements[i].c + 5,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_icon_top_elements[] = {
-            {ui_icoBIOS,       theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoConfig,     theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoCatalogue,  theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoFav,        theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoMusic,      theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoSave,       theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoScreenshot, theme.FONT.LIST_ICON_PAD_TOP},
-            {ui_icoTheme,      theme.FONT.LIST_ICON_PAD_TOP},
-    };
-    for (size_t i = 0; i < sizeof(font_pad_list_icon_top_elements) / sizeof(font_pad_list_icon_top_elements[0]); ++i) {
-        lv_obj_set_style_pad_top(font_pad_list_icon_top_elements[i].e, font_pad_list_icon_top_elements[i].c,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    struct small font_pad_list_icon_bottom_elements[] = {
-            {ui_icoBIOS,       theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoConfig,     theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoCatalogue,  theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoFav,        theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoMusic,      theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoSave,       theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoScreenshot, theme.FONT.LIST_ICON_PAD_BOTTOM},
-            {ui_icoTheme,      theme.FONT.LIST_ICON_PAD_BOTTOM},
-    };
-    for (size_t i = 0;
-         i < sizeof(font_pad_list_icon_bottom_elements) / sizeof(font_pad_list_icon_bottom_elements[0]); ++i) {
-        lv_obj_set_style_pad_bottom(font_pad_list_icon_bottom_elements[i].e,
-                                    font_pad_list_icon_bottom_elements[i].c,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 

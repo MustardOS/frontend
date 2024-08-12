@@ -95,6 +95,18 @@ void init_navigation_groups() {
     ui_icons[3] = ui_icoServices;
     ui_icons[4] = ui_icoRTC;
 
+    apply_theme_list_item(&theme, ui_lblTweakGeneral, "General Settings", false, false, false);
+    apply_theme_list_item(&theme, ui_lblTheme, "Theme Picker", false, false, false);
+    apply_theme_list_item(&theme, ui_lblNetwork, "Wi-Fi Network", false, false, false);
+    apply_theme_list_item(&theme, ui_lblServices, "Web Services", false, false, false);
+    apply_theme_list_item(&theme, ui_lblRTC, "Date and Time", false, false, false);
+
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTweakGeneral, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTheme, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoServices, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoRTC, "", 12);
+
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
 

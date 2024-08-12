@@ -260,6 +260,30 @@ void init_navigation_groups() {
             ui_icoTimezone
     };
 
+    apply_theme_list_item(&theme, ui_lblYear, "Year", false, false, false);
+    apply_theme_list_item(&theme, ui_lblMonth, "Month", false, false, false);
+    apply_theme_list_item(&theme, ui_lblDay, "Day", false, false, false);
+    apply_theme_list_item(&theme, ui_lblHour, "Hour", false, false, false);
+    apply_theme_list_item(&theme, ui_lblMinute, "Minute", false, false, false);
+    apply_theme_list_item(&theme, ui_lblNotation, "Time Notation", false, false, false);
+    apply_theme_list_item(&theme, ui_lblTimezone, "Set Timezone", false, false, false);
+
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoYear, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMonth, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDay, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHour, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMinute, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNotation, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTimezone, "", 10);
+
+    apply_theme_list_value(&theme, ui_lblYearValue, "");
+    apply_theme_list_value(&theme, ui_lblMonthValue, "");
+    apply_theme_list_value(&theme, ui_lblDayValue, "");
+    apply_theme_list_value(&theme, ui_lblHourValue, "");
+    apply_theme_list_value(&theme, ui_lblMinuteValue, "");
+    apply_theme_list_value(&theme, ui_lblNotationValue, "");
+    apply_theme_list_value(&theme, ui_lblTimezoneValue, "");
+
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();

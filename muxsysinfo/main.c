@@ -220,6 +220,42 @@ void init_navigation_groups() {
             ui_icoVoltage
     };
 
+    apply_theme_list_item(&theme, ui_lblVersion, "muOS Version", false, false, true);
+    apply_theme_list_item(&theme, ui_lblKernel, "Linux Kernel", false, false, true);
+    apply_theme_list_item(&theme, ui_lblUptime, "System Uptime", false, false, true);
+    apply_theme_list_item(&theme, ui_lblCPU, "CPU Information", false, false, true);
+    apply_theme_list_item(&theme, ui_lblSpeed, "CPU Speed", false, false, true);
+    apply_theme_list_item(&theme, ui_lblGovernor, "CPU Governor", false, false, true);
+    apply_theme_list_item(&theme, ui_lblMemory, "RAM Usage", false, false, true);
+    apply_theme_list_item(&theme, ui_lblTemp, "Temperature", false, false, true);
+    apply_theme_list_item(&theme, ui_lblServices, "Running Services", false, false, true);
+    apply_theme_list_item(&theme, ui_lblBatteryCap, "Battery Capacity", false, false, true);
+    apply_theme_list_item(&theme, ui_lblVoltage, "Battery Voltage", false, false, true);
+
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVersion, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoKernel, "", 9);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoUptime, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCPU, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSpeed, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoGovernor, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMemory, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTemp, "", 14);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoServices, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBatteryCap, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVoltage, "", 11);
+
+    apply_theme_list_value(&theme, ui_lblVersionValue, "");
+    apply_theme_list_value(&theme, ui_lblKernelValue, "");
+    apply_theme_list_value(&theme, ui_lblUptimeValue, "");
+    apply_theme_list_value(&theme, ui_lblCPUValue, "");
+    apply_theme_list_value(&theme, ui_lblSpeedValue, "");
+    apply_theme_list_value(&theme, ui_lblGovernorValue, "");
+    apply_theme_list_value(&theme, ui_lblMemoryValue, "");
+    apply_theme_list_value(&theme, ui_lblTempValue, "");
+    apply_theme_list_value(&theme, ui_lblServicesValue, "");
+    apply_theme_list_value(&theme, ui_lblBatteryCapValue, "");
+    apply_theme_list_value(&theme, ui_lblVoltageValue, "");
+
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();

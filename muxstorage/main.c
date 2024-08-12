@@ -248,6 +248,33 @@ void init_navigation_groups() {
             ui_icoTheme
     };
 
+    apply_theme_list_item(&theme, ui_lblBIOS, "RetroArch BIOS", false, false, true);
+    apply_theme_list_item(&theme, ui_lblConfig, "RetroArch Configs", false, false, true);
+    apply_theme_list_item(&theme, ui_lblCatalogue, "Metadata Catalogue", false, false, true);
+    apply_theme_list_item(&theme, ui_lblFav, "Favourites + History", false, false, true);
+    apply_theme_list_item(&theme, ui_lblMusic, "Background Music", false, false, true);
+    apply_theme_list_item(&theme, ui_lblSave, "Save Games + Save States", false, false, true);
+    apply_theme_list_item(&theme, ui_lblScreenshot, "Screenshots", false, false, true);
+    apply_theme_list_item(&theme, ui_lblTheme, "Themes", false, false, true);
+
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBIOS, "", 13);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConfig, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCatalogue, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFav, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMusic, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSave, "", 13);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoScreenshot, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTheme, "", 12);
+
+    apply_theme_list_drop_down(&theme, ui_droBIOS, "SD1\nSD2\nUSB");
+    apply_theme_list_drop_down(&theme, ui_droConfig, "SD1\nSD2\nUSB");
+    apply_theme_list_drop_down(&theme, ui_droCatalogue, "SD1\nSD2\nUSB");
+    apply_theme_list_drop_down(&theme, ui_droFav, "SD1\nSD2\nUSB");
+    apply_theme_list_drop_down(&theme, ui_droMusic, "SD1\nSD2\nUSB");
+    apply_theme_list_drop_down(&theme, ui_droSave, "SD1\nSD2\nUSB");
+    apply_theme_list_drop_down(&theme, ui_droScreenshot, "SD1\nSD2\nUSB");
+    apply_theme_list_drop_down(&theme, ui_droTheme, "SD1\nSD2\nUSB");
+
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_icon = lv_group_create();

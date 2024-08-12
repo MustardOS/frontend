@@ -419,13 +419,46 @@ void apply_theme_list_value(struct theme_config *theme, lv_obj_t * ui_lblItemVal
     lv_obj_set_style_radius(ui_lblItemValue, theme->LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
+void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblItemDropDown, char *options) {
+    lv_dropdown_set_dir(ui_lblItemDropDown, LV_DIR_LEFT);
+    lv_dropdown_set_options(ui_lblItemDropDown, options);
+    lv_dropdown_set_selected_highlight(ui_lblItemDropDown, false);
+    lv_obj_set_width(ui_lblItemDropDown, theme->MISC.CONTENT.WIDTH);
+    lv_obj_set_height(ui_lblItemDropDown, theme->MUX.ITEM.HEIGHT);
+    lv_obj_set_align(ui_lblItemDropDown, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_lblItemDropDown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_set_scrollbar_mode(ui_lblItemDropDown, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_scroll_dir(ui_lblItemDropDown, LV_DIR_RIGHT);
+    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(theme->LIST_DEFAULT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, theme->LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(theme->LIST_FOCUS.TEXT), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, theme->LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_color(ui_lblItemDropDown, lv_color_hex(0x403A03), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblItemDropDown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblItemDropDown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblItemDropDown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblItemDropDown, theme->FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblItemDropDown, theme->FONT.LIST_PAD_TOP + 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblItemDropDown, theme->FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);    
+    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_SCROLLED);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, 255, LV_PART_MAIN | LV_STATE_SCROLLED);
+    lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(0x808080), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblItemDropDown, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0x02080D),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255,  LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0xF8E008),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255,  LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0xF8E008),
+                              LV_PART_SELECTED | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255,  LV_PART_SELECTED | LV_STATE_DEFAULT);
+}
+
 void apply_theme_list_icon(struct theme_config *theme, struct mux_device *device, const lv_font_t * ui_font_AwesomeSmall,
     lv_obj_t * ui_lblItemGlyph, char *item_glyph, int glyph_pad) 
 {
-    char message[MAX_BUFFER_SIZE];
-    snprintf(message, sizeof(message), "List Icon Text: %s\n", item_glyph);
-    write_text_to_file("/mnt/mmc/MUOS/log/logfile.log", message, "a");
-
     lv_label_set_text(ui_lblItemGlyph, item_glyph);
 
     lv_obj_set_width(ui_lblItemGlyph, device->MUX.WIDTH);
