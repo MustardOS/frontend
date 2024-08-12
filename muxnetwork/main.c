@@ -247,6 +247,42 @@ void init_navigation_groups() {
     ui_icons[7] = ui_icoDNS;
     ui_icons[8] = ui_icoConnect;
 
+    apply_theme_list_item(&theme, ui_lblEnable, "Enabled", false, false, true);
+    apply_theme_list_item(&theme, ui_lblIdentifier, "Identifier", false, false, true);
+    apply_theme_list_item(&theme, ui_lblPassword, "Password", false, false, true);
+    apply_theme_list_item(&theme, ui_lblType, "Network Type", false, false, true);
+    apply_theme_list_item(&theme, ui_lblAddress, "Device IP", false, false, true);
+    apply_theme_list_item(&theme, ui_lblSubnet, "Subnet CIDR", false, false, true);
+    apply_theme_list_item(&theme, ui_lblGateway, "Gateway IP", false, false, true);
+    apply_theme_list_item(&theme, ui_lblDNS, "DNS Server", false, false, true);
+    apply_theme_list_item(&theme, ui_lblConnect, "Connect", false, false, true);
+
+    apply_theme_list_item(&theme, ui_lblStatus, "Status", false, false, false);
+
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoEnable, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoIdentifier, "", 11);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoPassword, "", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoType, "", 10);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoAddress, "#", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSubnet, "#", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoGateway, "#", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDNS, "#", 12);
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConnect, "", 10);
+
+    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoStatus, "", 10);
+
+    apply_theme_list_value(&theme, ui_lblEnableValue, "");
+    apply_theme_list_value(&theme, ui_lblIdentifierValue, "");
+    apply_theme_list_value(&theme, ui_lblPasswordValue, "");
+    apply_theme_list_value(&theme, ui_lblTypeValue, "");
+    apply_theme_list_value(&theme, ui_lblAddressValue, "");
+    apply_theme_list_value(&theme, ui_lblSubnetValue, "");
+    apply_theme_list_value(&theme, ui_lblGatewayValue, "");
+    apply_theme_list_value(&theme, ui_lblDNSValue, "");
+    apply_theme_list_value(&theme, ui_lblConnectValue, "");
+
+    apply_theme_list_value(&theme, ui_lblStatusValue, "");
+
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
