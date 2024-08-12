@@ -459,10 +459,6 @@ void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblIte
 void apply_theme_list_icon(struct theme_config *theme, struct mux_device *device, const lv_font_t * ui_font_AwesomeSmall,
     lv_obj_t * ui_lblItemGlyph, char *item_glyph, int glyph_pad) 
 {
-    char message[MAX_BUFFER_SIZE];
-    snprintf(message, sizeof(message), "List Icon Text: %s\n", item_glyph);
-    write_text_to_file("/mnt/mmc/MUOS/log/logfile.log", message, "a");
-
     lv_label_set_text(ui_lblItemGlyph, item_glyph);
 
     lv_obj_set_width(ui_lblItemGlyph, device->MUX.WIDTH);
