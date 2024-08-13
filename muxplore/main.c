@@ -492,10 +492,6 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
 
     int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblExploreItem, item_text);
     apply_align(&theme, &device, ui_lblExploreItemGlyph, ui_lblExploreItem, item_width);
-
-    if (item_type == FOLDER && strcasecmp(item_text, prev_dir) == 0) {
-        sys_index = ui_count;
-    }
 }
 
 void gen_item(char **file_names, int file_count) {
@@ -741,6 +737,9 @@ void create_explore_items(void *count) {
         sort_items(items, item_count);
         for (int i = 0; i < dir_count; i++) {
             gen_label(FOLDER, "\uF07B", items[i].display_name, 12);
+            if (strcasecmp(items[i].name, prev_dir) == 0) {
+                sys_index = i;
+            }
             (*ui_count_ptr)++;
         }
 
