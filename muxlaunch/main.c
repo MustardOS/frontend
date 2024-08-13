@@ -143,25 +143,23 @@ void init_navigation_groups() {
 
 void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index > 0) {
-            current_item_index--;
-            nav_prev(ui_group, 1);
-            nav_prev(ui_group_glyph, 1);
-        }
+        current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_glyph, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, NULL);
+    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index < (UI_COUNT - 1)) {
-            current_item_index++;
-            nav_next(ui_group, 1);
-            nav_next(ui_group_glyph, 1);
-        }
+        current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_glyph, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, NULL);
+    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -267,33 +265,11 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
-                                if (current_item_index == 0) {
-                                    play_sound("navigate", nav_sound, 0);
-                                    current_item_index = UI_COUNT - 1;
-                                    nav_prev(ui_group, 1);
-                                    nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, NULL);
-                                    nav_moved = 1;
-                                } else if (current_item_index > 0) {
-                                    play_sound("navigate", nav_sound, 0);
-                                    list_nav_prev(1);
-                                    nav_moved = 1;
-                                }
+                                list_nav_prev(1);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
-                                if (current_item_index == UI_COUNT - 1) {
-                                    play_sound("navigate", nav_sound, 0);
-                                    current_item_index = 0;
-                                    nav_next(ui_group, 1);
-                                    nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, NULL);
-                                    nav_moved = 1;
-                                } else if (current_item_index < UI_COUNT - 1) {
-                                    play_sound("navigate", nav_sound, 0);
-                                    list_nav_next(1);
-                                    nav_moved = 1;
-                                }
+                                list_nav_next(1);
                             }
                         }
                         // Horizontal Navigation with 2 rows of 4 items
@@ -301,21 +277,11 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
-                                play_sound("navigate", nav_sound, 0);
-                                if (current_item_index > 3) {
-                                    nav_prev(ui_group, 4);
-                                    nav_prev(ui_group_glyph, 4);
-                                }
-                                nav_moved = 1;
+                                list_nav_prev(4);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
-                                play_sound("navigate", nav_sound, 0);
-                                if (current_item_index < 4) {
-                                    nav_next(ui_group, 4);
-                                    nav_next(ui_group_glyph, 4);
-                                }
-                                nav_moved = 1;
+                                list_nav_next(4);
                             }
                         }
                         // Horizontal Navigation with 3 item first row, 5 item second row
@@ -326,40 +292,30 @@ void *joystick_task() {
                                     switch (current_item_index) {
                                         case 3:
                                         case 4:
-                                            nav_prev(ui_group, 3);
-                                            nav_prev(ui_group_glyph, 3);
+                                            list_nav_prev(3);
                                             break;
                                         case 5:
-                                            nav_prev(ui_group, 4);
-                                            nav_prev(ui_group_glyph, 4);
+                                            list_nav_prev(4);
                                             break;
                                         case 6:
                                         case 7:
-                                            nav_prev(ui_group, 5);
-                                            nav_prev(ui_group_glyph, 5);
+                                            list_nav_prev(5);
                                             break;
                                     }
-                                play_sound("navigate", nav_sound, 0);
-                                nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                 ev.value == 1) {
                                     switch (current_item_index) {
                                         case 0:
-                                            nav_next(ui_group, 3);
-                                            nav_next(ui_group_glyph, 3);
+                                            list_nav_next(3);
                                             break;
                                         case 1:
-                                            nav_next(ui_group, 4);
-                                            nav_next(ui_group_glyph, 4);
+                                            list_nav_next(4);
                                             break;
                                         case 2:
-                                            nav_next(ui_group, 5);
-                                            nav_next(ui_group_glyph, 5);
+                                            list_nav_next(5);
                                             break;
                                     }
-                                play_sound("navigate", nav_sound, 0);
-                                nav_moved = 1;
                             }
                         }
                     default:
