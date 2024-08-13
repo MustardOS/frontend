@@ -93,61 +93,6 @@ unsigned long long total_file_size(const char *path) {
     return total_size;
 }
 
-int time_compare_for_history(const void *a, const void *b) {
-    char *file_a = strip_label_placement(strdup(*(const char **)a));
-    char *file_b = strip_label_placement(strdup(*(const char **)b));
-
-    char mod_file_a[MAX_BUFFER_SIZE];
-    char mod_file_b[MAX_BUFFER_SIZE];
-
-    snprintf(mod_file_a, sizeof(mod_file_a), "%s/MUOS/info/history/%s.cfg",
-             get_default_storage(config.STORAGE.FAV), file_a);
-    snprintf(mod_file_b, sizeof(mod_file_b), "%s/MUOS/info/history/%s.cfg",
-             get_default_storage(config.STORAGE.FAV), file_b);
-
-    free(file_a);
-    free(file_b);
-
-    if (access(mod_file_a, F_OK) != 0) {
-        printf("Error: %s does not exist\n", mod_file_a);
-        return 0;
-    }
-
-    if (access(mod_file_b, F_OK) != 0) {
-        printf("Error: %s does not exist\n", mod_file_b);
-        return 0;
-    }
-
-    struct stat stat_a, stat_b;
-
-    if (stat(mod_file_a, &stat_a) != 0) {
-        printf("Error getting file information for %s\n", mod_file_a);
-        return 0;
-    }
-
-    if (stat(mod_file_b, &stat_b) != 0) {
-        printf("Error getting file information for %s\n", mod_file_b);
-        return 0;
-    }
-
-    struct timespec time_a = stat_a.st_mtim;
-    struct timespec time_b = stat_b.st_mtim;
-
-    if (time_a.tv_sec > time_b.tv_sec) {
-        return -1;
-    } else if (time_a.tv_sec < time_b.tv_sec) {
-        return 1;
-    } else {
-        if (time_a.tv_nsec > time_b.tv_nsec) {
-            return -1;
-        } else if (time_a.tv_nsec < time_b.tv_nsec) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-}
-
 char *str_append(char *old_text, const char *new_text) {
     size_t len = old_text ? strlen(old_text) : 0;
     char *temp = realloc(old_text, len + strlen(new_text) + 2);
@@ -1538,4 +1483,3 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
         lv_obj_update_snap(ui_pnlHighlight, LV_ANIM_OFF);
     }
 }
-

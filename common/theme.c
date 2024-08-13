@@ -318,13 +318,7 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
 void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, const char *item_text, 
     bool apply_visual_label, bool enable_scrolling_text, bool is_config_menu) 
 {
-    if (apply_visual_label) {
-        char *visual_item_text = (char *)item_text;
-        adjust_visual_label(visual_item_text, config.VISUAL.NAME, config.VISUAL.DASH);
-        lv_label_set_text(ui_lblItem, visual_item_text);
-    } else {
-        lv_label_set_text(ui_lblItem, item_text);
-    }
+    lv_label_set_text(ui_lblItem, item_text);
 
     if (enable_scrolling_text) {
         static lv_anim_t item_anim;

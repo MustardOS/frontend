@@ -60,8 +60,6 @@ int file_size(char *filename, int filesize);
 
 unsigned long long total_file_size(const char *path);
 
-int time_compare_for_history(const void *a, const void *b);
-
 char *str_append(char *old_text, const char *new_text);
 
 int str_compare(const void *a, const void *b);
