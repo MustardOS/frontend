@@ -154,7 +154,7 @@ char *load_content_core(int force) {
 char *load_content_description() {
     char content_desc[MAX_BUFFER_SIZE];
 
-    const char *content_label = items[current_item_index].display_name;
+    const char *content_label = items[current_item_index].name;
 
     switch (module) {
         case ROOT:
@@ -290,7 +290,7 @@ void image_refresh(char *image_type) {
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
 
-    const char *content_label = items[current_item_index].display_name;
+    const char *content_label = items[current_item_index].name;
 
     switch (module) {
         case ROOT:
@@ -710,20 +710,40 @@ void create_explore_items(void *count) {
 
     add_directory_and_file_names(curr_dir, &dir_names, &dir_count, &file_names, &file_count);
 
+    int fn_valid = 0;
+    struct json fn_json;
+    
+    char folder_name_file[MAX_BUFFER_SIZE];
+    snprintf(folder_name_file, sizeof(folder_name_file), "%s/MUOS/info/folder_name.json",
+             device.STORAGE.ROM.MOUNT);
+
+    if (json_valid(read_text_from_file(folder_name_file))) {
+        fn_valid = 1;
+        fn_json = json_parse(read_text_from_file(folder_name_file));
+    }
+
     if (dir_count > 0 || file_count > 0) {
-        qsort(dir_names, dir_count, sizeof(char *), str_compare);
         for (int i = 0; i < dir_count; i++) {
-            char curr_label[MAX_BUFFER_SIZE];
-            snprintf(curr_label, sizeof(curr_label), "%s%s :: %d", DUMMY_DIR, dir_names[i], *ui_count_ptr);
-
-            content_item *new_item = add_item(&items, &item_count, dir_names[i], dir_names[i], FOLDER);
+            content_item *new_item = NULL;
+            char good_name[MAX_BUFFER_SIZE];
+            if (fn_valid) {
+                struct json good_name_json = json_object_get(fn_json, dir_names[i]);
+                if (json_exists(good_name_json)) {
+                    json_string_copy(good_name_json, good_name, sizeof(good_name));
+                    new_item = add_item(&items, &item_count, dir_names[i], good_name, FOLDER);
+                } 
+            }
+            if (new_item == NULL) new_item = add_item(&items, &item_count, dir_names[i], dir_names[i], FOLDER);
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
-            gen_label(FOLDER, "\uF07B", new_item->display_name, 12);
-
-            (*ui_count_ptr)++;
 
             free(dir_names[i]);
         }
+        sort_items(items, item_count);
+        for (int i = 0; i < dir_count; i++) {
+            gen_label(FOLDER, "\uF07B", items[i].display_name, 12);
+            (*ui_count_ptr)++;
+        }
+
         free(dir_names);
 
         gen_item(file_names, file_count);
@@ -1108,7 +1128,7 @@ void *joystick_task() {
 
                                     play_sound("confirm", nav_sound, 1);
 
-                                    char *content_label = items[current_item_index].display_name;
+                                    char *content_label = items[current_item_index].name;
 
                                     switch (module) {
                                         case ROOT:
@@ -1141,7 +1161,7 @@ void *joystick_task() {
                                                         char n_dir[MAX_BUFFER_SIZE];
                                                         snprintf(n_dir, sizeof(n_dir), "%s/%s",
                                                                  sd_dir,
-                                                                 items[current_item_index].display_name);
+                                                                 items[current_item_index].name);
 
                                                         write_text_to_file("/tmp/explore_dir", n_dir, "w");
                                                         load_mux("explore");
