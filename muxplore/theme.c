@@ -74,6 +74,7 @@ void apply_theme() {
             {ui_lblTitle,                  theme.HEADER.TEXT},
             {ui_lblHelpHeader,             theme.HELP.TITLE},
             {ui_lblHelpPreviewHeader,      theme.HELP.TITLE},
+            {ui_lblHelpDescription,        theme.HELP.CONTENT},
             {ui_staBluetooth,              theme.STATUS.BLUETOOTH.NORMAL},
             {ui_staNetwork,                theme.STATUS.NETWORK.NORMAL},
             {ui_staCapacity,               theme.STATUS.BATTERY.NORMAL},
