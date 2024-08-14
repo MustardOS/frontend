@@ -152,6 +152,10 @@ struct theme_config {
         int16_t INDICATOR_ALPHA;
         uint32_t TEXT;
         int16_t TEXT_ALPHA;
+        int16_t GLYPH_PADDING_LEFT;
+        int16_t GLYPH_ALPHA;
+        uint32_t GLYPH_RECOLOUR;
+        int16_t GLYPH_RECOLOUR_ALPHA;
     } LIST_DEFAULT;
 
     struct {
@@ -169,6 +173,8 @@ struct theme_config {
         int16_t INDICATOR_ALPHA;
         uint32_t TEXT;
         int16_t TEXT_ALPHA;
+        uint32_t GLYPH_RECOLOUR;
+        int16_t GLYPH_RECOLOUR_ALPHA;
     } LIST_FOCUS;
 
     struct {
@@ -306,4 +312,5 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
 void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, const char *item_text, bool apply_visual_label, bool enable_scrolling_text, bool is_config_menu);
 void apply_theme_list_value(struct theme_config *theme, lv_obj_t * ui_lblItemValue, char *item_text);
 void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblItemValue, char *options);
+void apply_theme_list_glyph(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_lblItemGlyph, char *item_glyph);
 void apply_theme_list_icon(struct theme_config *theme, struct mux_device *device, const lv_font_t * ui_font_AwesomeSmall, lv_obj_t * ui_lblItemGlyph, char *item_glyph, int glyph_pad);

@@ -484,8 +484,10 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     const bool apply_visual_label = module != ROOT;
     apply_theme_list_item(&theme, ui_lblExploreItem, item_text, apply_visual_label, true, false);
 
-    lv_obj_t * ui_lblExploreItemGlyph = lv_label_create(ui_pnlExplore);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblExploreItemGlyph, item_glyph, glyph_pad);
+    lv_obj_t * ui_lblExploreItemGlyph = lv_img_create(ui_lblExploreItem);
+    apply_theme_list_glyph(&theme, &device, ui_lblExploreItemGlyph, item_glyph);
+    // lv_obj_t * ui_lblExploreItemGlyph = lv_label_create(ui_pnlExplore);
+    // apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblExploreItemGlyph, item_glyph, glyph_pad);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
@@ -624,13 +626,16 @@ void gen_item(char **file_names, int file_count) {
             char *glyph_icon;
             int glyph_pad;
             if (file_exist(fav_dir)) {
-                glyph_icon = "\uF005";
+                //glyph_icon = "\uF005";
+                glyph_icon = "favourite";
                 glyph_pad = 10;
             } else if (file_exist(hist_dir)) {
-                glyph_icon = "\uE5A0";
+                //glyph_icon = "\uE5A0";
+                glyph_icon = "history";
                 glyph_pad = 12;
             } else {
-                glyph_icon = "\uF15B";
+                //glyph_icon = "\uF15B";
+                glyph_icon = "rom";
                 glyph_pad = 12;
             }
 
@@ -736,7 +741,7 @@ void create_explore_items(void *count) {
         }
         sort_items(items, item_count);
         for (int i = 0; i < dir_count; i++) {
-            gen_label(FOLDER, "\uF07B", items[i].display_name, 12);
+            gen_label(FOLDER, "folder", items[i].display_name, 12);
             if (strcasecmp(items[i].name, prev_dir) == 0) {
                 sys_index = i;
             }

@@ -136,6 +136,10 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_DEFAULT.TEXT = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_TEXT");
     theme->LIST_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_TEXT_ALPHA", 255);
     theme->LIST_DEFAULT.BACKGROUND_GRADIENT = (theme->LIST_DEFAULT.GRADIENT_START  == 255) ? theme->LIST_DEFAULT.BACKGROUND : theme->SYSTEM.BACKGROUND;
+    theme->LIST_DEFAULT.GLYPH_PADDING_LEFT = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_PAD_LEFT", 9);
+    theme->LIST_DEFAULT.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_ALPHA", 255);
+    theme->LIST_DEFAULT.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR");
+    theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", 0);
 
     theme->LIST_DISABLED.TEXT = get_ini_hex(muos_theme, "list", "LIST_DISABLED_TEXT");
     theme->LIST_DISABLED.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DISABLED_TEXT_ALPHA", 255);
@@ -149,6 +153,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_FOCUS.TEXT = get_ini_hex(muos_theme, "list", "LIST_FOCUS_TEXT");
     theme->LIST_FOCUS.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_TEXT_ALPHA", 255);
     theme->LIST_FOCUS.BACKGROUND_GRADIENT = (theme->LIST_FOCUS.GRADIENT_START  == 255) ? theme->LIST_FOCUS.BACKGROUND : theme->SYSTEM.BACKGROUND;
+    theme->LIST_FOCUS.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR");
+    theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR_ALPHA", 0);
 
     theme->IMAGE_LIST.ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_ALPHA", 255);
     theme->IMAGE_LIST.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RADIUS", 3);
@@ -287,15 +293,15 @@ void apply_align(struct theme_config *theme, struct mux_device *device, lv_obj_t
     if (theme->MISC.CONTENT.ALIGNMENT == 1) {
         int x = ((device->SCREEN.WIDTH - item_width) / 2) + theme->MISC.CONTENT.PADDING_LEFT;
         lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
-        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
+        //lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
     } else if (theme->MISC.CONTENT.ALIGNMENT == 2) {
         int x = device->SCREEN.WIDTH - item_width + theme->MISC.CONTENT.PADDING_LEFT;
         lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
-        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
+        //lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
     } else {
         int x = theme->MISC.CONTENT.PADDING_LEFT;
         lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
-        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);        
+        //lv_obj_set_style_translate_x(ui_lblItemIcon, x -32, LV_PART_MAIN);        
     }
 
 }
@@ -374,10 +380,6 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, co
     lv_obj_set_style_pad_left(ui_lblItem, theme->FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (!is_config_menu) lv_obj_set_style_pad_right(ui_lblItem, theme->FONT.LIST_PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblItem, theme->FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblItem, theme->FONT.LIST_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_text_line_space(ui_lblItem, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     lv_obj_set_style_radius(ui_lblItem, theme->LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
@@ -448,6 +450,37 @@ void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblIte
     lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0xF8E008),
                               LV_PART_SELECTED | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255,  LV_PART_SELECTED | LV_STATE_DEFAULT);
+}
+
+void apply_theme_list_glyph(struct theme_config *theme, struct mux_device *device,
+    lv_obj_t * ui_lblItemGlyph, char *item_glyph) 
+{
+    const char *store_catalogue;
+    store_catalogue = get_default_storage(config.STORAGE.CATALOGUE);
+
+    char image[MAX_BUFFER_SIZE];
+    char image_path[MAX_BUFFER_SIZE];
+    snprintf(image, sizeof(image), "%s/MUOS/theme/active/glyph/%s.png",
+                store_catalogue, item_glyph);
+    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/theme/active/glyph/%s.png",
+                store_catalogue, item_glyph);
+
+    if (file_exist(image)) {
+        write_text_to_file("/mnt/mmc/MUOS/log/logfile.log", "Found the glyph image\n", "a");
+        lv_img_set_src(ui_lblItemGlyph, image_path);
+    }
+    
+    lv_obj_set_style_translate_x(ui_lblItemGlyph, -(theme->MISC.CONTENT.WIDTH / 2) + theme->LIST_DEFAULT.GLYPH_PADDING_LEFT + 22, LV_PART_MAIN);
+    lv_obj_set_align(ui_lblItemGlyph, LV_ALIGN_CENTER);
+    lv_obj_set_style_translate_y(ui_lblItemGlyph, -theme->FONT.LIST_PAD_TOP / 2, LV_PART_MAIN);  // Font padding top will misalign icon by half the padding
+
+    lv_obj_set_style_img_opa(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_img_recolor(ui_lblItemGlyph, lv_color_hex(theme->LIST_DEFAULT.GLYPH_RECOLOUR), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_img_recolor(ui_lblItemGlyph, lv_color_hex(theme->LIST_FOCUS.GLYPH_RECOLOUR), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_img_recolor_opa(ui_lblItemGlyph, theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 }
 
 void apply_theme_list_icon(struct theme_config *theme, struct mux_device *device, const lv_font_t * ui_font_AwesomeSmall,
