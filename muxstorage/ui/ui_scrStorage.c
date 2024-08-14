@@ -216,14 +216,14 @@ void ui_scrStorage_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoBIOS = lv_label_create(ui_pnlGlyph);
-    ui_icoConfig = lv_label_create(ui_pnlGlyph);
-    ui_icoCatalogue = lv_label_create(ui_pnlGlyph);
-    ui_icoFav = lv_label_create(ui_pnlGlyph);
-    ui_icoMusic = lv_label_create(ui_pnlGlyph);
-    ui_icoSave = lv_label_create(ui_pnlGlyph);
-    ui_icoScreenshot = lv_label_create(ui_pnlGlyph);
-    ui_icoTheme = lv_label_create(ui_pnlGlyph);
+    ui_icoBIOS = lv_img_create(ui_lblBIOS);
+    ui_icoConfig = lv_img_create(ui_lblConfig);
+    ui_icoCatalogue = lv_img_create(ui_lblCatalogue);
+    ui_icoFav = lv_img_create(ui_lblFav);
+    ui_icoMusic = lv_img_create(ui_lblMusic);
+    ui_icoSave = lv_img_create(ui_lblSave);
+    ui_icoScreenshot = lv_img_create(ui_lblScreenshot);
+    ui_icoTheme = lv_img_create(ui_lblTheme);
 
     ui_pnlHighlight = lv_obj_create(ui_scrStorage);
     lv_obj_set_width(ui_pnlHighlight, 640);

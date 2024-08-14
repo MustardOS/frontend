@@ -88,8 +88,8 @@ void create_timezone_items() {
         lv_obj_t * ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
         apply_theme_list_item(&theme, ui_lblTimezoneItem, base_key, false, false, false);
 
-        lv_obj_t * ui_lblTimezoneGlyph = lv_label_create(ui_pnlTimezone);
-        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblTimezoneGlyph, "\uF0AC", 9);
+        lv_obj_t * ui_lblTimezoneGlyph = lv_img_create(ui_lblTimezoneItem);
+        apply_theme_list_glyph(&theme, &device, ui_lblTimezoneGlyph, "timezone");
 
         lv_group_add_obj(ui_group, ui_lblTimezoneItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);

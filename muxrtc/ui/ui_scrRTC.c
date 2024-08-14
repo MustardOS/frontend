@@ -211,13 +211,13 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoYear = lv_label_create(ui_pnlGlyph);
-    ui_icoMonth = lv_label_create(ui_pnlGlyph);
-    ui_icoDay = lv_label_create(ui_pnlGlyph);
-    ui_icoHour = lv_label_create(ui_pnlGlyph);
-    ui_icoMinute = lv_label_create(ui_pnlGlyph);
-    ui_icoNotation = lv_label_create(ui_pnlGlyph);
-    ui_icoTimezone = lv_label_create(ui_pnlGlyph);
+    ui_icoYear = lv_img_create(ui_lblYear);
+    ui_icoMonth = lv_img_create(ui_lblMonth);
+    ui_icoDay = lv_img_create(ui_lblDay);
+    ui_icoHour = lv_img_create(ui_lblHour);
+    ui_icoMinute = lv_img_create(ui_lblMinute);
+    ui_icoNotation = lv_img_create(ui_lblNotation);
+    ui_icoTimezone = lv_img_create(ui_lblTimezone);
 
     ui_pnlHighlight = lv_obj_create(ui_scrRTC);
     lv_obj_set_width(ui_pnlHighlight, 640);

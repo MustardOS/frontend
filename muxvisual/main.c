@@ -271,15 +271,15 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblMenuCounterFolder, "Menu Counter Folder", false, false, true);
     apply_theme_list_item(&theme, ui_lblMenuCounterFile, "Menu Counter File", false, false, true);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBattery, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 9);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBluetooth, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoClock, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBoxArt, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoName, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDash, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMenuCounterFolder, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMenuCounterFile, "", 12);
+    apply_theme_list_glyph(&theme, &device, ui_icoBattery, "battery");
+    apply_theme_list_glyph(&theme, &device, ui_icoNetwork, "network");
+    apply_theme_list_glyph(&theme, &device, ui_icoBluetooth, "bluetooth");
+    apply_theme_list_glyph(&theme, &device, ui_icoClock, "clock");
+    apply_theme_list_glyph(&theme, &device, ui_icoBoxArt, "boxart");
+    apply_theme_list_glyph(&theme, &device, ui_icoName, "name");
+    apply_theme_list_glyph(&theme, &device, ui_icoDash, "dash");
+    apply_theme_list_glyph(&theme, &device, ui_icoMenuCounterFolder, "menucounterfolder");
+    apply_theme_list_glyph(&theme, &device, ui_icoMenuCounterFile, "menucounterfile");
 
     apply_theme_list_drop_down(&theme, ui_droBattery, "Hidden\nVisible");
     apply_theme_list_drop_down(&theme, ui_droNetwork, "Hidden\nVisible");

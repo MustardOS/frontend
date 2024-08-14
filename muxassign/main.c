@@ -301,8 +301,8 @@ void create_system_items() {
             lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
             apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, false, false, false);
 
-            lv_obj_t * ui_lblCoreItemGlyph = lv_label_create(ui_pnlCore);
-            apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblCoreItemGlyph, "\uF233", 12);
+            lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_lblCoreItem);
+            apply_theme_list_glyph(&theme, &device, ui_lblCoreItemGlyph, "systemitem");
 
             lv_group_add_obj(ui_group, ui_lblCoreItem);
             lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
@@ -353,8 +353,8 @@ void create_core_items(const char *target) {
         lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
         apply_theme_list_item(&theme, ui_lblCoreItem, core_headers[i], false, false, false);
 
-        lv_obj_t * ui_lblCoreItemGlyph = lv_label_create(ui_pnlCore);
-        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblCoreItemGlyph, "\uF6D1", 12);
+        lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_lblCoreItem);
+        apply_theme_list_glyph(&theme, &device, ui_lblCoreItemGlyph, "coreitem");
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);

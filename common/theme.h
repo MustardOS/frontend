@@ -313,4 +313,3 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, co
 void apply_theme_list_value(struct theme_config *theme, lv_obj_t * ui_lblItemValue, char *item_text);
 void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblItemValue, char *options);
 void apply_theme_list_glyph(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_lblItemGlyph, char *item_glyph);
-void apply_theme_list_icon(struct theme_config *theme, struct mux_device *device, const lv_font_t * ui_font_AwesomeSmall, lv_obj_t * ui_lblItemGlyph, char *item_glyph, int glyph_pad);

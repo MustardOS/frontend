@@ -132,28 +132,28 @@ void create_app_items() {
         lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
         apply_theme_list_item(&theme, ui_lblAppItem, app_store, false, false, false);
 
-        lv_obj_t * ui_lblAppItemGlyph = lv_label_create(ui_pnlApp);
+        lv_obj_t * ui_lblAppItemGlyph = lv_img_create(ui_lblAppItem)
 
         char *item_glyph;
         if (strcasecmp(app_store, "Archive Manager") == 0) {
-            item_glyph = "\uF187";
+            item_glyph = "archive";
         } else if (strcasecmp(app_store, "Dingux Commander") == 0) {
-            item_glyph = "\uF0C7";
+            item_glyph = "dingux";
         } else if (strcasecmp(app_store, "GMU Music Player") == 0) {
-            item_glyph = "\uF001";
+            item_glyph = "music";
         } else if (strcasecmp(app_store, "PortMaster") == 0) {
-            item_glyph = "\uF21A";
+            item_glyph = "portmaster";
         } else if (strcasecmp(app_store, "RetroArch") == 0) {
-            item_glyph = "\uF6E2";
+            item_glyph = "retroarch";
         } else if (strcasecmp(app_store, "Simple Terminal") == 0) {
-            item_glyph = "\uF120";
+            item_glyph = "terminal";
         } else if (strcasecmp(app_store, "Task Toolkit") == 0) {
-            item_glyph = "\uF7D9";
+            item_glyph = "task";
         } else {
-            item_glyph = "\uF04B";
+            item_glyph = "app";
         }
 
-        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblAppItemGlyph, item_glyph, 12);
+        apply_theme_list_glyph(&theme, &device, ui_lblAppItemGlyph, item_glyph);
 
         lv_group_add_obj(ui_group, ui_lblAppItem);
         lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);

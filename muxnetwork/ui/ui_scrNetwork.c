@@ -210,15 +210,15 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoEnable = lv_label_create(ui_pnlGlyph);
-    ui_icoIdentifier = lv_label_create(ui_pnlGlyph);
-    ui_icoPassword = lv_label_create(ui_pnlGlyph);
-    ui_icoType = lv_label_create(ui_pnlGlyph);
-    ui_icoAddress = lv_label_create(ui_pnlGlyph);
-    ui_icoSubnet = lv_label_create(ui_pnlGlyph);
-    ui_icoGateway = lv_label_create(ui_pnlGlyph);
-    ui_icoDNS = lv_label_create(ui_pnlGlyph);
-    ui_icoConnect = lv_label_create(ui_pnlGlyph);
+    ui_icoEnable = lv_img_create(ui_lblEnable);
+    ui_icoIdentifier = lv_img_create(ui_lblIdentifier);
+    ui_icoPassword = lv_img_create(ui_lblPassword);
+    ui_icoType = lv_img_create(ui_lblType);
+    ui_icoAddress = lv_img_create(ui_lblAddress);
+    ui_icoSubnet = lv_img_create(ui_lblSubnet);
+    ui_icoGateway = lv_img_create(ui_lblGateway);
+    ui_icoDNS = lv_img_create(ui_lblDNS);
+    ui_icoConnect = lv_img_create(ui_lblConnect);
 
     ui_pnlHighlight = lv_obj_create(ui_scrNetwork);
     lv_obj_set_width(ui_pnlHighlight, 640);
@@ -289,7 +289,7 @@ void ui_scrNetwork_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlStatusGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlStatusGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoStatus = lv_label_create(ui_pnlStatusGlyph);
+    ui_icoStatus = lv_img_create(ui_lblStatus);
 
     ui_pnlStatusHighlight = lv_obj_create(ui_scrNetwork);
     lv_obj_set_width(ui_pnlStatusHighlight, 640);

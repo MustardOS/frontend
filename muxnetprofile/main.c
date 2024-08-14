@@ -152,8 +152,8 @@ void create_profile_items() {
             lv_obj_t * ui_lblNetProfileItem = lv_label_create(ui_pnlNetProfile);
             apply_theme_list_item(&theme, ui_lblNetProfileItem, base_filename, false, false, false);
 
-            lv_obj_t * ui_lblNetProfileItemGlyph = lv_label_create(ui_pnlNetProfile);
-            apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblNetProfileItemGlyph, "\uF53F", 12);
+            lv_obj_t * ui_lblNetProfileItemGlyph = lv_img_create(ui_lblNetProfileItem);
+            apply_theme_list_glyph(&theme, &device, ui_lblNetProfileItemGlyph, "netprofileitem");
 
             lv_group_add_obj(ui_group, ui_lblNetProfileItem);
             lv_group_add_obj(ui_group_glyph, ui_lblNetProfileItemGlyph);

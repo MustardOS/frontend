@@ -117,8 +117,8 @@ void create_network_items() {
         lv_obj_t * ui_lblNetScanItem = lv_label_create(ui_pnlNetScan);
         apply_theme_list_item(&theme, ui_lblNetScanItem, str_nonew(ssid), false, false, false);
 
-        lv_obj_t * ui_lblNetScanGlyph = lv_label_create(ui_pnlNetScan);
-        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblNetScanGlyph, "\uF0AC", 9);
+        lv_obj_t * ui_lblNetScanGlyph = lv_img_create(ui_lblNetScanItem);
+        apply_theme_list_glyph(&theme, &device, ui_lblNetScanGlyph, "netscan");
 
         lv_group_add_obj(ui_group, ui_lblNetScanItem);
         lv_group_add_obj(ui_group_glyph, ui_lblNetScanGlyph);

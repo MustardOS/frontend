@@ -212,14 +212,14 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoContent = lv_label_create(ui_pnlGlyph);
-    ui_icoFavourites = lv_label_create(ui_pnlGlyph);
-    ui_icoHistory = lv_label_create(ui_pnlGlyph);
-    ui_icoApps = lv_label_create(ui_pnlGlyph);
-    ui_icoInfo = lv_label_create(ui_pnlGlyph);
-    ui_icoConfig = lv_label_create(ui_pnlGlyph);
-    ui_icoReboot = lv_label_create(ui_pnlGlyph);
-    ui_icoShutdown = lv_label_create(ui_pnlGlyph);
+    ui_icoContent = lv_img_create(ui_lblContent);
+    ui_icoFavourites = lv_img_create(ui_lblFavourites);
+    ui_icoHistory = lv_img_create(ui_lblHistory);
+    ui_icoApps = lv_img_create(ui_lblApps);
+    ui_icoInfo = lv_img_create(ui_lblInfo);
+    ui_icoConfig = lv_img_create(ui_lblConfig);
+    ui_icoReboot = lv_img_create(ui_lblReboot);
+    ui_icoShutdown = lv_img_create(ui_lblShutdown);
 
     ui_pnlFooter = lv_obj_create(ui_scrLaunch);
     lv_obj_set_width(ui_pnlFooter, 640);

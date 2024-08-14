@@ -92,10 +92,10 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblSystem, "System Details", false, false, false);
     apply_theme_list_item(&theme, ui_lblCredits, "Supporters", false, false, false);
 
-    //apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTracker, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTester, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSystem, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCredits, "", 10);
+    //apply_theme_list_glyph(&theme, &device, ui_icoTracker, "tracker");
+    apply_theme_list_glyph(&theme, &device, ui_icoTester, "tester");
+    apply_theme_list_glyph(&theme, &device, ui_icoSystem, "system");
+    apply_theme_list_glyph(&theme, &device, ui_icoCredits, "credits");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();

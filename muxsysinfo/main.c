@@ -232,17 +232,17 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblBatteryCap, "Battery Capacity", false, false, true);
     apply_theme_list_item(&theme, ui_lblVoltage, "Battery Voltage", false, false, true);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVersion, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoKernel, "", 9);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoUptime, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCPU, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSpeed, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoGovernor, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMemory, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTemp, "", 14);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoServices, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBatteryCap, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVoltage, "", 11);
+    apply_theme_list_glyph(&theme, &device, ui_icoVersion, "version");
+    apply_theme_list_glyph(&theme, &device, ui_icoKernel, "kernel");
+    apply_theme_list_glyph(&theme, &device, ui_icoUptime, "uptime");
+    apply_theme_list_glyph(&theme, &device, ui_icoCPU, "cpu");
+    apply_theme_list_glyph(&theme, &device, ui_icoSpeed, "speed");
+    apply_theme_list_glyph(&theme, &device, ui_icoGovernor, "governor");
+    apply_theme_list_glyph(&theme, &device, ui_icoMemory, "memory");
+    apply_theme_list_glyph(&theme, &device, ui_icoTemp, "temp");
+    apply_theme_list_glyph(&theme, &device, ui_icoServices, "services");
+    apply_theme_list_glyph(&theme, &device, ui_icoBatteryCap, "batterycap");
+    apply_theme_list_glyph(&theme, &device, ui_icoVoltage, "voltage");
 
     apply_theme_list_value(&theme, ui_lblVersionValue, "");
     apply_theme_list_value(&theme, ui_lblKernelValue, "");

@@ -132,8 +132,8 @@ void create_task_items() {
         lv_obj_t * ui_lblTaskItem = lv_label_create(ui_pnlTask);
         apply_theme_list_item(&theme, ui_lblTaskItem, task_store, false, false, false);
 
-        lv_obj_t * ui_lblTaskItemGlyph = lv_label_create(ui_pnlTask);
-        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblTaskItemGlyph, "\uF56E", 12);
+        lv_obj_t * ui_lblTaskItemGlyph = lv_img_create(ui_lblTaskItem);
+        apply_theme_list_glyph(&theme, &device, ui_lblTaskItemGlyph, "taskitem");
 
         lv_group_add_obj(ui_group, ui_lblTaskItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);

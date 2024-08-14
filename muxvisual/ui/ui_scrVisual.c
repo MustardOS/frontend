@@ -220,16 +220,16 @@ void ui_scrVisual_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoBattery = lv_label_create(ui_pnlGlyph);
-    ui_icoNetwork = lv_label_create(ui_pnlGlyph);
-    ui_icoBluetooth = lv_label_create(ui_pnlGlyph);
+    ui_icoBattery = lv_img_create(ui_lblBattery);
+    ui_icoNetwork = lv_img_create(ui_lblNetwork);
+    ui_icoBluetooth = lv_img_create(ui_lblBluetooth);
     lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    ui_icoClock = lv_label_create(ui_pnlGlyph);
-    ui_icoBoxArt = lv_label_create(ui_pnlGlyph);
-    ui_icoName = lv_label_create(ui_pnlGlyph);
-    ui_icoDash = lv_label_create(ui_pnlGlyph);
-    ui_icoMenuCounterFolder = lv_label_create(ui_pnlGlyph);
-    ui_icoMenuCounterFile = lv_label_create(ui_pnlGlyph);
+    ui_icoClock = lv_img_create(ui_lblClock);
+    ui_icoBoxArt = lv_img_create(ui_lblBoxArt);
+    ui_icoName = lv_img_create(ui_lblName);
+    ui_icoDash = lv_img_create(ui_lblDash);
+    ui_icoMenuCounterFolder = lv_img_create(ui_lblMenuCounterFolder);
+    ui_icoMenuCounterFile = lv_img_create(ui_lblMenuCounterFile);
 
     ui_pnlHighlight = lv_obj_create(ui_scrVisual);
     lv_obj_set_width(ui_pnlHighlight, 640);

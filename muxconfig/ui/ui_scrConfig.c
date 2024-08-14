@@ -213,11 +213,11 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoTweakGeneral = lv_label_create(ui_pnlGlyph);
-    ui_icoTheme = lv_label_create(ui_pnlGlyph);
-    ui_icoNetwork = lv_label_create(ui_pnlGlyph);
-    ui_icoServices = lv_label_create(ui_pnlGlyph);
-    ui_icoRTC = lv_label_create(ui_pnlGlyph);
+    ui_icoTweakGeneral = lv_img_create(ui_lblTweakGeneral);
+    ui_icoTheme = lv_img_create(ui_lblTheme);
+    ui_icoNetwork = lv_img_create(ui_lblNetwork);
+    ui_icoServices = lv_img_create(ui_lblServices);
+    ui_icoRTC = lv_img_create(ui_lblRTC);
 
     ui_pnlFooter = lv_obj_create(ui_scrConfig);
     lv_obj_set_width(ui_pnlFooter, 640);

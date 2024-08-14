@@ -119,14 +119,14 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblReboot, "Reboot", false, false, false);
     apply_theme_list_item(&theme, ui_lblShutdown, "Shutdown", false, false, false);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoContent, "", 14);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFavourites, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHistory, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoApps, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoInfo, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConfig, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoReboot, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoShutdown, "", 12);
+    apply_theme_list_glyph(&theme, &device, ui_icoContent, "content");
+    apply_theme_list_glyph(&theme, &device, ui_icoFavourites, "favourites");
+    apply_theme_list_glyph(&theme, &device, ui_icoHistory, "history");
+    apply_theme_list_glyph(&theme, &device, ui_icoApps, "apps");
+    apply_theme_list_glyph(&theme, &device, ui_icoInfo, "info");
+    apply_theme_list_glyph(&theme, &device, ui_icoConfig, "config");
+    apply_theme_list_glyph(&theme, &device, ui_icoReboot, "reboot");
+    apply_theme_list_glyph(&theme, &device, ui_icoShutdown, "shutdown");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();

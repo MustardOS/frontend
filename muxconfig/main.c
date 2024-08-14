@@ -101,11 +101,11 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblServices, "Web Services", false, false, false);
     apply_theme_list_item(&theme, ui_lblRTC, "Date and Time", false, false, false);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTweakGeneral, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTheme, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoServices, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoRTC, "", 12);
+    apply_theme_list_glyph(&theme, &device, ui_icoTweakGeneral, "tweakgeneral");
+    apply_theme_list_glyph(&theme, &device, ui_icoTheme, "theme");
+    apply_theme_list_glyph(&theme, &device, ui_icoNetwork, "network");
+    apply_theme_list_glyph(&theme, &device, ui_icoServices, "services");
+    apply_theme_list_glyph(&theme, &device, ui_icoRTC, "rtc");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();

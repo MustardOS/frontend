@@ -268,13 +268,13 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblNotation, "Time Notation", false, false, false);
     apply_theme_list_item(&theme, ui_lblTimezone, "Set Timezone", false, false, false);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoYear, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMonth, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDay, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHour, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMinute, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNotation, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTimezone, "", 10);
+    apply_theme_list_glyph(&theme, &device, ui_icoYear, "year");
+    apply_theme_list_glyph(&theme, &device, ui_icoMonth, "month");
+    apply_theme_list_glyph(&theme, &device, ui_icoDay, "day");
+    apply_theme_list_glyph(&theme, &device, ui_icoHour, "hour");
+    apply_theme_list_glyph(&theme, &device, ui_icoMinute, "minute");
+    apply_theme_list_glyph(&theme, &device, ui_icoNotation, "notation");
+    apply_theme_list_glyph(&theme, &device, ui_icoTimezone, "timezone");
 
     apply_theme_list_value(&theme, ui_lblYearValue, "");
     apply_theme_list_value(&theme, ui_lblMonthValue, "");

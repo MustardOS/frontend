@@ -210,11 +210,11 @@ void ui_scrWebServices_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoShell = lv_label_create(ui_pnlGlyph);
-    ui_icoBrowser = lv_label_create(ui_pnlGlyph);
-    ui_icoTerminal = lv_label_create(ui_pnlGlyph);
-    ui_icoSyncthing = lv_label_create(ui_pnlGlyph);
-    ui_icoNTP = lv_label_create(ui_pnlGlyph);
+    ui_icoShell = lv_img_create(ui_lblShell);
+    ui_icoBrowser = lv_img_create(ui_lblBrowser);
+    ui_icoTerminal = lv_img_create(ui_lblTerminal);
+    ui_icoSyncthing = lv_img_create(ui_lblSyncthing);
+    ui_icoNTP = lv_img_create(ui_lblNTP);
 
     ui_pnlHighlight = lv_obj_create(ui_scrWebServices);
     lv_obj_set_width(ui_pnlHighlight, 640);

@@ -598,17 +598,17 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblStorage, "Storage Preference", false, false, true);
     apply_theme_list_item(&theme, ui_lblAdvanced, "Advanced Settings", false, false, true);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHidden, "", 14);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBGM, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSound, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoStartup, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoColour, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBrightness, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHDMI, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoShutdown, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoInterface, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoStorage, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoAdvanced, "", 11);
+    apply_theme_list_glyph(&theme, &device, ui_icoHidden, "hidden");
+    apply_theme_list_glyph(&theme, &device, ui_icoBGM, "bgm");
+    apply_theme_list_glyph(&theme, &device, ui_icoSound, "sound");
+    apply_theme_list_glyph(&theme, &device, ui_icoStartup, "startup");
+    apply_theme_list_glyph(&theme, &device, ui_icoColour, "colour");
+    apply_theme_list_glyph(&theme, &device, ui_icoBrightness, "brightness");
+    apply_theme_list_glyph(&theme, &device, ui_icoHDMI, "hdmi");
+    apply_theme_list_glyph(&theme, &device, ui_icoShutdown, "shutdown");
+    apply_theme_list_glyph(&theme, &device, ui_icoInterface, "interface");
+    apply_theme_list_glyph(&theme, &device, ui_icoStorage, "storage");
+    apply_theme_list_glyph(&theme, &device, ui_icoAdvanced, "advanced");
 
     apply_theme_list_drop_down(&theme, ui_droHidden, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droBGM, "Disabled\nEnabled");

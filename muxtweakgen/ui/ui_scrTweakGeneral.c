@@ -214,17 +214,17 @@ void ui_scrTweakGeneral_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoHidden = lv_label_create(ui_pnlGlyph);
-    ui_icoBGM = lv_label_create(ui_pnlGlyph);
-    ui_icoSound = lv_label_create(ui_pnlGlyph);
-    ui_icoStartup = lv_label_create(ui_pnlGlyph);
-    ui_icoColour = lv_label_create(ui_pnlGlyph);
-    ui_icoBrightness = lv_label_create(ui_pnlGlyph);
-    ui_icoHDMI = lv_label_create(ui_pnlGlyph);
-    ui_icoShutdown = lv_label_create(ui_pnlGlyph);
-    ui_icoInterface = lv_label_create(ui_pnlGlyph);
-    ui_icoStorage = lv_label_create(ui_pnlGlyph);
-    ui_icoAdvanced = lv_label_create(ui_pnlGlyph);
+    ui_icoHidden = lv_img_create(ui_lblHidden);
+    ui_icoBGM = lv_img_create(ui_lblBGM);
+    ui_icoSound = lv_img_create(ui_lblSound);
+    ui_icoStartup = lv_img_create(ui_lblStartup);
+    ui_icoColour = lv_img_create(ui_lblColour);
+    ui_icoBrightness = lv_img_create(ui_lblBrightness);
+    ui_icoHDMI = lv_img_create(ui_lblHDMI);
+    ui_icoShutdown = lv_img_create(ui_lblShutdown);
+    ui_icoInterface = lv_img_create(ui_lblInterface);
+    ui_icoStorage = lv_img_create(ui_lblStorage);
+    ui_icoAdvanced = lv_img_create(ui_lblAdvanced);
 
     ui_pnlHighlight = lv_obj_create(ui_scrTweakGeneral);
     lv_obj_set_width(ui_pnlHighlight, 640);

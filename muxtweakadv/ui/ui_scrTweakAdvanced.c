@@ -223,19 +223,19 @@ void ui_scrTweakAdvanced_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoSwap = lv_label_create(ui_pnlGlyph);
-    ui_icoThermal = lv_label_create(ui_pnlGlyph);
-    ui_icoFont = lv_label_create(ui_pnlGlyph);
-    ui_icoVolume = lv_label_create(ui_pnlGlyph);
-    ui_icoBrightness = lv_label_create(ui_pnlGlyph);
-    ui_icoOffset = lv_label_create(ui_pnlGlyph);
-    ui_icoPasscode = lv_label_create(ui_pnlGlyph);
-    ui_icoLED = lv_label_create(ui_pnlGlyph);
-    ui_icoTheme = lv_label_create(ui_pnlGlyph);
-    ui_icoRetroWait = lv_label_create(ui_pnlGlyph);
-    ui_icoAndroid = lv_label_create(ui_pnlGlyph);
-    ui_icoState = lv_label_create(ui_pnlGlyph);
-    ui_icoVerbose = lv_label_create(ui_pnlGlyph);
+    ui_icoSwap = lv_img_create(ui_lblSwap);
+    ui_icoThermal = lv_img_create(ui_lblThermal);
+    ui_icoFont = lv_img_create(ui_lblFont);
+    ui_icoVolume = lv_img_create(ui_lblVolume);
+    ui_icoBrightness = lv_img_create(ui_lblBrightness);
+    ui_icoOffset = lv_img_create(ui_lblOffset);
+    ui_icoPasscode = lv_img_create(ui_lblPasscode);
+    ui_icoLED = lv_img_create(ui_lblLED);
+    ui_icoTheme = lv_img_create(ui_lblTheme);
+    ui_icoRetroWait = lv_img_create(ui_lblRetroWait);
+    ui_icoAndroid = lv_img_create(ui_lblAndroid);
+    ui_icoState = lv_img_create(ui_lblState);
+    ui_icoVerbose = lv_img_create(ui_lblVerbose);
 
     ui_pnlHighlight = lv_obj_create(ui_scrTweakAdvanced);
     lv_obj_set_width(ui_pnlHighlight, 640);

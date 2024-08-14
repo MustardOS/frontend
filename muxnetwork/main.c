@@ -259,17 +259,17 @@ void init_navigation_groups() {
 
     apply_theme_list_item(&theme, ui_lblStatus, "Status", false, false, false);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoEnable, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoIdentifier, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoPassword, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoType, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoAddress, "#", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSubnet, "#", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoGateway, "#", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDNS, "#", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConnect, "", 10);
+    apply_theme_list_glyph(&theme, &device, ui_icoEnable, "enable");
+    apply_theme_list_glyph(&theme, &device, ui_icoIdentifier, "identifier");
+    apply_theme_list_glyph(&theme, &device, ui_icoPassword, "password");
+    apply_theme_list_glyph(&theme, &device, ui_icoType, "type");
+    apply_theme_list_glyph(&theme, &device, ui_icoAddress, "address");
+    apply_theme_list_glyph(&theme, &device, ui_icoSubnet, "subnet");
+    apply_theme_list_glyph(&theme, &device, ui_icoGateway, "gateway");
+    apply_theme_list_glyph(&theme, &device, ui_icoDNS, "dns");
+    apply_theme_list_glyph(&theme, &device, ui_icoConnect, "connect");
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoStatus, "", 10);
+    apply_theme_list_glyph(&theme, &device, ui_icoStatus, "status");
 
     apply_theme_list_value(&theme, ui_lblEnableValue, "");
     apply_theme_list_value(&theme, ui_lblIdentifierValue, "");

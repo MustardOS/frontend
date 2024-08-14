@@ -482,35 +482,3 @@ void apply_theme_list_glyph(struct theme_config *theme, struct mux_device *devic
     lv_obj_set_style_img_recolor(ui_lblItemGlyph, lv_color_hex(theme->LIST_FOCUS.GLYPH_RECOLOUR), LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_img_recolor_opa(ui_lblItemGlyph, theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 }
-
-void apply_theme_list_icon(struct theme_config *theme, struct mux_device *device, const lv_font_t * ui_font_AwesomeSmall,
-    lv_obj_t * ui_lblItemGlyph, char *item_glyph, int glyph_pad) 
-{
-    lv_label_set_text(ui_lblItemGlyph, item_glyph);
-
-    lv_obj_set_width(ui_lblItemGlyph, device->MUX.WIDTH);
-    lv_obj_set_height(ui_lblItemGlyph, theme->MUX.ITEM.HEIGHT);
-
-    lv_obj_set_style_border_width(ui_lblItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_opa(ui_lblItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblItemGlyph, lv_color_hex(theme->LIST_DEFAULT.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblItemGlyph, theme->LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_opa(ui_lblItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_opa(ui_lblItemGlyph, 0, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_color(ui_lblItemGlyph, lv_color_hex(theme->LIST_FOCUS.TEXT),
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_lblItemGlyph, theme->LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-    lv_obj_set_style_pad_left(ui_lblItemGlyph, glyph_pad, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblItemGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblItemGlyph, theme->FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblItemGlyph, theme->FONT.LIST_ICON_PAD_BOTTOM,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_text_align(ui_lblItemGlyph, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblItemGlyph, ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
-}

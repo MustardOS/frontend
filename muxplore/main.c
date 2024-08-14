@@ -486,8 +486,6 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
 
     lv_obj_t * ui_lblExploreItemGlyph = lv_img_create(ui_lblExploreItem);
     apply_theme_list_glyph(&theme, &device, ui_lblExploreItemGlyph, item_glyph);
-    // lv_obj_t * ui_lblExploreItemGlyph = lv_label_create(ui_pnlExplore);
-    // apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblExploreItemGlyph, item_glyph, glyph_pad);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
@@ -626,15 +624,12 @@ void gen_item(char **file_names, int file_count) {
             char *glyph_icon;
             int glyph_pad;
             if (file_exist(fav_dir)) {
-                //glyph_icon = "\uF005";
                 glyph_icon = "favourite";
                 glyph_pad = 10;
             } else if (file_exist(hist_dir)) {
-                //glyph_icon = "\uE5A0";
                 glyph_icon = "history";
                 glyph_pad = 12;
             } else {
-                //glyph_icon = "\uF15B";
                 glyph_icon = "rom";
                 glyph_pad = 12;
             }
@@ -790,8 +785,8 @@ void explore_root() {
         case 6:
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
             ui_count += 2;
             nav_moved = 1;
             break;
@@ -805,16 +800,16 @@ void explore_root() {
         case 10:
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "folder", "USB (external)", 12);
             ui_count += 2;
             nav_moved = 1;
             break;
         case 12:
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "folder", "USB (external)", 12);
             ui_count += 2;
             nav_moved = 1;
             break;
@@ -822,9 +817,9 @@ void explore_root() {
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "folder", "USB (external)", 12);
             ui_count += 3;
             nav_moved = 1;
             break;

@@ -257,14 +257,14 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblScreenshot, "Screenshots", false, false, true);
     apply_theme_list_item(&theme, ui_lblTheme, "Themes", false, false, true);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBIOS, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConfig, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCatalogue, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFav, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMusic, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSave, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoScreenshot, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTheme, "", 12);
+    apply_theme_list_glyph(&theme, &device, ui_icoBIOS, "bios");
+    apply_theme_list_glyph(&theme, &device, ui_icoConfig, "config");
+    apply_theme_list_glyph(&theme, &device, ui_icoCatalogue, "catalogue");
+    apply_theme_list_glyph(&theme, &device, ui_icoFav, "fav");
+    apply_theme_list_glyph(&theme, &device, ui_icoMusic, "music");
+    apply_theme_list_glyph(&theme, &device, ui_icoSave, "save");
+    apply_theme_list_glyph(&theme, &device, ui_icoScreenshot, "screenshot");
+    apply_theme_list_glyph(&theme, &device, ui_icoTheme, "theme");
 
     apply_theme_list_drop_down(&theme, ui_droBIOS, "SD1\nSD2\nUSB");
     apply_theme_list_drop_down(&theme, ui_droConfig, "SD1\nSD2\nUSB");

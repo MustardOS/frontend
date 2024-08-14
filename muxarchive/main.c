@@ -177,8 +177,8 @@ void create_archive_items() {
         lv_obj_set_width(ui_lblArchiveItemData, 1);
         lv_obj_set_height(ui_lblArchiveItemData, 1);
 
-        lv_obj_t * ui_lblArchiveItemGlyph = lv_label_create(ui_pnlArchive);
-        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblArchiveItemGlyph, "\uF1C6", 12);
+        lv_obj_t * ui_lblArchiveItemGlyph = lv_img_create(ui_lblArchiveItem);
+        apply_theme_list_glyph(&theme, &device, ui_lblArchiveItemGlyph, "archiveitem");
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);
         lv_group_add_obj(ui_group_glyph, ui_lblArchiveItemGlyph);

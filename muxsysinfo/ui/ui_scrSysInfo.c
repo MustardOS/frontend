@@ -220,17 +220,17 @@ void ui_scrSysInfo_screen_init(void)
     lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_icoVersion = lv_label_create(ui_pnlGlyph);
-    ui_icoKernel = lv_label_create(ui_pnlGlyph);
-    ui_icoUptime = lv_label_create(ui_pnlGlyph);
-    ui_icoCPU = lv_label_create(ui_pnlGlyph);
-    ui_icoSpeed = lv_label_create(ui_pnlGlyph);
-    ui_icoGovernor = lv_label_create(ui_pnlGlyph);
-    ui_icoMemory = lv_label_create(ui_pnlGlyph);
-    ui_icoTemp = lv_label_create(ui_pnlGlyph);
-    ui_icoServices = lv_label_create(ui_pnlGlyph);
-    ui_icoBatteryCap = lv_label_create(ui_pnlGlyph);
-    ui_icoVoltage = lv_label_create(ui_pnlGlyph);
+    ui_icoVersion = lv_img_create(ui_lblVersion);
+    ui_icoKernel = lv_img_create(ui_lblKernel);
+    ui_icoUptime = lv_img_create(ui_lblUptime);
+    ui_icoCPU = lv_img_create(ui_lblCPU);
+    ui_icoSpeed = lv_img_create(ui_lblSpeed);
+    ui_icoGovernor = lv_img_create(ui_lblGovernor);
+    ui_icoMemory = lv_img_create(ui_lblMemory);
+    ui_icoTemp = lv_img_create(ui_lblTemp);
+    ui_icoServices = lv_img_create(ui_lblServices);
+    ui_icoBatteryCap = lv_img_create(ui_lblBatteryCap);
+    ui_icoVoltage = lv_img_create(ui_lblVoltage);
 
     ui_pnlHighlight = lv_obj_create(ui_scrSysInfo);
     lv_obj_set_width(ui_pnlHighlight, 640);

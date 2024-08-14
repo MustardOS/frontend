@@ -405,19 +405,19 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblState, "Suspend Power State", false, false, true);
     apply_theme_list_item(&theme, ui_lblVerbose, "Verbose Messages", false, false, true);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSwap, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoThermal, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFont, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVolume, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBrightness, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoOffset, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoPasscode, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoLED, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTheme, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoRetroWait, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoAndroid, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoState, "", 14);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoVerbose, "", 13);
+    apply_theme_list_glyph(&theme, &device, ui_icoSwap, "swap");
+    apply_theme_list_glyph(&theme, &device, ui_icoThermal, "thermal");
+    apply_theme_list_glyph(&theme, &device, ui_icoFont, "font");
+    apply_theme_list_glyph(&theme, &device, ui_icoVolume, "volume");
+    apply_theme_list_glyph(&theme, &device, ui_icoBrightness, "brightness");
+    apply_theme_list_glyph(&theme, &device, ui_icoOffset, "offset");
+    apply_theme_list_glyph(&theme, &device, ui_icoPasscode, "passcode");
+    apply_theme_list_glyph(&theme, &device, ui_icoLED, "led");
+    apply_theme_list_glyph(&theme, &device, ui_icoTheme, "theme");
+    apply_theme_list_glyph(&theme, &device, ui_icoRetroWait, "retrowait");
+    apply_theme_list_glyph(&theme, &device, ui_icoAndroid, "android");
+    apply_theme_list_glyph(&theme, &device, ui_icoState, "state");
+    apply_theme_list_glyph(&theme, &device, ui_icoVerbose, "verbose");
 
     apply_theme_list_drop_down(&theme, ui_droSwap, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droThermal, "Disabled\nEnabled");
