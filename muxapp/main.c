@@ -25,6 +25,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -130,30 +131,30 @@ void create_app_items() {
         apply_theme_list_panel(&theme, &device, ui_pnlApp);
 
         lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
-        apply_theme_list_item(&theme, ui_lblAppItem, app_store, false, false, false);
+        apply_theme_list_item(&theme, ui_lblAppItem, app_store, false, false);
 
-        lv_obj_t * ui_lblAppItemGlyph = lv_label_create(ui_pnlApp);
+        lv_obj_t * ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
 
         char *item_glyph;
         if (strcasecmp(app_store, "Archive Manager") == 0) {
-            item_glyph = "\uF187";
+            item_glyph = "archive";
         } else if (strcasecmp(app_store, "Dingux Commander") == 0) {
-            item_glyph = "\uF0C7";
+            item_glyph = "dingux";
         } else if (strcasecmp(app_store, "GMU Music Player") == 0) {
-            item_glyph = "\uF001";
+            item_glyph = "music";
         } else if (strcasecmp(app_store, "PortMaster") == 0) {
-            item_glyph = "\uF21A";
+            item_glyph = "portmaster";
         } else if (strcasecmp(app_store, "RetroArch") == 0) {
-            item_glyph = "\uF6E2";
+            item_glyph = "retroarch";
         } else if (strcasecmp(app_store, "Simple Terminal") == 0) {
-            item_glyph = "\uF120";
+            item_glyph = "terminal";
         } else if (strcasecmp(app_store, "Task Toolkit") == 0) {
-            item_glyph = "\uF7D9";
+            item_glyph = "task";
         } else {
-            item_glyph = "\uF04B";
+            item_glyph = "app";
         }
 
-        apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblAppItemGlyph, item_glyph, 12);
+        apply_theme_list_glyph(&theme, &device, ui_lblAppItemGlyph, mux_prog, item_glyph);
 
         lv_group_add_obj(ui_group, ui_lblAppItem);
         lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
@@ -175,7 +176,7 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -188,7 +189,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     if (first_open) {
         first_open = 0;
     } else {
@@ -310,7 +311,7 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
@@ -325,7 +326,7 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count) {
@@ -582,6 +583,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 

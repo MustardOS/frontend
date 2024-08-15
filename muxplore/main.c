@@ -481,11 +481,10 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     apply_theme_list_panel(&theme, &device, ui_pnlExplore);
 
     lv_obj_t * ui_lblExploreItem = lv_label_create(ui_pnlExplore);
-    const bool apply_visual_label = module != ROOT;
-    apply_theme_list_item(&theme, ui_lblExploreItem, item_text, apply_visual_label, true, false);
+    apply_theme_list_item(&theme, ui_lblExploreItem, item_text, true, false);
 
-    lv_obj_t * ui_lblExploreItemGlyph = lv_label_create(ui_pnlExplore);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_lblExploreItemGlyph, item_glyph, glyph_pad);
+    lv_obj_t * ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
+    apply_theme_list_glyph(&theme, &device, ui_lblExploreItemGlyph, mux_prog, item_glyph);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
@@ -624,13 +623,13 @@ void gen_item(char **file_names, int file_count) {
             char *glyph_icon;
             int glyph_pad;
             if (file_exist(fav_dir)) {
-                glyph_icon = "\uF005";
+                glyph_icon = "favourite";
                 glyph_pad = 10;
             } else if (file_exist(hist_dir)) {
-                glyph_icon = "\uE5A0";
+                glyph_icon = "history";
                 glyph_pad = 12;
             } else {
-                glyph_icon = "\uF15B";
+                glyph_icon = "rom";
                 glyph_pad = 12;
             }
 
@@ -736,7 +735,7 @@ void create_explore_items(void *count) {
         }
         sort_items(items, item_count);
         for (int i = 0; i < dir_count; i++) {
-            gen_label(FOLDER, "\uF07B", items[i].display_name, 12);
+            gen_label(FOLDER, "folder", items[i].display_name, 12);
             if (strcasecmp(items[i].name, prev_dir) == 0) {
                 sys_index = i;
             }
@@ -785,8 +784,8 @@ void explore_root() {
         case 6:
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
             ui_count += 2;
             nav_moved = 1;
             break;
@@ -800,16 +799,16 @@ void explore_root() {
         case 10:
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "folder", "USB (external)", 12);
             ui_count += 2;
             nav_moved = 1;
             break;
         case 12:
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "folder", "USB (external)", 12);
             ui_count += 2;
             nav_moved = 1;
             break;
@@ -817,9 +816,9 @@ void explore_root() {
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "\uF07B", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "\uF07B", "SD2 (sdcard)", 12);
-            gen_label(FOLDER, "\uF07B", "USB (external)", 12);
+            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
+            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
+            gen_label(FOLDER, "folder", "USB (external)", 12);
             ui_count += 3;
             nav_moved = 1;
             break;
@@ -997,7 +996,7 @@ void list_nav_prev(int steps) {
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                           current_item_index, ui_pnlContent, NULL, NULL);
+                           current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     image_refresh("box");
     set_label_long_mode();
@@ -1014,7 +1013,7 @@ void list_nav_next(int steps) {
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                           current_item_index, ui_pnlContent, NULL, NULL);
+                           current_item_index, ui_pnlContent);
     if (first_open) {
         first_open = 0;
     } else {
@@ -1475,7 +1474,7 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                                                           current_item_index, ui_pnlContent, NULL, NULL);
+                                                           current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                     image_refresh("box");
                                     set_label_long_mode();
@@ -1496,7 +1495,7 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                                                           current_item_index, ui_pnlContent, NULL, NULL);
+                                                           current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                     image_refresh("box");
                                     set_label_long_mode();

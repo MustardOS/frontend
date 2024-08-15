@@ -24,6 +24,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -260,21 +261,29 @@ void init_navigation_groups() {
             ui_icoTimezone
     };
 
-    apply_theme_list_item(&theme, ui_lblYear, "Year", false, false, false);
-    apply_theme_list_item(&theme, ui_lblMonth, "Month", false, false, false);
-    apply_theme_list_item(&theme, ui_lblDay, "Day", false, false, false);
-    apply_theme_list_item(&theme, ui_lblHour, "Hour", false, false, false);
-    apply_theme_list_item(&theme, ui_lblMinute, "Minute", false, false, false);
-    apply_theme_list_item(&theme, ui_lblNotation, "Time Notation", false, false, false);
-    apply_theme_list_item(&theme, ui_lblTimezone, "Set Timezone", false, false, false);
+    apply_theme_list_panel(&theme, &device, ui_pnlYear);
+    apply_theme_list_panel(&theme, &device, ui_pnlMonth);
+    apply_theme_list_panel(&theme, &device, ui_pnlDay);
+    apply_theme_list_panel(&theme, &device, ui_pnlHour);
+    apply_theme_list_panel(&theme, &device, ui_pnlMinute);
+    apply_theme_list_panel(&theme, &device, ui_pnlNotation);
+    apply_theme_list_panel(&theme, &device, ui_pnlTimezone);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoYear, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMonth, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDay, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHour, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMinute, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNotation, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTimezone, "", 10);
+    apply_theme_list_item(&theme, ui_lblYear, "Year", false, false);
+    apply_theme_list_item(&theme, ui_lblMonth, "Month", false, false);
+    apply_theme_list_item(&theme, ui_lblDay, "Day", false, false);
+    apply_theme_list_item(&theme, ui_lblHour, "Hour", false, false);
+    apply_theme_list_item(&theme, ui_lblMinute, "Minute", false, false);
+    apply_theme_list_item(&theme, ui_lblNotation, "Time Notation", false, false);
+    apply_theme_list_item(&theme, ui_lblTimezone, "Set Timezone", false, false);
+
+    apply_theme_list_glyph(&theme, &device, ui_icoYear, mux_prog, "year");
+    apply_theme_list_glyph(&theme, &device, ui_icoMonth, mux_prog, "month");
+    apply_theme_list_glyph(&theme, &device, ui_icoDay, mux_prog, "day");
+    apply_theme_list_glyph(&theme, &device, ui_icoHour, mux_prog, "hour");
+    apply_theme_list_glyph(&theme, &device, ui_icoMinute, mux_prog, "minute");
+    apply_theme_list_glyph(&theme, &device, ui_icoNotation, mux_prog, "notation");
+    apply_theme_list_glyph(&theme, &device, ui_icoTimezone, mux_prog, "timezone");
 
     apply_theme_list_value(&theme, ui_lblYearValue, "");
     apply_theme_list_value(&theme, ui_lblMonthValue, "");
@@ -304,7 +313,7 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -318,7 +327,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -490,7 +499,7 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -504,7 +513,7 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);
@@ -882,6 +891,7 @@ void direct_to_previous() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 
@@ -962,7 +972,6 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrRTC);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {

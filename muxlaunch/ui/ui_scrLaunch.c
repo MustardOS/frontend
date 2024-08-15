@@ -183,43 +183,32 @@ void ui_scrLaunch_screen_init(void)
     lv_obj_set_style_pad_row(ui_pnlContent, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblContent = lv_label_create(ui_pnlContent);
-    ui_lblFavourites = lv_label_create(ui_pnlContent);
-    ui_lblHistory = lv_label_create(ui_pnlContent);
-    ui_lblApps = lv_label_create(ui_pnlContent);
-    ui_lblInfo = lv_label_create(ui_pnlContent);
-    ui_lblConfig = lv_label_create(ui_pnlContent);
-    ui_lblReboot = lv_label_create(ui_pnlContent);
-    ui_lblShutdown = lv_label_create(ui_pnlContent);
+    ui_pnlExplore = lv_obj_create(ui_pnlContent);
+    ui_pnlFavourites = lv_obj_create(ui_pnlContent);
+    ui_pnlHistory = lv_obj_create(ui_pnlContent);
+    ui_pnlApps = lv_obj_create(ui_pnlContent);
+    ui_pnlInfo = lv_obj_create(ui_pnlContent);
+    ui_pnlConfig = lv_obj_create(ui_pnlContent);
+    ui_pnlReboot = lv_obj_create(ui_pnlContent);
+    ui_pnlShutdown = lv_obj_create(ui_pnlContent);
 
-    ui_pnlGlyph = lv_obj_create(ui_scrLaunch);
-    lv_obj_set_width(ui_pnlGlyph, 640);
-    lv_obj_set_height(ui_pnlGlyph, 400);
-    lv_obj_set_x(ui_pnlGlyph, 0);
-    lv_obj_set_y(ui_pnlGlyph, 44);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
-    lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlGlyph, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblContent = lv_label_create(ui_pnlExplore);
+    ui_lblFavourites = lv_label_create(ui_pnlFavourites);
+    ui_lblHistory = lv_label_create(ui_pnlHistory);
+    ui_lblApps = lv_label_create(ui_pnlApps);
+    ui_lblInfo = lv_label_create(ui_pnlInfo);
+    ui_lblConfig = lv_label_create(ui_pnlConfig);
+    ui_lblReboot = lv_label_create(ui_pnlReboot);
+    ui_lblShutdown = lv_label_create(ui_pnlShutdown);
 
-    ui_icoContent = lv_label_create(ui_pnlGlyph);
-    ui_icoFavourites = lv_label_create(ui_pnlGlyph);
-    ui_icoHistory = lv_label_create(ui_pnlGlyph);
-    ui_icoApps = lv_label_create(ui_pnlGlyph);
-    ui_icoInfo = lv_label_create(ui_pnlGlyph);
-    ui_icoConfig = lv_label_create(ui_pnlGlyph);
-    ui_icoReboot = lv_label_create(ui_pnlGlyph);
-    ui_icoShutdown = lv_label_create(ui_pnlGlyph);
+    ui_icoContent = lv_img_create(ui_pnlExplore);
+    ui_icoFavourites = lv_img_create(ui_pnlFavourites);
+    ui_icoHistory = lv_img_create(ui_pnlHistory);
+    ui_icoApps = lv_img_create(ui_pnlApps);
+    ui_icoInfo = lv_img_create(ui_pnlInfo);
+    ui_icoConfig = lv_img_create(ui_pnlConfig);
+    ui_icoReboot = lv_img_create(ui_pnlReboot);
+    ui_icoShutdown = lv_img_create(ui_pnlShutdown);
 
     ui_pnlFooter = lv_obj_create(ui_scrLaunch);
     lv_obj_set_width(ui_pnlFooter, 640);

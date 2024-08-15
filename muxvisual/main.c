@@ -25,6 +25,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -261,25 +262,35 @@ void init_navigation_groups() {
             ui_icoMenuCounterFile
     };
 
-    apply_theme_list_item(&theme, ui_lblBattery, "Battery", false, false, true);
-    apply_theme_list_item(&theme, ui_lblNetwork, "Network", false, false, true);
-    apply_theme_list_item(&theme, ui_lblBluetooth, "Bluetooth", false, false, true);
-    apply_theme_list_item(&theme, ui_lblClock, "Clock", false, false, true);
-    apply_theme_list_item(&theme, ui_lblBoxArt, "Content Box Art", false, false, true);
-    apply_theme_list_item(&theme, ui_lblName, "Content Name Scheme", false, false, true);
-    apply_theme_list_item(&theme, ui_lblDash, "Content Dash Replacement", false, false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, "Menu Counter Folder", false, false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFile, "Menu Counter File", false, false, true);
+    apply_theme_list_panel(&theme, &device, ui_pnlBattery);
+    apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
+    apply_theme_list_panel(&theme, &device, ui_pnlBluetooth);
+    apply_theme_list_panel(&theme, &device, ui_pnlClock);
+    apply_theme_list_panel(&theme, &device, ui_pnlBoxArt);
+    apply_theme_list_panel(&theme, &device, ui_pnlName);
+    apply_theme_list_panel(&theme, &device, ui_pnlDash);
+    apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFolder);
+    apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFile);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBattery, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoNetwork, "", 9);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBluetooth, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoClock, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBoxArt, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoName, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoDash, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMenuCounterFolder, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMenuCounterFile, "", 12);
+    apply_theme_list_item(&theme, ui_lblBattery, "Battery", false, true);
+    apply_theme_list_item(&theme, ui_lblNetwork, "Network", false, true);
+    apply_theme_list_item(&theme, ui_lblBluetooth, "Bluetooth", false, true);
+    apply_theme_list_item(&theme, ui_lblClock, "Clock", false, true);
+    apply_theme_list_item(&theme, ui_lblBoxArt, "Content Box Art", false, true);
+    apply_theme_list_item(&theme, ui_lblName, "Content Name Scheme", false, true);
+    apply_theme_list_item(&theme, ui_lblDash, "Content Dash Replacement", false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, "Menu Counter Folder", false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFile, "Menu Counter File", false, true);
+
+    apply_theme_list_glyph(&theme, &device, ui_icoBattery, mux_prog, "battery");
+    apply_theme_list_glyph(&theme, &device, ui_icoNetwork, mux_prog, "network");
+    apply_theme_list_glyph(&theme, &device, ui_icoBluetooth, mux_prog, "bluetooth");
+    apply_theme_list_glyph(&theme, &device, ui_icoClock, mux_prog, "clock");
+    apply_theme_list_glyph(&theme, &device, ui_icoBoxArt, mux_prog, "boxart");
+    apply_theme_list_glyph(&theme, &device, ui_icoName, mux_prog, "name");
+    apply_theme_list_glyph(&theme, &device, ui_icoDash, mux_prog, "dash");
+    apply_theme_list_glyph(&theme, &device, ui_icoMenuCounterFolder, mux_prog, "counterfolder");
+    apply_theme_list_glyph(&theme, &device, ui_icoMenuCounterFile, mux_prog, "counterfile");
 
     apply_theme_list_drop_down(&theme, ui_droBattery, "Hidden\nVisible");
     apply_theme_list_drop_down(&theme, ui_droNetwork, "Hidden\nVisible");
@@ -313,7 +324,7 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_icon, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -327,7 +338,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group_icon, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -459,7 +470,7 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -473,7 +484,7 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < ui_count - 1) {
                                     list_nav_next(1);
@@ -809,6 +820,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 
@@ -889,8 +901,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrVisual);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
-
+    
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);

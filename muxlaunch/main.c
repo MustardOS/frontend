@@ -25,6 +25,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -110,23 +111,32 @@ void init_navigation_groups() {
     ui_icons[6] = ui_icoReboot;
     ui_icons[7] = ui_icoShutdown;
 
-    apply_theme_list_item(&theme, ui_lblContent, "Explore Content", false, false, false);
-    apply_theme_list_item(&theme, ui_lblFavourites, "Favourites", false, false, false);
-    apply_theme_list_item(&theme, ui_lblHistory, "History", false, false, false);
-    apply_theme_list_item(&theme, ui_lblApps, "Applications", false, false, false);
-    apply_theme_list_item(&theme, ui_lblInfo, "Information", false, false, false);
-    apply_theme_list_item(&theme, ui_lblConfig, "Configuration", false, false, false);
-    apply_theme_list_item(&theme, ui_lblReboot, "Reboot", false, false, false);
-    apply_theme_list_item(&theme, ui_lblShutdown, "Shutdown", false, false, false);
+    apply_theme_list_panel(&theme, &device, ui_pnlExplore);
+    apply_theme_list_panel(&theme, &device, ui_pnlFavourites);
+    apply_theme_list_panel(&theme, &device, ui_pnlHistory);
+    apply_theme_list_panel(&theme, &device, ui_pnlApps);
+    apply_theme_list_panel(&theme, &device, ui_pnlInfo);
+    apply_theme_list_panel(&theme, &device, ui_pnlConfig);
+    apply_theme_list_panel(&theme, &device, ui_pnlReboot);
+    apply_theme_list_panel(&theme, &device, ui_pnlShutdown);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoContent, "", 14);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFavourites, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoHistory, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoApps, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoInfo, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConfig, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoReboot, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoShutdown, "", 12);
+    apply_theme_list_item(&theme, ui_lblContent, "Explore Content", false, false);
+    apply_theme_list_item(&theme, ui_lblFavourites, "Favourites", false, false);
+    apply_theme_list_item(&theme, ui_lblHistory, "History", false, false);
+    apply_theme_list_item(&theme, ui_lblApps, "Applications", false, false);
+    apply_theme_list_item(&theme, ui_lblInfo, "Information", false, false);
+    apply_theme_list_item(&theme, ui_lblConfig, "Configuration", false, false);
+    apply_theme_list_item(&theme, ui_lblReboot, "Reboot", false, false);
+    apply_theme_list_item(&theme, ui_lblShutdown, "Shutdown", false, false);
+
+    apply_theme_list_glyph(&theme, &device, ui_icoContent, mux_prog, "explore");
+    apply_theme_list_glyph(&theme, &device, ui_icoFavourites, mux_prog, "favourite");
+    apply_theme_list_glyph(&theme, &device, ui_icoHistory, mux_prog, "history");
+    apply_theme_list_glyph(&theme, &device, ui_icoApps, mux_prog, "apps");
+    apply_theme_list_glyph(&theme, &device, ui_icoInfo, mux_prog, "info");
+    apply_theme_list_glyph(&theme, &device, ui_icoConfig, mux_prog, "config");
+    apply_theme_list_glyph(&theme, &device, ui_icoReboot, mux_prog, "reboot");
+    apply_theme_list_glyph(&theme, &device, ui_icoShutdown, mux_prog, "shutdown");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -147,7 +157,7 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -158,7 +168,7 @@ void list_nav_next(int steps) {
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -562,6 +572,7 @@ void direct_to_previous() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 

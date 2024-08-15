@@ -25,6 +25,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -248,23 +249,32 @@ void init_navigation_groups() {
             ui_icoTheme
     };
 
-    apply_theme_list_item(&theme, ui_lblBIOS, "RetroArch BIOS", false, false, true);
-    apply_theme_list_item(&theme, ui_lblConfig, "RetroArch Configs", false, false, true);
-    apply_theme_list_item(&theme, ui_lblCatalogue, "Metadata Catalogue", false, false, true);
-    apply_theme_list_item(&theme, ui_lblFav, "Favourites + History", false, false, true);
-    apply_theme_list_item(&theme, ui_lblMusic, "Background Music", false, false, true);
-    apply_theme_list_item(&theme, ui_lblSave, "Save Games + Save States", false, false, true);
-    apply_theme_list_item(&theme, ui_lblScreenshot, "Screenshots", false, false, true);
-    apply_theme_list_item(&theme, ui_lblTheme, "Themes", false, false, true);
+    apply_theme_list_panel(&theme, &device, ui_pnlBIOS);
+    apply_theme_list_panel(&theme, &device, ui_pnlConfig);
+    apply_theme_list_panel(&theme, &device, ui_pnlCatalogue);
+    apply_theme_list_panel(&theme, &device, ui_pnlFav);
+    apply_theme_list_panel(&theme, &device, ui_pnlMusic);
+    apply_theme_list_panel(&theme, &device, ui_pnlSave);
+    apply_theme_list_panel(&theme, &device, ui_pnlScreenshot);
+    apply_theme_list_panel(&theme, &device, ui_pnlTheme);
 
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoBIOS, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoConfig, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoCatalogue, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoFav, "", 10);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoMusic, "", 11);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoSave, "", 13);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoScreenshot, "", 12);
-    apply_theme_list_icon(&theme, &device, &ui_font_AwesomeSmall, ui_icoTheme, "", 12);
+    apply_theme_list_item(&theme, ui_lblBIOS, "RetroArch BIOS", false, true);
+    apply_theme_list_item(&theme, ui_lblConfig, "RetroArch Configs", false, true);
+    apply_theme_list_item(&theme, ui_lblCatalogue, "Metadata Catalogue", false, true);
+    apply_theme_list_item(&theme, ui_lblFav, "Favourites + History", false, true);
+    apply_theme_list_item(&theme, ui_lblMusic, "Background Music", false, true);
+    apply_theme_list_item(&theme, ui_lblSave, "Save Games + Save States", false, true);
+    apply_theme_list_item(&theme, ui_lblScreenshot, "Screenshots", false, true);
+    apply_theme_list_item(&theme, ui_lblTheme, "Themes", false, true);
+
+    apply_theme_list_glyph(&theme, &device, ui_icoBIOS, mux_prog, "bios");
+    apply_theme_list_glyph(&theme, &device, ui_icoConfig, mux_prog, "config");
+    apply_theme_list_glyph(&theme, &device, ui_icoCatalogue, mux_prog, "catalogue");
+    apply_theme_list_glyph(&theme, &device, ui_icoFav, mux_prog, "fav");
+    apply_theme_list_glyph(&theme, &device, ui_icoMusic, mux_prog, "music");
+    apply_theme_list_glyph(&theme, &device, ui_icoSave, mux_prog, "save");
+    apply_theme_list_glyph(&theme, &device, ui_icoScreenshot, mux_prog, "screenshot");
+    apply_theme_list_glyph(&theme, &device, ui_icoTheme, mux_prog, "theme");
 
     apply_theme_list_drop_down(&theme, ui_droBIOS, "SD1\nSD2\nUSB");
     apply_theme_list_drop_down(&theme, ui_droConfig, "SD1\nSD2\nUSB");
@@ -296,7 +306,7 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_icon, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -310,7 +320,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group_icon, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -438,7 +448,7 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -452,7 +462,7 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < ui_count - 1) {
                                     list_nav_next(1);
@@ -759,6 +769,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 
@@ -839,7 +850,6 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrStorage);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {

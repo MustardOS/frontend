@@ -1449,7 +1449,7 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
 }
 
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, 
-    int current_item_index, lv_obj_t * ui_pnlContent, lv_obj_t * ui_pnlGlyph, lv_obj_t * ui_pnlHighlight
+    int current_item_index, lv_obj_t * ui_pnlContent
     ) {
     // how many items should be above the currently selected item when scrolling
     double item_distribution = (mux_item_count - 1) / (double)2; 
@@ -1460,26 +1460,12 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
     if (isAtBottom) scrollMultiplier = ui_count - mux_item_count;
 
     if (mux_item_count % 2 == 0 && current_item_index > item_distribution && !isAtBottom) {
-        if (ui_pnlContent != NULL) lv_obj_set_scroll_snap_y(ui_pnlContent, LV_SCROLL_SNAP_CENTER);
-        if (ui_pnlGlyph != NULL) lv_obj_set_scroll_snap_y(ui_pnlGlyph, LV_SCROLL_SNAP_CENTER);
-        if (ui_pnlHighlight != NULL) lv_obj_set_scroll_snap_y(ui_pnlHighlight, LV_SCROLL_SNAP_CENTER);
+        lv_obj_set_scroll_snap_y(ui_pnlContent, LV_SCROLL_SNAP_CENTER);
     } else {
-        if (ui_pnlContent != NULL) lv_obj_set_scroll_snap_y(ui_pnlContent, LV_SCROLL_SNAP_START);
-        if (ui_pnlGlyph != NULL) lv_obj_set_scroll_snap_y(ui_pnlGlyph, LV_SCROLL_SNAP_START);
-        if (ui_pnlHighlight != NULL) lv_obj_set_scroll_snap_y(ui_pnlHighlight, LV_SCROLL_SNAP_START);
+        lv_obj_set_scroll_snap_y(ui_pnlContent, LV_SCROLL_SNAP_START);
     }
 
     int content_panel_y = scrollMultiplier * mux_item_panel;
-    if (ui_pnlContent != NULL) {
-        lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
-        lv_obj_update_snap(ui_pnlContent, LV_ANIM_OFF);
-    }
-    if (ui_pnlGlyph != NULL) {
-        lv_obj_scroll_to_y(ui_pnlGlyph, content_panel_y, LV_ANIM_OFF);
-        lv_obj_update_snap(ui_pnlGlyph, LV_ANIM_OFF);
-    }
-    if (ui_pnlHighlight != NULL) {
-        lv_obj_scroll_to_y(ui_pnlHighlight, content_panel_y, LV_ANIM_OFF);
-        lv_obj_update_snap(ui_pnlHighlight, LV_ANIM_OFF);
-    }
+    lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
+    lv_obj_update_snap(ui_pnlContent, LV_ANIM_OFF);
 }
