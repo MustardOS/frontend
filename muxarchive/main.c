@@ -180,7 +180,7 @@ void create_archive_items() {
 
         lv_obj_t * ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         char item_glyph[MAX_BUFFER_SIZE];
-        snprintf(item_glyph, sizeof(item_glyph), "archive%s", is_installed);
+        snprintf(item_glyph, sizeof(item_glyph), "archive%s", str_tolower(is_installed));
         apply_theme_list_glyph(&theme, &device, ui_lblArchiveItemGlyph, mux_prog, item_glyph);
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);
