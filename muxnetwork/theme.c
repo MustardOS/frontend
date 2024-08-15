@@ -155,8 +155,6 @@ void apply_theme() {
 
     struct small item_height_elements[] = {
             {ui_pnlContent,         theme.MISC.CONTENT.HEIGHT},
-            {ui_pnlGlyph,           theme.MISC.CONTENT.HEIGHT},
-            {ui_pnlHighlight,       theme.MISC.CONTENT.HEIGHT},
     };
     for (size_t i = 0; i < sizeof(item_height_elements) / sizeof(item_height_elements[0]); ++i) {
         lv_obj_set_height(item_height_elements[i].e, item_height_elements[i].c);
@@ -297,11 +295,7 @@ void apply_theme() {
 
     struct small content_pad_left_element[] = {
             {ui_pnlContent,         theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlGlyph,           theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlHighlight,       theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlStatus,          theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlStatusGlyph,     theme.MISC.CONTENT.PADDING_LEFT},
-            {ui_pnlStatusHighlight, theme.MISC.CONTENT.PADDING_LEFT},
+            {ui_pnlStatusCore,      theme.MISC.CONTENT.PADDING_LEFT},
     };
     for (size_t i = 0; i < sizeof(content_pad_left_element) / sizeof(content_pad_left_element[0]); ++i) {
         lv_obj_set_style_pad_left(content_pad_left_element[i].e, content_pad_left_element[i].c,
@@ -310,19 +304,9 @@ void apply_theme() {
 
     struct small content_padding_top_element[] = {
             {ui_pnlContent, 44 + theme.MISC.CONTENT.PADDING_TOP},
-            {ui_pnlGlyph,   44 + theme.MISC.CONTENT.PADDING_TOP},
-            {ui_pnlHighlight,   44 + theme.MISC.CONTENT.PADDING_TOP},
     };
     for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
         lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);
-    }
-
-    struct small highlight_pad_right_element[] = {
-            {ui_pnlHighlight, theme.MISC.CONTENT.PADDING_LEFT},
-    };
-    for (size_t i = 0; i < sizeof(highlight_pad_right_element) / sizeof(highlight_pad_right_element[0]); ++i) {
-        lv_obj_set_style_pad_right(highlight_pad_right_element[i].e, (highlight_pad_right_element[i].c / 2) + 4,
-                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     struct small datetime_pad_left_element[] = {

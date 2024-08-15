@@ -186,38 +186,23 @@ void ui_scrConfig_screen_init(void)
     lv_obj_set_style_pad_row(ui_pnlContent, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblTweakGeneral = lv_label_create(ui_pnlContent);
-    ui_lblTheme = lv_label_create(ui_pnlContent);
-    ui_lblNetwork = lv_label_create(ui_pnlContent);
-    ui_lblServices = lv_label_create(ui_pnlContent);
-    ui_lblRTC = lv_label_create(ui_pnlContent);
+    ui_pnlTweakGeneral = lv_obj_create(ui_pnlContent);
+    ui_pnlTheme = lv_obj_create(ui_pnlContent);
+    ui_pnlNetwork = lv_obj_create(ui_pnlContent);
+    ui_pnlServices = lv_obj_create(ui_pnlContent);
+    ui_pnlRTC = lv_obj_create(ui_pnlContent);
+    
+    ui_lblTweakGeneral = lv_label_create(ui_pnlTweakGeneral);
+    ui_lblTheme = lv_label_create(ui_pnlTheme);
+    ui_lblNetwork = lv_label_create(ui_pnlNetwork);
+    ui_lblServices = lv_label_create(ui_pnlServices);
+    ui_lblRTC = lv_label_create(ui_pnlRTC);
 
-    ui_pnlGlyph = lv_obj_create(ui_scrConfig);
-    lv_obj_set_width(ui_pnlGlyph, 640);
-    lv_obj_set_height(ui_pnlGlyph, 400);
-    lv_obj_set_x(ui_pnlGlyph, 0);
-    lv_obj_set_y(ui_pnlGlyph, 34);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_add_flag(ui_pnlGlyph, LV_OBJ_FLAG_FLOATING);     /// Flags
-    lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_radius(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlGlyph, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlGlyph, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_icoTweakGeneral = lv_img_create(ui_lblTweakGeneral);
-    ui_icoTheme = lv_img_create(ui_lblTheme);
-    ui_icoNetwork = lv_img_create(ui_lblNetwork);
-    ui_icoServices = lv_img_create(ui_lblServices);
-    ui_icoRTC = lv_img_create(ui_lblRTC);
+    ui_icoTweakGeneral = lv_img_create(ui_pnlTweakGeneral);
+    ui_icoTheme = lv_img_create(ui_pnlTheme);
+    ui_icoNetwork = lv_img_create(ui_pnlNetwork);
+    ui_icoServices = lv_img_create(ui_pnlServices);
+    ui_icoRTC = lv_img_create(ui_pnlRTC);
 
     ui_pnlFooter = lv_obj_create(ui_scrConfig);
     lv_obj_set_width(ui_pnlFooter, 640);

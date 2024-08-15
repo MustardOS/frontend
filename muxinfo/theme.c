@@ -284,7 +284,6 @@ void apply_theme() {
 
     struct small content_padding_top_element[] = {
             {ui_pnlContent, 34 + theme.MISC.CONTENT.PADDING_TOP},
-            {ui_pnlGlyph,   34 + theme.MISC.CONTENT.PADDING_TOP},
     };
     for (size_t i = 0; i < sizeof(content_padding_top_element) / sizeof(content_padding_top_element[0]); ++i) {
         lv_obj_set_y(content_padding_top_element[i].e, content_padding_top_element[i].c);

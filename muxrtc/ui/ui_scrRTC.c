@@ -184,66 +184,37 @@ void ui_scrRTC_screen_init(void)
     lv_obj_set_style_pad_row(ui_pnlContent, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblYear = lv_label_create(ui_pnlContent);
-    ui_lblMonth = lv_label_create(ui_pnlContent);
-    ui_lblDay = lv_label_create(ui_pnlContent);
-    ui_lblHour = lv_label_create(ui_pnlContent);
-    ui_lblMinute = lv_label_create(ui_pnlContent);
-    ui_lblNotation = lv_label_create(ui_pnlContent);
-    ui_lblTimezone = lv_label_create(ui_pnlContent);
+    ui_pnlYear = lv_obj_create(ui_pnlContent);
+    ui_pnlMonth = lv_obj_create(ui_pnlContent);
+    ui_pnlDay = lv_obj_create(ui_pnlContent);
+    ui_pnlHour = lv_obj_create(ui_pnlContent);
+    ui_pnlMinute = lv_obj_create(ui_pnlContent);
+    ui_pnlNotation = lv_obj_create(ui_pnlContent);
+    ui_pnlTimezone = lv_obj_create(ui_pnlContent);
 
-    ui_pnlGlyph = lv_obj_create(ui_scrRTC);
-    lv_obj_set_width(ui_pnlGlyph, 640);
-    lv_obj_set_height(ui_pnlGlyph, 400);
-    lv_obj_set_x(ui_pnlGlyph, 0);
-    lv_obj_set_y(ui_pnlGlyph, 44);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlGlyph, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblYear = lv_label_create(ui_pnlYear);
+    ui_lblMonth = lv_label_create(ui_pnlMonth);
+    ui_lblDay = lv_label_create(ui_pnlDay);
+    ui_lblHour = lv_label_create(ui_pnlHour);
+    ui_lblMinute = lv_label_create(ui_pnlMinute);
+    ui_lblNotation = lv_label_create(ui_pnlNotation);
+    ui_lblTimezone = lv_label_create(ui_pnlTimezone);
 
-    ui_icoYear = lv_img_create(ui_lblYear);
-    ui_icoMonth = lv_img_create(ui_lblMonth);
-    ui_icoDay = lv_img_create(ui_lblDay);
-    ui_icoHour = lv_img_create(ui_lblHour);
-    ui_icoMinute = lv_img_create(ui_lblMinute);
-    ui_icoNotation = lv_img_create(ui_lblNotation);
-    ui_icoTimezone = lv_img_create(ui_lblTimezone);
+    ui_icoYear = lv_img_create(ui_pnlYear);
+    ui_icoMonth = lv_img_create(ui_pnlMonth);
+    ui_icoDay = lv_img_create(ui_pnlDay);
+    ui_icoHour = lv_img_create(ui_pnlHour);
+    ui_icoMinute = lv_img_create(ui_pnlMinute);
+    ui_icoNotation = lv_img_create(ui_pnlNotation);
+    ui_icoTimezone = lv_img_create(ui_pnlTimezone);
 
-    ui_pnlHighlight = lv_obj_create(ui_scrRTC);
-    lv_obj_set_width(ui_pnlHighlight, 640);
-    lv_obj_set_height(ui_pnlHighlight, 400);
-    lv_obj_set_x(ui_pnlHighlight, 0);
-    lv_obj_set_y(ui_pnlHighlight, 44);
-    lv_obj_set_flex_flow(ui_pnlHighlight, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlHighlight, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_pnlHighlight, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_pnlHighlight, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlHighlight, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_lblYearValue = lv_label_create(ui_pnlHighlight);
-    ui_lblMonthValue = lv_label_create(ui_pnlHighlight);
-    ui_lblDayValue = lv_label_create(ui_pnlHighlight);
-    ui_lblHourValue = lv_label_create(ui_pnlHighlight);
-    ui_lblMinuteValue = lv_label_create(ui_pnlHighlight);
-    ui_lblNotationValue = lv_label_create(ui_pnlHighlight);
-    ui_lblTimezoneValue = lv_label_create(ui_pnlHighlight);
+    ui_lblYearValue = lv_label_create(ui_pnlYear);
+    ui_lblMonthValue = lv_label_create(ui_pnlMonth);
+    ui_lblDayValue = lv_label_create(ui_pnlDay);
+    ui_lblHourValue = lv_label_create(ui_pnlHour);
+    ui_lblMinuteValue = lv_label_create(ui_pnlMinute);
+    ui_lblNotationValue = lv_label_create(ui_pnlNotation);
+    ui_lblTimezoneValue = lv_label_create(ui_pnlTimezone);
 
     ui_pnlFooter = lv_obj_create(ui_scrRTC);
     lv_obj_set_width(ui_pnlFooter, 640);

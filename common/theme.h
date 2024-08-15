@@ -309,7 +309,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 int apply_size_to_content(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_pnlContent, lv_obj_t * ui_lblItem, const char *item_text);
 void apply_align(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_lblItemIcon, lv_obj_t * ui_lblItem, int item_width);
 void apply_theme_list_panel(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_pnlList);
-void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, const char *item_text, bool apply_visual_label, bool enable_scrolling_text, bool is_config_menu);
+void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, const char *item_text, bool enable_scrolling_text, bool is_config_menu);
 void apply_theme_list_value(struct theme_config *theme, lv_obj_t * ui_lblItemValue, char *item_text);
 void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblItemValue, char *options);
-void apply_theme_list_glyph(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_lblItemGlyph, char *item_glyph);
+void apply_theme_list_glyph(struct theme_config *theme, struct mux_device *device, lv_obj_t * ui_lblItemGlyph, const char *screen_name, char *item_glyph);

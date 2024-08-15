@@ -25,6 +25,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -391,33 +392,47 @@ void init_navigation_groups() {
             ui_icoVerbose
     };
 
-    apply_theme_list_item(&theme, ui_lblSwap, "A+B Button Swap", false, false, true);
-    apply_theme_list_item(&theme, ui_lblThermal, "Thermal Zone Control", false, false, true);
-    apply_theme_list_item(&theme, ui_lblFont, "Interface Font Type", false, false, true);
-    apply_theme_list_item(&theme, ui_lblVolume, "Volume On Boot", false, false, true);
-    apply_theme_list_item(&theme, ui_lblBrightness, "Brightness On Boot", false, false, true);
-    apply_theme_list_item(&theme, ui_lblOffset, "Battery Offset", false, false, true);
-    apply_theme_list_item(&theme, ui_lblPasscode, "Passcode Lock", false, false, true);
-    apply_theme_list_item(&theme, ui_lblLED, "LED During Play", false, false, true);
-    apply_theme_list_item(&theme, ui_lblTheme, "Random Theme on Boot", false, false, true);
-    apply_theme_list_item(&theme, ui_lblRetroWait, "RetroArch Network Wait", false, false, true);
-    apply_theme_list_item(&theme, ui_lblAndroid, "Android Debug Bridge", false, false, true);
-    apply_theme_list_item(&theme, ui_lblState, "Suspend Power State", false, false, true);
-    apply_theme_list_item(&theme, ui_lblVerbose, "Verbose Messages", false, false, true);
+    apply_theme_list_panel(&theme, &device, ui_pnlSwap);
+    apply_theme_list_panel(&theme, &device, ui_pnlThermal);
+    apply_theme_list_panel(&theme, &device, ui_pnlFont);
+    apply_theme_list_panel(&theme, &device, ui_pnlVolume);
+    apply_theme_list_panel(&theme, &device, ui_pnlBrightness);
+    apply_theme_list_panel(&theme, &device, ui_pnlOffset);
+    apply_theme_list_panel(&theme, &device, ui_pnlPasscode);
+    apply_theme_list_panel(&theme, &device, ui_pnlLED);
+    apply_theme_list_panel(&theme, &device, ui_pnlTheme);
+    apply_theme_list_panel(&theme, &device, ui_pnlRetroWait);
+    apply_theme_list_panel(&theme, &device, ui_pnlAndroid);
+    apply_theme_list_panel(&theme, &device, ui_pnlState);
+    apply_theme_list_panel(&theme, &device, ui_pnlVerbose);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoSwap, "swap");
-    apply_theme_list_glyph(&theme, &device, ui_icoThermal, "thermal");
-    apply_theme_list_glyph(&theme, &device, ui_icoFont, "font");
-    apply_theme_list_glyph(&theme, &device, ui_icoVolume, "volume");
-    apply_theme_list_glyph(&theme, &device, ui_icoBrightness, "brightness");
-    apply_theme_list_glyph(&theme, &device, ui_icoOffset, "offset");
-    apply_theme_list_glyph(&theme, &device, ui_icoPasscode, "passcode");
-    apply_theme_list_glyph(&theme, &device, ui_icoLED, "led");
-    apply_theme_list_glyph(&theme, &device, ui_icoTheme, "theme");
-    apply_theme_list_glyph(&theme, &device, ui_icoRetroWait, "retrowait");
-    apply_theme_list_glyph(&theme, &device, ui_icoAndroid, "android");
-    apply_theme_list_glyph(&theme, &device, ui_icoState, "state");
-    apply_theme_list_glyph(&theme, &device, ui_icoVerbose, "verbose");
+    apply_theme_list_item(&theme, ui_lblSwap, "A+B Button Swap", false, true);
+    apply_theme_list_item(&theme, ui_lblThermal, "Thermal Zone Control", false, true);
+    apply_theme_list_item(&theme, ui_lblFont, "Interface Font Type", false, true);
+    apply_theme_list_item(&theme, ui_lblVolume, "Volume On Boot", false, true);
+    apply_theme_list_item(&theme, ui_lblBrightness, "Brightness On Boot", false, true);
+    apply_theme_list_item(&theme, ui_lblOffset, "Battery Offset", false, true);
+    apply_theme_list_item(&theme, ui_lblPasscode, "Passcode Lock", false, true);
+    apply_theme_list_item(&theme, ui_lblLED, "LED During Play", false, true);
+    apply_theme_list_item(&theme, ui_lblTheme, "Random Theme on Boot", false, true);
+    apply_theme_list_item(&theme, ui_lblRetroWait, "RetroArch Network Wait", false, true);
+    apply_theme_list_item(&theme, ui_lblAndroid, "Android Debug Bridge", false, true);
+    apply_theme_list_item(&theme, ui_lblState, "Suspend Power State", false, true);
+    apply_theme_list_item(&theme, ui_lblVerbose, "Verbose Messages", false, true);
+
+    apply_theme_list_glyph(&theme, &device, ui_icoSwap, mux_prog, "swap");
+    apply_theme_list_glyph(&theme, &device, ui_icoThermal, mux_prog, "thermal");
+    apply_theme_list_glyph(&theme, &device, ui_icoFont, mux_prog, "font");
+    apply_theme_list_glyph(&theme, &device, ui_icoVolume, mux_prog, "volume");
+    apply_theme_list_glyph(&theme, &device, ui_icoBrightness, mux_prog, "brightness");
+    apply_theme_list_glyph(&theme, &device, ui_icoOffset, mux_prog, "offset");
+    apply_theme_list_glyph(&theme, &device, ui_icoPasscode, mux_prog, "lock");
+    apply_theme_list_glyph(&theme, &device, ui_icoLED, mux_prog, "led");
+    apply_theme_list_glyph(&theme, &device, ui_icoTheme, mux_prog, "theme");
+    apply_theme_list_glyph(&theme, &device, ui_icoRetroWait, mux_prog, "retrowait");
+    apply_theme_list_glyph(&theme, &device, ui_icoAndroid, mux_prog, "android");
+    apply_theme_list_glyph(&theme, &device, ui_icoState, mux_prog, "state");
+    apply_theme_list_glyph(&theme, &device, ui_icoVerbose, mux_prog, "verbose");
 
     apply_theme_list_drop_down(&theme, ui_droSwap, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droThermal, "Disabled\nEnabled");
@@ -454,7 +469,7 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -468,7 +483,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -616,7 +631,7 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -630,7 +645,7 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);
@@ -991,6 +1006,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 
@@ -1071,7 +1087,6 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrTweakAdvanced);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {

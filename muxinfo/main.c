@@ -24,6 +24,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -87,15 +88,20 @@ void init_navigation_groups() {
     ui_icons[1] = ui_icoSystem;
     ui_icons[2] = ui_icoCredits;
 
-    //apply_theme_list_item(&theme, ui_lblTracker, "Activity Tracker", false, false, false);
-    apply_theme_list_item(&theme, ui_lblTester, "Input Tester", false, false, false);
-    apply_theme_list_item(&theme, ui_lblSystem, "System Details", false, false, false);
-    apply_theme_list_item(&theme, ui_lblCredits, "Supporters", false, false, false);
+    apply_theme_list_panel(&theme, &device, ui_pnlTracker);
+    apply_theme_list_panel(&theme, &device, ui_pnlTester);
+    apply_theme_list_panel(&theme, &device, ui_pnlSystem);
+    apply_theme_list_panel(&theme, &device, ui_pnlCredits);
 
-    //apply_theme_list_glyph(&theme, &device, ui_icoTracker, "tracker");
-    apply_theme_list_glyph(&theme, &device, ui_icoTester, "tester");
-    apply_theme_list_glyph(&theme, &device, ui_icoSystem, "system");
-    apply_theme_list_glyph(&theme, &device, ui_icoCredits, "credits");
+    //apply_theme_list_item(&theme, ui_lblTracker, "Activity Tracker", false, false, false);
+    apply_theme_list_item(&theme, ui_lblTester, "Input Tester", false, false);
+    apply_theme_list_item(&theme, ui_lblSystem, "System Details", false, false);
+    apply_theme_list_item(&theme, ui_lblCredits, "Supporters", false, false);
+
+    //apply_theme_list_glyph(&theme, &device, ui_icoTracker, mux_prog, "tracker");
+    apply_theme_list_glyph(&theme, &device, ui_icoTester, mux_prog, "tester");
+    apply_theme_list_glyph(&theme, &device, ui_icoSystem, mux_prog, "system");
+    apply_theme_list_glyph(&theme, &device, ui_icoCredits, mux_prog, "credit");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -450,6 +456,7 @@ void direct_to_previous() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 

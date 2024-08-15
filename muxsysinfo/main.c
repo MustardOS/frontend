@@ -25,6 +25,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -220,29 +221,41 @@ void init_navigation_groups() {
             ui_icoVoltage
     };
 
-    apply_theme_list_item(&theme, ui_lblVersion, "muOS Version", false, false, true);
-    apply_theme_list_item(&theme, ui_lblKernel, "Linux Kernel", false, false, true);
-    apply_theme_list_item(&theme, ui_lblUptime, "System Uptime", false, false, true);
-    apply_theme_list_item(&theme, ui_lblCPU, "CPU Information", false, false, true);
-    apply_theme_list_item(&theme, ui_lblSpeed, "CPU Speed", false, false, true);
-    apply_theme_list_item(&theme, ui_lblGovernor, "CPU Governor", false, false, true);
-    apply_theme_list_item(&theme, ui_lblMemory, "RAM Usage", false, false, true);
-    apply_theme_list_item(&theme, ui_lblTemp, "Temperature", false, false, true);
-    apply_theme_list_item(&theme, ui_lblServices, "Running Services", false, false, true);
-    apply_theme_list_item(&theme, ui_lblBatteryCap, "Battery Capacity", false, false, true);
-    apply_theme_list_item(&theme, ui_lblVoltage, "Battery Voltage", false, false, true);
+    apply_theme_list_panel(&theme, &device, ui_pnlVersion);
+    apply_theme_list_panel(&theme, &device, ui_pnlKernel);
+    apply_theme_list_panel(&theme, &device, ui_pnlUptime);
+    apply_theme_list_panel(&theme, &device, ui_pnlCPU);
+    apply_theme_list_panel(&theme, &device, ui_pnlSpeed);
+    apply_theme_list_panel(&theme, &device, ui_pnlGovernor);
+    apply_theme_list_panel(&theme, &device, ui_pnlMemory);
+    apply_theme_list_panel(&theme, &device, ui_pnlTemp);
+    apply_theme_list_panel(&theme, &device, ui_pnlServices);
+    apply_theme_list_panel(&theme, &device, ui_pnlBatteryCap);
+    apply_theme_list_panel(&theme, &device, ui_pnlVoltage);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoVersion, "version");
-    apply_theme_list_glyph(&theme, &device, ui_icoKernel, "kernel");
-    apply_theme_list_glyph(&theme, &device, ui_icoUptime, "uptime");
-    apply_theme_list_glyph(&theme, &device, ui_icoCPU, "cpu");
-    apply_theme_list_glyph(&theme, &device, ui_icoSpeed, "speed");
-    apply_theme_list_glyph(&theme, &device, ui_icoGovernor, "governor");
-    apply_theme_list_glyph(&theme, &device, ui_icoMemory, "memory");
-    apply_theme_list_glyph(&theme, &device, ui_icoTemp, "temp");
-    apply_theme_list_glyph(&theme, &device, ui_icoServices, "services");
-    apply_theme_list_glyph(&theme, &device, ui_icoBatteryCap, "batterycap");
-    apply_theme_list_glyph(&theme, &device, ui_icoVoltage, "voltage");
+    apply_theme_list_item(&theme, ui_lblVersion, "muOS Version", false, true);
+    apply_theme_list_item(&theme, ui_lblKernel, "Linux Kernel", false, true);
+    apply_theme_list_item(&theme, ui_lblUptime, "System Uptime", false, true);
+    apply_theme_list_item(&theme, ui_lblCPU, "CPU Information", false, true);
+    apply_theme_list_item(&theme, ui_lblSpeed, "CPU Speed", false, true);
+    apply_theme_list_item(&theme, ui_lblGovernor, "CPU Governor", false, true);
+    apply_theme_list_item(&theme, ui_lblMemory, "RAM Usage", false, true);
+    apply_theme_list_item(&theme, ui_lblTemp, "Temperature", false, true);
+    apply_theme_list_item(&theme, ui_lblServices, "Running Services", false, true);
+    apply_theme_list_item(&theme, ui_lblBatteryCap, "Battery Capacity", false, true);
+    apply_theme_list_item(&theme, ui_lblVoltage, "Battery Voltage", false, true);
+
+    apply_theme_list_glyph(&theme, &device, ui_icoVersion, mux_prog, "version");
+    apply_theme_list_glyph(&theme, &device, ui_icoKernel, mux_prog, "kernel");
+    apply_theme_list_glyph(&theme, &device, ui_icoUptime, mux_prog, "uptime");
+    apply_theme_list_glyph(&theme, &device, ui_icoCPU, mux_prog, "cpu");
+    apply_theme_list_glyph(&theme, &device, ui_icoSpeed, mux_prog, "speed");
+    apply_theme_list_glyph(&theme, &device, ui_icoGovernor, mux_prog, "governor");
+    apply_theme_list_glyph(&theme, &device, ui_icoMemory, mux_prog, "memory");
+    apply_theme_list_glyph(&theme, &device, ui_icoTemp, mux_prog, "temp");
+    apply_theme_list_glyph(&theme, &device, ui_icoServices, mux_prog, "services");
+    apply_theme_list_glyph(&theme, &device, ui_icoBatteryCap, mux_prog, "capacity");
+    apply_theme_list_glyph(&theme, &device, ui_icoVoltage, mux_prog, "voltage");
 
     apply_theme_list_value(&theme, ui_lblVersionValue, "");
     apply_theme_list_value(&theme, ui_lblKernelValue, "");
@@ -276,7 +289,7 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -290,7 +303,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
@@ -382,7 +395,7 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -396,7 +409,7 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent, ui_pnlGlyph, ui_pnlHighlight);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);
@@ -630,6 +643,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 
@@ -710,7 +724,6 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrSysInfo);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {

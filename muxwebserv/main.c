@@ -25,6 +25,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -213,17 +214,23 @@ void init_navigation_groups() {
             ui_icoNTP
     };
 
-    apply_theme_list_item(&theme, ui_lblShell, "Secure Shell", false, false, true);
-    apply_theme_list_item(&theme, ui_lblBrowser, "SFTP + Filebrowser", false, false, true);
-    apply_theme_list_item(&theme, ui_lblTerminal, "Virtual Terminal", false, false, true);
-    apply_theme_list_item(&theme, ui_lblSyncthing, "Syncthing", false, false, true);
-    apply_theme_list_item(&theme, ui_lblNTP, "Network Time Sync", false, false, true);
+    apply_theme_list_panel(&theme, &device, ui_pnlShell);
+    apply_theme_list_panel(&theme, &device, ui_pnlBrowser);
+    apply_theme_list_panel(&theme, &device, ui_pnlTerminal);
+    apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
+    apply_theme_list_panel(&theme, &device, ui_pnlNTP);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoShell, "shell");
-    apply_theme_list_glyph(&theme, &device, ui_icoBrowser, "browser");
-    apply_theme_list_glyph(&theme, &device, ui_icoTerminal, "terminal");
-    apply_theme_list_glyph(&theme, &device, ui_icoSyncthing, "syncthing");
-    apply_theme_list_glyph(&theme, &device, ui_icoNTP, "ntp");
+    apply_theme_list_item(&theme, ui_lblShell, "Secure Shell", false, true);
+    apply_theme_list_item(&theme, ui_lblBrowser, "SFTP + Filebrowser", false, true);
+    apply_theme_list_item(&theme, ui_lblTerminal, "Virtual Terminal", false, true);
+    apply_theme_list_item(&theme, ui_lblSyncthing, "Syncthing", false, true);
+    apply_theme_list_item(&theme, ui_lblNTP, "Network Time Sync", false, true);
+
+    apply_theme_list_glyph(&theme, &device, ui_icoShell, mux_prog, "shell");
+    apply_theme_list_glyph(&theme, &device, ui_icoBrowser, mux_prog, "browser");
+    apply_theme_list_glyph(&theme, &device, ui_icoTerminal, mux_prog, "terminal");
+    apply_theme_list_glyph(&theme, &device, ui_icoSyncthing, mux_prog, "sync");
+    apply_theme_list_glyph(&theme, &device, ui_icoNTP, mux_prog, "ntp");
 
     apply_theme_list_drop_down(&theme, ui_droShell, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droBrowser, "Disabled\nEnabled");
@@ -635,6 +642,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 
@@ -715,8 +723,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrWebServices);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlHighlight);
-
+    
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);

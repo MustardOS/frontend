@@ -25,6 +25,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -147,10 +148,10 @@ void create_theme_items() {
             apply_theme_list_panel(&theme, &device, ui_pnlTheme);
 
             lv_obj_t * ui_lblThemeItem = lv_label_create(ui_pnlTheme);
-            apply_theme_list_item(&theme, ui_lblThemeItem, base_filename, false, false, false);
+            apply_theme_list_item(&theme, ui_lblThemeItem, base_filename, false, false);
 
-            lv_obj_t * ui_lblThemeItemGlyph = lv_img_create(ui_lblThemeItem);
-            apply_theme_list_glyph(&theme, &device, ui_lblThemeItemGlyph, "themeitem");
+            lv_obj_t * ui_lblThemeItemGlyph = lv_img_create(ui_pnlTheme);
+            apply_theme_list_glyph(&theme, &device, ui_lblThemeItemGlyph, mux_prog, "theme");
 
             lv_group_add_obj(ui_group, ui_lblThemeItem);
             lv_group_add_obj(ui_group_glyph, ui_lblThemeItemGlyph);
@@ -173,7 +174,7 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     image_refresh();
     play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
@@ -187,7 +188,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group_glyph, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     image_refresh();
     if (first_open) {
         first_open = 0;
@@ -309,7 +310,7 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
                                     image_refresh();
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
@@ -324,7 +325,7 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent, NULL, NULL);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
                                     image_refresh();
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count) {
@@ -569,6 +570,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 

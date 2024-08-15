@@ -185,60 +185,29 @@ void ui_scrWebServices_screen_init(void)
     lv_obj_set_style_pad_row(ui_pnlContent, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblShell = lv_label_create(ui_pnlContent);
-    ui_lblBrowser = lv_label_create(ui_pnlContent);
-    ui_lblTerminal = lv_label_create(ui_pnlContent);
-    ui_lblSyncthing = lv_label_create(ui_pnlContent);
-    ui_lblNTP = lv_label_create(ui_pnlContent);
+    ui_pnlShell = lv_obj_create(ui_pnlContent);
+    ui_pnlBrowser = lv_obj_create(ui_pnlContent);
+    ui_pnlTerminal = lv_obj_create(ui_pnlContent);
+    ui_pnlSyncthing = lv_obj_create(ui_pnlContent);
+    ui_pnlNTP = lv_obj_create(ui_pnlContent);
 
-    ui_pnlGlyph = lv_obj_create(ui_scrWebServices);
-    lv_obj_set_width(ui_pnlGlyph, 640);
-    lv_obj_set_height(ui_pnlGlyph, 400);
-    lv_obj_set_x(ui_pnlGlyph, 0);
-    lv_obj_set_y(ui_pnlGlyph, 34);
-    lv_obj_set_flex_flow(ui_pnlGlyph, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlGlyph, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_pnlGlyph, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_pnlGlyph, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlGlyph, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlGlyph, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_pnlGlyph, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblShell = lv_label_create(ui_pnlShell);
+    ui_lblBrowser = lv_label_create(ui_pnlBrowser);
+    ui_lblTerminal = lv_label_create(ui_pnlTerminal);
+    ui_lblSyncthing = lv_label_create(ui_pnlSyncthing);
+    ui_lblNTP = lv_label_create(ui_pnlNTP);
 
-    ui_icoShell = lv_img_create(ui_lblShell);
-    ui_icoBrowser = lv_img_create(ui_lblBrowser);
-    ui_icoTerminal = lv_img_create(ui_lblTerminal);
-    ui_icoSyncthing = lv_img_create(ui_lblSyncthing);
-    ui_icoNTP = lv_img_create(ui_lblNTP);
+    ui_icoShell = lv_img_create(ui_pnlShell);
+    ui_icoBrowser = lv_img_create(ui_pnlBrowser);
+    ui_icoTerminal = lv_img_create(ui_pnlTerminal);
+    ui_icoSyncthing = lv_img_create(ui_pnlSyncthing);
+    ui_icoNTP = lv_img_create(ui_pnlNTP);
 
-    ui_pnlHighlight = lv_obj_create(ui_scrWebServices);
-    lv_obj_set_width(ui_pnlHighlight, 640);
-    lv_obj_set_height(ui_pnlHighlight, 400);
-    lv_obj_set_x(ui_pnlHighlight, 0);
-    lv_obj_set_y(ui_pnlHighlight, 34);
-    lv_obj_set_flex_flow(ui_pnlHighlight, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlHighlight, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_pnlHighlight, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_pnlHighlight, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlHighlight, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlHighlight, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlHighlight, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_droShell = lv_dropdown_create(ui_pnlHighlight);
-    ui_droBrowser = lv_dropdown_create(ui_pnlHighlight);
-    ui_droTerminal = lv_dropdown_create(ui_pnlHighlight);
-    ui_droSyncthing = lv_dropdown_create(ui_pnlHighlight);
-    ui_droNTP = lv_dropdown_create(ui_pnlHighlight);
+    ui_droShell = lv_dropdown_create(ui_pnlShell);
+    ui_droBrowser = lv_dropdown_create(ui_pnlBrowser);
+    ui_droTerminal = lv_dropdown_create(ui_pnlTerminal);
+    ui_droSyncthing = lv_dropdown_create(ui_pnlSyncthing);
+    ui_droNTP = lv_dropdown_create(ui_pnlNTP);
 
     ui_pnlFooter = lv_obj_create(ui_scrWebServices);
     lv_obj_set_width(ui_pnlFooter, 640);

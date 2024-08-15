@@ -24,6 +24,7 @@
 #include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int NAV_DPAD_HOR;
@@ -95,17 +96,23 @@ void init_navigation_groups() {
     ui_icons[3] = ui_icoServices;
     ui_icons[4] = ui_icoRTC;
 
-    apply_theme_list_item(&theme, ui_lblTweakGeneral, "General Settings", false, false, false);
-    apply_theme_list_item(&theme, ui_lblTheme, "Theme Picker", false, false, false);
-    apply_theme_list_item(&theme, ui_lblNetwork, "Wi-Fi Network", false, false, false);
-    apply_theme_list_item(&theme, ui_lblServices, "Web Services", false, false, false);
-    apply_theme_list_item(&theme, ui_lblRTC, "Date and Time", false, false, false);
+    apply_theme_list_panel(&theme, &device, ui_pnlTweakGeneral);
+    apply_theme_list_panel(&theme, &device, ui_pnlTheme);
+    apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
+    apply_theme_list_panel(&theme, &device, ui_pnlServices);
+    apply_theme_list_panel(&theme, &device, ui_pnlRTC);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoTweakGeneral, "tweakgeneral");
-    apply_theme_list_glyph(&theme, &device, ui_icoTheme, "theme");
-    apply_theme_list_glyph(&theme, &device, ui_icoNetwork, "network");
-    apply_theme_list_glyph(&theme, &device, ui_icoServices, "services");
-    apply_theme_list_glyph(&theme, &device, ui_icoRTC, "rtc");
+    apply_theme_list_item(&theme, ui_lblTweakGeneral, "General Settings", false, false);
+    apply_theme_list_item(&theme, ui_lblTheme, "Theme Picker", false, false);
+    apply_theme_list_item(&theme, ui_lblNetwork, "Wi-Fi Network", false, false);
+    apply_theme_list_item(&theme, ui_lblServices, "Web Services", false, false);
+    apply_theme_list_item(&theme, ui_lblRTC, "Date and Time", false, false);
+
+    apply_theme_list_glyph(&theme, &device, ui_icoTweakGeneral, mux_prog, "general");
+    apply_theme_list_glyph(&theme, &device, ui_icoTheme, mux_prog, "theme");
+    apply_theme_list_glyph(&theme, &device, ui_icoNetwork, mux_prog, "network");
+    apply_theme_list_glyph(&theme, &device, ui_icoServices, mux_prog, "service");
+    apply_theme_list_glyph(&theme, &device, ui_icoRTC, mux_prog, "clock");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -474,6 +481,7 @@ void direct_to_previous() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 

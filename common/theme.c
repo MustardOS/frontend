@@ -293,15 +293,15 @@ void apply_align(struct theme_config *theme, struct mux_device *device, lv_obj_t
     if (theme->MISC.CONTENT.ALIGNMENT == 1) {
         int x = ((device->SCREEN.WIDTH - item_width) / 2) + theme->MISC.CONTENT.PADDING_LEFT;
         lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
-        //lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
+        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
     } else if (theme->MISC.CONTENT.ALIGNMENT == 2) {
         int x = device->SCREEN.WIDTH - item_width + theme->MISC.CONTENT.PADDING_LEFT;
         lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
-        //lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
+        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);
     } else {
         int x = theme->MISC.CONTENT.PADDING_LEFT;
         lv_obj_set_style_translate_x(ui_lblItem, x, LV_PART_MAIN);
-        //lv_obj_set_style_translate_x(ui_lblItemIcon, x -32, LV_PART_MAIN);        
+        lv_obj_set_style_translate_x(ui_lblItemIcon, x, LV_PART_MAIN);        
     }
 
 }
@@ -322,7 +322,7 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
 }
 
 void apply_theme_list_item(struct theme_config *theme, lv_obj_t * ui_lblItem, const char *item_text, 
-    bool apply_visual_label, bool enable_scrolling_text, bool is_config_menu) 
+    bool enable_scrolling_text, bool is_config_menu) 
 {
     lv_label_set_text(ui_lblItem, item_text);
 
@@ -417,7 +417,7 @@ void apply_theme_list_value(struct theme_config *theme, lv_obj_t * ui_lblItemVal
 
 void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblItemDropDown, char *options) {
     lv_dropdown_set_dir(ui_lblItemDropDown, LV_DIR_LEFT);
-    lv_dropdown_set_options(ui_lblItemDropDown, options);
+    if (options != NULL) lv_dropdown_set_options(ui_lblItemDropDown, options);
     lv_dropdown_set_selected_highlight(ui_lblItemDropDown, false);
     lv_obj_set_width(ui_lblItemDropDown, theme->MISC.CONTENT.WIDTH);
     lv_obj_set_height(ui_lblItemDropDown, theme->MUX.ITEM.HEIGHT);
@@ -453,26 +453,27 @@ void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblIte
 }
 
 void apply_theme_list_glyph(struct theme_config *theme, struct mux_device *device,
-    lv_obj_t * ui_lblItemGlyph, char *item_glyph) 
+    lv_obj_t * ui_lblItemGlyph, const char *screen_name, char *item_glyph) 
 {
+    lv_label_set_text(ui_lblItemGlyph, "");
+    if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0) return;
+
     const char *store_catalogue;
     store_catalogue = get_default_storage(config.STORAGE.CATALOGUE);
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
-    snprintf(image, sizeof(image), "%s/MUOS/theme/active/glyph/%s.png",
-                store_catalogue, item_glyph);
-    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/theme/active/glyph/%s.png",
-                store_catalogue, item_glyph);
+    snprintf(image, sizeof(image), "%s/MUOS/theme/active/glyph/%s/%s.png",
+                store_catalogue, screen_name, item_glyph);
+    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/theme/active/glyph/%s/%s.png",
+                store_catalogue, screen_name, item_glyph);
 
-    if (file_exist(image)) {
-        write_text_to_file("/mnt/mmc/MUOS/log/logfile.log", "Found the glyph image\n", "a");
-        lv_img_set_src(ui_lblItemGlyph, image_path);
-    }
+    if (!file_exist(image)) return;
     
-    lv_obj_set_style_translate_x(ui_lblItemGlyph, -(theme->MISC.CONTENT.WIDTH / 2) + theme->LIST_DEFAULT.GLYPH_PADDING_LEFT + 22, LV_PART_MAIN);
+    lv_img_set_src(ui_lblItemGlyph, image_path);
+
+    lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT  - (theme->MISC.CONTENT.WIDTH / 2));
     lv_obj_set_align(ui_lblItemGlyph, LV_ALIGN_CENTER);
-    lv_obj_set_style_translate_y(ui_lblItemGlyph, -theme->FONT.LIST_PAD_TOP / 2, LV_PART_MAIN);  // Font padding top will misalign icon by half the padding
 
     lv_obj_set_style_img_opa(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
 
