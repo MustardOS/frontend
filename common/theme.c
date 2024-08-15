@@ -455,7 +455,6 @@ void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t * ui_lblIte
 void apply_theme_list_glyph(struct theme_config *theme, struct mux_device *device,
     lv_obj_t * ui_lblItemGlyph, const char *screen_name, char *item_glyph) 
 {
-    lv_label_set_text(ui_lblItemGlyph, "");
     if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0) return;
 
     const char *store_catalogue;
