@@ -72,6 +72,7 @@ struct theme_config {
     } DATETIME;
 
     struct {
+        int16_t HEIGHT;
         uint32_t BACKGROUND;
         uint16_t BACKGROUND_ALPHA;
         uint32_t TEXT;
@@ -79,6 +80,7 @@ struct theme_config {
     } FOOTER;
 
     struct {
+        int16_t HEIGHT;
         uint32_t BACKGROUND;
         uint16_t BACKGROUND_ALPHA;
         uint32_t TEXT;

@@ -71,11 +71,13 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->DATETIME.ALPHA = get_ini_int(muos_theme, "date", "DATETIME_ALPHA", 255);
     theme->DATETIME.PADDING_LEFT = get_ini_int(muos_theme, "date", "PADDING_LEFT", 0);
 
+    theme->FOOTER.HEIGHT = get_ini_int(muos_theme, "footer", "FOOTER_HEIGHT", 42);
     theme->FOOTER.BACKGROUND = get_ini_hex(muos_theme, "footer", "FOOTER_BACKGROUND");
     theme->FOOTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "footer", "FOOTER_BACKGROUND_ALPHA", 255);
     theme->FOOTER.TEXT = get_ini_hex(muos_theme, "footer", "FOOTER_TEXT");
     theme->FOOTER.TEXT_ALPHA = get_ini_int(muos_theme, "footer", "FOOTER_TEXT_ALPHA", 255);
 
+    theme->HEADER.HEIGHT = get_ini_int(muos_theme, "header", "HEADER_HEIGHT", 42);
     theme->HEADER.BACKGROUND = get_ini_hex(muos_theme, "header", "HEADER_BACKGROUND");
     theme->HEADER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "header", "HEADER_BACKGROUND_ALPHA", 255);
     theme->HEADER.TEXT = get_ini_hex(muos_theme, "header", "HEADER_TEXT");
