@@ -114,7 +114,7 @@ void *joystick_task() {
                             lv_label_set_text(ui_lblButton, " ");
                             break;
                     }
-                } else if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
+                } else if (ev.code == ABS_HAT0X || ev.code == ABS_Y) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
@@ -350,7 +350,6 @@ int main(int argc, char *argv[]) {
     lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);
 
-    init_elements();
     while (!safe_quit) {
         lv_task_handler();
         usleep(device.SCREEN.WAIT);

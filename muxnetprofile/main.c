@@ -693,7 +693,6 @@ int main(int argc, char *argv[]) {
 
     create_profile_items();
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

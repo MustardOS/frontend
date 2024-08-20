@@ -184,9 +184,9 @@ void init_dropdown_settings() {
             {led.total,          led.current},
             {random_theme.total, random_theme.current},
             {retrowait.total,    retrowait.current},
-            {android.total,    android.current},
-            {state.total,    state.current},
-            {verbose.total,    verbose.current}
+            {android.total,      android.current},
+            {state.total,        state.current},
+            {verbose.total,      verbose.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -428,8 +428,12 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droFont, "Noto Sans\nTheme Controlled");
     apply_theme_list_drop_down(&theme, ui_droVolume, "Previous\nQuiet\nLoud");
     apply_theme_list_drop_down(&theme, ui_droBrightness, "Previous\nLow\nHigh");
-    apply_theme_list_drop_down(&theme, ui_droOffset, 
-        "-50\n-49\n-48\n-47\n-46\n-45\n-44\n-43\n-42\n-41\n-40\n-39\n-38\n-37\n-36\n-35\n-34\n-33\n-32\n-31\n-30\n-29\n-28\n-27\n-26\n-25\n-24\n-23\n-22\n-21\n-20\n-19\n-18\n-17\n-16\n-15\n-14\n-13\n-12\n-11\n-10\n-9\n-8\n-7\n-6\n-5\n-4\n-3\n-2\n-1\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50");
+    apply_theme_list_drop_down(&theme, ui_droOffset,
+                               "-50\n-49\n-48\n-47\n-46\n-45\n-44\n-43\n-42\n-41\n-40\n-39\n-38\n-37\n-36\n-35\n-34\n-33\n-32\n"
+                               "-31\n-30\n-29\n-28\n-27\n-26\n-25\n-24\n-23\n-22\n-21\n-20\n-19\n-18\n-17\n-16\n-15\n-14\n-13\n"
+                               "-12\n-11\n-10\n-9\n-8\n-7\n-6\n-5\n-4\n-3\n-2\n-1\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n"
+                               "14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n"
+                               "37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50");
     apply_theme_list_drop_down(&theme, ui_droPasscode, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droLED, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droTheme, "Disabled\nEnabled");
@@ -620,7 +624,8 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -634,7 +639,8 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);
@@ -1137,7 +1143,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

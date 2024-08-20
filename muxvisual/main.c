@@ -152,13 +152,13 @@ void elements_events_init() {
 
 void init_dropdown_settings() {
     Visuals settings[] = {
-            {battery.total,   battery.current},
-            {network.total,   network.current},
-            {bluetooth.total, bluetooth.current},
-            {mux_clock.total, mux_clock.current},
-            {boxart.total,    boxart.current},
-            {name.total,      name.current},
-            {dash.total,      dash.current},
+            {battery.total,       battery.current},
+            {network.total,       network.current},
+            {bluetooth.total,     bluetooth.current},
+            {mux_clock.total,     mux_clock.current},
+            {boxart.total,        boxart.current},
+            {name.total,          name.current},
+            {dash.total,          dash.current},
             {counterfolder.total, counterfolder.current},
             {counterfile.total,   counterfile.current}
     };
@@ -286,8 +286,9 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droNetwork, "Hidden\nVisible");
     apply_theme_list_drop_down(&theme, ui_droBluetooth, "Hidden\nVisible");
     apply_theme_list_drop_down(&theme, ui_droClock, "Hidden\nVisible");
-    apply_theme_list_drop_down(&theme, ui_droBoxArt, 
-        "Bottom + Behind\nBottom + Front\nMiddle + Behind\nMiddle + Front\nTop + Behind\nTop + Front\nFullscreen + Behind\nFullscreen + Front\nDisabled");
+    apply_theme_list_drop_down(&theme, ui_droBoxArt,
+                               "Bottom + Behind\nBottom + Front\nMiddle + Behind\nMiddle + Front\n"
+                               "Top + Behind\nTop + Front\nFullscreen + Behind\nFullscreen + Front\nDisabled");
     apply_theme_list_drop_down(&theme, ui_droName, "Full Name\nRemove [ ]\nRemove ( )\nRemove [ ] and ( )");
     apply_theme_list_drop_down(&theme, ui_droDash, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, "Hidden\nVisible");
@@ -460,7 +461,8 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -474,7 +476,8 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < ui_count - 1) {
                                     list_nav_next(1);
@@ -891,7 +894,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrVisual);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    
+
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
@@ -952,7 +955,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

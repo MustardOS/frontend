@@ -60,7 +60,9 @@ const char* get_default_storage(int store_type);
 
 int file_exist(char *filename);
 
-int file_size(char *filename, int filesize);
+int check_file_size(char *filename, int filesize);
+
+int get_file_size(char *filename);
 
 unsigned long long total_file_size(const char *path);
 

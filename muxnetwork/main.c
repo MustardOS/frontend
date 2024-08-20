@@ -183,6 +183,10 @@ void restore_network_values() {
     lv_label_set_text(ui_lblGatewayValue, config.NETWORK.GATEWAY);
     lv_label_set_text(ui_lblDNSValue, config.NETWORK.DNS);
 
+    if (get_file_size("/etc/wpa_supplicant.conf") > 90 && strlen(config.NETWORK.SSID) > 0) {
+        lv_label_set_text(ui_lblPasswordValue, "******");
+    }
+
     get_current_ip();
 }
 
@@ -559,9 +563,11 @@ void *joystick_task() {
                                         write_text_to_file("/run/muos/global/network/interface", "w", CHAR, "wlan0");
                                         write_text_to_file("/run/muos/global/network/type", "w", INT, 0);
                                         write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, "");
-                                        write_text_to_file("/run/muos/global/network/address", "w", CHAR, "192.168.0.123");
+                                        write_text_to_file("/run/muos/global/network/address", "w", CHAR,
+                                                           "192.168.0.123");
                                         write_text_to_file("/run/muos/global/network/subnet", "w", INT, 24);
-                                        write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, "192.168.0.1");
+                                        write_text_to_file("/run/muos/global/network/gateway", "w", CHAR,
+                                                           "192.168.0.1");
                                         write_text_to_file("/run/muos/global/network/dns", "w", CHAR, "1.1.1.1");
 
                                         system("/opt/muos/script/system/network.sh");

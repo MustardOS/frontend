@@ -755,7 +755,6 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblArchiveMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

@@ -40,7 +40,7 @@ int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
 }
 
-int file_size(char *filename, int filesize) {
+int check_file_size(char *filename, int filesize) {
     FILE * file = fopen(filename, "rb");
 
     if (file == NULL) {
@@ -58,6 +58,19 @@ int file_size(char *filename, int filesize) {
     }
 
     fclose(file);
+    return 0;
+}
+
+int get_file_size(char *filename) {
+    FILE * file = fopen(filename, "rb");
+
+    if (file_exist(filename)) {
+        fseek(file, 0, SEEK_END);
+        int size = ftell(file);
+        fclose(file);
+        return size;
+    }
+
     return 0;
 }
 
@@ -636,7 +649,7 @@ char *format_meta_text(char *filename) {
 }
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...) {
-    FILE *file = fopen(filename, mode);
+    FILE * file = fopen(filename, mode);
 
     if (file == NULL) {
         perror("Error opening file for writing");
@@ -647,9 +660,11 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
     va_start(args, type);
 
     if (type == CHAR) { // type is general text!
-        fprintf(file, "%s", va_arg(args, const char *));
+        fprintf(file, "%s", va_arg(args,
+        const char *));
     } else if (type == INT) { // type is a number!
-        fprintf(file, "%d", va_arg(args, int));
+        fprintf(file, "%d", va_arg(args,
+        int));
     }
 
     va_end(args);
@@ -1428,11 +1443,11 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
     }
 }
 
-void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, 
-    int current_item_index, lv_obj_t * ui_pnlContent
-    ) {
+void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count,
+                            int current_item_index, lv_obj_t *ui_pnlContent
+) {
     // how many items should be above the currently selected item when scrolling
-    double item_distribution = (mux_item_count - 1) / (double)2; 
+    double item_distribution = (mux_item_count - 1) / (double) 2;
     // how many items are off screen
     double scrollMultiplier = (current_item_index > item_distribution) ? (current_item_index - item_distribution) : 0;
     // max scroll value

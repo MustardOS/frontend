@@ -186,7 +186,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
     lv_dropdown_set_selected(ui_droBGM, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
-    lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BRIGHT_FILE)) - 1);
+    lv_dropdown_set_selected(ui_droBrightness, config.SETTINGS.GENERAL.BRIGHTNESS - 1);
 
     switch (config.SETTINGS.GENERAL.HDMI) {
         case -1:
@@ -525,9 +525,12 @@ void save_tweak_options() {
     write_text_to_file("/run/muos/global/settings/general/hdmi", "w", INT, idx_hdmi);
     write_text_to_file("/run/muos/global/settings/general/shutdown", "w", INT, idx_shutdown);
 
+    char br_num[MAX_BUFFER_SIZE];
+    lv_dropdown_get_selected_str(ui_droBrightness, br_num, MAX_BUFFER_SIZE);
+
     char command[MAX_BUFFER_SIZE];
     snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
-             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), atoi(lv_label_get_text(ui_lblBrightness)));
+             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), atoi(br_num));
     system(command);
 
     static char tweak_script[MAX_BUFFER_SIZE];
@@ -616,14 +619,22 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droHidden, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droBGM, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droSound, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droStartup, "Main Menu\nContent Explorer\nFavourites\nHistory\nLast Game\nResume Game");
-    apply_theme_list_drop_down(&theme, ui_droColour, 
-        "Deep Arctic (-256)\nIcy Chill (-224)\nFrosty Breeze (-192)\nCool Glacier (-160)\nArctic Frost (-128)\nWinter Sky (-96)\nFrostbite Blue (-64)\nArctic Blue (-32)\nNeutral White (0)\nDaylight White (32)\nWarm White (64)\nSoft Ivory (96)\nCandlelight Yellow (128)\nWarm Glow (160)\nSunset Orange (192)\nAmber Flame (224)\nDeep Ember (256)");
+    apply_theme_list_drop_down(&theme, ui_droStartup,
+                               "Main Menu\nContent Explorer\nFavourites\nHistory\nLast Game\nResume Game");
+    apply_theme_list_drop_down(&theme, ui_droColour,
+                               "Deep Arctic (-256)\nIcy Chill (-224)\nFrosty Breeze (-192)\n"
+                               "Cool Glacier (-160)\nArctic Frost (-128)\nWinter Sky (-96)\n"
+                               "Frostbite Blue (-64)\nArctic Blue (-32)\nNeutral White (0)\nDaylight White (32)\n"
+                               "Warm White (64)\nSoft Ivory (96)\nCandlelight Yellow (128)\nWarm Glow (160)\n"
+                               "Sunset Orange (192)\nAmber Flame (224)\nDeep Ember (256)");
     apply_theme_list_drop_down(&theme, ui_droBrightness, NULL);
-    apply_theme_list_drop_down(&theme, ui_droHDMI, 
-        "Disabled\n480i\n576i\n480p\n576p\n720p + 50hz\n720p + 60hz\n1080i + 50hz\n1080i + 60hz\n1080p + 24hz\n1080p + 50hz\n1080p + 60hz");
-    apply_theme_list_drop_down(&theme, ui_droShutdown, 
-        "Disabled\nSleep Suspend\nInstant Shutdown\nSleep 10s + Shutdown\nSleep 30s + Shutdown\nSleep 60s + Shutdown\nSleep 2m + Shutdown\nSleep 5m + Shutdown\nSleep 10m + Shutdown\nSleep 30m + Shutdown\nSleep 60m + Shutdown");
+    apply_theme_list_drop_down(&theme, ui_droHDMI,
+                               "Disabled\n480i\n576i\n480p\n576p\n720p + 50hz\n720p + 60hz\n"
+                               "1080i + 50hz\n1080i + 60hz\n1080p + 24hz\n1080p + 50hz\n1080p + 60hz");
+    apply_theme_list_drop_down(&theme, ui_droShutdown,
+                               "Disabled\nSleep Suspend\nInstant Shutdown\nSleep 10s + Shutdown\n"
+                               "Sleep 30s + Shutdown\nSleep 60s + Shutdown\nSleep 2m + Shutdown\n"
+                               "Sleep 5m + Shutdown\nSleep 10m + Shutdown\nSleep 30m + Shutdown\nSleep 60m + Shutdown");
     apply_theme_list_drop_down(&theme, ui_droInterface, "");
     apply_theme_list_drop_down(&theme, ui_droStorage, "");
     apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
@@ -820,7 +831,8 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT,
+                                                           current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -834,7 +846,8 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT,
+                                                           current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);
@@ -1345,7 +1358,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     direct_to_previous();
 
     while (!safe_quit) {
