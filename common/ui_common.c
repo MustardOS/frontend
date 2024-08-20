@@ -307,7 +307,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavAGlyph, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavAGlyph, "⇓");
     lv_label_set_recolor(ui_lblNavAGlyph, "true");
-    lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavAGlyph, lv_color_hex(theme->NAV.A.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavAGlyph, theme->NAV.A.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblNavAGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -324,7 +323,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavA, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavA, "");
     lv_label_set_recolor(ui_lblNavA, "true");
-    lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavA, lv_color_hex(theme->NAV.A.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavA, theme->NAV.A.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavA, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -340,7 +338,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavBGlyph, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavBGlyph, "⇒");
     lv_label_set_recolor(ui_lblNavBGlyph, "true");
-    lv_obj_add_flag(ui_lblNavBGlyph, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavBGlyph, lv_color_hex(theme->NAV.B.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavBGlyph, theme->NAV.B.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblNavBGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -357,7 +354,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavB, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavB, "");
     lv_label_set_recolor(ui_lblNavB, "true");
-    lv_obj_add_flag(ui_lblNavB, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavB, lv_color_hex(theme->NAV.B.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavB, theme->NAV.B.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavB, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -373,7 +369,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavCGlyph, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavCGlyph, "⇫");
     lv_label_set_recolor(ui_lblNavCGlyph, "true");
-    lv_obj_add_flag(ui_lblNavCGlyph, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavCGlyph, lv_color_hex(theme->NAV.C.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavCGlyph, theme->NAV.C.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblNavCGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -390,7 +385,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavC, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavC, "");
     lv_label_set_recolor(ui_lblNavC, "true");
-    lv_obj_add_flag(ui_lblNavC, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavC, lv_color_hex(theme->NAV.C.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavC, theme->NAV.C.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavC, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -406,7 +400,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavXGlyph, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavXGlyph, "⇣");
     lv_label_set_recolor(ui_lblNavXGlyph, "true");
-    lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavXGlyph, lv_color_hex(theme->NAV.X.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavXGlyph, theme->NAV.X.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblNavXGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -423,7 +416,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavX, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavX, "");
     lv_label_set_recolor(ui_lblNavX, "true");
-    lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavX, lv_color_hex(theme->NAV.X.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavX, theme->NAV.X.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavX, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -439,7 +431,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavYGlyph, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavYGlyph, "⇑");
     lv_label_set_recolor(ui_lblNavYGlyph, "true");
-    lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavYGlyph, lv_color_hex(theme->NAV.Y.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavYGlyph, theme->NAV.Y.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblNavYGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -456,7 +447,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavY, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavY, "");
     lv_label_set_recolor(ui_lblNavY, "true");
-    lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavY, lv_color_hex(theme->NAV.Y.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavY, theme->NAV.Y.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavY, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -472,7 +462,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavZGlyph, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavZGlyph, "⇬");
     lv_label_set_recolor(ui_lblNavZGlyph, "true");
-    lv_obj_add_flag(ui_lblNavZGlyph, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavZGlyph, lv_color_hex(theme->NAV.Z.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavZGlyph, theme->NAV.Z.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblNavZGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -489,7 +478,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavZ, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavZ, "");
     lv_label_set_recolor(ui_lblNavZ, "true");
-    lv_obj_add_flag(ui_lblNavZ, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavZ, lv_color_hex(theme->NAV.Z.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavZ, theme->NAV.Z.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavZ, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -505,7 +493,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavMenuGlyph, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavMenuGlyph, "⇥");
     lv_label_set_recolor(ui_lblNavMenuGlyph, "true");
-    lv_obj_add_flag(ui_lblNavMenuGlyph, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavMenuGlyph, lv_color_hex(theme->NAV.MENU.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavMenuGlyph, theme->NAV.MENU.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblNavMenuGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -522,7 +509,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_lblNavMenu, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavMenu, "");
     lv_label_set_recolor(ui_lblNavMenu, "true");
-    lv_obj_add_flag(ui_lblNavMenu, LV_OBJ_FLAG_HIDDEN);     /// Flags
     lv_obj_set_style_text_color(ui_lblNavMenu, lv_color_hex(theme->NAV.MENU.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavMenu, theme->NAV.MENU.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavMenu, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
