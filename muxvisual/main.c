@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -153,13 +152,13 @@ void elements_events_init() {
 
 void init_dropdown_settings() {
     Visuals settings[] = {
-            {battery.total,   battery.current},
-            {network.total,   network.current},
-            {bluetooth.total, bluetooth.current},
-            {mux_clock.total, mux_clock.current},
-            {boxart.total,    boxart.current},
-            {name.total,      name.current},
-            {dash.total,      dash.current},
+            {battery.total,       battery.current},
+            {network.total,       network.current},
+            {bluetooth.total,     bluetooth.current},
+            {mux_clock.total,     mux_clock.current},
+            {boxart.total,        boxart.current},
+            {name.total,          name.current},
+            {dash.total,          dash.current},
             {counterfolder.total, counterfolder.current},
             {counterfile.total,   counterfile.current}
     };
@@ -195,12 +194,6 @@ void restore_visual_options() {
 }
 
 void save_visual_options() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
     int idx_battery = lv_dropdown_get_selected(ui_droBattery);
     int idx_network = lv_dropdown_get_selected(ui_droNetwork);
     int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
@@ -208,21 +201,18 @@ void save_visual_options() {
     int idx_boxart = lv_dropdown_get_selected(ui_droBoxArt);
     int idx_name = lv_dropdown_get_selected(ui_droName);
     int idx_dash = lv_dropdown_get_selected(ui_droDash);
-    int idx_foldercounter = lv_dropdown_get_selected(ui_droMenuCounterFolder);
-    int idx_filecounter = lv_dropdown_get_selected(ui_droMenuCounterFile);
+    int idx_counterfolder = lv_dropdown_get_selected(ui_droMenuCounterFolder);
+    int idx_counterfile = lv_dropdown_get_selected(ui_droMenuCounterFile);
 
-    mini_set_int(muos_config, "visual", "battery", idx_battery);
-    mini_set_int(muos_config, "visual", "network", idx_network);
-    mini_set_int(muos_config, "visual", "bluetooth", idx_bluetooth);
-    mini_set_int(muos_config, "visual", "clock", idx_clock);
-    mini_set_int(muos_config, "visual", "boxart", idx_boxart);
-    mini_set_int(muos_config, "visual", "name", idx_name);
-    mini_set_int(muos_config, "visual", "dash", idx_dash);
-    mini_set_int(muos_config, "visual", "counterfolder", idx_foldercounter);
-    mini_set_int(muos_config, "visual", "counterfile", idx_filecounter);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/visual/battery", "w", INT, idx_battery);
+    write_text_to_file("/run/muos/global/visual/network", "w", INT, idx_network);
+    write_text_to_file("/run/muos/global/visual/bluetooth", "w", INT, idx_bluetooth);
+    write_text_to_file("/run/muos/global/visual/clock", "w", INT, idx_clock);
+    write_text_to_file("/run/muos/global/visual/boxart", "w", INT, idx_boxart);
+    write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
+    write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
+    write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_counterfolder);
+    write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_counterfile);
 }
 
 void init_navigation_groups() {
@@ -296,8 +286,9 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droNetwork, "Hidden\nVisible");
     apply_theme_list_drop_down(&theme, ui_droBluetooth, "Hidden\nVisible");
     apply_theme_list_drop_down(&theme, ui_droClock, "Hidden\nVisible");
-    apply_theme_list_drop_down(&theme, ui_droBoxArt, 
-        "Bottom + Behind\nBottom + Front\nMiddle + Behind\nMiddle + Front\nTop + Behind\nTop + Front\nFullscreen + Behind\nFullscreen + Front\nDisabled");
+    apply_theme_list_drop_down(&theme, ui_droBoxArt,
+                               "Bottom + Behind\nBottom + Front\nMiddle + Behind\nMiddle + Front\n"
+                               "Top + Behind\nTop + Front\nFullscreen + Behind\nFullscreen + Front\nDisabled");
     apply_theme_list_drop_down(&theme, ui_droName, "Full Name\nRemove [ ]\nRemove ( )\nRemove [ ] and ( )");
     apply_theme_list_drop_down(&theme, ui_droDash, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, "Hidden\nVisible");
@@ -441,7 +432,7 @@ void *joystick_task() {
 
                                     save_visual_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "interface", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
                                     safe_quit = 1;
                                 }
                             }
@@ -470,7 +461,8 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -484,7 +476,8 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < ui_count - 1) {
                                     list_nav_next(1);
@@ -901,7 +894,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrVisual);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    
+
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
@@ -962,7 +955,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

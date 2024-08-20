@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -163,26 +162,17 @@ void restore_web_options() {
 }
 
 void save_web_options() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
     int idx_shell = lv_dropdown_get_selected(ui_droShell);
     int idx_browser = lv_dropdown_get_selected(ui_droBrowser);
     int idx_terminal = lv_dropdown_get_selected(ui_droTerminal);
     int idx_syncthing = lv_dropdown_get_selected(ui_droSyncthing);
     int idx_ntp = lv_dropdown_get_selected(ui_droNTP);
 
-    mini_set_int(muos_config, "web", "shell", idx_shell);
-    mini_set_int(muos_config, "web", "browser", idx_browser);
-    mini_set_int(muos_config, "web", "terminal", idx_terminal);
-    mini_set_int(muos_config, "web", "syncthing", idx_syncthing);
-    mini_set_int(muos_config, "web", "ntp", idx_ntp);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/web/shell", "w", INT, idx_shell);
+    write_text_to_file("/run/muos/global/web/browser", "w", INT, idx_browser);
+    write_text_to_file("/run/muos/global/web/terminal", "w", INT, idx_terminal);
+    write_text_to_file("/run/muos/global/web/syncthing", "w", INT, idx_syncthing);
+    write_text_to_file("/run/muos/global/web/ntp", "w", INT, idx_ntp);
 
     static char service_script[MAX_BUFFER_SIZE];
     snprintf(service_script, sizeof(service_script),
@@ -331,7 +321,7 @@ void *joystick_task() {
 
                                     save_web_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "service", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "service");
                                     safe_quit = 1;
                                 }
                             }
@@ -723,7 +713,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrWebServices);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    
+
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
@@ -784,7 +774,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

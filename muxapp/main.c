@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -263,17 +262,15 @@ void *joystick_task() {
                                         static char command[MAX_BUFFER_SIZE];
                                         snprintf(command, sizeof(command), "%s/MUOS/application/%s.sh",
                                                  device.STORAGE.ROM.MOUNT, lv_label_get_text(element_focused));
-                                        write_text_to_file(MUOS_APP_LOAD, command, "w");
+                                        write_text_to_file(MUOS_APP_LOAD, "w", CHAR, command);
 
-                                        char c_index[MAX_BUFFER_SIZE];
-                                        snprintf(c_index, sizeof(c_index), "%d", current_item_index);
-                                        write_text_to_file(MUOS_IDX_LOAD, c_index, "w");
+                                        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
                                         safe_quit = 1;
                                     }
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
-                                    write_text_to_file(MUOS_PDI_LOAD, "apps", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "apps");
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
@@ -731,7 +728,6 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblAppMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

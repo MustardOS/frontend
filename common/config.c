@@ -1,105 +1,80 @@
 #include "common.h"
 #include "options.h"
 #include "config.h"
-#include "mini/mini.h"
 
 void load_config(struct mux_config *config) {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
+    config->BOOT.FACTORY_RESET = atoi(read_text_from_file("/run/muos/global/boot/factory_reset"));
 
-    mini_t * muos_config = mini_try_load(config_file);
-
-    config->BOOT.FACTORY_RESET = get_ini_int(muos_config, "boot", "factory_reset", 0);
-
-    config->CLOCK.NOTATION = get_ini_int(muos_config, "clock", "notation", 0);
-    strncpy(config->CLOCK.POOL, get_ini_string(muos_config, "clock", "pool", "pool.ntp.org"),
-            MAX_BUFFER_SIZE - 1);
+    config->CLOCK.NOTATION = atoi(read_text_from_file("/run/muos/global/clock/notation"));
+    strncpy(config->CLOCK.POOL, read_text_from_file("/run/muos/global/clock/pool"), MAX_BUFFER_SIZE - 1);
     config->CLOCK.POOL[MAX_BUFFER_SIZE - 1] = '\0';
-
-    config->NETWORK.ENABLED = get_ini_int(muos_config, "network", "enabled", 0);
-    strncpy(config->NETWORK.INTERFACE, get_ini_string(muos_config, "network", "interface", "wlan0"),
-            MAX_BUFFER_SIZE - 1);
+    
+    config->NETWORK.ENABLED = atoi(read_text_from_file("/run/muos/global/network/enabled"));
+    config->NETWORK.TYPE = atoi(read_text_from_file("/run/muos/global/network/type"));
+    strncpy(config->NETWORK.INTERFACE, read_text_from_file("/run/muos/global/network/interface"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->NETWORK.SSID, read_text_from_file("/run/muos/global/network/ssid"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->NETWORK.ADDRESS, read_text_from_file("/run/muos/global/network/address"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->NETWORK.GATEWAY, read_text_from_file("/run/muos/global/network/gateway"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->NETWORK.SUBNET, read_text_from_file("/run/muos/global/network/subnet"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->NETWORK.DNS, read_text_from_file("/run/muos/global/network/dns"), MAX_BUFFER_SIZE - 1);
     config->NETWORK.INTERFACE[MAX_BUFFER_SIZE - 1] = '\0';
-    config->NETWORK.TYPE = get_ini_int(muos_config, "network", "type", 0);
-    strncpy(config->NETWORK.SSID, get_ini_string(muos_config, "network", "ssid", ""),
-            MAX_BUFFER_SIZE - 1);
     config->NETWORK.SSID[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(config->NETWORK.ADDRESS, get_ini_string(muos_config, "network", "address", "192.168.0.123"),
-            MAX_BUFFER_SIZE - 1);
     config->NETWORK.ADDRESS[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(config->NETWORK.GATEWAY, get_ini_string(muos_config, "network", "gateway", "192.168.0.1"),
-            MAX_BUFFER_SIZE - 1);
     config->NETWORK.GATEWAY[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(config->NETWORK.SUBNET, get_ini_string(muos_config, "network", "subnet", "24"),
-            MAX_BUFFER_SIZE - 1);
     config->NETWORK.SUBNET[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(config->NETWORK.DNS, get_ini_string(muos_config, "network", "dns", "1.1.1.1"),
-            MAX_BUFFER_SIZE - 1);
     config->NETWORK.DNS[MAX_BUFFER_SIZE - 1] = '\0';
-
-    config->SETTINGS.GENERAL.HIDDEN = get_ini_int(muos_config, "settings.general", "hidden", 0);
-    config->SETTINGS.GENERAL.SOUND = get_ini_int(muos_config, "settings.general", "sound", 0);
-    config->SETTINGS.GENERAL.BGM = get_ini_int(muos_config, "settings.general", "bgm", 0);
-    strncpy(config->SETTINGS.GENERAL.STARTUP, get_ini_string(muos_config, "settings.general", "startup", "launcher"),
-            MAX_BUFFER_SIZE - 1);
+    
+    config->SETTINGS.GENERAL.HIDDEN = atoi(read_text_from_file("/run/muos/global/settings/general/hidden"));
+    config->SETTINGS.GENERAL.SOUND = atoi(read_text_from_file("/run/muos/global/settings/general/sound"));
+    config->SETTINGS.GENERAL.BGM = atoi(read_text_from_file("/run/muos/global/settings/general/bgm"));
+    config->SETTINGS.GENERAL.POWER = atoi(read_text_from_file("/run/muos/global/settings/general/power"));
+    config->SETTINGS.GENERAL.LOW_BATTERY = atoi(read_text_from_file("/run/muos/global/settings/general/low_battery"));
+    config->SETTINGS.GENERAL.COLOUR = atoi(read_text_from_file("/run/muos/global/settings/general/colour"));
+    config->SETTINGS.GENERAL.BRIGHTNESS = atoi(read_text_from_file("/run/muos/global/settings/general/brightness"));
+    config->SETTINGS.GENERAL.HDMI = atoi(read_text_from_file("/run/muos/global/settings/general/hdmi"));
+    config->SETTINGS.GENERAL.SHUTDOWN = atoi(read_text_from_file("/run/muos/global/settings/general/shutdown"));
+    strncpy(config->SETTINGS.GENERAL.STARTUP, read_text_from_file("/run/muos/global/settings/general/startup"), MAX_BUFFER_SIZE - 1);
     config->SETTINGS.GENERAL.STARTUP[MAX_BUFFER_SIZE - 1] = '\0';
-    config->SETTINGS.GENERAL.POWER = get_ini_int(muos_config, "settings.general", "power", 0);
-    config->SETTINGS.GENERAL.LOW_BATTERY = get_ini_int(muos_config, "settings.general", "low_battery", 0);
-    config->SETTINGS.GENERAL.COLOUR = get_ini_int(muos_config, "settings.general", "colour", 9);
-    config->SETTINGS.GENERAL.BRIGHTNESS = get_ini_int(muos_config, "settings.general", "brightness", 49);
-    config->SETTINGS.GENERAL.HDMI = get_ini_int(muos_config, "settings.general", "hdmi", 0);
-    config->SETTINGS.GENERAL.SHUTDOWN = get_ini_int(muos_config, "settings.general", "shutdown", -1);
-
-    config->SETTINGS.ADVANCED.SWAP = get_ini_int(muos_config, "settings.advanced", "swap", 0);
-    config->SETTINGS.ADVANCED.THERMAL = get_ini_int(muos_config, "settings.advanced", "thermal", 0);
-    config->SETTINGS.ADVANCED.FONT = get_ini_int(muos_config, "settings.advanced", "font", 1);
-    strncpy(config->SETTINGS.ADVANCED.VOLUME, get_ini_string(muos_config, "settings.advanced", "volume", "previous"),
-            MAX_BUFFER_SIZE - 1);
+    
+    config->SETTINGS.ADVANCED.SWAP = atoi(read_text_from_file("/run/muos/global/settings/advanced/swap"));
+    config->SETTINGS.ADVANCED.THERMAL = atoi(read_text_from_file("/run/muos/global/settings/advanced/thermal"));
+    config->SETTINGS.ADVANCED.FONT = atoi(read_text_from_file("/run/muos/global/settings/advanced/font"));
+    config->SETTINGS.ADVANCED.OFFSET = atoi(read_text_from_file("/run/muos/global/settings/advanced/offset"));
+    config->SETTINGS.ADVANCED.LOCK = atoi(read_text_from_file("/run/muos/global/settings/advanced/lock"));
+    config->SETTINGS.ADVANCED.LED = atoi(read_text_from_file("/run/muos/global/settings/advanced/led"));
+    config->SETTINGS.ADVANCED.THEME = atoi(read_text_from_file("/run/muos/global/settings/advanced/random_theme"));
+    config->SETTINGS.ADVANCED.RETROWAIT = atoi(read_text_from_file("/run/muos/global/settings/advanced/retrowait"));
+    config->SETTINGS.ADVANCED.ANDROID = atoi(read_text_from_file("/run/muos/global/settings/advanced/android"));
+    config->SETTINGS.ADVANCED.VERBOSE = atoi(read_text_from_file("/run/muos/global/settings/advanced/verbose"));
+    strncpy(config->SETTINGS.ADVANCED.VOLUME, read_text_from_file("/run/muos/global/settings/advanced/volume"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->SETTINGS.ADVANCED.BRIGHTNESS, read_text_from_file("/run/muos/global/settings/advanced/brightness"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->SETTINGS.ADVANCED.STATE, read_text_from_file("/run/muos/global/settings/advanced/state"), MAX_BUFFER_SIZE - 1);
     config->SETTINGS.ADVANCED.VOLUME[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(config->SETTINGS.ADVANCED.BRIGHTNESS,
-            get_ini_string(muos_config, "settings.advanced", "brightness", "previous"),
-            MAX_BUFFER_SIZE - 1);
     config->SETTINGS.ADVANCED.BRIGHTNESS[MAX_BUFFER_SIZE - 1] = '\0';
-    config->SETTINGS.ADVANCED.OFFSET = get_ini_int(muos_config, "settings.advanced", "offset", 50);
-    config->SETTINGS.ADVANCED.LOCK = get_ini_int(muos_config, "settings.advanced", "lock", 0);
-    config->SETTINGS.ADVANCED.LED = get_ini_int(muos_config, "settings.advanced", "led", 0);
-    config->SETTINGS.ADVANCED.THEME = get_ini_int(muos_config, "settings.advanced", "random_theme", 0);
-    config->SETTINGS.ADVANCED.RETROWAIT = get_ini_int(muos_config, "settings.advanced", "retrowait", 0);
-    config->SETTINGS.ADVANCED.ANDROID = get_ini_int(muos_config, "settings.advanced", "android", 0);
-    strncpy(config->SETTINGS.ADVANCED.STATE, get_ini_string(muos_config, "settings.advanced", "state", "mem"),
-            MAX_BUFFER_SIZE - 1);
     config->SETTINGS.ADVANCED.STATE[MAX_BUFFER_SIZE - 1] = '\0';
-    config->SETTINGS.ADVANCED.VERBOSE = get_ini_int(muos_config, "settings.advanced", "verbose", 0);
 
-    strncpy(config->THEME.NAME, get_ini_string(muos_config, "theme", "name", "muOS"),
-            MAX_BUFFER_SIZE - 1);
-    config->THEME.NAME[MAX_BUFFER_SIZE - 1] = '\0';
+    config->VISUAL.BATTERY = atoi(read_text_from_file("/run/muos/global/visual/battery"));
+    config->VISUAL.NETWORK = atoi(read_text_from_file("/run/muos/global/visual/network"));
+    config->VISUAL.BLUETOOTH = atoi(read_text_from_file("/run/muos/global/visual/bluetooth"));
+    config->VISUAL.CLOCK = atoi(read_text_from_file("/run/muos/global/visual/clock"));
+    config->VISUAL.BOX_ART = atoi(read_text_from_file("/run/muos/global/visual/boxart"));
+    config->VISUAL.NAME = atoi(read_text_from_file("/run/muos/global/visual/name"));
+    config->VISUAL.DASH = atoi(read_text_from_file("/run/muos/global/visual/dash"));
+    config->VISUAL.COUNTERFOLDER = atoi(read_text_from_file("/run/muos/global/visual/counterfolder"));
+    config->VISUAL.COUNTERFILE = atoi(read_text_from_file("/run/muos/global/visual/counterfile"));
 
-    config->VISUAL.BATTERY = get_ini_int(muos_config, "visual", "battery", 1);
-    config->VISUAL.NETWORK = get_ini_int(muos_config, "visual", "network", 0);
-    config->VISUAL.BLUETOOTH = get_ini_int(muos_config, "visual", "bluetooth", 0);
-    config->VISUAL.CLOCK = get_ini_int(muos_config, "visual", "clock", 1);
-    config->VISUAL.BOX_ART = get_ini_int(muos_config, "visual", "boxart", 1);
-    config->VISUAL.NAME = get_ini_int(muos_config, "visual", "name", 0);
-    config->VISUAL.DASH = get_ini_int(muos_config, "visual", "dash", 0);
-    config->VISUAL.COUNTERFOLDER = get_ini_int(muos_config, "visual", "counterfolder", 1);
-    config->VISUAL.COUNTERFILE = get_ini_int(muos_config, "visual", "counterfile", 1);
+    config->WEB.SHELL = atoi(read_text_from_file("/run/muos/global/web/shell"));
+    config->WEB.BROWSER = atoi(read_text_from_file("/run/muos/global/web/browser"));
+    config->WEB.TERMINAL = atoi(read_text_from_file("/run/muos/global/web/terminal"));
+    config->WEB.SYNCTHING = atoi(read_text_from_file("/run/muos/global/web/syncthing"));
+    config->WEB.NTP = atoi(read_text_from_file("/run/muos/global/web/ntp"));
 
-    config->WEB.SHELL = get_ini_int(muos_config, "web", "shell", 1);
-    config->WEB.BROWSER = get_ini_int(muos_config, "web", "browser", 0);
-    config->WEB.TERMINAL = get_ini_int(muos_config, "web", "terminal", 0);
-    config->WEB.SYNCTHING = get_ini_int(muos_config, "web", "syncthing", 0);
-    config->WEB.NTP = get_ini_int(muos_config, "web", "ntp", 1);
-
-    config->STORAGE.BIOS = get_ini_int(muos_config, "storage", "bios", 0);
-    config->STORAGE.CONFIG = get_ini_int(muos_config, "storage", "config", 0);
-    config->STORAGE.CATALOGUE = get_ini_int(muos_config, "storage", "catalogue", 0);
-    config->STORAGE.FAV = get_ini_int(muos_config, "storage", "fav", 0);
-    config->STORAGE.MUSIC = get_ini_int(muos_config, "storage", "music", 0);
-    config->STORAGE.SAVE = get_ini_int(muos_config, "storage", "save", 0);
-    config->STORAGE.SCREENSHOT = get_ini_int(muos_config, "storage", "screenshot", 0);
-    config->STORAGE.THEME = get_ini_int(muos_config, "storage", "theme", 0);
-
-    mini_free(muos_config);
+    config->STORAGE.BIOS = atoi(read_text_from_file("/run/muos/global/storage/bios"));
+    config->STORAGE.CONFIG = atoi(read_text_from_file("/run/muos/global/storage/config"));
+    config->STORAGE.CATALOGUE = atoi(read_text_from_file("/run/muos/global/storage/catalogue"));
+    config->STORAGE.FAV = atoi(read_text_from_file("/run/muos/global/storage/fav"));
+    config->STORAGE.MUSIC = atoi(read_text_from_file("/run/muos/global/storage/music"));
+    config->STORAGE.SAVE = atoi(read_text_from_file("/run/muos/global/storage/save"));
+    config->STORAGE.SCREENSHOT = atoi(read_text_from_file("/run/muos/global/storage/screenshot"));
+    config->STORAGE.THEME = atoi(read_text_from_file("/run/muos/global/storage/theme"));
 }

@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -694,7 +693,6 @@ int main(int argc, char *argv[]) {
 
     create_profile_items();
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

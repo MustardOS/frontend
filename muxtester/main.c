@@ -20,7 +20,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 static int js_fd;
@@ -115,7 +114,7 @@ void *joystick_task() {
                             lv_label_set_text(ui_lblButton, " ");
                             break;
                     }
-                } else if (ev.code == ABS_HAT0X || ev.code == ABS_Z) {
+                } else if (ev.code == ABS_HAT0X || ev.code == ABS_Y) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
@@ -180,7 +179,7 @@ void *joystick_system_task() {
                 if (ev.value == 1) {
                     if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT ||
                         ev.code == device.RAW_INPUT.BUTTON.POWER_LONG) {
-                        write_text_to_file(MUOS_PDI_LOAD, "tester", "w");
+                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
                         safe_quit = 1;
                     }
                 }
@@ -351,7 +350,6 @@ int main(int argc, char *argv[]) {
     lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);
 
-    init_elements();
     while (!safe_quit) {
         lv_task_handler();
         usleep(device.SCREEN.WAIT);

@@ -24,14 +24,12 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/array.h"
 #include "../common/collection.h"
 #include "../common/json/json.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
-struct glyph_config glyph;
 struct theme_config theme;
 
 static int js_fd;
@@ -580,11 +578,11 @@ void gen_item(char **file_names, int file_count) {
                     if (json_exists(good_name_json)) {
                         json_string_copy(good_name_json, fn_name, sizeof(fn_name));
                         snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
-                        write_text_to_file(init_cache_file, cache_fn_name, "a");
+                        write_text_to_file(init_cache_file, "a", CHAR, cache_fn_name);
                     } else {
                         snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
                         snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
-                        write_text_to_file(init_cache_file, cache_fn_name, "a");
+                        write_text_to_file(init_cache_file, "a", CHAR, cache_fn_name);
                         printf("MISSING LABEL: %s", cache_fn_name);
                     }
                 }
@@ -707,7 +705,7 @@ void create_explore_items(void *count) {
 
     int fn_valid = 0;
     struct json fn_json;
-    
+
     char folder_name_file[MAX_BUFFER_SIZE];
     snprintf(folder_name_file, sizeof(folder_name_file), "%s/MUOS/info/folder_name.json",
              device.STORAGE.ROM.MOUNT);
@@ -726,7 +724,7 @@ void create_explore_items(void *count) {
                 if (json_exists(good_name_json)) {
                     json_string_copy(good_name_json, good_name, sizeof(good_name));
                     new_item = add_item(&items, &item_count, dir_names[i], good_name, FOLDER);
-                } 
+                }
             }
             if (new_item == NULL) new_item = add_item(&items, &item_count, dir_names[i], dir_names[i], FOLDER);
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
@@ -768,16 +766,16 @@ void explore_root() {
 
     switch (single_card) {
         case 2:
-            write_text_to_file("/tmp/explore_card", "mmc", "w");
-            write_text_to_file("/tmp/explore_dir", strip_dir(SD1), "w");
-            write_text_to_file("/tmp/single_card", "", "w");
+            write_text_to_file("/tmp/explore_card", "w", CHAR, "mmc");
+            write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD1));
+            write_text_to_file("/tmp/single_card", "w", CHAR, "");
             load_mux("explore");
             safe_quit = 1;
             break;
         case 4:
-            write_text_to_file("/tmp/explore_card", "sdcard", "w");
-            write_text_to_file("/tmp/explore_dir", strip_dir(SD2), "w");
-            write_text_to_file("/tmp/single_card", "", "w");
+            write_text_to_file("/tmp/explore_card", "w", CHAR, "sdcard");
+            write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD2));
+            write_text_to_file("/tmp/single_card", "w", CHAR, "");
             load_mux("explore");
             safe_quit = 1;
             break;
@@ -790,9 +788,9 @@ void explore_root() {
             nav_moved = 1;
             break;
         case 8:
-            write_text_to_file("/tmp/explore_card", "usb", "w");
-            write_text_to_file("/tmp/explore_dir", strip_dir(E_USB), "w");
-            write_text_to_file("/tmp/single_card", "", "w");
+            write_text_to_file("/tmp/explore_card", "w", CHAR, "usb");
+            write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(E_USB));
+            write_text_to_file("/tmp/single_card", "w", CHAR, "");
             load_mux("explore");
             safe_quit = 1;
             break;
@@ -833,7 +831,7 @@ void prepare_activity_file(char *act_content, char *act_path) {
     if (!file_exist(act_path)) {
         char activity_content[MAX_BUFFER_SIZE];
         snprintf(activity_content, sizeof(activity_content), "%s\n0\n0", act_content);
-        write_text_to_file(act_path, activity_content, "w");
+        write_text_to_file(act_path, "w", CHAR, activity_content);
     }
 }
 
@@ -871,7 +869,7 @@ int load_content(int add_favourite) {
                  get_last_subdir(sd_dir, '/', 4),
                  items[current_item_index].name);
 
-        write_text_to_file(content_loader_file, content_loader_data, "w");
+        write_text_to_file(content_loader_file, "w", CHAR, content_loader_data);
         printf("\nCONFIG DATA\n%s\n", content_loader_data);
     }
 
@@ -897,7 +895,7 @@ int load_content(int add_favourite) {
                  store_favourite, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
 
         if (add_favourite) {
-            write_text_to_file(add_to_hf, pointer, "w");
+            write_text_to_file(add_to_hf, "w", CHAR, pointer);
 
             char *hf_msg;
             if (file_exist(add_to_hf)) {
@@ -921,8 +919,8 @@ int load_content(int add_favourite) {
                      strip_ext(items[current_item_index].name), curr_sd, read_line_from_file(content_loader_file, 5));
             prepare_activity_file(act_content, act_file);
 */
-            write_text_to_file(add_to_hf, pointer, "w");
-            write_text_to_file(MUOS_ROM_LOAD, read_text_from_file(content_loader_file), "w");
+            write_text_to_file(add_to_hf, "w", CHAR, pointer);
+            write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(content_loader_file));
         }
 
         printf("CONTENT LOADED SUCCESSFULLY\n");
@@ -951,7 +949,7 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
             snprintf(add_to_hf, sizeof(add_to_hf), "%s/MUOS/info/favourite/%s",
                      store_favourite, content_name);
 
-            write_text_to_file(add_to_hf, read_text_from_file(pointer_file), "w");
+            write_text_to_file(add_to_hf, "w", CHAR, read_text_from_file(pointer_file));
 
             return 1;
         } else {
@@ -972,8 +970,8 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
                  content_name, curr_sd, read_line_from_file(cache_file, 5));
         prepare_activity_file(act_content, act_file);
 */
-            write_text_to_file(add_to_hf, read_text_from_file(pointer_file), "w");
-            write_text_to_file(MUOS_ROM_LOAD, read_text_from_file(cache_file), "w");
+            write_text_to_file(add_to_hf, "w", CHAR, read_text_from_file(pointer_file));
+            write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(cache_file));
 
             printf("CONTENT LOADED SUCCESSFULLY\n");
             return 1;
@@ -1131,25 +1129,26 @@ void *joystick_task() {
                                     switch (module) {
                                         case ROOT:
                                             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
-                                                write_text_to_file("/tmp/explore_card", "mmc", "w");
-                                                write_text_to_file("/tmp/explore_dir", strip_dir(SD1), "w");
+                                                write_text_to_file("/tmp/explore_card", "w", CHAR, "mmc");
+                                                write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD1));
                                                 load_mux("explore");
                                                 break;
                                             } else if (strcasecmp(content_label, "SD2 (sdcard)") == 0) {
-                                                write_text_to_file("/tmp/explore_card", "sdcard", "w");
-                                                write_text_to_file("/tmp/explore_dir", strip_dir(SD2), "w");
+                                                write_text_to_file("/tmp/explore_card", "w", CHAR, "sdcard");
+                                                write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD2));
                                                 load_mux("explore");
                                                 break;
                                             } else if (strcasecmp(content_label, "USB (external)") == 0) {
-                                                write_text_to_file("/tmp/explore_card", "usb", "w");
-                                                write_text_to_file("/tmp/explore_dir", strip_dir(E_USB), "w");
+                                                write_text_to_file("/tmp/explore_card", "w", CHAR, "usb");
+                                                write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(E_USB));
                                                 load_mux("explore");
                                                 break;
                                             }
                                             break;
                                         default:
                                             char f_content[MAX_BUFFER_SIZE];
-                                            snprintf(f_content, sizeof(f_content), "%s.cfg", strip_ext(items[current_item_index].name));
+                                            snprintf(f_content, sizeof(f_content), "%s.cfg",
+                                                     strip_ext(items[current_item_index].name));
 
                                             switch (module) {
                                                 case MMC:
@@ -1161,7 +1160,7 @@ void *joystick_task() {
                                                                  sd_dir,
                                                                  items[current_item_index].name);
 
-                                                        write_text_to_file("/tmp/explore_dir", n_dir, "w");
+                                                        write_text_to_file("/tmp/explore_dir", "w", CHAR, n_dir);
                                                         load_mux("explore");
 
                                                         switch (module) {
@@ -1179,17 +1178,14 @@ void *joystick_task() {
                                                         }
                                                         break;
                                                     } else {
-                                                        char c_index[MAX_BUFFER_SIZE];
-                                                        snprintf(c_index, sizeof(c_index), "%d",
-                                                                 current_item_index);
-                                                        write_text_to_file(MUOS_IDX_LOAD, c_index, "w");
+                                                        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
                                                         if (load_content(0)) {
                                                             static char launch_script[MAX_BUFFER_SIZE];
                                                             snprintf(launch_script, sizeof(launch_script),
                                                                      "%s/script/mux/launch.sh", INTERNAL_PATH);
 
-                                                            write_text_to_file("/tmp/manual_launch", "1", "w");
+                                                            write_text_to_file("/tmp/manual_launch", "w", INT, 1);
 
                                                             system(launch_script);
                                                         }
@@ -1198,18 +1194,18 @@ void *joystick_task() {
                                                     break;
                                                 case FAVOURITE:
                                                     if (load_cached_content(f_content, "favourite", 0)) {
-                                                        write_text_to_file("/tmp/explore_card", "favourite", "w");
-                                                        write_text_to_file("/tmp/explore_dir", "", "w");
-                                                        write_text_to_file("/tmp/manual_launch", "1", "w");
+                                                        write_text_to_file("/tmp/explore_card", "w", CHAR, "favourite");
+                                                        write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
+                                                        write_text_to_file("/tmp/manual_launch", "w", INT, 1);
                                                     } else {
                                                         goto fail_quit;
                                                     }
                                                     break;
                                                 case HISTORY:
                                                     if (load_cached_content(f_content, "history", 0)) {
-                                                        write_text_to_file("/tmp/explore_card", "history", "w");
-                                                        write_text_to_file("/tmp/explore_dir", "", "w");
-                                                        write_text_to_file("/tmp/manual_launch", "1", "w");
+                                                        write_text_to_file("/tmp/explore_card", "w", CHAR, "history");
+                                                        write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
+                                                        write_text_to_file("/tmp/manual_launch", "w", INT, 1);
                                                     } else {
                                                         goto fail_quit;
                                                     }
@@ -1226,13 +1222,13 @@ void *joystick_task() {
 
                                     switch (module) {
                                         case FAVOURITE:
-                                            write_text_to_file("/tmp/explore_card", "root", "w");
-                                            write_text_to_file("/tmp/explore_dir", "", "w");
+                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
+                                            write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
                                             load_mux("launcher");
                                             break;
                                         case HISTORY:
-                                            write_text_to_file("/tmp/explore_card", "root", "w");
-                                            write_text_to_file("/tmp/explore_dir", "", "w");
+                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
+                                            write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
                                             load_mux("launcher");
                                             break;
                                         default:
@@ -1241,18 +1237,18 @@ void *joystick_task() {
                                                 if (b_dir != NULL) {
                                                     if (strcasecmp(str_tolower(b_dir), "/roms") == 0) {
                                                         if (file_exist("/tmp/single_card")) {
-                                                            write_text_to_file("/tmp/explore_card", "root", "w");
-                                                            write_text_to_file("/tmp/explore_dir", "", "w");
+                                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
+                                                            write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
                                                             remove("/tmp/single_card");
                                                             load_mux("launcher");
                                                         } else {
-                                                            write_text_to_file("/tmp/explore_card", "root", "w");
-                                                            write_text_to_file("/tmp/explore_dir", "", "w");
+                                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
+                                                            write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
                                                             load_mux("explore");
                                                         }
                                                     } else {
-                                                        write_text_to_file("/tmp/explore_dir",
-                                                                           strndup(sd_dir, b_dir - sd_dir), "w");
+                                                        write_text_to_file("/tmp/explore_dir", "w", CHAR,
+                                                                           strndup(sd_dir, b_dir - sd_dir));
                                                         load_mux("explore");
                                                     }
 
@@ -1270,7 +1266,8 @@ void *joystick_task() {
                                     snprintf(n_dir, sizeof(n_dir), "%s", sd_dir);
 
                                     char f_content[MAX_BUFFER_SIZE];
-                                    snprintf(f_content, sizeof(f_content), "%s.cfg", strip_ext(items[current_item_index].name));
+                                    snprintf(f_content, sizeof(f_content), "%s.cfg",
+                                             strip_ext(items[current_item_index].name));
 
                                     char cache_file[MAX_BUFFER_SIZE];
                                     switch (module) {
@@ -1280,7 +1277,7 @@ void *joystick_task() {
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/mmc/%s.ini",
                                                      device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
 
-                                            write_text_to_file("/tmp/explore_card", "mmc", "w");
+                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "mmc");
                                             break;
                                         case SDCARD:
                                             play_sound("confirm", nav_sound, 1);
@@ -1289,7 +1286,7 @@ void *joystick_task() {
                                                      "%s/MUOS/info/cache/sdcard/%s.ini",
                                                      device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
 
-                                            write_text_to_file("/tmp/explore_card", "sdcard", "w");
+                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "sdcard");
                                             break;
                                         case USB:
                                             play_sound("confirm", nav_sound, 1);
@@ -1297,7 +1294,7 @@ void *joystick_task() {
                                             snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/usb/%s.ini",
                                                      device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
 
-                                            write_text_to_file("/tmp/explore_card", "usb", "w");
+                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "usb");
                                             break;
                                         case FAVOURITE:
                                             play_sound("confirm", nav_sound, 1);
@@ -1306,7 +1303,7 @@ void *joystick_task() {
                                                      store_favourite, strip_ext(f_content));
 
                                             remove(cache_file);
-                                            write_text_to_file("/tmp/mux_reload", "1", "w");
+                                            write_text_to_file("/tmp/mux_reload", "w", INT, 1);
 
                                             goto ttq;
                                             break;
@@ -1317,7 +1314,7 @@ void *joystick_task() {
                                                      store_favourite, strip_ext(f_content));
 
                                             remove(cache_file);
-                                            write_text_to_file("/tmp/mux_reload", "1", "w");
+                                            write_text_to_file("/tmp/mux_reload", "w", INT, 1);
 
                                             goto ttq;
                                             break;
@@ -1336,7 +1333,7 @@ void *joystick_task() {
                                         cache_message(n_dir);
                                     }
 
-                                    write_text_to_file("/tmp/explore_dir", n_dir, "w");
+                                    write_text_to_file("/tmp/explore_dir", "w", CHAR, n_dir);
                                     load_mux("explore");
 
                                     ttq:
@@ -1345,7 +1342,8 @@ void *joystick_task() {
                                     play_sound("confirm", nav_sound, 1);
 
                                     char f_content[MAX_BUFFER_SIZE];
-                                    snprintf(f_content, sizeof(f_content), "%s.cfg", strip_ext(items[current_item_index].name));
+                                    snprintf(f_content, sizeof(f_content), "%s.cfg",
+                                             strip_ext(items[current_item_index].name));
 
                                     switch (module) {
                                         case MMC:
@@ -1392,7 +1390,7 @@ void *joystick_task() {
                                         case USB:
                                             play_sound("confirm", nav_sound, 1);
 
-                                            write_text_to_file("/tmp/explore_card", "root", "w");
+                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
                                             remove("/tmp/explore_dir");
                                             load_mux("explore");
 
@@ -1410,7 +1408,7 @@ void *joystick_task() {
                                             case MMC:
                                             case SDCARD:
                                             case USB:
-                                                write_text_to_file(MUOS_SAA_LOAD, "1", "w");
+                                                write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
                                                 load_content_core(1);
                                                 break;
                                             default:
@@ -2024,7 +2022,6 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_staCapacity, get_capacity());
 
     load_theme(&theme, &config, &device, mux_prog);
-    load_glyph(&glyph, &device, mux_prog);
 
     apply_theme();
     init_fonts();
@@ -2128,7 +2125,7 @@ int main(int argc, char *argv[]) {
             free(SD2_lc);
             free(USB_lc);
 
-            write_text_to_file(MUOS_PDI_LOAD, "explore", "w");
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "explore");
             break;
         case MMC:
         case SDCARD:
@@ -2169,19 +2166,19 @@ int main(int argc, char *argv[]) {
                 }
             }
             if (sd_dir != NULL) {
-                write_text_to_file(MUOS_PDI_LOAD, get_last_dir(sd_dir), "w");
+                write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sd_dir));
             }
             if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "roms") == 0) {
-                write_text_to_file(MUOS_PDI_LOAD, get_last_subdir(sd_dir, '/', 4), "w");
+                write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sd_dir, '/', 4));
             }
             break;
         case FAVOURITE:
             pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "favourite");
-            write_text_to_file(MUOS_PDI_LOAD, "favourite", "w");
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "favourite");
             break;
         case HISTORY:
             pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "history");
-            write_text_to_file(MUOS_PDI_LOAD, "history", "w");
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
             break;
     }
 

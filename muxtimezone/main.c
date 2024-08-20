@@ -23,7 +23,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -640,7 +639,6 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblTimezoneMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

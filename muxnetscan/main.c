@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -71,20 +70,6 @@ void show_help() {
     }
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
-}
-
-void save_ssid() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
-    mini_set_string(muos_config, "network", "ssid",
-                    lv_label_get_text(lv_group_get_focused(ui_group)));
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
 }
 
 void create_network_items() {
@@ -216,7 +201,8 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
-                                    save_ssid();
+                                    write_text_to_file("/run/muos/global/network/ssid", "w", CHAR,
+                                                       lv_label_get_text(lv_group_get_focused(ui_group)));
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
@@ -261,7 +247,8 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent);
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
                                     JOYUP_pressed = (ev.value != 0);
@@ -275,7 +262,8 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent);
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count) {
                                     JOYDOWN_pressed = (ev.value != 0);
@@ -656,7 +644,6 @@ int main(int argc, char *argv[]) {
 
     create_network_items();
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }
