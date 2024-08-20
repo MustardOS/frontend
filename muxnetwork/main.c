@@ -1024,6 +1024,7 @@ void init_elements() {
     lv_obj_move_foreground(ui_pnlEntry);
     lv_obj_move_foreground(ui_pnlProgressBrightness);
     lv_obj_move_foreground(ui_pnlProgressVolume);
+    lv_obj_move_foreground(ui_pnlMessage);
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
