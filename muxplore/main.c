@@ -2007,7 +2007,7 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_theme(&theme, &config, &device, mux_prog);
 
-    ui_common_screen_init(&theme, &device);
+    ui_common_screen_init(&theme, &device, "");
     ui_init(ui_screen, &theme);
 
     if (file_exist("/tmp/manual_launch")) {

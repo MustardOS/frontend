@@ -1,6 +1,6 @@
 #pragma once
 
-void ui_common_screen_init(struct theme_config *theme, struct mux_device *device);
+void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title);
 extern lv_obj_t * ui_screen;
 extern lv_obj_t * ui_pnlWall;
 extern lv_obj_t * ui_imgWall;

@@ -536,9 +536,10 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
 
-    ui_common_screen_init(&theme, &device);
+    ui_common_screen_init(&theme, &device, "NETWORK SCAN");
     init_elements();
     lv_label_set_text(ui_lblScreenMessage, "Scanning for Wi-Fi Networks...");
+    lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 

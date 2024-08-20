@@ -527,7 +527,7 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
 
-    ui_common_screen_init(&theme, &device);
+    ui_common_screen_init(&theme, &device, "TIMEZONE");
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));

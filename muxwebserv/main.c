@@ -662,7 +662,7 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
 
-    ui_common_screen_init(&theme, &device);
+    ui_common_screen_init(&theme, &device, "WEB SERVICES");
     ui_init(ui_pnlContent);
     init_elements();
 

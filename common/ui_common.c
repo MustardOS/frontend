@@ -56,7 +56,7 @@ lv_obj_t * ui_icoProgressVolume;
 lv_obj_t * ui_barProgressVolume;
 lv_obj_t * ui____initial_actions0;
 
-void ui_common_screen_init(struct theme_config *theme, struct mux_device *device) {
+void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title) {
     ui_screen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -185,7 +185,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_lblTitle, theme->HEADER.HEIGHT);
     lv_obj_set_align(ui_lblTitle, LV_ALIGN_TOP_MID);
     lv_label_set_long_mode(ui_lblTitle, LV_LABEL_LONG_DOT);
-    lv_label_set_text(ui_lblTitle, "");
+    lv_label_set_text(ui_lblTitle, title);
     lv_obj_add_flag(ui_lblTitle, LV_OBJ_FLAG_FLOATING);     /// Flags
     lv_obj_set_style_text_color(ui_lblTitle, lv_color_hex(theme->HEADER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblTitle, theme->HEADER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
