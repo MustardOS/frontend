@@ -53,28 +53,28 @@ void load_config(struct mux_config *config) {
     config->SETTINGS.ADVANCED.BRIGHTNESS[MAX_BUFFER_SIZE - 1] = '\0';
     config->SETTINGS.ADVANCED.STATE[MAX_BUFFER_SIZE - 1] = '\0';
 
-    config->VISUAL.BATTERY = atoi(read_text_from_file("/run/muos/global/settings/visual/battery"));
-    config->VISUAL.NETWORK = atoi(read_text_from_file("/run/muos/global/settings/visual/network"));
-    config->VISUAL.BLUETOOTH = atoi(read_text_from_file("/run/muos/global/settings/visual/bluetooth"));
-    config->VISUAL.CLOCK = atoi(read_text_from_file("/run/muos/global/settings/visual/clock"));
-    config->VISUAL.BOX_ART = atoi(read_text_from_file("/run/muos/global/settings/visual/boxart"));
-    config->VISUAL.NAME = atoi(read_text_from_file("/run/muos/global/settings/visual/name"));
-    config->VISUAL.DASH = atoi(read_text_from_file("/run/muos/global/settings/visual/dash"));
-    config->VISUAL.COUNTERFOLDER = atoi(read_text_from_file("/run/muos/global/settings/visual/counterfolder"));
-    config->VISUAL.COUNTERFILE = atoi(read_text_from_file("/run/muos/global/settings/visual/counterfile"));
+    config->VISUAL.BATTERY = atoi(read_text_from_file("/run/muos/global/visual/battery"));
+    config->VISUAL.NETWORK = atoi(read_text_from_file("/run/muos/global/visual/network"));
+    config->VISUAL.BLUETOOTH = atoi(read_text_from_file("/run/muos/global/visual/bluetooth"));
+    config->VISUAL.CLOCK = atoi(read_text_from_file("/run/muos/global/visual/clock"));
+    config->VISUAL.BOX_ART = atoi(read_text_from_file("/run/muos/global/visual/boxart"));
+    config->VISUAL.NAME = atoi(read_text_from_file("/run/muos/global/visual/name"));
+    config->VISUAL.DASH = atoi(read_text_from_file("/run/muos/global/visual/dash"));
+    config->VISUAL.COUNTERFOLDER = atoi(read_text_from_file("/run/muos/global/visual/counterfolder"));
+    config->VISUAL.COUNTERFILE = atoi(read_text_from_file("/run/muos/global/visual/counterfile"));
 
-    config->WEB.SHELL = atoi(read_text_from_file("/run/muos/global/settings/web/shell"));
-    config->WEB.BROWSER = atoi(read_text_from_file("/run/muos/global/settings/web/browser"));
-    config->WEB.TERMINAL = atoi(read_text_from_file("/run/muos/global/settings/web/terminal"));
-    config->WEB.SYNCTHING = atoi(read_text_from_file("/run/muos/global/settings/web/syncthing"));
-    config->WEB.NTP = atoi(read_text_from_file("/run/muos/global/settings/web/ntp"));
+    config->WEB.SHELL = atoi(read_text_from_file("/run/muos/global/web/shell"));
+    config->WEB.BROWSER = atoi(read_text_from_file("/run/muos/global/web/browser"));
+    config->WEB.TERMINAL = atoi(read_text_from_file("/run/muos/global/web/terminal"));
+    config->WEB.SYNCTHING = atoi(read_text_from_file("/run/muos/global/web/syncthing"));
+    config->WEB.NTP = atoi(read_text_from_file("/run/muos/global/web/ntp"));
 
-    config->STORAGE.BIOS = atoi(read_text_from_file("/run/muos/global/settings/storage/bios"));
-    config->STORAGE.CONFIG = atoi(read_text_from_file("/run/muos/global/settings/storage/config"));
-    config->STORAGE.CATALOGUE = atoi(read_text_from_file("/run/muos/global/settings/storage/catalogue"));
-    config->STORAGE.FAV = atoi(read_text_from_file("/run/muos/global/settings/storage/fav"));
-    config->STORAGE.MUSIC = atoi(read_text_from_file("/run/muos/global/settings/storage/music"));
-    config->STORAGE.SAVE = atoi(read_text_from_file("/run/muos/global/settings/storage/save"));
-    config->STORAGE.SCREENSHOT = atoi(read_text_from_file("/run/muos/global/settings/storage/screenshot"));
-    config->STORAGE.THEME = atoi(read_text_from_file("/run/muos/global/settings/storage/theme"));
+    config->STORAGE.BIOS = atoi(read_text_from_file("/run/muos/global/storage/bios"));
+    config->STORAGE.CONFIG = atoi(read_text_from_file("/run/muos/global/storage/config"));
+    config->STORAGE.CATALOGUE = atoi(read_text_from_file("/run/muos/global/storage/catalogue"));
+    config->STORAGE.FAV = atoi(read_text_from_file("/run/muos/global/storage/fav"));
+    config->STORAGE.MUSIC = atoi(read_text_from_file("/run/muos/global/storage/music"));
+    config->STORAGE.SAVE = atoi(read_text_from_file("/run/muos/global/storage/save"));
+    config->STORAGE.SCREENSHOT = atoi(read_text_from_file("/run/muos/global/storage/screenshot"));
+    config->STORAGE.THEME = atoi(read_text_from_file("/run/muos/global/storage/theme"));
 }

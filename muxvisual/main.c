@@ -201,8 +201,8 @@ void save_visual_options() {
     int idx_boxart = lv_dropdown_get_selected(ui_droBoxArt);
     int idx_name = lv_dropdown_get_selected(ui_droName);
     int idx_dash = lv_dropdown_get_selected(ui_droDash);
-    int idx_foldercounter = lv_dropdown_get_selected(ui_droMenuCounterFolder);
-    int idx_filecounter = lv_dropdown_get_selected(ui_droMenuCounterFile);
+    int idx_counterfolder = lv_dropdown_get_selected(ui_droMenuCounterFolder);
+    int idx_counterfile = lv_dropdown_get_selected(ui_droMenuCounterFile);
 
     write_text_to_file("/run/muos/global/visual/battery", "w", INT, idx_battery);
     write_text_to_file("/run/muos/global/visual/network", "w", INT, idx_network);
@@ -211,8 +211,8 @@ void save_visual_options() {
     write_text_to_file("/run/muos/global/visual/boxart", "w", INT, idx_boxart);
     write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
     write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
-    write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_foldercounter);
-    write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_filecounter);
+    write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_counterfolder);
+    write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_counterfile);
 }
 
 void init_navigation_groups() {

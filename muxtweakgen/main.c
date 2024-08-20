@@ -186,7 +186,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
     lv_dropdown_set_selected(ui_droBGM, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
-    lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BRIGHT_FILE)));
+    lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BRIGHT_FILE)) - 1);
 
     switch (config.SETTINGS.GENERAL.HDMI) {
         case -1:
@@ -520,14 +520,14 @@ void save_tweak_options() {
     write_text_to_file("/run/muos/global/settings/general/bgm", "w", INT, idx_bgm);
     write_text_to_file("/run/muos/global/settings/general/sound", "w", INT, idx_sound);
     write_text_to_file("/run/muos/global/settings/general/brightness", "w", INT, idx_brightness);
-    write_text_to_file("/run/muos/global/settings/general/startup", "w", INT, idx_startup);
+    write_text_to_file("/run/muos/global/settings/general/startup", "w", CHAR, idx_startup);
     write_text_to_file("/run/muos/global/settings/general/colour", "w", INT, idx_colour);
     write_text_to_file("/run/muos/global/settings/general/hdmi", "w", INT, idx_hdmi);
     write_text_to_file("/run/muos/global/settings/general/shutdown", "w", INT, idx_shutdown);
 
     char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %s",
-             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), lv_label_get_text(ui_lblBrightness));
+    snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
+             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), atoi(lv_label_get_text(ui_lblBrightness)));
     system(command);
 
     static char tweak_script[MAX_BUFFER_SIZE];
