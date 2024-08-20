@@ -24,7 +24,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -189,32 +188,18 @@ void restore_network_values() {
 
 void save_network_config() {
     int idx_enable = 0;
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "true") == 0) {
-        idx_enable = 1;
-    }
-
     int idx_type = 0;
-    if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "static") == 0) {
-        idx_type = 1;
-    }
 
-    char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
+    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "true") == 0) idx_enable = 1;
+    if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "static") == 0) idx_type = 1;
 
-    mini_t * muos_config = mini_try_load(config_file);
-
-    mini_set_int(muos_config, "network", "enabled", idx_enable);
-    mini_set_int(muos_config, "network", "type", idx_type);
-
-    mini_set_string(muos_config, "network", "ssid", lv_label_get_text(ui_lblIdentifierValue));
-    mini_set_string(muos_config, "network", "address", lv_label_get_text(ui_lblAddressValue));
-    mini_set_string(muos_config, "network", "subnet", lv_label_get_text(ui_lblSubnetValue));
-    mini_set_string(muos_config, "network", "gateway", lv_label_get_text(ui_lblGatewayValue));
-    mini_set_string(muos_config, "network", "dns", lv_label_get_text(ui_lblDNSValue));
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/network/enabled", "w", INT, idx_enable);
+    write_text_to_file("/run/muos/global/network/type", "w", INT, idx_type);
+    write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue));
+    write_text_to_file("/run/muos/global/network/address", "w", CHAR, lv_label_get_text(ui_lblAddressValue));
+    write_text_to_file("/run/muos/global/network/subnet", "w", CHAR, lv_label_get_text(ui_lblSubnetValue));
+    write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, lv_label_get_text(ui_lblGatewayValue));
+    write_text_to_file("/run/muos/global/network/dns", "w", CHAR, lv_label_get_text(ui_lblDNSValue));
 }
 
 void init_navigation_groups() {
@@ -524,10 +509,10 @@ void *joystick_task() {
                                         lv_task_handler();
                                         save_network_config();
                                         if (config.NETWORK.ENABLED) {
-                                            write_text_to_file("/tmp/net_ssid",
-                                                               lv_label_get_text(ui_lblIdentifierValue), "w");
-                                            write_text_to_file("/tmp/net_pass",
-                                                               lv_label_get_text(ui_lblPasswordValue), "w");
+                                            write_text_to_file("/tmp/net_ssid", "w", CHAR,
+                                                               lv_label_get_text(ui_lblIdentifierValue));
+                                            write_text_to_file("/tmp/net_pass", "w", CHAR,
+                                                               lv_label_get_text(ui_lblPasswordValue));
 
                                             system("/opt/muos/script/web/password.sh");
                                             system("/opt/muos/script/system/network.sh");
@@ -570,23 +555,14 @@ void *joystick_task() {
                                     input_disable = 1;
                                     save_network_config();
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "False") == 0) {
-                                        char config_file[MAX_BUFFER_SIZE];
-                                        snprintf(config_file, sizeof(config_file),
-                                                 "%s/config/config.ini", INTERNAL_PATH);
-
-                                        mini_t * muos_config = mini_try_load(config_file);
-
-                                        set_ini_int(muos_config, "network", "enabled", 0);
-                                        set_ini_string(muos_config, "network", "interface", "wlan0");
-                                        set_ini_int(muos_config, "network", "type", 0);
-                                        set_ini_string(muos_config, "network", "ssid", "");
-                                        set_ini_string(muos_config, "network", "address", "192.168.0.123");
-                                        set_ini_string(muos_config, "network", "gateway", "192.168.0.1");
-                                        set_ini_int(muos_config, "network", "subnet", 24);
-                                        set_ini_string(muos_config, "network", "dns", "1.1.1.1");
-
-                                        mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-                                        mini_free(muos_config);
+                                        write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
+                                        write_text_to_file("/run/muos/global/network/interface", "w", CHAR, "wlan0");
+                                        write_text_to_file("/run/muos/global/network/type", "w", INT, 0);
+                                        write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, "");
+                                        write_text_to_file("/run/muos/global/network/address", "w", CHAR, "192.168.0.123");
+                                        write_text_to_file("/run/muos/global/network/subnet", "w", INT, 24);
+                                        write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, "192.168.0.1");
+                                        write_text_to_file("/run/muos/global/network/dns", "w", CHAR, "1.1.1.1");
 
                                         system("/opt/muos/script/system/network.sh");
                                     }
@@ -595,7 +571,7 @@ void *joystick_task() {
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "network", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
@@ -605,8 +581,8 @@ void *joystick_task() {
                                         save_network_config();
                                         load_mux("net_scan");
 
-                                        const char *u_data = lv_obj_get_user_data(element_focused);
-                                        write_text_to_file(MUOS_PDI_LOAD, u_data, "w");
+                                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,
+                                                           lv_obj_get_user_data(element_focused));
 
                                         safe_quit = 1;
                                     }
@@ -617,8 +593,8 @@ void *joystick_task() {
                                         input_disable = 1;
                                         load_mux("net_profile");
 
-                                        const char *u_data = lv_obj_get_user_data(element_focused);
-                                        write_text_to_file(MUOS_PDI_LOAD, u_data, "w");
+                                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,
+                                                           lv_obj_get_user_data(element_focused));
 
                                         safe_quit = 1;
                                     }
@@ -693,7 +669,8 @@ void *joystick_task() {
                                         nav_prev(ui_group_value, 1);
                                         nav_prev(ui_group_glyph, 1);
                                         nav_moved = 1;
-                                        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                               current_item_index, ui_pnlContent);
                                     } else if (current_item_index > 0) {
                                         list_nav_prev(1);
                                         nav_moved = 1;
@@ -761,7 +738,8 @@ void *joystick_task() {
                                         nav_next(ui_group_value, 1);
                                         nav_next(ui_group_glyph, 1);
                                         nav_moved = 1;
-                                        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                               current_item_index, ui_pnlContent);
                                     } else if (current_item_index < ui_count - 1) {
                                         list_nav_next(1);
                                         nav_moved = 1;

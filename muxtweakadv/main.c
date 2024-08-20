@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -259,12 +258,6 @@ void restore_tweak_options() {
 }
 
 void save_tweak_options() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
     int idx_swap = lv_dropdown_get_selected(ui_droSwap);
     int idx_thermal = lv_dropdown_get_selected(ui_droThermal);
     int idx_font = lv_dropdown_get_selected(ui_droFont);
@@ -321,27 +314,23 @@ void save_tweak_options() {
             break;
     }
 
-    mini_set_int(muos_config, "settings.advanced", "swap", idx_swap);
-    mini_set_int(muos_config, "settings.advanced", "thermal", idx_thermal);
-    mini_set_int(muos_config, "settings.advanced", "font", idx_font);
-    mini_set_string(muos_config, "settings.advanced", "volume", idx_volume);
-    mini_set_string(muos_config, "settings.advanced", "brightness", idx_brightness);
-    mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
-    mini_set_int(muos_config, "settings.advanced", "lock", idx_lockdown);
-    mini_set_int(muos_config, "settings.advanced", "led", idx_led);
-    mini_set_int(muos_config, "settings.advanced", "random_theme", idx_random_theme);
-    mini_set_int(muos_config, "settings.advanced", "retrowait", idx_retrowait);
-    mini_set_int(muos_config, "settings.advanced", "android", idx_android);
-    mini_set_string(muos_config, "settings.advanced", "state", idx_state);
-    mini_set_int(muos_config, "settings.advanced", "verbose", idx_verbose);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/settings/advanced/swap", "w", INT, idx_swap);
+    write_text_to_file("/run/muos/global/settings/advanced/thermal", "w", INT, idx_thermal);
+    write_text_to_file("/run/muos/global/settings/advanced/font", "w", INT, idx_font);
+    write_text_to_file("/run/muos/global/settings/advanced/volume", "w", CHAR, idx_volume);
+    write_text_to_file("/run/muos/global/settings/advanced/brightness", "w", CHAR, idx_brightness);
+    write_text_to_file("/run/muos/global/settings/advanced/offset", "w", INT, idx_offset);
+    write_text_to_file("/run/muos/global/settings/advanced/lock", "w", INT, idx_lockdown);
+    write_text_to_file("/run/muos/global/settings/advanced/led", "w", INT, idx_led);
+    write_text_to_file("/run/muos/global/settings/advanced/random_theme", "w", INT, idx_random_theme);
+    write_text_to_file("/run/muos/global/settings/advanced/retrowait", "w", INT, idx_retrowait);
+    write_text_to_file("/run/muos/global/settings/advanced/android", "w", INT, idx_android);
+    write_text_to_file("/run/muos/global/settings/advanced/state", "w", CHAR, idx_state);
+    write_text_to_file("/run/muos/global/settings/advanced/verbose", "w", INT, idx_verbose);
 
     static char tweak_script[MAX_BUFFER_SIZE];
     snprintf(tweak_script, sizeof(tweak_script),
              "%s/script/mux/tweak.sh", INTERNAL_PATH);
-
     system(tweak_script);
 }
 
@@ -602,7 +591,7 @@ void *joystick_task() {
 
                                     save_tweak_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "advanced", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "advanced");
                                     safe_quit = 1;
                                 }
                             }

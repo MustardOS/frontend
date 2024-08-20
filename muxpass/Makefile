@@ -63,7 +63,6 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/array.c \
 		../common/config.c \
 		../common/device.c \
-		../common/glyph.c \
 		../common/common.c \
 		../common/theme.c \
 		../common/passcode.c \

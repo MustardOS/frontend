@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -346,12 +345,6 @@ void restore_tweak_options() {
 }
 
 void save_tweak_options() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
     int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
     int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
     int idx_sound = lv_dropdown_get_selected(ui_droSound);
@@ -523,26 +516,23 @@ void save_tweak_options() {
             break;
     }
 
-    mini_set_int(muos_config, "settings.general", "hidden", idx_hidden);
-    mini_set_int(muos_config, "settings.general", "bgm", idx_bgm);
-    mini_set_int(muos_config, "settings.general", "sound", idx_sound);
-    mini_set_string(muos_config, "settings.general", "startup", idx_startup);
-    mini_set_int(muos_config, "settings.general", "colour", idx_colour);
-    mini_set_int(muos_config, "settings.general", "hdmi", idx_hdmi);
-    mini_set_int(muos_config, "settings.general", "shutdown", idx_shutdown);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/settings/general/hidden", "w", INT, idx_hidden);
+    write_text_to_file("/run/muos/global/settings/general/bgm", "w", INT, idx_bgm);
+    write_text_to_file("/run/muos/global/settings/general/sound", "w", INT, idx_sound);
+    write_text_to_file("/run/muos/global/settings/general/brightness", "w", INT, idx_brightness);
+    write_text_to_file("/run/muos/global/settings/general/startup", "w", INT, idx_startup);
+    write_text_to_file("/run/muos/global/settings/general/colour", "w", INT, idx_colour);
+    write_text_to_file("/run/muos/global/settings/general/hdmi", "w", INT, idx_hdmi);
+    write_text_to_file("/run/muos/global/settings/general/shutdown", "w", INT, idx_shutdown);
 
     char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
-             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), idx_brightness);
+    snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %s",
+             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), lv_label_get_text(ui_lblBrightness));
     system(command);
 
     static char tweak_script[MAX_BUFFER_SIZE];
     snprintf(tweak_script, sizeof(tweak_script),
              "%s/script/mux/tweak.sh", INTERNAL_PATH);
-
     system(tweak_script);
 }
 
@@ -785,7 +775,7 @@ void *joystick_task() {
 
                                     save_tweak_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "general", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (element_focused == ui_lblBrightness) {

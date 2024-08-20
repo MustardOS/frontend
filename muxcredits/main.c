@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include "../common/common.h"
 #include "../common/config.h"
 #include "../common/device.h"
 
@@ -63,7 +64,7 @@ int main() {
     animScroll_Animation(ui_conScroll, 10000);
     animFade_Animation(ui_conKofi, 50000);
 
-    write_text_to_file(MUOS_PDI_LOAD, "credit", "w");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
 
     int hold = 0;
     while (!safe_quit) {

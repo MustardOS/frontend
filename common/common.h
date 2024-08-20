@@ -25,6 +25,10 @@ enum element_type {
     LABEL, VALUE, IGNORE, MISC_PAD, MISC_WIDTH
 };
 
+enum write_file_type {
+    CHAR, INT
+};
+
 struct dt_task_param {
     lv_obj_t *lblDatetime;
 };
@@ -124,7 +128,7 @@ int set_ini_string(mini_t *ini_config, const char *section, const char *key, con
 
 char *format_meta_text(char *filename);
 
-void write_text_to_file(const char *filename, const char *text, const char *mode);
+void write_text_to_file(const char *filename, const char *mode, int type, ...);
 
 void create_directories(const char *path);
 
@@ -191,8 +195,6 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
 char *load_overlay_image();
 
 void load_font_text(const char *program, lv_obj_t *screen);
-
-void load_font_glyph(const char *program, lv_obj_t *element);
 
 void load_font_section(const char *program, const char *section, lv_obj_t *element);
 

@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -251,7 +250,7 @@ void *joystick_task() {
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
                                     load_mux("launcher");
-                                    write_text_to_file(MUOS_PDI_LOAD, "", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "");
                                     safe_quit = 1;
                                 }
                             }

@@ -1,7 +1,6 @@
 #include "../lvgl/lvgl.h"
 #include "ui/ui.h"
 #include "../common/theme.h"
-#include "../common/glyph.h"
 
 struct theme_config theme;
 

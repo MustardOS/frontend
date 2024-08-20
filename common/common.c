@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdarg.h>
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -15,7 +16,6 @@
 #include "options.h"
 #include "config.h"
 #include "device.h"
-#include "glyph.h"
 #include "mini/mini.h"
 
 struct pattern skip_pattern_list = {NULL, 0, 0};
@@ -635,15 +635,24 @@ char *format_meta_text(char *filename) {
     return result;
 }
 
-void write_text_to_file(const char *filename, const char *text, const char *mode) {
-    FILE * file = fopen(filename, mode);
+void write_text_to_file(const char *filename, const char *mode, int type, ...) {
+    FILE *file = fopen(filename, mode);
 
     if (file == NULL) {
         perror("Error opening file for writing");
         return;
     }
 
-    fprintf(file, "%s", text);
+    va_list args;
+    va_start(args, type);
+
+    if (type == CHAR) { // type is general text!
+        fprintf(file, "%s", va_arg(args, const char *));
+    } else if (type == INT) { // type is a number!
+        fprintf(file, "%d", va_arg(args, int));
+    }
+
+    va_end(args);
     fclose(file);
 }
 
@@ -1199,35 +1208,6 @@ void load_font_text(const char *program, lv_obj_t *screen) {
                          "M:%s/MUOS/theme/active/font/default.bin", get_default_storage(config.STORAGE.THEME));
                 lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
-            }
-        }
-    }
-}
-
-void load_font_glyph(const char *program, lv_obj_t *element) {
-    printf("\t\t\t\tTRYING TO LOAD GLYPH FONT\n");
-
-    if (config.SETTINGS.ADVANCED.FONT) {
-        char theme_font_glyph_default[MAX_BUFFER_SIZE];
-        char theme_font_glyph[MAX_BUFFER_SIZE];
-        snprintf(theme_font_glyph_default, sizeof(theme_font_glyph_default),
-                 "%s/MUOS/theme/active/font/glyph/default.bin", get_default_storage(config.STORAGE.THEME));
-        snprintf(theme_font_glyph, sizeof(theme_font_glyph),
-                 "%s/MUOS/theme/active/font/glyph/%s.bin", get_default_storage(config.STORAGE.THEME), program);
-        if (file_exist(theme_font_glyph)) {
-            char theme_font_glyph_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_glyph_fs, sizeof(theme_font_glyph_fs),
-                     "M:%s/MUOS/theme/active/font/glyph/%s.bin", get_default_storage(config.STORAGE.THEME), program);
-            lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        } else {
-            if (file_exist(theme_font_glyph_default)) {
-                char theme_font_glyph_default_fs[MAX_BUFFER_SIZE];
-                snprintf(theme_font_glyph_default_fs, sizeof(theme_font_glyph_default_fs),
-                         "M:%s/MUOS/theme/active/font/glyph/default.bin", get_default_storage(config.STORAGE.THEME));
-                lv_obj_set_style_text_font(element, lv_font_load(theme_font_glyph_default_fs),
-                                           LV_PART_MAIN | LV_STATE_DEFAULT);
-                printf("\t\t\t\tLOADED DEFAULT GLYPH FONT (%s)\n", theme_font_glyph_default_fs);
             }
         }
     }

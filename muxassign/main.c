@@ -24,7 +24,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/json/json.h"
 #include "../common/mini/mini.h"
 

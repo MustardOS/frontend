@@ -22,7 +22,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -195,12 +194,6 @@ void restore_visual_options() {
 }
 
 void save_visual_options() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
     int idx_battery = lv_dropdown_get_selected(ui_droBattery);
     int idx_network = lv_dropdown_get_selected(ui_droNetwork);
     int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
@@ -211,18 +204,15 @@ void save_visual_options() {
     int idx_foldercounter = lv_dropdown_get_selected(ui_droMenuCounterFolder);
     int idx_filecounter = lv_dropdown_get_selected(ui_droMenuCounterFile);
 
-    mini_set_int(muos_config, "visual", "battery", idx_battery);
-    mini_set_int(muos_config, "visual", "network", idx_network);
-    mini_set_int(muos_config, "visual", "bluetooth", idx_bluetooth);
-    mini_set_int(muos_config, "visual", "clock", idx_clock);
-    mini_set_int(muos_config, "visual", "boxart", idx_boxart);
-    mini_set_int(muos_config, "visual", "name", idx_name);
-    mini_set_int(muos_config, "visual", "dash", idx_dash);
-    mini_set_int(muos_config, "visual", "counterfolder", idx_foldercounter);
-    mini_set_int(muos_config, "visual", "counterfile", idx_filecounter);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/visual/battery", "w", INT, idx_battery);
+    write_text_to_file("/run/muos/global/visual/network", "w", INT, idx_network);
+    write_text_to_file("/run/muos/global/visual/bluetooth", "w", INT, idx_bluetooth);
+    write_text_to_file("/run/muos/global/visual/clock", "w", INT, idx_clock);
+    write_text_to_file("/run/muos/global/visual/boxart", "w", INT, idx_boxart);
+    write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
+    write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
+    write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_foldercounter);
+    write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_filecounter);
 }
 
 void init_navigation_groups() {
@@ -441,7 +431,7 @@ void *joystick_task() {
 
                                     save_visual_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "interface", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
                                     safe_quit = 1;
                                 }
                             }

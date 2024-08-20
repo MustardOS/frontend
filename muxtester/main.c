@@ -20,7 +20,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 static int js_fd;
@@ -180,7 +179,7 @@ void *joystick_system_task() {
                 if (ev.value == 1) {
                     if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT ||
                         ev.code == device.RAW_INPUT.BUTTON.POWER_LONG) {
-                        write_text_to_file(MUOS_PDI_LOAD, "tester", "w");
+                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
                         safe_quit = 1;
                     }
                 }
