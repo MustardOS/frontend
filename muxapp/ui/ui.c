@@ -9,10 +9,3 @@
 ///////////////////// VARIABLES ////////////////////
 
 // SCREEN: ui_scrApp
-void ui_screen_init(lv_obj_t * ui_screen);
-lv_obj_t * ui_lblAppMessage;
-
-void ui_init(lv_obj_t * ui_screen)
-{
-    ui_screen_init(ui_screen);
-}

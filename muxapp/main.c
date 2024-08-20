@@ -614,7 +614,6 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
 
     ui_common_screen_init(&theme, &device);
-    ui_init(ui_screen);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
@@ -731,7 +730,8 @@ int main(int argc, char *argv[]) {
             list_nav_next(sys_index);
         }
     } else {
-        lv_obj_clear_flag(ui_lblAppMessage, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(ui_lblScreenMessage, "No Applications Found");
+        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     init_elements();

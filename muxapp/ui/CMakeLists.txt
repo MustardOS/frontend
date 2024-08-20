@@ -1,5 +1,4 @@
-SET(SOURCES ui_scrApp.c
-    ui.c
+SET(SOURCES ui.c
     ui_comp_hook.c
     ui_helpers.c
     ui_events.c

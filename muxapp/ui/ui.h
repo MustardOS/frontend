@@ -15,12 +15,6 @@ extern "C" {
 #include "ui_helpers.h"
 #include "ui_events.h"
 
-// SCREEN: ui_scrApp
-void ui_screen_init(lv_obj_t * ui_screen);
-extern lv_obj_t * ui_lblAppMessage;
-
-void ui_init(lv_obj_t * ui_screen);
-
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif
