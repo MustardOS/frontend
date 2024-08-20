@@ -400,6 +400,7 @@ void *joystick_task() {
 }
 
 void init_elements() {
+    lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
