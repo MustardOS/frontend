@@ -34,42 +34,36 @@ struct mux_device {
 
     struct {
         struct {
-            char OUT[MAX_BUFFER_SIZE];
-            int16_t SEEK;
-        } BOOT;
-        struct {
-            char OUT[MAX_BUFFER_SIZE];
-            int16_t SEEK;
-        } PACKAGE;
-    } FIRMWARE;
-
-    struct {
-        struct {
             char DEVICE[MAX_BUFFER_SIZE];
+            char SEPARATOR[MAX_BUFFER_SIZE];
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
         } BOOT;
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
+            char SEPARATOR[MAX_BUFFER_SIZE];
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
         } ROM;
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
+            char SEPARATOR[MAX_BUFFER_SIZE];
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
         } ROOT;
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
+            char SEPARATOR[MAX_BUFFER_SIZE];
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
         } SDCARD;
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
+            char SEPARATOR[MAX_BUFFER_SIZE];
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];

@@ -20,10 +20,8 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
-#include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -48,7 +46,6 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
-struct theme_config theme;
 
 int nav_moved = 1;
 char *current_wall = "";
@@ -165,26 +162,17 @@ void restore_web_options() {
 }
 
 void save_web_options() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
     int idx_shell = lv_dropdown_get_selected(ui_droShell);
     int idx_browser = lv_dropdown_get_selected(ui_droBrowser);
     int idx_terminal = lv_dropdown_get_selected(ui_droTerminal);
     int idx_syncthing = lv_dropdown_get_selected(ui_droSyncthing);
     int idx_ntp = lv_dropdown_get_selected(ui_droNTP);
 
-    mini_set_int(muos_config, "web", "shell", idx_shell);
-    mini_set_int(muos_config, "web", "browser", idx_browser);
-    mini_set_int(muos_config, "web", "terminal", idx_terminal);
-    mini_set_int(muos_config, "web", "syncthing", idx_syncthing);
-    mini_set_int(muos_config, "web", "ntp", idx_ntp);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/web/shell", "w", INT, idx_shell);
+    write_text_to_file("/run/muos/global/web/browser", "w", INT, idx_browser);
+    write_text_to_file("/run/muos/global/web/terminal", "w", INT, idx_terminal);
+    write_text_to_file("/run/muos/global/web/syncthing", "w", INT, idx_syncthing);
+    write_text_to_file("/run/muos/global/web/ntp", "w", INT, idx_ntp);
 
     static char service_script[MAX_BUFFER_SIZE];
     snprintf(service_script, sizeof(service_script),
@@ -333,7 +321,7 @@ void *joystick_task() {
 
                                     save_web_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "service", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "service");
                                     safe_quit = 1;
                                 }
                             }
@@ -520,12 +508,12 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_screen);
+        lv_obj_t * overlay_img = lv_img_create(ui_scrWebServices);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
 
-    if (TEST_IMAGE) display_testing_message(ui_screen);
+    if (TEST_IMAGE) display_testing_message(ui_scrWebServices);
 }
 
 void glyph_task() {
@@ -581,7 +569,7 @@ void ui_refresh_task() {
 
             snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                    ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND));
+                    ui_scrWebServices, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
             if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
@@ -601,7 +589,7 @@ void ui_refresh_task() {
 
             static char static_image[MAX_BUFFER_SIZE];
             snprintf(static_image, sizeof(static_image), "%s",
-                     load_static_image(ui_screen, ui_group));
+                     load_static_image(ui_scrWebServices, ui_group));
 
             if (strlen(static_image) > 0) {
                 printf("LOADING STATIC IMAGE: %s\n", static_image);
@@ -670,16 +658,17 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
-    load_theme(&theme, &config, &device, basename(argv[0]));
 
-    ui_common_screen_init(&theme, &device);
-    ui_init(ui_pnlContent);
+    ui_init();
     init_elements();
 
-    lv_obj_set_user_data(ui_screen, basename(argv[0]));
+    lv_obj_set_user_data(ui_scrWebServices, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
+
+    load_theme(&theme, &config, &device, basename(argv[0]));
+    apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
@@ -710,7 +699,7 @@ int main(int argc, char *argv[]) {
             break;
     }
 
-    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    current_wall = load_wallpaper(ui_scrWebServices, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
@@ -722,11 +711,9 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font_text(basename(argv[0]), ui_screen);
+    load_font_text(basename(argv[0]), ui_scrWebServices);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
-    
+
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
@@ -787,7 +774,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

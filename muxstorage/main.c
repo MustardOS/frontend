@@ -23,7 +23,6 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -189,12 +188,6 @@ void restore_storage_options() {
 }
 
 void save_storage_options() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
     int idx_bios = lv_dropdown_get_selected(ui_droBIOS);
     int idx_config = lv_dropdown_get_selected(ui_droConfig);
     int idx_catalogue = lv_dropdown_get_selected(ui_droCatalogue);
@@ -204,17 +197,14 @@ void save_storage_options() {
     int idx_screenshot = lv_dropdown_get_selected(ui_droScreenshot);
     int idx_theme = lv_dropdown_get_selected(ui_droTheme);
 
-    mini_set_int(muos_config, "storage", "bios", idx_bios);
-    mini_set_int(muos_config, "storage", "config", idx_config);
-    mini_set_int(muos_config, "storage", "catalogue", idx_catalogue);
-    mini_set_int(muos_config, "storage", "fav", idx_fav);
-    mini_set_int(muos_config, "storage", "music", idx_music);
-    mini_set_int(muos_config, "storage", "save", idx_save);
-    mini_set_int(muos_config, "storage", "screenshot", idx_screenshot);
-    mini_set_int(muos_config, "storage", "theme", idx_theme);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/storage/bios", "w", INT, idx_bios);
+    write_text_to_file("/run/muos/global/storage/config", "w", INT, idx_config);
+    write_text_to_file("/run/muos/global/storage/catalogue", "w", INT, idx_catalogue);
+    write_text_to_file("/run/muos/global/storage/fav", "w", INT, idx_fav);
+    write_text_to_file("/run/muos/global/storage/music", "w", INT, idx_music);
+    write_text_to_file("/run/muos/global/storage/save", "w", INT, idx_save);
+    write_text_to_file("/run/muos/global/storage/screenshot", "w", INT, idx_screenshot);
+    write_text_to_file("/run/muos/global/storage/theme", "w", INT, idx_theme);
 }
 
 void init_navigation_groups() {
@@ -421,7 +411,7 @@ void *joystick_task() {
 
                                     save_storage_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "storage", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "storage");
                                     safe_quit = 1;
                                 }
                             }
@@ -450,7 +440,8 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -464,7 +455,8 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_icon, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < ui_count - 1) {
                                     list_nav_next(1);
@@ -913,7 +905,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

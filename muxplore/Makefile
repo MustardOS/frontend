@@ -65,7 +65,6 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/collection.c \
 		../common/config.c \
 		../common/device.c \
-		../common/glyph.c \
 		../common/common.c \
 		../common/ui_common.c \
 		../common/theme.c \

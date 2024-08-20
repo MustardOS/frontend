@@ -19,7 +19,6 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 #define NP_LOG_INFO "/tmp/muxlog_info"

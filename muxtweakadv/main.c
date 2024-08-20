@@ -23,7 +23,6 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -187,9 +186,9 @@ void init_dropdown_settings() {
             {led.total,          led.current},
             {random_theme.total, random_theme.current},
             {retrowait.total,    retrowait.current},
-            {android.total,    android.current},
-            {state.total,    state.current},
-            {verbose.total,    verbose.current}
+            {android.total,      android.current},
+            {state.total,        state.current},
+            {verbose.total,      verbose.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -261,12 +260,6 @@ void restore_tweak_options() {
 }
 
 void save_tweak_options() {
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
     int idx_swap = lv_dropdown_get_selected(ui_droSwap);
     int idx_thermal = lv_dropdown_get_selected(ui_droThermal);
     int idx_font = lv_dropdown_get_selected(ui_droFont);
@@ -323,27 +316,23 @@ void save_tweak_options() {
             break;
     }
 
-    mini_set_int(muos_config, "settings.advanced", "swap", idx_swap);
-    mini_set_int(muos_config, "settings.advanced", "thermal", idx_thermal);
-    mini_set_int(muos_config, "settings.advanced", "font", idx_font);
-    mini_set_string(muos_config, "settings.advanced", "volume", idx_volume);
-    mini_set_string(muos_config, "settings.advanced", "brightness", idx_brightness);
-    mini_set_int(muos_config, "settings.advanced", "offset", idx_offset);
-    mini_set_int(muos_config, "settings.advanced", "lock", idx_lockdown);
-    mini_set_int(muos_config, "settings.advanced", "led", idx_led);
-    mini_set_int(muos_config, "settings.advanced", "random_theme", idx_random_theme);
-    mini_set_int(muos_config, "settings.advanced", "retrowait", idx_retrowait);
-    mini_set_int(muos_config, "settings.advanced", "android", idx_android);
-    mini_set_string(muos_config, "settings.advanced", "state", idx_state);
-    mini_set_int(muos_config, "settings.advanced", "verbose", idx_verbose);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/settings/advanced/swap", "w", INT, idx_swap);
+    write_text_to_file("/run/muos/global/settings/advanced/thermal", "w", INT, idx_thermal);
+    write_text_to_file("/run/muos/global/settings/advanced/font", "w", INT, idx_font);
+    write_text_to_file("/run/muos/global/settings/advanced/volume", "w", CHAR, idx_volume);
+    write_text_to_file("/run/muos/global/settings/advanced/brightness", "w", CHAR, idx_brightness);
+    write_text_to_file("/run/muos/global/settings/advanced/offset", "w", INT, idx_offset);
+    write_text_to_file("/run/muos/global/settings/advanced/lock", "w", INT, idx_lockdown);
+    write_text_to_file("/run/muos/global/settings/advanced/led", "w", INT, idx_led);
+    write_text_to_file("/run/muos/global/settings/advanced/random_theme", "w", INT, idx_random_theme);
+    write_text_to_file("/run/muos/global/settings/advanced/retrowait", "w", INT, idx_retrowait);
+    write_text_to_file("/run/muos/global/settings/advanced/android", "w", INT, idx_android);
+    write_text_to_file("/run/muos/global/settings/advanced/state", "w", CHAR, idx_state);
+    write_text_to_file("/run/muos/global/settings/advanced/verbose", "w", INT, idx_verbose);
 
     static char tweak_script[MAX_BUFFER_SIZE];
     snprintf(tweak_script, sizeof(tweak_script),
              "%s/script/mux/tweak.sh", INTERNAL_PATH);
-
     system(tweak_script);
 }
 
@@ -441,8 +430,12 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droFont, "Noto Sans\nTheme Controlled");
     apply_theme_list_drop_down(&theme, ui_droVolume, "Previous\nQuiet\nLoud");
     apply_theme_list_drop_down(&theme, ui_droBrightness, "Previous\nLow\nHigh");
-    apply_theme_list_drop_down(&theme, ui_droOffset, 
-        "-50\n-49\n-48\n-47\n-46\n-45\n-44\n-43\n-42\n-41\n-40\n-39\n-38\n-37\n-36\n-35\n-34\n-33\n-32\n-31\n-30\n-29\n-28\n-27\n-26\n-25\n-24\n-23\n-22\n-21\n-20\n-19\n-18\n-17\n-16\n-15\n-14\n-13\n-12\n-11\n-10\n-9\n-8\n-7\n-6\n-5\n-4\n-3\n-2\n-1\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50");
+    apply_theme_list_drop_down(&theme, ui_droOffset,
+                               "-50\n-49\n-48\n-47\n-46\n-45\n-44\n-43\n-42\n-41\n-40\n-39\n-38\n-37\n-36\n-35\n-34\n-33\n-32\n"
+                               "-31\n-30\n-29\n-28\n-27\n-26\n-25\n-24\n-23\n-22\n-21\n-20\n-19\n-18\n-17\n-16\n-15\n-14\n-13\n"
+                               "-12\n-11\n-10\n-9\n-8\n-7\n-6\n-5\n-4\n-3\n-2\n-1\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n"
+                               "14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n"
+                               "37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50");
     apply_theme_list_drop_down(&theme, ui_droPasscode, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droLED, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droTheme, "Disabled\nEnabled");
@@ -604,7 +597,7 @@ void *joystick_task() {
 
                                     save_tweak_options();
 
-                                    write_text_to_file(MUOS_PDI_LOAD, "advanced", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "advanced");
                                     safe_quit = 1;
                                 }
                             }
@@ -633,7 +626,8 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -647,7 +641,8 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                                                           UI_COUNT, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);
@@ -1151,7 +1146,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

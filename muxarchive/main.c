@@ -23,7 +23,6 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -299,9 +298,7 @@ void *joystick_task() {
                                         printf("RUNNING: %s\n", command);
                                         system(command);
 
-                                        char c_index[MAX_BUFFER_SIZE];
-                                        snprintf(c_index, sizeof(c_index), "%d", current_item_index);
-                                        write_text_to_file(MUOS_IDX_LOAD, c_index, "w");
+                                        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
                                         load_mux("archive");
                                         safe_quit = 1;
@@ -761,7 +758,6 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

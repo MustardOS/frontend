@@ -23,7 +23,6 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -368,7 +367,7 @@ void *joystick_task() {
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
-                                    write_text_to_file(MUOS_PDI_LOAD, "system", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "system");
                                     safe_quit = 1;
                                 }
                             }
@@ -789,7 +788,6 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }

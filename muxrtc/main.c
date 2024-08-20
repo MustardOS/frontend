@@ -22,7 +22,6 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -98,16 +97,7 @@ void confirm_rtc_config() {
         idx_notation = 1;
     }
 
-    char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t * muos_config = mini_try_load(config_file);
-
-    mini_set_int(muos_config, "clock", "notation", idx_notation);
-
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    write_text_to_file("/run/muos/global/clock/notation", "w", INT, idx_notation);
 
     system("hwclock -w");
 }
@@ -390,7 +380,7 @@ void *joystick_task() {
                                         save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
                                                             rtcHourValue, rtcMinuteValue);
                                         load_mux("timezone");
-                                        write_text_to_file(MUOS_PDI_LOAD, "timezone", "w");
+                                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
                                         safe_quit = 1;
                                     } else {
                                         play_sound("navigate", nav_sound, 0);
@@ -467,12 +457,8 @@ void *joystick_task() {
                                     snprintf(config_file, sizeof(config_file),
                                              "%s/config/config.ini", INTERNAL_PATH);
 
-                                    mini_t * muos_config = mini_try_load(config_file);
-                                    mini_set_int(muos_config, "boot", "clock_setup", 0);
-                                    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-                                    mini_free(muos_config);
-
-                                    write_text_to_file(MUOS_PDI_LOAD, "clock", "w");
+                                    write_text_to_file("/run/muos/global/boot/clock_setup", "w", INT, 0);
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
                                     safe_quit = 1;
                                 }
                             }
@@ -501,7 +487,8 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT,
+                                                           current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -515,7 +502,8 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT,
+                                                           current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);

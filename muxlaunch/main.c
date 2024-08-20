@@ -23,7 +23,6 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/glyph.h"
 #include "../common/mini/mini.h"
 
 char *mux_prog;
@@ -253,7 +252,7 @@ void *joystick_task() {
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
                                     load_mux("launcher");
-                                    write_text_to_file(MUOS_PDI_LOAD, "", "w");
+                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "");
                                     safe_quit = 1;
                                 }
                             }
@@ -277,15 +276,38 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
-                                list_nav_prev(1);
+                                // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
+                                if (theme.MISC.NAVIGATION_TYPE == 4 && (current_item_index == 0 || current_item_index == 4)){
+                                    list_nav_next(3);
+                                // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
+                                } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 0) {
+                                    list_nav_next(2);
+                                } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 3) {
+                                    list_nav_next(4);
+                                // Regular Navigation
+                                } else {
+                                    list_nav_prev(1);
+                                }
+                                
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
-                                list_nav_next(1);
+                                // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
+                                if (theme.MISC.NAVIGATION_TYPE == 4 && (current_item_index == 3 || current_item_index == 7)){
+                                    list_nav_prev(3);
+                                // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
+                                } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 2) {
+                                    list_nav_prev(2);
+                                } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 7) {
+                                    list_nav_prev(4);
+                                // Regular Navigation
+                                } else {
+                                    list_nav_next(1);
+                                }
                             }
                         }
                         // Horizontal Navigation with 2 rows of 4 items
-                        if (theme.MISC.NAVIGATION_TYPE == 2 && (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
+                        if ((theme.MISC.NAVIGATION_TYPE == 2 || theme.MISC.NAVIGATION_TYPE == 4) && (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
@@ -297,7 +319,7 @@ void *joystick_task() {
                             }
                         }
                         // Horizontal Navigation with 3 item first row, 5 item second row
-                        if (theme.MISC.NAVIGATION_TYPE == 3 && (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
+                        if ((theme.MISC.NAVIGATION_TYPE == 3 || theme.MISC.NAVIGATION_TYPE == 5) && (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
@@ -615,6 +637,8 @@ int main(int argc, char *argv[]) {
         case 1:
         case 2:
         case 3:
+        case 4:
+        case 5:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
             NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
             NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
