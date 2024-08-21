@@ -30,3 +30,5 @@
 #define VOLUME_PERC "/tmp/current_volume_percent"
 
 #define FONT_PANEL_FOLDER "panel"
+#define FONT_HEADER_FOLDER "header"
+#define FONT_FOOTER_FOLDER "footer"

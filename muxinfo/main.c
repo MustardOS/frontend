@@ -19,6 +19,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/mini/mini.h"
@@ -45,6 +46,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct theme_config theme;
 
 int nav_moved = 1;
 char *current_wall = "";
@@ -309,12 +311,12 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_scrInfo);
+        lv_obj_t * overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
 
-    if (TEST_IMAGE) display_testing_message(ui_scrInfo);
+    if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
 void glyph_task() {
@@ -370,7 +372,7 @@ void ui_refresh_task() {
 
             snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                    ui_scrInfo, ui_group, theme.MISC.ANIMATED_BACKGROUND));
+                    ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
             if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
@@ -390,7 +392,7 @@ void ui_refresh_task() {
 
             static char static_image[MAX_BUFFER_SIZE];
             snprintf(static_image, sizeof(static_image), "%s",
-                     load_static_image(ui_scrInfo, ui_group));
+                     load_static_image(ui_screen, ui_group));
 
             if (strlen(static_image) > 0) {
                 printf("LOADING STATIC IMAGE: %s\n", static_image);
@@ -481,17 +483,16 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_theme(&theme, &config, &device, basename(argv[0]));
 
-    ui_init();
+    ui_common_screen_init(&theme, &device, "INFORMATION");
+    ui_init(ui_pnlContent);
     init_elements();
 
-    lv_obj_set_user_data(ui_scrInfo, basename(argv[0]));
+    lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
-
-    load_theme(&theme, &config, &device, basename(argv[0]));
-    apply_theme();
 
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
@@ -522,7 +523,7 @@ int main(int argc, char *argv[]) {
             break;
     }
 
-    current_wall = load_wallpaper(ui_scrInfo, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
@@ -534,8 +535,10 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font_text(basename(argv[0]), ui_scrInfo);
+    load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {

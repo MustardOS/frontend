@@ -66,8 +66,8 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/config.c \
 		../common/device.c \
 		../common/common.c \
+		../common/ui_common.c \
 		../common/theme.c \
-		theme.c \
 		$(EXTRA)
 
 clean:

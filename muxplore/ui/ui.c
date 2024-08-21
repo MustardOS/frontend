@@ -5,83 +5,44 @@
 
 #include "ui.h"
 #include "ui_helpers.h"
+#include "../../common/theme.h"
 
-///////////////////// VARIABLES ////////////////////
-
-
-// SCREEN: ui_scrExplore
-void ui_scrExplore_screen_init(void);
-lv_obj_t * ui_scrExplore;
 lv_obj_t * ui_lblCounter;
-lv_obj_t * ui_pnlWall;
-lv_obj_t * ui_imgWall;
-lv_obj_t * ui_pnlContent;
-lv_obj_t * ui_pnlBox;
-lv_obj_t * ui_imgBox;
-lv_obj_t * ui_pnlHeader;
-lv_obj_t * ui_lblDatetime;
-lv_obj_t * ui_lblTitle;
-lv_obj_t * ui_conGlyphs;
-lv_obj_t * ui_staBluetooth;
-lv_obj_t * ui_staNetwork;
-lv_obj_t * ui_staCapacity;
-lv_obj_t * ui_pnlFooter;
-lv_obj_t * ui_lblNavAGlyph;
-lv_obj_t * ui_lblNavA;
-lv_obj_t * ui_lblNavBGlyph;
-lv_obj_t * ui_lblNavB;
-lv_obj_t * ui_lblNavCGlyph;
-lv_obj_t * ui_lblNavC;
-lv_obj_t * ui_lblNavXGlyph;
-lv_obj_t * ui_lblNavX;
-lv_obj_t * ui_lblNavYGlyph;
-lv_obj_t * ui_lblNavY;
-lv_obj_t * ui_lblNavZGlyph;
-lv_obj_t * ui_lblNavZ;
-lv_obj_t * ui_lblNavMenuGlyph;
-lv_obj_t * ui_lblNavMenu;
-lv_obj_t * ui_lblExploreMessage;
-lv_obj_t * ui_pnlMessage;
-lv_obj_t * ui_lblMessage;
-lv_obj_t * ui_pnlHelp;
-lv_obj_t * ui_pnlHelpMessage;
-lv_obj_t * ui_lblHelpHeader;
-lv_obj_t * ui_lblHelpDescription;
-lv_obj_t * ui_pnlHelpExtra;
-lv_obj_t * ui_lblPreviewHeaderGlyph;
-lv_obj_t * ui_lblPreviewHeader;
-lv_obj_t * ui_pnlHelpPreview;
-lv_obj_t * ui_lblHelpPreviewHeader;
-lv_obj_t * ui_pnlHelpPreviewImage;
-lv_obj_t * ui_imgHelpPreviewImage;
-lv_obj_t * ui_pnlHelpPreviewInfo;
-lv_obj_t * ui_lblHelpPreviewInfoGlyph;
-lv_obj_t * ui_lblHelpPreviewInfoMessage;
-lv_obj_t * ui_pnlProgressBrightness;
-lv_obj_t * ui_icoProgressBrightness;
-lv_obj_t * ui_barProgressBrightness;
-lv_obj_t * ui_pnlProgressVolume;
-lv_obj_t * ui_icoProgressVolume;
-lv_obj_t * ui_barProgressVolume;
-lv_obj_t * ui____initial_actions0;
 
-///////////////////// TEST LVGL SETTINGS ////////////////////
-#if LV_COLOR_DEPTH != 32
-    #error "LV_COLOR_DEPTH should be 32bit to match SquareLine Studio's settings"
-#endif
-#if LV_COLOR_16_SWAP !=0
-    #error "LV_COLOR_16_SWAP should be 0 to match SquareLine Studio's settings"
-#endif
-
-///////////////////// ANIMATIONS ////////////////////
-
-///////////////////// FUNCTIONS ////////////////////
-
-///////////////////// SCREENS ////////////////////
-
-void ui_init(void)
+void ui_init(lv_obj_t * ui_screen, struct theme_config *theme)
 {
-    ui_scrExplore_screen_init();
-    ui____initial_actions0 = lv_obj_create(NULL);
-    lv_disp_load_scr(ui_scrExplore);
+    ui_lblCounter = lv_label_create(ui_screen);
+    lv_obj_set_width(ui_lblCounter, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_lblCounter, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_lblCounter, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblCounter, "");
+    lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);     /// Flags
+    lv_obj_clear_flag(ui_lblCounter, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_text_color(ui_lblCounter, lv_color_hex(theme->COUNTER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblCounter, theme->COUNTER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_lblCounter, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblCounter, lv_color_hex(theme->COUNTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblCounter, theme->COUNTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblCounter, lv_color_hex(theme->COUNTER.BORDER_COLOUR), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblCounter, theme->COUNTER.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblCounter, theme->COUNTER.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblCounter, theme->COUNTER.PADDING_AROUND, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblCounter, theme->COUNTER.PADDING_AROUND, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblCounter, theme->COUNTER.PADDING_AROUND, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblCounter, theme->COUNTER.PADDING_AROUND, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_lblCounter, theme->COUNTER.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_y(ui_lblCounter, theme->COUNTER.PADDING_TOP);
+    switch (theme->COUNTER.ALIGNMENT) {
+        case 1:
+            lv_obj_set_align(ui_lblCounter, LV_ALIGN_TOP_MID);
+            break;
+        case 2:
+            lv_obj_set_align(ui_lblCounter, LV_ALIGN_TOP_RIGHT);
+            lv_obj_set_x(ui_lblCounter, -theme->COUNTER.PADDING_SIDE);
+            break;
+        default:
+            lv_obj_set_align(ui_lblCounter, LV_ALIGN_TOP_LEFT);
+            lv_obj_set_x(ui_lblCounter, theme->COUNTER.PADDING_SIDE);
+            break;
+    }
 }

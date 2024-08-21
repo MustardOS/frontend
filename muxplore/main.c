@@ -22,6 +22,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/array.h"
@@ -822,7 +823,7 @@ void explore_root() {
             break;
         default:
             nav_moved = 0;
-            lv_obj_clear_flag(ui_lblExploreMessage, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
             break;
     }
 }
@@ -1448,11 +1449,11 @@ void *joystick_task() {
                                     lv_anim_set_delay(&desc_anim, 2000);
                                     lv_style_init(&desc_style);
                                     lv_style_set_anim(&desc_style, &desc_anim);
-                                    lv_obj_add_style(ui_lblHelpDescription, &desc_style, LV_PART_MAIN);
-                                    lv_obj_set_style_anim_speed(ui_lblHelpDescription, 25, LV_PART_MAIN);
+                                    lv_obj_add_style(ui_lblHelpContent, &desc_style, LV_PART_MAIN);
+                                    lv_obj_set_style_anim_speed(ui_lblHelpContent, 25, LV_PART_MAIN);
 
                                     show_rom_info(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpPreviewHeader,
-                                                  ui_lblHelpDescription,
+                                                  ui_lblHelpContent,
                                                   items[current_item_index].display_name,
                                                   load_content_description());
                                 }
@@ -1660,12 +1661,12 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_scrExplore);
+        lv_obj_t * overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
 
-    if (TEST_IMAGE) display_testing_message(ui_scrExplore);
+    if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
 void init_footer_elements() {
@@ -1745,8 +1746,10 @@ void init_footer_elements() {
 }
 
 void init_fonts() {
-    load_font_text(mux_prog, ui_scrExplore);
+    load_font_text(mux_prog, ui_screen);
     load_font_section(mux_prog, FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
 }
 
 void glyph_task() {
@@ -1845,7 +1848,7 @@ void ui_refresh_task() {
 
             snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
             snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                    ui_scrExplore, ui_group, theme.MISC.ANIMATED_BACKGROUND));
+                    ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
             if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
@@ -1865,7 +1868,7 @@ void ui_refresh_task() {
 
             static char static_image[MAX_BUFFER_SIZE];
             snprintf(static_image, sizeof(static_image), "%s",
-                     load_static_image(ui_scrExplore, ui_group));
+                     load_static_image(ui_screen, ui_group));
 
             if (strlen(static_image) > 0) {
                 printf("LOADING STATIC IMAGE: %s\n", static_image);
@@ -2002,8 +2005,10 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_theme(&theme, &config, &device, mux_prog);
 
-    ui_init();
+    ui_common_screen_init(&theme, &device, "");
+    ui_init(ui_screen, &theme);
 
     if (file_exist("/tmp/manual_launch")) {
         remove("/tmp/manual_launch");
@@ -2016,14 +2021,11 @@ int main(int argc, char *argv[]) {
     snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
     snprintf(E_USB, sizeof(E_USB), "%s/ROMS/", device.STORAGE.USB.MOUNT);
 
-    lv_obj_set_user_data(ui_scrExplore, mux_prog);
+    lv_obj_set_user_data(ui_screen, mux_prog);
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
     lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, &config, &device, mux_prog);
-
-    apply_theme();
     init_fonts();
 
     struct dt_task_param dt_par;
@@ -2075,7 +2077,7 @@ int main(int argc, char *argv[]) {
             break;
     }
 
-    current_wall = load_wallpaper(ui_scrExplore, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
@@ -2208,7 +2210,7 @@ int main(int argc, char *argv[]) {
         }
     } else {
         nav_moved = 0;
-        lv_obj_clear_flag(ui_lblExploreMessage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
     pthread_cancel(gen_item_thread);
 
