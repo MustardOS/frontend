@@ -204,16 +204,16 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
+                                play_sound("navigate", nav_sound, 0);
                                 nav_prev(ui_group, 1);
                                 nav_prev(ui_group_glyph, 1);
-                                play_sound("navigate", nav_sound, 0);
                                 nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
+                                play_sound("navigate", nav_sound, 0);
                                 nav_next(ui_group, 1);
                                 nav_next(ui_group_glyph, 1);
-                                play_sound("navigate", nav_sound, 0);
                                 nav_moved = 1;
                             }
                         }

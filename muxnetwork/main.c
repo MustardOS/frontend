@@ -54,6 +54,8 @@ struct theme_config theme;
 int nav_moved = 1;
 char *current_wall = "";
 int current_item_index = 0;
+int first_open = 1;
+
 int ui_count = 0;
 
 lv_obj_t *msgbox_element = NULL;
@@ -308,6 +310,7 @@ void reset_osk() {
 }
 
 void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index--;
         nav_prev(ui_group, 1);
@@ -315,19 +318,21 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group_glyph, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
-    for (int step = 0; step < steps; ++step) {
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound("navigate", nav_sound, 0);
+    }    for (int step = 0; step < steps; ++step) {
         current_item_index++;
         nav_next(ui_group, 1);
         nav_next(ui_group_value, 1);
         nav_next(ui_group_glyph, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -378,6 +383,7 @@ void *joystick_task() {
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
                                 }
                             } else if (key_show > 0) {
+                                play_sound("navigate", nav_sound, 0);
                                 const char *is_key;
                                 if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
                                     is_key = lv_btnmatrix_get_btn_text(num_entry, key_curr);
@@ -1385,7 +1391,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    
+
     ui_common_screen_init(&theme, &device, "WI-FI NETWORK");
     ui_init(ui_screen, ui_pnlContent);
     init_elements();

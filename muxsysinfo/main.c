@@ -282,6 +282,7 @@ void init_navigation_groups() {
 }
 
 void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         if (current_item_index > 0) {
             current_item_index--;
@@ -291,11 +292,11 @@ void list_nav_prev(int steps) {
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
+    play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         if (current_item_index < (UI_COUNT - 1)) {
             current_item_index++;
@@ -305,7 +306,6 @@ void list_nav_next(int steps) {
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -396,7 +396,8 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT,
+                                                           current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
                                     list_nav_prev(1);
@@ -410,7 +411,8 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT,
+                                                           current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
                                     list_nav_next(1);

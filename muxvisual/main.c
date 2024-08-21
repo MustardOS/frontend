@@ -309,6 +309,7 @@ void init_navigation_groups() {
 }
 
 void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         if (current_item_index > 0) {
             current_item_index--;
@@ -318,11 +319,11 @@ void list_nav_prev(int steps) {
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
+    play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         if (current_item_index < (ui_count - 1)) {
             current_item_index++;
@@ -332,7 +333,6 @@ void list_nav_next(int steps) {
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
@@ -386,6 +386,7 @@ void *joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
+                                    play_sound("confirm", nav_sound, 1);
                                     if (element_focused == ui_lblBattery) {
                                         increase_option_value(ui_droBattery,
                                                               &battery_current,
@@ -423,7 +424,6 @@ void *joystick_task() {
                                                               &menu_counter_file_current,
                                                               menu_counter_file_total);
                                     }
-                                    play_sound("navigate", nav_sound, 0);
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
@@ -490,6 +490,7 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
+                                play_sound("navigate", nav_sound, 0);
                                 if (element_focused == ui_lblBattery) {
                                     decrease_option_value(ui_droBattery,
                                                           &battery_current,
@@ -527,10 +528,10 @@ void *joystick_task() {
                                                           &menu_counter_file_current,
                                                           menu_counter_file_total);
                                 }
-                                play_sound("navigate", nav_sound, 0);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
+                                play_sound("navigate", nav_sound, 0);
                                 if (element_focused == ui_lblBattery) {
                                     increase_option_value(ui_droBattery,
                                                           &battery_current,
@@ -568,7 +569,6 @@ void *joystick_task() {
                                                           &menu_counter_file_current,
                                                           menu_counter_file_total);
                                 }
-                                play_sound("navigate", nav_sound, 0);
                             }
                         }
                     default:

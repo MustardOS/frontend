@@ -297,6 +297,7 @@ void init_navigation_groups() {
 }
 
 void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         if (current_item_index > 0) {
             current_item_index--;
@@ -306,11 +307,11 @@ void list_nav_prev(int steps) {
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
+    play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         if (current_item_index < (UI_COUNT - 1)) {
             current_item_index++;
@@ -320,7 +321,6 @@ void list_nav_next(int steps) {
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     nav_moved = 1;
 }
 

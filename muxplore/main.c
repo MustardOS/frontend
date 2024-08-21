@@ -986,6 +986,7 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
 }
 
 void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         reset_label_long_mode();
         if (current_item_index > 0) {
@@ -996,13 +997,17 @@ void list_nav_prev(int steps) {
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
                            current_item_index, ui_pnlContent);
-    play_sound("navigate", nav_sound, 0);
     image_refresh("box");
     set_label_long_mode();
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound("navigate", nav_sound, 0);
+    }
     for (int step = 0; step < steps; ++step) {
         reset_label_long_mode();
         if (current_item_index < (ui_count - 1)) {
@@ -1013,11 +1018,6 @@ void list_nav_next(int steps) {
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
                            current_item_index, ui_pnlContent);
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0);
-    }
     image_refresh("box");
     set_label_long_mode();
     nav_moved = 1;

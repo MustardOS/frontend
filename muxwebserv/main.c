@@ -291,6 +291,7 @@ void *joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
+                                    play_sound("confirm", nav_sound, 1);
                                     if (element_focused == ui_lblShell) {
                                         increase_option_value(ui_droShell,
                                                               &shell_current,
@@ -312,7 +313,6 @@ void *joystick_task() {
                                                               &ntp_current,
                                                               ntp_total);
                                     }
-                                    play_sound("navigate", nav_sound, 0);
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
@@ -347,24 +347,25 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
+                                play_sound("navigate", nav_sound, 0);
                                 nav_prev(ui_group, 1);
                                 nav_prev(ui_group_value, 1);
                                 nav_prev(ui_group_glyph, 1);
-                                play_sound("navigate", nav_sound, 0);
                                 nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
+                                play_sound("navigate", nav_sound, 0);
                                 nav_next(ui_group, 1);
                                 nav_next(ui_group_value, 1);
                                 nav_next(ui_group_glyph, 1);
-                                play_sound("navigate", nav_sound, 0);
                                 nav_moved = 1;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
                                 ev.value == -1) {
+                                play_sound("navigate", nav_sound, 0);
                                 if (element_focused == ui_lblShell) {
                                     decrease_option_value(ui_droShell,
                                                           &shell_current,
@@ -386,10 +387,10 @@ void *joystick_task() {
                                                           &ntp_current,
                                                           ntp_total);
                                 }
-                                play_sound("navigate", nav_sound, 0);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
                                         ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
                                        ev.value == 1) {
+                                play_sound("navigate", nav_sound, 0);
                                 if (element_focused == ui_lblShell) {
                                     increase_option_value(ui_droShell,
                                                           &shell_current,
@@ -411,7 +412,6 @@ void *joystick_task() {
                                                           &ntp_current,
                                                           ntp_total);
                                 }
-                                play_sound("navigate", nav_sound, 0);
                             }
                         }
                     default:
