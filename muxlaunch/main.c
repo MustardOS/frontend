@@ -278,8 +278,8 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
                                 ev.value == -1) {
                                 // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
                                 if (theme.MISC.NAVIGATION_TYPE == 4 &&
@@ -295,8 +295,8 @@ void *joystick_task() {
                                     list_nav_prev(1);
                                 }
 
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
                                 // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
                                 if (theme.MISC.NAVIGATION_TYPE == 4 &&
@@ -316,12 +316,12 @@ void *joystick_task() {
                         // Horizontal Navigation with 2 rows of 4 items
                         if ((theme.MISC.NAVIGATION_TYPE == 2 || theme.MISC.NAVIGATION_TYPE == 4) &&
                             (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
                                 ev.value == -1) {
                                 list_nav_prev(4);
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
                                 list_nav_next(4);
                             }
@@ -329,8 +329,8 @@ void *joystick_task() {
                         // Horizontal Navigation with 3 item first row, 5 item second row
                         if ((theme.MISC.NAVIGATION_TYPE == 3 || theme.MISC.NAVIGATION_TYPE == 5) &&
                             (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
                                 ev.value == -1) {
                                 switch (current_item_index) {
                                     case 3:
@@ -345,8 +345,8 @@ void *joystick_task() {
                                         list_nav_prev(5);
                                         break;
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
                                 switch (current_item_index) {
                                     case 0:

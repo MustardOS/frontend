@@ -242,8 +242,8 @@ void *joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX >> 2) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN >> 2) * -1)) ||
+                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
+                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
                                     current_item_index = ui_count - 1;
@@ -257,8 +257,8 @@ void *joystick_task() {
                                     list_nav_prev(1);
                                     lv_task_handler();
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN >> 2) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX >> 2)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
+                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
                                 if (current_item_index == ui_count - 1) {
                                     current_item_index = 0;

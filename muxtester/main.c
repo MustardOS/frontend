@@ -55,13 +55,13 @@ void *joystick_task() {
                     } else if (ev.code == device.RAW_INPUT.BUTTON.B) {
                         lv_label_set_text(ui_lblButton, "↧⇒");
                     } else if (ev.code == device.RAW_INPUT.BUTTON.C) {
-                        // TODO:
+                        // TODO: Add glyph icon for this!
                     } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                         lv_label_set_text(ui_lblButton, "↥⇐");
                     } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                         lv_label_set_text(ui_lblButton, "↤⇑");
                     } else if (ev.code == device.RAW_INPUT.BUTTON.Z) {
-                        // TODO:
+                        // TODO: Add glyph icon for this!
                     } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                         lv_label_set_text(ui_lblButton, "↖");
                     } else if (ev.code == device.RAW_INPUT.BUTTON.R1) {
@@ -98,6 +98,7 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
+                        // TODO: Change this over to conditional statements to use INPUT.AXIS_MIN/MAX
                         case -4100 ... -4000:
                             lv_label_set_text(ui_lblButton, "↾");
                             break;
@@ -118,6 +119,7 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
+                        // TODO: Change this over to conditional statements to use INPUT.AXIS_MIN/MAX
                         case -4100 ... -4000:
                             lv_label_set_text(ui_lblButton, "↼");
                             break;
@@ -138,6 +140,7 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
+                        // TODO: Change this over to conditional statements to use INPUT.AXIS_MIN/MAX
                         case -4100 ... -4000:
                             lv_label_set_text(ui_lblButton, "↿");
                             break;
@@ -152,6 +155,7 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
+                        // TODO: Change this over to conditional statements to use INPUT.AXIS_MIN/MAX
                         case -4100 ... -4000:
                             lv_label_set_text(ui_lblButton, "↽");
                             break;
