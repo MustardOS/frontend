@@ -3,62 +3,62 @@
 #include "device.h"
 #include "ui_common.h"
 
-lv_obj_t * ui_screen;
-lv_obj_t * ui_pnlWall;
-lv_obj_t * ui_imgWall;
-lv_obj_t * ui_pnlContent;
-lv_obj_t * ui_pnlBox;
-lv_obj_t * ui_imgBox;
-lv_obj_t * ui_pnlHeader;
-lv_obj_t * ui_lblDatetime;
-lv_obj_t * ui_lblTitle;
-lv_obj_t * ui_conGlyphs;
-lv_obj_t * ui_staBluetooth;
-lv_obj_t * ui_staNetwork;
-lv_obj_t * ui_staCapacity;
-lv_obj_t * ui_pnlFooter;
-lv_obj_t * ui_lblNavAGlyph;
-lv_obj_t * ui_lblNavA;
-lv_obj_t * ui_lblNavBGlyph;
-lv_obj_t * ui_lblNavB;
-lv_obj_t * ui_lblNavCGlyph;
-lv_obj_t * ui_lblNavC;
-lv_obj_t * ui_lblNavXGlyph;
-lv_obj_t * ui_lblNavX;
-lv_obj_t * ui_lblNavYGlyph;
-lv_obj_t * ui_lblNavY;
-lv_obj_t * ui_lblNavZGlyph;
-lv_obj_t * ui_lblNavZ;
-lv_obj_t * ui_lblNavMenuGlyph;
-lv_obj_t * ui_lblNavMenu;
-lv_obj_t * ui_lblScreenMessage;
-lv_obj_t * ui_pnlMessage;
-lv_obj_t * ui_lblMessage;
-lv_obj_t * ui_pnlHelp;
-lv_obj_t * ui_pnlHelpMessage;
-lv_obj_t * ui_lblHelpHeader;
-lv_obj_t * ui_lblHelpContent;
-lv_obj_t * ui_pnlHelpExtra;
-lv_obj_t * ui_lblPreviewHeaderGlyph;
-lv_obj_t * ui_lblPreviewHeader;
-lv_obj_t * ui_pnlHelpPreview;
-lv_obj_t * ui_lblHelpPreviewHeader;
-lv_obj_t * ui_pnlHelpPreviewImage;
-lv_obj_t * ui_imgHelpPreviewImage;
-lv_obj_t * ui_pnlHelpPreviewInfo;
-lv_obj_t * ui_lblHelpPreviewInfoGlyph;
-lv_obj_t * ui_lblHelpPreviewInfoMessage;
-lv_obj_t * ui_pnlProgressBrightness;
-lv_obj_t * ui_icoProgressBrightness;
-lv_obj_t * ui_barProgressBrightness;
-lv_obj_t * ui_pnlProgressVolume;
-lv_obj_t * ui_icoProgressVolume;
-lv_obj_t * ui_barProgressVolume;
-lv_obj_t * ui____initial_actions0;
+lv_obj_t *ui_screen;
+lv_obj_t *ui_pnlWall;
+lv_obj_t *ui_imgWall;
+lv_obj_t *ui_pnlContent;
+lv_obj_t *ui_pnlBox;
+lv_obj_t *ui_imgBox;
+lv_obj_t *ui_pnlHeader;
+lv_obj_t *ui_lblDatetime;
+lv_obj_t *ui_lblTitle;
+lv_obj_t *ui_conGlyphs;
+lv_obj_t *ui_staBluetooth;
+lv_obj_t *ui_staNetwork;
+lv_obj_t *ui_staCapacity;
+lv_obj_t *ui_pnlFooter;
+lv_obj_t *ui_lblNavAGlyph;
+lv_obj_t *ui_lblNavA;
+lv_obj_t *ui_lblNavBGlyph;
+lv_obj_t *ui_lblNavB;
+lv_obj_t *ui_lblNavCGlyph;
+lv_obj_t *ui_lblNavC;
+lv_obj_t *ui_lblNavXGlyph;
+lv_obj_t *ui_lblNavX;
+lv_obj_t *ui_lblNavYGlyph;
+lv_obj_t *ui_lblNavY;
+lv_obj_t *ui_lblNavZGlyph;
+lv_obj_t *ui_lblNavZ;
+lv_obj_t *ui_lblNavMenuGlyph;
+lv_obj_t *ui_lblNavMenu;
+lv_obj_t *ui_lblScreenMessage;
+lv_obj_t *ui_pnlMessage;
+lv_obj_t *ui_lblMessage;
+lv_obj_t *ui_pnlHelp;
+lv_obj_t *ui_pnlHelpMessage;
+lv_obj_t *ui_lblHelpHeader;
+lv_obj_t *ui_lblHelpContent;
+lv_obj_t *ui_pnlHelpExtra;
+lv_obj_t *ui_lblPreviewHeaderGlyph;
+lv_obj_t *ui_lblPreviewHeader;
+lv_obj_t *ui_pnlHelpPreview;
+lv_obj_t *ui_lblHelpPreviewHeader;
+lv_obj_t *ui_pnlHelpPreviewImage;
+lv_obj_t *ui_imgHelpPreviewImage;
+lv_obj_t *ui_pnlHelpPreviewInfo;
+lv_obj_t *ui_lblHelpPreviewInfoGlyph;
+lv_obj_t *ui_lblHelpPreviewInfoMessage;
+lv_obj_t *ui_pnlProgressBrightness;
+lv_obj_t *ui_icoProgressBrightness;
+lv_obj_t *ui_barProgressBrightness;
+lv_obj_t *ui_pnlProgressVolume;
+lv_obj_t *ui_icoProgressVolume;
+lv_obj_t *ui_barProgressVolume;
+lv_obj_t *ui____initial_actions0;
 
 void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title) {
     ui_screen = lv_obj_create(NULL);
-    lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_screen, theme->SYSTEM.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_screen, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -68,7 +68,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_pnlWall, device->SCREEN.HEIGHT);
     lv_obj_set_align(ui_pnlWall, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlWall, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                      LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
+                                  LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlWall, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlWall, LV_DIR_VER);
     lv_obj_set_style_bg_color(ui_pnlWall, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -84,11 +84,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_imgWall = lv_img_create(ui_pnlWall);
     lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
-    lv_obj_set_width(ui_imgWall, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_imgWall, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_imgWall, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_imgWall, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgWall, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_imgWall, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_flag(ui_imgWall, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
 
     ui_pnlContent = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlContent, device->SCREEN.WIDTH);
@@ -97,7 +97,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_y(ui_pnlContent, theme->HEADER.HEIGHT + 2 + theme->MISC.CONTENT.PADDING_TOP);
     lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_ROW_WRAP);
     lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_pnlContent, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
+    lv_obj_clear_flag(ui_pnlContent, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlContent, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlContent, LV_DIR_VER);
     lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -120,7 +120,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_pnlBox, 400);
     lv_obj_set_align(ui_pnlBox, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                      LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
+                                 LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlBox, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlBox, LV_DIR_VER);
     lv_obj_set_style_bg_color(ui_pnlBox, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -138,11 +138,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_imgBox = lv_img_create(ui_pnlBox);
     lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
-    lv_obj_set_width(ui_imgBox, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_imgBox, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_imgBox, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_imgBox, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
-    lv_obj_add_flag(ui_imgBox, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_imgBox, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_flag(ui_imgBox, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_clear_flag(ui_imgBox, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_clip_corner(ui_imgBox, true, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_imgBox, theme->IMAGE_LIST.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_img_opa(ui_imgBox, theme->IMAGE_LIST.ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -155,7 +155,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_pnlHeader, LV_ALIGN_TOP_MID);
     lv_obj_set_flex_flow(ui_pnlHeader, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlHeader, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_pnlHeader, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_pnlHeader, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHeader, lv_color_hex(theme->HEADER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHeader, theme->HEADER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -169,7 +169,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblDatetime = lv_label_create(ui_pnlHeader);
     lv_obj_set_height(ui_lblDatetime, LV_SIZE_CONTENT);
-    lv_obj_set_width(ui_lblDatetime, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_width(ui_lblDatetime, LV_SIZE_CONTENT);
     lv_label_set_long_mode(ui_lblDatetime, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblDatetime, "");
     lv_obj_set_style_text_color(ui_lblDatetime, lv_color_hex(theme->DATETIME.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -200,8 +200,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_conGlyphs, LV_ALIGN_TOP_RIGHT);
     lv_obj_set_flex_flow(ui_conGlyphs, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_conGlyphs, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_add_flag(ui_conGlyphs, LV_OBJ_FLAG_FLOATING);     /// Flags
-    lv_obj_clear_flag(ui_conGlyphs, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_flag(ui_conGlyphs, LV_OBJ_FLAG_FLOATING);
+    lv_obj_clear_flag(ui_conGlyphs, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_pad_left(ui_conGlyphs, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_conGlyphs, theme->STATUS.PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_conGlyphs, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -209,12 +209,13 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_staBluetooth = lv_label_create(ui_conGlyphs);
     lv_obj_set_width(ui_staBluetooth, 20);
-    lv_obj_set_height(ui_staBluetooth, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_staBluetooth, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_staBluetooth, -220);
     lv_obj_set_y(ui_staBluetooth, -205);
     lv_obj_set_align(ui_staBluetooth, LV_ALIGN_TOP_MID);
     lv_label_set_text(ui_staBluetooth, "");
-    lv_obj_set_style_text_color(ui_staBluetooth, lv_color_hex(theme->STATUS.BLUETOOTH.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_staBluetooth, lv_color_hex(theme->STATUS.BLUETOOTH.NORMAL),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_staBluetooth, theme->STATUS.BLUETOOTH.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_staBluetooth, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_staBluetooth, &ui_font_AwesomeBrand, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -225,12 +226,13 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_staNetwork = lv_label_create(ui_conGlyphs);
     lv_obj_set_width(ui_staNetwork, 30);
-    lv_obj_set_height(ui_staNetwork, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_staNetwork, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_staNetwork, -220);
     lv_obj_set_y(ui_staNetwork, -205);
     lv_obj_set_align(ui_staNetwork, LV_ALIGN_TOP_MID);
     lv_label_set_text(ui_staNetwork, "");
-    lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.NORMAL),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_staNetwork, theme->STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_staNetwork, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_staNetwork, &ui_font_Awesome, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -241,12 +243,13 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_staCapacity = lv_label_create(ui_conGlyphs);
     lv_obj_set_width(ui_staCapacity, 35);
-    lv_obj_set_height(ui_staCapacity, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_staCapacity, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_staCapacity, -220);
     lv_obj_set_y(ui_staCapacity, -205);
     lv_obj_set_align(ui_staCapacity, LV_ALIGN_TOP_MID);
     lv_label_set_text(ui_staCapacity, "");
-    lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_staCapacity, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_staCapacity, &ui_font_AwesomeBig, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -261,7 +264,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_pnlFooter, LV_ALIGN_BOTTOM_MID);
     lv_obj_set_flex_flow(ui_pnlFooter, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlFooter, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlFooter, lv_color_hex(theme->FOOTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlFooter, theme->FOOTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -299,7 +302,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblNavAGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavAGlyph, 25);
-    lv_obj_set_height(ui_lblNavAGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblNavAGlyph, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavAGlyph, -220);
     lv_obj_set_y(ui_lblNavAGlyph, -205);
     lv_obj_set_align(ui_lblNavAGlyph, LV_ALIGN_CENTER);
@@ -314,8 +317,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_lblNavAGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavA = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavA, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblNavA, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_lblNavA, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblNavA, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavA, -220);
     lv_obj_set_y(ui_lblNavA, -205);
     lv_obj_set_align(ui_lblNavA, LV_ALIGN_CENTER);
@@ -330,7 +333,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblNavBGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavBGlyph, 25);
-    lv_obj_set_height(ui_lblNavBGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblNavBGlyph, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavBGlyph, -220);
     lv_obj_set_y(ui_lblNavBGlyph, -205);
     lv_obj_set_align(ui_lblNavBGlyph, LV_ALIGN_CENTER);
@@ -345,8 +348,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_lblNavBGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavB = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavB, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblNavB, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_lblNavB, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblNavB, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavB, -220);
     lv_obj_set_y(ui_lblNavB, -205);
     lv_obj_set_align(ui_lblNavB, LV_ALIGN_CENTER);
@@ -361,7 +364,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblNavCGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavCGlyph, 25);
-    lv_obj_set_height(ui_lblNavCGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblNavCGlyph, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavCGlyph, -220);
     lv_obj_set_y(ui_lblNavCGlyph, -205);
     lv_obj_set_align(ui_lblNavCGlyph, LV_ALIGN_CENTER);
@@ -376,8 +379,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_lblNavCGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavC = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavC, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblNavC, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_lblNavC, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblNavC, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavC, -220);
     lv_obj_set_y(ui_lblNavC, -205);
     lv_obj_set_align(ui_lblNavC, LV_ALIGN_CENTER);
@@ -392,7 +395,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblNavXGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavXGlyph, 25);
-    lv_obj_set_height(ui_lblNavXGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblNavXGlyph, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavXGlyph, -220);
     lv_obj_set_y(ui_lblNavXGlyph, -205);
     lv_obj_set_align(ui_lblNavXGlyph, LV_ALIGN_CENTER);
@@ -407,8 +410,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_lblNavXGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavX = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavX, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblNavX, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_lblNavX, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblNavX, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavX, -220);
     lv_obj_set_y(ui_lblNavX, -205);
     lv_obj_set_align(ui_lblNavX, LV_ALIGN_CENTER);
@@ -423,7 +426,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblNavYGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavYGlyph, 25);
-    lv_obj_set_height(ui_lblNavYGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblNavYGlyph, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavYGlyph, -220);
     lv_obj_set_y(ui_lblNavYGlyph, -205);
     lv_obj_set_align(ui_lblNavYGlyph, LV_ALIGN_CENTER);
@@ -438,8 +441,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_lblNavYGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavY = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavY, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblNavY, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_lblNavY, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblNavY, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavY, -220);
     lv_obj_set_y(ui_lblNavY, -205);
     lv_obj_set_align(ui_lblNavY, LV_ALIGN_CENTER);
@@ -454,7 +457,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblNavZGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavZGlyph, 25);
-    lv_obj_set_height(ui_lblNavZGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblNavZGlyph, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavZGlyph, -220);
     lv_obj_set_y(ui_lblNavZGlyph, -205);
     lv_obj_set_align(ui_lblNavZGlyph, LV_ALIGN_CENTER);
@@ -469,8 +472,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_lblNavZGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavZ = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavZ, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblNavZ, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_lblNavZ, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblNavZ, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavZ, -220);
     lv_obj_set_y(ui_lblNavZ, -205);
     lv_obj_set_align(ui_lblNavZ, LV_ALIGN_CENTER);
@@ -485,23 +488,25 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblNavMenuGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavMenuGlyph, 27);
-    lv_obj_set_height(ui_lblNavMenuGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblNavMenuGlyph, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavMenuGlyph, -220);
     lv_obj_set_y(ui_lblNavMenuGlyph, -205);
     lv_obj_set_align(ui_lblNavMenuGlyph, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblNavMenuGlyph, "⇥");
     lv_label_set_recolor(ui_lblNavMenuGlyph, "true");
-    lv_obj_set_style_text_color(ui_lblNavMenuGlyph, lv_color_hex(theme->NAV.MENU.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblNavMenuGlyph, lv_color_hex(theme->NAV.MENU.GLYPH),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblNavMenuGlyph, theme->NAV.MENU.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblNavMenuGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblNavMenuGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavMenuGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavMenuGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavMenuGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavMenuGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavMenu = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavMenu, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_lblNavMenu, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_lblNavMenu, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblNavMenu, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavMenu, -220);
     lv_obj_set_y(ui_lblNavMenu, -205);
     lv_obj_set_align(ui_lblNavMenu, LV_ALIGN_CENTER);
@@ -519,9 +524,10 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_lblScreenMessage, 28);
     lv_obj_set_align(ui_lblScreenMessage, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblScreenMessage, "No Content Found...");
-    lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);     /// Flags
+    lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     lv_obj_set_scroll_dir(ui_lblScreenMessage, LV_DIR_HOR);
-    lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(theme->LIST_DEFAULT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(theme->LIST_DEFAULT.TEXT),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblScreenMessage, theme->LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblScreenMessage, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblScreenMessage, lv_color_hex(0xA5B2B5), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -549,8 +555,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_pnlMessage, LV_ALIGN_BOTTOM_MID);
     lv_obj_set_flex_flow(ui_pnlMessage, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlMessage, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlMessage, theme->MESSAGE.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlMessage, lv_color_hex(theme->MESSAGE.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlMessage, theme->MESSAGE.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -561,7 +567,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblMessage = lv_label_create(ui_pnlMessage);
     lv_obj_set_width(ui_lblMessage, 600);
-    lv_obj_set_height(ui_lblMessage, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblMessage, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblMessage, -220);
     lv_obj_set_y(ui_lblMessage, -205);
     lv_obj_set_align(ui_lblMessage, LV_ALIGN_CENTER);
@@ -578,8 +584,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_pnlHelp, device->SCREEN.WIDTH);
     lv_obj_set_height(ui_pnlHelp, device->SCREEN.HEIGHT);
     lv_obj_set_align(ui_pnlHelp, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelp, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelp, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHelp, 155, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -593,7 +599,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_pnlHelpMessage, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_pnlHelpMessage, LV_FLEX_FLOW_COLUMN_WRAP);
     lv_obj_set_flex_align(ui_pnlHelpMessage, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpMessage, theme->HELP.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpMessage, lv_color_hex(theme->HELP.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHelpMessage, theme->HELP.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -606,7 +612,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblHelpHeader = lv_label_create(ui_pnlHelpMessage);
     lv_obj_set_width(ui_lblHelpHeader, 515);
-    lv_obj_set_height(ui_lblHelpHeader, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblHelpHeader, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpHeader, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpHeader, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblHelpHeader, "");
@@ -626,13 +632,14 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_pnlHelpExtra = lv_obj_create(ui_pnlHelpMessage);
     lv_obj_set_width(ui_pnlHelpExtra, 515);
-    lv_obj_set_height(ui_pnlHelpExtra, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_pnlHelpExtra, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_pnlHelpExtra, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_pnlHelpExtra, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlHelpExtra, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_clear_flag(ui_pnlHelpExtra, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
-                      LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
-                      LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);     /// Flags
+                                       LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE |
+                                       LV_OBJ_FLAG_SCROLL_ELASTIC |
+                                       LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_style_radius(ui_pnlHelpExtra, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpExtra, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHelpExtra, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -646,21 +653,24 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblPreviewHeaderGlyph = lv_label_create(ui_pnlHelpExtra);
     lv_obj_set_width(ui_lblPreviewHeaderGlyph, 28);
-    lv_obj_set_height(ui_lblPreviewHeaderGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblPreviewHeaderGlyph, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblPreviewHeaderGlyph, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblPreviewHeaderGlyph, LV_LABEL_LONG_CLIP);
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "⇓");
-    lv_obj_set_style_text_color(ui_lblPreviewHeaderGlyph, lv_color_hex(theme->NAV.A.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblPreviewHeaderGlyph, lv_color_hex(theme->NAV.A.GLYPH),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblPreviewHeaderGlyph, theme->NAV.A.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblPreviewHeaderGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblPreviewHeaderGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblPreviewHeaderGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblPreviewHeaderGlyph, theme->FONT.FOOTER_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblPreviewHeaderGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblPreviewHeaderGlyph, theme->FONT.FOOTER_ICON_PAD_TOP,
+                             LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblPreviewHeaderGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblPreviewHeader = lv_label_create(ui_pnlHelpExtra);
     lv_obj_set_width(ui_lblPreviewHeader, 480);
-    lv_obj_set_height(ui_lblPreviewHeader, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblPreviewHeader, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblPreviewHeader, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblPreviewHeader, LV_LABEL_LONG_CLIP);
     lv_label_set_text(ui_lblPreviewHeader, "Switch to Preview Image");
@@ -675,8 +685,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_pnlHelpPreview, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_pnlHelpPreview, LV_FLEX_FLOW_COLUMN_WRAP);
     lv_obj_set_flex_align(ui_pnlHelpPreview, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpPreview, theme->HELP.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpPreview, lv_color_hex(theme->HELP.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHelpPreview, theme->HELP.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -689,18 +699,19 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblHelpPreviewHeader = lv_label_create(ui_pnlHelpPreview);
     lv_obj_set_width(ui_lblHelpPreviewHeader, 515);
-    lv_obj_set_height(ui_lblHelpPreviewHeader, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblHelpPreviewHeader, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpPreviewHeader, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpPreviewHeader, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblHelpPreviewHeader, "");
-    lv_obj_set_style_text_color(ui_lblHelpPreviewHeader, lv_color_hex(theme->HELP.TITLE), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblHelpPreviewHeader, lv_color_hex(theme->HELP.TITLE),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHelpPreviewHeader, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHelpPreviewImage = lv_obj_create(ui_pnlHelpPreview);
     lv_obj_set_width(ui_pnlHelpPreviewImage, 515);
     lv_obj_set_height(ui_pnlHelpPreviewImage, 250);
     lv_obj_set_align(ui_pnlHelpPreviewImage, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_pnlHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_pnlHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpPreviewImage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpPreviewImage, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHelpPreviewImage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -708,26 +719,28 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_imgHelpPreviewImage = lv_img_create(ui_pnlHelpPreviewImage);
     lv_img_set_src(ui_imgHelpPreviewImage, &ui_img_nothing_png);
-    lv_obj_set_width(ui_imgHelpPreviewImage, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_imgHelpPreviewImage, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_width(ui_imgHelpPreviewImage, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_imgHelpPreviewImage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgHelpPreviewImage, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_imgHelpPreviewImage, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_imgHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_flag(ui_imgHelpPreviewImage, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_clear_flag(ui_imgHelpPreviewImage, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_imgHelpPreviewImage, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_imgHelpPreviewImage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_clip_corner(ui_imgHelpPreviewImage, true, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_img_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor(ui_imgHelpPreviewImage, lv_color_hex(theme->IMAGE_PREVIEW.RECOLOUR), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_imgHelpPreviewImage, lv_color_hex(theme->IMAGE_PREVIEW.RECOLOUR),
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_imgHelpPreviewImage, theme->IMAGE_PREVIEW.RECOLOUR_ALPHA,
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHelpPreviewInfo = lv_obj_create(ui_pnlHelpPreview);
     lv_obj_set_width(ui_pnlHelpPreviewInfo, 515);
-    lv_obj_set_height(ui_pnlHelpPreviewInfo, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_pnlHelpPreviewInfo, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_pnlHelpPreviewInfo, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_pnlHelpPreviewInfo, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlHelpPreviewInfo, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_pnlHelpPreviewInfo, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_clear_flag(ui_pnlHelpPreviewInfo, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpPreviewInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpPreviewInfo, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -741,28 +754,33 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_lblHelpPreviewInfoGlyph = lv_label_create(ui_pnlHelpPreviewInfo);
     lv_obj_set_width(ui_lblHelpPreviewInfoGlyph, 28);
-    lv_obj_set_height(ui_lblHelpPreviewInfoGlyph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblHelpPreviewInfoGlyph, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpPreviewInfoGlyph, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpPreviewInfoGlyph, LV_LABEL_LONG_CLIP);
     lv_label_set_text(ui_lblHelpPreviewInfoGlyph, "⇓");
-    lv_obj_set_style_text_color(ui_lblHelpPreviewInfoGlyph, lv_color_hex(theme->NAV.A.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblHelpPreviewInfoGlyph, lv_color_hex(theme->NAV.A.GLYPH),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHelpPreviewInfoGlyph, theme->NAV.A.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_lblHelpPreviewInfoGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblHelpPreviewInfoGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblHelpPreviewInfoGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblHelpPreviewInfoGlyph, theme->FONT.FOOTER_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblHelpPreviewInfoGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblHelpPreviewInfoGlyph, theme->FONT.FOOTER_ICON_PAD_TOP,
+                             LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblHelpPreviewInfoGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblHelpPreviewInfoMessage = lv_label_create(ui_pnlHelpPreviewInfo);
     lv_obj_set_width(ui_lblHelpPreviewInfoMessage, 480);
-    lv_obj_set_height(ui_lblHelpPreviewInfoMessage, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_height(ui_lblHelpPreviewInfoMessage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpPreviewInfoMessage, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpPreviewInfoMessage, LV_LABEL_LONG_CLIP);
     lv_label_set_text(ui_lblHelpPreviewInfoMessage, "Switch to Information");
-    lv_obj_set_style_text_color(ui_lblHelpPreviewInfoMessage, lv_color_hex(theme->NAV.A.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblHelpPreviewInfoMessage, lv_color_hex(theme->NAV.A.TEXT),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHelpPreviewInfoMessage, theme->NAV.A.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblHelpPreviewInfoMessage, theme->FONT.FOOTER_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblHelpPreviewInfoMessage, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblHelpPreviewInfoMessage, theme->FONT.FOOTER_PAD_BOTTOM,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlProgressBrightness = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlProgressBrightness, 615);
@@ -771,14 +789,19 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_y(ui_pnlProgressBrightness, -47);
     lv_obj_set_align(ui_pnlProgressBrightness, LV_ALIGN_BOTTOM_MID);
     lv_obj_set_flex_flow(ui_pnlProgressBrightness, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_pnlProgressBrightness, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_flex_align(ui_pnlProgressBrightness, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER,
+                          LV_FLEX_ALIGN_CENTER);
+    lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlProgressBrightness, theme->BAR.PANEL_BORDER_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlProgressBrightness, lv_color_hex(theme->BAR.PANEL_BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlProgressBrightness, theme->BAR.PANEL_BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlProgressBrightness, lv_color_hex(theme->BAR.PANEL_BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlProgressBrightness, theme->BAR.PANEL_BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlProgressBrightness, lv_color_hex(theme->BAR.PANEL_BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlProgressBrightness, theme->BAR.PANEL_BACKGROUND_ALPHA,
+                            LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnlProgressBrightness, lv_color_hex(theme->BAR.PANEL_BORDER),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_pnlProgressBrightness, theme->BAR.PANEL_BORDER_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlProgressBrightness, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlProgressBrightness, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -790,7 +813,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_icoProgressBrightness, LV_ALIGN_CENTER);
     lv_label_set_text(ui_icoProgressBrightness, "");
     lv_label_set_recolor(ui_icoProgressBrightness, "true");
-    lv_obj_set_style_text_color(ui_icoProgressBrightness, lv_color_hex(theme->BAR.ICON), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_icoProgressBrightness, lv_color_hex(theme->BAR.ICON),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_icoProgressBrightness, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_icoProgressBrightness, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_icoProgressBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -805,12 +829,16 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_barProgressBrightness, 16);
     lv_obj_set_align(ui_barProgressBrightness, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_barProgressBrightness, theme->BAR.PROGRESS_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA,
+                            LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_radius(ui_barProgressBrightness, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
+                              LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA,
+                            LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     ui_pnlProgressVolume = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlProgressVolume, 615);
@@ -820,12 +848,14 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_align(ui_pnlProgressVolume, LV_ALIGN_BOTTOM_MID);
     lv_obj_set_flex_flow(ui_pnlProgressVolume, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlProgressVolume, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlProgressVolume, theme->BAR.PANEL_BORDER_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlProgressVolume, lv_color_hex(theme->BAR.PANEL_BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlProgressVolume, lv_color_hex(theme->BAR.PANEL_BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlProgressVolume, theme->BAR.PANEL_BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlProgressVolume, lv_color_hex(theme->BAR.PANEL_BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_pnlProgressVolume, lv_color_hex(theme->BAR.PANEL_BORDER),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_pnlProgressVolume, theme->BAR.PANEL_BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlProgressVolume, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlProgressVolume, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -853,21 +883,17 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_barProgressVolume, 16);
     lv_obj_set_align(ui_barProgressVolume, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_barProgressVolume, theme->BAR.PROGRESS_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA,
+                            LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_radius(ui_barProgressVolume, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    
+    lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
+                              LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA,
+                            LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_screen);
 }
-
-///////////////////// TEST LVGL SETTINGS ////////////////////
-#if LV_COLOR_DEPTH != 32
-    #error "LV_COLOR_DEPTH should be 32bit to match SquareLine Studio's settings"
-#endif
-#if LV_COLOR_16_SWAP !=0
-    #error "LV_COLOR_16_SWAP should be 0 to match SquareLine Studio's settings"
-#endif

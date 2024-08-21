@@ -262,17 +262,17 @@ void init_navigation_groups() {
 
     apply_theme_list_item(&theme, ui_lblStatus, "Status", false, false);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoEnable, mux_prog, "enable");
-    apply_theme_list_glyph(&theme, &device, ui_icoIdentifier, mux_prog, "identifier");
-    apply_theme_list_glyph(&theme, &device, ui_icoPassword, mux_prog, "password");
-    apply_theme_list_glyph(&theme, &device, ui_icoType, mux_prog, "type");
-    apply_theme_list_glyph(&theme, &device, ui_icoAddress, mux_prog, "address");
-    apply_theme_list_glyph(&theme, &device, ui_icoSubnet, mux_prog, "subnet");
-    apply_theme_list_glyph(&theme, &device, ui_icoGateway, mux_prog, "gateway");
-    apply_theme_list_glyph(&theme, &device, ui_icoDNS, mux_prog, "dns");
-    apply_theme_list_glyph(&theme, &device, ui_icoConnect, mux_prog, "connect");
+    apply_theme_list_glyph(&theme, ui_icoEnable, mux_prog, "enable");
+    apply_theme_list_glyph(&theme, ui_icoIdentifier, mux_prog, "identifier");
+    apply_theme_list_glyph(&theme, ui_icoPassword, mux_prog, "password");
+    apply_theme_list_glyph(&theme, ui_icoType, mux_prog, "type");
+    apply_theme_list_glyph(&theme, ui_icoAddress, mux_prog, "address");
+    apply_theme_list_glyph(&theme, ui_icoSubnet, mux_prog, "subnet");
+    apply_theme_list_glyph(&theme, ui_icoGateway, mux_prog, "gateway");
+    apply_theme_list_glyph(&theme, ui_icoDNS, mux_prog, "dns");
+    apply_theme_list_glyph(&theme, ui_icoConnect, mux_prog, "connect");
 
-    apply_theme_list_glyph(&theme, &device, ui_icoStatus, mux_prog, "status");
+    apply_theme_list_glyph(&theme, ui_icoStatus, mux_prog, "status");
 
     apply_theme_list_value(&theme, ui_lblEnableValue, "");
     apply_theme_list_value(&theme, ui_lblIdentifierValue, "");

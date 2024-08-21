@@ -155,12 +155,12 @@ void create_app_items() {
             item_glyph = "app";
         }
 
-        apply_theme_list_glyph(&theme, &device, ui_lblAppItemGlyph, mux_prog, item_glyph);
+        apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_prog, item_glyph);
 
         lv_group_add_obj(ui_group, ui_lblAppItem);
         lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
 
-        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblAppItem, app_store);
+        int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblAppItem, app_store);
         apply_align(&theme, &device, ui_lblAppItemGlyph, ui_lblAppItem, item_width);
 
         free(base_filename);

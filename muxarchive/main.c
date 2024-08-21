@@ -181,8 +181,9 @@ void create_archive_items() {
 
         lv_obj_t * ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         char item_glyph[MAX_BUFFER_SIZE];
-        snprintf(item_glyph, sizeof(item_glyph), "archive%s", (strcasecmp(is_installed, "INSTALLED") == 0) ? "installed" : "");
-        apply_theme_list_glyph(&theme, &device, ui_lblArchiveItemGlyph, mux_prog, item_glyph);
+        snprintf(item_glyph, sizeof(item_glyph), "%s",
+                 (strcasecmp(is_installed, "INSTALLED") == 0) ? "installed" : "archive");
+        apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_prog, item_glyph);
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);
         lv_group_add_obj(ui_group_glyph, ui_lblArchiveItemGlyph);
@@ -344,7 +345,8 @@ void *joystick_task() {
                                     nav_prev(ui_group_glyph, 1);
                                     nav_prev(ui_group_installed, 1);
                                     nav_prev(ui_group_data, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent);
                                     lv_task_handler();
                                 } else if (current_item_index > 0) {
                                     JOYUP_pressed = (ev.value != 0);
@@ -360,7 +362,8 @@ void *joystick_task() {
                                     nav_next(ui_group_glyph, 1);
                                     nav_next(ui_group_installed, 1);
                                     nav_next(ui_group_data, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent);
                                     lv_task_handler();
                                 } else if (current_item_index < ui_count) {
                                     JOYDOWN_pressed = (ev.value != 0);

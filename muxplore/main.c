@@ -483,12 +483,12 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
     apply_theme_list_item(&theme, ui_lblExploreItem, item_text, true, false);
 
     lv_obj_t * ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
-    apply_theme_list_glyph(&theme, &device, ui_lblExploreItemGlyph, mux_prog, item_glyph);
+    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_prog, item_glyph);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
 
-    int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblExploreItem, item_text);
+    int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
     apply_align(&theme, &device, ui_lblExploreItemGlyph, ui_lblExploreItem, item_width);
 }
 

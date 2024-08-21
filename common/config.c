@@ -8,7 +8,7 @@ void load_config(struct mux_config *config) {
     config->CLOCK.NOTATION = atoi(read_text_from_file("/run/muos/global/clock/notation"));
     strncpy(config->CLOCK.POOL, read_text_from_file("/run/muos/global/clock/pool"), MAX_BUFFER_SIZE - 1);
     config->CLOCK.POOL[MAX_BUFFER_SIZE - 1] = '\0';
-    
+
     config->NETWORK.ENABLED = atoi(read_text_from_file("/run/muos/global/network/enabled"));
     config->NETWORK.TYPE = atoi(read_text_from_file("/run/muos/global/network/type"));
     strncpy(config->NETWORK.INTERFACE, read_text_from_file("/run/muos/global/network/interface"), MAX_BUFFER_SIZE - 1);
@@ -23,7 +23,7 @@ void load_config(struct mux_config *config) {
     config->NETWORK.GATEWAY[MAX_BUFFER_SIZE - 1] = '\0';
     config->NETWORK.SUBNET[MAX_BUFFER_SIZE - 1] = '\0';
     config->NETWORK.DNS[MAX_BUFFER_SIZE - 1] = '\0';
-    
+
     config->SETTINGS.GENERAL.HIDDEN = atoi(read_text_from_file("/run/muos/global/settings/general/hidden"));
     config->SETTINGS.GENERAL.SOUND = atoi(read_text_from_file("/run/muos/global/settings/general/sound"));
     config->SETTINGS.GENERAL.BGM = atoi(read_text_from_file("/run/muos/global/settings/general/bgm"));
@@ -33,9 +33,10 @@ void load_config(struct mux_config *config) {
     config->SETTINGS.GENERAL.BRIGHTNESS = atoi(read_text_from_file("/run/muos/global/settings/general/brightness"));
     config->SETTINGS.GENERAL.HDMI = atoi(read_text_from_file("/run/muos/global/settings/general/hdmi"));
     config->SETTINGS.GENERAL.SHUTDOWN = atoi(read_text_from_file("/run/muos/global/settings/general/shutdown"));
-    strncpy(config->SETTINGS.GENERAL.STARTUP, read_text_from_file("/run/muos/global/settings/general/startup"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->SETTINGS.GENERAL.STARTUP, read_text_from_file("/run/muos/global/settings/general/startup"),
+            MAX_BUFFER_SIZE - 1);
     config->SETTINGS.GENERAL.STARTUP[MAX_BUFFER_SIZE - 1] = '\0';
-    
+
     config->SETTINGS.ADVANCED.SWAP = atoi(read_text_from_file("/run/muos/global/settings/advanced/swap"));
     config->SETTINGS.ADVANCED.THERMAL = atoi(read_text_from_file("/run/muos/global/settings/advanced/thermal"));
     config->SETTINGS.ADVANCED.FONT = atoi(read_text_from_file("/run/muos/global/settings/advanced/font"));
@@ -46,9 +47,12 @@ void load_config(struct mux_config *config) {
     config->SETTINGS.ADVANCED.RETROWAIT = atoi(read_text_from_file("/run/muos/global/settings/advanced/retrowait"));
     config->SETTINGS.ADVANCED.ANDROID = atoi(read_text_from_file("/run/muos/global/settings/advanced/android"));
     config->SETTINGS.ADVANCED.VERBOSE = atoi(read_text_from_file("/run/muos/global/settings/advanced/verbose"));
-    strncpy(config->SETTINGS.ADVANCED.VOLUME, read_text_from_file("/run/muos/global/settings/advanced/volume"), MAX_BUFFER_SIZE - 1);
-    strncpy(config->SETTINGS.ADVANCED.BRIGHTNESS, read_text_from_file("/run/muos/global/settings/advanced/brightness"), MAX_BUFFER_SIZE - 1);
-    strncpy(config->SETTINGS.ADVANCED.STATE, read_text_from_file("/run/muos/global/settings/advanced/state"), MAX_BUFFER_SIZE - 1);
+    strncpy(config->SETTINGS.ADVANCED.VOLUME, read_text_from_file("/run/muos/global/settings/advanced/volume"),
+            MAX_BUFFER_SIZE - 1);
+    strncpy(config->SETTINGS.ADVANCED.BRIGHTNESS, read_text_from_file("/run/muos/global/settings/advanced/brightness"),
+            MAX_BUFFER_SIZE - 1);
+    strncpy(config->SETTINGS.ADVANCED.STATE, read_text_from_file("/run/muos/global/settings/advanced/state"),
+            MAX_BUFFER_SIZE - 1);
     config->SETTINGS.ADVANCED.VOLUME[MAX_BUFFER_SIZE - 1] = '\0';
     config->SETTINGS.ADVANCED.BRIGHTNESS[MAX_BUFFER_SIZE - 1] = '\0';
     config->SETTINGS.ADVANCED.STATE[MAX_BUFFER_SIZE - 1] = '\0';

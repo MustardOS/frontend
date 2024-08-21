@@ -411,19 +411,19 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblState, "Suspend Power State", false, true);
     apply_theme_list_item(&theme, ui_lblVerbose, "Verbose Messages", false, true);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoSwap, mux_prog, "swap");
-    apply_theme_list_glyph(&theme, &device, ui_icoThermal, mux_prog, "thermal");
-    apply_theme_list_glyph(&theme, &device, ui_icoFont, mux_prog, "font");
-    apply_theme_list_glyph(&theme, &device, ui_icoVolume, mux_prog, "volume");
-    apply_theme_list_glyph(&theme, &device, ui_icoBrightness, mux_prog, "brightness");
-    apply_theme_list_glyph(&theme, &device, ui_icoOffset, mux_prog, "offset");
-    apply_theme_list_glyph(&theme, &device, ui_icoPasscode, mux_prog, "lock");
-    apply_theme_list_glyph(&theme, &device, ui_icoLED, mux_prog, "led");
-    apply_theme_list_glyph(&theme, &device, ui_icoTheme, mux_prog, "theme");
-    apply_theme_list_glyph(&theme, &device, ui_icoRetroWait, mux_prog, "retrowait");
-    apply_theme_list_glyph(&theme, &device, ui_icoAndroid, mux_prog, "android");
-    apply_theme_list_glyph(&theme, &device, ui_icoState, mux_prog, "state");
-    apply_theme_list_glyph(&theme, &device, ui_icoVerbose, mux_prog, "verbose");
+    apply_theme_list_glyph(&theme, ui_icoSwap, mux_prog, "swap");
+    apply_theme_list_glyph(&theme, ui_icoThermal, mux_prog, "thermal");
+    apply_theme_list_glyph(&theme, ui_icoFont, mux_prog, "font");
+    apply_theme_list_glyph(&theme, ui_icoVolume, mux_prog, "volume");
+    apply_theme_list_glyph(&theme, ui_icoBrightness, mux_prog, "brightness");
+    apply_theme_list_glyph(&theme, ui_icoOffset, mux_prog, "offset");
+    apply_theme_list_glyph(&theme, ui_icoPasscode, mux_prog, "lock");
+    apply_theme_list_glyph(&theme, ui_icoLED, mux_prog, "led");
+    apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
+    apply_theme_list_glyph(&theme, ui_icoRetroWait, mux_prog, "retrowait");
+    apply_theme_list_glyph(&theme, ui_icoAndroid, mux_prog, "android");
+    apply_theme_list_glyph(&theme, ui_icoState, mux_prog, "state");
+    apply_theme_list_glyph(&theme, ui_icoVerbose, mux_prog, "verbose");
 
     apply_theme_list_drop_down(&theme, ui_droSwap, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droThermal, "Disabled\nEnabled");

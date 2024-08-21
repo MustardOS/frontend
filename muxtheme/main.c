@@ -152,12 +152,12 @@ void create_theme_items() {
             apply_theme_list_item(&theme, ui_lblThemeItem, base_filename, false, false);
 
             lv_obj_t * ui_lblThemeItemGlyph = lv_img_create(ui_pnlTheme);
-            apply_theme_list_glyph(&theme, &device, ui_lblThemeItemGlyph, mux_prog, "theme");
+            apply_theme_list_glyph(&theme, ui_lblThemeItemGlyph, mux_prog, "theme");
 
             lv_group_add_obj(ui_group, ui_lblThemeItem);
             lv_group_add_obj(ui_group_glyph, ui_lblThemeItemGlyph);
 
-            int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblThemeItem, base_filename);
+            int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblThemeItem, base_filename);
             apply_align(&theme, &device, ui_lblThemeItemGlyph, ui_lblThemeItem, item_width);
 
             free(base_filename);

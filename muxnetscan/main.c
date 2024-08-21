@@ -106,12 +106,12 @@ void create_network_items() {
         apply_theme_list_item(&theme, ui_lblNetScanItem, str_nonew(ssid), false, false);
 
         lv_obj_t * ui_lblNetScanGlyph = lv_img_create(ui_pnlNetScan);
-        apply_theme_list_glyph(&theme, &device, ui_lblNetScanGlyph, mux_prog, "netscan");
+        apply_theme_list_glyph(&theme, ui_lblNetScanGlyph, mux_prog, "netscan");
 
         lv_group_add_obj(ui_group, ui_lblNetScanItem);
         lv_group_add_obj(ui_group_glyph, ui_lblNetScanGlyph);
 
-        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblNetScanItem, str_nonew(ssid));
+        int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblNetScanItem, str_nonew(ssid));
         apply_align(&theme, &device, ui_lblNetScanGlyph, ui_lblNetScanItem, item_width);
     }
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);

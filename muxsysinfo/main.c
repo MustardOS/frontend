@@ -246,17 +246,17 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblBatteryCap, "Battery Capacity", false, true);
     apply_theme_list_item(&theme, ui_lblVoltage, "Battery Voltage", false, true);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoVersion, mux_prog, "version");
-    apply_theme_list_glyph(&theme, &device, ui_icoKernel, mux_prog, "kernel");
-    apply_theme_list_glyph(&theme, &device, ui_icoUptime, mux_prog, "uptime");
-    apply_theme_list_glyph(&theme, &device, ui_icoCPU, mux_prog, "cpu");
-    apply_theme_list_glyph(&theme, &device, ui_icoSpeed, mux_prog, "speed");
-    apply_theme_list_glyph(&theme, &device, ui_icoGovernor, mux_prog, "governor");
-    apply_theme_list_glyph(&theme, &device, ui_icoMemory, mux_prog, "memory");
-    apply_theme_list_glyph(&theme, &device, ui_icoTemp, mux_prog, "temp");
-    apply_theme_list_glyph(&theme, &device, ui_icoServices, mux_prog, "services");
-    apply_theme_list_glyph(&theme, &device, ui_icoBatteryCap, mux_prog, "capacity");
-    apply_theme_list_glyph(&theme, &device, ui_icoVoltage, mux_prog, "voltage");
+    apply_theme_list_glyph(&theme, ui_icoVersion, mux_prog, "version");
+    apply_theme_list_glyph(&theme, ui_icoKernel, mux_prog, "kernel");
+    apply_theme_list_glyph(&theme, ui_icoUptime, mux_prog, "uptime");
+    apply_theme_list_glyph(&theme, ui_icoCPU, mux_prog, "cpu");
+    apply_theme_list_glyph(&theme, ui_icoSpeed, mux_prog, "speed");
+    apply_theme_list_glyph(&theme, ui_icoGovernor, mux_prog, "governor");
+    apply_theme_list_glyph(&theme, ui_icoMemory, mux_prog, "memory");
+    apply_theme_list_glyph(&theme, ui_icoTemp, mux_prog, "temp");
+    apply_theme_list_glyph(&theme, ui_icoServices, mux_prog, "services");
+    apply_theme_list_glyph(&theme, ui_icoBatteryCap, mux_prog, "capacity");
+    apply_theme_list_glyph(&theme, ui_icoVoltage, mux_prog, "voltage");
 
     apply_theme_list_value(&theme, ui_lblVersionValue, "");
     apply_theme_list_value(&theme, ui_lblKernelValue, "");

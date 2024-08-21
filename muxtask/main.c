@@ -135,12 +135,12 @@ void create_task_items() {
         apply_theme_list_item(&theme, ui_lblTaskItem, task_store, false, false);
 
         lv_obj_t * ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
-        apply_theme_list_glyph(&theme, &device, ui_lblTaskItemGlyph, mux_prog, "task");
+        apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_prog, "task");
 
         lv_group_add_obj(ui_group, ui_lblTaskItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);
 
-        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTaskItem, task_store);
+        int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblTaskItem, task_store);
         apply_align(&theme, &device, ui_lblTaskItemGlyph, ui_lblTaskItem, item_width);
 
         free(base_filename);

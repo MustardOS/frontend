@@ -130,14 +130,14 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblReboot, "Reboot", false, false);
     apply_theme_list_item(&theme, ui_lblShutdown, "Shutdown", false, false);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoContent, mux_prog, "explore");
-    apply_theme_list_glyph(&theme, &device, ui_icoFavourites, mux_prog, "favourite");
-    apply_theme_list_glyph(&theme, &device, ui_icoHistory, mux_prog, "history");
-    apply_theme_list_glyph(&theme, &device, ui_icoApps, mux_prog, "apps");
-    apply_theme_list_glyph(&theme, &device, ui_icoInfo, mux_prog, "info");
-    apply_theme_list_glyph(&theme, &device, ui_icoConfig, mux_prog, "config");
-    apply_theme_list_glyph(&theme, &device, ui_icoReboot, mux_prog, "reboot");
-    apply_theme_list_glyph(&theme, &device, ui_icoShutdown, mux_prog, "shutdown");
+    apply_theme_list_glyph(&theme, ui_icoContent, mux_prog, "explore");
+    apply_theme_list_glyph(&theme, ui_icoFavourites, mux_prog, "favourite");
+    apply_theme_list_glyph(&theme, ui_icoHistory, mux_prog, "history");
+    apply_theme_list_glyph(&theme, ui_icoApps, mux_prog, "apps");
+    apply_theme_list_glyph(&theme, ui_icoInfo, mux_prog, "info");
+    apply_theme_list_glyph(&theme, ui_icoConfig, mux_prog, "config");
+    apply_theme_list_glyph(&theme, ui_icoReboot, mux_prog, "reboot");
+    apply_theme_list_glyph(&theme, ui_icoShutdown, mux_prog, "shutdown");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -147,7 +147,7 @@ void init_navigation_groups() {
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
 
         apply_align(&theme, &device, ui_icons[i], ui_objects[i],
-                    apply_size_to_content(&theme, &device, ui_pnlContent,
+                    apply_size_to_content(&theme, ui_pnlContent,
                                           ui_objects[i], lv_label_get_text(ui_objects[i])));
     }
 }

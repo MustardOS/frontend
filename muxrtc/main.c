@@ -269,13 +269,13 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblNotation, "Time Notation", false, false);
     apply_theme_list_item(&theme, ui_lblTimezone, "Set Timezone", false, false);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoYear, mux_prog, "year");
-    apply_theme_list_glyph(&theme, &device, ui_icoMonth, mux_prog, "month");
-    apply_theme_list_glyph(&theme, &device, ui_icoDay, mux_prog, "day");
-    apply_theme_list_glyph(&theme, &device, ui_icoHour, mux_prog, "hour");
-    apply_theme_list_glyph(&theme, &device, ui_icoMinute, mux_prog, "minute");
-    apply_theme_list_glyph(&theme, &device, ui_icoNotation, mux_prog, "notation");
-    apply_theme_list_glyph(&theme, &device, ui_icoTimezone, mux_prog, "timezone");
+    apply_theme_list_glyph(&theme, ui_icoYear, mux_prog, "year");
+    apply_theme_list_glyph(&theme, ui_icoMonth, mux_prog, "month");
+    apply_theme_list_glyph(&theme, ui_icoDay, mux_prog, "day");
+    apply_theme_list_glyph(&theme, ui_icoHour, mux_prog, "hour");
+    apply_theme_list_glyph(&theme, ui_icoMinute, mux_prog, "minute");
+    apply_theme_list_glyph(&theme, ui_icoNotation, mux_prog, "notation");
+    apply_theme_list_glyph(&theme, ui_icoTimezone, mux_prog, "timezone");
 
     apply_theme_list_value(&theme, ui_lblYearValue, "");
     apply_theme_list_value(&theme, ui_lblMonthValue, "");

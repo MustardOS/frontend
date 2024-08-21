@@ -218,11 +218,11 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblSyncthing, "Syncthing", false, true);
     apply_theme_list_item(&theme, ui_lblNTP, "Network Time Sync", false, true);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoShell, mux_prog, "shell");
-    apply_theme_list_glyph(&theme, &device, ui_icoBrowser, mux_prog, "browser");
-    apply_theme_list_glyph(&theme, &device, ui_icoTerminal, mux_prog, "terminal");
-    apply_theme_list_glyph(&theme, &device, ui_icoSyncthing, mux_prog, "sync");
-    apply_theme_list_glyph(&theme, &device, ui_icoNTP, mux_prog, "ntp");
+    apply_theme_list_glyph(&theme, ui_icoShell, mux_prog, "shell");
+    apply_theme_list_glyph(&theme, ui_icoBrowser, mux_prog, "browser");
+    apply_theme_list_glyph(&theme, ui_icoTerminal, mux_prog, "terminal");
+    apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_prog, "sync");
+    apply_theme_list_glyph(&theme, ui_icoNTP, mux_prog, "ntp");
 
     apply_theme_list_drop_down(&theme, ui_droShell, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droBrowser, "Disabled\nEnabled");

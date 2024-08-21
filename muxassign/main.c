@@ -304,12 +304,12 @@ void create_system_items() {
             apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, false, false);
 
             lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
-            apply_theme_list_glyph(&theme, &device, ui_lblCoreItemGlyph, mux_prog, "system");
+            apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_prog, "system");
 
             lv_group_add_obj(ui_group, ui_lblCoreItem);
             lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
 
-            int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblCoreItem, base_filename);
+            int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, base_filename);
             apply_align(&theme, &device, ui_lblCoreItemGlyph, ui_lblCoreItem, item_width);
         }
         if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
@@ -356,12 +356,12 @@ void create_core_items(const char *target) {
         apply_theme_list_item(&theme, ui_lblCoreItem, core_headers[i], false, false);
 
         lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
-        apply_theme_list_glyph(&theme, &device, ui_lblCoreItemGlyph, mux_prog, "core");
+        apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_prog, "core");
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
 
-        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblCoreItem, core_headers[i]);
+        int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, core_headers[i]);
         apply_align(&theme, &device, ui_lblCoreItemGlyph, ui_lblCoreItem, item_width);
 
         free(core_headers[i]);

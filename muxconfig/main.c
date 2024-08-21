@@ -109,11 +109,11 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblServices, "Web Services", false, false);
     apply_theme_list_item(&theme, ui_lblRTC, "Date and Time", false, false);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoTweakGeneral, mux_prog, "general");
-    apply_theme_list_glyph(&theme, &device, ui_icoTheme, mux_prog, "theme");
-    apply_theme_list_glyph(&theme, &device, ui_icoNetwork, mux_prog, "network");
-    apply_theme_list_glyph(&theme, &device, ui_icoServices, mux_prog, "service");
-    apply_theme_list_glyph(&theme, &device, ui_icoRTC, mux_prog, "clock");
+    apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_prog, "general");
+    apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
+    apply_theme_list_glyph(&theme, ui_icoNetwork, mux_prog, "network");
+    apply_theme_list_glyph(&theme, ui_icoServices, mux_prog, "service");
+    apply_theme_list_glyph(&theme, ui_icoRTC, mux_prog, "clock");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -123,7 +123,7 @@ void init_navigation_groups() {
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
 
         apply_align(&theme, &device, ui_icons[i], ui_objects[i],
-                    apply_size_to_content(&theme, &device, ui_pnlContent,
+                    apply_size_to_content(&theme, ui_pnlContent,
                                           ui_objects[i], lv_label_get_text(ui_objects[i])));
     }
 }

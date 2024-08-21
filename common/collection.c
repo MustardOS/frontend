@@ -9,27 +9,28 @@
 #include "config.h"
 #include "options.h"
 
-content_item* add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name, content_type content_type) {
+content_item *add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name,
+                       content_type content_type) {
     *content_items = realloc(*content_items, (*count + 1) * sizeof(content_item));
-    
+
     (*content_items)[*count].name = strdup(name);
     (*content_items)[*count].display_name = strdup(sort_name);
     (*content_items)[*count].sort_name = strdup(sort_name);
     (*content_items)[*count].content_type = content_type;
 
     (*count)++;
-    
+
     return &(*content_items)[*count - 1];
 }
 
 int content_item_compare(const void *a, const void *b) {
-    content_item *itemA = (content_item *)a;
-    content_item *itemB = (content_item *)b;
+    content_item *itemA = (content_item *) a;
+    content_item *itemB = (content_item *) b;
 
     // Compare content_type in descending order
     if (itemA->content_type < itemB->content_type) return -1;
     if (itemA->content_type > itemB->content_type) return 1;
-    
+
     const char *str1 = itemA->sort_name;
     const char *str2 = itemB->sort_name;
 
@@ -49,8 +50,8 @@ int content_item_compare(const void *a, const void *b) {
 }
 
 int time_compare_for_history(const void *a, const void *b) {
-    content_item *itemA = (content_item *)a;
-    content_item *itemB = (content_item *)b;    
+    content_item *itemA = (content_item *) a;
+    content_item *itemB = (content_item *) b;
 
     char mod_file_a[MAX_BUFFER_SIZE];
     char mod_file_b[MAX_BUFFER_SIZE];
@@ -124,8 +125,8 @@ void print_items(content_item *content_items, size_t count) {
     for (size_t i = 0; i < count; i++) {
         char message[1024];
         snprintf(message, sizeof(message), "Item %zu  file_name=%s  display_name=%s  sort_name=%s  content_type=%d\n",
-               i, content_items[i].name, content_items[i].display_name, content_items[i].sort_name, content_items[i].content_type);
+                 i, content_items[i].name, content_items[i].display_name, content_items[i].sort_name,
+                 content_items[i].content_type);
         write_text_to_file("/mnt/mmc/MUOS/log/collection.log", "a", CHAR, message);
     }
 }
-

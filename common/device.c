@@ -25,8 +25,10 @@ void load_device(struct mux_device *device) {
 
     device->STORAGE.BOOT.PARTITION = atoi(read_text_from_file("/run/muos/device/storage/boot/num"));
     strncpy(device->STORAGE.BOOT.DEVICE, read_text_from_file("/run/muos/device/storage/boot/dev"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.BOOT.SEPARATOR, read_text_from_file("/run/muos/device/storage/boot/sep"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.BOOT.MOUNT, read_text_from_file("/run/muos/device/storage/boot/mount"), MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.BOOT.SEPARATOR, read_text_from_file("/run/muos/device/storage/boot/sep"),
+            MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.BOOT.MOUNT, read_text_from_file("/run/muos/device/storage/boot/mount"),
+            MAX_BUFFER_SIZE - 1);
     strncpy(device->STORAGE.BOOT.TYPE, read_text_from_file("/run/muos/device/storage/boot/type"), MAX_BUFFER_SIZE - 1);
     device->STORAGE.BOOT.DEVICE[MAX_BUFFER_SIZE - 1] = '\0';
     device->STORAGE.BOOT.MOUNT[MAX_BUFFER_SIZE - 1] = '\0';
@@ -34,7 +36,8 @@ void load_device(struct mux_device *device) {
 
     device->STORAGE.ROM.PARTITION = atoi(read_text_from_file("/run/muos/device/storage/rom/num"));
     strncpy(device->STORAGE.ROM.DEVICE, read_text_from_file("/run/muos/device/storage/rom/dev"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.ROM.SEPARATOR, read_text_from_file("/run/muos/device/storage/rom/sep"), MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.ROM.SEPARATOR, read_text_from_file("/run/muos/device/storage/rom/sep"),
+            MAX_BUFFER_SIZE - 1);
     strncpy(device->STORAGE.ROM.MOUNT, read_text_from_file("/run/muos/device/storage/rom/mount"), MAX_BUFFER_SIZE - 1);
     strncpy(device->STORAGE.ROM.TYPE, read_text_from_file("/run/muos/device/storage/rom/type"), MAX_BUFFER_SIZE - 1);
     device->STORAGE.ROM.DEVICE[MAX_BUFFER_SIZE - 1] = '\0';
@@ -43,25 +46,32 @@ void load_device(struct mux_device *device) {
 
     device->STORAGE.ROOT.PARTITION = atoi(read_text_from_file("/run/muos/device/storage/root/num"));
     strncpy(device->STORAGE.ROOT.DEVICE, read_text_from_file("/run/muos/device/storage/root/dev"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.ROOT.SEPARATOR, read_text_from_file("/run/muos/device/storage/root/sep"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.ROOT.MOUNT, read_text_from_file("/run/muos/device/storage/root/mount"), MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.ROOT.SEPARATOR, read_text_from_file("/run/muos/device/storage/root/sep"),
+            MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.ROOT.MOUNT, read_text_from_file("/run/muos/device/storage/root/mount"),
+            MAX_BUFFER_SIZE - 1);
     strncpy(device->STORAGE.ROOT.TYPE, read_text_from_file("/run/muos/device/storage/root/type"), MAX_BUFFER_SIZE - 1);
     device->STORAGE.ROOT.DEVICE[MAX_BUFFER_SIZE - 1] = '\0';
     device->STORAGE.ROOT.MOUNT[MAX_BUFFER_SIZE - 1] = '\0';
     device->STORAGE.ROOT.TYPE[MAX_BUFFER_SIZE - 1] = '\0';
 
     device->STORAGE.SDCARD.PARTITION = atoi(read_text_from_file("/run/muos/device/storage/sdcard/num"));
-    strncpy(device->STORAGE.SDCARD.DEVICE, read_text_from_file("/run/muos/device/storage/sdcard/dev"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.SDCARD.SEPARATOR, read_text_from_file("/run/muos/device/storage/sdcard/sep"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.SDCARD.MOUNT, read_text_from_file("/run/muos/device/storage/sdcard/mount"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.SDCARD.TYPE, read_text_from_file("/run/muos/device/storage/sdcard/type"), MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.SDCARD.DEVICE, read_text_from_file("/run/muos/device/storage/sdcard/dev"),
+            MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.SDCARD.SEPARATOR, read_text_from_file("/run/muos/device/storage/sdcard/sep"),
+            MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.SDCARD.MOUNT, read_text_from_file("/run/muos/device/storage/sdcard/mount"),
+            MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.SDCARD.TYPE, read_text_from_file("/run/muos/device/storage/sdcard/type"),
+            MAX_BUFFER_SIZE - 1);
     device->STORAGE.SDCARD.DEVICE[MAX_BUFFER_SIZE - 1] = '\0';
     device->STORAGE.SDCARD.MOUNT[MAX_BUFFER_SIZE - 1] = '\0';
     device->STORAGE.SDCARD.TYPE[MAX_BUFFER_SIZE - 1] = '\0';
 
     device->STORAGE.USB.PARTITION = atoi(read_text_from_file("/run/muos/device/storage/usb/num"));
     strncpy(device->STORAGE.USB.DEVICE, read_text_from_file("/run/muos/device/storage/usb/dev"), MAX_BUFFER_SIZE - 1);
-    strncpy(device->STORAGE.USB.SEPARATOR, read_text_from_file("/run/muos/device/storage/usb/sep"), MAX_BUFFER_SIZE - 1);
+    strncpy(device->STORAGE.USB.SEPARATOR, read_text_from_file("/run/muos/device/storage/usb/sep"),
+            MAX_BUFFER_SIZE - 1);
     strncpy(device->STORAGE.USB.MOUNT, read_text_from_file("/run/muos/device/storage/usb/mount"), MAX_BUFFER_SIZE - 1);
     strncpy(device->STORAGE.USB.TYPE, read_text_from_file("/run/muos/device/storage/usb/type"), MAX_BUFFER_SIZE - 1);
     device->STORAGE.USB.DEVICE[MAX_BUFFER_SIZE - 1] = '\0';
@@ -83,7 +93,7 @@ void load_device(struct mux_device *device) {
     device->NETWORK.TYPE[MAX_BUFFER_SIZE - 1] = '\0';
     device->NETWORK.INTERFACE[MAX_BUFFER_SIZE - 1] = '\0';
     device->NETWORK.STATE[MAX_BUFFER_SIZE - 1] = '\0';
-    
+
     device->SCREEN.BRIGHT = atoi(read_text_from_file("/run/muos/device/screen/bright"));
     device->SCREEN.BUFFER = atoi(read_text_from_file("/run/muos/device/screen/buffer"));
     device->SCREEN.WIDTH = atoi(read_text_from_file("/run/muos/device/screen/width"));
@@ -94,7 +104,7 @@ void load_device(struct mux_device *device) {
     strncpy(device->SCREEN.HDMI, read_text_from_file("/run/muos/device/screen/hdmi"), MAX_BUFFER_SIZE - 1);
     device->SCREEN.DEVICE[MAX_BUFFER_SIZE - 1] = '\0';
     device->SCREEN.HDMI[MAX_BUFFER_SIZE - 1] = '\0';
-    
+
     device->AUDIO.MIN = atoi(read_text_from_file("/run/muos/device/audio/min"));
     device->AUDIO.MAX = atoi(read_text_from_file("/run/muos/device/audio/max"));
     strncpy(device->AUDIO.CONTROL, read_text_from_file("/run/muos/device/audio/control"), MAX_BUFFER_SIZE - 1);

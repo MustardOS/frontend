@@ -259,14 +259,14 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblScreenshot, "Screenshots", false, true);
     apply_theme_list_item(&theme, ui_lblTheme, "Themes", false, true);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoBIOS, mux_prog, "bios");
-    apply_theme_list_glyph(&theme, &device, ui_icoConfig, mux_prog, "config");
-    apply_theme_list_glyph(&theme, &device, ui_icoCatalogue, mux_prog, "catalogue");
-    apply_theme_list_glyph(&theme, &device, ui_icoFav, mux_prog, "fav");
-    apply_theme_list_glyph(&theme, &device, ui_icoMusic, mux_prog, "music");
-    apply_theme_list_glyph(&theme, &device, ui_icoSave, mux_prog, "save");
-    apply_theme_list_glyph(&theme, &device, ui_icoScreenshot, mux_prog, "screenshot");
-    apply_theme_list_glyph(&theme, &device, ui_icoTheme, mux_prog, "theme");
+    apply_theme_list_glyph(&theme, ui_icoBIOS, mux_prog, "bios");
+    apply_theme_list_glyph(&theme, ui_icoConfig, mux_prog, "config");
+    apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_prog, "catalogue");
+    apply_theme_list_glyph(&theme, ui_icoFav, mux_prog, "fav");
+    apply_theme_list_glyph(&theme, ui_icoMusic, mux_prog, "music");
+    apply_theme_list_glyph(&theme, ui_icoSave, mux_prog, "save");
+    apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_prog, "screenshot");
+    apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
 
     apply_theme_list_drop_down(&theme, ui_droBIOS, "SD1\nSD2\nUSB");
     apply_theme_list_drop_down(&theme, ui_droConfig, "SD1\nSD2\nUSB");

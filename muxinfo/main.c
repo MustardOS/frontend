@@ -99,10 +99,10 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblSystem, "System Details", false, false);
     apply_theme_list_item(&theme, ui_lblCredits, "Supporters", false, false);
 
-    //apply_theme_list_glyph(&theme, &device, ui_icoTracker, mux_prog, "tracker");
-    apply_theme_list_glyph(&theme, &device, ui_icoTester, mux_prog, "tester");
-    apply_theme_list_glyph(&theme, &device, ui_icoSystem, mux_prog, "system");
-    apply_theme_list_glyph(&theme, &device, ui_icoCredits, mux_prog, "credit");
+    //apply_theme_list_glyph(&theme, ui_icoTracker, mux_prog, "tracker");
+    apply_theme_list_glyph(&theme, ui_icoTester, mux_prog, "tester");
+    apply_theme_list_glyph(&theme, ui_icoSystem, mux_prog, "system");
+    apply_theme_list_glyph(&theme, ui_icoCredits, mux_prog, "credit");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -112,7 +112,7 @@ void init_navigation_groups() {
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
 
         apply_align(&theme, &device, ui_icons[i], ui_objects[i],
-                    apply_size_to_content(&theme, &device, ui_pnlContent,
+                    apply_size_to_content(&theme, ui_pnlContent,
                                           ui_objects[i], lv_label_get_text(ui_objects[i])));
     }
 }

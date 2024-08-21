@@ -91,12 +91,12 @@ void create_timezone_items() {
         apply_theme_list_item(&theme, ui_lblTimezoneItem, base_key, false, false);
 
         lv_obj_t * ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
-        apply_theme_list_glyph(&theme, &device, ui_lblTimezoneGlyph, mux_prog, "timezone");
+        apply_theme_list_glyph(&theme, ui_lblTimezoneGlyph, mux_prog, "timezone");
 
         lv_group_add_obj(ui_group, ui_lblTimezoneItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTimezoneGlyph);
 
-        int item_width = apply_size_to_content(&theme, &device, ui_pnlContent, ui_lblTimezoneItem, base_key);
+        int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblTimezoneItem, base_key);
         apply_align(&theme, &device, ui_lblTimezoneGlyph, ui_lblTimezoneItem, item_width);
     }
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);

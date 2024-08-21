@@ -606,17 +606,17 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblStorage, "Storage Preference", false, true);
     apply_theme_list_item(&theme, ui_lblAdvanced, "Advanced Settings", false, true);
 
-    apply_theme_list_glyph(&theme, &device, ui_icoHidden, mux_prog, "hidden");
-    apply_theme_list_glyph(&theme, &device, ui_icoBGM, mux_prog, "bgm");
-    apply_theme_list_glyph(&theme, &device, ui_icoSound, mux_prog, "sound");
-    apply_theme_list_glyph(&theme, &device, ui_icoStartup, mux_prog, "startup");
-    apply_theme_list_glyph(&theme, &device, ui_icoColour, mux_prog, "colour");
-    apply_theme_list_glyph(&theme, &device, ui_icoBrightness, mux_prog, "brightness");
-    apply_theme_list_glyph(&theme, &device, ui_icoHDMI, mux_prog, "hdmi");
-    apply_theme_list_glyph(&theme, &device, ui_icoShutdown, mux_prog, "shutdown");
-    apply_theme_list_glyph(&theme, &device, ui_icoInterface, mux_prog, "interface");
-    apply_theme_list_glyph(&theme, &device, ui_icoStorage, mux_prog, "storage");
-    apply_theme_list_glyph(&theme, &device, ui_icoAdvanced, mux_prog, "advanced");
+    apply_theme_list_glyph(&theme, ui_icoHidden, mux_prog, "hidden");
+    apply_theme_list_glyph(&theme, ui_icoBGM, mux_prog, "bgm");
+    apply_theme_list_glyph(&theme, ui_icoSound, mux_prog, "sound");
+    apply_theme_list_glyph(&theme, ui_icoStartup, mux_prog, "startup");
+    apply_theme_list_glyph(&theme, ui_icoColour, mux_prog, "colour");
+    apply_theme_list_glyph(&theme, ui_icoBrightness, mux_prog, "brightness");
+    apply_theme_list_glyph(&theme, ui_icoHDMI, mux_prog, "hdmi");
+    apply_theme_list_glyph(&theme, ui_icoShutdown, mux_prog, "shutdown");
+    apply_theme_list_glyph(&theme, ui_icoInterface, mux_prog, "interface");
+    apply_theme_list_glyph(&theme, ui_icoStorage, mux_prog, "storage");
+    apply_theme_list_glyph(&theme, ui_icoAdvanced, mux_prog, "advanced");
 
     apply_theme_list_drop_down(&theme, ui_droHidden, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droBGM, "Disabled\nEnabled");
