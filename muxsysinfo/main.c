@@ -184,17 +184,17 @@ void update_system_info() {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-        ui_lblVersion,
-        ui_lblKernel,
-        ui_lblUptime,
-        ui_lblCPU,
-        ui_lblSpeed,
-        ui_lblGovernor,
-        ui_lblMemory,
-        ui_lblTemp,
-        ui_lblServices,
-        ui_lblBatteryCap,
-        ui_lblVoltage,
+        ui_pnlVersion,
+        ui_pnlKernel,
+        ui_pnlUptime,
+        ui_pnlCPU,
+        ui_pnlSpeed,
+        ui_pnlGovernor,
+        ui_pnlMemory,
+        ui_pnlTemp,
+        ui_pnlServices,
+        ui_pnlBatteryCap,
+        ui_pnlVoltage,
     };
 
     ui_objects[0] = ui_lblVersion;
