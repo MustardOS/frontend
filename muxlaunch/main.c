@@ -97,7 +97,7 @@ void show_help(lv_obj_t *element_focused) {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-        ui_pnlContent,
+        ui_pnlExplore,
         ui_pnlFavourites,
         ui_pnlHistory,
         ui_pnlApps,
