@@ -12,11 +12,11 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (config->BOOT.FACTORY_RESET) {
         snprintf(scheme, sizeof(scheme), "%s/theme/scheme/default.txt", INTERNAL_PATH);
     } else {
-        snprintf(scheme, sizeof(scheme), "%s/MUOS/theme/active/scheme/%s.txt",
-                 get_default_storage(config->STORAGE.THEME), mux_name);
+        snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/%s.txt",
+                 STORAGE_PATH, mux_name);
         if (!file_exist(scheme)) {
-            snprintf(scheme, sizeof(scheme), "%s/MUOS/theme/active/scheme/default.txt",
-                     get_default_storage(config->STORAGE.THEME));
+            snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/default.txt",
+                     STORAGE_PATH);
             if (!file_exist(scheme)) {
                 snprintf(scheme, sizeof(scheme), "%s/theme/scheme/default.txt", INTERNAL_PATH);
                 // TODO: Is there a better way to do fallback?
@@ -470,15 +470,12 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
                             const char *screen_name, char *item_glyph) {
     if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0) return;
 
-    const char *store_catalogue;
-    store_catalogue = get_default_storage(config.STORAGE.CATALOGUE);
-
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
-    snprintf(image, sizeof(image), "%s/MUOS/theme/active/glyph/%s/%s.png",
-             store_catalogue, screen_name, item_glyph);
-    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/theme/active/glyph/%s/%s.png",
-             store_catalogue, screen_name, item_glyph);
+    snprintf(image, sizeof(image), "%s/theme/active/glyph/%s/%s.png",
+             STORAGE_PATH, screen_name, item_glyph);
+    snprintf(image_path, sizeof(image_path), "M:%s/theme/active/glyph/%s/%s.png",
+             STORAGE_PATH, screen_name, item_glyph);
 
     if (!file_exist(image)) return;
 

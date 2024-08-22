@@ -20,22 +20,6 @@
 
 struct pattern skip_pattern_list = {NULL, 0, 0};
 
-const char *get_default_storage(int store_type) {
-    switch (store_type) {
-        case 0:
-            return device.STORAGE.ROM.MOUNT;
-            break;
-        case 1:
-            return device.STORAGE.SDCARD.MOUNT;
-            break;
-        case 2:
-            return device.STORAGE.USB.MOUNT;
-            break;
-        default:
-            return device.STORAGE.ROM.MOUNT;
-    }
-}
-
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
 }
@@ -998,10 +982,8 @@ void load_mux(const char *value) {
 
 void play_sound(const char *sound, int enabled, int wait) {
     if (enabled) {
-        const char *theme_path = get_default_storage(config.STORAGE.THEME);
-
         char ns_file[MAX_BUFFER_SIZE];
-        snprintf(ns_file, sizeof(ns_file), "%s/MUOS/theme/active/sound/%s.wav", theme_path, sound);
+        snprintf(ns_file, sizeof(ns_file), "%s/theme/active/sound/%s.wav", STORAGE_PATH, sound);
 
         if (file_exist(ns_file)) {
             printf("PLAYING SOUND: %s\n", ns_file);
@@ -1131,28 +1113,28 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
             const char *element = lv_obj_get_user_data(element_focused);
 
-            if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/MUOS/theme/active/image/wall/%s/%s.%s",
-                         get_default_storage(config.STORAGE.THEME), program, element,
+            if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/%s/%s.%s",
+                         STORAGE_PATH, program, element,
                          wall_extension) >= 0 && file_exist(wall_image_path)) {
-                snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/%s/%s.%s",
-                         get_default_storage(config.STORAGE.THEME), program, element, wall_extension);
+                snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/%s/%s.%s",
+                         STORAGE_PATH, program, element, wall_extension);
                 return wall_image_embed;
             }
         }
     }
 
-    if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/MUOS/theme/active/image/wall/%s.%s",
-                 get_default_storage(config.STORAGE.THEME), program, wall_extension) >= 0 &&
+    if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/%s.%s",
+                 STORAGE_PATH, program, wall_extension) >= 0 &&
         file_exist(wall_image_path)) {
-        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/%s.%s",
-                 get_default_storage(config.STORAGE.THEME), program, wall_extension);
+        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/%s.%s",
+                 STORAGE_PATH, program, wall_extension);
         return wall_image_embed;
     }
 
-    if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/MUOS/theme/active/image/wall/default.%s",
-                 get_default_storage(config.STORAGE.THEME), wall_extension) >= 0 && file_exist(wall_image_path)) {
-        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/MUOS/theme/active/image/wall/default.%s",
-                 get_default_storage(config.STORAGE.THEME), wall_extension);
+    if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/default.%s",
+                 STORAGE_PATH, wall_extension) >= 0 && file_exist(wall_image_path)) {
+        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/default.%s",
+                 STORAGE_PATH, wall_extension);
         return wall_image_embed;
     }
 
@@ -1169,17 +1151,16 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
         const char *element = lv_obj_get_user_data(element_focused);
 
-        if (snprintf(static_image_path, sizeof(static_image_path), "%s/MUOS/theme/active/image/static/%s.png",
-                     get_default_storage(config.STORAGE.THEME), program) >= 0 && file_exist(static_image_path)) {
-            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/static/%s.png",
-                     get_default_storage(config.STORAGE.THEME), program);
+        if (snprintf(static_image_path, sizeof(static_image_path), "%s/theme/active/image/static/%s.png",
+                     STORAGE_PATH, program) >= 0 && file_exist(static_image_path)) {
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/theme/active/image/static/%s.png",
+                     STORAGE_PATH, program);
             return static_image_embed;
-        } else if (snprintf(static_image_path, sizeof(static_image_path),
-                            "%s/MUOS/theme/active/image/static/%s/%s.png",
-                            get_default_storage(config.STORAGE.THEME), program, element) >= 0 &&
+        } else if (snprintf(static_image_path, sizeof(static_image_path), "%s/theme/active/image/static/%s/%s.png",
+                            STORAGE_PATH, program, element) >= 0 &&
                    file_exist(static_image_path)) {
-            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/static/%s/%s.png",
-                     get_default_storage(config.STORAGE.THEME), program, element);
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/theme/active/image/static/%s/%s.png",
+                     STORAGE_PATH, program, element);
             return static_image_embed;
         }
     }
@@ -1191,11 +1172,11 @@ char *load_overlay_image() {
     static char static_image_path[MAX_BUFFER_SIZE];
     static char static_image_embed[MAX_BUFFER_SIZE];
 
-    if (snprintf(static_image_path, sizeof(static_image_path), "%s/MUOS/theme/active/image/overlay.png",
-                 get_default_storage(config.STORAGE.THEME)) >= 0 &&
+    if (snprintf(static_image_path, sizeof(static_image_path), "%s/theme/active/image/overlay.png",
+                 STORAGE_PATH) >= 0 &&
         file_exist(static_image_path)) {
-        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/MUOS/theme/active/image/overlay.png",
-                 get_default_storage(config.STORAGE.THEME));
+        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/theme/active/image/overlay.png",
+                 STORAGE_PATH);
         return static_image_embed;
     }
 
@@ -1207,20 +1188,20 @@ void load_font_text(const char *program, lv_obj_t *screen) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
         char theme_font_text[MAX_BUFFER_SIZE];
         snprintf(theme_font_text_default, sizeof(theme_font_text_default),
-                 "%s/MUOS/theme/active/font/default.bin", get_default_storage(config.STORAGE.THEME));
+                 "%s/theme/active/font/default.bin", STORAGE_PATH);
         snprintf(theme_font_text, sizeof(theme_font_text),
-                 "%s/MUOS/theme/active/font/%s.bin", get_default_storage(config.STORAGE.THEME), program);
+                 "%s/theme/active/font/%s.bin", STORAGE_PATH, program);
         if (file_exist(theme_font_text)) {
             char theme_font_text_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
-                     "M:%s/MUOS/theme/active/font/%s.bin", get_default_storage(config.STORAGE.THEME), program);
+                     "M:%s/theme/active/font/%s.bin", STORAGE_PATH, program);
             lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             if (file_exist(theme_font_text_default)) {
                 char theme_font_text_default_fs[MAX_BUFFER_SIZE];
                 snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                         "M:%s/MUOS/theme/active/font/default.bin", get_default_storage(config.STORAGE.THEME));
+                         "M:%s/theme/active/font/default.bin", STORAGE_PATH);
                 lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
             }
@@ -1235,22 +1216,22 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
         char theme_font_section_default[MAX_BUFFER_SIZE];
         char theme_font_section[MAX_BUFFER_SIZE];
         snprintf(theme_font_section_default, sizeof(theme_font_section_default),
-                 "%s/MUOS/theme/active/font/%s/default.bin", get_default_storage(config.STORAGE.THEME), section);
+                 "%s/theme/active/font/%s/default.bin", STORAGE_PATH, section);
         snprintf(theme_font_section, sizeof(theme_font_section),
-                 "%s/MUOS/theme/active/font/%s/%s.bin", get_default_storage(config.STORAGE.THEME), section, program);
+                 "%s/theme/active/font/%s/%s.bin", STORAGE_PATH, section, program);
         if (file_exist(theme_font_section)) {
             char theme_font_section_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_section_fs, sizeof(theme_font_section_fs),
-                     "M:%s/MUOS/theme/active/font/%s/%s.bin",
-                     get_default_storage(config.STORAGE.THEME), section, program);
+                     "M:%s/theme/active/font/%s/%s.bin",
+                     STORAGE_PATH, section, program);
             lv_obj_set_style_text_font(element, lv_font_load(theme_font_section_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             if (file_exist(theme_font_section_default)) {
                 char theme_font_section_default_fs[MAX_BUFFER_SIZE];
                 snprintf(theme_font_section_default_fs, sizeof(theme_font_section_default_fs),
-                         "M:%s/MUOS/theme/active/font/%s/default.bin",
-                         get_default_storage(config.STORAGE.THEME), section);
+                         "M:%s/theme/active/font/%s/default.bin",
+                         STORAGE_PATH, section);
                 lv_obj_set_style_text_font(element, lv_font_load(theme_font_section_default_fs),
                                            LV_PART_MAIN | LV_STATE_DEFAULT);
                 printf("\t\t\t\tLOADED DEFAULT %s FONT (%s)\n", section, theme_font_section_default_fs);

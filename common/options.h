@@ -13,6 +13,7 @@
 #define TIME_STRING_24 "%H:%M"
 
 #define INTERNAL_PATH "/opt/muos"
+#define STORAGE_PATH  "/run/muos/storage"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch

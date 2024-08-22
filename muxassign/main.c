@@ -70,8 +70,6 @@ char *auto_assign;
 char *rom_dir;
 char *rom_system;
 
-const char *store_favourite;
-
 enum core_gen_type {
     SINGLE,
     DIRECTORY,
@@ -152,8 +150,8 @@ void free_subdirectories(char **dir_names) {
 
 void create_core_assignment(const char *core, char *sys, int cache, enum core_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), "%s/MUOS/info/core/%s/",
-             store_favourite, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_dir, sizeof(core_dir), "%s/info/core/%s/",
+             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
     create_directories(core_dir);
     //delete_files_of_type(core_dir, "cfg", NULL);
@@ -164,8 +162,8 @@ void create_core_assignment(const char *core, char *sys, int cache, enum core_ge
             break;
         case PARENT: {
             char subdir_path[MAX_BUFFER_SIZE];
-            snprintf(subdir_path, sizeof(subdir_path), "%s/MUOS/info/core/%s/",
-                     store_favourite, get_last_subdir(rom_dir, '/', 4));
+            snprintf(subdir_path, sizeof(subdir_path), "%s/info/core/%s/",
+                     STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
             char **subdirs = get_subdirectories(rom_dir);
             if (subdirs != NULL) {
@@ -191,8 +189,8 @@ void create_core_assignment(const char *core, char *sys, int cache, enum core_ge
         case DIRECTORY:
         default: {
             char core_file[MAX_BUFFER_SIZE];
-            snprintf(core_file, sizeof(core_file), "%s/MUOS/info/core/%s/core.cfg",
-                     store_favourite, get_last_subdir(rom_dir, '/', 4));
+            snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
+                     STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
             FILE * file = fopen(core_file, "w");
             if (file == NULL) {
@@ -893,7 +891,6 @@ int main(int argc, char *argv[]) {
     }
 
     load_config(&config);
-    store_favourite = get_default_storage(config.STORAGE.FAV);
 
     printf("ASSIGN CORE ROM_DIR: \"%s\"\n", rom_dir);
     printf("ASSIGN CORE ROM_SYS: \"%s\"\n", rom_system);
@@ -902,8 +899,8 @@ int main(int argc, char *argv[]) {
         printf("ASSIGN AUTO INITIATED\n");
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "%s/MUOS/info/core/%s/core.cfg",
-                 store_favourite, get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
+                 STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
             return 0;

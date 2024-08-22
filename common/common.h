@@ -56,8 +56,6 @@ struct pattern {
     size_t capacity;
 };
 
-const char* get_default_storage(int store_type);
-
 int file_exist(char *filename);
 
 int check_file_size(char *filename, int filesize);

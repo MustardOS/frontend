@@ -56,10 +56,10 @@ int time_compare_for_history(const void *a, const void *b) {
     char mod_file_a[MAX_BUFFER_SIZE];
     char mod_file_b[MAX_BUFFER_SIZE];
 
-    snprintf(mod_file_a, sizeof(mod_file_a), "%s/MUOS/info/history/%s.cfg",
-             get_default_storage(config.STORAGE.FAV), strip_ext(itemA->name));
-    snprintf(mod_file_b, sizeof(mod_file_b), "%s/MUOS/info/history/%s.cfg",
-             get_default_storage(config.STORAGE.FAV), strip_ext(itemB->name));
+    snprintf(mod_file_a, sizeof(mod_file_a), "%s/info/history/%s.cfg",
+             STORAGE_PATH, strip_ext(itemA->name));
+    snprintf(mod_file_b, sizeof(mod_file_b), "%s/info/history/%s.cfg",
+             STORAGE_PATH, strip_ext(itemB->name));
 
     if (access(mod_file_a, F_OK) != 0) {
         printf("Error: %s does not exist\n", mod_file_a);
