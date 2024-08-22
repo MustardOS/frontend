@@ -60,6 +60,7 @@ int progress_onscreen = -1;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
+lv_group_t *ui_group_panel;
 
 // Modify the following integer to number of static menu elements
 #define UI_COUNT 8
@@ -95,6 +96,17 @@ void show_help(lv_obj_t *element_focused) {
 }
 
 void init_navigation_groups() {
+    lv_obj_t *ui_objects_panel[] = {
+        ui_pnlContent,
+        ui_pnlFavourites,
+        ui_pnlHistory,
+        ui_pnlApps,
+        ui_pnlInfo,
+        ui_pnlConfig,
+        ui_pnlReboot,
+        ui_pnlShutdown,
+    };
+
     ui_objects[0] = ui_lblContent;
     ui_objects[1] = ui_lblFavourites;
     ui_objects[2] = ui_lblHistory;
@@ -142,14 +154,14 @@ void init_navigation_groups() {
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
 
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
+        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
 
-        apply_align(&theme, &device, ui_icons[i], ui_objects[i],
-                    apply_size_to_content(&theme, ui_pnlContent,
-                                          ui_objects[i], lv_label_get_text(ui_objects[i])));
+        apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
     }
 }
 
@@ -159,6 +171,7 @@ void list_nav_prev(int steps) {
         current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
+        nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     nav_moved = 1;
@@ -174,6 +187,7 @@ void list_nav_next(int steps) {
         current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
+        nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     nav_moved = 1;

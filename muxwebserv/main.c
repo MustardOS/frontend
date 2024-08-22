@@ -72,6 +72,7 @@ WebServices shell, browser, terminal, syncthing, ntp;
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
+lv_group_t *ui_group_panel;
 
 lv_obj_t *ui_objects[5];
 
@@ -184,6 +185,14 @@ void save_web_options() {
 }
 
 void init_navigation_groups() {
+    lv_obj_t *ui_objects_panel[] = {
+        ui_pnlShell,
+        ui_pnlBrowser,
+        ui_pnlTerminal,
+        ui_pnlSyncthing,
+        ui_pnlNTP,
+    };
+
     ui_objects[0] = ui_lblShell;
     ui_objects[1] = ui_lblBrowser;
     ui_objects[2] = ui_lblTerminal;
@@ -233,11 +242,13 @@ void init_navigation_groups() {
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
 
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_icon[i]);
+        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 }
 
@@ -351,6 +362,7 @@ void *joystick_task() {
                                 nav_prev(ui_group, 1);
                                 nav_prev(ui_group_value, 1);
                                 nav_prev(ui_group_glyph, 1);
+                                nav_prev(ui_group_panel, 1);
                                 nav_moved = 1;
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
@@ -359,6 +371,7 @@ void *joystick_task() {
                                 nav_next(ui_group, 1);
                                 nav_next(ui_group_value, 1);
                                 nav_next(ui_group_glyph, 1);
+                                nav_next(ui_group_panel, 1);
                                 nav_moved = 1;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
