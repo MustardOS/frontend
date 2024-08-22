@@ -4,8 +4,9 @@
 // Project name: muxnetwork
 
 #include "ui.h"
+#include "../../common/theme.h"
 
-void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent)
+void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent, struct theme_config *theme)
 {
     ui_pnlEnable = lv_obj_create(ui_pnlContent);
     ui_pnlIdentifier = lv_obj_create(ui_pnlContent);
@@ -51,9 +52,8 @@ void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent)
     lv_obj_set_width(ui_pnlStatusCore, 640);
     lv_obj_set_height(ui_pnlStatusCore, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_pnlStatusCore, LV_ALIGN_BOTTOM_MID);
-    lv_obj_set_y(ui_pnlStatusCore, -47);
-    lv_obj_set_flex_flow(ui_pnlStatusCore, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlStatusCore, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_y(ui_pnlStatusCore, -theme->FOOTER.HEIGHT -5);
+    lv_obj_set_flex_flow(ui_pnlStatusCore, LV_FLEX_FLOW_COLUMN);
     lv_obj_clear_flag(ui_pnlStatusCore, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
     lv_obj_set_style_bg_color(ui_pnlStatusCore, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlStatusCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -66,7 +66,13 @@ void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent)
     lv_obj_set_style_pad_column(ui_pnlStatusCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlStatus = lv_obj_create(ui_pnlStatusCore);
-    lv_obj_set_align(ui_pnlStatus, LV_ALIGN_CENTER);
+    if (theme->MISC.CONTENT.ALIGNMENT == 1) {
+        lv_obj_set_x(ui_pnlStatusCore, (640 - theme->MISC.CONTENT.WIDTH) / 2 + theme->MISC.CONTENT.PADDING_LEFT);
+    } else if (theme->MISC.CONTENT.ALIGNMENT == 2) {
+        lv_obj_set_x(ui_pnlStatusCore, 640 - theme->MISC.CONTENT.WIDTH + theme->MISC.CONTENT.PADDING_LEFT);
+    } else{
+        lv_obj_set_x(ui_pnlStatusCore, theme->MISC.CONTENT.PADDING_LEFT);
+    }
 
     ui_lblStatus = lv_label_create(ui_pnlStatus);
     ui_icoStatus = lv_img_create(ui_pnlStatus);
