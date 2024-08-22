@@ -95,16 +95,23 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_pnlContent, theme->MISC.CONTENT.HEIGHT);
     lv_obj_set_x(ui_pnlContent, 0);
     lv_obj_set_y(ui_pnlContent, theme->HEADER.HEIGHT + 2 + theme->MISC.CONTENT.PADDING_TOP);
-    lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_COLUMN);
+    if (theme->MISC.CONTENT.ALIGNMENT == 1) {
+        lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_style_pad_left(ui_pnlContent, theme->MISC.CONTENT.PADDING_LEFT * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else if (theme->MISC.CONTENT.ALIGNMENT == 2) {
+        lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_END);
+        lv_obj_set_style_pad_right(ui_pnlContent, -theme->MISC.CONTENT.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else{
+        lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+        lv_obj_set_style_pad_left(ui_pnlContent, theme->MISC.CONTENT.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
     lv_obj_clear_flag(ui_pnlContent, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_pnlContent, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_dir(ui_pnlContent, LV_DIR_VER);
     lv_obj_set_style_bg_color(ui_pnlContent, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_pnlContent, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(ui_pnlContent, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -177,7 +184,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblDatetime, theme->DATETIME.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblDatetime, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblDatetime, theme->FONT.HEADER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblDatetime, theme->FONT.HEADER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblDatetime, theme->FONT.HEADER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblTitle = lv_label_create(ui_pnlHeader);
     lv_obj_set_width(ui_lblTitle, 630);
@@ -191,7 +198,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblTitle, theme->FONT.HEADER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblTitle, theme->FONT.HEADER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblTitle, theme->FONT.HEADER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_conGlyphs = lv_obj_create(ui_pnlHeader);
     lv_obj_remove_style_all(ui_conGlyphs);
@@ -221,8 +228,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_font(ui_staBluetooth, &ui_font_AwesomeBrand, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_staBluetooth, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_staBluetooth, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staBluetooth, theme->FONT.HEADER_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staBluetooth, theme->FONT.HEADER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_staBluetooth, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_staBluetooth, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_staNetwork = lv_label_create(ui_conGlyphs);
     lv_obj_set_width(ui_staNetwork, 30);
@@ -238,8 +245,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_font(ui_staNetwork, &ui_font_Awesome, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_staNetwork, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_staNetwork, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staNetwork, theme->FONT.HEADER_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staNetwork, theme->FONT.HEADER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_staNetwork, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_staNetwork, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_staCapacity = lv_label_create(ui_conGlyphs);
     lv_obj_set_width(ui_staCapacity, 35);
@@ -255,15 +262,15 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_font(ui_staCapacity, &ui_font_AwesomeBig, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_staCapacity, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_staCapacity, -4, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staCapacity, theme->FONT.HEADER_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staCapacity, theme->FONT.HEADER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_staCapacity, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_staCapacity, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlFooter = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlFooter, device->SCREEN.WIDTH);
     lv_obj_set_height(ui_pnlFooter, theme->FOOTER.HEIGHT);
     lv_obj_set_align(ui_pnlFooter, LV_ALIGN_BOTTOM_MID);
     lv_obj_set_flex_flow(ui_pnlFooter, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_pnlFooter, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(ui_pnlFooter, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlFooter, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlFooter, lv_color_hex(theme->FOOTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -314,7 +321,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavAGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavAGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavAGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavAGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavAGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavA = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavA, LV_SIZE_CONTENT);
@@ -329,7 +336,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavA, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavA, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavA, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavA, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavA, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavBGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavBGlyph, 25);
@@ -345,7 +352,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavBGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavBGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavBGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavBGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavBGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavB = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavB, LV_SIZE_CONTENT);
@@ -360,7 +367,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavB, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavB, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavB, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavB, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavB, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavCGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavCGlyph, 25);
@@ -376,7 +383,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavCGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavCGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavCGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavCGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavCGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavC = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavC, LV_SIZE_CONTENT);
@@ -391,7 +398,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavC, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavC, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavC, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavC, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavC, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavXGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavXGlyph, 25);
@@ -407,7 +414,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavXGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavXGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavXGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavXGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavXGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavX = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavX, LV_SIZE_CONTENT);
@@ -422,7 +429,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavX, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavX, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavX, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavX, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavX, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavYGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavYGlyph, 25);
@@ -438,7 +445,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavYGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavYGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavYGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavYGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavYGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavY = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavY, LV_SIZE_CONTENT);
@@ -453,7 +460,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavY, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavY, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavY, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavY, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavY, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavZGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavZGlyph, 25);
@@ -469,7 +476,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavZGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavZGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavZGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavZGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavZGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavZ = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavZ, LV_SIZE_CONTENT);
@@ -484,7 +491,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavZ, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavZ, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavZ, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavZ, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavZ, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavMenuGlyph = lv_label_create(ui_pnlFooter);
     lv_obj_set_width(ui_lblNavMenuGlyph, 27);
@@ -501,7 +508,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavMenuGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavMenuGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavMenuGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavMenuGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM,
+    lv_obj_set_style_pad_bottom(ui_lblNavMenuGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2,
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblNavMenu = lv_label_create(ui_pnlFooter);
@@ -517,7 +524,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_left(ui_lblNavMenu, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblNavMenu, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblNavMenu, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavMenu, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavMenu, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblScreenMessage = lv_label_create(ui_screen);
     lv_obj_set_width(ui_lblScreenMessage, device->SCREEN.WIDTH);
