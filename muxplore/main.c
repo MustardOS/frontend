@@ -705,7 +705,7 @@ void create_explore_items(void *count) {
     struct json fn_json;
 
     char folder_name_file[MAX_BUFFER_SIZE];
-    snprintf(folder_name_file, sizeof(folder_name_file), "%s/MUOS/info/folder_name.json",
+    snprintf(folder_name_file, sizeof(folder_name_file), "%s/MUOS/info/name/folder.json",
              device.STORAGE.ROM.MOUNT);
 
     if (json_valid(read_text_from_file(folder_name_file))) {
