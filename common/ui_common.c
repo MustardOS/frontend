@@ -558,7 +558,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_pnlMessage, 615);
     lv_obj_set_height(ui_pnlMessage, 42);
     lv_obj_set_x(ui_pnlMessage, 0);
-    lv_obj_set_y(ui_pnlMessage, -47);
+    lv_obj_set_y(ui_pnlMessage, -theme->FOOTER.HEIGHT -5);
     lv_obj_set_align(ui_pnlMessage, LV_ALIGN_BOTTOM_MID);
     lv_obj_set_flex_flow(ui_pnlMessage, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlMessage, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
