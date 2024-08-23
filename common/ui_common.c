@@ -710,16 +710,13 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
 lv_obj_t * create_footer_glyph(lv_obj_t * parent, struct theme_config *theme, char *glyph_name, int16_t glyph_alpha) {
     lv_obj_t * ui_glyph;
-    
-    const char *store_catalogue;
-    store_catalogue = get_default_storage(config.STORAGE.CATALOGUE);
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
     snprintf(image, sizeof(image), "%s/MUOS/theme/active/glyph/footer/%s.png",
-             store_catalogue, glyph_name);
+             STORAGE_PATH, glyph_name);
     snprintf(image_path, sizeof(image_path), "M:%s/MUOS/theme/active/glyph/footer/%s.png",
-             store_catalogue, glyph_name);
+             STORAGE_PATH, glyph_name);
 
     ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
