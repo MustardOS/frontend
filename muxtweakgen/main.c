@@ -1084,6 +1084,8 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblAdvanced, "advanced");
 
     if (!device.DEVICE.HAS_HDMI) {
+        lv_obj_add_flag(ui_pnlHDMI, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlHDMI, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblHDMI, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblHDMI, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_icoHDMI, LV_OBJ_FLAG_HIDDEN);

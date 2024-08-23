@@ -93,7 +93,7 @@
 #define MUXSTORAGE_BIOS       ""
 #define MUXSTORAGE_CONFIG     ""
 #define MUXSTORAGE_CATALOGUE  ""
-#define MUXSTORAGE_FAV        ""
+#define MUXSTORAGE_CONTENT    ""
 #define MUXSTORAGE_MUSIC      ""
 #define MUXSTORAGE_SAVE       ""
 #define MUXSTORAGE_SCREENSHOT ""

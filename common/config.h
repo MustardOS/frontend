@@ -83,7 +83,7 @@ struct mux_config {
         int16_t BIOS;
         int16_t CONFIG;
         int16_t CATALOGUE;
-        int16_t FAV;
+        int16_t CONTENT;
         int16_t MUSIC;
         int16_t SAVE;
         int16_t SCREENSHOT;

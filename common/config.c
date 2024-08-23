@@ -76,7 +76,7 @@ void load_config(struct mux_config *config) {
     config->STORAGE.BIOS = atoi(read_text_from_file("/run/muos/global/storage/bios"));
     config->STORAGE.CONFIG = atoi(read_text_from_file("/run/muos/global/storage/config"));
     config->STORAGE.CATALOGUE = atoi(read_text_from_file("/run/muos/global/storage/catalogue"));
-    config->STORAGE.FAV = atoi(read_text_from_file("/run/muos/global/storage/fav"));
+    config->STORAGE.CONTENT = atoi(read_text_from_file("/run/muos/global/storage/content"));
     config->STORAGE.MUSIC = atoi(read_text_from_file("/run/muos/global/storage/music"));
     config->STORAGE.SAVE = atoi(read_text_from_file("/run/muos/global/storage/save"));
     config->STORAGE.SCREENSHOT = atoi(read_text_from_file("/run/muos/global/storage/screenshot"));

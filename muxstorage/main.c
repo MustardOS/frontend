@@ -61,7 +61,7 @@ int progress_onscreen = -1;
 int bios_total, bios_current;
 int raconfig_total, raconfig_current;
 int catalogue_total, catalogue_current;
-int fav_total, fav_current;
+int content_total, content_current;
 int music_total, music_current;
 int save_total, save_current;
 int screenshot_total, screenshot_current;
@@ -72,7 +72,7 @@ typedef struct {
     int *current;
 } Storage;
 
-Storage bios, raconfig, catalogue, fav, music, save, screenshot, look;
+Storage bios, raconfig, catalogue, content, music, save, screenshot, look;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -88,8 +88,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXSTORAGE_CONFIG;
     } else if (element_focused == ui_lblCatalogue) {
         message = MUXSTORAGE_CATALOGUE;
-    } else if (element_focused == ui_lblFav) {
-        message = MUXSTORAGE_FAV;
+    } else if (element_focused == ui_lblConman) {
+        message = MUXSTORAGE_CONTENT;
     } else if (element_focused == ui_lblMusic) {
         message = MUXSTORAGE_MUSIC;
     } else if (element_focused == ui_lblSave) {
@@ -127,7 +127,7 @@ void elements_events_init() {
             ui_droBIOS,
             ui_droConfig,
             ui_droCatalogue,
-            ui_droFav,
+            ui_droConman,
             ui_droMusic,
             ui_droSave,
             ui_droScreenshot,
@@ -141,7 +141,7 @@ void elements_events_init() {
     init_pointers(&bios, &bios_total, &bios_current);
     init_pointers(&raconfig, &raconfig_total, &raconfig_current);
     init_pointers(&catalogue, &catalogue_total, &catalogue_current);
-    init_pointers(&fav, &fav_total, &fav_current);
+    init_pointers(&content, &content_total, &content_current);
     init_pointers(&music, &music_total, &music_current);
     init_pointers(&save, &save_total, &save_current);
     init_pointers(&screenshot, &screenshot_total, &screenshot_current);
@@ -153,7 +153,7 @@ void init_dropdown_settings() {
             {bios.total,       bios.current},
             {raconfig.total,   raconfig.current},
             {catalogue.total,  catalogue.current},
-            {fav.total,        fav.current},
+            {content.total,    content.current},
             {music.total,      music.current},
             {save.total,       save.current},
             {screenshot.total, screenshot.current},
@@ -164,7 +164,7 @@ void init_dropdown_settings() {
             ui_droBIOS,
             ui_droConfig,
             ui_droCatalogue,
-            ui_droFav,
+            ui_droConman,
             ui_droMusic,
             ui_droSave,
             ui_droScreenshot,
@@ -181,7 +181,7 @@ void restore_storage_options() {
     lv_dropdown_set_selected(ui_droBIOS, config.STORAGE.BIOS);
     lv_dropdown_set_selected(ui_droConfig, config.STORAGE.CONFIG);
     lv_dropdown_set_selected(ui_droCatalogue, config.STORAGE.CATALOGUE);
-    lv_dropdown_set_selected(ui_droFav, config.STORAGE.FAV);
+    lv_dropdown_set_selected(ui_droConman, config.STORAGE.CONTENT);
     lv_dropdown_set_selected(ui_droMusic, config.STORAGE.MUSIC);
     lv_dropdown_set_selected(ui_droSave, config.STORAGE.SAVE);
     lv_dropdown_set_selected(ui_droScreenshot, config.STORAGE.SCREENSHOT);
@@ -192,7 +192,7 @@ void save_storage_options() {
     int idx_bios = lv_dropdown_get_selected(ui_droBIOS);
     int idx_config = lv_dropdown_get_selected(ui_droConfig);
     int idx_catalogue = lv_dropdown_get_selected(ui_droCatalogue);
-    int idx_fav = lv_dropdown_get_selected(ui_droFav);
+    int idx_content = lv_dropdown_get_selected(ui_droConman);
     int idx_music = lv_dropdown_get_selected(ui_droMusic);
     int idx_save = lv_dropdown_get_selected(ui_droSave);
     int idx_screenshot = lv_dropdown_get_selected(ui_droScreenshot);
@@ -201,7 +201,7 @@ void save_storage_options() {
     write_text_to_file("/run/muos/global/storage/bios", "w", INT, idx_bios);
     write_text_to_file("/run/muos/global/storage/config", "w", INT, idx_config);
     write_text_to_file("/run/muos/global/storage/catalogue", "w", INT, idx_catalogue);
-    write_text_to_file("/run/muos/global/storage/fav", "w", INT, idx_fav);
+    write_text_to_file("/run/muos/global/storage/content", "w", INT, idx_content);
     write_text_to_file("/run/muos/global/storage/music", "w", INT, idx_music);
     write_text_to_file("/run/muos/global/storage/save", "w", INT, idx_save);
     write_text_to_file("/run/muos/global/storage/screenshot", "w", INT, idx_screenshot);
@@ -213,7 +213,7 @@ void init_navigation_groups() {
             ui_pnlBIOS,
             ui_pnlConfig,
             ui_pnlCatalogue,
-            ui_pnlFav,
+            ui_pnlConman,
             ui_pnlMusic,
             ui_pnlSave,
             ui_pnlScreenshot,
@@ -224,7 +224,7 @@ void init_navigation_groups() {
             ui_lblBIOS,
             ui_lblConfig,
             ui_lblCatalogue,
-            ui_lblFav,
+            ui_lblConman,
             ui_lblMusic,
             ui_lblSave,
             ui_lblScreenshot,
@@ -235,7 +235,7 @@ void init_navigation_groups() {
             ui_droBIOS,
             ui_droConfig,
             ui_droCatalogue,
-            ui_droFav,
+            ui_droConman,
             ui_droMusic,
             ui_droSave,
             ui_droScreenshot,
@@ -246,7 +246,7 @@ void init_navigation_groups() {
             ui_icoBIOS,
             ui_icoConfig,
             ui_icoCatalogue,
-            ui_icoFav,
+            ui_icoConman,
             ui_icoMusic,
             ui_icoSave,
             ui_icoScreenshot,
@@ -256,7 +256,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlBIOS);
     apply_theme_list_panel(&theme, &device, ui_pnlConfig);
     apply_theme_list_panel(&theme, &device, ui_pnlCatalogue);
-    apply_theme_list_panel(&theme, &device, ui_pnlFav);
+    apply_theme_list_panel(&theme, &device, ui_pnlConman);
     apply_theme_list_panel(&theme, &device, ui_pnlMusic);
     apply_theme_list_panel(&theme, &device, ui_pnlSave);
     apply_theme_list_panel(&theme, &device, ui_pnlScreenshot);
@@ -265,7 +265,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblBIOS, "RetroArch BIOS", false, true);
     apply_theme_list_item(&theme, ui_lblConfig, "RetroArch Configs", false, true);
     apply_theme_list_item(&theme, ui_lblCatalogue, "Metadata Catalogue", false, true);
-    apply_theme_list_item(&theme, ui_lblFav, "Favourites + History", false, true);
+    apply_theme_list_item(&theme, ui_lblConman, "Content Management", false, true);
     apply_theme_list_item(&theme, ui_lblMusic, "Background Music", false, true);
     apply_theme_list_item(&theme, ui_lblSave, "Save Games + Save States", false, true);
     apply_theme_list_item(&theme, ui_lblScreenshot, "Screenshots", false, true);
@@ -274,20 +274,20 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoBIOS, mux_prog, "bios");
     apply_theme_list_glyph(&theme, ui_icoConfig, mux_prog, "config");
     apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_prog, "catalogue");
-    apply_theme_list_glyph(&theme, ui_icoFav, mux_prog, "fav");
+    apply_theme_list_glyph(&theme, ui_icoConman, mux_prog, "content");
     apply_theme_list_glyph(&theme, ui_icoMusic, mux_prog, "music");
     apply_theme_list_glyph(&theme, ui_icoSave, mux_prog, "save");
     apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_prog, "screenshot");
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
 
-    apply_theme_list_drop_down(&theme, ui_droBIOS, "SD1\nSD2\nUSB");
-    apply_theme_list_drop_down(&theme, ui_droConfig, "SD1\nSD2\nUSB");
-    apply_theme_list_drop_down(&theme, ui_droCatalogue, "SD1\nSD2\nUSB");
-    apply_theme_list_drop_down(&theme, ui_droFav, "SD1\nSD2\nUSB");
-    apply_theme_list_drop_down(&theme, ui_droMusic, "SD1\nSD2\nUSB");
-    apply_theme_list_drop_down(&theme, ui_droSave, "SD1\nSD2\nUSB");
-    apply_theme_list_drop_down(&theme, ui_droScreenshot, "SD1\nSD2\nUSB");
-    apply_theme_list_drop_down(&theme, ui_droTheme, "SD1\nSD2\nUSB");
+    apply_theme_list_drop_down(&theme, ui_droBIOS, "SD1\nSD2\nAUTO");
+    apply_theme_list_drop_down(&theme, ui_droConfig, "SD1\nSD2\nAUTO");
+    apply_theme_list_drop_down(&theme, ui_droCatalogue, "SD1\nSD2\nAUTO");
+    apply_theme_list_drop_down(&theme, ui_droConman, "SD1\nSD2\nAUTO");
+    apply_theme_list_drop_down(&theme, ui_droMusic, "SD1\nSD2\nAUTO");
+    apply_theme_list_drop_down(&theme, ui_droSave, "SD1\nSD2\nAUTO");
+    apply_theme_list_drop_down(&theme, ui_droScreenshot, "SD1\nSD2\nAUTO");
+    apply_theme_list_drop_down(&theme, ui_droTheme, "SD1\nSD2\nAUTO");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -396,10 +396,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droCatalogue,
                                                               &catalogue_current,
                                                               catalogue_total);
-                                    } else if (element_focused == ui_lblFav) {
-                                        increase_option_value(ui_droFav,
-                                                              &fav_current,
-                                                              fav_total);
+                                    } else if (element_focused == ui_lblConman) {
+                                        increase_option_value(ui_droConman,
+                                                              &content_current,
+                                                              content_total);
                                     } else if (element_focused == ui_lblMusic) {
                                         increase_option_value(ui_droMusic,
                                                               &music_current,
@@ -498,10 +498,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droCatalogue,
                                                           &catalogue_current,
                                                           catalogue_total);
-                                } else if (element_focused == ui_lblFav) {
-                                    decrease_option_value(ui_droFav,
-                                                          &fav_current,
-                                                          fav_total);
+                                } else if (element_focused == ui_lblConman) {
+                                    decrease_option_value(ui_droConman,
+                                                          &content_current,
+                                                          content_total);
                                 } else if (element_focused == ui_lblMusic) {
                                     decrease_option_value(ui_droMusic,
                                                           &music_current,
@@ -535,10 +535,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droCatalogue,
                                                           &catalogue_current,
                                                           catalogue_total);
-                                } else if (element_focused == ui_lblFav) {
-                                    increase_option_value(ui_droFav,
-                                                          &fav_current,
-                                                          fav_total);
+                                } else if (element_focused == ui_lblConman) {
+                                    increase_option_value(ui_droConman,
+                                                          &content_current,
+                                                          content_total);
                                 } else if (element_focused == ui_lblMusic) {
                                     increase_option_value(ui_droMusic,
                                                           &music_current,
@@ -649,7 +649,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBIOS, "bios");
     lv_obj_set_user_data(ui_lblConfig, "config");
     lv_obj_set_user_data(ui_lblCatalogue, "catalogue");
-    lv_obj_set_user_data(ui_lblFav, "fav");
+    lv_obj_set_user_data(ui_lblConman, "content");
     lv_obj_set_user_data(ui_lblMusic, "music");
     lv_obj_set_user_data(ui_lblSave, "save");
     lv_obj_set_user_data(ui_lblScreenshot, "screenshot");
