@@ -310,11 +310,8 @@ struct theme_config {
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name);
 
-int apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent,
-                          lv_obj_t *ui_lblItem, const char *item_text);
-
-void apply_align(struct theme_config *theme, struct mux_device *device, lv_obj_t *ui_lblItemIcon,
-                 lv_obj_t *ui_lblItem, int item_width);
+void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem, 
+                          lv_obj_t *ui_lblItemGlyph, const char *item_text);
 
 void apply_theme_list_panel(struct theme_config *theme, struct mux_device *device, lv_obj_t *ui_pnlList);
 

@@ -78,6 +78,7 @@ Visuals battery, network, bluetooth, mux_clock, boxart, name, dash, counterfolde
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_icon;
+lv_group_t *ui_group_panel;
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -218,6 +219,18 @@ void save_visual_options() {
 }
 
 void init_navigation_groups() {
+    lv_obj_t *ui_objects_panel[] = {
+            ui_pnlBattery,
+            ui_pnlNetwork,
+            ui_pnlBluetooth,
+            ui_pnlClock,
+            ui_pnlBoxArt,
+            ui_pnlName,
+            ui_pnlDash,
+            ui_pnlMenuCounterFolder,
+            ui_pnlMenuCounterFile
+    };
+
     lv_obj_t *ui_objects[] = {
             ui_lblBattery,
             ui_lblNetwork,
@@ -299,12 +312,14 @@ void init_navigation_groups() {
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_icon = lv_group_create();
+    ui_group_panel = lv_group_create();
 
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
         lv_group_add_obj(ui_group_icon, ui_objects_icon[i]);
+        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 }
 
@@ -316,6 +331,7 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group, 1);
             nav_prev(ui_group_value, 1);
             nav_prev(ui_group_icon, 1);
+            nav_prev(ui_group_panel, 1);
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
@@ -330,6 +346,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group, 1);
             nav_next(ui_group_value, 1);
             nav_next(ui_group_icon, 1);
+            nav_next(ui_group_panel, 1);
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
@@ -463,6 +480,7 @@ void *joystick_task() {
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_icon, 1);
+                                    nav_prev(ui_group_panel, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
                                                            ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
@@ -478,6 +496,7 @@ void *joystick_task() {
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_icon, 1);
+                                    nav_next(ui_group_panel, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
                                                            ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;

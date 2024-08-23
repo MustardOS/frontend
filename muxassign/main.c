@@ -61,6 +61,7 @@ int progress_onscreen = -1;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
+lv_group_t *ui_group_panel;
 
 int ui_count = 0;
 int current_item_index = 0;
@@ -289,6 +290,7 @@ void create_system_items() {
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
 
     if (file_count > 0) {
         for (size_t i = 0; i < file_count; i++) {
@@ -306,9 +308,9 @@ void create_system_items() {
 
             lv_group_add_obj(ui_group, ui_lblCoreItem);
             lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
+            lv_group_add_obj(ui_group_panel, ui_pnlCore);
 
-            int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, base_filename);
-            apply_align(&theme, &device, ui_lblCoreItemGlyph, ui_lblCoreItem, item_width);
+            apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, base_filename);
         }
         if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     }
@@ -330,6 +332,7 @@ void create_core_items(const char *target) {
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
 
     const char *skip_entries[] = {
             "bios", "global"
@@ -358,9 +361,9 @@ void create_core_items(const char *target) {
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlCore);
 
-        int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, core_headers[i]);
-        apply_align(&theme, &device, ui_lblCoreItemGlyph, ui_lblCoreItem, item_width);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, core_headers[i]);
 
         free(core_headers[i]);
     }
@@ -375,6 +378,7 @@ void list_nav_prev(int steps) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
+            nav_prev(ui_group_panel, 1);
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
@@ -392,6 +396,7 @@ void list_nav_next(int steps) {
             current_item_index++;
             nav_next(ui_group, 1);
             nav_next(ui_group_glyph, 1);
+            nav_next(ui_group_panel, 1);
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
@@ -585,6 +590,7 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
+                                    nav_prev(ui_group_panel, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
                                                            current_item_index, ui_pnlContent);
                                     lv_task_handler();
@@ -600,6 +606,7 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
+                                    nav_next(ui_group_panel, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
                                                            current_item_index, ui_pnlContent);
                                     lv_task_handler();

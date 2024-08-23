@@ -73,6 +73,7 @@ content_item *items = NULL;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
+lv_group_t *ui_group_panel;
 
 int sd_card;
 char *sd_dir = NULL;
@@ -484,9 +485,9 @@ void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) 
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
+    lv_group_add_obj(ui_group_panel, ui_pnlExplore);
 
-    int item_width = apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
-    apply_align(&theme, &device, ui_lblExploreItemGlyph, ui_lblExploreItem, item_width);
+    apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, ui_lblExploreItemGlyph, item_text);
 }
 
 void gen_item(char **file_names, int file_count) {
@@ -990,6 +991,7 @@ void list_nav_prev(int steps) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
+            nav_prev(ui_group_panel, 1);
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
@@ -1011,6 +1013,7 @@ void list_nav_next(int steps) {
             current_item_index++;
             nav_next(ui_group, 1);
             nav_next(ui_group_glyph, 1);
+            nav_next(ui_group_panel, 1);
         }
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
@@ -1469,6 +1472,7 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
+                                    nav_prev(ui_group_panel, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
                                                            current_item_index, ui_pnlContent);
                                     nav_moved = 1;
@@ -1490,6 +1494,7 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
+                                    nav_next(ui_group_panel, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
                                                            current_item_index, ui_pnlContent);
                                     nav_moved = 1;
@@ -2096,6 +2101,7 @@ int main(int argc, char *argv[]) {
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
 
     if (file_exist(MUOS_PDI_LOAD)) {
         prev_dir = read_text_from_file(MUOS_PDI_LOAD);

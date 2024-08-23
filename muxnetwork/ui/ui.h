@@ -14,9 +14,10 @@ extern "C" {
 
 #include "ui_helpers.h"
 #include "ui_events.h"
+#include "../../common/theme.h"
 
 // SCREEN: ui_scrNetwork
-void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent);
+void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent, struct theme_config *theme);
 extern lv_obj_t * ui_scrNetwork;
 extern lv_obj_t * ui_pnlEnable;
 extern lv_obj_t * ui_pnlIdentifier;
@@ -62,7 +63,7 @@ extern lv_obj_t * ui_lblStatusValue;
 extern lv_obj_t * ui_pnlEntry;
 extern lv_obj_t * ui_txtEntry;
 
-void ui_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent);
+void ui_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent, struct theme_config *theme);
 
 #ifdef __cplusplus
 } /*extern "C"*/

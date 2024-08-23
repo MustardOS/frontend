@@ -58,6 +58,7 @@ int progress_onscreen = -1;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
+lv_group_t *ui_group_panel;
 
 lv_group_t *ui_group_installed;
 lv_group_t *ui_group_data;
@@ -119,6 +120,7 @@ void create_archive_items() {
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
     ui_group_installed = lv_group_create();
     ui_group_data = lv_group_create();
 
@@ -187,6 +189,7 @@ void create_archive_items() {
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);
         lv_group_add_obj(ui_group_glyph, ui_lblArchiveItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlArchive);
         lv_group_add_obj(ui_group_installed, ui_lblArchiveItemInstalled);
         lv_group_add_obj(ui_group_data, ui_lblArchiveItemData);
 
@@ -203,6 +206,7 @@ void list_nav_prev(int steps) {
             current_item_index--;
             nav_prev(ui_group, 1);
             nav_prev(ui_group_glyph, 1);
+            nav_prev(ui_group_panel, 1);
             nav_prev(ui_group_installed, 1);
             nav_prev(ui_group_data, 1);
         }
@@ -222,6 +226,7 @@ void list_nav_next(int steps) {
             current_item_index++;
             nav_next(ui_group, 1);
             nav_next(ui_group_glyph, 1);
+            nav_next(ui_group_panel, 1);
             nav_next(ui_group_installed, 1);
             nav_next(ui_group_data, 1);
         }
@@ -343,6 +348,7 @@ void *joystick_task() {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_glyph, 1);
+                                    nav_prev(ui_group_panel, 1);
                                     nav_prev(ui_group_installed, 1);
                                     nav_prev(ui_group_data, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
@@ -360,6 +366,7 @@ void *joystick_task() {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_glyph, 1);
+                                    nav_next(ui_group_panel, 1);
                                     nav_next(ui_group_installed, 1);
                                     nav_next(ui_group_data, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,

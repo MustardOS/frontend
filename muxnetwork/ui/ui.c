@@ -5,11 +5,12 @@
 
 #include "ui.h"
 #include "ui_helpers.h"
+#include "../../common/theme.h"
 
 ///////////////////// VARIABLES ////////////////////
 
 // SCREEN: ui_scrNetwork
-void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent);
+void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent, struct theme_config *theme);
 lv_obj_t * ui_scrNetwork;
 lv_obj_t * ui_pnlEnable;
 lv_obj_t * ui_pnlIdentifier;
@@ -55,7 +56,7 @@ lv_obj_t * ui_lblStatusValue;
 lv_obj_t * ui_pnlEntry;
 lv_obj_t * ui_txtEntry;
 
-void ui_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent)
+void ui_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent, struct theme_config *theme)
 {
-    ui_screen_init(ui_screen, ui_pnlContent);
+    ui_screen_init(ui_screen, ui_pnlContent, theme);
 }
