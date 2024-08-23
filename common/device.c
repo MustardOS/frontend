@@ -19,9 +19,6 @@ void load_device(struct mux_device *device) {
 
     device->MUX.WIDTH = atoi(read_text_from_file("/run/muos/device/mux/width"));
     device->MUX.HEIGHT = atoi(read_text_from_file("/run/muos/device/mux/height"));
-    device->MUX.ITEM.COUNT = atoi(read_text_from_file("/run/muos/device/mux/item_count"));
-    device->MUX.ITEM.HEIGHT = atoi(read_text_from_file("/run/muos/device/mux/item_height"));
-    device->MUX.ITEM.PANEL = atoi(read_text_from_file("/run/muos/device/mux/item_panel"));
 
     device->STORAGE.BOOT.PARTITION = atoi(read_text_from_file("/run/muos/device/storage/boot/num"));
     strncpy(device->STORAGE.BOOT.DEVICE, read_text_from_file("/run/muos/device/storage/boot/dev"), MAX_BUFFER_SIZE - 1);
