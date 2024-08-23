@@ -702,14 +702,10 @@ int main(int argc, char *argv[]) {
         case 1:
             NAV_A = device.RAW_INPUT.BUTTON.B;
             NAV_B = device.RAW_INPUT.BUTTON.A;
-            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
-            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
             break;
         default:
             NAV_A = device.RAW_INPUT.BUTTON.A;
             NAV_B = device.RAW_INPUT.BUTTON.B;
-            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
-            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
             break;
     }
 

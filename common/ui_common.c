@@ -1,4 +1,5 @@
 #include "common.h"
+#include "config.h"
 #include "theme.h"
 #include "device.h"
 #include "ui_common.h"
@@ -301,224 +302,32 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     }
     lv_obj_set_style_flex_main_place(ui_pnlFooter, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblNavAGlyph = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavAGlyph, 25);
-    lv_obj_set_height(ui_lblNavAGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavAGlyph, -220);
-    lv_obj_set_y(ui_lblNavAGlyph, -205);
-    lv_obj_set_align(ui_lblNavAGlyph, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavAGlyph, "⇓");
-    lv_label_set_recolor(ui_lblNavAGlyph, "true");
-    lv_obj_set_style_text_color(ui_lblNavAGlyph, lv_color_hex(theme->NAV.A.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavAGlyph, theme->NAV.A.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblNavAGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavAGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavAGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavAGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavAGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (config.SETTINGS.ADVANCED.SWAP) {
+        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.A.GLYPH_ALPHA);
+        ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
+        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.B.GLYPH_ALPHA);
+    } else {
+        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.A.GLYPH_ALPHA);
+        ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
+        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.B.GLYPH_ALPHA);
+    }
 
-    ui_lblNavA = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavA, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblNavA, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavA, -220);
-    lv_obj_set_y(ui_lblNavA, -205);
-    lv_obj_set_align(ui_lblNavA, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavA, "");
-    lv_label_set_recolor(ui_lblNavA, "true");
-    lv_obj_set_style_text_color(ui_lblNavA, lv_color_hex(theme->NAV.A.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavA, theme->NAV.A.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavA, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavA, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavA, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavA, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblNavB = create_footer_text(ui_pnlFooter, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA);
 
-    ui_lblNavBGlyph = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavBGlyph, 25);
-    lv_obj_set_height(ui_lblNavBGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavBGlyph, -220);
-    lv_obj_set_y(ui_lblNavBGlyph, -205);
-    lv_obj_set_align(ui_lblNavBGlyph, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavBGlyph, "⇒");
-    lv_label_set_recolor(ui_lblNavBGlyph, "true");
-    lv_obj_set_style_text_color(ui_lblNavBGlyph, lv_color_hex(theme->NAV.B.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavBGlyph, theme->NAV.B.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblNavBGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavBGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavBGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavBGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavBGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C.GLYPH_ALPHA);
+    ui_lblNavC = create_footer_text(ui_pnlFooter, theme, theme->NAV.C.TEXT, theme->NAV.C.TEXT_ALPHA);
 
-    ui_lblNavB = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavB, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblNavB, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavB, -220);
-    lv_obj_set_y(ui_lblNavB, -205);
-    lv_obj_set_align(ui_lblNavB, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavB, "");
-    lv_label_set_recolor(ui_lblNavB, "true");
-    lv_obj_set_style_text_color(ui_lblNavB, lv_color_hex(theme->NAV.B.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavB, theme->NAV.B.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavB, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavB, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavB, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavB, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, "x", theme->NAV.X.GLYPH_ALPHA);
+    ui_lblNavX = create_footer_text(ui_pnlFooter, theme, theme->NAV.X.TEXT, theme->NAV.X.TEXT_ALPHA);
 
-    ui_lblNavCGlyph = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavCGlyph, 25);
-    lv_obj_set_height(ui_lblNavCGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavCGlyph, -220);
-    lv_obj_set_y(ui_lblNavCGlyph, -205);
-    lv_obj_set_align(ui_lblNavCGlyph, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavCGlyph, "⇫");
-    lv_label_set_recolor(ui_lblNavCGlyph, "true");
-    lv_obj_set_style_text_color(ui_lblNavCGlyph, lv_color_hex(theme->NAV.C.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavCGlyph, theme->NAV.C.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblNavCGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavCGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavCGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavCGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavCGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, "y", theme->NAV.Y.GLYPH_ALPHA);
+    ui_lblNavY = create_footer_text(ui_pnlFooter, theme, theme->NAV.Y.TEXT, theme->NAV.Y.TEXT_ALPHA);
 
-    ui_lblNavC = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavC, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblNavC, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavC, -220);
-    lv_obj_set_y(ui_lblNavC, -205);
-    lv_obj_set_align(ui_lblNavC, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavC, "");
-    lv_label_set_recolor(ui_lblNavC, "true");
-    lv_obj_set_style_text_color(ui_lblNavC, lv_color_hex(theme->NAV.C.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavC, theme->NAV.C.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavC, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavC, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavC, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavC, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z.GLYPH_ALPHA);
+    ui_lblNavZ = create_footer_text(ui_pnlFooter, theme, theme->NAV.Z.TEXT, theme->NAV.Z.TEXT_ALPHA);
 
-    ui_lblNavXGlyph = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavXGlyph, 25);
-    lv_obj_set_height(ui_lblNavXGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavXGlyph, -220);
-    lv_obj_set_y(ui_lblNavXGlyph, -205);
-    lv_obj_set_align(ui_lblNavXGlyph, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavXGlyph, "⇣");
-    lv_label_set_recolor(ui_lblNavXGlyph, "true");
-    lv_obj_set_style_text_color(ui_lblNavXGlyph, lv_color_hex(theme->NAV.X.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavXGlyph, theme->NAV.X.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblNavXGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavXGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavXGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavXGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavXGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_lblNavX = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavX, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblNavX, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavX, -220);
-    lv_obj_set_y(ui_lblNavX, -205);
-    lv_obj_set_align(ui_lblNavX, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavX, "");
-    lv_label_set_recolor(ui_lblNavX, "true");
-    lv_obj_set_style_text_color(ui_lblNavX, lv_color_hex(theme->NAV.X.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavX, theme->NAV.X.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavX, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavX, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavX, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavX, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_lblNavYGlyph = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavYGlyph, 25);
-    lv_obj_set_height(ui_lblNavYGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavYGlyph, -220);
-    lv_obj_set_y(ui_lblNavYGlyph, -205);
-    lv_obj_set_align(ui_lblNavYGlyph, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavYGlyph, "⇑");
-    lv_label_set_recolor(ui_lblNavYGlyph, "true");
-    lv_obj_set_style_text_color(ui_lblNavYGlyph, lv_color_hex(theme->NAV.Y.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavYGlyph, theme->NAV.Y.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblNavYGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavYGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavYGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavYGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavYGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_lblNavY = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavY, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblNavY, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavY, -220);
-    lv_obj_set_y(ui_lblNavY, -205);
-    lv_obj_set_align(ui_lblNavY, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavY, "");
-    lv_label_set_recolor(ui_lblNavY, "true");
-    lv_obj_set_style_text_color(ui_lblNavY, lv_color_hex(theme->NAV.Y.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavY, theme->NAV.Y.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavY, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavY, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavY, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavY, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_lblNavZGlyph = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavZGlyph, 25);
-    lv_obj_set_height(ui_lblNavZGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavZGlyph, -220);
-    lv_obj_set_y(ui_lblNavZGlyph, -205);
-    lv_obj_set_align(ui_lblNavZGlyph, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavZGlyph, "⇬");
-    lv_label_set_recolor(ui_lblNavZGlyph, "true");
-    lv_obj_set_style_text_color(ui_lblNavZGlyph, lv_color_hex(theme->NAV.Z.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavZGlyph, theme->NAV.Z.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblNavZGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavZGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavZGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavZGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavZGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_lblNavZ = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavZ, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblNavZ, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavZ, -220);
-    lv_obj_set_y(ui_lblNavZ, -205);
-    lv_obj_set_align(ui_lblNavZ, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavZ, "");
-    lv_label_set_recolor(ui_lblNavZ, "true");
-    lv_obj_set_style_text_color(ui_lblNavZ, lv_color_hex(theme->NAV.Z.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavZ, theme->NAV.Z.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavZ, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavZ, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavZ, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavZ, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_lblNavMenuGlyph = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavMenuGlyph, 27);
-    lv_obj_set_height(ui_lblNavMenuGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavMenuGlyph, -220);
-    lv_obj_set_y(ui_lblNavMenuGlyph, -205);
-    lv_obj_set_align(ui_lblNavMenuGlyph, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavMenuGlyph, "⇥");
-    lv_label_set_recolor(ui_lblNavMenuGlyph, "true");
-    lv_obj_set_style_text_color(ui_lblNavMenuGlyph, lv_color_hex(theme->NAV.MENU.GLYPH),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavMenuGlyph, theme->NAV.MENU.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblNavMenuGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavMenuGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavMenuGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavMenuGlyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavMenuGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_lblNavMenu = lv_label_create(ui_pnlFooter);
-    lv_obj_set_width(ui_lblNavMenu, LV_SIZE_CONTENT);
-    lv_obj_set_height(ui_lblNavMenu, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblNavMenu, -220);
-    lv_obj_set_y(ui_lblNavMenu, -205);
-    lv_obj_set_align(ui_lblNavMenu, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblNavMenu, "");
-    lv_label_set_recolor(ui_lblNavMenu, "true");
-    lv_obj_set_style_text_color(ui_lblNavMenu, lv_color_hex(theme->NAV.MENU.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblNavMenu, theme->NAV.MENU.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblNavMenu, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblNavMenu, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblNavMenu, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblNavMenu, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblNavMenuGlyph = create_footer_glyph(ui_pnlFooter, theme, "menu", theme->NAV.MENU.GLYPH_ALPHA);
+    ui_lblNavMenu = create_footer_text(ui_pnlFooter, theme, theme->NAV.MENU.TEXT, theme->NAV.MENU.TEXT_ALPHA);
 
     ui_lblScreenMessage = lv_label_create(ui_screen);
     lv_obj_set_width(ui_lblScreenMessage, device->SCREEN.WIDTH);
@@ -897,4 +706,51 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_screen);
+}
+
+lv_obj_t * create_footer_glyph(lv_obj_t * parent, struct theme_config *theme, char *glyph_name, int16_t glyph_alpha) {
+    lv_obj_t * ui_glyph;
+    
+    const char *store_catalogue;
+    store_catalogue = get_default_storage(config.STORAGE.CATALOGUE);
+
+    char image[MAX_BUFFER_SIZE];
+    char image_path[MAX_BUFFER_SIZE];
+    snprintf(image, sizeof(image), "%s/MUOS/theme/active/glyph/footer/%s.png",
+             store_catalogue, glyph_name);
+    snprintf(image_path, sizeof(image_path), "M:%s/MUOS/theme/active/glyph/footer/%s.png",
+             store_catalogue, glyph_name);
+
+    ui_glyph = lv_img_create(parent);
+    lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
+    if (file_exist(image) && glyph_alpha > 0) lv_img_set_src(ui_glyph, image_path);
+    lv_obj_set_style_img_opa(ui_glyph, glyph_alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_glyph, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    
+    lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
+    lv_obj_set_align(ui_glyph, LV_ALIGN_CENTER);
+    lv_obj_set_style_pad_left(ui_glyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (glyph_alpha == 0) lv_obj_set_width(ui_glyph, 0);
+    return ui_glyph;
+}
+
+lv_obj_t * create_footer_text(lv_obj_t * parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha) {
+    lv_obj_t * ui_lblNavText = lv_label_create(parent);
+    lv_obj_set_width(ui_lblNavText, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_lblNavText, LV_SIZE_CONTENT);
+    lv_obj_set_x(ui_lblNavText, -220);
+    lv_obj_set_y(ui_lblNavText, -205);
+    lv_obj_set_align(ui_lblNavText, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblNavText, "");
+    lv_label_set_recolor(ui_lblNavText, "true");
+    lv_obj_set_style_text_color(ui_lblNavText, lv_color_hex(text_color), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblNavText, text_alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblNavText, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblNavText, 9, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblNavText, theme->FONT.FOOTER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblNavText, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (text_alpha == 0) lv_obj_set_width(ui_lblNavText, 0);
+    return ui_lblNavText;
 }
