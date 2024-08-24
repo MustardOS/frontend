@@ -6,6 +6,14 @@ extern struct theme_config theme;
 extern struct mux_config config;
 extern struct mux_device device;
 
+struct footer_glyph{
+    uint32_t GLYPH;
+    int16_t GLYPH_ALPHA;
+    int16_t GLYPH_RECOLOUR_ALPHA;
+    uint32_t TEXT;
+    int16_t TEXT_ALPHA;
+};
+
 struct theme_config {
     struct {
         uint32_t BACKGROUND;
@@ -99,48 +107,13 @@ struct theme_config {
 
     struct {
         uint16_t ALIGNMENT;
-        struct {
-            uint32_t GLYPH;
-            int16_t GLYPH_ALPHA;
-            uint32_t TEXT;
-            int16_t TEXT_ALPHA;
-        } A;
-        struct {
-            uint32_t GLYPH;
-            int16_t GLYPH_ALPHA;
-            uint32_t TEXT;
-            int16_t TEXT_ALPHA;
-        } B;
-        struct {
-            uint32_t GLYPH;
-            int16_t GLYPH_ALPHA;
-            uint32_t TEXT;
-            int16_t TEXT_ALPHA;
-        } C;
-        struct {
-            uint32_t GLYPH;
-            int16_t GLYPH_ALPHA;
-            uint32_t TEXT;
-            int16_t TEXT_ALPHA;
-        } X;
-        struct {
-            uint32_t GLYPH;
-            int16_t GLYPH_ALPHA;
-            uint32_t TEXT;
-            int16_t TEXT_ALPHA;
-        } Y;
-        struct {
-            uint32_t GLYPH;
-            int16_t GLYPH_ALPHA;
-            uint32_t TEXT;
-            int16_t TEXT_ALPHA;
-        } Z;
-        struct {
-            uint32_t GLYPH;
-            int16_t GLYPH_ALPHA;
-            uint32_t TEXT;
-            int16_t TEXT_ALPHA;
-        } MENU;
+        struct footer_glyph A;
+        struct footer_glyph B;
+        struct footer_glyph C;
+        struct footer_glyph X;
+        struct footer_glyph Y;
+        struct footer_glyph Z;
+        struct footer_glyph MENU;
     } NAV;
 
     struct {

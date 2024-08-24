@@ -262,30 +262,30 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_flex_main_place(ui_pnlFooter, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     if (config.SETTINGS.ADVANCED.SWAP) {
-        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.A.GLYPH_ALPHA);
+        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.A);
         ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
-        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.B.GLYPH_ALPHA);
+        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.B);
     } else {
-        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.A.GLYPH_ALPHA);
+        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.A);
         ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
-        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.B.GLYPH_ALPHA);
+        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.B);
     }
 
     ui_lblNavB = create_footer_text(ui_pnlFooter, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA);
 
-    ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C.GLYPH_ALPHA);
+    ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C);
     ui_lblNavC = create_footer_text(ui_pnlFooter, theme, theme->NAV.C.TEXT, theme->NAV.C.TEXT_ALPHA);
 
-    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, "x", theme->NAV.X.GLYPH_ALPHA);
+    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, "x", theme->NAV.X);
     ui_lblNavX = create_footer_text(ui_pnlFooter, theme, theme->NAV.X.TEXT, theme->NAV.X.TEXT_ALPHA);
 
-    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, "y", theme->NAV.Y.GLYPH_ALPHA);
+    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, "y", theme->NAV.Y);
     ui_lblNavY = create_footer_text(ui_pnlFooter, theme, theme->NAV.Y.TEXT, theme->NAV.Y.TEXT_ALPHA);
 
-    ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z.GLYPH_ALPHA);
+    ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z);
     ui_lblNavZ = create_footer_text(ui_pnlFooter, theme, theme->NAV.Z.TEXT, theme->NAV.Z.TEXT_ALPHA);
 
-    ui_lblNavMenuGlyph = create_footer_glyph(ui_pnlFooter, theme, "menu", theme->NAV.MENU.GLYPH_ALPHA);
+    ui_lblNavMenuGlyph = create_footer_glyph(ui_pnlFooter, theme, "menu", theme->NAV.MENU);
     ui_lblNavMenu = create_footer_text(ui_pnlFooter, theme, theme->NAV.MENU.TEXT, theme->NAV.MENU.TEXT_ALPHA);
 
     ui_lblScreenMessage = lv_label_create(ui_screen);
@@ -680,7 +680,7 @@ lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
     return ui_glyph;
 }
 
-lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, int16_t glyph_alpha) {
+lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, struct footer_glyph nav_footer_glyph) {
     lv_obj_t * ui_glyph;
 
     char footer_image_path[MAX_BUFFER_SIZE];
@@ -698,8 +698,8 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 
     ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
-    if (file_exist(footer_image_path) && glyph_alpha > 0) lv_img_set_src(ui_glyph, footer_image_embed);
-    lv_obj_set_style_img_opa(ui_glyph, glyph_alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (file_exist(footer_image_path) && nav_footer_glyph.GLYPH_ALPHA > 0) lv_img_set_src(ui_glyph, footer_image_embed);
+    lv_obj_set_style_img_opa(ui_glyph, nav_footer_glyph.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_glyph, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
@@ -707,7 +707,11 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
     lv_obj_set_style_pad_left(ui_glyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_glyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (glyph_alpha == 0) lv_obj_set_width(ui_glyph, 0);
+
+    lv_obj_set_style_img_recolor(ui_glyph, lv_color_hex(nav_footer_glyph.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_glyph, nav_footer_glyph.GLYPH_RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    if (nav_footer_glyph.GLYPH_ALPHA == 0) lv_obj_set_width(ui_glyph, 0);
     return ui_glyph;
 }
 
