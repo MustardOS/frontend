@@ -27,7 +27,7 @@ EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 LVGL_DIR_NAME ?= lvgl
 LVGL_DIR ?= ${shell pwd}/..
 
-SSRCS := ${shell cat ui/filelist.txt}
+SSRCS := ${shell ls -1 ./ui/*.c}
 
 MAINSRC = ./main.c
 
