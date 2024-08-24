@@ -958,14 +958,14 @@ void load_system(const char *value) {
     fclose(file);
 }
 
-void load_assign(const char *dir, const char *sys) {
+void load_assign(const char *rom, const char *dir, const char *sys) {
     FILE * file = fopen(MUOS_ASS_LOAD, "w");
     if (file == NULL) {
         perror("fopen");
         return;
     }
 
-    fprintf(file, "%s\n%s", dir, sys);
+    fprintf(file, "%s\n%s\n%s", rom, dir, sys);
     fclose(file);
 }
 
@@ -1002,7 +1002,7 @@ void play_sound(const char *sound, int enabled, int wait) {
     }
 }
 
-void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[]) {
+void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive) {
     struct dirent *entry;
     DIR *dir = opendir(dir_path);
 
@@ -1036,9 +1036,11 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
                 }
             } else if (entry->d_type == DT_DIR && strcasecmp(entry->d_name, ".") != 0 &&
                        strcasecmp(entry->d_name, "..") != 0) {
-                char sub_dir_path[PATH_MAX];
-                snprintf(sub_dir_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
-                delete_files_of_type(sub_dir_path, extension, exception);
+                if (recursive) {
+                    char sub_dir_path[PATH_MAX];
+                    snprintf(sub_dir_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
+                    delete_files_of_type(sub_dir_path, extension, exception, recursive);
+                }
             }
         }
 
@@ -1210,8 +1212,6 @@ void load_font_text(const char *program, lv_obj_t *screen) {
 }
 
 void load_font_section(const char *program, const char *section, lv_obj_t *element) {
-    printf("\t\t\t\tTRYING TO LOAD %s FONT\n", section);
-
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_section_default[MAX_BUFFER_SIZE];
         char theme_font_section[MAX_BUFFER_SIZE];

@@ -141,7 +141,7 @@ char *load_content_core(int force) {
         printf("LOADING CORE AT: %s\n", content_core);
         return read_text_from_file(content_core);
     } else {
-        load_assign(sd_dir, "none");
+        load_assign(items[current_item_index].name, sd_dir, "none");
         safe_quit = 1;
     }
 
@@ -1323,14 +1323,8 @@ void *joystick_task() {
                                             goto nothing_ever_happens;
                                     }
 
-                                    char c_dir[MAX_BUFFER_SIZE];
-                                    snprintf(c_dir, sizeof(c_dir), "%s/info/core/%s",
-                                             STORAGE_PATH, get_last_subdir(n_dir, '/', 4));
-                                    const char *exception_list[] = {"core.cfg", NULL};
-
                                     if (file_exist(cache_file)) {
                                         remove(cache_file);
-                                        delete_files_of_type(c_dir, "cfg", exception_list);
                                         cache_message(n_dir);
                                     }
 

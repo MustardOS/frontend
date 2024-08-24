@@ -172,13 +172,13 @@ void decrease_option_value(lv_obj_t *element, int *current, int total);
 
 void load_system(const char *value);
 
-void load_assign(const char *dir, const char *sys);
+void load_assign(const char *rom, const char *dir, const char *sys);
 
 void load_mux(const char *value);
 
 void play_sound(const char *sound, int enabled, int wait);
 
-void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[]);
+void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive);
 
 void delete_files_of_name(const char *dir_path, const char *filename);
 

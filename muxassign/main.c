@@ -68,6 +68,7 @@ int current_item_index = 0;
 int first_open = 1;
 
 char *auto_assign;
+char *rom_name;
 char *rom_dir;
 char *rom_system;
 
@@ -149,24 +150,42 @@ void free_subdirectories(char **dir_names) {
     free(dir_names);
 }
 
-void create_core_assignment(const char *core, char *sys, int cache, enum core_gen_type method) {
+void create_core_assignment(const char *core, char *sys, char *rom, int cache, enum core_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/info/core/%s/",
              STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
     create_directories(core_dir);
-    //delete_files_of_type(core_dir, "cfg", NULL);
 
     switch (method) {
         case SINGLE:
-            // TODO: Capture name of content and assign core to file only
+            printf("SINGLE ASSIGN TRIGGER\n");
+            char rom_path[MAX_BUFFER_SIZE];
+            snprintf(rom_path, sizeof(rom_path), "%s/%s.cfg",
+                     core_dir, strip_ext(rom));
+
+            if (file_exist(rom_path)) remove(rom_path);
+
+            FILE * rom_file = fopen(rom_path, "w");
+            if (rom_file == NULL) {
+                perror("Error opening file rom_path file");
+                return;
+            }
+
+            printf("SINGLE ASSIGN CONTENT:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s\n",
+                   strip_ext(rom), core, str_trim(sys), cache,
+                   str_replace(str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""), "/ROMS/", "/ROMS"),
+                   get_last_subdir(rom_dir, '/', 4), rom);
+            fprintf(rom_file, "%s\n%s\n%s\n%d\n%s\n%s\n%s\n",
+                    strip_ext(rom), core, str_trim(sys), cache,
+                    str_replace(str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""), "/ROMS/", "/ROMS"),
+                    get_last_subdir(rom_dir, '/', 4), rom);
+            fclose(rom_file);
             break;
         case PARENT: {
-            char subdir_path[MAX_BUFFER_SIZE];
-            snprintf(subdir_path, sizeof(subdir_path), "%s/info/core/%s/",
-                     STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+            delete_files_of_type(core_dir, "cfg", NULL, 1);
 
-            char **subdirs = get_subdirectories(rom_dir);
+            char **subdirs = get_subdirectories(core_dir);
             if (subdirs != NULL) {
                 for (int i = 0; subdirs[i] != NULL; i++) {
                     char subdir_file[MAX_BUFFER_SIZE];
@@ -189,6 +208,8 @@ void create_core_assignment(const char *core, char *sys, int cache, enum core_ge
             break;
         case DIRECTORY:
         default: {
+            delete_files_of_type(core_dir, "cfg", NULL, 0);
+
             char core_file[MAX_BUFFER_SIZE];
             snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
                      STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
@@ -460,6 +481,8 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     if (strcasecmp(rom_system, "none") != 0) {
+                                        printf("PARENT CORE ASSIGNMENT TRIGGER\n");
+
                                         play_sound("confirm", nav_sound, 1);
 
                                         char chosen_core_ini[FILENAME_MAX];
@@ -479,7 +502,8 @@ void *joystick_task() {
                                         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
                                                                               "catalogue", rom_system));
 
-                                        create_core_assignment(raw_core, core_catalogue, name_cache, PARENT);
+                                        create_core_assignment(raw_core, core_catalogue, rom_name,
+                                                               name_cache, PARENT);
 
                                         mini_free(chosen_core);
 
@@ -487,6 +511,8 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(rom_system, "none") != 0) {
+                                        printf("SINGLE CORE ASSIGNMENT TRIGGER\n");
+
                                         play_sound("confirm", nav_sound, 1);
 
                                         char chosen_core_ini[FILENAME_MAX];
@@ -506,7 +532,8 @@ void *joystick_task() {
                                         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
                                                                               "catalogue", rom_system));
 
-                                        create_core_assignment(raw_core, core_catalogue, name_cache, SINGLE);
+                                        create_core_assignment(raw_core, core_catalogue, rom_name,
+                                                               name_cache, SINGLE);
 
                                         mini_free(chosen_core);
 
@@ -516,8 +543,10 @@ void *joystick_task() {
                                     play_sound("confirm", nav_sound, 1);
 
                                     if (strcasecmp(rom_system, "none") == 0) {
-                                        load_assign(rom_dir, str_trim(lv_label_get_text(element_focused)));
+                                        load_assign(rom_name, rom_dir, str_trim(lv_label_get_text(element_focused)));
                                     } else {
+                                        printf("DIRECTORY CORE ASSIGNMENT TRIGGER\n");
+
                                         char chosen_core_ini[FILENAME_MAX];
                                         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
                                                  "%s/MUOS/info/assign/%s.ini",
@@ -535,7 +564,8 @@ void *joystick_task() {
                                         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
                                                                               "catalogue", rom_system));
 
-                                        create_core_assignment(raw_core, core_catalogue, name_cache, DIRECTORY);
+                                        create_core_assignment(raw_core, core_catalogue, rom_name,
+                                                               name_cache, DIRECTORY);
 
                                         mini_free(chosen_core);
                                     }
@@ -549,7 +579,7 @@ void *joystick_task() {
                                         fprintf(file, "%s", "");
                                         fclose(file);
                                     } else {
-                                        load_assign(rom_dir, "none");
+                                        load_assign(rom_name, rom_dir, "none");
                                     }
 
                                     remove(MUOS_SAA_LOAD);
@@ -869,16 +899,20 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     srand(time(NULL));
 
-    char *cmd_help = "\nmuOS Extras - Core Assignment\nUsage: %s <-ads>\n\nOptions:\n"
+    char *cmd_help = "\nmuOS Extras - Core Assignment\nUsage: %s <-acds>\n\nOptions:\n"
                      "\t-a Auto assign content directory check\n"
+                     "\t-c Name of content file\n"
                      "\t-d Name of content directory\n"
                      "\t-s Name of content system (use 'none' for root)\n\n";
 
     int opt;
-    while ((opt = getopt(argc, argv, "a:d:s:")) != -1) {
+    while ((opt = getopt(argc, argv, "a:c:d:s:")) != -1) {
         switch (opt) {
             case 'a':
                 auto_assign = optarg;
+                break;
+            case 'c':
+                rom_name = optarg;
                 break;
             case 'd':
                 rom_dir = optarg;
@@ -892,13 +926,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (auto_assign == NULL || rom_dir == NULL || rom_system == NULL) {
+    if (auto_assign == NULL || rom_name == NULL || rom_dir == NULL || rom_system == NULL) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
 
     load_config(&config);
 
+    printf("ASSIGN CORE ROM_NAME: \"%s\"\n", rom_name);
     printf("ASSIGN CORE ROM_DIR: \"%s\"\n", rom_dir);
     printf("ASSIGN CORE ROM_SYS: \"%s\"\n", rom_system);
 
@@ -963,7 +998,7 @@ int main(int argc, char *argv[]) {
                         printf("ASSIGN CORE CACHE: %d\n", name_cache);
                         printf("ASSIGN CORE CATALOGUE: %s\n", core_catalogue);
 
-                        create_core_assignment(auto_core, core_catalogue, name_cache, DIRECTORY);
+                        create_core_assignment(auto_core, core_catalogue, rom_name, name_cache, DIRECTORY);
 
                         auto_assign_good = 1;
                     }
