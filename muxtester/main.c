@@ -94,77 +94,69 @@ void *joystick_task() {
                 }
                 break;
             case EV_ABS:
-                if (ev.code == ABS_HAT0Y || ev.code == ABS_Z) {
+                if (ev.code == device.RAW_INPUT.DPAD.UP ||
+                    ev.code == device.RAW_INPUT.DPAD.DOWN) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    switch (ev.value) {
-                        // TODO: Change this over to conditional statements to use INPUT.AXIS_MIN/MAX
-                        case -4100 ... -4000:
-                            lv_label_set_text(ui_lblButton, "↾");
-                            break;
-                        case -1:
-                            lv_label_set_text(ui_lblButton, "↟");
-                            break;
-                        case 1:
-                            lv_label_set_text(ui_lblButton, "↡");
-                            break;
-                        case 4000 ... 4100:
-                            lv_label_set_text(ui_lblButton, "⇂");
-                            break;
-                        default:
-                            lv_label_set_text(ui_lblButton, " ");
-                            break;
+                    if (ev.value == -1) {
+                        lv_label_set_text(ui_lblButton, "↟");
+                    } else if (ev.value == 1) {
+                        lv_label_set_text(ui_lblButton, "↡");
+                    } else {
+                        lv_label_set_text(ui_lblButton, " ");
                     }
-                } else if (ev.code == ABS_HAT0X || ev.code == ABS_Y) {
+                } else if (ev.code == device.RAW_INPUT.DPAD.LEFT ||
+                           ev.code == device.RAW_INPUT.DPAD.RIGHT) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    switch (ev.value) {
-                        // TODO: Change this over to conditional statements to use INPUT.AXIS_MIN/MAX
-                        case -4100 ... -4000:
-                            lv_label_set_text(ui_lblButton, "↼");
-                            break;
-                        case -1:
-                            lv_label_set_text(ui_lblButton, "↞");
-                            break;
-                        case 1:
-                            lv_label_set_text(ui_lblButton, "↠");
-                            break;
-                        case 4000 ... 4100:
-                            lv_label_set_text(ui_lblButton, "⇀");
-                            break;
-                        default:
-                            lv_label_set_text(ui_lblButton, " ");
-                            break;
+                    if (ev.value == -1) {
+                        lv_label_set_text(ui_lblButton, "↞");
+                    } else if (ev.value == 1) {
+                        lv_label_set_text(ui_lblButton, "↠");
+                    } else {
+                        lv_label_set_text(ui_lblButton, " ");
+                    }
+                } else if (ev.code == device.RAW_INPUT.ANALOG.LEFT.UP ||
+                           ev.code == device.RAW_INPUT.ANALOG.LEFT.DOWN) {
+                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
+                    if (ev.value >= -device.INPUT.AXIS_MAX && ev.value <= -device.INPUT.AXIS_MIN) {
+                        lv_label_set_text(ui_lblButton, "↾");
+                    } else if (ev.value >= device.INPUT.AXIS_MIN && ev.value <= device.INPUT.AXIS_MAX) {
+                        lv_label_set_text(ui_lblButton, "⇂");
+                    } else {
+                        lv_label_set_text(ui_lblButton, " ");
+                    }
+                } else if (ev.code == device.RAW_INPUT.ANALOG.LEFT.LEFT ||
+                           ev.code == device.RAW_INPUT.ANALOG.LEFT.RIGHT) {
+                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
+                    if (ev.value >= -device.INPUT.AXIS_MAX && ev.value <= -device.INPUT.AXIS_MIN) {
+                        lv_label_set_text(ui_lblButton, "↼");
+                    } else if (ev.value >= device.INPUT.AXIS_MIN && ev.value <= device.INPUT.AXIS_MAX) {
+                        lv_label_set_text(ui_lblButton, "⇀");
+                    } else {
+                        lv_label_set_text(ui_lblButton, " ");
                     }
                 } else if (ev.code == ABS_RZ) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    switch (ev.value) {
-                        // TODO: Change this over to conditional statements to use INPUT.AXIS_MIN/MAX
-                        case -4100 ... -4000:
-                            lv_label_set_text(ui_lblButton, "↿");
-                            break;
-                        case 4000 ... 4100:
-                            lv_label_set_text(ui_lblButton, "⇃");
-                            break;
-                        default:
-                            lv_label_set_text(ui_lblButton, " ");
-                            break;
+                    if (ev.value >= -device.INPUT.AXIS_MAX && ev.value <= -device.INPUT.AXIS_MIN) {
+                        lv_label_set_text(ui_lblButton, "↿");
+                    } else if (ev.value >= device.INPUT.AXIS_MIN && ev.value <= device.INPUT.AXIS_MAX) {
+                        lv_label_set_text(ui_lblButton, "⇃");
+                    } else {
+                        lv_label_set_text(ui_lblButton, " ");
                     }
                 } else if (ev.code == ABS_RY) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    switch (ev.value) {
-                        // TODO: Change this over to conditional statements to use INPUT.AXIS_MIN/MAX
-                        case -4100 ... -4000:
-                            lv_label_set_text(ui_lblButton, "↽");
-                            break;
-                        case 4000 ... 4100:
-                            lv_label_set_text(ui_lblButton, "⇁");
-                            break;
-                        default:
-                            lv_label_set_text(ui_lblButton, " ");
-                            break;
+                    if (ev.value >= -device.INPUT.AXIS_MAX && ev.value <= -device.INPUT.AXIS_MIN) {
+                        lv_label_set_text(ui_lblButton, "↽");
+                    } else if (ev.value >= device.INPUT.AXIS_MIN && ev.value <= device.INPUT.AXIS_MAX) {
+                        lv_label_set_text(ui_lblButton, "⇁");
+                    } else {
+                        lv_label_set_text(ui_lblButton, " ");
                     }
                 }
             default:
