@@ -493,4 +493,6 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
                                  LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_img_recolor_opa(ui_lblItemGlyph, theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA,
                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_pad_top(ui_lblItemGlyph, theme->FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblItemGlyph, theme->FONT.LIST_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
