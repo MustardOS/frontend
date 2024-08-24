@@ -94,7 +94,7 @@ void *joystick_task() {
                 }
                 break;
             case EV_ABS:
-                if (ev.code == ABS_HAT0Y || ev.code == ABS_RX) {
+                if (ev.code == ABS_HAT0Y || ev.code == ABS_Z) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     switch (ev.value) {
