@@ -1,0 +1,35 @@
+MODULES := muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxinfo \
+           muxlaunch muxnetprofile muxnetscan muxnetwork muxpass muxplore \
+           muxrtc muxsplash muxstart muxstorage muxsysinfo muxtask muxtester \
+           muxtheme muxtimezone muxtweakadv muxtweakgen muxvisual muxwebserv
+
+BUILD_TOTAL := $(words $(MODULES))
+BUILD_FILE := .build_count
+DEVICE ?= $(error DEVICE not specified)
+
+.PHONY: all $(MODULES) clean notify build
+
+MAKEFLAGS += --no-print-directory
+
+all: info clean $(MODULES) notify
+
+info:
+	$(info ======== muOS Frontend Builder ========)
+	$(info Targeting: $(DEVICE))
+	$(info Modules: $(MODULES))
+
+clean:
+	@rm -rf bin/mux*
+
+$(MODULES):
+	@if [ -f "$@/Makefile" ]; then \
+		$(MAKE) -C $@ DEVICE=$(DEVICE) && \
+		BUILD_COUNT=$$(cat $(BUILD_FILE) 2>/dev/null || echo 0); \
+		echo $$((BUILD_COUNT + 1)) > $(BUILD_FILE); \
+	fi
+
+notify:
+	@BUILD_COUNT=$$(cat $(BUILD_FILE) 2>/dev/null || echo 0); \
+	printf "Compiled $$BUILD_COUNT of $(BUILD_TOTAL) Modules\n============== Complete! =============="; \
+	notify-send "muOS Frontend Builder" "Compiled $$BUILD_COUNT of $(BUILD_TOTAL) Modules" && echo -e '\a'
+	@rm -rf $(BUILD_FILE)

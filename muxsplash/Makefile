@@ -6,9 +6,6 @@ ifeq ($(DEVICE), RG35XX)
 else ifeq ($(DEVICE), RG35XXPLUS)
 	ARCH = -march=armv8-a+simd \
 		-mtune=cortex-a53
-else ifeq ($(DEVICE), RG28XX)
-	ARCH = -march=armv8-a+simd \
-		-mtune=cortex-a53
 else
 	$(error Unsupported Device: $(DEVICE))
 endif
@@ -48,22 +45,25 @@ MAINOBJ = $(MAINSRC:.c=$(OBJEXT))
 SRCS = $(ASRCS) $(CSRCS) $(SSRCS) $(MAINSRC)
 OBJS = $(AOBJS) $(COBJS) $(SOBJS)
 
-all: message compile
+all: clean compile move
 
 %.o: %.c
 	@$(CC) -D$(DEVICE) $(CFLAGS) -c $< -o $@ $(EXTRA)
 
-message:
-	@printf "\nDevice:\t$(DEVICE)\n"
-	@printf "Name:\t$(TARGET)\n"
+clean:
+	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
+	@printf "Building: $(TARGET)...\r"
 	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
 		../common/mini/mini.c \
 		../common/device.c \
 		../common/common.c \
 		$(EXTRA)
+	@printf "Building: $(TARGET)... DONE!\n"
 
-clean:
+move:
+	@mkdir -p ../bin
+	@mv $(TARGET) ../bin/
 	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
 
