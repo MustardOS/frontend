@@ -713,16 +713,22 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, int16_t glyph_alpha) {
     lv_obj_t * ui_glyph;
 
-    char image[MAX_BUFFER_SIZE];
-    char image_path[MAX_BUFFER_SIZE];
-    snprintf(image, sizeof(image), "%s/theme/active/glyph/footer/%s.png",
-             STORAGE_PATH, glyph_name);
-    snprintf(image_path, sizeof(image_path), "M:%s/theme/active/glyph/footer/%s.png",
-             STORAGE_PATH, glyph_name);
+    char footer_image_path[MAX_BUFFER_SIZE];
+    char footer_image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(footer_image_path, sizeof(footer_image_path), "%s/theme/active/glyph/footer/%s.png",
+                 STORAGE_PATH, glyph_name) >= 0 && file_exist(footer_image_path)) {
+        snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s/theme/active/glyph/footer/%s.png",
+                 STORAGE_PATH, glyph_name);
+    } else if (snprintf(footer_image_path, sizeof(footer_image_path), "%s/theme/glyph/footer/%s.png",
+                        INTERNAL_PATH, glyph_name) >= 0 &&
+               file_exist(footer_image_path)) {
+        snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s/theme/glyph/footer/%s.png",
+                 INTERNAL_PATH, glyph_name);
+    }
 
     ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
-    if (file_exist(image) && glyph_alpha > 0) lv_img_set_src(ui_glyph, image_path);
+    if (file_exist(footer_image_path) && glyph_alpha > 0) lv_img_set_src(ui_glyph, footer_image_embed);
     lv_obj_set_style_img_opa(ui_glyph, glyph_alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_glyph, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
 

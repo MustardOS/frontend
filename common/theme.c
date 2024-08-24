@@ -454,16 +454,22 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
                             const char *screen_name, char *item_glyph) {
     if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0 && theme->LIST_FOCUS.GLYPH_ALPHA == 0) return;
 
-    char image[MAX_BUFFER_SIZE];
-    char image_path[MAX_BUFFER_SIZE];
-    snprintf(image, sizeof(image), "%s/theme/active/glyph/%s/%s.png",
-             STORAGE_PATH, screen_name, item_glyph);
-    snprintf(image_path, sizeof(image_path), "M:%s/theme/active/glyph/%s/%s.png",
-             STORAGE_PATH, screen_name, item_glyph);
+    char glyph_image_path[MAX_BUFFER_SIZE];
+    char glyph_image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/glyph/%s/%s.png",
+                 STORAGE_PATH, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) {
+        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/theme/active/glyph/%s/%s.png",
+                 STORAGE_PATH, screen_name, item_glyph);
+    } else if (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/glyph/%s/%s.png",
+                        INTERNAL_PATH, screen_name, item_glyph) >= 0 &&
+               file_exist(glyph_image_path)) {
+        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/theme/glyph/%s/%s.png",
+                 INTERNAL_PATH, screen_name, item_glyph);
+    }
 
-    if (!file_exist(image)) return;
+    if (!file_exist(glyph_image_path)) return;
 
-    lv_img_set_src(ui_lblItemGlyph, image_path);
+    lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
 
     lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (theme->MISC.CONTENT.WIDTH / 2));
     lv_obj_set_align(ui_lblItemGlyph, LV_ALIGN_CENTER);
