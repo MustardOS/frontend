@@ -212,58 +212,15 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_top(ui_conGlyphs, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_conGlyphs, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_staBluetooth = lv_label_create(ui_conGlyphs);
-    lv_obj_set_width(ui_staBluetooth, 20);
-    lv_obj_set_height(ui_staBluetooth, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_staBluetooth, -220);
-    lv_obj_set_y(ui_staBluetooth, -205);
-    lv_obj_set_align(ui_staBluetooth, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_staBluetooth, "");
-    lv_obj_set_style_text_color(ui_staBluetooth, lv_color_hex(theme->STATUS.BLUETOOTH.NORMAL),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_staBluetooth, theme->STATUS.BLUETOOTH.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_staBluetooth, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_staBluetooth, &ui_font_AwesomeBrand, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_staBluetooth, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_staBluetooth, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staBluetooth, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staBluetooth, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_staBluetooth = create_header_glyph(ui_conGlyphs, theme);
+    update_bluetooth_status(ui_staBluetooth);
 
-    ui_staNetwork = lv_label_create(ui_conGlyphs);
-    lv_obj_set_width(ui_staNetwork, 30);
-    lv_obj_set_height(ui_staNetwork, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_staNetwork, -220);
-    lv_obj_set_y(ui_staNetwork, -205);
-    lv_obj_set_align(ui_staNetwork, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_staNetwork, "");
-    lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.NORMAL),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_staNetwork, theme->STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_staNetwork, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_staNetwork, &ui_font_Awesome, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_staNetwork, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_staNetwork, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staNetwork, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staNetwork, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_staNetwork = create_header_glyph(ui_conGlyphs, theme);
+    update_network_status(ui_staNetwork);
 
-    ui_staCapacity = lv_label_create(ui_conGlyphs);
-    lv_obj_set_width(ui_staCapacity, 35);
-    lv_obj_set_height(ui_staCapacity, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_staCapacity, -220);
-    lv_obj_set_y(ui_staCapacity, -205);
-    lv_obj_set_align(ui_staCapacity, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_staCapacity, "");
-    lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_staCapacity, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_staCapacity, &ui_font_AwesomeBig, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_staCapacity, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_staCapacity, -4, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staCapacity, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staCapacity, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_staCapacity = create_header_glyph(ui_conGlyphs, theme);
+    battery_capacity = read_battery_capacity();
+    update_battery_capacity(ui_staCapacity);
 
     ui_pnlFooter = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlFooter, device->SCREEN.WIDTH);
@@ -708,6 +665,19 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_screen);
+}
+
+lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
+    lv_obj_t * ui_glyph;
+    ui_glyph = lv_img_create(parent);
+    lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
+    lv_obj_set_align(ui_glyph, LV_ALIGN_CENTER);
+    lv_obj_set_style_pad_left(ui_glyph, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_glyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    return ui_glyph;
 }
 
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, int16_t glyph_alpha) {

@@ -19,6 +19,7 @@
 #include "mini/mini.h"
 
 struct pattern skip_pattern_list = {NULL, 0, 0};
+int battery_capacity = 100;
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
@@ -863,23 +864,24 @@ void datetime_task(lv_timer_t *timer) {
 }
 
 char *get_capacity() {
-    static char capacity_str[MAX_BUFFER_SIZE];
+    char *battery_glyph_name = (atoi(read_text_from_file(device.BATTERY.CHARGER))) ? "capacity_charging_" : "capacity_";
 
-    switch (read_battery_capacity()) {
+    static char capacity_str[MAX_BUFFER_SIZE];
+    switch (battery_capacity) {
         case -255 ... 15:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF244");
+            snprintf(capacity_str, sizeof(capacity_str), "%s0", battery_glyph_name);
             break;
         case 16 ... 30:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF243");
+            snprintf(capacity_str, sizeof(capacity_str), "%s25", battery_glyph_name);
             break;
         case 31 ... 50:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF242");
+            snprintf(capacity_str, sizeof(capacity_str), "%s50", battery_glyph_name);
             break;
         case 51 ... 75:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF241");
+            snprintf(capacity_str, sizeof(capacity_str), "%s75", battery_glyph_name);
             break;
         case 76 ... 255:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF240");
+            snprintf(capacity_str, sizeof(capacity_str), "%s100", battery_glyph_name);
             break;
     }
 
@@ -888,7 +890,63 @@ char *get_capacity() {
 
 void capacity_task(lv_timer_t *timer) {
     struct bat_task_param *bat_par = timer->user_data;
-    lv_label_set_text(bat_par->staCapacity, get_capacity());
+    battery_capacity = read_battery_capacity();
+    update_battery_capacity(bat_par->staCapacity);
+}
+
+void update_battery_capacity(lv_obj_t * ui_staCapacity) {
+    char *battery_glyph_name = get_capacity();
+
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/%s.png",
+                 STORAGE_PATH, battery_glyph_name) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/%s.png",
+                 STORAGE_PATH, battery_glyph_name);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/%s.png",
+                        INTERNAL_PATH, battery_glyph_name) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/%s.png",
+                 INTERNAL_PATH, battery_glyph_name);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staCapacity, image_embed);
+}
+
+void update_bluetooth_status(lv_obj_t * ui_staBluetooth) {
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/bluetooth.png",
+                 STORAGE_PATH) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/bluetooth.png",
+                 STORAGE_PATH);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/bluetooth.png",
+                        INTERNAL_PATH) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/bluetooth.png",
+                 INTERNAL_PATH);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staBluetooth, image_embed);
+}
+
+void update_network_status(lv_obj_t * ui_staNetwork) {
+    char *network_status = (device.DEVICE.HAS_NETWORK && is_network_connected()) ? "active" : "normal";
+
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/network_%s.png",
+                 STORAGE_PATH, network_status) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/network_%s.png",
+                 STORAGE_PATH, network_status);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/network_%s.png",
+                        INTERNAL_PATH, network_status) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/network_%s.png",
+                 INTERNAL_PATH, network_status);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
 }
 
 void osd_task(lv_timer_t *timer) {

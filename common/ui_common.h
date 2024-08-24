@@ -2,6 +2,8 @@
 
 void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title);
 
+lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme);
+
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, int16_t glyph_alpha);
 
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha);
