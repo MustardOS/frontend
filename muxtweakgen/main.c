@@ -189,7 +189,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
     lv_dropdown_set_selected(ui_droBGM, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
-    lv_dropdown_set_selected(ui_droBrightness, config.SETTINGS.GENERAL.BRIGHTNESS - 1);
+    lv_dropdown_set_selected(ui_droBrightness, config.SETTINGS.GENERAL.BRIGHTNESS + 1);
 
     switch (config.SETTINGS.GENERAL.HDMI) {
         case -1:
