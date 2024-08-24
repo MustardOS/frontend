@@ -757,8 +757,8 @@ void init_elements() {
 
     if (strcasecmp(rom_system, "none") != 0) {
         lv_label_set_text(ui_lblNavA, "Directory");
-        lv_label_set_text(ui_lblNavX, "Selected");
-        lv_label_set_text(ui_lblNavY, "Parent");
+        lv_label_set_text(ui_lblNavX, "Individual");
+        lv_label_set_text(ui_lblNavY, "Recursive");
 
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
@@ -769,6 +769,13 @@ void init_elements() {
         lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
+
+        lv_obj_move_foreground(ui_lblNavAGlyph);
+        lv_obj_move_foreground(ui_lblNavA);
+        lv_obj_move_foreground(ui_lblNavXGlyph);
+        lv_obj_move_foreground(ui_lblNavX);
+        lv_obj_move_foreground(ui_lblNavYGlyph);
+        lv_obj_move_foreground(ui_lblNavY);
     }
 
     char *overlay = load_overlay_image();
