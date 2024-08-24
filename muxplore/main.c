@@ -554,9 +554,19 @@ void gen_item(char **file_names, int file_count) {
     int fn_valid = 0;
     struct json fn_json;
 
+    char friendly_name_file[MAX_BUFFER_SIZE];
+    if (module == FAVOURITE || module == HISTORY) {
+        snprintf(friendly_name_file, sizeof(friendly_name_file), "general");
+    } else {
+        snprintf(friendly_name_file, sizeof(friendly_name_file), "%s",
+                 str_replace(read_line_from_file(local_name_cache, 1), "_libretro.so", ""));
+    }
+
     char name_file[MAX_BUFFER_SIZE];
-    snprintf(name_file, sizeof(name_file), "%s/MUOS/info/name.json",
-             device.STORAGE.ROM.MOUNT);
+    snprintf(name_file, sizeof(name_file), "%s/MUOS/info/name/%s.json",
+             device.STORAGE.ROM.MOUNT, friendly_name_file);
+
+    printf("TRYING TO READ NAME FILE AT: %s\n", name_file);
 
     if (json_valid(read_text_from_file(name_file))) {
         fn_valid = 1;
