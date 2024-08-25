@@ -301,7 +301,7 @@ void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, 
         // The overall width of the control will include the right padding
         lv_obj_set_style_pad_right(ui_lblItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_width(ui_lblItem, item_width);
-        lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (item_width / 2));
+        lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (item_width / 2) - 5); // - 5 at end to compensate for border width
     }
 }
 
