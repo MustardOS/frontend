@@ -95,36 +95,43 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     theme->NAV.A.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_A_GLYPH");
     theme->NAV.A.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_ALPHA", 255);
+    theme->NAV.A.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_RECOLOUR_ALPHA", 255);
     theme->NAV.A.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_A_TEXT");
     theme->NAV.A.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_TEXT_ALPHA", 255);
 
     theme->NAV.B.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_B_GLYPH");
     theme->NAV.B.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_B_GLYPH_ALPHA", 255);
+    theme->NAV.B.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_B_GLYPH_RECOLOUR_ALPHA", 255);
     theme->NAV.B.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_B_TEXT");
     theme->NAV.B.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_B_TEXT_ALPHA", 255);
 
     theme->NAV.C.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_C_GLYPH");
     theme->NAV.C.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_C_GLYPH_ALPHA", 255);
+    theme->NAV.C.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_C_GLYPH_RECOLOUR_ALPHA", 255);
     theme->NAV.C.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_C_TEXT");
     theme->NAV.C.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_C_TEXT_ALPHA", 255);
 
     theme->NAV.X.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_X_GLYPH");
     theme->NAV.X.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_X_GLYPH_ALPHA", 255);
+    theme->NAV.X.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_X_GLYPH_RECOLOUR_ALPHA", 255);
     theme->NAV.X.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_X_TEXT");
     theme->NAV.X.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_X_TEXT_ALPHA", 255);
 
     theme->NAV.Y.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_Y_GLYPH");
     theme->NAV.Y.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Y_GLYPH_ALPHA", 255);
+    theme->NAV.Y.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Y_GLYPH_RECOLOUR_ALPHA", 255);
     theme->NAV.Y.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_Y_TEXT");
     theme->NAV.Y.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Y_TEXT_ALPHA", 255);
 
     theme->NAV.Z.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_Z_GLYPH");
     theme->NAV.Z.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Z_GLYPH_ALPHA", 255);
+    theme->NAV.Z.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Z_GLYPH_RECOLOUR_ALPHA", 255);
     theme->NAV.Z.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_Z_TEXT");
     theme->NAV.Z.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Z_TEXT_ALPHA", 255);
 
     theme->NAV.MENU.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_MENU_GLYPH");
     theme->NAV.MENU.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_GLYPH_ALPHA", 255);
+    theme->NAV.MENU.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_GLYPH_RECOLOUR_ALPHA", 255);
     theme->NAV.MENU.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_MENU_TEXT");
     theme->NAV.MENU.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_TEXT_ALPHA", 255);
 
@@ -139,7 +146,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_TEXT_ALPHA", 255);
     theme->LIST_DEFAULT.BACKGROUND_GRADIENT = (theme->LIST_DEFAULT.GRADIENT_START == 255)
                                               ? theme->LIST_DEFAULT.BACKGROUND : theme->SYSTEM.BACKGROUND;
-    theme->LIST_DEFAULT.GLYPH_PADDING_LEFT = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_PAD_LEFT", 9);
+    theme->LIST_DEFAULT.GLYPH_PADDING_LEFT = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_PAD_LEFT", 19);
     theme->LIST_DEFAULT.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_ALPHA", 255);
     theme->LIST_DEFAULT.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR");
     theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", 0);
@@ -486,4 +493,6 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
                                  LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_img_recolor_opa(ui_lblItemGlyph, theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA,
                                      LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_pad_top(ui_lblItemGlyph, theme->FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblItemGlyph, theme->FONT.LIST_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 }

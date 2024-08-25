@@ -212,58 +212,15 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_top(ui_conGlyphs, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_conGlyphs, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_staBluetooth = lv_label_create(ui_conGlyphs);
-    lv_obj_set_width(ui_staBluetooth, 20);
-    lv_obj_set_height(ui_staBluetooth, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_staBluetooth, -220);
-    lv_obj_set_y(ui_staBluetooth, -205);
-    lv_obj_set_align(ui_staBluetooth, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_staBluetooth, "");
-    lv_obj_set_style_text_color(ui_staBluetooth, lv_color_hex(theme->STATUS.BLUETOOTH.NORMAL),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_staBluetooth, theme->STATUS.BLUETOOTH.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_staBluetooth, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_staBluetooth, &ui_font_AwesomeBrand, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_staBluetooth, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_staBluetooth, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staBluetooth, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staBluetooth, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_staBluetooth = create_header_glyph(ui_conGlyphs, theme);
+    //update_bluetooth_status(ui_staBluetooth, theme);
 
-    ui_staNetwork = lv_label_create(ui_conGlyphs);
-    lv_obj_set_width(ui_staNetwork, 30);
-    lv_obj_set_height(ui_staNetwork, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_staNetwork, -220);
-    lv_obj_set_y(ui_staNetwork, -205);
-    lv_obj_set_align(ui_staNetwork, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_staNetwork, "");
-    lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.NORMAL),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_staNetwork, theme->STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_staNetwork, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_staNetwork, &ui_font_Awesome, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_staNetwork, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_staNetwork, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staNetwork, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staNetwork, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_staNetwork = create_header_glyph(ui_conGlyphs, theme);
+    update_network_status(ui_staNetwork, theme);
 
-    ui_staCapacity = lv_label_create(ui_conGlyphs);
-    lv_obj_set_width(ui_staCapacity, 35);
-    lv_obj_set_height(ui_staCapacity, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_staCapacity, -220);
-    lv_obj_set_y(ui_staCapacity, -205);
-    lv_obj_set_align(ui_staCapacity, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_staCapacity, "");
-    lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_staCapacity, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_staCapacity, &ui_font_AwesomeBig, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_staCapacity, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_staCapacity, -4, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_staCapacity, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_staCapacity, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_staCapacity = create_header_glyph(ui_conGlyphs, theme);
+    battery_capacity = read_battery_capacity();
+    update_battery_capacity(ui_staCapacity, theme);
 
     ui_pnlFooter = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlFooter, device->SCREEN.WIDTH);
@@ -305,30 +262,30 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_flex_main_place(ui_pnlFooter, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     if (config.SETTINGS.ADVANCED.SWAP) {
-        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.A.GLYPH_ALPHA);
+        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.A);
         ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
-        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.B.GLYPH_ALPHA);
+        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.B);
     } else {
-        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.A.GLYPH_ALPHA);
+        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.A);
         ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
-        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.B.GLYPH_ALPHA);
+        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.B);
     }
 
     ui_lblNavB = create_footer_text(ui_pnlFooter, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA);
 
-    ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C.GLYPH_ALPHA);
+    ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C);
     ui_lblNavC = create_footer_text(ui_pnlFooter, theme, theme->NAV.C.TEXT, theme->NAV.C.TEXT_ALPHA);
 
-    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, "x", theme->NAV.X.GLYPH_ALPHA);
+    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, "x", theme->NAV.X);
     ui_lblNavX = create_footer_text(ui_pnlFooter, theme, theme->NAV.X.TEXT, theme->NAV.X.TEXT_ALPHA);
 
-    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, "y", theme->NAV.Y.GLYPH_ALPHA);
+    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, "y", theme->NAV.Y);
     ui_lblNavY = create_footer_text(ui_pnlFooter, theme, theme->NAV.Y.TEXT, theme->NAV.Y.TEXT_ALPHA);
 
-    ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z.GLYPH_ALPHA);
+    ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z);
     ui_lblNavZ = create_footer_text(ui_pnlFooter, theme, theme->NAV.Z.TEXT, theme->NAV.Z.TEXT_ALPHA);
 
-    ui_lblNavMenuGlyph = create_footer_glyph(ui_pnlFooter, theme, "menu", theme->NAV.MENU.GLYPH_ALPHA);
+    ui_lblNavMenuGlyph = create_footer_glyph(ui_pnlFooter, theme, "menu", theme->NAV.MENU);
     ui_lblNavMenu = create_footer_text(ui_pnlFooter, theme, theme->NAV.MENU.TEXT, theme->NAV.MENU.TEXT_ALPHA);
 
     ui_lblScreenMessage = lv_label_create(ui_screen);
@@ -710,7 +667,20 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_disp_load_scr(ui_screen);
 }
 
-lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, int16_t glyph_alpha) {
+lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
+    lv_obj_t * ui_glyph;
+    ui_glyph = lv_img_create(parent);
+    lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
+    lv_obj_set_align(ui_glyph, LV_ALIGN_CENTER);
+    lv_obj_set_style_pad_left(ui_glyph, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_glyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_glyph, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.HEADER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    return ui_glyph;
+}
+
+lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, struct footer_glyph nav_footer_glyph) {
     lv_obj_t * ui_glyph;
 
     char footer_image_path[MAX_BUFFER_SIZE];
@@ -728,8 +698,8 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 
     ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
-    if (file_exist(footer_image_path) && glyph_alpha > 0) lv_img_set_src(ui_glyph, footer_image_embed);
-    lv_obj_set_style_img_opa(ui_glyph, glyph_alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (file_exist(footer_image_path) && nav_footer_glyph.GLYPH_ALPHA > 0) lv_img_set_src(ui_glyph, footer_image_embed);
+    lv_obj_set_style_img_opa(ui_glyph, nav_footer_glyph.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_glyph, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
@@ -737,7 +707,11 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
     lv_obj_set_style_pad_left(ui_glyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_glyph, theme->FONT.FOOTER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_glyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (glyph_alpha == 0) lv_obj_set_width(ui_glyph, 0);
+
+    lv_obj_set_style_img_recolor(ui_glyph, lv_color_hex(nav_footer_glyph.GLYPH), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_glyph, nav_footer_glyph.GLYPH_RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    if (nav_footer_glyph.GLYPH_ALPHA == 0) lv_obj_set_width(ui_glyph, 0);
     return ui_glyph;
 }
 
@@ -758,4 +732,89 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     lv_obj_set_style_pad_bottom(ui_lblNavText, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (text_alpha == 0) lv_obj_set_width(ui_lblNavText, 0);
     return ui_lblNavText;
+}
+
+void update_battery_capacity(lv_obj_t * ui_staCapacity, struct theme_config *theme) {
+    char *battery_glyph_name = get_capacity();
+    
+    if (str_startswith(battery_glyph_name, "capacity_charging_")) {
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.ACTIVE),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.ACTIVE_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else if (battery_capacity <= 15) {
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.LOW),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.LOW_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/%s.png",
+                 STORAGE_PATH, battery_glyph_name) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/%s.png",
+                 STORAGE_PATH, battery_glyph_name);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/%s.png",
+                        INTERNAL_PATH, battery_glyph_name) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/%s.png",
+                 INTERNAL_PATH, battery_glyph_name);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staCapacity, image_embed);
+}
+
+void update_bluetooth_status(lv_obj_t * ui_staBluetooth, struct theme_config *theme) {
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/bluetooth.png",
+                 STORAGE_PATH) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/bluetooth.png",
+                 STORAGE_PATH);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/bluetooth.png",
+                        INTERNAL_PATH) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/bluetooth.png",
+                 INTERNAL_PATH);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staBluetooth, image_embed);
+}
+
+void update_network_status(lv_obj_t * ui_staNetwork, struct theme_config *theme) {
+    char *network_status;
+    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
+        network_status = "active";
+        lv_obj_set_style_img_recolor(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.ACTIVE),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staNetwork, theme->STATUS.NETWORK.ACTIVE_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        network_status = "normal";
+        lv_obj_set_style_img_recolor(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.NORMAL),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staNetwork, theme->STATUS.NETWORK.NORMAL_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/network_%s.png",
+                 STORAGE_PATH, network_status) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/network_%s.png",
+                 STORAGE_PATH, network_status);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/network_%s.png",
+                        INTERNAL_PATH, network_status) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/network_%s.png",
+                 INTERNAL_PATH, network_status);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
 }

@@ -18,6 +18,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/mini/mini.h"
@@ -188,39 +189,20 @@ void *joystick_system_task() {
 
 void glyph_task() {
     // TODO: Bluetooth connectivity!
+    //update_bluetooth_status(ui_staBluetooth, &theme);
 
-    if (is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    update_network_status(ui_staNetwork, &theme);
 
-    if (atoi(read_text_from_file(device.BATTERY.CHARGER))) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    update_battery_capacity(ui_staCapacity, &theme);
 }
 
 void init_elements() {
-    lv_obj_move_foreground(ui_pnlFooter);
+    lv_label_set_text(ui_lblMessage, "Press POWER to finish testing");
+    lv_obj_set_y(ui_pnlMessage, - 5);
+    lv_obj_set_height(ui_pnlFooter, 0);
     lv_obj_move_foreground(ui_pnlHeader);
-
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_border_width(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -233,12 +215,12 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_scrTester);
+        lv_obj_t * overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
 
-    if (TEST_IMAGE) display_testing_message(ui_scrTester);
+    if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
 int main(int argc, char *argv[]) {
@@ -267,19 +249,19 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_theme(&theme, &config, &device, basename(argv[0]));
 
-    ui_init();
+    ui_common_screen_init(&theme, &device, "INPUT TESTER");
+    ui_init(ui_pnlContent);
     init_elements();
 
-    lv_obj_set_user_data(ui_scrTester, basename(argv[0]));
+    lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    lv_label_set_text(ui_staCapacity, get_capacity());
-
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    
     apply_theme();
 
-    char *current_wall = load_wallpaper(ui_scrTester, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    char *current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
@@ -291,7 +273,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font_text(basename(argv[0]), ui_scrTester);
+    load_font_text(basename(argv[0]), ui_screen);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {

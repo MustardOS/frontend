@@ -357,30 +357,11 @@ void init_elements() {
 
 void glyph_task() {
     // TODO: Bluetooth connectivity!
+    //update_bluetooth_status(ui_staBluetooth, &theme);
 
-    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    update_network_status(ui_staNetwork, &theme);
 
-    if (atoi(read_text_from_file(device.BATTERY.CHARGER))) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    update_battery_capacity(ui_staCapacity, &theme);
 
     if (progress_onscreen > 0) {
         progress_onscreen -= 1;
@@ -529,8 +510,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    lv_label_set_text(ui_staCapacity, get_capacity());
-
+    
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;

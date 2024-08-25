@@ -19,6 +19,7 @@
 #include "mini/mini.h"
 
 struct pattern skip_pattern_list = {NULL, 0, 0};
+int battery_capacity = 100;
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
@@ -863,23 +864,42 @@ void datetime_task(lv_timer_t *timer) {
 }
 
 char *get_capacity() {
-    static char capacity_str[MAX_BUFFER_SIZE];
+    char *battery_glyph_name = (atoi(read_text_from_file(device.BATTERY.CHARGER))) ? "capacity_charging_" : "capacity_";
 
-    switch (read_battery_capacity()) {
-        case -255 ... 15:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF244");
+    static char capacity_str[MAX_BUFFER_SIZE];
+    switch (battery_capacity) {
+        case -255 ... 5:
+            snprintf(capacity_str, sizeof(capacity_str), "%s0", battery_glyph_name);
             break;
-        case 16 ... 30:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF243");
+        case 6 ... 10:
+            snprintf(capacity_str, sizeof(capacity_str), "%s10", battery_glyph_name);
             break;
-        case 31 ... 50:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF242");
+        case 11 ... 20:
+            snprintf(capacity_str, sizeof(capacity_str), "%s20", battery_glyph_name);
             break;
-        case 51 ... 75:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF241");
+        case 21 ... 30:
+            snprintf(capacity_str, sizeof(capacity_str), "%s30", battery_glyph_name);
             break;
-        case 76 ... 255:
-            snprintf(capacity_str, sizeof(capacity_str), "\uF240");
+        case 31 ... 40:
+            snprintf(capacity_str, sizeof(capacity_str), "%s40", battery_glyph_name);
+            break;
+        case 41 ... 50:
+            snprintf(capacity_str, sizeof(capacity_str), "%s50", battery_glyph_name);
+            break;
+        case 51 ... 60:
+            snprintf(capacity_str, sizeof(capacity_str), "%s60", battery_glyph_name);
+            break;
+        case 61 ... 70:
+            snprintf(capacity_str, sizeof(capacity_str), "%s70", battery_glyph_name);
+            break;
+        case 71 ... 80:
+            snprintf(capacity_str, sizeof(capacity_str), "%s80", battery_glyph_name);
+            break;
+        case 81 ... 90:
+            snprintf(capacity_str, sizeof(capacity_str), "%s90", battery_glyph_name);
+            break;
+        case 91 ... 255:
+            snprintf(capacity_str, sizeof(capacity_str), "%s100", battery_glyph_name);
             break;
     }
 
@@ -887,8 +907,7 @@ char *get_capacity() {
 }
 
 void capacity_task(lv_timer_t *timer) {
-    struct bat_task_param *bat_par = timer->user_data;
-    lv_label_set_text(bat_par->staCapacity, get_capacity());
+    battery_capacity = read_battery_capacity();
 }
 
 void osd_task(lv_timer_t *timer) {

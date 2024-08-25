@@ -2,9 +2,17 @@
 
 void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title);
 
-lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, int16_t glyph_alpha);
+lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme);
+
+lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, struct footer_glyph nav_footer_glyph);
 
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha);
+
+void update_battery_capacity(lv_obj_t * ui_staCapacity, struct theme_config *theme);
+
+void update_bluetooth_status(lv_obj_t * ui_staBluetooth, struct theme_config *theme);
+
+void update_network_status(lv_obj_t * ui_staNetwork, struct theme_config *theme);
 
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;
