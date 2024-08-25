@@ -20,6 +20,7 @@
 #include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
+#include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/passcode.h"
@@ -217,40 +218,21 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_scrPass);
+        lv_obj_t * overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
 
-    if (TEST_IMAGE) display_testing_message(ui_scrPass);
+    if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
 void glyph_task() {
     // TODO: Bluetooth connectivity!
+    //update_bluetooth_status(ui_staBluetooth);
 
-    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.ACTIVE),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else {
-        lv_obj_set_style_text_color(ui_staNetwork, lv_color_hex(theme.STATUS.NETWORK.NORMAL),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staNetwork, theme.STATUS.NETWORK.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    update_network_status(ui_staNetwork);
 
-    if (atoi(read_text_from_file(device.BATTERY.CHARGER))) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.ACTIVE),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.ACTIVE_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else if (read_battery_capacity() <= 15) {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.LOW),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.LOW_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else {
-        lv_obj_set_style_text_color(ui_staCapacity, lv_color_hex(theme.STATUS.BATTERY.NORMAL),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_opa(ui_staCapacity, theme.STATUS.BATTERY.NORMAL_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    update_battery_capacity(ui_staCapacity);
 }
 
 int main(int argc, char *argv[]) {
@@ -317,8 +299,10 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_theme(&theme, &config, &device, basename(argv[0]));
 
-    ui_init();
+    ui_common_screen_init(&theme, &device, "");
+    ui_init(ui_pnlContent);
     init_elements();
 
     if (strlen(p_msg) > 1) {
@@ -326,15 +310,13 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    lv_obj_set_user_data(ui_scrPass, basename(argv[0]));
+    lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    lv_label_set_text(ui_staCapacity, get_capacity());
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
     apply_theme();
 
-    current_wall = load_wallpaper(ui_scrPass, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
@@ -346,7 +328,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font_text(basename(argv[0]), ui_scrPass);
+    load_font_text(basename(argv[0]), ui_screen);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
@@ -370,18 +352,14 @@ int main(int argc, char *argv[]) {
         case 1:
             NAV_A = device.RAW_INPUT.BUTTON.B;
             NAV_B = device.RAW_INPUT.BUTTON.A;
-            lv_label_set_text(ui_lblNavAGlyph, "\u21D2");
-            lv_label_set_text(ui_lblNavBGlyph, "\u21D3");
             break;
         default:
             NAV_A = device.RAW_INPUT.BUTTON.A;
             NAV_B = device.RAW_INPUT.BUTTON.B;
-            lv_label_set_text(ui_lblNavAGlyph, "\u21D3");
-            lv_label_set_text(ui_lblNavBGlyph, "\u21D2");
             break;
     }
 
-    current_wall = load_wallpaper(ui_scrPass, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
@@ -393,7 +371,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font_text(basename(argv[0]), ui_scrPass);
+    load_font_text(basename(argv[0]), ui_screen);
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
