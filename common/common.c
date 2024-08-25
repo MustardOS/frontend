@@ -868,19 +868,37 @@ char *get_capacity() {
 
     static char capacity_str[MAX_BUFFER_SIZE];
     switch (battery_capacity) {
-        case -255 ... 15:
+        case -255 ... 5:
             snprintf(capacity_str, sizeof(capacity_str), "%s0", battery_glyph_name);
             break;
-        case 16 ... 30:
-            snprintf(capacity_str, sizeof(capacity_str), "%s25", battery_glyph_name);
+        case 6 ... 10:
+            snprintf(capacity_str, sizeof(capacity_str), "%s10", battery_glyph_name);
             break;
-        case 31 ... 50:
+        case 11 ... 20:
+            snprintf(capacity_str, sizeof(capacity_str), "%s20", battery_glyph_name);
+            break;
+        case 21 ... 30:
+            snprintf(capacity_str, sizeof(capacity_str), "%s30", battery_glyph_name);
+            break;
+        case 31 ... 40:
+            snprintf(capacity_str, sizeof(capacity_str), "%s40", battery_glyph_name);
+            break;
+        case 41 ... 50:
             snprintf(capacity_str, sizeof(capacity_str), "%s50", battery_glyph_name);
             break;
-        case 51 ... 75:
-            snprintf(capacity_str, sizeof(capacity_str), "%s75", battery_glyph_name);
+        case 51 ... 60:
+            snprintf(capacity_str, sizeof(capacity_str), "%s60", battery_glyph_name);
             break;
-        case 76 ... 255:
+        case 61 ... 70:
+            snprintf(capacity_str, sizeof(capacity_str), "%s70", battery_glyph_name);
+            break;
+        case 71 ... 80:
+            snprintf(capacity_str, sizeof(capacity_str), "%s80", battery_glyph_name);
+            break;
+        case 81 ... 90:
+            snprintf(capacity_str, sizeof(capacity_str), "%s90", battery_glyph_name);
+            break;
+        case 91 ... 255:
             snprintf(capacity_str, sizeof(capacity_str), "%s100", battery_glyph_name);
             break;
     }
@@ -889,64 +907,7 @@ char *get_capacity() {
 }
 
 void capacity_task(lv_timer_t *timer) {
-    struct bat_task_param *bat_par = timer->user_data;
     battery_capacity = read_battery_capacity();
-    update_battery_capacity(bat_par->staCapacity);
-}
-
-void update_battery_capacity(lv_obj_t * ui_staCapacity) {
-    char *battery_glyph_name = get_capacity();
-
-    char image_path[MAX_BUFFER_SIZE];
-    char image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/%s.png",
-                 STORAGE_PATH, battery_glyph_name) >= 0 && file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/%s.png",
-                 STORAGE_PATH, battery_glyph_name);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/%s.png",
-                        INTERNAL_PATH, battery_glyph_name) >= 0 &&
-               file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/%s.png",
-                 INTERNAL_PATH, battery_glyph_name);
-    }
-
-    if (file_exist(image_path)) lv_img_set_src(ui_staCapacity, image_embed);
-}
-
-void update_bluetooth_status(lv_obj_t * ui_staBluetooth) {
-    char image_path[MAX_BUFFER_SIZE];
-    char image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/bluetooth.png",
-                 STORAGE_PATH) >= 0 && file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/bluetooth.png",
-                 STORAGE_PATH);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/bluetooth.png",
-                        INTERNAL_PATH) >= 0 &&
-               file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/bluetooth.png",
-                 INTERNAL_PATH);
-    }
-
-    if (file_exist(image_path)) lv_img_set_src(ui_staBluetooth, image_embed);
-}
-
-void update_network_status(lv_obj_t * ui_staNetwork) {
-    char *network_status = (device.DEVICE.HAS_NETWORK && is_network_connected()) ? "active" : "normal";
-
-    char image_path[MAX_BUFFER_SIZE];
-    char image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/network_%s.png",
-                 STORAGE_PATH, network_status) >= 0 && file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/network_%s.png",
-                 STORAGE_PATH, network_status);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/network_%s.png",
-                        INTERNAL_PATH, network_status) >= 0 &&
-               file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/network_%s.png",
-                 INTERNAL_PATH, network_status);
-    }
-
-    if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
 }
 
 void osd_task(lv_timer_t *timer) {

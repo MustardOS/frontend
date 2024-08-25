@@ -228,11 +228,11 @@ void init_elements() {
 
 void glyph_task() {
     // TODO: Bluetooth connectivity!
-    //update_bluetooth_status(ui_staBluetooth);
+    //update_bluetooth_status(ui_staBluetooth, &theme);
 
-    update_network_status(ui_staNetwork);
+    update_network_status(ui_staNetwork, &theme);
 
-    update_battery_capacity(ui_staCapacity);
+    update_battery_capacity(ui_staCapacity, &theme);
 }
 
 int main(int argc, char *argv[]) {

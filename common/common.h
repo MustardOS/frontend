@@ -159,12 +159,6 @@ char *get_capacity();
 
 void capacity_task(lv_timer_t *timer);
 
-void update_battery_capacity(lv_obj_t * ui_staCapacity);
-
-void update_bluetooth_status(lv_obj_t * ui_staBluetooth);
-
-void update_network_status(lv_obj_t * ui_staNetwork);
-
 void osd_task(lv_timer_t *timer);
 
 void *turbo_task();

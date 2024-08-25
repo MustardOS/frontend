@@ -8,6 +8,12 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha);
 
+void update_battery_capacity(lv_obj_t * ui_staCapacity, struct theme_config *theme);
+
+void update_bluetooth_status(lv_obj_t * ui_staBluetooth, struct theme_config *theme);
+
+void update_network_status(lv_obj_t * ui_staNetwork, struct theme_config *theme);
+
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;
 extern lv_obj_t *ui_imgWall;

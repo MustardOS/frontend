@@ -213,14 +213,14 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_conGlyphs, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_staBluetooth = create_header_glyph(ui_conGlyphs, theme);
-    update_bluetooth_status(ui_staBluetooth);
+    //update_bluetooth_status(ui_staBluetooth, theme);
 
     ui_staNetwork = create_header_glyph(ui_conGlyphs, theme);
-    update_network_status(ui_staNetwork);
+    update_network_status(ui_staNetwork, theme);
 
     ui_staCapacity = create_header_glyph(ui_conGlyphs, theme);
     battery_capacity = read_battery_capacity();
-    update_battery_capacity(ui_staCapacity);
+    update_battery_capacity(ui_staCapacity, theme);
 
     ui_pnlFooter = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlFooter, device->SCREEN.WIDTH);
@@ -732,4 +732,89 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     lv_obj_set_style_pad_bottom(ui_lblNavText, theme->FONT.FOOTER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (text_alpha == 0) lv_obj_set_width(ui_lblNavText, 0);
     return ui_lblNavText;
+}
+
+void update_battery_capacity(lv_obj_t * ui_staCapacity, struct theme_config *theme) {
+    char *battery_glyph_name = get_capacity();
+    
+    if (str_startswith(battery_glyph_name, "capacity_charging_")) {
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.ACTIVE),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.ACTIVE_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else if (battery_capacity <= 15) {
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.LOW),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.LOW_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/%s.png",
+                 STORAGE_PATH, battery_glyph_name) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/%s.png",
+                 STORAGE_PATH, battery_glyph_name);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/%s.png",
+                        INTERNAL_PATH, battery_glyph_name) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/%s.png",
+                 INTERNAL_PATH, battery_glyph_name);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staCapacity, image_embed);
+}
+
+void update_bluetooth_status(lv_obj_t * ui_staBluetooth, struct theme_config *theme) {
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/bluetooth.png",
+                 STORAGE_PATH) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/bluetooth.png",
+                 STORAGE_PATH);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/bluetooth.png",
+                        INTERNAL_PATH) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/bluetooth.png",
+                 INTERNAL_PATH);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staBluetooth, image_embed);
+}
+
+void update_network_status(lv_obj_t * ui_staNetwork, struct theme_config *theme) {
+    char *network_status;
+    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
+        network_status = "active";
+        lv_obj_set_style_img_recolor(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.ACTIVE),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staNetwork, theme->STATUS.NETWORK.ACTIVE_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        network_status = "normal";
+        lv_obj_set_style_img_recolor(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.NORMAL),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_img_recolor_opa(ui_staNetwork, theme->STATUS.NETWORK.NORMAL_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/network_%s.png",
+                 STORAGE_PATH, network_status) >= 0 && file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/network_%s.png",
+                 STORAGE_PATH, network_status);
+    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/network_%s.png",
+                        INTERNAL_PATH, network_status) >= 0 &&
+               file_exist(image_path)) {
+        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/network_%s.png",
+                 INTERNAL_PATH, network_status);
+    }
+
+    if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
 }
