@@ -583,6 +583,7 @@ void gen_item(char **file_names, int file_count) {
         char fn_name[MAX_BUFFER_SIZE];
         char cache_fn_name[MAX_BUFFER_SIZE];
 
+        snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
         if (require_local_name_cache || module == FAVOURITE || module == HISTORY) {
             if (is_cache) {
                 snprintf(fn_name, sizeof(fn_name), "%s", read_line_from_file(init_cache_file, i + 1));
@@ -594,16 +595,13 @@ void gen_item(char **file_names, int file_count) {
                         snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
                         write_text_to_file(init_cache_file, "a", CHAR, cache_fn_name);
                     } else {
-                        snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
                         snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
                         write_text_to_file(init_cache_file, "a", CHAR, cache_fn_name);
                         printf("MISSING LABEL: %s", cache_fn_name);
                     }
                 }
             }
-        } else {
-            snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
-        }
+        } 
 
         snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
 
