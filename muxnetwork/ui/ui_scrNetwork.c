@@ -103,8 +103,8 @@ void ui_screen_init(lv_obj_t * ui_screen, lv_obj_t * ui_pnlContent, struct theme
     lv_obj_set_align(ui_txtEntry, LV_ALIGN_CENTER);
     lv_textarea_set_max_length(ui_txtEntry, 1024);
     lv_textarea_set_one_line(ui_txtEntry, true);
-    lv_obj_set_style_radius(ui_txtEntry, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_txtEntry, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_txtEntry, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(ui_txtEntry, theme->OSK.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_txtEntry, lv_color_hex(theme->OSK.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_txtEntry, theme->OSK.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_txtEntry, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
