@@ -65,8 +65,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_font(ui_screen, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlWall = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlWall, device->SCREEN.WIDTH);
-    lv_obj_set_height(ui_pnlWall, device->SCREEN.HEIGHT);
+    lv_obj_set_width(ui_pnlWall, device->MUX.WIDTH);
+    lv_obj_set_height(ui_pnlWall, device->MUX.HEIGHT);
     lv_obj_set_align(ui_pnlWall, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlWall, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
                                   LV_OBJ_FLAG_SCROLL_CHAIN);
@@ -92,7 +92,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
 
     ui_pnlContent = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlContent, device->SCREEN.WIDTH);
+    lv_obj_set_width(ui_pnlContent, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlContent, theme->MISC.CONTENT.HEIGHT);
     lv_obj_set_x(ui_pnlContent, 0);
     lv_obj_set_y(ui_pnlContent, theme->HEADER.HEIGHT + 2 + theme->MISC.CONTENT.PADDING_TOP);
@@ -124,7 +124,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlContent, 0, LV_PART_SCROLLBAR | LV_STATE_SCROLLED);
 
     ui_pnlBox = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlBox, device->SCREEN.WIDTH);
+    lv_obj_set_width(ui_pnlBox, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlBox, 400);
     lv_obj_set_align(ui_pnlBox, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
@@ -158,7 +158,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_img_recolor_opa(ui_imgBox, theme->IMAGE_LIST.RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHeader = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlHeader, device->SCREEN.WIDTH);
+    lv_obj_set_width(ui_pnlHeader, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlHeader, theme->HEADER.HEIGHT);
     lv_obj_set_align(ui_pnlHeader, LV_ALIGN_TOP_MID);
     lv_obj_set_flex_flow(ui_pnlHeader, LV_FLEX_FLOW_ROW);
@@ -223,7 +223,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     update_battery_capacity(ui_staCapacity, theme);
 
     ui_pnlFooter = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlFooter, device->SCREEN.WIDTH);
+    lv_obj_set_width(ui_pnlFooter, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlFooter, theme->FOOTER.HEIGHT);
     lv_obj_set_align(ui_pnlFooter, LV_ALIGN_BOTTOM_MID);
     lv_obj_set_flex_flow(ui_pnlFooter, LV_FLEX_FLOW_ROW);
@@ -289,7 +289,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     ui_lblNavMenu = create_footer_text(ui_pnlFooter, theme, theme->NAV.MENU.TEXT, theme->NAV.MENU.TEXT_ALPHA);
 
     ui_lblScreenMessage = lv_label_create(ui_screen);
-    lv_obj_set_width(ui_lblScreenMessage, device->SCREEN.WIDTH);
+    lv_obj_set_width(ui_lblScreenMessage, device->MUX.WIDTH);
     lv_obj_set_height(ui_lblScreenMessage, 28);
     lv_obj_set_align(ui_lblScreenMessage, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblScreenMessage, "No Content Found...");
@@ -350,8 +350,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_lblMessage, theme->FONT.MESSAGE_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHelp = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlHelp, device->SCREEN.WIDTH);
-    lv_obj_set_height(ui_pnlHelp, device->SCREEN.HEIGHT);
+    lv_obj_set_width(ui_pnlHelp, device->MUX.WIDTH);
+    lv_obj_set_height(ui_pnlHelp, device->MUX.HEIGHT);
     lv_obj_set_align(ui_pnlHelp, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_SCROLLABLE);
