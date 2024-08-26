@@ -174,4 +174,5 @@
 #define MUXWEBSERV_BROWSER   ""
 #define MUXWEBSERV_TERMINAL  ""
 #define MUXWEBSERV_SYNCTHING ""
+#define MUXWEBSERV_RESILIO   ""
 #define MUXWEBSERV_NTP       ""

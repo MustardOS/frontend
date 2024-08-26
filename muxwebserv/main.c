@@ -60,6 +60,7 @@ int shell_total, shell_current;
 int browser_total, browser_current;
 int terminal_total, terminal_current;
 int syncthing_total, syncthing_current;
+int resilio_total, resilio_current;
 int ntp_total, ntp_current;
 
 typedef struct {
@@ -67,14 +68,14 @@ typedef struct {
     int *current;
 } WebServices;
 
-WebServices shell, browser, terminal, syncthing, ntp;
+WebServices shell, browser, terminal, syncthing, resilio, ntp;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-lv_obj_t *ui_objects[5];
+lv_obj_t *ui_objects[6];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -87,6 +88,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXWEBSERV_TERMINAL;
     } else if (element_focused == ui_lblSyncthing) {
         message = MUXWEBSERV_SYNCTHING;
+    } else if (element_focused == ui_lblResilio) {
+        message = MUXWEBSERV_RESILIO;
     } else if (element_focused == ui_lblNTP) {
         message = MUXWEBSERV_NTP;
     }
@@ -119,6 +122,7 @@ void elements_events_init() {
             ui_droBrowser,
             ui_droTerminal,
             ui_droSyncthing,
+            ui_droResilio,
             ui_droNTP
     };
 
@@ -130,6 +134,7 @@ void elements_events_init() {
     init_pointers(&browser, &browser_total, &browser_current);
     init_pointers(&terminal, &terminal_total, &terminal_current);
     init_pointers(&syncthing, &syncthing_total, &syncthing_current);
+    init_pointers(&resilio, &resilio_total, &resilio_current);
     init_pointers(&ntp, &ntp_total, &ntp_current);
 }
 
@@ -139,6 +144,7 @@ void init_dropdown_settings() {
             {browser.total,   browser.current},
             {terminal.total,  terminal.current},
             {syncthing.total, syncthing.current},
+            {resilio.total, resilio.current},
             {ntp.total,       ntp.current}
     };
 
@@ -147,6 +153,7 @@ void init_dropdown_settings() {
             ui_droBrowser,
             ui_droTerminal,
             ui_droSyncthing,
+            ui_droResilio,
             ui_droNTP
     };
 
@@ -161,6 +168,7 @@ void restore_web_options() {
     lv_dropdown_set_selected(ui_droBrowser, config.WEB.BROWSER);
     lv_dropdown_set_selected(ui_droTerminal, config.WEB.TERMINAL);
     lv_dropdown_set_selected(ui_droSyncthing, config.WEB.SYNCTHING);
+    lv_dropdown_set_selected(ui_droResilio, config.WEB.RESILIO);
     lv_dropdown_set_selected(ui_droNTP, config.WEB.NTP);
 }
 
@@ -169,12 +177,14 @@ void save_web_options() {
     int idx_browser = lv_dropdown_get_selected(ui_droBrowser);
     int idx_terminal = lv_dropdown_get_selected(ui_droTerminal);
     int idx_syncthing = lv_dropdown_get_selected(ui_droSyncthing);
+    int idx_resilio = lv_dropdown_get_selected(ui_droResilio);
     int idx_ntp = lv_dropdown_get_selected(ui_droNTP);
 
     write_text_to_file("/run/muos/global/web/shell", "w", INT, idx_shell);
     write_text_to_file("/run/muos/global/web/browser", "w", INT, idx_browser);
     write_text_to_file("/run/muos/global/web/terminal", "w", INT, idx_terminal);
     write_text_to_file("/run/muos/global/web/syncthing", "w", INT, idx_syncthing);
+    write_text_to_file("/run/muos/global/web/resilio", "w", INT, idx_resilio);
     write_text_to_file("/run/muos/global/web/ntp", "w", INT, idx_ntp);
 
     static char service_script[MAX_BUFFER_SIZE];
@@ -190,6 +200,7 @@ void init_navigation_groups() {
         ui_pnlBrowser,
         ui_pnlTerminal,
         ui_pnlSyncthing,
+        ui_pnlResilio,
         ui_pnlNTP,
     };
 
@@ -197,13 +208,15 @@ void init_navigation_groups() {
     ui_objects[1] = ui_lblBrowser;
     ui_objects[2] = ui_lblTerminal;
     ui_objects[3] = ui_lblSyncthing;
-    ui_objects[4] = ui_lblNTP;
+    ui_objects[4] = ui_lblResilio;
+    ui_objects[5] = ui_lblNTP;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droShell,
             ui_droBrowser,
             ui_droTerminal,
             ui_droSyncthing,
+            ui_droResilio,
             ui_droNTP
     };
 
@@ -212,6 +225,7 @@ void init_navigation_groups() {
             ui_icoBrowser,
             ui_icoTerminal,
             ui_icoSyncthing,
+            ui_icoResilio,
             ui_icoNTP
     };
 
@@ -219,24 +233,28 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlBrowser);
     apply_theme_list_panel(&theme, &device, ui_pnlTerminal);
     apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
+    apply_theme_list_panel(&theme, &device, ui_pnlResilio);
     apply_theme_list_panel(&theme, &device, ui_pnlNTP);
 
     apply_theme_list_item(&theme, ui_lblShell, "Secure Shell", false, true);
     apply_theme_list_item(&theme, ui_lblBrowser, "SFTP + Filebrowser", false, true);
     apply_theme_list_item(&theme, ui_lblTerminal, "Virtual Terminal", false, true);
     apply_theme_list_item(&theme, ui_lblSyncthing, "Syncthing", false, true);
+    apply_theme_list_item(&theme, ui_lblResilio, "Resilio", false, true);
     apply_theme_list_item(&theme, ui_lblNTP, "Network Time Sync", false, true);
 
     apply_theme_list_glyph(&theme, ui_icoShell, mux_prog, "shell");
     apply_theme_list_glyph(&theme, ui_icoBrowser, mux_prog, "browser");
     apply_theme_list_glyph(&theme, ui_icoTerminal, mux_prog, "terminal");
     apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_prog, "sync");
+    apply_theme_list_glyph(&theme, ui_icoResilio, mux_prog, "resilio");
     apply_theme_list_glyph(&theme, ui_icoNTP, mux_prog, "ntp");
 
     apply_theme_list_drop_down(&theme, ui_droShell, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droBrowser, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droTerminal, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droSyncthing, "Disabled\nEnabled");
+    apply_theme_list_drop_down(&theme, ui_droResilio, "Disabled\nEnabled");
     apply_theme_list_drop_down(&theme, ui_droNTP, "Disabled\nEnabled");
 
     ui_group = lv_group_create();
@@ -319,6 +337,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droSyncthing,
                                                               &syncthing_current,
                                                               syncthing_total);
+                                    } else if (element_focused == ui_lblResilio) {
+                                        increase_option_value(ui_droResilio,
+                                                              &resilio_current,
+                                                              resilio_total);
                                     } else if (element_focused == ui_lblNTP) {
                                         increase_option_value(ui_droNTP,
                                                               &ntp_current,
@@ -395,6 +417,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droSyncthing,
                                                           &syncthing_current,
                                                           syncthing_total);
+                                } else if (element_focused == ui_lblResilio) {
+                                    decrease_option_value(ui_droResilio,
+                                                          &resilio_current,
+                                                          resilio_total);
                                 } else if (element_focused == ui_lblNTP) {
                                     decrease_option_value(ui_droNTP,
                                                           &ntp_current,
@@ -420,6 +446,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droSyncthing,
                                                           &syncthing_current,
                                                           syncthing_total);
+                                } else if (element_focused == ui_lblResilio) {
+                                    increase_option_value(ui_droResilio,
+                                                          &resilio_current,
+                                                          resilio_total);
                                 } else if (element_focused == ui_lblNTP) {
                                     increase_option_value(ui_droNTP,
                                                           &ntp_current,
@@ -519,6 +549,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBrowser, "browser");
     lv_obj_set_user_data(ui_lblTerminal, "terminal");
     lv_obj_set_user_data(ui_lblSyncthing, "sync");
+    lv_obj_set_user_data(ui_lblResilio, "resilio");
     lv_obj_set_user_data(ui_lblNTP, "ntp");
 
     char *overlay = load_overlay_image();

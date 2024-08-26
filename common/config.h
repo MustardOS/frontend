@@ -76,6 +76,7 @@ struct mux_config {
         int16_t BROWSER;
         int16_t TERMINAL;
         int16_t SYNCTHING;
+        int16_t RESILIO;
         int16_t NTP;
     } WEB;
 

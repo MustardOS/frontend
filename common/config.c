@@ -71,6 +71,7 @@ void load_config(struct mux_config *config) {
     config->WEB.BROWSER = atoi(read_text_from_file("/run/muos/global/web/browser"));
     config->WEB.TERMINAL = atoi(read_text_from_file("/run/muos/global/web/terminal"));
     config->WEB.SYNCTHING = atoi(read_text_from_file("/run/muos/global/web/syncthing"));
+    config->WEB.RESILIO = atoi(read_text_from_file("/run/muos/global/web/resilio"));
     config->WEB.NTP = atoi(read_text_from_file("/run/muos/global/web/ntp"));
 
     config->STORAGE.BIOS = atoi(read_text_from_file("/run/muos/global/storage/bios"));
