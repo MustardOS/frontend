@@ -565,8 +565,13 @@ void gen_item(char **file_names, int file_count) {
     char name_file[MAX_BUFFER_SIZE];
     snprintf(name_file, sizeof(name_file), "%s/MUOS/info/name/%s.json",
              device.STORAGE.ROM.MOUNT, friendly_name_file);
-
     printf("TRYING TO READ NAME FILE AT: %s\n", name_file);
+
+    if (!file_exist(name_file)) {
+        snprintf(name_file, sizeof(name_file), "%s/MUOS/info/name/general.json",
+                 device.STORAGE.ROM.MOUNT);
+        printf("FALLING BACK TO GENERAL NAME FILE AT: %s\n", name_file);
+    }
 
     if (json_valid(read_text_from_file(name_file))) {
         fn_valid = 1;
@@ -1405,7 +1410,7 @@ void *joystick_task() {
                                             break;
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.SELECT) {
-                                    if (module != ROOT && module != FAVOURITE && module != HISTORY
+                                    if (ui_count != 0 && module != ROOT && module != FAVOURITE && module != HISTORY
                                         && !strcasecmp(get_last_dir(sd_dir), "ROMS") == 0) {
                                         play_sound("confirm", nav_sound, 1);
 
