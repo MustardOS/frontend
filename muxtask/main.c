@@ -410,8 +410,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Launch");
-    lv_label_set_text(ui_lblNavB, "Back");
+    lv_label_set_text(ui_lblNavA, _("Launch"));
+    lv_label_set_text(ui_lblNavB, _("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -575,8 +575,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "TASK TOOLKIT");
+    ui_common_screen_init(&theme, &device, _("TASK TOOLKIT"));
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
@@ -685,7 +686,7 @@ int main(int argc, char *argv[]) {
             list_nav_next(sys_index);
         }
     } else {
-        lv_label_set_text(ui_lblScreenMessage, "No Tasks Found");
+        lv_label_set_text(ui_lblScreenMessage, _("No Tasks Found"));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 

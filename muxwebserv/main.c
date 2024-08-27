@@ -236,12 +236,12 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlResilio);
     apply_theme_list_panel(&theme, &device, ui_pnlNTP);
 
-    apply_theme_list_item(&theme, ui_lblShell, "Secure Shell", false, true);
-    apply_theme_list_item(&theme, ui_lblBrowser, "SFTP + Filebrowser", false, true);
-    apply_theme_list_item(&theme, ui_lblTerminal, "Virtual Terminal", false, true);
-    apply_theme_list_item(&theme, ui_lblSyncthing, "Syncthing", false, true);
-    apply_theme_list_item(&theme, ui_lblResilio, "Resilio", false, true);
-    apply_theme_list_item(&theme, ui_lblNTP, "Network Time Sync", false, true);
+    apply_theme_list_item(&theme, ui_lblShell, _("Secure Shell"), false, true);
+    apply_theme_list_item(&theme, ui_lblBrowser, _("SFTP + Filebrowser"), false, true);
+    apply_theme_list_item(&theme, ui_lblTerminal, _("Virtual Terminal"), false, true);
+    apply_theme_list_item(&theme, ui_lblSyncthing, _("Syncthing"), false, true);
+    apply_theme_list_item(&theme, ui_lblResilio, _("Resilio"), false, true);
+    apply_theme_list_item(&theme, ui_lblNTP, _("Network Time Sync"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoShell, mux_prog, "shell");
     apply_theme_list_glyph(&theme, ui_icoBrowser, mux_prog, "browser");
@@ -350,7 +350,7 @@ void *joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = "Saving Changes";
+                                    osd_message = _("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -523,7 +523,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, "Save");
+    lv_label_set_text(ui_lblNavB, _("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -686,8 +686,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "WEB SERVICES");
+    ui_common_screen_init(&theme, &device, _("WEB SERVICES"));
     ui_init(ui_pnlContent);
     init_elements();
 

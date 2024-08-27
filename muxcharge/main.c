@@ -24,6 +24,7 @@
 #include "../common/device.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 
 int turbo_mode = 0;
@@ -112,7 +113,7 @@ void *joystick_task() {
                                     lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_FLOATING);
                                     lv_obj_add_flag(ui_lblHealth, LV_OBJ_FLAG_FLOATING);
 
-                                    lv_label_set_text(ui_lblBoot, "Booting System - Please Wait...");
+                                    lv_label_set_text(ui_lblBoot, _("Booting System - Please Wait..."));
 
                                     lv_task_handler();
                                     usleep(device.SCREEN.WAIT);
@@ -137,9 +138,9 @@ void *joystick_task() {
 }
 
 void battery_task() {
-    snprintf(capacity_info, sizeof(capacity_info), "Capacity: %d%%", read_battery_capacity());
-    snprintf(voltage_info, sizeof(voltage_info), "Voltage: %s", read_battery_voltage());
-    snprintf(health_info, sizeof(health_info), "Health: %s", read_battery_health());
+    snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", _("Capacity"), read_battery_capacity());
+    snprintf(voltage_info, sizeof(voltage_info), "%s: %s", _("Voltage"), read_battery_voltage());
+    snprintf(health_info, sizeof(health_info), "%s: %s", _("Health"), read_battery_health());
 
     lv_label_set_text(ui_lblCapacity, capacity_info);
     lv_label_set_text(ui_lblVoltage, voltage_info);
@@ -155,6 +156,7 @@ void battery_task() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 
@@ -185,6 +187,7 @@ int main(int argc, char *argv[]) {
     set_brightness(90);
 
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
     apply_theme();
 
     lv_obj_set_user_data(ui_scrCharge, "muxcharge");

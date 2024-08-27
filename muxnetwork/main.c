@@ -139,7 +139,7 @@ void show_help(lv_obj_t *element_focused) {
 
 void get_current_ip() {
     if (!config.NETWORK.ENABLED) {
-        lv_label_set_text(ui_lblStatusValue, "Network Disabled");
+        lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
         return;
     }
 
@@ -154,11 +154,11 @@ void get_current_ip() {
         strcasecmp(curr_ip, "127.0.0.1") == 0 ||
         strcasecmp(curr_ip, "") == 0 ||
         curr_ip == NULL) {
-        lv_label_set_text(ui_lblStatusValue, "Not Connected");
+        lv_label_set_text(ui_lblStatusValue, _("Not Connected"));
         lv_task_handler();
         return;
     } else {
-        snprintf(net_message, sizeof(net_message), "Connected - %s", curr_ip);
+        snprintf(net_message, sizeof(net_message), "%s - %s", _("Connected"), curr_ip);
         lv_label_set_text(ui_lblStatusValue, net_message);
         lv_task_handler();
         return;
@@ -265,17 +265,17 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlConnect);
     apply_theme_list_panel(&theme, &device, ui_pnlStatus);
 
-    apply_theme_list_item(&theme, ui_lblEnable, "Enabled", false, true);
-    apply_theme_list_item(&theme, ui_lblIdentifier, "Identifier", false, true);
-    apply_theme_list_item(&theme, ui_lblPassword, "Password", false, true);
-    apply_theme_list_item(&theme, ui_lblType, "Network Type", false, true);
-    apply_theme_list_item(&theme, ui_lblAddress, "Device IP", false, true);
-    apply_theme_list_item(&theme, ui_lblSubnet, "Subnet CIDR", false, true);
-    apply_theme_list_item(&theme, ui_lblGateway, "Gateway IP", false, true);
-    apply_theme_list_item(&theme, ui_lblDNS, "DNS Server", false, true);
-    apply_theme_list_item(&theme, ui_lblConnect, "Connect", false, true);
+    apply_theme_list_item(&theme, ui_lblEnable, _("Enabled"), false, true);
+    apply_theme_list_item(&theme, ui_lblIdentifier, _("Identifier"), false, true);
+    apply_theme_list_item(&theme, ui_lblPassword, _("Password"), false, true);
+    apply_theme_list_item(&theme, ui_lblType, _("Network Type"), false, true);
+    apply_theme_list_item(&theme, ui_lblAddress, _("Device IP"), false, true);
+    apply_theme_list_item(&theme, ui_lblSubnet, _("Subnet CIDR"), false, true);
+    apply_theme_list_item(&theme, ui_lblGateway, _("Gateway IP"), false, true);
+    apply_theme_list_item(&theme, ui_lblDNS, _("DNS Server"), false, true);
+    apply_theme_list_item(&theme, ui_lblConnect, _("Connect"), false, true);
 
-    apply_theme_list_item(&theme, ui_lblStatus, "Status", false, false);
+    apply_theme_list_item(&theme, ui_lblStatus, _("Status"), false, false);
 
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_prog, "enable");
     apply_theme_list_glyph(&theme, ui_icoIdentifier, mux_prog, "identifier");
@@ -1050,9 +1050,9 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, "Back");
-    lv_label_set_text(ui_lblNavX, "Scan");
-    lv_label_set_text(ui_lblNavY, "Profiles");
+    lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavX, _("Scan"));
+    lv_label_set_text(ui_lblNavY, _("Profiles"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -1393,8 +1393,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "WI-FI NETWORK");
+    ui_common_screen_init(&theme, &device, _("WI-FI NETWORK"));
     ui_init(ui_screen, ui_pnlContent, &theme);
     init_elements();
 

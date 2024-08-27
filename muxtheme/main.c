@@ -260,7 +260,7 @@ void *joystick_task() {
                                     if (ev.code == NAV_A) {
                                         play_sound("confirm", nav_sound, 1);
                                         char *chosen_theme = lv_label_get_text(element_focused);
-                                        lv_label_set_text(ui_lblMessage, "Loading Theme");
+                                        lv_label_set_text(ui_lblMessage, _("Loading Theme"));
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                         lv_task_handler();
 
@@ -430,8 +430,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Confirm");
-    lv_label_set_text(ui_lblNavB, "Back");
+    lv_label_set_text(ui_lblNavA, _("Confirm"));
+    lv_label_set_text(ui_lblNavB, _("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -586,10 +586,11 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "THEME PICKER");
+    ui_common_screen_init(&theme, &device, _("THEME PICKER"));
     init_elements();
-    lv_label_set_text(ui_lblScreenMessage, "No Themes Found");
+    lv_label_set_text(ui_lblScreenMessage, _("No Themes Found"));
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 

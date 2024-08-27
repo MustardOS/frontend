@@ -414,19 +414,19 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlState);
     apply_theme_list_panel(&theme, &device, ui_pnlVerbose);
 
-    apply_theme_list_item(&theme, ui_lblSwap, "A+B Button Swap", false, true);
-    apply_theme_list_item(&theme, ui_lblThermal, "Thermal Zone Control", false, true);
-    apply_theme_list_item(&theme, ui_lblFont, "Interface Font Type", false, true);
-    apply_theme_list_item(&theme, ui_lblVolume, "Volume On Boot", false, true);
-    apply_theme_list_item(&theme, ui_lblBrightness, "Brightness On Boot", false, true);
-    apply_theme_list_item(&theme, ui_lblOffset, "Battery Offset", false, true);
-    apply_theme_list_item(&theme, ui_lblPasscode, "Passcode Lock", false, true);
-    apply_theme_list_item(&theme, ui_lblLED, "LED During Play", false, true);
-    apply_theme_list_item(&theme, ui_lblTheme, "Random Theme on Boot", false, true);
-    apply_theme_list_item(&theme, ui_lblRetroWait, "RetroArch Network Wait", false, true);
-    apply_theme_list_item(&theme, ui_lblAndroid, "Android Debug Bridge", false, true);
-    apply_theme_list_item(&theme, ui_lblState, "Suspend Power State", false, true);
-    apply_theme_list_item(&theme, ui_lblVerbose, "Verbose Messages", false, true);
+    apply_theme_list_item(&theme, ui_lblSwap, _("A+B Button Swap"), false, true);
+    apply_theme_list_item(&theme, ui_lblThermal, _("Thermal Zone Control"), false, true);
+    apply_theme_list_item(&theme, ui_lblFont, _("Interface Font Type"), false, true);
+    apply_theme_list_item(&theme, ui_lblVolume, _("Volume On Boot"), false, true);
+    apply_theme_list_item(&theme, ui_lblBrightness, _("Brightness On Boot"), false, true);
+    apply_theme_list_item(&theme, ui_lblOffset, _("Battery Offset"), false, true);
+    apply_theme_list_item(&theme, ui_lblPasscode, _("Passcode Lock"), false, true);
+    apply_theme_list_item(&theme, ui_lblLED, _("LED During Play"), false, true);
+    apply_theme_list_item(&theme, ui_lblTheme, _("Random Theme on Boot"), false, true);
+    apply_theme_list_item(&theme, ui_lblRetroWait, _("RetroArch Network Wait"), false, true);
+    apply_theme_list_item(&theme, ui_lblAndroid, _("Android Debug Bridge"), false, true);
+    apply_theme_list_item(&theme, ui_lblState, _("Suspend Power State"), false, true);
+    apply_theme_list_item(&theme, ui_lblVerbose, _("Verbose Messages"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoSwap, mux_prog, "swap");
     apply_theme_list_glyph(&theme, ui_icoThermal, mux_prog, "thermal");
@@ -612,7 +612,7 @@ void *joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = "Saving Changes";
+                                    osd_message = _("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -855,7 +855,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, "Save");
+    lv_label_set_text(ui_lblNavB, _("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -1034,8 +1034,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "ADVANCED SETTINGS");
+    ui_common_screen_init(&theme, &device, _("ADVANCED SETTINGS"));
     ui_init(ui_pnlContent);
     init_elements();
 

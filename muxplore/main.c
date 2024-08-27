@@ -663,19 +663,19 @@ void create_root_items(char *dir_name) {
             snprintf(spec_dir, sizeof(spec_dir), "%s/info/%s",
                      STORAGE_PATH, dir_name);
 
-            lv_label_set_text(ui_lblTitle, "FAVOURITES");
+            lv_label_set_text(ui_lblTitle, _("FAVOURITES"));
             break;
         case HISTORY:
             snprintf(spec_dir, sizeof(spec_dir), "%s/info/%s",
                      STORAGE_PATH, dir_name);
 
-            lv_label_set_text(ui_lblTitle, "HISTORY");
+            lv_label_set_text(ui_lblTitle, _("HISTORY"));
             break;
         default:
             snprintf(spec_dir, sizeof(spec_dir), "%s/MUOS/info/%s",
                      device.STORAGE.ROM.MOUNT, dir_name);
 
-            lv_label_set_text(ui_lblTitle, "EXPLORE");
+            lv_label_set_text(ui_lblTitle, _("EXPLORE"));
             break;
     }
 
@@ -700,16 +700,16 @@ void create_explore_items(void *count) {
 
     switch (module) {
         case MMC:
-            lv_label_set_text(ui_lblTitle, "EXPLORE (SD1)");
+            lv_label_set_text(ui_lblTitle, _("EXPLORE (SD1)"));
             break;
         case SDCARD:
-            lv_label_set_text(ui_lblTitle, "EXPLORE (SD2)");
+            lv_label_set_text(ui_lblTitle, _("EXPLORE (SD2)"));
             break;
         case USB:
-            lv_label_set_text(ui_lblTitle, "EXPLORE (USB)");
+            lv_label_set_text(ui_lblTitle, _("EXPLORE (USB)"));
             break;
         default:
-            lv_label_set_text(ui_lblTitle, "EXPLORE");
+            lv_label_set_text(ui_lblTitle, _("EXPLORE"));
             break;
     }
 
@@ -761,7 +761,7 @@ void create_explore_items(void *count) {
 }
 
 void explore_root() {
-    lv_label_set_text(ui_lblTitle, "EXPLORE");
+    lv_label_set_text(ui_lblTitle, _("EXPLORE"));
     int single_card = 0;
 
     if (count_items(SD1, DIRECTORIES_ONLY) > 0) {
@@ -939,7 +939,7 @@ int load_content(int add_favourite) {
         return 1;
     }
 
-    lv_label_set_text(ui_lblMessage, "Could not load content - No core is associated");
+    lv_label_set_text(ui_lblMessage, _("Could not load content - No core is associated"));
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
     return 0;
@@ -990,7 +990,7 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
         }
     }
 
-    lv_label_set_text(ui_lblMessage, "Could not load content!");
+    lv_label_set_text(ui_lblMessage, _("Could not load content!"));
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
     return 0;
@@ -1061,7 +1061,7 @@ void cache_message(char *n_dir) {
             break;
     }
 
-    lv_label_set_text(ui_lblMessage, "Loading...");
+    lv_label_set_text(ui_lblMessage, _("Loading..."));
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 }
 
@@ -1359,15 +1359,15 @@ void *joystick_task() {
                                         case USB:
                                             if (items[current_item_index].content_type == FOLDER) {
                                                 lv_label_set_text(ui_lblMessage,
-                                                                  "Directories cannot be added to Favourites");
+                                                                  _("Directories cannot be added to Favourites"));
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 break;
                                             } else {
                                                 if (load_content(1)) {
-                                                    lv_label_set_text(ui_lblMessage, "Added to Favourites");
+                                                    lv_label_set_text(ui_lblMessage, _("Added to Favourites"));
                                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 } else {
-                                                    lv_label_set_text(ui_lblMessage, "Error adding to Favourites");
+                                                    lv_label_set_text(ui_lblMessage, _("Error adding to Favourites"));
                                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 }
                                                 if (file_exist(MUOS_ROM_LOAD)) {
@@ -1378,10 +1378,10 @@ void *joystick_task() {
                                             break;
                                         case HISTORY:
                                             if (load_cached_content(f_content, "history", 1)) {
-                                                lv_label_set_text(ui_lblMessage, "Added to Favourites");
+                                                lv_label_set_text(ui_lblMessage, _("Added to Favourites"));
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                             } else {
-                                                lv_label_set_text(ui_lblMessage, "Error adding to Favourites");
+                                                lv_label_set_text(ui_lblMessage, _("Error adding to Favourites"));
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                             }
                                             if (file_exist(MUOS_ROM_LOAD)) {
@@ -1702,8 +1702,8 @@ void init_footer_elements() {
         case USB:
         case FAVOURITE:
         case HISTORY: {
-            set_nav_text("Open", "Back", module == ROOT ? NULL : "Refresh",
-                         module == ROOT ? NULL : "Favourite", "Info");
+            set_nav_text(_("Open"), _("Back"), module == ROOT ? NULL : _("Refresh"),
+                         module == ROOT ? NULL : _("Favourite"), _("Info"));
             if (lv_group_get_obj_count(ui_group) <= 0) {
                 lv_obj_t *nav_keep[] = {ui_lblNavBGlyph, ui_lblNavB};
                 lv_obj_t *nav_hide[] = {
@@ -1744,10 +1744,10 @@ void init_footer_elements() {
             lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
-            lv_label_set_text(ui_lblNavX, "Remove");
+            lv_label_set_text(ui_lblNavX, _("Remove"));
             break;
         case HISTORY:
-            lv_label_set_text(ui_lblNavX, "Remove");
+            lv_label_set_text(ui_lblNavX, _("Remove"));
             break;
         default:
             break;
@@ -1803,16 +1803,16 @@ void glyph_task() {
             if (strcasecmp(lv_label_get_text(ui_lblTitle), last_dir) == 0) {
                 switch (module) {
                     case MMC:
-                        lv_label_set_text(ui_lblTitle, "EXPLORE (SD1)");
+                        lv_label_set_text(ui_lblTitle, _("EXPLORE (SD1)"));
                         break;
                     case SDCARD:
-                        lv_label_set_text(ui_lblTitle, "EXPLORE (SD2)");
+                        lv_label_set_text(ui_lblTitle, _("EXPLORE (SD2)"));
                         break;
                     case USB:
-                        lv_label_set_text(ui_lblTitle, "EXPLORE (USB)");
+                        lv_label_set_text(ui_lblTitle, _("EXPLORE (USB)"));
                         break;
                     default:
-                        lv_label_set_text(ui_lblTitle, "EXPLORE");
+                        lv_label_set_text(ui_lblTitle, _("EXPLORE"));
                         break;
                 }
             } else {
@@ -1996,6 +1996,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, mux_prog);
+    load_language(mux_prog);
 
     ui_common_screen_init(&theme, &device, "");
     ui_init(ui_screen, &theme);

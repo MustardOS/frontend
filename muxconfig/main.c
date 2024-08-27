@@ -112,11 +112,11 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlServices);
     apply_theme_list_panel(&theme, &device, ui_pnlRTC);
 
-    apply_theme_list_item(&theme, ui_lblTweakGeneral, "General Settings", false, false);
-    apply_theme_list_item(&theme, ui_lblTheme, "Theme Picker", false, false);
-    apply_theme_list_item(&theme, ui_lblNetwork, "Wi-Fi Network", false, false);
-    apply_theme_list_item(&theme, ui_lblServices, "Web Services", false, false);
-    apply_theme_list_item(&theme, ui_lblRTC, "Date and Time", false, false);
+    apply_theme_list_item(&theme, ui_lblTweakGeneral, _("General Settings"), false, false);
+    apply_theme_list_item(&theme, ui_lblTheme, _("Theme Picker"), false, false);
+    apply_theme_list_item(&theme, ui_lblNetwork, _("Wi-Fi Network"), false, false);
+    apply_theme_list_item(&theme, ui_lblServices, _("Web Services"), false, false);
+    apply_theme_list_item(&theme, ui_lblRTC, _("Date and Time"), false, false);
 
     apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_prog, "general");
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
@@ -307,8 +307,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Confirm");
-    lv_label_set_text(ui_lblNavB, "Back");
+    lv_label_set_text(ui_lblNavA, _("Confirm"));
+    lv_label_set_text(ui_lblNavB, _("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -502,8 +502,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "CONFIGURATION");
+    ui_common_screen_init(&theme, &device, _("CONFIGURATION"));
     ui_init(ui_pnlContent);
     init_elements();
 

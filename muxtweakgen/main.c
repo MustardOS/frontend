@@ -65,20 +65,21 @@ int colour_total, colour_current;
 int brightness_total, brightness_current;
 int hdmi_total, hdmi_current;
 int shutdown_total, shutdown_current;
+int language_total, language_current;
 
 typedef struct {
     int *total;
     int *current;
 } Tweak;
 
-Tweak hidden, bgm, sound, startup, colour, brightness, hdmi, shutdown;
+Tweak hidden, bgm, sound, startup, colour, brightness, hdmi, shutdown, language;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 11
+#define UI_COUNT 12
 lv_obj_t *ui_objects[UI_COUNT];
 
 void show_help(lv_obj_t *element_focused) {
@@ -100,6 +101,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKGEN_HDMI;
     } else if (element_focused == ui_lblShutdown) {
         message = MUXTWEAKGEN_SHUTDOWN;
+    } else if (element_focused == ui_lblLanguage) {
+        message = MUXTWEAKGEN_LANGUAGE;
     } else if (element_focused == ui_lblInterface) {
         message = MUXTWEAKGEN_INTERFACE;
     } else if (element_focused == ui_lblStorage) {
@@ -139,7 +142,8 @@ void elements_events_init() {
             ui_droColour,
             ui_droBrightness,
             ui_droHDMI,
-            ui_droShutdown
+            ui_droShutdown,
+            ui_droLanguage
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -154,6 +158,7 @@ void elements_events_init() {
     init_pointers(&brightness, &brightness_total, &brightness_current);
     init_pointers(&hdmi, &hdmi_total, &hdmi_current);
     init_pointers(&shutdown, &shutdown_total, &shutdown_current);
+    init_pointers(&language, &language_total, &language_current);
 }
 
 void init_dropdown_settings() {
@@ -165,7 +170,8 @@ void init_dropdown_settings() {
             {colour.total,     colour.current},
             {brightness.total, brightness.current},
             {hdmi.total,       hdmi.current},
-            {shutdown.total,   shutdown.current}
+            {shutdown.total,   shutdown.current},
+            {language.total,   language.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -176,7 +182,8 @@ void init_dropdown_settings() {
             ui_droColour,
             ui_droBrightness,
             ui_droHDMI,
-            ui_droShutdown
+            ui_droShutdown,
+            ui_droLanguage
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -519,6 +526,9 @@ void save_tweak_options() {
             break;
     }
 
+    char idx_language[MAX_BUFFER_SIZE];
+    lv_dropdown_get_selected_str(ui_droLanguage, idx_language, MAX_BUFFER_SIZE);
+
     write_text_to_file("/run/muos/global/settings/general/hidden", "w", INT, idx_hidden);
     write_text_to_file("/run/muos/global/settings/general/bgm", "w", INT, idx_bgm);
     write_text_to_file("/run/muos/global/settings/general/sound", "w", INT, idx_sound);
@@ -527,6 +537,7 @@ void save_tweak_options() {
     write_text_to_file("/run/muos/global/settings/general/colour", "w", INT, idx_colour);
     write_text_to_file("/run/muos/global/settings/general/hdmi", "w", INT, idx_hdmi);
     write_text_to_file("/run/muos/global/settings/general/shutdown", "w", INT, idx_shutdown);
+    write_text_to_file("/run/muos/global/settings/general/language", "w", CHAR, idx_language);
 
     char br_num[MAX_BUFFER_SIZE];
     lv_dropdown_get_selected_str(ui_droBrightness, br_num, MAX_BUFFER_SIZE);
@@ -552,6 +563,7 @@ void init_navigation_groups() {
         ui_pnlBrightness,
         ui_pnlHDMI,
         ui_pnlShutdown,
+        ui_pnlLanguage,
         ui_pnlInterface,
         ui_pnlStorage,
         ui_pnlAdvanced,
@@ -565,9 +577,10 @@ void init_navigation_groups() {
     ui_objects[5] = ui_lblBrightness;
     ui_objects[6] = ui_lblHDMI;
     ui_objects[7] = ui_lblShutdown;
-    ui_objects[8] = ui_lblInterface;
-    ui_objects[9] = ui_lblStorage;
-    ui_objects[10] = ui_lblAdvanced;
+    ui_objects[8] = ui_lblLanguage;
+    ui_objects[9] = ui_lblInterface;
+    ui_objects[10] = ui_lblStorage;
+    ui_objects[11] = ui_lblAdvanced;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droHidden,
@@ -578,6 +591,7 @@ void init_navigation_groups() {
             ui_droBrightness,
             ui_droHDMI,
             ui_droShutdown,
+            ui_droLanguage,
             ui_droInterface,
             ui_droStorage,
             ui_droAdvanced
@@ -592,6 +606,7 @@ void init_navigation_groups() {
             ui_icoBrightness,
             ui_icoHDMI,
             ui_icoShutdown,
+            ui_icoLanguage,
             ui_icoInterface,
             ui_icoStorage,
             ui_icoAdvanced
@@ -605,21 +620,23 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlBrightness);
     apply_theme_list_panel(&theme, &device, ui_pnlHDMI);
     apply_theme_list_panel(&theme, &device, ui_pnlShutdown);
+    apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
     apply_theme_list_panel(&theme, &device, ui_pnlInterface);
     apply_theme_list_panel(&theme, &device, ui_pnlStorage);
     apply_theme_list_panel(&theme, &device, ui_pnlAdvanced);
 
-    apply_theme_list_item(&theme, ui_lblHidden, "Show Hidden Content", false, true);
-    apply_theme_list_item(&theme, ui_lblBGM, "Background Music", false, true);
-    apply_theme_list_item(&theme, ui_lblSound, "Navigation Sound", false, true);
-    apply_theme_list_item(&theme, ui_lblStartup, "Device Startup", false, true);
-    apply_theme_list_item(&theme, ui_lblColour, "Colour Temperature", false, true);
-    apply_theme_list_item(&theme, ui_lblBrightness, "Brightness", false, true);
-    apply_theme_list_item(&theme, ui_lblHDMI, "HDMI Output", false, true);
-    apply_theme_list_item(&theme, ui_lblShutdown, "Sleep Function", false, true);
-    apply_theme_list_item(&theme, ui_lblInterface, "Interface Options", false, true);
-    apply_theme_list_item(&theme, ui_lblStorage, "Storage Preference", false, true);
-    apply_theme_list_item(&theme, ui_lblAdvanced, "Advanced Settings", false, true);
+    apply_theme_list_item(&theme, ui_lblHidden, _("Show Hidden Content"), false, true);
+    apply_theme_list_item(&theme, ui_lblBGM, _("Background Music"), false, true);
+    apply_theme_list_item(&theme, ui_lblSound, _("Navigation Sound"), false, true);
+    apply_theme_list_item(&theme, ui_lblStartup, _("Device Startup"), false, true);
+    apply_theme_list_item(&theme, ui_lblColour, _("Colour Temperature"), false, true);
+    apply_theme_list_item(&theme, ui_lblBrightness, _("Brightness"), false, true);
+    apply_theme_list_item(&theme, ui_lblHDMI, _("HDMI Output"), false, true);
+    apply_theme_list_item(&theme, ui_lblShutdown, _("Sleep Function"), false, true);
+    apply_theme_list_item(&theme, ui_lblLanguage, _("Language"), false, true);
+    apply_theme_list_item(&theme, ui_lblInterface, _("Interface Options"), false, true);
+    apply_theme_list_item(&theme, ui_lblStorage, _("Storage Preference"), false, true);
+    apply_theme_list_item(&theme, ui_lblAdvanced, _("Advanced Settings"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoHidden, mux_prog, "hidden");
     apply_theme_list_glyph(&theme, ui_icoBGM, mux_prog, "bgm");
@@ -629,6 +646,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoBrightness, mux_prog, "brightness");
     apply_theme_list_glyph(&theme, ui_icoHDMI, mux_prog, "hdmi");
     apply_theme_list_glyph(&theme, ui_icoShutdown, mux_prog, "shutdown");
+    apply_theme_list_glyph(&theme, ui_icoLanguage, mux_prog, "language");
     apply_theme_list_glyph(&theme, ui_icoInterface, mux_prog, "interface");
     apply_theme_list_glyph(&theme, ui_icoStorage, mux_prog, "storage");
     apply_theme_list_glyph(&theme, ui_icoAdvanced, mux_prog, "advanced");
@@ -652,6 +670,7 @@ void init_navigation_groups() {
                                "Disabled\nSleep Suspend\nInstant Shutdown\nSleep 10s + Shutdown\n"
                                "Sleep 30s + Shutdown\nSleep 60s + Shutdown\nSleep 2m + Shutdown\n"
                                "Sleep 5m + Shutdown\nSleep 10m + Shutdown\nSleep 30m + Shutdown\nSleep 60m + Shutdown");
+    apply_theme_list_drop_down(&theme, ui_droLanguage, NULL);
     apply_theme_list_drop_down(&theme, ui_droInterface, "");
     apply_theme_list_drop_down(&theme, ui_droStorage, "");
     apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
@@ -782,6 +801,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droShutdown,
                                                               &shutdown_current,
                                                               shutdown_total);
+                                    } else if (element_focused == ui_lblLanguage) {
+                                        increase_option_value(ui_droLanguage,
+                                                              &language_current,
+                                                              language_total);
                                     } else if (element_focused == ui_lblInterface) {
                                         save_tweak_options();
 
@@ -802,7 +825,7 @@ void *joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    lv_label_set_text(ui_lblMessage, "Saving Changes");
+                                    lv_label_set_text(ui_lblMessage, _("Saving Changes"));
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     save_tweak_options();
@@ -914,6 +937,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droShutdown,
                                                           &shutdown_current,
                                                           shutdown_total);
+                                } else if (element_focused == ui_lblLanguage) {
+                                    decrease_option_value(ui_droLanguage,
+                                                          &language_current,
+                                                          language_total);
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
@@ -951,6 +978,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droShutdown,
                                                           &shutdown_current,
                                                           shutdown_total);
+                                } else if (element_focused == ui_lblLanguage) {
+                                    increase_option_value(ui_droLanguage,
+                                                          &language_current,
+                                                          language_total);
                                 }
                             }
                         }
@@ -1025,8 +1056,36 @@ void populate_brightness() {
     free(options);
 }
 
+void populate_languages() {
+    struct dirent *entry;
+    DIR *dir = opendir("/opt/muos/language/muxlaunch");
+
+    if (!dir) {
+        perror("opendir");
+        return;
+    }
+    
+    lv_dropdown_clear_options(ui_droLanguage);
+    int selectedOption = -1;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            size_t len = strlen(entry->d_name);
+            if (len > 5 && strcasecmp(entry->d_name + len - 5, ".json") == 0) {
+                entry->d_name[len - 5] = '\0';
+                
+                lv_dropdown_add_option(ui_droLanguage, entry->d_name, LV_DROPDOWN_POS_LAST);
+                selectedOption++;
+                if (strcasecmp(entry->d_name, config.SETTINGS.GENERAL.LANGUAGE) == 0) lv_dropdown_set_selected(ui_droLanguage, selectedOption);
+            }
+        }
+    }
+
+    closedir(dir);
+}
+
 void init_elements() {
     populate_brightness();
+    populate_languages();
 
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
@@ -1049,7 +1108,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, "Save");
+    lv_label_set_text(ui_lblNavB, _("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -1079,6 +1138,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBrightness, "brightness");
     lv_obj_set_user_data(ui_lblHDMI, "hdmi");
     lv_obj_set_user_data(ui_lblShutdown, "shutdown");
+    lv_obj_set_user_data(ui_lblLanguage, "language");
     lv_obj_set_user_data(ui_lblInterface, "interface");
     lv_obj_set_user_data(ui_lblStorage, "storage");
     lv_obj_set_user_data(ui_lblAdvanced, "advanced");
@@ -1249,8 +1309,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "GENERAL SETTINGS");
+    ui_common_screen_init(&theme, &device, _("GENERAL SETTINGS"));
     ui_init(ui_pnlContent);
     init_elements();
 

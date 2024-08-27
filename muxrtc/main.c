@@ -272,13 +272,13 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlNotation);
     apply_theme_list_panel(&theme, &device, ui_pnlTimezone);
 
-    apply_theme_list_item(&theme, ui_lblYear, "Year", false, false);
-    apply_theme_list_item(&theme, ui_lblMonth, "Month", false, false);
-    apply_theme_list_item(&theme, ui_lblDay, "Day", false, false);
-    apply_theme_list_item(&theme, ui_lblHour, "Hour", false, false);
-    apply_theme_list_item(&theme, ui_lblMinute, "Minute", false, false);
-    apply_theme_list_item(&theme, ui_lblNotation, "Time Notation", false, false);
-    apply_theme_list_item(&theme, ui_lblTimezone, "Set Timezone", false, false);
+    apply_theme_list_item(&theme, ui_lblYear, _("Year"), false, false);
+    apply_theme_list_item(&theme, ui_lblMonth, _("Month"), false, false);
+    apply_theme_list_item(&theme, ui_lblDay, _("Day"), false, false);
+    apply_theme_list_item(&theme, ui_lblHour, _("Hour"), false, false);
+    apply_theme_list_item(&theme, ui_lblMinute, _("Minute"), false, false);
+    apply_theme_list_item(&theme, ui_lblNotation, _("Time Notation"), false, false);
+    apply_theme_list_item(&theme, ui_lblTimezone, _("Set Timezone"), false, false);
 
     apply_theme_list_glyph(&theme, ui_icoYear, mux_prog, "year");
     apply_theme_list_glyph(&theme, ui_icoMonth, mux_prog, "month");
@@ -459,7 +459,7 @@ void *joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = "Saving Changes";
+                                    osd_message = _("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
@@ -715,7 +715,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, "Save");
+    lv_label_set_text(ui_lblNavB, _("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -906,8 +906,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "DATE AND TIME");
+    ui_common_screen_init(&theme, &device, _("DATE AND TIME"));
     ui_init(ui_pnlContent);
     init_elements();
 

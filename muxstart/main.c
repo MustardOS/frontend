@@ -86,6 +86,7 @@ int main(int argc, char *argv[]) {
     ui_init();
 
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
     apply_theme();
 
     lv_obj_set_user_data(ui_scrStart, "muxstart");

@@ -4,6 +4,7 @@
 // Project name: muxtester
 
 #include "ui.h"
+#include "../../common/common.h"
 
 void ui_scrTester_screen_init(lv_obj_t * ui_pnlContent)
 {
@@ -28,7 +29,7 @@ void ui_scrTester_screen_init(lv_obj_t * ui_pnlContent)
     lv_obj_set_x(ui_lblFirst, 0);
     lv_obj_set_y(ui_lblFirst, -1);
     lv_obj_set_align(ui_lblFirst, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblFirst, "Press any button to start input testing!");
+    lv_label_set_text(ui_lblFirst, _("Press any button to start input testing!"));
     lv_obj_set_style_text_color(ui_lblFirst, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblFirst, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblFirst, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
