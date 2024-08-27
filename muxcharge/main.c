@@ -182,12 +182,12 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_language(mux_prog);
 
     ui_init();
     set_brightness(90);
 
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
     apply_theme();
 
     lv_obj_set_user_data(ui_scrCharge, "muxcharge");
