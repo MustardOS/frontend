@@ -24,6 +24,8 @@
 #include "../common/device.h"
 #include "../common/mini/mini.h"
 
+__thread uint64_t start_ms = 0;
+
 char *mux_prog;
 static int js_fd;
 
@@ -83,9 +85,9 @@ void show_help(lv_obj_t *element_focused) {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-        ui_pnlTester,
-        ui_pnlSystem,
-        ui_pnlCredits,
+            ui_pnlTester,
+            ui_pnlSystem,
+            ui_pnlCredits,
     };
 
     ui_objects[0] = ui_lblTester;
@@ -484,7 +486,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
@@ -598,20 +600,11 @@ int main(int argc, char *argv[]) {
 }
 
 uint32_t mux_tick(void) {
-    static uint64_t start_ms = 0;
+    struct timespec tv_now;
+    clock_gettime(CLOCK_REALTIME, &tv_now);
 
-    if (start_ms == 0) {
-        struct timeval tv_start;
-        gettimeofday(&tv_start, NULL);
-        start_ms = (tv_start.tv_sec * 1000000 + tv_start.tv_usec) / 1000;
-    }
+    uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
+    start_ms = start_ms || now_ms;
 
-    struct timeval tv_now;
-    gettimeofday(&tv_now, NULL);
-
-    uint64_t now_ms;
-    now_ms = (tv_now.tv_sec * 1000000 + tv_now.tv_usec) / 1000;
-
-    uint32_t time_ms = now_ms - start_ms;
-    return time_ms;
+    return (uint32_t)(now_ms - start_ms);
 }

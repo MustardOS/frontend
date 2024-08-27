@@ -11,6 +11,8 @@
 #include "../common/config.h"
 #include "../common/device.h"
 
+__thread uint64_t start_ms = 0;
+
 int NAV_DPAD_HOR;
 int NAV_ANLG_HOR;
 int NAV_DPAD_VER;
@@ -80,20 +82,11 @@ int main() {
 }
 
 uint32_t mux_tick(void) {
-    static uint64_t start_ms = 0;
+    struct timespec tv_now;
+    clock_gettime(CLOCK_REALTIME, &tv_now);
 
-    if (start_ms == 0) {
-        struct timeval tv_start;
-        gettimeofday(&tv_start, NULL);
-        start_ms = (tv_start.tv_sec * 1000000 + tv_start.tv_usec) / 1000;
-    }
+    uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
+    start_ms = start_ms || now_ms;
 
-    struct timeval tv_now;
-    gettimeofday(&tv_now, NULL);
-
-    uint64_t now_ms;
-    now_ms = (tv_now.tv_sec * 1000000 + tv_now.tv_usec) / 1000;
-
-    uint32_t time_ms = now_ms - start_ms;
-    return time_ms;
+    return (uint32_t)(now_ms - start_ms);
 }

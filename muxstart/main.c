@@ -11,8 +11,6 @@
 #include <sys/epoll.h>
 #include <time.h>
 #include <libgen.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -20,6 +18,8 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/mini/mini.h"
+
+__thread uint64_t start_ms = 0;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -86,7 +86,6 @@ int main(int argc, char *argv[]) {
     ui_init();
 
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
     apply_theme();
 
     lv_obj_set_user_data(ui_scrStart, "muxstart");
@@ -96,16 +95,11 @@ int main(int argc, char *argv[]) {
         snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/muxstart.png", INTERNAL_PATH);
         current_wall = strdup(init_wall);
     } else {
-        current_wall = load_wallpaper(ui_scrStart, NULL, theme.MISC.ANIMATED_BACKGROUND);
+        current_wall = load_wallpaper(ui_scrStart, NULL, 0);
     }
 
     if (strlen(current_wall) > 3) {
-        if (theme.MISC.ANIMATED_BACKGROUND) {
-            lv_obj_t * img = lv_gif_create(ui_pnlWall);
-            lv_gif_set_src(img, current_wall);
-        } else {
-            lv_img_set_src(ui_imgWall, current_wall);
-        }
+        lv_img_set_src(ui_imgWall, current_wall);
     } else {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
@@ -113,17 +107,6 @@ int main(int argc, char *argv[]) {
     load_font_text(basename(argv[0]), ui_scrStart);
 
     if (TEST_IMAGE) display_testing_message(ui_scrStart);
-
-    if (config.SETTINGS.GENERAL.SOUND) {
-        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            Mix_Init(0);
-            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            printf("SDL init success!\n");
-            nav_sound = 1;
-        } else {
-            fprintf(stderr, "Failed to init SDL\n");
-        }
-    }
 
     lv_obj_set_y(ui_pnlMessage, theme.VERBOSE_BOOT.Y_POS);
     lv_label_set_text(ui_lblMessage, argv[1]);
@@ -135,20 +118,11 @@ int main(int argc, char *argv[]) {
 }
 
 uint32_t mux_tick(void) {
-    static uint64_t start_ms = 0;
+    struct timespec tv_now;
+    clock_gettime(CLOCK_REALTIME, &tv_now);
 
-    if (start_ms == 0) {
-        struct timeval tv_start;
-        gettimeofday(&tv_start, NULL);
-        start_ms = (tv_start.tv_sec * 1000000 + tv_start.tv_usec) / 1000;
-    }
+    uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
+    start_ms = start_ms || now_ms;
 
-    struct timeval tv_now;
-    gettimeofday(&tv_now, NULL);
-
-    uint64_t now_ms;
-    now_ms = (tv_now.tv_sec * 1000000 + tv_now.tv_usec) / 1000;
-
-    uint32_t time_ms = now_ms - start_ms;
-    return time_ms;
+    return (uint32_t)(now_ms - start_ms);
 }
