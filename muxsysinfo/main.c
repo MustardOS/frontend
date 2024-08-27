@@ -381,7 +381,7 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
                                     if (element_focused == ui_lblVersion) {
-                                        osd_message = "Thank you for using muOS!";
+                                        osd_message = _("Thank you for using muOS!");
                                         lv_label_set_text(ui_lblMessage, osd_message);
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                     }

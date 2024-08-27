@@ -137,12 +137,7 @@ void create_archive_items() {
         snprintf(install_check, sizeof(install_check), "/mnt/mmc/MUOS/update/installed/%s.done",
                  archive_name);
 
-        char *is_installed;
-        if (file_exist(install_check)) {
-            is_installed = "INSTALLED";
-        } else {
-            is_installed = "";
-        }
+        int is_installed = file_exist(install_check);
 
         char *prefix;
         if (strstr(base_filename, "/mnt/mmc/muos/update") != NULL) {
@@ -175,7 +170,7 @@ void create_archive_items() {
         apply_theme_list_item(&theme, ui_lblArchiveItem, archive_store, false, true);
 
         lv_obj_t * ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
-        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, is_installed);
+        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? _("INSTALLED") : "");
 
         lv_obj_t * ui_lblArchiveItemData = lv_label_create(ui_pnlArchive);
         lv_label_set_text(ui_lblArchiveItemData, base_filename);
@@ -185,8 +180,7 @@ void create_archive_items() {
 
         lv_obj_t * ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         char item_glyph[MAX_BUFFER_SIZE];
-        snprintf(item_glyph, sizeof(item_glyph), "%s",
-                 (strcasecmp(is_installed, "INSTALLED") == 0) ? "installed" : "archive");
+        snprintf(item_glyph, sizeof(item_glyph), "%s", (is_installed) ? "installed" : "archive");
         apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_prog, item_glyph);
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);

@@ -216,3 +216,5 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 void load_language(const char *program);
 
 char *translate(char *key);
+
+void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count);

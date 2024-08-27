@@ -194,7 +194,7 @@ void *joystick_task() {
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
 
-                                    osd_message = "Saving Timezone";
+                                    osd_message = _("Saving Timezone");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 

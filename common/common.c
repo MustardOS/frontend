@@ -1487,3 +1487,10 @@ char *translate(char *key) {
 
     return key;
 }
+
+void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count) {
+    lv_dropdown_clear_options(ui_lblItemDropDown);
+    for (unsigned int i = 0; i < count; i++) {
+        lv_dropdown_add_option(ui_lblItemDropDown, options[i], LV_DROPDOWN_POS_LAST);
+    }    
+}

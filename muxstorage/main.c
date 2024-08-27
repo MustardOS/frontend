@@ -282,14 +282,16 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_prog, "screenshot");
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
 
-    apply_theme_list_drop_down(&theme, ui_droBIOS, "SD1\nSD2\nAUTO");
-    apply_theme_list_drop_down(&theme, ui_droConfig, "SD1\nSD2\nAUTO");
-    apply_theme_list_drop_down(&theme, ui_droCatalogue, "SD1\nSD2\nAUTO");
-    apply_theme_list_drop_down(&theme, ui_droConman, "SD1\nSD2\nAUTO");
-    apply_theme_list_drop_down(&theme, ui_droMusic, "SD1\nSD2\nAUTO");
-    apply_theme_list_drop_down(&theme, ui_droSave, "SD1\nSD2\nAUTO");
-    apply_theme_list_drop_down(&theme, ui_droScreenshot, "SD1\nSD2\nAUTO");
-    apply_theme_list_drop_down(&theme, ui_droTheme, "SD1\nSD2\nAUTO");
+    char options[MAX_BUFFER_SIZE];
+    snprintf(options, sizeof(options), "%s\n%s\n%s", _("SD1"), _("SD2"), _("AUTO"));
+    apply_theme_list_drop_down(&theme, ui_droBIOS, options);
+    apply_theme_list_drop_down(&theme, ui_droConfig, options);
+    apply_theme_list_drop_down(&theme, ui_droCatalogue, options);
+    apply_theme_list_drop_down(&theme, ui_droConman, options);
+    apply_theme_list_drop_down(&theme, ui_droMusic, options);
+    apply_theme_list_drop_down(&theme, ui_droSave, options);
+    apply_theme_list_drop_down(&theme, ui_droScreenshot, options);
+    apply_theme_list_drop_down(&theme, ui_droTheme, options);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

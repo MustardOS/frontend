@@ -1,5 +1,5 @@
 MODULES := muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxinfo \
-           muxlaunch muxnetprofile muxnetscan muxnetwork muxpass muxplore \
+           muxlanguage muxlaunch muxnetprofile muxnetscan muxnetwork muxpass muxplore \
            muxrtc muxsplash muxstart muxstorage muxsysinfo muxtask muxtester \
            muxtheme muxtimezone muxtweakadv muxtweakgen muxvisual muxwebserv
 
