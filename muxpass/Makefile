@@ -56,6 +56,7 @@ clean:
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@printf "Building: $(TARGET)...\r"
 	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
+		../common/json/json.c \
 		../common/mini/mini.c \
 		../common/array.c \
 		../common/config.c \

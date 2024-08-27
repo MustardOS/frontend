@@ -171,7 +171,7 @@ void create_profile_items() {
         free(file_names);
         lv_label_set_text(ui_lblScreenMessage, "");
     } else {
-        lv_label_set_text(ui_lblScreenMessage, "No Saved Network Profiles Found");
+        lv_label_set_text(ui_lblScreenMessage, _("No Saved Network Profiles Found"));
     }
 }
 
@@ -417,8 +417,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Load");
-    lv_label_set_text(ui_lblNavB, "Back");
+    lv_label_set_text(ui_lblNavA, _("Load"));
+    lv_label_set_text(ui_lblNavB, _("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -573,10 +573,11 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "NETWORK PROFILE");
+    ui_common_screen_init(&theme, &device, _("NETWORK PROFILE"));
     init_elements();
-    lv_label_set_text(ui_lblScreenMessage, "Loading Network Profiles...");
+    lv_label_set_text(ui_lblScreenMessage, _("Loading Network Profiles..."));
     lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));

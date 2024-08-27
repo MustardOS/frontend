@@ -249,17 +249,17 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlBatteryCap);
     apply_theme_list_panel(&theme, &device, ui_pnlVoltage);
 
-    apply_theme_list_item(&theme, ui_lblVersion, "muOS Version", false, true);
-    apply_theme_list_item(&theme, ui_lblKernel, "Linux Kernel", false, true);
-    apply_theme_list_item(&theme, ui_lblUptime, "System Uptime", false, true);
-    apply_theme_list_item(&theme, ui_lblCPU, "CPU Information", false, true);
-    apply_theme_list_item(&theme, ui_lblSpeed, "CPU Speed", false, true);
-    apply_theme_list_item(&theme, ui_lblGovernor, "CPU Governor", false, true);
-    apply_theme_list_item(&theme, ui_lblMemory, "RAM Usage", false, true);
-    apply_theme_list_item(&theme, ui_lblTemp, "Temperature", false, true);
-    apply_theme_list_item(&theme, ui_lblServices, "Running Services", false, true);
-    apply_theme_list_item(&theme, ui_lblBatteryCap, "Battery Capacity", false, true);
-    apply_theme_list_item(&theme, ui_lblVoltage, "Battery Voltage", false, true);
+    apply_theme_list_item(&theme, ui_lblVersion, _("muOS Version"), false, true);
+    apply_theme_list_item(&theme, ui_lblKernel, _("Linux Kernel"), false, true);
+    apply_theme_list_item(&theme, ui_lblUptime, _("System Uptime"), false, true);
+    apply_theme_list_item(&theme, ui_lblCPU, _("CPU Information"), false, true);
+    apply_theme_list_item(&theme, ui_lblSpeed, _("CPU Speed"), false, true);
+    apply_theme_list_item(&theme, ui_lblGovernor, _("CPU Governor"), false, true);
+    apply_theme_list_item(&theme, ui_lblMemory, _("RAM Usage"), false, true);
+    apply_theme_list_item(&theme, ui_lblTemp, _("Temperature"), false, true);
+    apply_theme_list_item(&theme, ui_lblServices, _("Running Services"), false, true);
+    apply_theme_list_item(&theme, ui_lblBatteryCap, _("Battery Capacity"), false, true);
+    apply_theme_list_item(&theme, ui_lblVoltage, _("Battery Voltage"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoVersion, mux_prog, "version");
     apply_theme_list_glyph(&theme, ui_icoKernel, mux_prog, "kernel");
@@ -507,7 +507,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, "Back");
+    lv_label_set_text(ui_lblNavB, _("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -675,8 +675,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "SYSTEM DETAILS");
+    ui_common_screen_init(&theme, &device, _("SYSTEM DETAILS"));
     ui_init(ui_pnlContent);
     init_elements();
 

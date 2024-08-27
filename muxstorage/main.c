@@ -262,14 +262,14 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlScreenshot);
     apply_theme_list_panel(&theme, &device, ui_pnlTheme);
 
-    apply_theme_list_item(&theme, ui_lblBIOS, "RetroArch BIOS", false, true);
-    apply_theme_list_item(&theme, ui_lblConfig, "RetroArch Configs", false, true);
-    apply_theme_list_item(&theme, ui_lblCatalogue, "Metadata Catalogue", false, true);
-    apply_theme_list_item(&theme, ui_lblConman, "Content Management", false, true);
-    apply_theme_list_item(&theme, ui_lblMusic, "Background Music", false, true);
-    apply_theme_list_item(&theme, ui_lblSave, "Save Games + Save States", false, true);
-    apply_theme_list_item(&theme, ui_lblScreenshot, "Screenshots", false, true);
-    apply_theme_list_item(&theme, ui_lblTheme, "Themes", false, true);
+    apply_theme_list_item(&theme, ui_lblBIOS, _("RetroArch BIOS"), false, true);
+    apply_theme_list_item(&theme, ui_lblConfig, _("RetroArch Configs"), false, true);
+    apply_theme_list_item(&theme, ui_lblCatalogue, _("Metadata Catalogue"), false, true);
+    apply_theme_list_item(&theme, ui_lblConman, _("Content Management"), false, true);
+    apply_theme_list_item(&theme, ui_lblMusic, _("Background Music"), false, true);
+    apply_theme_list_item(&theme, ui_lblSave, _("Save Games + Save States"), false, true);
+    apply_theme_list_item(&theme, ui_lblScreenshot, _("Screenshots"), false, true);
+    apply_theme_list_item(&theme, ui_lblTheme, _("Themes"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBIOS, mux_prog, "bios");
     apply_theme_list_glyph(&theme, ui_icoConfig, mux_prog, "config");
@@ -421,7 +421,7 @@ void *joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = "Saving Changes";
+                                    osd_message = _("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -624,7 +624,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, "Save");
+    lv_label_set_text(ui_lblNavB, _("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -789,8 +789,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "STORAGE PREFERENCE");
+    ui_common_screen_init(&theme, &device, _("STORAGE PREFERENCE"));
     ui_init(ui_pnlContent);
     init_elements();
 

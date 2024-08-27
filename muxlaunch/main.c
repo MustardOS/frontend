@@ -134,14 +134,14 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlReboot);
     apply_theme_list_panel(&theme, &device, ui_pnlShutdown);
 
-    apply_theme_list_item(&theme, ui_lblContent, "Explore Content", false, false);
-    apply_theme_list_item(&theme, ui_lblFavourites, "Favourites", false, false);
-    apply_theme_list_item(&theme, ui_lblHistory, "History", false, false);
-    apply_theme_list_item(&theme, ui_lblApps, "Applications", false, false);
-    apply_theme_list_item(&theme, ui_lblInfo, "Information", false, false);
-    apply_theme_list_item(&theme, ui_lblConfig, "Configuration", false, false);
-    apply_theme_list_item(&theme, ui_lblReboot, "Reboot", false, false);
-    apply_theme_list_item(&theme, ui_lblShutdown, "Shutdown", false, false);
+    apply_theme_list_item(&theme, ui_lblContent, _("Explore Content"), false, false);
+    apply_theme_list_item(&theme, ui_lblFavourites, _("Favourites"), false, false);
+    apply_theme_list_item(&theme, ui_lblHistory, _("History"), false, false);
+    apply_theme_list_item(&theme, ui_lblApps, _("Applications"), false, false);
+    apply_theme_list_item(&theme, ui_lblInfo, _("Information"), false, false);
+    apply_theme_list_item(&theme, ui_lblConfig, _("Configuration"), false, false);
+    apply_theme_list_item(&theme, ui_lblReboot, _("Reboot"), false, false);
+    apply_theme_list_item(&theme, ui_lblShutdown, _("Shutdown"), false, false);
 
     apply_theme_list_glyph(&theme, ui_icoContent, mux_prog, "explore");
     apply_theme_list_glyph(&theme, ui_icoFavourites, mux_prog, "favourite");
@@ -441,7 +441,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Confirm");
+    lv_label_set_text(ui_lblNavA, _("Confirm"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavBGlyph,
@@ -627,8 +627,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "MAIN MENU");
+    ui_common_screen_init(&theme, &device, _("MAIN MENU"));
     ui_init(ui_pnlContent);
     init_elements();
 

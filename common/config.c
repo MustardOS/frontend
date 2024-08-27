@@ -36,6 +36,9 @@ void load_config(struct mux_config *config) {
     strncpy(config->SETTINGS.GENERAL.STARTUP, read_text_from_file("/run/muos/global/settings/general/startup"),
             MAX_BUFFER_SIZE - 1);
     config->SETTINGS.GENERAL.STARTUP[MAX_BUFFER_SIZE - 1] = '\0';
+    strncpy(config->SETTINGS.GENERAL.LANGUAGE, read_text_from_file("/run/muos/global/settings/general/language"),
+            MAX_BUFFER_SIZE - 1);
+    config->SETTINGS.GENERAL.LANGUAGE[MAX_BUFFER_SIZE - 1] = '\0';
 
     config->SETTINGS.ADVANCED.SWAP = atoi(read_text_from_file("/run/muos/global/settings/advanced/swap"));
     config->SETTINGS.ADVANCED.THERMAL = atoi(read_text_from_file("/run/muos/global/settings/advanced/thermal"));

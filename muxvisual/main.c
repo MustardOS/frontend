@@ -277,15 +277,15 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFolder);
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFile);
 
-    apply_theme_list_item(&theme, ui_lblBattery, "Battery", false, true);
-    apply_theme_list_item(&theme, ui_lblNetwork, "Network", false, true);
-    apply_theme_list_item(&theme, ui_lblBluetooth, "Bluetooth", false, true);
-    apply_theme_list_item(&theme, ui_lblClock, "Clock", false, true);
-    apply_theme_list_item(&theme, ui_lblBoxArt, "Content Box Art", false, true);
-    apply_theme_list_item(&theme, ui_lblName, "Content Name Scheme", false, true);
-    apply_theme_list_item(&theme, ui_lblDash, "Content Dash Replacement", false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, "Menu Counter Folder", false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFile, "Menu Counter File", false, true);
+    apply_theme_list_item(&theme, ui_lblBattery, _("Battery"), false, true);
+    apply_theme_list_item(&theme, ui_lblNetwork, _("Network"), false, true);
+    apply_theme_list_item(&theme, ui_lblBluetooth, _("Bluetooth"), false, true);
+    apply_theme_list_item(&theme, ui_lblClock, _("Clock"), false, true);
+    apply_theme_list_item(&theme, ui_lblBoxArt, _("Content Box Art"), false, true);
+    apply_theme_list_item(&theme, ui_lblName, _("Content Name Scheme"), false, true);
+    apply_theme_list_item(&theme, ui_lblDash, _("Content Dash Replacement"), false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, _("Menu Counter Folder"), false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFile, _("Menu Counter File"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_prog, "battery");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_prog, "network");
@@ -445,7 +445,7 @@ void *joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = "Saving Changes";
+                                    osd_message = _("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -656,7 +656,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, "Save");
+    lv_label_set_text(ui_lblNavB, _("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -842,8 +842,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "INTERFACE OPTIONS");
+    ui_common_screen_init(&theme, &device, _("INTERFACE OPTIONS"));
     ui_init(ui_pnlContent);
     init_elements();
 

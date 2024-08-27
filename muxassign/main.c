@@ -79,7 +79,7 @@ enum core_gen_type {
 } gen_method;
 
 void show_help() {
-    char *title = "ASSIGN CORE";
+    char *title = _("ASSIGN CORE");
     char *message = MUXASSIGN_GENERIC;
 
     if (strlen(message) <= 1) {
@@ -734,8 +734,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Confirm");
-    lv_label_set_text(ui_lblNavB, "Back");
+    lv_label_set_text(ui_lblNavA, _("Confirm"));
+    lv_label_set_text(ui_lblNavB, _("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -756,9 +756,9 @@ void init_elements() {
     }
 
     if (strcasecmp(rom_system, "none") != 0) {
-        lv_label_set_text(ui_lblNavA, "Directory");
-        lv_label_set_text(ui_lblNavX, "Individual");
-        lv_label_set_text(ui_lblNavY, "Recursive");
+        lv_label_set_text(ui_lblNavA, _("Directory"));
+        lv_label_set_text(ui_lblNavX, _("Individual"));
+        lv_label_set_text(ui_lblNavY, _("Recursive"));
 
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
@@ -1024,6 +1024,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
     ui_common_screen_init(&theme, &device, "");
     init_elements();
@@ -1085,7 +1086,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    lv_label_set_text(ui_lblScreenMessage, "No Cores Found...");
+    lv_label_set_text(ui_lblScreenMessage, _("No Cores Found..."));
     if (strcasecmp(rom_system, "none") == 0) {
         create_system_items();
     } else {
@@ -1137,7 +1138,7 @@ int main(int argc, char *argv[]) {
 
     if (ui_count > 0) {
         char title[MAX_BUFFER_SIZE];
-        snprintf(title, sizeof(title), "ASSIGN - %s", get_last_dir(rom_dir));
+        snprintf(title, sizeof(title), "%s - %s", _("ASSIGN"), get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
     } else {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);

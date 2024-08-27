@@ -134,7 +134,7 @@ void create_app_items() {
         apply_theme_list_panel(&theme, &device, ui_pnlApp);
 
         lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
-        apply_theme_list_item(&theme, ui_lblAppItem, app_store, false, false);
+        apply_theme_list_item(&theme, ui_lblAppItem, _(app_store), false, false);
 
         lv_obj_t * ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
 
@@ -261,7 +261,7 @@ void *joystick_task() {
                                     if (ui_count > 0) {
                                         play_sound("confirm", nav_sound, 1);
 
-                                        lv_label_set_text(ui_lblMessage, "Loading Application");
+                                        lv_label_set_text(ui_lblMessage, _("Loading Application"));
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                         lv_task_handler();
 
@@ -430,8 +430,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Launch");
-    lv_label_set_text(ui_lblNavB, "Back");
+    lv_label_set_text(ui_lblNavA, _("Launch"));
+    lv_label_set_text(ui_lblNavB, _("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -451,6 +451,17 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
+    char *overlay = load_overlay_image();
+    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
+        lv_obj_t * overlay_img = lv_img_create(ui_screen);
+        lv_img_set_src(overlay_img, overlay);
+        lv_obj_move_foreground(overlay_img);
+    }
+
+    if (TEST_IMAGE) display_testing_message(ui_screen);
+}
+
+void update_footer_nav_elements() {
     if (ui_count == 0) {
         lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -462,15 +473,6 @@ void init_elements() {
         lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
     }
-
-    char *overlay = load_overlay_image();
-    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_screen);
-        lv_img_set_src(overlay_img, overlay);
-        lv_obj_move_foreground(overlay_img);
-    }
-
-    if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
 void glyph_task() {
@@ -598,8 +600,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "APPLICATIONS");
+    ui_common_screen_init(&theme, &device, _("APPLICATIONS"));
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
@@ -637,6 +640,7 @@ int main(int argc, char *argv[]) {
     load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
     create_app_items();
+    update_footer_nav_elements();
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     lv_obj_set_user_data(element_focused, lv_label_get_text(element_focused));
@@ -711,7 +715,7 @@ int main(int argc, char *argv[]) {
             list_nav_next(sys_index);
         }
     } else {
-        lv_label_set_text(ui_lblScreenMessage, "No Applications Found");
+        lv_label_set_text(ui_lblScreenMessage, _("No Applications Found"));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 

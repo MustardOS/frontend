@@ -23,6 +23,7 @@
 #include "../common/device.h"
 #include "../common/mini/mini.h"
 
+char *mux_prog;
 static int js_fd;
 static int js_fd_sys;
 
@@ -197,7 +198,7 @@ void glyph_task() {
 }
 
 void init_elements() {
-    lv_label_set_text(ui_lblMessage, "Press POWER to finish testing");
+    lv_label_set_text(ui_lblMessage, _("Press POWER to finish testing"));
     lv_obj_set_y(ui_pnlMessage, - 5);
     lv_obj_set_height(ui_pnlFooter, 0);
     lv_obj_move_foreground(ui_pnlHeader);
@@ -224,6 +225,7 @@ void init_elements() {
 }
 
 int main(int argc, char *argv[]) {
+    mux_prog = basename(argv[0]);
     load_device(&device);
     srand(time(NULL));
 
@@ -250,8 +252,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "INPUT TESTER");
+    ui_common_screen_init(&theme, &device, _("INPUT TESTER"));
     ui_init(ui_pnlContent);
     init_elements();
 

@@ -12,12 +12,14 @@
 #include <sys/stat.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include "json/json.h"
 #include "common.h"
 #include "options.h"
 #include "config.h"
 #include "device.h"
 #include "mini/mini.h"
 
+struct json translations;
 struct pattern skip_pattern_list = {NULL, 0, 0};
 int battery_capacity = 100;
 
@@ -1463,4 +1465,25 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
     int content_panel_y = scrollMultiplier * mux_item_panel;
     lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
     lv_obj_update_snap(ui_pnlContent, LV_ANIM_OFF);
+}
+
+void load_language(const char *program) {
+    char language_file[MAX_BUFFER_SIZE];
+    snprintf(language_file, sizeof(language_file), "/opt/muos/language/%s/%s.json",
+             program, config.SETTINGS.GENERAL.LANGUAGE);
+
+    if (json_valid(read_text_from_file(language_file))) {
+        translations = json_parse(read_text_from_file(language_file));
+    }
+}
+
+char *translate(char *key) {
+    struct json translation_json = json_object_get(translations, key);
+    if (json_exists(translation_json)) {
+        char translation[MAX_BUFFER_SIZE];
+        json_string_copy(translation_json, translation, sizeof(translation));
+        return strdup(translation);
+    }
+
+    return key;
 }

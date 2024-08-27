@@ -355,7 +355,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, "Confirm");
+    lv_label_set_text(ui_lblNavA, _("Confirm"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavBGlyph,
@@ -515,8 +515,9 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
+    load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, "TIMEZONE");
+    ui_common_screen_init(&theme, &device, _("TIMEZONE"));
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
@@ -622,7 +623,7 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     if (ui_count == 0) {
-        lv_label_set_text(ui_lblScreenMessage, "No Timezones Found...");
+        lv_label_set_text(ui_lblScreenMessage, _("No Timezones Found..."));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
