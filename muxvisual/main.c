@@ -299,17 +299,29 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFolder, mux_prog, "counterfolder");
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFile, mux_prog, "counterfile");
 
-    apply_theme_list_drop_down(&theme, ui_droBattery, "Hidden\nVisible");
-    apply_theme_list_drop_down(&theme, ui_droNetwork, "Hidden\nVisible");
-    apply_theme_list_drop_down(&theme, ui_droBluetooth, "Hidden\nVisible");
-    apply_theme_list_drop_down(&theme, ui_droClock, "Hidden\nVisible");
-    apply_theme_list_drop_down(&theme, ui_droBoxArt,
-                               "Bottom + Behind\nBottom + Front\nMiddle + Behind\nMiddle + Front\n"
-                               "Top + Behind\nTop + Front\nFullscreen + Behind\nFullscreen + Front\nDisabled");
-    apply_theme_list_drop_down(&theme, ui_droName, "Full Name\nRemove [ ]\nRemove ( )\nRemove [ ] and ( )");
-    apply_theme_list_drop_down(&theme, ui_droDash, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, "Hidden\nVisible");
-    apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, "Hidden\nVisible");
+    apply_theme_list_drop_down(&theme, ui_droBattery, NULL);
+    apply_theme_list_drop_down(&theme, ui_droNetwork, NULL);
+    apply_theme_list_drop_down(&theme, ui_droBluetooth, NULL);
+    apply_theme_list_drop_down(&theme, ui_droClock, NULL);
+    apply_theme_list_drop_down(&theme, ui_droBoxArt, NULL);
+    apply_theme_list_drop_down(&theme, ui_droName, NULL);
+    apply_theme_list_drop_down(&theme, ui_droDash, NULL);
+    apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, NULL);
+    apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, NULL);
+
+    char *hidden_visible[] = {_("Hidden"), _("Visible")};
+    char *disabled_enabled[] = {_("Disabled"), _("Enabled")};
+    add_drop_down_options(ui_droBattery, hidden_visible, 2);
+    add_drop_down_options(ui_droNetwork, hidden_visible, 2);
+    add_drop_down_options(ui_droBluetooth, hidden_visible, 2);
+    add_drop_down_options(ui_droClock, hidden_visible, 2);
+    add_drop_down_options(ui_droBoxArt, (char *[]){
+                               _("Bottom + Behind"), _("Bottom + Front"), _("Middle + Behind"), _("Middle + Front"), 
+                               _("Top + Behind"), _("Top + Front"), _("Fullscreen + Behind"), _("Fullscreen + Front"), _("Disabled") }, 9);
+    add_drop_down_options(ui_droName, (char *[]){ _("Full Name"), _("Remove [ ]"), _("Remove ( )"), _("Remove [ ] and ( )") }, 4);
+    add_drop_down_options(ui_droDash, disabled_enabled, 2);
+    add_drop_down_options(ui_droMenuCounterFolder, hidden_visible, 2);
+    add_drop_down_options(ui_droMenuCounterFile, hidden_visible, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

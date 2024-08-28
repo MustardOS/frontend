@@ -252,12 +252,14 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoResilio, mux_prog, "resilio");
     apply_theme_list_glyph(&theme, ui_icoNTP, mux_prog, "ntp");
 
-    apply_theme_list_drop_down(&theme, ui_droShell, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droBrowser, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droTerminal, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droSyncthing, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droResilio, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droNTP, "Disabled\nEnabled");
+    char options[MAX_BUFFER_SIZE];
+    snprintf(options, sizeof(options), "%s\n%s", _("Disabled"), _("Enabled"));
+    apply_theme_list_drop_down(&theme, ui_droShell, options);
+    apply_theme_list_drop_down(&theme, ui_droBrowser, options);
+    apply_theme_list_drop_down(&theme, ui_droTerminal, options);
+    apply_theme_list_drop_down(&theme, ui_droSyncthing, options);
+    apply_theme_list_drop_down(&theme, ui_droResilio, options);
+    apply_theme_list_drop_down(&theme, ui_droNTP, options);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

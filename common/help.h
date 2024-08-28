@@ -34,6 +34,7 @@
 #define MUXCONFIG_WIFI     ""
 #define MUXCONFIG_WEBSERV  ""
 #define MUXCONFIG_RTC      ""
+#define MUXCONFIG_LANGUAGE ""
 
 // muxdevice
 #define MUXDEVICE_RG28XX     ""
@@ -48,6 +49,9 @@
 #define MUXINFO_TESTER  ""
 #define MUXINFO_SYSTEM  ""
 #define MUXINFO_CREDITS ""
+
+// muxlanguage
+#define MUXLANGUAGE_GENERIC ""
 
 // muxlaunch
 #define MUXLAUNCH_CONTENT    ""
@@ -154,7 +158,6 @@
 #define MUXTWEAKGEN_BRIGHTNESS ""
 #define MUXTWEAKGEN_HDMI       ""
 #define MUXTWEAKGEN_SHUTDOWN   ""
-#define MUXTWEAKGEN_LANGUAGE   ""
 #define MUXTWEAKGEN_INTERFACE  ""
 #define MUXTWEAKGEN_STORAGE    ""
 #define MUXTWEAKGEN_ADVANCED   ""

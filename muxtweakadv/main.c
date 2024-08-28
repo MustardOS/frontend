@@ -444,24 +444,38 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoState, mux_prog, "state");
     apply_theme_list_glyph(&theme, ui_icoVerbose, mux_prog, "verbose");
 
-    apply_theme_list_drop_down(&theme, ui_droSwap, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droThermal, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droFont, "Noto Sans\nTheme Controlled");
-    apply_theme_list_drop_down(&theme, ui_droVolume, "Previous\nQuiet\nLoud");
-    apply_theme_list_drop_down(&theme, ui_droBrightness, "Previous\nLow\nHigh");
+    apply_theme_list_drop_down(&theme, ui_droSwap, NULL);
+    apply_theme_list_drop_down(&theme, ui_droThermal, NULL);
+    apply_theme_list_drop_down(&theme, ui_droFont, NULL);
+    apply_theme_list_drop_down(&theme, ui_droVolume, NULL);
+    apply_theme_list_drop_down(&theme, ui_droBrightness, NULL);
     apply_theme_list_drop_down(&theme, ui_droOffset,
                                "-50\n-49\n-48\n-47\n-46\n-45\n-44\n-43\n-42\n-41\n-40\n-39\n-38\n-37\n-36\n-35\n-34\n-33\n-32\n"
                                "-31\n-30\n-29\n-28\n-27\n-26\n-25\n-24\n-23\n-22\n-21\n-20\n-19\n-18\n-17\n-16\n-15\n-14\n-13\n"
                                "-12\n-11\n-10\n-9\n-8\n-7\n-6\n-5\n-4\n-3\n-2\n-1\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n"
                                "14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n"
                                "37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50");
-    apply_theme_list_drop_down(&theme, ui_droPasscode, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droLED, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droTheme, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droRetroWait, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droAndroid, "Disabled\nEnabled");
-    apply_theme_list_drop_down(&theme, ui_droState, "mem\nfreeze");
-    apply_theme_list_drop_down(&theme, ui_droVerbose, "Disabled\nEnabled");
+    apply_theme_list_drop_down(&theme, ui_droPasscode, NULL);
+    apply_theme_list_drop_down(&theme, ui_droLED, NULL);
+    apply_theme_list_drop_down(&theme, ui_droTheme, NULL);
+    apply_theme_list_drop_down(&theme, ui_droRetroWait, NULL);
+    apply_theme_list_drop_down(&theme, ui_droAndroid, NULL);
+    apply_theme_list_drop_down(&theme, ui_droState, NULL);
+    apply_theme_list_drop_down(&theme, ui_droVerbose, NULL);
+
+    char *disabled_enabled[] = {_("Disabled"), _("Enabled")};
+    add_drop_down_options(ui_droSwap, disabled_enabled, 2);
+    add_drop_down_options(ui_droThermal, disabled_enabled, 2);
+    add_drop_down_options(ui_droFont, (char *[]){ _("Noto Sans"), _("Theme Controlled") }, 2);
+    add_drop_down_options(ui_droVolume, (char *[]){ _("Previous"), _("Quiet"), _("Loud") }, 3);
+    add_drop_down_options(ui_droBrightness, (char *[]){ _("Previous"), _("Low"), _("High") }, 3);
+    add_drop_down_options(ui_droPasscode, disabled_enabled, 2);
+    add_drop_down_options(ui_droLED, disabled_enabled, 2);
+    add_drop_down_options(ui_droTheme, disabled_enabled, 2);
+    add_drop_down_options(ui_droRetroWait, disabled_enabled, 2);
+    add_drop_down_options(ui_droAndroid, disabled_enabled, 2);
+    add_drop_down_options(ui_droState, (char *[]){ _("mem"), _("freeze")}, 2);
+    add_drop_down_options(ui_droVerbose, disabled_enabled, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

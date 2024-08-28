@@ -74,6 +74,11 @@ int lblIdentifierValue;
 int lblPasswordValue;
 int lblStatusValue;
 
+char * type_dhcp;
+char * type_static;
+char * enabled_true;
+char * enabled_false;
+
 lv_obj_t *key_entry;
 lv_obj_t *num_entry;
 
@@ -169,16 +174,16 @@ void get_current_ip() {
 
 void restore_network_values() {
     if (config.NETWORK.ENABLED) {
-        lv_label_set_text(ui_lblEnableValue, "True");
+        lv_label_set_text(ui_lblEnableValue, enabled_true);
     } else {
-        lv_label_set_text(ui_lblEnableValue, "False");
+        lv_label_set_text(ui_lblEnableValue, enabled_false);
     }
 
     if (config.NETWORK.TYPE) {
-        lv_label_set_text(ui_lblTypeValue, "Static");
+        lv_label_set_text(ui_lblTypeValue, type_static);
         ui_count = 9;
     } else {
-        lv_label_set_text(ui_lblTypeValue, "DHCP");
+        lv_label_set_text(ui_lblTypeValue, type_dhcp);
         ui_count = 5;
     }
 
@@ -201,8 +206,8 @@ void save_network_config() {
     int idx_enable = 0;
     int idx_type = 0;
 
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "true") == 0) idx_enable = 1;
-    if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "static") == 0) idx_type = 1;
+    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) idx_enable = 1;
+    if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) idx_type = 1;
 
     write_text_to_file("/run/muos/global/network/enabled", "w", INT, idx_enable);
     write_text_to_file("/run/muos/global/network/type", "w", INT, idx_type);
@@ -482,8 +487,8 @@ void *joystick_task() {
                                     play_sound("confirm", nav_sound, 1);
 
                                     if (strcasecmp(lv_label_get_text(element_focused), "Enabled") == 0) {
-                                        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
-                                            lv_label_set_text(ui_lblEnableValue, "False");
+                                        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
+                                            lv_label_set_text(ui_lblEnableValue, enabled_false);
                                             lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
@@ -496,7 +501,7 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
                                         } else {
-                                            lv_label_set_text(ui_lblEnableValue, "True");
+                                            lv_label_set_text(ui_lblEnableValue, enabled_true);
                                             lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
@@ -504,7 +509,7 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                                                 lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
@@ -512,8 +517,8 @@ void *joystick_task() {
                                             }
                                         }
                                     } else if (strcasecmp(lv_label_get_text(element_focused), "Network Type") == 0) {
-                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
-                                            lv_label_set_text(ui_lblTypeValue, "DHCP");
+                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+                                            lv_label_set_text(ui_lblTypeValue, type_dhcp);
                                             ui_count = 5;
                                             lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -524,7 +529,7 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
                                         } else {
-                                            lv_label_set_text(ui_lblTypeValue, "static");
+                                            lv_label_set_text(ui_lblTypeValue, type_static);
                                             ui_count = 9;
                                             lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -585,7 +590,7 @@ void *joystick_task() {
 
                                     input_disable = 1;
                                     save_network_config();
-                                    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "False") == 0) {
+                                    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
                                         write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
                                         write_text_to_file("/run/muos/global/network/interface", "w", CHAR, "wlan0");
                                         write_text_to_file("/run/muos/global/network/type", "w", INT, 0);
@@ -600,14 +605,14 @@ void *joystick_task() {
                                         system("/opt/muos/script/system/network.sh");
                                     }
 
-                                    osd_message = "Changes Saved";
+                                    osd_message = _("Changes Saved");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
                                     safe_quit = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
-                                    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
+                                    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
                                         play_sound("confirm", nav_sound, 1);
 
                                         input_disable = 1;
@@ -620,7 +625,7 @@ void *joystick_task() {
                                         safe_quit = 1;
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
-                                    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
+                                    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
                                         play_sound("confirm", nav_sound, 1);
 
                                         input_disable = 1;
@@ -803,8 +808,8 @@ void *joystick_task() {
                                     if (element_focused == ui_lblEnable) {
                                         play_sound("navigate", nav_sound, 0);
 
-                                        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
-                                            lv_label_set_text(ui_lblEnableValue, "False");
+                                        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
+                                            lv_label_set_text(ui_lblEnableValue, enabled_false);
                                             lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
@@ -817,7 +822,7 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
                                         } else {
-                                            lv_label_set_text(ui_lblEnableValue, "True");
+                                            lv_label_set_text(ui_lblEnableValue, enabled_true);
                                             lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
@@ -825,7 +830,7 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                                                 lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
@@ -837,8 +842,8 @@ void *joystick_task() {
                                     if (element_focused == ui_lblType) {
                                         play_sound("navigate", nav_sound, 0);
 
-                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
-                                            lv_label_set_text(ui_lblTypeValue, "DHCP");
+                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+                                            lv_label_set_text(ui_lblTypeValue, type_dhcp);
                                             ui_count = 5;
                                             lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -849,7 +854,7 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
                                         } else {
-                                            lv_label_set_text(ui_lblTypeValue, "Static");
+                                            lv_label_set_text(ui_lblTypeValue, type_static);
                                             ui_count = 9;
                                             lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -888,8 +893,8 @@ void *joystick_task() {
                                     if (element_focused == ui_lblEnable) {
                                         play_sound("navigate", nav_sound, 0);
 
-                                        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "True") == 0) {
-                                            lv_label_set_text(ui_lblEnableValue, "False");
+                                        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
+                                            lv_label_set_text(ui_lblEnableValue, enabled_false);
                                             lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
@@ -902,7 +907,7 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
                                         } else {
-                                            lv_label_set_text(ui_lblEnableValue, "True");
+                                            lv_label_set_text(ui_lblEnableValue, enabled_true);
                                             lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
@@ -910,7 +915,7 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                                                 lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
@@ -922,8 +927,8 @@ void *joystick_task() {
                                     if (element_focused == ui_lblType) {
                                         play_sound("navigate", nav_sound, 0);
 
-                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
-                                            lv_label_set_text(ui_lblTypeValue, "DHCP");
+                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+                                            lv_label_set_text(ui_lblTypeValue, type_dhcp);
                                             ui_count = 5;
                                             lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -934,7 +939,7 @@ void *joystick_task() {
                                             lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
                                         } else {
-                                            lv_label_set_text(ui_lblTypeValue, "Static");
+                                            lv_label_set_text(ui_lblTypeValue, type_static);
                                             ui_count = 9;
                                             lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -1029,6 +1034,10 @@ static void num_handler(lv_event_t *e) {
 }
 
 void init_elements() {
+    type_dhcp = _("DHCP");
+    type_static = _("Static");
+    enabled_false = _("False");
+    enabled_true = _("True");
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
@@ -1090,7 +1099,7 @@ void init_elements() {
         lv_obj_move_foreground(overlay_img);
     }
 
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), "False") == 0) {
+    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
         lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
@@ -1110,7 +1119,7 @@ void init_elements() {
         lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "Static") == 0) {
+        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
             lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
@@ -1118,7 +1127,7 @@ void init_elements() {
         }
     }
 
-    if (strcasecmp(lv_label_get_text(ui_lblTypeValue), "DHCP") == 0) {
+    if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_dhcp) == 0) {
         lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);

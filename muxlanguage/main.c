@@ -1,12 +1,12 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <dirent.h>
 #include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
@@ -20,6 +20,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
+#include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/mini/mini.h"
@@ -52,124 +53,111 @@ struct theme_config theme;
 
 int nav_moved = 1;
 char *current_wall = "";
-int current_item_index = 0;
 
 lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
+size_t item_count = 0;
+content_item *items = NULL;
+
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-// Modify the following integer to number of static menu elements
-#define UI_COUNT 6
-lv_obj_t *ui_objects[UI_COUNT];
-lv_obj_t *ui_icons[UI_COUNT];
+int ui_count = 0;
+int current_item_index = 0;
+int first_open = 1;
 
-void show_help(lv_obj_t *element_focused) {
-    char *message = NO_HELP_FOUND;
-
-    if (element_focused == ui_lblTweakGeneral) {
-        message = MUXCONFIG_GENERAL;
-    } else if (element_focused == ui_lblTheme) {
-        message = MUXCONFIG_THEME;
-    } else if (element_focused == ui_lblNetwork) {
-        message = MUXCONFIG_WIFI;
-    } else if (element_focused == ui_lblServices) {
-        message = MUXCONFIG_WEBSERV;
-    } else if (element_focused == ui_lblRTC) {
-        message = MUXCONFIG_RTC;
-    } else if (element_focused == ui_lblLanguage) {
-        message = MUXCONFIG_LANGUAGE;
-    }
+void show_help() {
+    char *title = lv_label_get_text(ui_lblTitle);
+    char *message = MUXLANGUAGE_GENERIC;
 
     if (strlen(message) <= 1) {
         message = NO_HELP_FOUND;
     }
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, lv_label_get_text(element_focused), message);
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
 }
 
-void init_navigation_groups() {
-    lv_obj_t *ui_objects_panel[] = {
-        ui_pnlTweakGeneral,
-        ui_pnlTheme,
-        ui_pnlNetwork,
-        ui_pnlServices,
-        ui_pnlRTC,
-        ui_pnlLanguage
-    };
+void populate_languages() {
+    struct dirent *entry;
+    DIR *dir = opendir("/opt/muos/language/muxlaunch");
 
-    ui_objects[0] = ui_lblTweakGeneral;
-    ui_objects[1] = ui_lblTheme;
-    ui_objects[2] = ui_lblNetwork;
-    ui_objects[3] = ui_lblServices;
-    ui_objects[4] = ui_lblRTC;
-    ui_objects[5] = ui_lblLanguage;
+    if (!dir) {
+        perror("opendir");
+        return;
+    }
 
-    ui_icons[0] = ui_icoTweakGeneral;
-    ui_icons[1] = ui_icoTheme;
-    ui_icons[2] = ui_icoNetwork;
-    ui_icons[3] = ui_icoServices;
-    ui_icons[4] = ui_icoRTC;
-    ui_icons[5] = ui_icoLanguage;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            size_t len = strlen(entry->d_name);
+            if (len > 5 && strcasecmp(entry->d_name + len - 5, ".json") == 0) {
+                entry->d_name[len - 5] = '\0';
+                add_item(&items, &item_count, entry->d_name, _(entry->d_name), ROM);
+            }
+        }
+    }
+    sort_items(items, item_count);
+    closedir(dir);
+}
 
-    apply_theme_list_panel(&theme, &device, ui_pnlTweakGeneral);
-    apply_theme_list_panel(&theme, &device, ui_pnlTheme);
-    apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
-    apply_theme_list_panel(&theme, &device, ui_pnlServices);
-    apply_theme_list_panel(&theme, &device, ui_pnlRTC);
-    apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
-
-    apply_theme_list_item(&theme, ui_lblTweakGeneral, _("General Settings"), false, false);
-    apply_theme_list_item(&theme, ui_lblTheme, _("Theme Picker"), false, false);
-    apply_theme_list_item(&theme, ui_lblNetwork, _("Wi-Fi Network"), false, false);
-    apply_theme_list_item(&theme, ui_lblServices, _("Web Services"), false, false);
-    apply_theme_list_item(&theme, ui_lblRTC, _("Date and Time"), false, false);
-    apply_theme_list_item(&theme, ui_lblLanguage, _("Language"), false, false);
-
-    apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_prog, "general");
-    apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
-    apply_theme_list_glyph(&theme, ui_icoNetwork, mux_prog, "network");
-    apply_theme_list_glyph(&theme, ui_icoServices, mux_prog, "service");
-    apply_theme_list_glyph(&theme, ui_icoRTC, mux_prog, "clock");
-    apply_theme_list_glyph(&theme, ui_icoLanguage, mux_prog, "language");
-
+void create_language_items() {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
+    populate_languages();
+    for (size_t i = 0; i < item_count; i++) {
+        ui_count++;
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
+        lv_obj_t * ui_pnlLanguage = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
+
+        lv_obj_t * ui_lblLanguageItem = lv_label_create(ui_pnlLanguage);
+        apply_theme_list_item(&theme, ui_lblLanguageItem, items[i].display_name, false, false);
+
+        lv_obj_t * ui_lblLanguageGlyph = lv_img_create(ui_pnlLanguage);
+        apply_theme_list_glyph(&theme, ui_lblLanguageGlyph, mux_prog, "language");
+
+        lv_group_add_obj(ui_group, ui_lblLanguageItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblLanguageGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlLanguage);
+
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblLanguageItem, ui_lblLanguageGlyph, items[i].name);
     }
+    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
 
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+        if (current_item_index > 0) {
+            current_item_index--;
+            nav_prev(ui_group, 1);
+            nav_prev(ui_group_glyph, 1);
+            nav_prev(ui_group_panel, 1);
+        }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
-    play_sound("navigate", nav_sound, 0);
-    for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound("navigate", nav_sound, 0);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    for (int step = 0; step < steps; ++step) {
+        if (current_item_index < (ui_count - 1)) {
+            current_item_index++;
+            nav_next(ui_group, 1);
+            nav_next(ui_group_glyph, 1);
+            nav_next(ui_group_panel, 1);
+        }
+    }
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
@@ -178,7 +166,12 @@ void *joystick_task() {
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
 
+    int JOYUP_pressed = 0;
+    int JOYDOWN_pressed = 0;
     int JOYHOTKEY_pressed = 0;
+
+    int nav_hold = 0;
+    int nav_delay = UINT8_MAX;
 
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -194,7 +187,7 @@ void *joystick_task() {
     }
 
     while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, nav_delay);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
             continue;
@@ -208,7 +201,6 @@ void *joystick_task() {
                     continue;
                 }
 
-                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
                 switch (ev.type) {
                     case EV_KEY:
                         if (ev.value == 1) {
@@ -224,24 +216,27 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
-                                    if (element_focused == ui_lblTweakGeneral) {
-                                        load_mux("tweakgen");
-                                    } else if (element_focused == ui_lblTheme) {
-                                        load_mux("theme");
-                                    } else if (element_focused == ui_lblNetwork) {
-                                        load_mux("network");
-                                    } else if (element_focused == ui_lblServices) {
-                                        load_mux("webserv");
-                                    } else if (element_focused == ui_lblRTC) {
-                                        load_mux("rtc");
-                                    } else if (element_focused == ui_lblLanguage) {
-                                        load_mux("language");
-                                    }
+
+                                    osd_message = _("Saving Language");
+                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+
+                                    write_text_to_file("/run/muos/global/settings/general/language", "w", CHAR, items[current_item_index].name);
+
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
-                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
                                     safe_quit = 1;
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
+                                    if (current_item_index >= 0 && current_item_index < ui_count) {
+                                        list_nav_prev(theme.MUX.ITEM.COUNT);
+                                        lv_task_handler();
+                                    }
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.R1) {
+                                    if (current_item_index >= 0 && current_item_index < ui_count) {
+                                        list_nav_next(theme.MUX.ITEM.COUNT);
+                                        lv_task_handler();
+                                    }
                                 }
                             }
                         } else {
@@ -251,7 +246,7 @@ void *joystick_task() {
                                 /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
-                                    show_help(element_focused);
+                                    show_help();
                                 }
                                 */
                             }
@@ -264,11 +259,38 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
                                 ev.value == -1) {
-                                list_nav_prev(1);
+                                if (current_item_index == 0) {
+                                    current_item_index = ui_count - 1;
+                                    nav_prev(ui_group, 1);
+                                    nav_prev(ui_group_glyph, 1);
+                                    nav_prev(ui_group_panel, 1);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent);
+                                    lv_task_handler();
+                                } else if (current_item_index > 0) {
+                                    JOYUP_pressed = (ev.value != 0);
+                                    list_nav_prev(1);
+                                    lv_task_handler();
+                                }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
-                                list_nav_next(1);
+                                if (current_item_index == ui_count - 1) {
+                                    current_item_index = 0;
+                                    nav_next(ui_group, 1);
+                                    nav_next(ui_group_glyph, 1);
+                                    nav_next(ui_group_panel, 1);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent);
+                                    lv_task_handler();
+                                } else if (current_item_index < ui_count) {
+                                    JOYDOWN_pressed = (ev.value != 0);
+                                    list_nav_next(1);
+                                    lv_task_handler();
+                                }
+                            } else {
+                                JOYUP_pressed = 0;
+                                JOYDOWN_pressed = 0;
                             }
                         }
                     default:
@@ -277,7 +299,25 @@ void *joystick_task() {
             }
         }
 
-        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1))) {
+        if (ui_count > theme.MUX.ITEM.COUNT && (JOYUP_pressed || JOYDOWN_pressed)) {
+            if (nav_hold > 2) {
+                if (nav_delay > 16) {
+                    nav_delay -= 16;
+                }
+                if (JOYUP_pressed && current_item_index > 0) {
+                    list_nav_prev(1);
+                }
+                if (JOYDOWN_pressed && current_item_index < ui_count) {
+                    list_nav_next(1);
+                }
+            }
+            nav_hold++;
+        } else {
+            nav_delay = UINT8_MAX;
+            nav_hold = 0;
+        }
+
+        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) && !config.BOOT.FACTORY_RESET) {
             if (ev.type == EV_KEY && ev.value == 1 &&
                 (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
                 if (JOYHOTKEY_pressed) {
@@ -358,24 +398,6 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblTweakGeneral, "general");
-    lv_obj_set_user_data(ui_lblTheme, "theme");
-    lv_obj_set_user_data(ui_lblNetwork, "network");
-    lv_obj_set_user_data(ui_lblServices, "service");
-    lv_obj_set_user_data(ui_lblRTC, "clock");
-    lv_obj_set_user_data(ui_lblLanguage, "language");
-
-    if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblServices, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblServices, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoServices, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoServices, LV_OBJ_FLAG_FLOATING);
-    }
-
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
         lv_obj_t * overlay_img = lv_img_create(ui_screen);
@@ -415,26 +437,32 @@ void ui_refresh_task() {
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
-            static char old_wall[MAX_BUFFER_SIZE];
-            static char new_wall[MAX_BUFFER_SIZE];
+            if (config.BOOT.FACTORY_RESET) {
+                char init_wall[MAX_BUFFER_SIZE];
+                snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/default.png", INTERNAL_PATH);
+                lv_img_set_src(ui_imgWall, init_wall);
+            } else {
+                static char old_wall[MAX_BUFFER_SIZE];
+                static char new_wall[MAX_BUFFER_SIZE];
 
-            snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
-            snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                    ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND));
+                snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
+                snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
+                        ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND));
 
-            if (strcasecmp(new_wall, old_wall) != 0) {
-                strcpy(current_wall, new_wall);
-                if (strlen(new_wall) > 3) {
-                    printf("LOADING WALLPAPER: %s\n", new_wall);
-                    if (theme.MISC.ANIMATED_BACKGROUND) {
-                        lv_obj_t * img = lv_gif_create(ui_pnlWall);
-                        lv_gif_set_src(img, new_wall);
+                if (strcasecmp(new_wall, old_wall) != 0) {
+                    strcpy(current_wall, new_wall);
+                    if (strlen(new_wall) > 3) {
+                        printf("LOADING WALLPAPER: %s\n", new_wall);
+                        if (theme.MISC.ANIMATED_BACKGROUND) {
+                            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+                            lv_gif_set_src(img, new_wall);
+                        } else {
+                            lv_img_set_src(ui_imgWall, new_wall);
+                        }
+                        lv_obj_invalidate(ui_pnlWall);
                     } else {
-                        lv_img_set_src(ui_imgWall, new_wall);
+                        lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
                     }
-                    lv_obj_invalidate(ui_pnlWall);
-                } else {
-                    lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
                 }
             }
 
@@ -476,29 +504,7 @@ void ui_refresh_task() {
                 lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
             }
         }
-        lv_obj_invalidate(ui_pnlContent);
-        lv_task_handler();
         nav_moved = 0;
-    }
-}
-
-void direct_to_previous() {
-    if (file_exist(MUOS_PDI_LOAD)) {
-        char *prev = read_text_from_file(MUOS_PDI_LOAD);
-        int text_hit = 0;
-
-        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
-            const char *u_data = lv_obj_get_user_data(ui_objects[i]);
-
-            if (strcasecmp(u_data, prev) == 0) {
-                text_hit = i;
-                break;
-            }
-        }
-
-        if (text_hit != 0) {
-            list_nav_next(text_hit);
-        }
     }
 }
 
@@ -532,8 +538,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("CONFIGURATION"));
-    ui_init(ui_pnlContent);
+    ui_common_screen_init(&theme, &device, _("LANGUAGES"));
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
@@ -593,7 +598,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    init_navigation_groups();
+    create_language_items();
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
@@ -638,15 +643,18 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    init_elements();
-    direct_to_previous();
+    if (ui_count == 0) {
+        lv_label_set_text(ui_lblScreenMessage, _("No Languages Found..."));
+        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+    }
 
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
     }
-
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "language");
     pthread_cancel(joystick_thread);
 
+    free_items(items, item_count);
     close(js_fd);
 
     return 0;

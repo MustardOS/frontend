@@ -15,7 +15,6 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_pnlBrightness = lv_obj_create(ui_pnlContent);
     ui_pnlHDMI = lv_obj_create(ui_pnlContent);
     ui_pnlShutdown = lv_obj_create(ui_pnlContent);
-    ui_pnlLanguage = lv_obj_create(ui_pnlContent);
     ui_pnlInterface = lv_obj_create(ui_pnlContent);
     ui_pnlStorage = lv_obj_create(ui_pnlContent);
     ui_pnlAdvanced = lv_obj_create(ui_pnlContent);
@@ -28,7 +27,6 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_lblBrightness = lv_label_create(ui_pnlBrightness);
     ui_lblHDMI = lv_label_create(ui_pnlHDMI);
     ui_lblShutdown = lv_label_create(ui_pnlShutdown);
-    ui_lblLanguage = lv_label_create(ui_pnlLanguage);
     ui_lblInterface = lv_label_create(ui_pnlInterface);
     ui_lblStorage = lv_label_create(ui_pnlStorage);
     ui_lblAdvanced = lv_label_create(ui_pnlAdvanced);
@@ -41,7 +39,6 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_icoBrightness = lv_img_create(ui_pnlBrightness);
     ui_icoHDMI = lv_img_create(ui_pnlHDMI);
     ui_icoShutdown = lv_img_create(ui_pnlShutdown);
-    ui_icoLanguage = lv_img_create(ui_pnlLanguage);
     ui_icoInterface = lv_img_create(ui_pnlInterface);
     ui_icoStorage = lv_img_create(ui_pnlStorage);
     ui_icoAdvanced = lv_img_create(ui_pnlAdvanced);
@@ -54,7 +51,6 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_droBrightness = lv_dropdown_create(ui_pnlBrightness);
     ui_droHDMI = lv_dropdown_create(ui_pnlHDMI);
     ui_droShutdown = lv_dropdown_create(ui_pnlShutdown);
-    ui_droLanguage = lv_dropdown_create(ui_pnlLanguage);
     ui_droInterface = lv_dropdown_create(ui_pnlInterface);
     ui_droStorage = lv_dropdown_create(ui_pnlStorage);
     ui_droAdvanced = lv_dropdown_create(ui_pnlAdvanced);
