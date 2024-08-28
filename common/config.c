@@ -67,6 +67,7 @@ void load_config(struct mux_config *config) {
     config->VISUAL.BOX_ART = atoi(read_text_from_file("/run/muos/global/visual/boxart"));
     config->VISUAL.NAME = atoi(read_text_from_file("/run/muos/global/visual/name"));
     config->VISUAL.DASH = atoi(read_text_from_file("/run/muos/global/visual/dash"));
+    config->VISUAL.THETITLEFORMAT = atoi(read_text_from_file("/run/muos/global/visual/thetitleformat"));
     config->VISUAL.COUNTERFOLDER = atoi(read_text_from_file("/run/muos/global/visual/counterfolder"));
     config->VISUAL.COUNTERFILE = atoi(read_text_from_file("/run/muos/global/visual/counterfile"));
 

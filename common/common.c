@@ -1469,11 +1469,11 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 
 void load_language(const char *program) {
     char language_file[MAX_BUFFER_SIZE];
-    snprintf(language_file, sizeof(language_file), "/opt/muos/language/%s/%s.json",
-             program, config.SETTINGS.GENERAL.LANGUAGE);
+    snprintf(language_file, sizeof(language_file), "/opt/muos/language/%s.json",
+             config.SETTINGS.GENERAL.LANGUAGE);
 
     if (json_valid(read_text_from_file(language_file))) {
-        translations = json_parse(read_text_from_file(language_file));
+        translations = json_object_get(json_parse(read_text_from_file(language_file)), program);
     }
 }
 

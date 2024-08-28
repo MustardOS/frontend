@@ -9,6 +9,22 @@
 #include "config.h"
 #include "options.h"
 
+void reformat_display_name(char *display_name) {
+    const char *suffix = ", The";
+    size_t suffix_len = strlen(suffix);
+
+    char *position = strstr(display_name, suffix);
+
+    if (position != NULL) {
+        memmove(position, position + suffix_len, strlen(position + suffix_len) + 1);
+
+        size_t original_len = strlen(display_name);
+        memmove(display_name + 4, display_name, original_len + 1);
+
+        memcpy(display_name, "The ", 4);
+    }
+}
+
 content_item *add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name,
                        content_type content_type) {
     *content_items = realloc(*content_items, (*count + 1) * sizeof(content_item));
@@ -17,6 +33,10 @@ content_item *add_item(content_item **content_items, size_t *count, const char *
     (*content_items)[*count].display_name = strdup(sort_name);
     (*content_items)[*count].sort_name = strdup(sort_name);
     (*content_items)[*count].content_type = content_type;
+
+    if (config.VISUAL.THETITLEFORMAT) {
+        reformat_display_name((*content_items)[*count].display_name);
+    }
 
     (*count)++;
 

@@ -82,7 +82,7 @@ void show_help() {
 
 void populate_languages() {
     struct dirent *entry;
-    DIR *dir = opendir("/opt/muos/language/muxlaunch");
+    DIR *dir = opendir("/opt/muos/language");
 
     if (!dir) {
         perror("opendir");
