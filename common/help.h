@@ -102,6 +102,7 @@
 #define MUXSTORAGE_SAVE       ""
 #define MUXSTORAGE_SCREENSHOT ""
 #define MUXSTORAGE_THEME      ""
+#define MUXSTORAGE_LANGUAGE   ""
 
 // muxsysinfo
 #define MUXSYSINFO_VERSION  ""

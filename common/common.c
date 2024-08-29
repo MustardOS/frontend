@@ -1469,8 +1469,8 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 
 void load_language(const char *program) {
     char language_file[MAX_BUFFER_SIZE];
-    snprintf(language_file, sizeof(language_file), "/opt/muos/language/%s.json",
-             config.SETTINGS.GENERAL.LANGUAGE);
+    snprintf(language_file, sizeof(language_file), "%s/language/%s.json",
+             STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
 
     if (json_valid(read_text_from_file(language_file))) {
         translations = json_object_get(json_parse(read_text_from_file(language_file)), program);
@@ -1492,5 +1492,5 @@ void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int co
     lv_dropdown_clear_options(ui_lblItemDropDown);
     for (unsigned int i = 0; i < count; i++) {
         lv_dropdown_add_option(ui_lblItemDropDown, options[i], LV_DROPDOWN_POS_LAST);
-    }    
+    }
 }

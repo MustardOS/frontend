@@ -86,4 +86,5 @@ void load_config(struct mux_config *config) {
     config->STORAGE.SAVE = atoi(read_text_from_file("/run/muos/global/storage/save"));
     config->STORAGE.SCREENSHOT = atoi(read_text_from_file("/run/muos/global/storage/screenshot"));
     config->STORAGE.THEME = atoi(read_text_from_file("/run/muos/global/storage/theme"));
+    config->STORAGE.LANGUAGE = atoi(read_text_from_file("/run/muos/global/storage/language"));
 }

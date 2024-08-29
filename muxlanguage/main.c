@@ -82,7 +82,11 @@ void show_help() {
 
 void populate_languages() {
     struct dirent *entry;
-    DIR *dir = opendir("/opt/muos/language");
+
+    char lang_dir[MAX_BUFFER_SIZE];
+    snprintf(lang_dir, sizeof(lang_dir), "%s/language",
+                STORAGE_PATH);
+    DIR *dir = opendir(lang_dir);
 
     if (!dir) {
         perror("opendir");

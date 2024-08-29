@@ -211,7 +211,8 @@ int should_skip(const char *name);
 
 void adjust_visual_label(char *text, int method, int rep_dash);
 
-void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index, lv_obj_t * ui_pnlContent);
+void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
+                            lv_obj_t *ui_pnlContent);
 
 void load_language(const char *program);
 

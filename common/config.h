@@ -91,6 +91,7 @@ struct mux_config {
         int16_t SAVE;
         int16_t SCREENSHOT;
         int16_t THEME;
+        int16_t LANGUAGE;
     } STORAGE;
 };
 
