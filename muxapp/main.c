@@ -21,6 +21,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
+#include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/mini/mini.h"
@@ -58,6 +59,9 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
+size_t item_count = 0;
+content_item *items = NULL;
+
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
@@ -67,7 +71,7 @@ int current_item_index = 0;
 int first_open = 1;
 
 void show_help() {
-    char *title = lv_label_get_text(ui_lblTitle);
+    char *title = items[current_item_index].name;
     char *message = MUXAPP_GENERIC;
 
     if (strlen(message) <= 1) {
@@ -131,6 +135,8 @@ void create_app_items() {
         snprintf(app_store, sizeof(app_store), "%s", strip_ext(app_name));
 
         ui_count++;
+
+        add_item(&items, &item_count, app_store, _(app_store), ROM);
 
         lv_obj_t * ui_pnlApp = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlApp);
@@ -245,7 +251,6 @@ void *joystick_task() {
                     continue;
                 }
 
-                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
                 switch (ev.type) {
                     case EV_KEY:
                         if (ev.value == 1) {
@@ -269,7 +274,7 @@ void *joystick_task() {
 
                                         static char command[MAX_BUFFER_SIZE];
                                         snprintf(command, sizeof(command), "%s/MUOS/application/%s.sh",
-                                                 device.STORAGE.ROM.MOUNT, lv_label_get_text(element_focused));
+                                                 device.STORAGE.ROM.MOUNT, items[current_item_index].name);
                                         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, command);
 
                                         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
@@ -507,7 +512,7 @@ void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-            lv_obj_set_user_data(element_focused, lv_label_get_text(element_focused));
+            lv_obj_set_user_data(element_focused, items[current_item_index].name);
 
             static char old_wall[MAX_BUFFER_SIZE];
             static char new_wall[MAX_BUFFER_SIZE];
@@ -645,7 +650,7 @@ int main(int argc, char *argv[]) {
     update_footer_nav_elements();
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    lv_obj_set_user_data(element_focused, lv_label_get_text(element_focused));
+    lv_obj_set_user_data(element_focused, items[current_item_index].name);
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
@@ -727,6 +732,7 @@ int main(int argc, char *argv[]) {
 
     pthread_cancel(joystick_thread);
 
+    free_items(items, item_count);
     close(js_fd);
 
     return 0;
