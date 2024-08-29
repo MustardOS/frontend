@@ -735,23 +735,15 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblMenuCounterFile, "counterfile");
 
     if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_droNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droNetwork, LV_OBJ_FLAG_FLOATING);
-        ui_count--;
+        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_FLOATING);
+        ui_count -= 1;
     }
 
     if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
-        lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_FLOATING);
-        ui_count--;
+        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_FLOATING);
+        ui_count -= 1;
     }
 
     char *overlay = load_overlay_image();

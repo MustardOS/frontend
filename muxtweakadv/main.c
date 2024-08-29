@@ -908,12 +908,8 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblVerbose, "verbose");
 
     if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_lblRetroWait, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblRetroWait, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoRetroWait, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoRetroWait, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_droRetroWait, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droRetroWait, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();
