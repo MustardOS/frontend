@@ -1096,13 +1096,7 @@ void init_elements() {
 
     if (!device.DEVICE.HAS_HDMI) {
         lv_obj_add_flag(ui_pnlHDMI, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlHDMI, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblHDMI, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblHDMI, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoHDMI, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoHDMI, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_droHDMI, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droHDMI, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlHDMI, LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();
