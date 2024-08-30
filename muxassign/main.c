@@ -351,6 +351,16 @@ void create_core_items(const char *target) {
         return;
     }
 
+    char *assign_default = NULL;
+    mini_t * assign_ini = mini_try_load(filename);
+
+    if (assign_ini) {
+        const char *a_def = mini_get_string(assign_ini, "global", "default", "");
+        assign_default = malloc(strlen(a_def) + 1);
+        if (assign_default) strcpy(assign_default, a_def);
+        mini_free(assign_ini);
+    }
+
     qsort(core_headers, cores, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();
@@ -362,14 +372,11 @@ void create_core_items(const char *target) {
     };
 
     for (int i = 0; i < cores; ++i) {
-        int do_skip = 0;
         for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); k++) {
             if (strcasecmp(core_headers[i], skip_entries[k]) == 0) {
-                do_skip = 1;
+                continue;
             }
         }
-
-        if (do_skip) continue;
 
         ui_count++;
 
@@ -380,7 +387,9 @@ void create_core_items(const char *target) {
         apply_theme_list_item(&theme, ui_lblCoreItem, core_headers[i], false, false);
 
         lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
-        apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_prog, "core");
+
+        char *glyph = (strcasecmp(core_headers[i], assign_default) == 0) ? "default" : "core";
+        apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_prog, glyph);
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
@@ -390,6 +399,9 @@ void create_core_items(const char *target) {
 
         free(core_headers[i]);
     }
+
+    free(assign_default);
+
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     free(core_headers);
 }
@@ -1034,7 +1046,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
