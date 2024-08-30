@@ -486,7 +486,7 @@ void *joystick_task() {
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
 
-                                    if (strcasecmp(lv_label_get_text(element_focused), "Enabled") == 0) {
+                                    if (element_focused == ui_lblEnable) {
                                         if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
                                             lv_label_set_text(ui_lblEnableValue, enabled_false);
                                             lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
@@ -516,7 +516,7 @@ void *joystick_task() {
                                                 lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
                                             }
                                         }
-                                    } else if (strcasecmp(lv_label_get_text(element_focused), "Network Type") == 0) {
+                                    } else if (element_focused == ui_lblType) {
                                         if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                                             lv_label_set_text(ui_lblTypeValue, type_dhcp);
                                             ui_count = 5;
@@ -540,7 +540,7 @@ void *joystick_task() {
                                             lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
                                             lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
                                         }
-                                    } else if (strcasecmp(lv_label_get_text(element_focused), "Connect") == 0) {
+                                    } else if (element_focused == ui_lblConnect) {
                                         lv_label_set_text(ui_lblStatusValue, "Trying to Connect...");
                                         lv_task_handler();
                                         save_network_config();
