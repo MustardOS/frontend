@@ -175,7 +175,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
                 return;
             }
 
-            LOG_INFO(mux_prog, "Single Assign Content:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s\n",
+            LOG_INFO(mux_prog, "Single Assign Content:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s",
                      strip_ext(rom), core, str_trim(sys), cache,
                      str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
                      get_last_subdir(rom_dir, '/', 4), rom);
@@ -398,11 +398,11 @@ void create_core_items(const char *target) {
         }
 
         if (skip) {
-            LOG_INFO(mux_prog, "Skipping Non-Assignable Core: %s\n", core_headers[i]);
+            LOG_INFO(mux_prog, "Skipping Non-Assignable Core: %s", core_headers[i]);
             continue;
         }
 
-        LOG_INFO(mux_prog, "Generating Item For Core: %s\n", core_headers[i]);
+        LOG_SUCCESS(mux_prog, "Generating Item For Core: %s", core_headers[i]);
 
         ui_count++;
 
@@ -521,7 +521,7 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     if (strcasecmp(rom_system, "none") != 0) {
-                                        LOG_INFO(mux_prog, "Parent Core Assignment Triggered\n");
+                                        LOG_INFO(mux_prog, "Parent Core Assignment Triggered");
 
                                         play_sound("confirm", nav_sound, 1);
 
@@ -551,7 +551,7 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(rom_system, "none") != 0) {
-                                        LOG_INFO(mux_prog, "Directory Core Assignment Triggered\n");
+                                        LOG_INFO(mux_prog, "Directory Core Assignment Triggered");
 
                                         play_sound("confirm", nav_sound, 1);
 
@@ -583,7 +583,7 @@ void *joystick_task() {
                                     if (strcasecmp(rom_system, "none") == 0) {
                                         load_assign(rom_name, rom_dir, str_trim(lv_label_get_text(element_focused)));
                                     } else {
-                                        LOG_INFO(mux_prog, "Single Core Assignment Triggered\n");
+                                        LOG_INFO(mux_prog, "Single Core Assignment Triggered");
 
                                         play_sound("confirm", nav_sound, 1);
 
@@ -957,12 +957,12 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
 
-    LOG_INFO(mux_prog, "Assign Core ROM_NAME: \"%s\"\n", rom_name);
-    LOG_INFO(mux_prog, "Assign Core ROM_DIR: \"%s\"\n", rom_dir);
-    LOG_INFO(mux_prog, "Assign Core ROM_SYS: \"%s\"\n", rom_system);
+    LOG_INFO(mux_prog, "Assign Core ROM_NAME: \"%s\"", rom_name);
+    LOG_INFO(mux_prog, "Assign Core ROM_DIR: \"%s\"", rom_dir);
+    LOG_INFO(mux_prog, "Assign Core ROM_SYS: \"%s\"", rom_system);
 
     if (atoi(auto_assign) && !file_exist(MUOS_SAA_LOAD)) {
-        LOG_INFO(mux_prog, "Automatic Assign Core Initiated\n");
+        LOG_INFO(mux_prog, "Automatic Assign Core Initiated");
 
         char core_file[MAX_BUFFER_SIZE];
         snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
@@ -992,26 +992,26 @@ int main(int argc, char *argv[]) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_prog, "<Automatic Assign> Core Assigned: %s\n", ass_config);
+                LOG_INFO(mux_prog, "<Automatic Assign> Core Assigned: %s", ass_config);
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
                 snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/MUOS/info/assign/%s",
                          device.STORAGE.ROM.MOUNT, ass_config);
 
-                LOG_INFO(mux_prog, "<Automatic Assign> Obtaining Core INI: %s\n", assigned_core_ini);
+                LOG_INFO(mux_prog, "<Automatic Assign> Obtaining Core INI: %s", assigned_core_ini);
 
                 mini_t * core_config_ini = mini_load(assigned_core_ini);
 
                 static char def_core[MAX_BUFFER_SIZE];
                 strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
 
-                LOG_INFO(mux_prog, "<Automatic Assign> Default Core: %s\n", ass_config);
+                LOG_INFO(mux_prog, "<Automatic Assign> Default Core: %s", ass_config);
 
                 if (strcmp(def_core, "none") != 0) {
                     static char auto_core[MAX_BUFFER_SIZE];
                     strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
 
-                    LOG_INFO(mux_prog, "<Automatic Assign> Assigned Core To: %s\n", auto_core);
+                    LOG_INFO(mux_prog, "<Automatic Assign> Assigned Core To: %s", auto_core);
 
                     if (strcmp(def_core, "invalid") != 0) {
                         static char core_catalogue[MAX_BUFFER_SIZE];
@@ -1019,12 +1019,13 @@ int main(int argc, char *argv[]) {
 
                         int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
 
-                        LOG_INFO(mux_prog, "<Automatic Assign> Core Cache: %d\n", name_cache);
-                        LOG_INFO(mux_prog, "<Automatic Assign> Core Catalogue: %s\n", core_catalogue);
+                        LOG_INFO(mux_prog, "<Automatic Assign> Core Cache: %d", name_cache);
+                        LOG_INFO(mux_prog, "<Automatic Assign> Core Catalogue: %s", core_catalogue);
 
                         create_core_assignment(auto_core, core_catalogue, rom_name, name_cache, DIRECTORY_NO_WIPE);
 
                         auto_assign_good = 1;
+                        LOG_SUCCESS(mux_prog, "<Automatic Assign> Successful");
                     }
                 }
 
@@ -1115,14 +1116,15 @@ int main(int argc, char *argv[]) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
             Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            LOG_INFO(mux_prog, "SDL Init Success\n");
+            LOG_INFO(mux_prog, "SDL Init Success");
             nav_sound = 1;
         } else {
-            LOG_WARN(mux_prog, "SDL Failed To Init\n");
+            LOG_ERROR(mux_prog, "SDL Failed To Init");
         }
     }
 
     lv_label_set_text(ui_lblScreenMessage, _("No Cores Found..."));
+
     if (strcasecmp(rom_system, "none") == 0) {
         create_system_items();
     } else {
@@ -1141,7 +1143,7 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        LOG_ERROR(mux_prog, "Failed to open joystick device!");
         return 1;
     }
 
@@ -1173,10 +1175,16 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     if (ui_count > 0) {
+        if (strcasecmp(rom_system, "none") == 0) {
+            LOG_SUCCESS(mux_prog, "%d System%s Detected", ui_count, ui_count == 1 ? "" : "s");
+        } else {
+            LOG_SUCCESS(mux_prog, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s");
+        }
         char title[MAX_BUFFER_SIZE];
         snprintf(title, sizeof(title), "%s - %s", _("ASSIGN"), get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
     } else {
+        LOG_ERROR(mux_prog, "No Cores Detected - Check Directory!");
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
@@ -1187,6 +1195,8 @@ int main(int argc, char *argv[]) {
     pthread_cancel(joystick_thread);
 
     close(js_fd);
+
+    LOG_SUCCESS(mux_prog, "Safe Quit!");
 
     return 0;
 }
