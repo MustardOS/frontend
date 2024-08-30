@@ -18,6 +18,7 @@
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include "../common/log.h"
 #include "../common/common.h"
 #include "../common/help.h"
 #include "../common/options.h"
@@ -77,7 +78,8 @@ char *rom_system;
 enum core_gen_type {
     SINGLE,
     DIRECTORY,
-    PARENT
+    PARENT,
+    DIRECTORY_NO_WIPE
 } gen_method;
 
 void show_help() {
@@ -161,7 +163,6 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
 
     switch (method) {
         case SINGLE:
-            printf("SINGLE ASSIGN TRIGGER\n");
             char rom_path[MAX_BUFFER_SIZE];
             snprintf(rom_path, sizeof(rom_path), "%s/%s.cfg",
                      core_dir, strip_ext(rom));
@@ -174,18 +175,20 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
                 return;
             }
 
-            printf("SINGLE ASSIGN CONTENT:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s\n",
-                   strip_ext(rom), core, str_trim(sys), cache,
-                   str_replace(str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""), "/ROMS/", "/ROMS"),
-                   get_last_subdir(rom_dir, '/', 4), rom);
+            LOG_INFO(mux_prog, "Single Assign Content:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s\n",
+                     strip_ext(rom), core, str_trim(sys), cache,
+                     str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
+                     get_last_subdir(rom_dir, '/', 4), rom);
             fprintf(rom_file, "%s\n%s\n%s\n%d\n%s\n%s\n%s\n",
                     strip_ext(rom), core, str_trim(sys), cache,
-                    str_replace(str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""), "/ROMS/", "/ROMS"),
+                    str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
                     get_last_subdir(rom_dir, '/', 4), rom);
             fclose(rom_file);
             break;
         case PARENT: {
             delete_files_of_type(core_dir, "cfg", NULL, 1);
+
+            create_core_assignment(core, sys, rom, cache, DIRECTORY);
 
             char **subdirs = get_subdirectories(core_dir);
             if (subdirs != NULL) {
@@ -208,10 +211,24 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
             }
         }
             break;
-        case DIRECTORY:
-        default: {
+        case DIRECTORY: {
             delete_files_of_type(core_dir, "cfg", NULL, 0);
 
+            char core_file[MAX_BUFFER_SIZE];
+            snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
+                     STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+
+            FILE * file = fopen(core_file, "w");
+            if (file == NULL) {
+                perror("Error opening file");
+                return;
+            }
+
+            fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
+            fclose(file);
+        }
+        case DIRECTORY_NO_WIPE:
+        default: {
             char core_file[MAX_BUFFER_SIZE];
             snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
                      STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
@@ -372,11 +389,20 @@ void create_core_items(const char *target) {
     };
 
     for (int i = 0; i < cores; ++i) {
+        int skip = 0;
         for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); k++) {
             if (strcasecmp(core_headers[i], skip_entries[k]) == 0) {
-                continue;
+                skip = 1;
+                break;
             }
         }
+
+        if (skip) {
+            LOG_INFO(mux_prog, "Skipping Non-Assignable Core: %s\n", core_headers[i]);
+            continue;
+        }
+
+        LOG_INFO(mux_prog, "Generating Item For Core: %s\n", core_headers[i]);
 
         ui_count++;
 
@@ -495,7 +521,7 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     if (strcasecmp(rom_system, "none") != 0) {
-                                        printf("PARENT CORE ASSIGNMENT TRIGGER\n");
+                                        LOG_INFO(mux_prog, "Parent Core Assignment Triggered\n");
 
                                         play_sound("confirm", nav_sound, 1);
 
@@ -525,7 +551,39 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(rom_system, "none") != 0) {
-                                        printf("SINGLE CORE ASSIGNMENT TRIGGER\n");
+                                        LOG_INFO(mux_prog, "Directory Core Assignment Triggered\n");
+
+                                        play_sound("confirm", nav_sound, 1);
+
+                                        char chosen_core_ini[FILENAME_MAX];
+                                        snprintf(chosen_core_ini, sizeof(chosen_core_ini),
+                                                 "%s/MUOS/info/assign/%s.ini",
+                                                 device.STORAGE.ROM.MOUNT, rom_system);
+
+                                        mini_t * chosen_core = mini_load(chosen_core_ini);
+
+                                        const char *raw_core = mini_get_string(
+                                                chosen_core, str_trim(lv_label_get_text(element_focused)),
+                                                "core", "none");
+
+                                        int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
+
+                                        static char core_catalogue[MAX_BUFFER_SIZE];
+                                        strcpy(core_catalogue, get_ini_string(chosen_core, "global",
+                                                                              "catalogue", rom_system));
+
+                                        create_core_assignment(raw_core, core_catalogue, rom_name,
+                                                               name_cache, DIRECTORY);
+
+                                        mini_free(chosen_core);
+
+                                        safe_quit = 1;
+                                    }
+                                } else if (ev.code == NAV_A) {
+                                    if (strcasecmp(rom_system, "none") == 0) {
+                                        load_assign(rom_name, rom_dir, str_trim(lv_label_get_text(element_focused)));
+                                    } else {
+                                        LOG_INFO(mux_prog, "Single Core Assignment Triggered\n");
 
                                         play_sound("confirm", nav_sound, 1);
 
@@ -550,40 +608,7 @@ void *joystick_task() {
                                                                name_cache, SINGLE);
 
                                         mini_free(chosen_core);
-
-                                        safe_quit = 1;
                                     }
-                                } else if (ev.code == NAV_A) {
-                                    play_sound("confirm", nav_sound, 1);
-
-                                    if (strcasecmp(rom_system, "none") == 0) {
-                                        load_assign(rom_name, rom_dir, str_trim(lv_label_get_text(element_focused)));
-                                    } else {
-                                        printf("DIRECTORY CORE ASSIGNMENT TRIGGER\n");
-
-                                        char chosen_core_ini[FILENAME_MAX];
-                                        snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                                                 "%s/MUOS/info/assign/%s.ini",
-                                                 device.STORAGE.ROM.MOUNT, rom_system);
-
-                                        mini_t * chosen_core = mini_load(chosen_core_ini);
-
-                                        const char *raw_core = mini_get_string(
-                                                chosen_core, str_trim(lv_label_get_text(element_focused)),
-                                                "core", "none");
-
-                                        int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
-
-                                        static char core_catalogue[MAX_BUFFER_SIZE];
-                                        strcpy(core_catalogue, get_ini_string(chosen_core, "global",
-                                                                              "catalogue", rom_system));
-
-                                        create_core_assignment(raw_core, core_catalogue, rom_name,
-                                                               name_cache, DIRECTORY);
-
-                                        mini_free(chosen_core);
-                                    }
-
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
@@ -770,8 +795,8 @@ void init_elements() {
     }
 
     if (strcasecmp(rom_system, "none") != 0) {
-        lv_label_set_text(ui_lblNavA, _("Directory"));
-        lv_label_set_text(ui_lblNavX, _("Individual"));
+        lv_label_set_text(ui_lblNavA, _("Individual"));
+        lv_label_set_text(ui_lblNavX, _("Directory"));
         lv_label_set_text(ui_lblNavY, _("Recursive"));
 
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
@@ -841,7 +866,6 @@ void ui_refresh_task() {
             if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
-                    printf("LOADING WALLPAPER: %s\n", new_wall);
                     if (theme.MISC.ANIMATED_BACKGROUND) {
                         lv_obj_t * img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
@@ -859,8 +883,6 @@ void ui_refresh_task() {
                      load_static_image(ui_screen, ui_group));
 
             if (strlen(static_image) > 0) {
-                printf("LOADING STATIC IMAGE: %s\n", static_image);
-
                 switch (theme.MISC.STATIC_ALIGNMENT) {
                     case 0: // Bottom + Front
                         lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
@@ -935,12 +957,12 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
 
-    printf("ASSIGN CORE ROM_NAME: \"%s\"\n", rom_name);
-    printf("ASSIGN CORE ROM_DIR: \"%s\"\n", rom_dir);
-    printf("ASSIGN CORE ROM_SYS: \"%s\"\n", rom_system);
+    LOG_INFO(mux_prog, "Assign Core ROM_NAME: \"%s\"\n", rom_name);
+    LOG_INFO(mux_prog, "Assign Core ROM_DIR: \"%s\"\n", rom_dir);
+    LOG_INFO(mux_prog, "Assign Core ROM_SYS: \"%s\"\n", rom_system);
 
     if (atoi(auto_assign) && !file_exist(MUOS_SAA_LOAD)) {
-        printf("ASSIGN AUTO INITIATED\n");
+        LOG_INFO(mux_prog, "Automatic Assign Core Initiated\n");
 
         char core_file[MAX_BUFFER_SIZE];
         snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
@@ -970,26 +992,26 @@ int main(int argc, char *argv[]) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                printf("ASSIGN AUTO CORE: %s\n", ass_config);
+                LOG_INFO(mux_prog, "<Automatic Assign> Core Assigned: %s\n", ass_config);
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
                 snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/MUOS/info/assign/%s",
                          device.STORAGE.ROM.MOUNT, ass_config);
 
-                printf("OBTAINING CORE INI: %s\n", assigned_core_ini);
+                LOG_INFO(mux_prog, "<Automatic Assign> Obtaining Core INI: %s\n", assigned_core_ini);
 
                 mini_t * core_config_ini = mini_load(assigned_core_ini);
 
                 static char def_core[MAX_BUFFER_SIZE];
                 strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
 
-                printf("DEFAULT CORE: %s\n", def_core);
+                LOG_INFO(mux_prog, "<Automatic Assign> Default Core: %s\n", ass_config);
 
                 if (strcmp(def_core, "none") != 0) {
                     static char auto_core[MAX_BUFFER_SIZE];
                     strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
 
-                    printf("CORE TO BE ASSIGNED: %s\n", auto_core);
+                    LOG_INFO(mux_prog, "<Automatic Assign> Assigned Core To: %s\n", auto_core);
 
                     if (strcmp(def_core, "invalid") != 0) {
                         static char core_catalogue[MAX_BUFFER_SIZE];
@@ -997,10 +1019,10 @@ int main(int argc, char *argv[]) {
 
                         int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
 
-                        printf("ASSIGN CORE CACHE: %d\n", name_cache);
-                        printf("ASSIGN CORE CATALOGUE: %s\n", core_catalogue);
+                        LOG_INFO(mux_prog, "<Automatic Assign> Core Cache: %d\n", name_cache);
+                        LOG_INFO(mux_prog, "<Automatic Assign> Core Catalogue: %s\n", core_catalogue);
 
-                        create_core_assignment(auto_core, core_catalogue, rom_name, name_cache, DIRECTORY);
+                        create_core_assignment(auto_core, core_catalogue, rom_name, name_cache, DIRECTORY_NO_WIPE);
 
                         auto_assign_good = 1;
                     }
@@ -1093,10 +1115,10 @@ int main(int argc, char *argv[]) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
             Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            printf("SDL init success!\n");
+            LOG_INFO(mux_prog, "SDL Init Success\n");
             nav_sound = 1;
         } else {
-            fprintf(stderr, "Failed to init SDL\n");
+            LOG_WARN(mux_prog, "SDL Failed To Init\n");
         }
     }
 

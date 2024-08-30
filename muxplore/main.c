@@ -135,14 +135,23 @@ char *load_content_core(int force) {
         snprintf(content_core, sizeof(content_core), "%s/info/core/core.cfg",
                  STORAGE_PATH);
     } else {
-        snprintf(content_core, sizeof(content_core), "%s/info/core/%s/core.cfg",
-                 STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+        snprintf(content_core, sizeof(content_core), "%s/info/core/%s/%s.cfg",
+                 STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
+        if (file_exist(content_core) && !force) {
+            printf("LOADING INDIVIDUAL CORE AT: %s\n", content_core);
+            return read_line_from_file(content_core, 2);
+        } else {
+            printf("NO INDIVIDUAL CORE INFO AT: %s\n", content_core);
+            snprintf(content_core, sizeof(content_core), "%s/info/core/%s/core.cfg",
+                     STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+        }
     }
 
     if (file_exist(content_core) && !force) {
-        printf("LOADING CORE AT: %s\n", content_core);
-        return read_text_from_file(content_core);
+        printf("LOADING GLOBAL CORE AT: %s\n", content_core);
+        return read_line_from_file(content_core, 1);
     } else {
+        printf("NO GLOBAL CORE INFO AT: %s\n", content_core);
         load_assign(items[current_item_index].name, sd_dir, "none");
         safe_quit = 1;
     }
@@ -153,7 +162,7 @@ char *load_content_core(int force) {
 char *load_content_description() {
     char content_desc[MAX_BUFFER_SIZE];
 
-    const char *content_label = items[current_item_index].name;
+    char *content_label = items[current_item_index].name;
 
     switch (module) {
         case ROOT:
@@ -216,12 +225,23 @@ char *load_content_description() {
             } else {
                 char *desc_name = strip_ext(items[current_item_index].name);
 
+                char core_desc[MAX_BUFFER_SIZE];
                 char core_file[MAX_BUFFER_SIZE];
-                snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                         STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+                snprintf(core_file, sizeof(core_file), "%s/info/core/%s/%s.cfg",
+                         STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
 
-                printf("TRYING TO READ CORE CONFIG META: %s\n", core_file);
-                char *core_desc = read_line_from_file(core_file, 2);
+                printf("TRYING TO READ CONFIG AT: %s\n", core_file);
+
+                if (!file_exist(core_file)) {
+                    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
+                             STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+                    snprintf(core_file, sizeof(core_file), "%s",
+                             read_line_from_file(core_file, 2));
+                } else {
+                    snprintf(core_file, sizeof(core_file), "%s",
+                             read_line_from_file(core_file, 3));
+                }
+
                 if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) {
                     printf("CORE IS NOT SET - TEXT NOT LOADED\n");
                     return "No Information Found";
@@ -289,7 +309,7 @@ void image_refresh(char *image_type) {
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
 
-    const char *content_label = items[current_item_index].name;
+    char *content_label = items[current_item_index].name;
 
     switch (module) {
         case ROOT:
@@ -380,11 +400,23 @@ void image_refresh(char *image_type) {
             } else {
                 char *file_name = strip_ext(items[current_item_index].name);
 
+                char core_artwork[MAX_BUFFER_SIZE];
                 char core_file[MAX_BUFFER_SIZE];
-                snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                         STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+                snprintf(core_file, sizeof(core_file), "%s/info/core/%s/%s.cfg",
+                         STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
 
-                char *core_artwork = read_line_from_file(core_file, 2);
+                printf("TRYING TO READ CONFIG AT: %s\n", core_file);
+
+                if (!file_exist(core_file)) {
+                    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
+                             STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+                    snprintf(core_artwork, sizeof(core_artwork), "%s",
+                             read_line_from_file(core_file, 2));
+                } else {
+                    snprintf(core_artwork, sizeof(core_artwork), "%s",
+                             read_line_from_file(core_file, 3));
+                }
+
                 if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
                     printf("CORE IS NOT SET - ARTWORK NOT LOADED\n");
                     return;
@@ -603,7 +635,7 @@ void gen_item(char **file_names, int file_count) {
                     }
                 }
             }
-        } 
+        }
 
         snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
 
