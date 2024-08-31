@@ -466,7 +466,7 @@ void init_navigation_groups() {
     char *disabled_enabled[] = {_("Disabled"), _("Enabled")};
     add_drop_down_options(ui_droSwap, disabled_enabled, 2);
     add_drop_down_options(ui_droThermal, disabled_enabled, 2);
-    add_drop_down_options(ui_droFont, (char *[]){ _("Noto Sans"), _("Theme Controlled") }, 2);
+    add_drop_down_options(ui_droFont, (char *[]){ _("Language"), _("Theme") }, 2);
     add_drop_down_options(ui_droVolume, (char *[]){ _("Previous"), _("Quiet"), _("Loud") }, 3);
     add_drop_down_options(ui_droBrightness, (char *[]){ _("Previous"), _("Low"), _("High") }, 3);
     add_drop_down_options(ui_droPasscode, disabled_enabled, 2);
