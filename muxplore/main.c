@@ -113,6 +113,17 @@ lv_timer_t *osd_timer;
 lv_timer_t *glyph_timer;
 lv_timer_t *ui_refresh_timer;
 
+char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_cache) {
+    char *b_core = malloc(MAX_BUFFER_SIZE);
+    if (b_core) {
+        snprintf(b_core, MAX_BUFFER_SIZE, "%s\n%s\n%s",
+                 read_line_from_file(core_path, line_core),
+                 read_line_from_file(core_path, line_catalogue),
+                 read_line_from_file(core_path, line_cache));
+    }
+    return b_core;
+}
+
 char *load_content_core(int force) {
     char content_core[MAX_BUFFER_SIZE];
 
@@ -139,7 +150,7 @@ char *load_content_core(int force) {
                  STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
         if (file_exist(content_core) && !force) {
             printf("LOADING INDIVIDUAL CORE AT: %s\n", content_core);
-            return read_line_from_file(content_core, 2);
+            return build_core(content_core, 2, 3, 4);
         } else {
             printf("NO INDIVIDUAL CORE INFO AT: %s\n", content_core);
             snprintf(content_core, sizeof(content_core), "%s/info/core/%s/core.cfg",
@@ -149,7 +160,7 @@ char *load_content_core(int force) {
 
     if (file_exist(content_core) && !force) {
         printf("LOADING GLOBAL CORE AT: %s\n", content_core);
-        return read_line_from_file(content_core, 1);
+        return build_core(content_core, 1, 2, 3);
     } else {
         printf("NO GLOBAL CORE INFO AT: %s\n", content_core);
         load_assign(items[current_item_index].name, sd_dir, "none");
