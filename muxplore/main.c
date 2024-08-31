@@ -2217,9 +2217,9 @@ int main(int argc, char *argv[]) {
 
     lv_indev_drv_register(&indev_drv);
 
-    init_footer_elements();
-
     if (module != ROOT) pthread_join(gen_item_thread, NULL);
+
+    init_footer_elements();
 
     if (ui_count > 0) {
         lv_obj_update_layout(ui_pnlContent);
