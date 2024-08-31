@@ -52,6 +52,7 @@ struct theme_config theme;
 
 int nav_moved = 1;
 char *current_wall = "";
+int current_item_index = 0;
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -62,8 +63,9 @@ lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
 // Modify the following integer to number of static menu elements
-lv_obj_t *ui_objects[3];
-lv_obj_t *ui_icons[3];
+#define UI_COUNT 3
+lv_obj_t *ui_objects[UI_COUNT];
+lv_obj_t *ui_icons[UI_COUNT];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -124,6 +126,30 @@ void init_navigation_groups() {
 
         apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
     }
+}
+
+void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0);
+    for (int step = 0; step < steps; ++step) {
+        current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_glyph, 1);
+        nav_prev(ui_group_panel, 1);
+    }
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    nav_moved = 1;
+}
+
+void list_nav_next(int steps) {
+    play_sound("navigate", nav_sound, 0);
+    for (int step = 0; step < steps; ++step) {
+        current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_glyph, 1);
+        nav_next(ui_group_panel, 1);
+    }
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    nav_moved = 1;
 }
 
 void *joystick_task() {
@@ -213,19 +239,11 @@ void *joystick_task() {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
                                 ev.value == -1) {
-                                play_sound("navigate", nav_sound, 0);
-                                nav_prev(ui_group, 1);
-                                nav_prev(ui_group_glyph, 1);
-                                nav_prev(ui_group_panel, 1);
-                                nav_moved = 1;
+                                list_nav_prev(1);
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
-                                play_sound("navigate", nav_sound, 0);
-                                nav_next(ui_group, 1);
-                                nav_next(ui_group_glyph, 1);
-                                nav_next(ui_group_panel, 1);
-                                nav_moved = 1;
+                                list_nav_next(1);
                             }
                         }
                     default:
@@ -441,10 +459,7 @@ void direct_to_previous() {
         }
 
         if (text_hit != 0) {
-            nav_next(ui_group, text_hit);
-            nav_next(ui_group_glyph, text_hit);
-            nav_next(ui_group_panel, text_hit);
-            nav_moved = 1;
+            list_nav_next(text_hit);
         }
     }
 }
