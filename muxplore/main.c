@@ -816,14 +816,14 @@ void explore_root() {
             write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD1));
             write_text_to_file("/tmp/single_card", "w", CHAR, "");
             load_mux("explore");
-            safe_quit = 1;
+            quick_exit(0);
             break;
         case 4:
             write_text_to_file("/tmp/explore_card", "w", CHAR, "sdcard");
             write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD2));
             write_text_to_file("/tmp/single_card", "w", CHAR, "");
             load_mux("explore");
-            safe_quit = 1;
+            quick_exit(0);
             break;
         case 6:
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
@@ -838,7 +838,7 @@ void explore_root() {
             write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(E_USB));
             write_text_to_file("/tmp/single_card", "w", CHAR, "");
             load_mux("explore");
-            safe_quit = 1;
+            quick_exit(0);
             break;
         case 10:
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
@@ -2129,7 +2129,7 @@ int main(int argc, char *argv[]) {
 
     switch (module) {
         case ROOT:
-            pthread_create(&gen_item_thread, NULL, (void *) explore_root, (void *) NULL);
+            explore_root();
 
             char *SD2_lc = str_tolower(strcpy(malloc(strlen(SD2) + 1), SD2));
             char *USB_lc = str_tolower(strcpy(malloc(strlen(E_USB) + 1), E_USB));
@@ -2161,7 +2161,7 @@ int main(int argc, char *argv[]) {
                     pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
                                    (void *) &ui_count);
                 } else {
-                    pthread_create(&gen_item_thread, NULL, (void *) explore_root, (void *) NULL);
+                    explore_root();
                 }
             } else {
                 switch (module) {
@@ -2181,7 +2181,7 @@ int main(int argc, char *argv[]) {
                                        (void *) &ui_count);
                         break;
                     default:
-                        pthread_create(&gen_item_thread, NULL, (void *) explore_root, NULL);
+                        explore_root();
                         break;
                 }
             }
@@ -2217,8 +2217,10 @@ int main(int argc, char *argv[]) {
 
     lv_indev_drv_register(&indev_drv);
 
-    pthread_join(gen_item_thread, NULL);
     init_footer_elements();
+
+    if (module != ROOT) pthread_join(gen_item_thread, NULL);
+
     if (ui_count > 0) {
         lv_obj_update_layout(ui_pnlContent);
         if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
@@ -2230,6 +2232,7 @@ int main(int argc, char *argv[]) {
         nav_moved = 0;
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
+
     pthread_cancel(gen_item_thread);
 
     update_file_counter();
