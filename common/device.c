@@ -23,11 +23,11 @@ void load_device(struct mux_device *device) {
         DEV_STR_FIELD(device->STORAGE.field.TYPE, "storage/" path "/type");
 
 #define DEV_ALG_FIELD(field, path)                                                          \
-        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.UP, "input/analog/" path "/up");       \
-        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.DOWN, "input/analog/" path "/down");   \
-        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.LEFT, "input/analog/" path "/left");   \
-        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.RIGHT, "input/analog/" path "/right"); \
-        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.CLICK, "input/analog/" path "/click");
+        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.UP, "input/code/analog/" path "/up");       \
+        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.DOWN, "input/code/analog/" path "/down");   \
+        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.LEFT, "input/code/analog/" path "/left");   \
+        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.RIGHT, "input/code/analog/" path "/right"); \
+        DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.CLICK, "input/code/analog/" path "/click");
 
     DEV_INT_FIELD(device->DEVICE.HAS_NETWORK, "board/network");
     DEV_INT_FIELD(device->DEVICE.HAS_BLUETOOTH, "board/bluetooth");
@@ -85,34 +85,34 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->INPUT.EV0, "input/ev0");
     DEV_STR_FIELD(device->INPUT.EV1, "input/ev1");
 
-    DEV_INT_FIELD(device->RAW_INPUT.DPAD.UP, "input/dpad/up");
-    DEV_INT_FIELD(device->RAW_INPUT.DPAD.DOWN, "input/dpad/down");
-    DEV_INT_FIELD(device->RAW_INPUT.DPAD.LEFT, "input/dpad/left");
-    DEV_INT_FIELD(device->RAW_INPUT.DPAD.RIGHT, "input/dpad/right");
+    DEV_INT_FIELD(device->RAW_INPUT.DPAD.UP, "input/code/dpad/up");
+    DEV_INT_FIELD(device->RAW_INPUT.DPAD.DOWN, "input/code/dpad/down");
+    DEV_INT_FIELD(device->RAW_INPUT.DPAD.LEFT, "input/code/dpad/left");
+    DEV_INT_FIELD(device->RAW_INPUT.DPAD.RIGHT, "input/code/dpad/right");
 
     DEV_ALG_FIELD(LEFT, "left");
     DEV_ALG_FIELD(RIGHT, "right");
 
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.A, "input/button/a");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.B, "input/button/b");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.C, "input/button/c");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.X, "input/button/x");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.Y, "input/button/y");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.Z, "input/button/z");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L1, "input/button/l1");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L2, "input/button/l2");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L3, "input/button/l3");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R1, "input/button/r1");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R2, "input/button/r2");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R3, "input/button/r3");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.MENU_SHORT, "input/button/menu_short");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.MENU_LONG, "input/button/menu_long");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.SELECT, "input/button/select");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.START, "input/button/start");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.POWER_SHORT, "input/button/power_short");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.POWER_LONG, "input/button/power_long");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.VOLUME_UP, "input/button/vol_up");
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.VOLUME_DOWN, "input/button/vol_down");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.A, "input/code/button/a");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.B, "input/code/button/b");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.C, "input/code/button/c");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.X, "input/code/button/x");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.Y, "input/code/button/y");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.Z, "input/code/button/z");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L1, "input/code/button/l1");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L2, "input/code/button/l2");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L3, "input/code/button/l3");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R1, "input/code/button/r1");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R2, "input/code/button/r2");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R3, "input/code/button/r3");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.MENU_SHORT, "input/code/button/menu_short");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.MENU_LONG, "input/code/button/menu_long");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.SELECT, "input/code/button/select");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.START, "input/code/button/start");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.POWER_SHORT, "input/code/button/power_short");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.POWER_LONG, "input/code/button/power_long");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.VOLUME_UP, "input/code/button/vol_up");
+    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.VOLUME_DOWN, "input/code/button/vol_down");
 
 #undef DEV_INT_FIELD
 #undef DEV_STR_FIELD
