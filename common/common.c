@@ -1136,7 +1136,13 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
             const char *element = lv_obj_get_user_data(element_focused);
 
-            if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/%s/%s.%s",
+            if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/%s/wall/%s/%s.%s",
+                         STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program, element,
+                         wall_extension) >= 0 && file_exist(wall_image_path)) {
+                snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/%s/wall/%s/%s.%s",
+                         STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program, element, wall_extension);
+                return wall_image_embed;
+            } else if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/%s/%s.%s",
                          STORAGE_PATH, program, element,
                          wall_extension) >= 0 && file_exist(wall_image_path)) {
                 snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/%s/%s.%s",
@@ -1146,7 +1152,13 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
         }
     }
 
-    if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/%s.%s",
+    if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/%s/wall/%s.%s",
+                 STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program, wall_extension) >= 0 &&
+        file_exist(wall_image_path)) {
+        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/%s/wall/%s.%s",
+                 STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program, wall_extension);
+        return wall_image_embed;
+    } else if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/%s.%s",
                  STORAGE_PATH, program, wall_extension) >= 0 &&
         file_exist(wall_image_path)) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/%s.%s",
@@ -1154,7 +1166,12 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
         return wall_image_embed;
     }
 
-    if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/default.%s",
+    if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/%s/wall/default.%s",
+                 STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, wall_extension) >= 0 && file_exist(wall_image_path)) {
+        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/%s/wall/default.%s",
+                 STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, wall_extension);
+        return wall_image_embed;
+    } else if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/default.%s",
                  STORAGE_PATH, wall_extension) >= 0 && file_exist(wall_image_path)) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/default.%s",
                  STORAGE_PATH, wall_extension);
