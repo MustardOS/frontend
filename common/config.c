@@ -41,6 +41,7 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, "settings/general/startup");
     CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, "settings/general/language");
 
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACCELERATE, "settings/advanced/accelerate");
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAP, "settings/advanced/swap");
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.THERMAL, "settings/advanced/thermal");
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.FONT, "settings/advanced/font");

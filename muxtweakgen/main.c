@@ -396,11 +396,6 @@ void restore_tweak_options() {
 }
 
 void save_tweak_options() {
-    int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
-    int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
-    int idx_sound = lv_dropdown_get_selected(ui_droSound);
-    int idx_brightness = lv_dropdown_get_selected(ui_droBrightness);
-
     int idx_hdmi;
     switch (lv_dropdown_get_selected(ui_droHDMI)) {
         case 0:
@@ -606,6 +601,11 @@ void save_tweak_options() {
             idx_colour = 32;
             break;
     }
+
+    int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
+    int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
+    int idx_sound = lv_dropdown_get_selected(ui_droSound);
+    int idx_brightness = lv_dropdown_get_selected(ui_droBrightness);
 
     write_text_to_file("/run/muos/global/settings/general/hidden", "w", INT, idx_hidden);
     write_text_to_file("/run/muos/global/settings/general/bgm", "w", INT, idx_bgm);

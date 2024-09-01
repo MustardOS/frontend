@@ -40,6 +40,7 @@ struct mux_config {
             char LANGUAGE[MAX_BUFFER_SIZE];
         } GENERAL;
         struct {
+            int16_t ACCELERATE;
             int16_t SWAP;
             int16_t THERMAL;
             int16_t FONT;

@@ -17,6 +17,7 @@ extern "C" {
 
 // SCREEN: ui_scrTweakAdvanced
 void ui_screen_init(lv_obj_t * ui_pnlContent);
+extern lv_obj_t * ui_pnlAccelerate;
 extern lv_obj_t * ui_pnlSwap;
 extern lv_obj_t * ui_pnlThermal;
 extern lv_obj_t * ui_pnlFont;
@@ -30,6 +31,7 @@ extern lv_obj_t * ui_pnlRetroWait;
 extern lv_obj_t * ui_pnlAndroid;
 extern lv_obj_t * ui_pnlState;
 extern lv_obj_t * ui_pnlVerbose;
+extern lv_obj_t * ui_lblAccelerate;
 extern lv_obj_t * ui_lblSwap;
 extern lv_obj_t * ui_lblThermal;
 extern lv_obj_t * ui_lblFont;
@@ -43,6 +45,7 @@ extern lv_obj_t * ui_lblRetroWait;
 extern lv_obj_t * ui_lblAndroid;
 extern lv_obj_t * ui_lblState;
 extern lv_obj_t * ui_lblVerbose;
+extern lv_obj_t * ui_icoAccelerate;
 extern lv_obj_t * ui_icoSwap;
 extern lv_obj_t * ui_icoThermal;
 extern lv_obj_t * ui_icoFont;
@@ -56,6 +59,7 @@ extern lv_obj_t * ui_icoRetroWait;
 extern lv_obj_t * ui_icoAndroid;
 extern lv_obj_t * ui_icoState;
 extern lv_obj_t * ui_icoVerbose;
+extern lv_obj_t * ui_droAccelerate;
 extern lv_obj_t * ui_droSwap;
 extern lv_obj_t * ui_droThermal;
 extern lv_obj_t * ui_droFont;

@@ -7,6 +7,7 @@
 
 void ui_screen_init(lv_obj_t * ui_pnlContent)
 {
+    ui_pnlAccelerate = lv_obj_create(ui_pnlContent);
     ui_pnlSwap = lv_obj_create(ui_pnlContent);
     ui_pnlThermal = lv_obj_create(ui_pnlContent);
     ui_pnlFont = lv_obj_create(ui_pnlContent);
@@ -21,6 +22,7 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_pnlState = lv_obj_create(ui_pnlContent);
     ui_pnlVerbose = lv_obj_create(ui_pnlContent);
 
+    ui_lblAccelerate = lv_label_create(ui_pnlAccelerate);
     ui_lblSwap = lv_label_create(ui_pnlSwap);
     ui_lblThermal = lv_label_create(ui_pnlThermal);
     ui_lblFont = lv_label_create(ui_pnlFont);
@@ -35,6 +37,7 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_lblState = lv_label_create(ui_pnlState);
     ui_lblVerbose = lv_label_create(ui_pnlVerbose);
 
+    ui_icoAccelerate = lv_img_create(ui_pnlAccelerate);
     ui_icoSwap = lv_img_create(ui_pnlSwap);
     ui_icoThermal = lv_img_create(ui_pnlThermal);
     ui_icoFont = lv_img_create(ui_pnlFont);
@@ -49,6 +52,7 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_icoState = lv_img_create(ui_pnlState);
     ui_icoVerbose = lv_img_create(ui_pnlVerbose);
 
+    ui_droAccelerate = lv_dropdown_create(ui_pnlAccelerate);
     ui_droSwap = lv_dropdown_create(ui_pnlSwap);
     ui_droThermal = lv_dropdown_create(ui_pnlThermal);
     ui_droFont = lv_dropdown_create(ui_pnlFont);

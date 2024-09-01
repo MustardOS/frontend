@@ -1120,7 +1120,6 @@ void *joystick_task() {
     int JOYHOTKEY_pressed = 0;
 
     int nav_hold = 0;
-    int nav_delay = UINT8_MAX;
 
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -1136,7 +1135,7 @@ void *joystick_task() {
     }
 
     while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, nav_delay);
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
             continue;
@@ -1174,7 +1173,6 @@ void *joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                     JOYUP_pressed = 0;
                                     JOYDOWN_pressed = 0;
-                                    nav_delay = UINT8_MAX;
                                     nav_hold = 0;
                                 } else if (ev.code == NAV_A) {
                                     if (ui_count == 0) {
@@ -1515,6 +1513,12 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
+                        if (ev.code == ABS_Y) {
+                            JOYUP_pressed = 0;
+                            JOYDOWN_pressed = 0;
+                            nav_hold = 0;
+                            break;
+                        }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
@@ -1574,9 +1578,6 @@ void *joystick_task() {
 
         if (ui_count > theme.MUX.ITEM.COUNT && (JOYUP_pressed || JOYDOWN_pressed)) {
             if (nav_hold > 2) {
-                if (nav_delay > 16) {
-                    nav_delay -= 16;
-                }
                 if (JOYUP_pressed && current_item_index > 0) {
                     list_nav_prev(1);
                 }
@@ -1586,7 +1587,6 @@ void *joystick_task() {
             }
             nav_hold++;
         } else {
-            nav_delay = UINT8_MAX;
             nav_hold = 0;
         }
 
