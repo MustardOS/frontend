@@ -21,6 +21,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
+#include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/mini/mini.h"
@@ -58,6 +59,9 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
+size_t item_count = 0;
+content_item *items = NULL;
+
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
@@ -67,7 +71,7 @@ int current_item_index = 0;
 int first_open = 1;
 
 void show_help() {
-    char *title = lv_label_get_text(ui_lblTitle);
+    char *title = items[current_item_index].name;
     char *message = MUXTASK_GENERIC;
 
     if (strlen(message) <= 1) {
@@ -132,11 +136,13 @@ void create_task_items() {
 
         ui_count++;
 
+        add_item(&items, &item_count, task_store, _(task_store), ROM);
+
         lv_obj_t * ui_pnlTask = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlTask);
 
         lv_obj_t * ui_lblTaskItem = lv_label_create(ui_pnlTask);
-        apply_theme_list_item(&theme, ui_lblTaskItem, task_store, false, false);
+        apply_theme_list_item(&theme, ui_lblTaskItem, _(task_store), false, false);
 
         lv_obj_t * ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
         apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_prog, "task");
@@ -225,7 +231,6 @@ void *joystick_task() {
                     continue;
                 }
 
-                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
                 switch (ev.type) {
                     case EV_KEY:
                         if (ev.value == 1) {
@@ -249,12 +254,12 @@ void *joystick_task() {
 
                                         static char command[MAX_BUFFER_SIZE];
                                         snprintf(command, sizeof(command), "/opt/muos/bin/fbpad \"%s/%s.sh\"",
-                                                 task_path, lv_label_get_text(element_focused));
+                                                 task_path, items[current_item_index].name);
                                         setenv("TERM", "xterm-256color", 1);
                                         printf("RUNNING: %s\n", command);
                                         system(command);
 
-                                        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+                                        write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
                                         load_mux("task");
                                         safe_quit = 1;
@@ -455,6 +460,20 @@ void init_elements() {
     if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
+void update_footer_nav_elements() {
+    if (ui_count == 0) {
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+    } else {
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+    }
+}
+
 void glyph_task() {
     // TODO: Bluetooth connectivity!
     //update_bluetooth_status(ui_staBluetooth, &theme);
@@ -484,6 +503,9 @@ void ui_refresh_task() {
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
+            struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+            lv_obj_set_user_data(element_focused, items[current_item_index].name);
+
             static char old_wall[MAX_BUFFER_SIZE];
             static char new_wall[MAX_BUFFER_SIZE];
 
@@ -611,6 +633,17 @@ int main(int argc, char *argv[]) {
             break;
     }
 
+    load_font_text(basename(argv[0]), ui_screen);
+    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+
+    create_task_items();
+    update_footer_nav_elements();
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    lv_obj_set_user_data(element_focused, items[current_item_index].name);
+
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND) {
@@ -623,11 +656,6 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
     }
 
-    load_font_text(basename(argv[0]), ui_screen);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
-
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
@@ -639,12 +667,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    create_task_items();
-
-    int sys_index = 0;
-    if (file_exist(MUOS_IDX_LOAD)) {
-        sys_index = atoi(read_line_from_file(MUOS_IDX_LOAD, 1));
-        remove(MUOS_IDX_LOAD);
+    int ain_index = 0;
+    if (file_exist(MUOS_AIN_LOAD)) {
+        ain_index = atoi(read_line_from_file(MUOS_AIN_LOAD, 1));
+        printf("loading AIN at: %d\n", ain_index);
+        remove(MUOS_AIN_LOAD);
     }
 
     struct dt_task_param dt_par;
@@ -684,8 +711,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     if (ui_count > 0) {
-        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(sys_index);
+        if (ain_index > -1 && ain_index <= ui_count && current_item_index < ui_count) {
+            list_nav_next(ain_index);
         }
     } else {
         lv_label_set_text(ui_lblScreenMessage, _("No Tasks Found"));

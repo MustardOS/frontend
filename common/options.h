@@ -16,6 +16,7 @@
 #define STORAGE_PATH  "/run/muos/storage"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
+#define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index (used by mux[app|task])
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index

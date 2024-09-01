@@ -59,6 +59,7 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/json/json.c \
 		../common/mini/mini.c \
 		../common/array.c \
+		../common/collection.c \
 		../common/config.c \
 		../common/device.c \
 		../common/common.c \

@@ -277,7 +277,7 @@ void *joystick_task() {
                                                  device.STORAGE.ROM.MOUNT, items[current_item_index].name);
                                         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, command);
 
-                                        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+                                        write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
                                         safe_quit = 1;
                                     }
@@ -675,10 +675,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    int sys_index = 0;
-    if (file_exist(MUOS_IDX_LOAD)) {
-        sys_index = atoi(read_line_from_file(MUOS_IDX_LOAD, 1));
-        remove(MUOS_IDX_LOAD);
+    int ain_index = 0;
+    if (file_exist(MUOS_AIN_LOAD)) {
+        ain_index = atoi(read_line_from_file(MUOS_AIN_LOAD, 1));
+        remove(MUOS_AIN_LOAD);
     }
 
     struct dt_task_param dt_par;
@@ -718,8 +718,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     if (ui_count > 0) {
-        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(sys_index);
+        if (ain_index > -1 && ain_index <= ui_count && current_item_index < ui_count) {
+            list_nav_next(ain_index);
         }
     } else {
         lv_label_set_text(ui_lblScreenMessage, _("No Applications Found"));
