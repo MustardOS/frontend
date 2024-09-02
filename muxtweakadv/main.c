@@ -610,7 +610,7 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droTheme, disabled_enabled, 2);
     add_drop_down_options(ui_droRetroWait, disabled_enabled, 2);
     add_drop_down_options(ui_droAndroid, disabled_enabled, 2);
-    add_drop_down_options(ui_droState, (char *[]) {_("mem"), _("freeze")}, 2);
+    add_drop_down_options(ui_droState, (char *[]) {"mem", "freeze"}, 2);
     add_drop_down_options(ui_droVerbose, disabled_enabled, 2);
 
     ui_group = lv_group_create();
