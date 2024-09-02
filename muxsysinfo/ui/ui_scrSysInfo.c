@@ -8,6 +8,7 @@
 void ui_screen_init(lv_obj_t * ui_pnlContent)
 {
     ui_pnlVersion = lv_obj_create(ui_pnlContent);
+    ui_pnlDevice = lv_obj_create(ui_pnlContent);
     ui_pnlKernel = lv_obj_create(ui_pnlContent);
     ui_pnlUptime = lv_obj_create(ui_pnlContent);
     ui_pnlCPU = lv_obj_create(ui_pnlContent);
@@ -20,6 +21,7 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_pnlVoltage = lv_obj_create(ui_pnlContent);
 
     ui_lblVersion = lv_label_create(ui_pnlVersion);
+    ui_lblDevice = lv_label_create(ui_pnlDevice);
     ui_lblKernel = lv_label_create(ui_pnlKernel);
     ui_lblUptime = lv_label_create(ui_pnlUptime);
     ui_lblCPU = lv_label_create(ui_pnlCPU);
@@ -32,6 +34,7 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_lblVoltage = lv_label_create(ui_pnlVoltage);
 
     ui_icoVersion = lv_img_create(ui_pnlVersion);
+    ui_icoDevice = lv_img_create(ui_pnlDevice);
     ui_icoKernel = lv_img_create(ui_pnlKernel);
     ui_icoUptime = lv_img_create(ui_pnlUptime);
     ui_icoCPU = lv_img_create(ui_pnlCPU);
@@ -44,6 +47,7 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_icoVoltage = lv_img_create(ui_pnlVoltage);
 
     ui_lblVersionValue = lv_label_create(ui_pnlVersion);
+    ui_lblDeviceValue = lv_label_create(ui_pnlDevice);
     ui_lblKernelValue = lv_label_create(ui_pnlKernel);
     ui_lblUptimeValue = lv_label_create(ui_pnlUptime);
     ui_lblCPUValue = lv_label_create(ui_pnlCPU);

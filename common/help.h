@@ -106,6 +106,7 @@
 
 // muxsysinfo
 #define MUXSYSINFO_VERSION  ""
+#define MUXSYSINFO_DEVICE   ""
 #define MUXSYSINFO_KERNEL   ""
 #define MUXSYSINFO_UPTIME   ""
 #define MUXSYSINFO_CPU      ""
