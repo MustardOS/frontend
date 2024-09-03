@@ -1143,8 +1143,8 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
                          STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program, element, wall_extension);
                 return wall_image_embed;
             } else if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/%s/%s.%s",
-                         STORAGE_PATH, program, element,
-                         wall_extension) >= 0 && file_exist(wall_image_path)) {
+                                STORAGE_PATH, program, element,
+                                wall_extension) >= 0 && file_exist(wall_image_path)) {
                 snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/%s/%s.%s",
                          STORAGE_PATH, program, element, wall_extension);
                 return wall_image_embed;
@@ -1159,8 +1159,8 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
                  STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program, wall_extension);
         return wall_image_embed;
     } else if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/%s.%s",
-                 STORAGE_PATH, program, wall_extension) >= 0 &&
-        file_exist(wall_image_path)) {
+                        STORAGE_PATH, program, wall_extension) >= 0 &&
+               file_exist(wall_image_path)) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/%s.%s",
                  STORAGE_PATH, program, wall_extension);
         return wall_image_embed;
@@ -1172,7 +1172,7 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
                  STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, wall_extension);
         return wall_image_embed;
     } else if (snprintf(wall_image_path, sizeof(wall_image_path), "%s/theme/active/image/wall/default.%s",
-                 STORAGE_PATH, wall_extension) >= 0 && file_exist(wall_image_path)) {
+                        STORAGE_PATH, wall_extension) >= 0 && file_exist(wall_image_path)) {
         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s/theme/active/image/wall/default.%s",
                  STORAGE_PATH, wall_extension);
         return wall_image_embed;
@@ -1229,46 +1229,48 @@ void load_font_text(const char *program, lv_obj_t *screen) {
         char theme_font_text[MAX_BUFFER_SIZE];
 
         if (snprintf(theme_font_text, sizeof(theme_font_text),
-                 "%s/theme/active/font/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program) >= 0 && file_exist(theme_font_text)) {
+                     "%s/theme/active/font/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program) >= 0 &&
+            file_exist(theme_font_text)) {
             char theme_font_text_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
                      "M:%s/theme/active/font/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program);
             lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else if (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                 "%s/theme/active/font/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE) >= 0 && file_exist(theme_font_text)) {
+                            "%s/theme/active/font/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE) >=
+                   0 && file_exist(theme_font_text)) {
             char theme_font_text_default_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                        "M:%s/theme/active/font/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
+                     "M:%s/theme/active/font/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
             lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
         } else if (snprintf(theme_font_text, sizeof(theme_font_text),
-                 "%s/theme/active/font/%s.bin", STORAGE_PATH, program) >= 0 && file_exist(theme_font_text)) {
+                            "%s/theme/active/font/%s.bin", STORAGE_PATH, program) >= 0 && file_exist(theme_font_text)) {
             char theme_font_text_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
                      "M:%s/theme/active/font/%s.bin", STORAGE_PATH, program);
             lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else if (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                 "%s/theme/active/font/default.bin", STORAGE_PATH) >= 0 && file_exist(theme_font_text)) {
+                            "%s/theme/active/font/default.bin", STORAGE_PATH) >= 0 && file_exist(theme_font_text)) {
             char theme_font_text_default_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                        "M:%s/theme/active/font/default.bin", STORAGE_PATH);
+                     "M:%s/theme/active/font/default.bin", STORAGE_PATH);
             lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
         }
     } else {
         char theme_font_language[MAX_BUFFER_SIZE];
         snprintf(theme_font_language, sizeof(theme_font_language), "%s/language/%s.bin",
-                STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
+                 STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
 
         if (file_exist(theme_font_language)) {
             char theme_font_language_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_language_fs, sizeof(theme_font_language_fs),
-                        "M:%s/language/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
+                     "M:%s/language/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
             lv_obj_set_style_text_font(screen, lv_font_load(theme_font_language_fs),
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-        }        
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
     }
 }
 
@@ -1278,33 +1280,39 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
         char theme_font_section[MAX_BUFFER_SIZE];
 
         if (snprintf(theme_font_section, sizeof(theme_font_section),
-                 "%s/theme/active/font/%s/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section, program) >= 0 && file_exist(theme_font_section)) {
+                     "%s/theme/active/font/%s/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section,
+                     program) >= 0 && file_exist(theme_font_section)) {
             char theme_font_text_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
-                     "M:%s/theme/active/font/%s/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section, program);
+                     "M:%s/theme/active/font/%s/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section,
+                     program);
             lv_obj_set_style_text_font(element, lv_font_load(theme_font_text_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else if (snprintf(theme_font_section_default, sizeof(theme_font_section_default),
-                 "%s/theme/active/font/%s/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section) >= 0 && file_exist(theme_font_section_default)) {
+                            "%s/theme/active/font/%s/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE,
+                            section) >= 0 && file_exist(theme_font_section_default)) {
             char theme_font_text_default_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                        "M:%s/theme/active/font/%s/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section);
+                     "M:%s/theme/active/font/%s/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE,
+                     section);
             lv_obj_set_style_text_font(element, lv_font_load(theme_font_text_default_fs),
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
         } else if (snprintf(theme_font_section, sizeof(theme_font_section),
-                 "%s/theme/active/font/%s/%s.bin", STORAGE_PATH, section, program) >= 0 && file_exist(theme_font_section)) {
+                            "%s/theme/active/font/%s/%s.bin", STORAGE_PATH, section, program) >= 0 &&
+                   file_exist(theme_font_section)) {
             char theme_font_text_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
                      "M:%s/theme/active/font/%s/%s.bin", STORAGE_PATH, section, program);
             lv_obj_set_style_text_font(element, lv_font_load(theme_font_text_fs),
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         } else if (snprintf(theme_font_section_default, sizeof(theme_font_section_default),
-                 "%s/theme/active/font/%s/default.bin", STORAGE_PATH, section) >= 0 && file_exist(theme_font_section_default)) {
+                            "%s/theme/active/font/%s/default.bin", STORAGE_PATH, section) >= 0 &&
+                   file_exist(theme_font_section_default)) {
             char theme_font_text_default_fs[MAX_BUFFER_SIZE];
             snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                        "M:%s/theme/active/font/%s/default.bin", STORAGE_PATH, section);
+                     "M:%s/theme/active/font/%s/default.bin", STORAGE_PATH, section);
             lv_obj_set_style_text_font(element, lv_font_load(theme_font_text_default_fs),
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
         }
     }
 }
@@ -1541,4 +1549,62 @@ void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int co
     for (unsigned int i = 0; i < count; i++) {
         lv_dropdown_add_option(ui_lblItemDropDown, options[i], LV_DROPDOWN_POS_LAST);
     }
+}
+
+
+char* generate_number_string(int min, int max, int increment, const char* prefix, const char* infix,
+                             const char* suffix, int infix_position) {
+    int count = 0;
+    for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
+        count++;
+    }
+
+    int buffer_size = 0;
+    int prefix_len = prefix ? strlen(prefix) : 0;
+    int infix_len = infix ? strlen(infix) : 0;
+    int suffix_len = suffix ? strlen(suffix) : 0;
+
+    if (prefix) {
+        buffer_size += prefix_len + 1;
+    }
+    for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
+        buffer_size += snprintf(NULL, 0, "%d", i);
+        if (infix) {
+            buffer_size += infix_len;
+        }
+        if ((increment > 0 ? i + increment <= max : i + increment >= max)) {
+            buffer_size += 1;
+        }
+    }
+    if (suffix) {
+        buffer_size += suffix_len;
+    }
+
+    char *number_string = (char*)malloc(buffer_size + 1);
+    if (number_string == NULL) {
+        return NULL;
+    }
+
+    char *ptr = number_string;
+    if (prefix) {
+        ptr += sprintf(ptr, "%s\n", prefix);
+    }
+    for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
+        if (infix && infix_position == 0) {
+            ptr += sprintf(ptr, "%s", infix);
+        }
+        ptr += sprintf(ptr, "%d", i);
+        if (infix && infix_position == 1) {
+            ptr += sprintf(ptr, "%s", infix);
+        }
+        if ((increment > 0 ? i + increment <= max : i + increment >= max)) {
+            *ptr++ = '\n';
+        }
+    }
+    if (suffix) {
+        ptr += sprintf(ptr, "%s", suffix);
+    }
+    *ptr = '\0';
+
+    return number_string;
 }

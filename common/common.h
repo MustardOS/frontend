@@ -219,3 +219,6 @@ void load_language(const char *program);
 char *translate(char *key);
 
 void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count);
+
+char* generate_number_string(int min, int max, int increment, const char* prefix, const char* infix,
+                             const char* suffix, int infix_position);

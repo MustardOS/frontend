@@ -402,7 +402,7 @@ void *joystick_task() {
                                     } else {
                                         play_sound("navigate", nav_sound, 0);
                                         if (element_focused == ui_lblYear) {
-                                            if (rtcYearValue >= 1970 && rtcYearValue < 2199) {
+                                            if (rtcYearValue >= 1969 && rtcYearValue < 2199) {
                                                 rtcYearValue++;
                                                 rtcDayValue = 1;
                                             }

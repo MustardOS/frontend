@@ -734,10 +734,18 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droSound, NULL);
     apply_theme_list_drop_down(&theme, ui_droStartup, NULL);
     apply_theme_list_drop_down(&theme, ui_droColour, NULL);
-    apply_theme_list_drop_down(&theme, ui_droBrightness, NULL);
+
+    char *brightness_string = generate_number_string(1, device.SCREEN.BRIGHT, 1, NULL, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droBrightness, brightness_string);
+    free(brightness_string);
+
     apply_theme_list_drop_down(&theme, ui_droHDMI, NULL);
     apply_theme_list_drop_down(&theme, ui_droShutdown, NULL);
-    apply_theme_list_drop_down(&theme, ui_droBattery, NULL);
+
+    char *battery_string = generate_number_string(5, 50, 5, "Disabled", NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droBattery, battery_string);
+    free(battery_string);
+
     apply_theme_list_drop_down(&theme, ui_droInterface, "");
     apply_theme_list_drop_down(&theme, ui_droStorage, "");
     apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
@@ -764,9 +772,6 @@ void init_navigation_groups() {
             _("Sleep 60s + Shutdown"), _("Sleep 2m + Shutdown"),
             _("Sleep 5m + Shutdown"), _("Sleep 10m + Shutdown"),
             _("Sleep 30m + Shutdown"), _("Sleep 60m + Shutdown")}, 11);
-    add_drop_down_options(ui_droBattery, (char *[]) {
-            _("Disabled"), "5", "10", "15", "20", "25",
-            "30", "35", "40", "45", "50"}, 11);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -1122,36 +1127,7 @@ void *joystick_task() {
     }
 }
 
-void populate_brightness() {
-    int max_value = device.SCREEN.BRIGHT;
-    int max_digits = snprintf(NULL, 0, "%d", max_value);
-    int options_length = max_value * (max_digits + 1);
-
-    char *options = (char *) malloc(options_length * sizeof(char));
-    if (options == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return;
-    }
-
-    char *ptr = options;
-    for (int i = 1; i <= max_value; ++i) {
-        int chars_written = snprintf(ptr, options + options_length - ptr, "%d", i);
-        ptr += chars_written;
-        if (i < max_value) {
-            *ptr++ = '\n';
-        }
-    }
-    *ptr = '\0';
-
-    lv_dropdown_set_options(ui_droBrightness, options);
-    lv_dropdown_set_selected(ui_droBrightness, atoi(read_text_from_file(BRIGHT_FILE)));
-
-    free(options);
-}
-
 void init_elements() {
-    populate_brightness();
-
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
