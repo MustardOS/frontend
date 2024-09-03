@@ -476,6 +476,38 @@ void image_refresh(char *image_type) {
     }
 }
 
+int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
+    char full_path[PATH_MAX];
+    snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, dir_name);
+    
+    struct dirent *entry;
+    DIR *dir = opendir(full_path);
+
+    if (!dir) {
+        perror("opendir");
+        return 0;
+    }
+
+    char skip_ini[MAX_BUFFER_SIZE];
+    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+    load_skip_patterns(skip_ini);
+
+    int32_t item_count = 0;
+    while ((entry = readdir(dir)) != NULL) {
+        if (!should_skip(entry->d_name)) {
+            if (entry->d_type == DT_DIR) {
+                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
+                    item_count++;
+                }
+            } else if (entry->d_type == DT_REG) {
+                item_count++;
+            }
+        }
+    }
+    closedir(dir);
+    return item_count;
+}
+
 void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *dir_count,
                                   char ***file_names, int *file_count) {
     struct dirent *entry;
@@ -785,6 +817,12 @@ void create_explore_items(void *count) {
             }
             if (new_item == NULL) new_item = add_item(&items, &item_count, dir_names[i], dir_names[i], FOLDER);
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+            if (config.VISUAL.FOLDERITEMCOUNT) {
+                char display_name[MAX_BUFFER_SIZE];
+                snprintf(display_name, sizeof(display_name), "%s (%d)", new_item->display_name, 
+                            get_directory_item_count(curr_dir, new_item->name));
+                new_item->display_name = strdup(display_name);
+            }
 
             free(dir_names[i]);
         }

@@ -64,6 +64,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.NAME, "visual/name");
     CFG_INT_FIELD(config->VISUAL.DASH, "visual/dash");
     CFG_INT_FIELD(config->VISUAL.THETITLEFORMAT, "visual/thetitleformat");
+    CFG_INT_FIELD(config->VISUAL.FOLDERITEMCOUNT, "visual/folderitemcount");
     CFG_INT_FIELD(config->VISUAL.COUNTERFOLDER, "visual/counterfolder");
     CFG_INT_FIELD(config->VISUAL.COUNTERFILE, "visual/counterfile");
 
