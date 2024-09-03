@@ -765,8 +765,8 @@ void init_navigation_groups() {
             _("Sleep 5m + Shutdown"), _("Sleep 10m + Shutdown"),
             _("Sleep 30m + Shutdown"), _("Sleep 60m + Shutdown")}, 11);
     add_drop_down_options(ui_droBattery, (char *[]) {
-            _("Disabled"), _("5"), _("10"), _("15"), _("20"), _("25"),
-            _("30"), _("35"), _("40"), _("45"), _("50")}, 11);
+            _("Disabled"), "5", "10", "15", "20", "25",
+            "30", "35", "40", "45", "50"}, 11);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
