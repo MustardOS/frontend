@@ -68,6 +68,7 @@ int boxart_total, boxart_current;
 int name_total, name_current;
 int dash_total, dash_current;
 int thetitleformat_total, thetitleformat_current;
+int folderitemcount_total, folderitemcount_current;
 int menu_counter_folder_total, menu_counter_folder_current;
 int menu_counter_file_total, menu_counter_file_current;
 
@@ -76,7 +77,7 @@ typedef struct {
     int *current;
 } Visuals;
 
-Visuals battery, network, bluetooth, mux_clock, boxart, name, dash, thetitleformat, counterfolder, counterfile;
+Visuals battery, network, bluetooth, mux_clock, boxart, name, dash, thetitleformat, folderitemcount, counterfolder, counterfile;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -106,6 +107,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXVISUAL_DASH;
     } else if (element_focused == ui_lblTheTitleFormat) {
         message = MUXVISUAL_THETITLEFORMAT;
+    } else if (element_focused == ui_lblFolderItemCount) {
+        message = MUXVISUAL_FOLDERITEMCOUNT;
     } else if (element_focused == ui_lblMenuCounterFolder) {
         message = MUXVISUAL_MENU_COUNTER_FOLDERS;
     } else if (element_focused == ui_lblMenuCounterFile) {
@@ -144,6 +147,7 @@ void elements_events_init() {
             ui_droName,
             ui_droDash,
             ui_droTheTitleFormat,
+            ui_droFolderItemCount,
             ui_droMenuCounterFolder,
             ui_droMenuCounterFile,
     };
@@ -160,6 +164,7 @@ void elements_events_init() {
     init_pointers(&name, &name_total, &name_current);
     init_pointers(&dash, &dash_total, &dash_current);
     init_pointers(&thetitleformat, &thetitleformat_total, &thetitleformat_current);
+    init_pointers(&folderitemcount, &folderitemcount_total, &folderitemcount_current);
     init_pointers(&counterfolder, &menu_counter_folder_total, &menu_counter_folder_current);
     init_pointers(&counterfile, &menu_counter_file_total, &menu_counter_file_current);
 }
@@ -173,7 +178,8 @@ void init_dropdown_settings() {
             {boxart.total,        boxart.current},
             {name.total,          name.current},
             {dash.total,          dash.current},
-            {thetitleformat.total,          thetitleformat.current},
+            {thetitleformat.total, thetitleformat.current},
+            {folderitemcount.total, folderitemcount.current},
             {counterfolder.total, counterfolder.current},
             {counterfile.total,   counterfile.current}
     };
@@ -187,6 +193,7 @@ void init_dropdown_settings() {
             ui_droName,
             ui_droDash,
             ui_droTheTitleFormat,
+            ui_droFolderItemCount,
             ui_droMenuCounterFolder,
             ui_droMenuCounterFile
     };
@@ -206,6 +213,7 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droName, config.VISUAL.NAME);
     lv_dropdown_set_selected(ui_droDash, config.VISUAL.DASH);
     lv_dropdown_set_selected(ui_droTheTitleFormat, config.VISUAL.THETITLEFORMAT);
+    lv_dropdown_set_selected(ui_droFolderItemCount, config.VISUAL.FOLDERITEMCOUNT);
     lv_dropdown_set_selected(ui_droMenuCounterFolder, config.VISUAL.COUNTERFOLDER);
     lv_dropdown_set_selected(ui_droMenuCounterFile, config.VISUAL.COUNTERFILE);
 }
@@ -219,6 +227,7 @@ void save_visual_options() {
     int idx_name = lv_dropdown_get_selected(ui_droName);
     int idx_dash = lv_dropdown_get_selected(ui_droDash);
     int idx_thetitleformat = lv_dropdown_get_selected(ui_droTheTitleFormat);
+    int idx_folderitemcount = lv_dropdown_get_selected(ui_droFolderItemCount);
     int idx_counterfolder = lv_dropdown_get_selected(ui_droMenuCounterFolder);
     int idx_counterfile = lv_dropdown_get_selected(ui_droMenuCounterFile);
 
@@ -230,6 +239,7 @@ void save_visual_options() {
     write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
     write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
     write_text_to_file("/run/muos/global/visual/thetitleformat", "w", INT, idx_thetitleformat);
+    write_text_to_file("/run/muos/global/visual/folderitemcount", "w", INT, idx_folderitemcount);
     write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_counterfolder);
     write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_counterfile);
 }
@@ -244,20 +254,24 @@ void init_navigation_groups() {
             ui_pnlName,
             ui_pnlDash,
             ui_pnlTheTitleFormat,
+            ui_pnlFolderItemCount,
             ui_pnlMenuCounterFolder,
             ui_pnlMenuCounterFile
     };
-    
-    ui_objects[0] = ui_lblBattery;
-    ui_objects[1] = ui_lblNetwork;
-    ui_objects[2] = ui_lblBluetooth;
-    ui_objects[3] = ui_lblClock;
-    ui_objects[4] = ui_lblBoxArt;
-    ui_objects[5] = ui_lblName;
-    ui_objects[6] = ui_lblDash;
-    ui_objects[7] = ui_lblTheTitleFormat;
-    ui_objects[8] = ui_lblMenuCounterFolder;
-    ui_objects[9] = ui_lblMenuCounterFile;
+
+    lv_obj_t *ui_objects[] = {
+            ui_lblBattery,
+            ui_lblNetwork,
+            ui_lblBluetooth,
+            ui_lblClock,
+            ui_lblBoxArt,
+            ui_lblName,
+            ui_lblDash,
+            ui_lblTheTitleFormat,
+            ui_lblFolderItemCount,
+            ui_lblMenuCounterFolder,
+            ui_lblMenuCounterFile
+    };
 
     lv_obj_t *ui_objects_value[] = {
             ui_droBattery,
@@ -268,6 +282,7 @@ void init_navigation_groups() {
             ui_droName,
             ui_droDash,
             ui_droTheTitleFormat,
+            ui_droFolderItemCount,
             ui_droMenuCounterFolder,
             ui_droMenuCounterFile
     };
@@ -281,6 +296,7 @@ void init_navigation_groups() {
             ui_icoName,
             ui_icoDash,
             ui_icoTheTitleFormat,
+            ui_icoFolderItemCount,
             ui_icoMenuCounterFolder,
             ui_icoMenuCounterFile
     };
@@ -293,6 +309,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlName);
     apply_theme_list_panel(&theme, &device, ui_pnlDash);
     apply_theme_list_panel(&theme, &device, ui_pnlTheTitleFormat);
+    apply_theme_list_panel(&theme, &device, ui_pnlFolderItemCount);
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFolder);
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFile);
 
@@ -304,6 +321,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblName, _("Content Name Scheme"), false, true);
     apply_theme_list_item(&theme, ui_lblDash, _("Content Dash Replacement"), false, true);
     apply_theme_list_item(&theme, ui_lblTheTitleFormat, _("Display Title Reformatting"), false, true);
+    apply_theme_list_item(&theme, ui_lblFolderItemCount, _("Folder Item Count"), false, true);
     apply_theme_list_item(&theme, ui_lblMenuCounterFolder, _("Menu Counter Folder"), false, true);
     apply_theme_list_item(&theme, ui_lblMenuCounterFile, _("Menu Counter File"), false, true);
 
@@ -315,6 +333,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoName, mux_prog, "name");
     apply_theme_list_glyph(&theme, ui_icoDash, mux_prog, "dash");
     apply_theme_list_glyph(&theme, ui_icoTheTitleFormat, mux_prog, "thetitleformat");
+    apply_theme_list_glyph(&theme, ui_icoFolderItemCount, mux_prog, "folderitemcount");
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFolder, mux_prog, "counterfolder");
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFile, mux_prog, "counterfile");
 
@@ -326,6 +345,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droName, NULL);
     apply_theme_list_drop_down(&theme, ui_droDash, NULL);
     apply_theme_list_drop_down(&theme, ui_droTheTitleFormat, NULL);
+    apply_theme_list_drop_down(&theme, ui_droFolderItemCount, NULL);
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, NULL);
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, NULL);
 
@@ -341,6 +361,7 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droName, (char *[]){ _("Full Name"), _("Remove [ ]"), _("Remove ( )"), _("Remove [ ] and ( )") }, 4);
     add_drop_down_options(ui_droDash, disabled_enabled, 2);
     add_drop_down_options(ui_droTheTitleFormat, disabled_enabled, 2);
+    add_drop_down_options(ui_droFolderItemCount, hidden_visible, 2);
     add_drop_down_options(ui_droMenuCounterFolder, hidden_visible, 2);
     add_drop_down_options(ui_droMenuCounterFile, hidden_visible, 2);
 
@@ -475,6 +496,10 @@ void *joystick_task() {
                                         increase_option_value(ui_droTheTitleFormat,
                                                               &thetitleformat_current,
                                                               thetitleformat_total);
+                                    } else if (element_focused == ui_lblFolderItemCount) {
+                                        increase_option_value(ui_droFolderItemCount,
+                                                              &folderitemcount_current,
+                                                              folderitemcount_total);
                                     } else if (element_focused == ui_lblMenuCounterFolder) {
                                         increase_option_value(ui_droMenuCounterFolder,
                                                               &menu_counter_folder_current,
@@ -598,6 +623,10 @@ void *joystick_task() {
                                     decrease_option_value(ui_droTheTitleFormat,
                                                           &thetitleformat_current,
                                                           thetitleformat_total);
+                                } else if (element_focused == ui_lblFolderItemCount) {
+                                    decrease_option_value(ui_droFolderItemCount,
+                                                          &folderitemcount_current,
+                                                          folderitemcount_total);
                                 } else if (element_focused == ui_lblMenuCounterFolder) {
                                     decrease_option_value(ui_droMenuCounterFolder,
                                                           &menu_counter_folder_current,
@@ -643,6 +672,10 @@ void *joystick_task() {
                                     increase_option_value(ui_droTheTitleFormat,
                                                           &thetitleformat_current,
                                                           thetitleformat_total);
+                                } else if (element_focused == ui_lblFolderItemCount) {
+                                    increase_option_value(ui_droFolderItemCount,
+                                                          &folderitemcount_current,
+                                                          folderitemcount_total);
                                 } else if (element_focused == ui_lblMenuCounterFolder) {
                                     increase_option_value(ui_droMenuCounterFolder,
                                                           &menu_counter_folder_current,
@@ -764,6 +797,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblName, "name");
     lv_obj_set_user_data(ui_lblDash, "dash");
     lv_obj_set_user_data(ui_lblTheTitleFormat, "thetitleformat");
+    lv_obj_set_user_data(ui_lblFolderItemCount, "folderitemcount");
     lv_obj_set_user_data(ui_lblMenuCounterFolder, "counterfolder");
     lv_obj_set_user_data(ui_lblMenuCounterFile, "counterfile");
 
