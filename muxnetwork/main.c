@@ -161,12 +161,10 @@ void get_current_ip() {
         strcasecmp(curr_ip, "") == 0 ||
         curr_ip == NULL) {
         lv_label_set_text(ui_lblStatusValue, _("Not Connected"));
-        lv_task_handler();
         return;
     } else {
         snprintf(net_message, sizeof(net_message), "%s - %s", _("Connected"), curr_ip);
         lv_label_set_text(ui_lblStatusValue, net_message);
-        lv_task_handler();
         return;
     }
 }
@@ -441,7 +439,6 @@ void *joystick_task() {
                                         lv_textarea_set_text(ui_txtEntry, "");
                                         lv_group_set_focus_cb(ui_group, NULL);
                                         lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-                                        lv_task_handler();
                                     } else if (strcmp(is_key, "ABC") == 0) {
                                         lv_btnmatrix_set_map(key_entry, key_upper_map);
                                     } else if (strcmp(is_key, "!@#") == 0) {
@@ -545,7 +542,6 @@ void *joystick_task() {
                                         }
                                     } else if (element_focused == ui_lblConnect) {
                                         lv_label_set_text(ui_lblStatusValue, "Trying to Connect...");
-                                        lv_task_handler();
                                         save_network_config();
                                         if (config.NETWORK.ENABLED) {
                                             write_text_to_file("/tmp/net_ssid", "w", CHAR,
@@ -560,7 +556,6 @@ void *joystick_task() {
                                             input_disable = 0;
                                         } else {
                                             lv_label_set_text(ui_lblStatusValue, "Network Disabled");
-                                            lv_task_handler();
                                         }
                                     } else {
                                         key_curr = 0;
@@ -1022,7 +1017,6 @@ void *joystick_task() {
             }
         }
 
-        lv_task_handler();
         usleep(device.SCREEN.WAIT);
     }
 }
@@ -1378,7 +1372,6 @@ void ui_refresh_task() {
             }
         }
         lv_obj_invalidate(ui_pnlContent);
-        lv_task_handler();
         nav_moved = 0;
     }
 }
@@ -1547,7 +1540,8 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     while (!safe_quit) {
-        usleep(device.SCREEN.WAIT);
+        lv_task_handler();
+        usleep(LVGL_DELAY);
     }
 
     pthread_cancel(joystick_thread);

@@ -336,7 +336,6 @@ void *joystick_task() {
             }
         }
 
-        lv_task_handler();
         usleep(device.SCREEN.WAIT);
     }
 }
@@ -490,7 +489,6 @@ void ui_refresh_task() {
             }
         }
         lv_obj_invalidate(ui_pnlContent);
-        lv_task_handler();
         nav_moved = 0;
     }
 }
@@ -655,7 +653,8 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     while (!safe_quit) {
-        usleep(device.SCREEN.WAIT);
+        lv_task_handler();
+        usleep(LVGL_DELAY);
     }
 
     pthread_cancel(joystick_thread);
