@@ -73,7 +73,6 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-// Modify the following integer to number of static menu elements
 #define UI_COUNT 7
 lv_obj_t *ui_objects[UI_COUNT];
 
@@ -229,13 +228,13 @@ int days_in_month(int year, int month) {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-        ui_pnlYear,
-        ui_pnlMonth,
-        ui_pnlDay,
-        ui_pnlHour,
-        ui_pnlMinute,
-        ui_pnlNotation,
-        ui_pnlTimezone,
+            ui_pnlYear,
+            ui_pnlMonth,
+            ui_pnlDay,
+            ui_pnlHour,
+            ui_pnlMinute,
+            ui_pnlNotation,
+            ui_pnlTimezone,
     };
 
     ui_objects[0] = ui_lblYear;
@@ -256,7 +255,7 @@ void init_navigation_groups() {
             ui_lblTimezoneValue
     };
 
-    lv_obj_t *ui_objects_icon[] = {
+    lv_obj_t *ui_objects_glyph[] = {
             ui_icoYear,
             ui_icoMonth,
             ui_icoDay,
@@ -306,7 +305,7 @@ void init_navigation_groups() {
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_icon[i]);
+        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 }
@@ -346,7 +345,11 @@ void *joystick_task() {
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
 
+    int JOYUP_pressed = 0;
+    int JOYDOWN_pressed = 0;
     int JOYHOTKEY_pressed = 0;
+
+    int nav_hold = 0;
 
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -362,7 +365,7 @@ void *joystick_task() {
     }
 
     while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
             continue;
@@ -495,6 +498,12 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
+                        if (ev.code == ABS_Y) {
+                            JOYUP_pressed = 0;
+                            JOYDOWN_pressed = 0;
+                            nav_hold = 0;
+                            break;
+                        }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
@@ -509,6 +518,7 @@ void *joystick_task() {
                                                            current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
+                                    JOYUP_pressed = (ev.value != 0);
                                     list_nav_prev(1);
                                     nav_moved = 1;
                                 }
@@ -525,9 +535,13 @@ void *joystick_task() {
                                                            current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < UI_COUNT - 1) {
+                                    JOYDOWN_pressed = (ev.value != 0);
                                     list_nav_next(1);
                                     nav_moved = 1;
                                 }
+                            } else {
+                                JOYUP_pressed = 0;
+                                JOYDOWN_pressed = 0;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
@@ -655,6 +669,20 @@ void *joystick_task() {
                         break;
                 }
             }
+        }
+
+        if (JOYUP_pressed || JOYDOWN_pressed) {
+            if (nav_hold > 2) {
+                if (JOYUP_pressed && current_item_index > 0) {
+                    list_nav_prev(1);
+                }
+                if (JOYDOWN_pressed && current_item_index < UI_COUNT - 1) {
+                    list_nav_next(1);
+                }
+            }
+            nav_hold++;
+        } else {
+            nav_hold = 0;
         }
 
         if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) && !config.BOOT.FACTORY_RESET) {
@@ -917,7 +945,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;

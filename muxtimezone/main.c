@@ -284,7 +284,7 @@ void *joystick_task() {
             }
         }
 
-        if (ui_count > theme.MUX.ITEM.COUNT && (JOYUP_pressed || JOYDOWN_pressed)) {
+        if (JOYUP_pressed || JOYDOWN_pressed) {
             if (nav_hold > 2) {
                 if (JOYUP_pressed && current_item_index > 0) {
                     list_nav_prev(1);

@@ -348,7 +348,7 @@ void *joystick_task() {
                                                            current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                     lv_task_handler();
-                                } else if (current_item_index < ui_count) {
+                                } else if (current_item_index < ui_count - 1) {
                                     JOYDOWN_pressed = (ev.value != 0);
                                     list_nav_next(1);
                                     lv_task_handler();
@@ -364,12 +364,12 @@ void *joystick_task() {
             }
         }
 
-        if (ui_count > theme.MUX.ITEM.COUNT && (JOYUP_pressed || JOYDOWN_pressed)) {
+        if (JOYUP_pressed || JOYDOWN_pressed) {
             if (nav_hold > 2) {
                 if (JOYUP_pressed && current_item_index > 0) {
                     list_nav_prev(1);
                 }
-                if (JOYDOWN_pressed && current_item_index < ui_count) {
+                if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
                     list_nav_next(1);
                 }
             }
