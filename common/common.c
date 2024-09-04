@@ -1552,8 +1552,8 @@ void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int co
 }
 
 
-char* generate_number_string(int min, int max, int increment, const char* prefix, const char* infix,
-                             const char* suffix, int infix_position) {
+char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
+                             const char *suffix, int infix_position) {
     int count = 0;
     for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
         count++;
@@ -1580,7 +1580,7 @@ char* generate_number_string(int min, int max, int increment, const char* prefix
         buffer_size += suffix_len;
     }
 
-    char *number_string = (char*)malloc(buffer_size + 1);
+    char *number_string = (char *) malloc(buffer_size + 1);
     if (number_string == NULL) {
         return NULL;
     }

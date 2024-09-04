@@ -99,14 +99,14 @@ void show_help(lv_obj_t *element_focused) {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-        ui_pnlExplore,
-        ui_pnlFavourites,
-        ui_pnlHistory,
-        ui_pnlApps,
-        ui_pnlInfo,
-        ui_pnlConfig,
-        ui_pnlReboot,
-        ui_pnlShutdown,
+            ui_pnlExplore,
+            ui_pnlFavourites,
+            ui_pnlHistory,
+            ui_pnlApps,
+            ui_pnlInfo,
+            ui_pnlConfig,
+            ui_pnlReboot,
+            ui_pnlShutdown,
     };
 
     ui_objects[0] = ui_lblContent;
@@ -216,7 +216,7 @@ void *joystick_task() {
     }
 
     while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
             continue;
@@ -638,7 +638,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
         case 2:

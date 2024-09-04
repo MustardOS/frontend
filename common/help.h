@@ -151,6 +151,7 @@
 #define MUXTWEAKADV_ANDROID    ""
 #define MUXTWEAKADV_STATE      ""
 #define MUXTWEAKADV_VERBOSE    ""
+#define MUXTWEAKADV_STORAGE    ""
 
 // muxtweakgen
 #define MUXTWEAKGEN_HIDDEN     ""
@@ -163,7 +164,6 @@
 #define MUXTWEAKGEN_SHUTDOWN   ""
 #define MUXTWEAKGEN_BATTERY    ""
 #define MUXTWEAKGEN_INTERFACE  ""
-#define MUXTWEAKGEN_STORAGE    ""
 #define MUXTWEAKGEN_ADVANCED   ""
 
 // muxvisual

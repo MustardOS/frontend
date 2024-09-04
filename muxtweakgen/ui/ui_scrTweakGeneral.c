@@ -17,7 +17,6 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_pnlShutdown = lv_obj_create(ui_pnlContent);
     ui_pnlBattery = lv_obj_create(ui_pnlContent);
     ui_pnlInterface = lv_obj_create(ui_pnlContent);
-    ui_pnlStorage = lv_obj_create(ui_pnlContent);
     ui_pnlAdvanced = lv_obj_create(ui_pnlContent);
 
     ui_lblHidden = lv_label_create(ui_pnlHidden);
@@ -30,7 +29,6 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_lblShutdown = lv_label_create(ui_pnlShutdown);
     ui_lblBattery = lv_label_create(ui_pnlBattery);
     ui_lblInterface = lv_label_create(ui_pnlInterface);
-    ui_lblStorage = lv_label_create(ui_pnlStorage);
     ui_lblAdvanced = lv_label_create(ui_pnlAdvanced);
 
     ui_icoHidden = lv_img_create(ui_pnlHidden);
@@ -43,7 +41,6 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_icoShutdown = lv_img_create(ui_pnlShutdown);
     ui_icoBattery = lv_img_create(ui_pnlBattery);
     ui_icoInterface = lv_img_create(ui_pnlInterface);
-    ui_icoStorage = lv_img_create(ui_pnlStorage);
     ui_icoAdvanced = lv_img_create(ui_pnlAdvanced);
 
     ui_droHidden = lv_dropdown_create(ui_pnlHidden);
@@ -56,6 +53,5 @@ void ui_screen_init(lv_obj_t * ui_pnlContent)
     ui_droShutdown = lv_dropdown_create(ui_pnlShutdown);
     ui_droBattery = lv_dropdown_create(ui_pnlBattery);
     ui_droInterface = lv_dropdown_create(ui_pnlInterface);
-    ui_droStorage = lv_dropdown_create(ui_pnlStorage);
     ui_droAdvanced = lv_dropdown_create(ui_pnlAdvanced);
 }

@@ -25,6 +25,7 @@ lv_obj_t * ui_pnlRetroWait;
 lv_obj_t * ui_pnlAndroid;
 lv_obj_t * ui_pnlState;
 lv_obj_t * ui_pnlVerbose;
+lv_obj_t * ui_pnlStorage;
 lv_obj_t * ui_lblAccelerate;
 lv_obj_t * ui_lblSwap;
 lv_obj_t * ui_lblThermal;
@@ -39,6 +40,7 @@ lv_obj_t * ui_lblRetroWait;
 lv_obj_t * ui_lblAndroid;
 lv_obj_t * ui_lblState;
 lv_obj_t * ui_lblVerbose;
+lv_obj_t * ui_lblStorage;
 lv_obj_t * ui_icoAccelerate;
 lv_obj_t * ui_icoSwap;
 lv_obj_t * ui_icoThermal;
@@ -53,6 +55,7 @@ lv_obj_t * ui_icoRetroWait;
 lv_obj_t * ui_icoAndroid;
 lv_obj_t * ui_icoState;
 lv_obj_t * ui_icoVerbose;
+lv_obj_t * ui_icoStorage;
 lv_obj_t * ui_droAccelerate;
 lv_obj_t * ui_droSwap;
 lv_obj_t * ui_droThermal;
@@ -67,6 +70,7 @@ lv_obj_t * ui_droRetroWait;
 lv_obj_t * ui_droAndroid;
 lv_obj_t * ui_droState;
 lv_obj_t * ui_droVerbose;
+lv_obj_t * ui_droStorage;
 
 void ui_init(lv_obj_t * ui_pnlContent)
 {

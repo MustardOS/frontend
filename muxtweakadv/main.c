@@ -54,6 +54,7 @@ struct theme_config theme;
 int nav_moved = 1;
 char *current_wall = "";
 int current_item_index = 0;
+int ui_count = 15;
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -86,8 +87,7 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 14
-lv_obj_t *ui_objects[UI_COUNT];
+lv_obj_t *ui_objects[15];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -120,6 +120,8 @@ void show_help(lv_obj_t *element_focused) {
         message = MUXTWEAKADV_STATE;
     } else if (element_focused == ui_lblVerbose) {
         message = MUXTWEAKADV_VERBOSE;
+    } else if (element_focused == ui_lblStorage) {
+        message = MUXTWEAKADV_STORAGE;
     }
 
     if (strlen(message) <= 1) {
@@ -159,7 +161,8 @@ void elements_events_init() {
             ui_droRetroWait,
             ui_droAndroid,
             ui_droState,
-            ui_droVerbose
+            ui_droVerbose,
+            ui_droStorage
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -478,6 +481,7 @@ void init_navigation_groups() {
             ui_pnlAndroid,
             ui_pnlState,
             ui_pnlVerbose,
+            ui_pnlStorage
     };
 
     ui_objects[0] = ui_lblAccelerate;
@@ -494,6 +498,7 @@ void init_navigation_groups() {
     ui_objects[11] = ui_lblAndroid;
     ui_objects[12] = ui_lblState;
     ui_objects[13] = ui_lblVerbose;
+    ui_objects[14] = ui_lblStorage;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droAccelerate,
@@ -509,10 +514,11 @@ void init_navigation_groups() {
             ui_droRetroWait,
             ui_droAndroid,
             ui_droState,
-            ui_droVerbose
+            ui_droVerbose,
+            ui_droStorage
     };
 
-    lv_obj_t *ui_objects_icon[] = {
+    lv_obj_t *ui_objects_glyph[] = {
             ui_icoAccelerate,
             ui_icoSwap,
             ui_icoThermal,
@@ -526,7 +532,8 @@ void init_navigation_groups() {
             ui_icoRetroWait,
             ui_icoAndroid,
             ui_icoState,
-            ui_icoVerbose
+            ui_icoVerbose,
+            ui_icoStorage
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlAccelerate);
@@ -543,6 +550,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlAndroid);
     apply_theme_list_panel(&theme, &device, ui_pnlState);
     apply_theme_list_panel(&theme, &device, ui_pnlVerbose);
+    apply_theme_list_panel(&theme, &device, ui_pnlStorage);
 
     apply_theme_list_item(&theme, ui_lblAccelerate, _("Menu Acceleration"), false, true);
     apply_theme_list_item(&theme, ui_lblSwap, _("A+B Button Swap"), false, true);
@@ -558,6 +566,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblAndroid, _("Android Debug Bridge"), false, true);
     apply_theme_list_item(&theme, ui_lblState, _("Suspend Power State"), false, true);
     apply_theme_list_item(&theme, ui_lblVerbose, _("Verbose Messages"), false, true);
+    apply_theme_list_item(&theme, ui_lblStorage, _("Storage Preference"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoAccelerate, mux_prog, "accelerate");
     apply_theme_list_glyph(&theme, ui_icoSwap, mux_prog, "swap");
@@ -573,6 +582,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoAndroid, mux_prog, "android");
     apply_theme_list_glyph(&theme, ui_icoState, mux_prog, "state");
     apply_theme_list_glyph(&theme, ui_icoVerbose, mux_prog, "verbose");
+    apply_theme_list_glyph(&theme, ui_icoStorage, mux_prog, "storage");
 
     char *accelerate_string = generate_number_string(16, 256, 16, "Disabled", NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate, accelerate_string);
@@ -595,6 +605,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droAndroid, NULL);
     apply_theme_list_drop_down(&theme, ui_droState, NULL);
     apply_theme_list_drop_down(&theme, ui_droVerbose, NULL);
+    apply_theme_list_drop_down(&theme, ui_droStorage, "");
 
     char *disabled_enabled[] = {_("Disabled"), _("Enabled")};
     add_drop_down_options(ui_droSwap, disabled_enabled, 2);
@@ -618,7 +629,7 @@ void init_navigation_groups() {
     for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-        lv_group_add_obj(ui_group_glyph, ui_objects_icon[i]);
+        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 }
@@ -634,14 +645,14 @@ void list_nav_prev(int steps) {
             nav_prev(ui_group_panel, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index < (UI_COUNT - 1)) {
+        if (current_item_index < (ui_count)) {
             current_item_index++;
             nav_next(ui_group, 1);
             nav_next(ui_group_value, 1);
@@ -649,7 +660,7 @@ void list_nav_next(int steps) {
             nav_next(ui_group_panel, 1);
         }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
@@ -658,7 +669,11 @@ void *joystick_task() {
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
 
+    int JOYUP_pressed = 0;
+    int JOYDOWN_pressed = 0;
     int JOYHOTKEY_pressed = 0;
+
+    int nav_hold = 0;
 
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -674,7 +689,7 @@ void *joystick_task() {
     }
 
     while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
             continue;
@@ -760,6 +775,11 @@ void *joystick_task() {
                                         increase_option_value(ui_droVerbose,
                                                               &verbose_current,
                                                               verbose_total);
+                                    } else if (element_focused == ui_lblStorage) {
+                                        save_tweak_options();
+
+                                        load_mux("storage");
+                                        safe_quit = 1;
                                     }
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
@@ -791,39 +811,50 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
+                        if (ev.code == ABS_Y) {
+                            JOYUP_pressed = 0;
+                            JOYDOWN_pressed = 0;
+                            nav_hold = 0;
+                            break;
+                        }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
-                                    current_item_index = UI_COUNT - 1;
+                                    current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
                                     nav_prev(ui_group_value, 1);
                                     nav_prev(ui_group_glyph, 1);
                                     nav_prev(ui_group_panel, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
-                                                           UI_COUNT, current_item_index, ui_pnlContent);
+                                                           ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
+                                    JOYUP_pressed = (ev.value != 0);
                                     list_nav_prev(1);
                                     nav_moved = 1;
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
-                                if (current_item_index == UI_COUNT - 1) {
+                                if (current_item_index == ui_count - 1) {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
                                     nav_next(ui_group_value, 1);
                                     nav_next(ui_group_glyph, 1);
                                     nav_next(ui_group_panel, 1);
                                     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
-                                                           UI_COUNT, current_item_index, ui_pnlContent);
+                                                           ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
-                                } else if (current_item_index < UI_COUNT - 1) {
+                                } else if (current_item_index < ui_count - 1) {
+                                    JOYDOWN_pressed = (ev.value != 0);
                                     list_nav_next(1);
                                     nav_moved = 1;
                                 }
+                            } else {
+                                JOYUP_pressed = 0;
+                                JOYDOWN_pressed = 0;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
@@ -956,6 +987,20 @@ void *joystick_task() {
             }
         }
 
+        if (JOYUP_pressed || JOYDOWN_pressed) {
+            if (nav_hold > 2) {
+                if (JOYUP_pressed && current_item_index > 0) {
+                    list_nav_prev(1);
+                }
+                if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
+                    list_nav_next(1);
+                }
+            }
+            nav_hold++;
+        } else {
+            nav_hold = 0;
+        }
+
         if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1))) {
             if (ev.type == EV_KEY && ev.value == 1 &&
                 (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
@@ -1052,10 +1097,12 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblAndroid, "android");
     lv_obj_set_user_data(ui_lblState, "state");
     lv_obj_set_user_data(ui_lblVerbose, "verbose");
+    lv_obj_set_user_data(ui_lblStorage, "storage");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_FLOATING);
+        ui_count--;
     }
 
     char *overlay = load_overlay_image();
@@ -1161,6 +1208,27 @@ void ui_refresh_task() {
         lv_obj_invalidate(ui_pnlContent);
         lv_task_handler();
         nav_moved = 0;
+    }
+}
+
+void direct_to_previous() {
+    if (file_exist(MUOS_PDI_LOAD)) {
+        char *prev = read_text_from_file(MUOS_PDI_LOAD);
+        int text_hit = 0;
+
+        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+            const char *u_data = lv_obj_get_user_data(ui_objects[i]);
+
+            if (strcasecmp(u_data, prev) == 0) {
+                text_hit = i;
+                break;
+            }
+        }
+
+        if (text_hit != 0) {
+            list_nav_next(text_hit - !device.DEVICE.HAS_NETWORK);
+            nav_moved = 1;
+        }
     }
 }
 
@@ -1303,6 +1371,8 @@ int main(int argc, char *argv[]) {
 
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
+
+    direct_to_previous();
 
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);

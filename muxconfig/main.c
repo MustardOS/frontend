@@ -53,6 +53,7 @@ struct theme_config theme;
 int nav_moved = 1;
 char *current_wall = "";
 int current_item_index = 0;
+int ui_count = 6;
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -62,10 +63,8 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-// Modify the following integer to number of static menu elements
-#define UI_COUNT 6
-lv_obj_t *ui_objects[UI_COUNT];
-lv_obj_t *ui_icons[UI_COUNT];
+lv_obj_t *ui_objects[6];
+lv_obj_t *ui_icons[6];
 
 void show_help(lv_obj_t *element_focused) {
     char *message = NO_HELP_FOUND;
@@ -93,12 +92,12 @@ void show_help(lv_obj_t *element_focused) {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-        ui_pnlTweakGeneral,
-        ui_pnlTheme,
-        ui_pnlNetwork,
-        ui_pnlServices,
-        ui_pnlRTC,
-        ui_pnlLanguage
+            ui_pnlTweakGeneral,
+            ui_pnlTheme,
+            ui_pnlNetwork,
+            ui_pnlServices,
+            ui_pnlRTC,
+            ui_pnlLanguage
     };
 
     ui_objects[0] = ui_lblTweakGeneral;
@@ -152,24 +151,28 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+        if (current_item_index > 0) {
+            current_item_index--;
+            nav_prev(ui_group, 1);
+            nav_prev(ui_group_glyph, 1);
+            nav_prev(ui_group_panel, 1);
+        }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
+        if (current_item_index < (ui_count)) {
+            current_item_index++;
+            nav_next(ui_group, 1);
+            nav_next(ui_group_glyph, 1);
+            nav_next(ui_group_panel, 1);
+        }
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
@@ -178,7 +181,11 @@ void *joystick_task() {
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
 
+    int JOYUP_pressed = 0;
+    int JOYDOWN_pressed = 0;
     int JOYHOTKEY_pressed = 0;
+
+    int nav_hold = 0;
 
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -194,7 +201,7 @@ void *joystick_task() {
     }
 
     while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
+        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
             continue;
@@ -260,21 +267,68 @@ void *joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
+                        if (ev.code == ABS_Y) {
+                            JOYUP_pressed = 0;
+                            JOYDOWN_pressed = 0;
+                            nav_hold = 0;
+                            break;
+                        }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
                                  ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
                                 ev.value == -1) {
-                                list_nav_prev(1);
+                                if (current_item_index == 0) {
+                                    current_item_index = ui_count - 1;
+                                    nav_prev(ui_group, 1);
+                                    nav_prev(ui_group_glyph, 1);
+                                    nav_prev(ui_group_panel, 1);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent);
+                                    nav_moved = 1;
+                                } else if (current_item_index > 0) {
+                                    JOYUP_pressed = (ev.value != 0);
+                                    list_nav_prev(1);
+                                    nav_moved = 1;
+                                }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
                                        ev.value == 1) {
-                                list_nav_next(1);
+                                if (current_item_index == ui_count - 1) {
+                                    current_item_index = 0;
+                                    nav_next(ui_group, 1);
+                                    nav_next(ui_group_glyph, 1);
+                                    nav_next(ui_group_panel, 1);
+                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                                           current_item_index, ui_pnlContent);
+                                    nav_moved = 1;
+                                } else if (current_item_index < ui_count - 1) {
+                                    JOYDOWN_pressed = (ev.value != 0);
+                                    list_nav_next(1);
+                                    nav_moved = 1;
+                                }
+                            } else {
+                                JOYUP_pressed = 0;
+                                JOYDOWN_pressed = 0;
                             }
                         }
                     default:
                         break;
                 }
             }
+        }
+
+        if (JOYUP_pressed || JOYDOWN_pressed) {
+            if (nav_hold > 2) {
+                if (JOYUP_pressed && current_item_index > 0) {
+                    list_nav_prev(1);
+                }
+                if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
+                    list_nav_next(1);
+                }
+            }
+            nav_hold++;
+        } else {
+            nav_hold = 0;
         }
 
         if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1))) {
@@ -370,6 +424,7 @@ void init_elements() {
         lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_pnlServices, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlServices, LV_OBJ_FLAG_FLOATING);
+        ui_count -= 2;
     }
 
     char *overlay = load_overlay_image();
@@ -535,7 +590,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
