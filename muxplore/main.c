@@ -284,7 +284,6 @@ void reset_label_long_mode() {
 }
 
 void set_label_long_mode() {
-    lv_task_handler();
 
     char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
@@ -1507,12 +1506,10 @@ void *joystick_task() {
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index != 0 && current_item_index < ui_count) {
                                         list_nav_prev(theme.MUX.ITEM.COUNT);
-                                        lv_task_handler();
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.R1) {
                                     if (current_item_index >= 0 && current_item_index != ui_count - 1) {
                                         list_nav_next(theme.MUX.ITEM.COUNT);
-                                        lv_task_handler();
                                     }
                                 }
                             }
@@ -1573,12 +1570,10 @@ void *joystick_task() {
                                     image_refresh("box");
                                     set_label_long_mode();
                                     update_file_counter();
-                                    lv_task_handler();
                                 } else if (current_item_index > 0) {
                                     JOYUP_pressed = (ev.value != 0);
                                     list_nav_prev(1);
                                     nav_moved = 1;
-                                    lv_task_handler();
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
@@ -1595,12 +1590,10 @@ void *joystick_task() {
                                     image_refresh("box");
                                     set_label_long_mode();
                                     update_file_counter();
-                                    lv_task_handler();
                                 } else if (current_item_index < ui_count - 1) {
                                     JOYDOWN_pressed = (ev.value != 0);
                                     list_nav_next(1);
                                     nav_moved = 1;
-                                    lv_task_handler();
                                 }
                             } else {
                                 JOYUP_pressed = 0;
@@ -1661,7 +1654,6 @@ void *joystick_task() {
             }
         }
 
-        lv_task_handler();
         usleep(device.SCREEN.WAIT);
     }
 }
@@ -2290,7 +2282,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
 
     while (!safe_quit) {
-        usleep(device.SCREEN.WAIT);
+        lv_task_handler();
+        usleep(LVGL_DELAY);
     }
 
     pthread_cancel(joystick_thread);

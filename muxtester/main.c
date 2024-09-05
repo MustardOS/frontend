@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
 
     while (!safe_quit) {
         lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        usleep(LVGL_DELAY);
     }
 
     pthread_cancel(joystick_thread);

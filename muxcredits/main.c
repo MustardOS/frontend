@@ -72,7 +72,7 @@ int main() {
     while (!safe_quit) {
         hold++;
         lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        usleep(LVGL_DELAY);
         if (hold == 282500) {
             safe_quit = 1;
         }

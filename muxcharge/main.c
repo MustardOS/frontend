@@ -117,7 +117,6 @@ void *joystick_task() {
 
                                     lv_label_set_text(ui_lblBoot, _("Booting System - Please Wait..."));
 
-                                    lv_task_handler();
                                     usleep(device.SCREEN.WAIT);
 
                                     exit_status = 0;
@@ -134,7 +133,6 @@ void *joystick_task() {
             }
         }
 
-        lv_task_handler();
         usleep(device.SCREEN.WAIT);
     }
 }
@@ -245,7 +243,8 @@ int main(int argc, char *argv[]) {
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
     while (exit_status < 0) {
-        usleep(device.SCREEN.WAIT);
+        lv_task_handler();
+        usleep(LVGL_DELAY);
     }
 
     pthread_cancel(joystick_thread);
