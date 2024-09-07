@@ -130,7 +130,12 @@ void create_language_items() {
 
         apply_size_to_content(&theme, ui_pnlContent, ui_lblLanguageItem, ui_lblLanguageGlyph, items[i].name);
     }
-    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+    if (ui_count > 0) {
+        lv_obj_update_layout(ui_pnlContent);
+    } else if (ui_count == 0) {
+        lv_label_set_text(ui_lblScreenMessage, _("No Languages Found..."));
+        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 void list_nav_prev(int steps) {
@@ -598,7 +603,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    create_language_items();
+    pthread_t gen_item_thread;
+    pthread_create(&gen_item_thread, NULL, (void *(*)(void *)) create_language_items, NULL);
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
@@ -642,11 +648,6 @@ int main(int argc, char *argv[]) {
 
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
-
-    if (ui_count == 0) {
-        lv_label_set_text(ui_lblScreenMessage, _("No Languages Found..."));
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-    }
 
     while (!safe_quit) {
         lv_task_handler();
