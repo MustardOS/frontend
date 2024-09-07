@@ -1267,6 +1267,7 @@ void build_image_animation_array(char *base_image_path) {
 void load_image_animation(lv_obj_t * ui_pnlWall, int animation_time, char *base_image_path)
 {
     printf("Load Image Animation: %s\n", base_image_path);
+    img_paths_count = 0;
     build_image_animation_array(base_image_path);
 
     img_obj = lv_img_create(ui_pnlWall);
