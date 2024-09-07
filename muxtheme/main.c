@@ -502,7 +502,7 @@ void ui_refresh_task() {
                         wall_img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(wall_img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
-                        load_image_animation(ui_pnlWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
+                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
                     } else {
                         lv_img_set_src(ui_imgWall, new_wall);
                     }
@@ -626,7 +626,7 @@ int main(int argc, char *argv[]) {
             wall_img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(wall_img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
-            load_image_animation(ui_pnlWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
+            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
         } else {
             lv_img_set_src(ui_imgWall, current_wall);
         }

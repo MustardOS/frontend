@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
-            load_image_animation(ui_pnlWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
+            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
         } else {
             lv_img_set_src(ui_imgWall, current_wall);
         }
