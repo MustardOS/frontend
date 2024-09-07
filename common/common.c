@@ -1286,7 +1286,7 @@ void load_image_animation(lv_obj_t * ui_pnlWall, int animation_time, char *base_
 
 void unload_image_animation()
 {
-    lv_anim_del(img_obj, NULL);
+    if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 
 void load_font_text(const char *program, lv_obj_t *screen) {
