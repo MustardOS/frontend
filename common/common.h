@@ -197,6 +197,10 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
 
 char *load_overlay_image();
 
+void load_image_animation(lv_obj_t * ui_pnlWall, int animation_time, char *current_wall);
+
+void unload_image_animation();
+
 void load_font_text(const char *program, lv_obj_t *screen);
 
 void load_font_section(const char *program, const char *section, lv_obj_t *element);
