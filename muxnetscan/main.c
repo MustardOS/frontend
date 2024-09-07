@@ -626,7 +626,8 @@ int main(int argc, char *argv[]) {
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
 
-    create_network_items();
+    pthread_t gen_item_thread;
+    pthread_create(&gen_item_thread, NULL, (void *(*)(void *)) create_network_items, NULL);
 
     while (!safe_quit) {
         lv_task_handler();
