@@ -858,7 +858,7 @@ void ui_refresh_task() {
             if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
-                     if (theme.MISC.ANIMATED_BACKGROUND == 1) {
+                    if (theme.MISC.ANIMATED_BACKGROUND == 1) {
                         lv_obj_t * img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
@@ -1091,7 +1091,7 @@ int main(int argc, char *argv[]) {
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
-         if (theme.MISC.ANIMATED_BACKGROUND == 1) {
+        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
