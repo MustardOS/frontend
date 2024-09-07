@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "lv_chart.h"
+
 #if LV_USE_CHART != 0
 
 #include "../../../misc/lv_assert.h"

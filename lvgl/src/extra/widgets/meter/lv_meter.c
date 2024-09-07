@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "lv_meter.h"
+
 #if LV_USE_METER != 0
 
 #include "../../../misc/lv_assert.h"

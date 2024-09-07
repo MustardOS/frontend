@@ -24,7 +24,7 @@
     char time_buffer[20];                               \
     strftime(time_buffer, sizeof(time_buffer),          \
     "%Y-%m-%d %H:%M:%S", timeinfo);                     \
-    fprintf(stderr, "[%s] [" symbol "] [%s] " msg "\n", \
+    fprintf(stderr, "[%s] [" symbol "] [%s]\t" msg "\n", \
     time_buffer, mux_prog, ##__VA_ARGS__);              \
 }
 

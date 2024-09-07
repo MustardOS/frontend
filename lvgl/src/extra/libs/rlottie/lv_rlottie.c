@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "lv_rlottie.h"
+
 #if LV_USE_RLOTTIE
 
 #include <rlottie_capi.h>

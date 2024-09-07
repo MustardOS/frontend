@@ -44,6 +44,9 @@
 #define MUXDEVICE_RG35XXSP   ""
 #define MUXDEVICE_RG35XX2024 ""
 
+// muxgov
+#define MUXGOV_GENERIC ""
+
 // muxinfo
 #define MUXINFO_TRACKER ""
 #define MUXINFO_TESTER  ""
@@ -79,6 +82,10 @@
 #define MUXNETWORK_GATEWAY    ""
 #define MUXNETWORK_STATUS     ""
 #define MUXNETWORK_CONNECT    ""
+
+// muxoption
+#define MUXOPTION_CORE     ""
+#define MUXOPTION_GOVERNOR ""
 
 // muxreset
 #define MUXRESET_CLEARFAVOURITE ""

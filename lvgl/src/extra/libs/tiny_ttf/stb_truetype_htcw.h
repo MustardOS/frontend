@@ -446,77 +446,77 @@ typedef char stbtt__check_size16[sizeof(stbtt_int16) == 2 ? 1 : -1];
 // STBTT_STREAM_READ and STBTT_STREAM_SEEK to implement
 // another streaming source
 #ifdef STBTT_STDIO_STREAM
-    #include <stdio.h>
-    #define STBTT_STREAM_TYPE FILE*
-    #define STBTT_STREAM_READ(s,x,y) fread(x,1,y,s);
-    #define STBTT_STREAM_SEEK(s,x)  fseek(s,x,SEEK_SET);
+#include <stdio.h>
+#define STBTT_STREAM_TYPE FILE*
+#define STBTT_STREAM_READ(s,x,y) fread(x,1,y,s);
+#define STBTT_STREAM_SEEK(s,x)  fseek(s,x,SEEK_SET);
 #endif
 
 // heap factor sizes for various counts of objects
 // adjust for your platform. Below is suitable for
 // modern PC class machines.
 #ifndef STBTT_HEAP_FACTOR_SIZE_32
-    #define STBTT_HEAP_FACTOR_SIZE_32 2000
+#define STBTT_HEAP_FACTOR_SIZE_32 2000
 #endif
 
 #ifndef STBTT_HEAP_FACTOR_SIZE_128
-    #define STBTT_HEAP_FACTOR_SIZE_128 800
+#define STBTT_HEAP_FACTOR_SIZE_128 800
 #endif
 
 #ifndef STBTT_HEAP_FACTOR_SIZE_DEFAULT
-    #define STBTT_HEAP_FACTOR_SIZE_DEFAULT 100
+#define STBTT_HEAP_FACTOR_SIZE_DEFAULT 100
 #endif
 
 // e.g. #define your own STBTT_ifloor/STBTT_iceil() to avoid math.h
 #ifndef STBTT_ifloor
-    #include <math.h>
-    #define STBTT_ifloor(x)   ((int) floor(x))
-    #define STBTT_iceil(x)    ((int) ceil(x))
+#include <math.h>
+#define STBTT_ifloor(x)   ((int) floor(x))
+#define STBTT_iceil(x)    ((int) ceil(x))
 #endif
 
 #ifndef STBTT_sqrt
-    #include <math.h>
-    #define STBTT_sqrt(x)      (float)sqrt(x)
-    #define STBTT_pow(x,y)     pow(x,y)
+#include <math.h>
+#define STBTT_sqrt(x)      (float)sqrt(x)
+#define STBTT_pow(x,y)     pow(x,y)
 #endif
 
 #ifndef STBTT_fmod
-    #include <math.h>
-    #define STBTT_fmod(x,y)    fmod(x,y)
+#include <math.h>
+#define STBTT_fmod(x,y)    fmod(x,y)
 #endif
 
 #ifndef STBTT_cos
-    #include <math.h>
-    #define STBTT_cos(x)       cos(x)
-    #define STBTT_acos(x)      acos(x)
+#include <math.h>
+#define STBTT_cos(x)       cos(x)
+#define STBTT_acos(x)      acos(x)
 #endif
 
 #ifndef STBTT_fabs
-    #include <math.h>
-    #define STBTT_fabs(x)      (float)fabs(x)
+#include <math.h>
+#define STBTT_fabs(x)      (float)fabs(x)
 #endif
 
 // #define your own functions "STBTT_malloc" / "STBTT_free" to avoid malloc.h
 #ifndef STBTT_malloc
-    #include <stdlib.h>
-    #define STBTT_malloc(x,u)  ((void)(u),malloc(x))
-    #define STBTT_free(x,u)    ((void)(u),free(x))
+#include <stdlib.h>
+#define STBTT_malloc(x,u)  ((void)(u),malloc(x))
+#define STBTT_free(x,u)    ((void)(u),free(x))
 #endif
 
 #ifndef STBTT_assert
-    #include <assert.h>
-    #define STBTT_assert(x)    assert(x)
+#include <assert.h>
+#define STBTT_assert(x)    assert(x)
 #endif
 
 #ifndef STBTT_strlen
-    #include <string.h>
-    #define STBTT_strlen(x)    strlen(x)
+#include <string.h>
+#define STBTT_strlen(x)    strlen(x)
 #endif
 
 #ifndef STBTT_memcpy
-    #include <string.h>
-    #define STBTT_memcpy       memcpy
-    #define STBTT_memset       memset
+#include <string.h>
+#define STBTT_memcpy       memcpy
+#define STBTT_memset       memset
 #endif
 #endif
 
@@ -531,9 +531,9 @@ typedef char stbtt__check_size16[sizeof(stbtt_int16) == 2 ? 1 : -1];
 #define __STB_INCLUDE_STB_TRUETYPE_H__
 
 #ifdef STBTT_STATIC
-    #define STBTT_DEF static
+#define STBTT_DEF static
 #else
-    #define STBTT_DEF extern
+#define STBTT_DEF extern
 #endif
 
 #ifdef __cplusplus
@@ -546,7 +546,7 @@ typedef struct {
     STBTT_STREAM_TYPE data;
     stbtt_uint32 offset;
 #else
-    unsigned char * data;
+    unsigned char *data;
 #endif
     int cursor;
     int size;
@@ -574,10 +574,10 @@ typedef struct {
     float x1, y1, s1, t1; // bottom-right
 } stbtt_aligned_quad;
 
-STBTT_DEF void stbtt_GetBakedQuad(const stbtt_bakedchar * chardata, int pw, int ph, // same data as above
+STBTT_DEF void stbtt_GetBakedQuad(const stbtt_bakedchar *chardata, int pw, int ph, // same data as above
                                   int char_index,             // character to display
-                                  float * xpos, float * ypos, // pointers to current position in screen pixel space
-                                  stbtt_aligned_quad * q,     // output: quad to draw
+                                  float *xpos, float *ypos, // pointers to current position in screen pixel space
+                                  stbtt_aligned_quad *q,     // output: quad to draw
                                   int opengl_fillrule);       // true if opengl fill rule; false if DX9 or earlier
 // Call GetBakedQuad with char_index = 'character - first_char', and it
 // creates the quad you need to draw and advances the current position.
@@ -619,8 +619,9 @@ typedef struct stbrp_rect stbrp_rect;
 /// @endcond
 
 #endif
-STBTT_DEF int  stbtt_PackBegin(stbtt_pack_context * spc, unsigned char * pixels, int width, int height,
-                               int stride_in_bytes, int padding, void * alloc_context);
+
+STBTT_DEF int stbtt_PackBegin(stbtt_pack_context *spc, unsigned char *pixels, int width, int height,
+                              int stride_in_bytes, int padding, void *alloc_context);
 
 // Initializes a packing context stored in the passed-in stbtt_pack_context.
 // Future calls using this context will pack characters into the bitmap passed
@@ -632,7 +633,7 @@ STBTT_DEF int  stbtt_PackBegin(stbtt_pack_context * spc, unsigned char * pixels,
 //
 // Returns 0 on failure, 1 on success.
 
-STBTT_DEF void stbtt_PackEnd(stbtt_pack_context * spc);
+STBTT_DEF void stbtt_PackEnd(stbtt_pack_context *spc);
 // Cleans up the packing context and frees all memory.
 
 #define STBTT_POINT_SIZE(x)   (-(x))
@@ -640,13 +641,13 @@ STBTT_DEF void stbtt_PackEnd(stbtt_pack_context * spc);
 typedef struct {
     float font_size;
     int first_unicode_codepoint_in_range;  // if non-zero, then the chars are continuous, and this is the first codepoint
-    int * array_of_unicode_codepoints;      // if non-zero, then this is an array of unicode codepoints
+    int *array_of_unicode_codepoints;      // if non-zero, then this is an array of unicode codepoints
     int num_chars;
-    stbtt_packedchar * chardata_for_range; // output
+    stbtt_packedchar *chardata_for_range; // output
     unsigned char h_oversample, v_oversample; // don't set these, they're used internally
 } stbtt_pack_range;
 
-STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context * spc, unsigned int h_oversample,
+STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context *spc, unsigned int h_oversample,
                                          unsigned int v_oversample);
 // Oversampling a font increases the quality by allowing higher-quality subpixel
 // positioning, and is especially valuable at smaller text sizes.
@@ -663,23 +664,25 @@ STBTT_DEF void stbtt_PackSetOversampling(stbtt_pack_context * spc, unsigned int 
 // To use with PackFontRangesGather etc., you must set it before calls
 // call to PackFontRangesGatherRects.
 
-STBTT_DEF void stbtt_PackSetSkipMissingCodepoints(stbtt_pack_context * spc, int skip);
+STBTT_DEF void stbtt_PackSetSkipMissingCodepoints(stbtt_pack_context *spc, int skip);
 // If skip != 0, this tells stb_truetype to skip any codepoints for which
 // there is no corresponding glyph. If skip=0, which is the default, then
 // codepoints without a glyph received the font's "missing character" glyph,
 // typically an empty box by convention.
 
-STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar * chardata, int pw, int ph, // same data as above
+STBTT_DEF void stbtt_GetPackedQuad(const stbtt_packedchar *chardata, int pw, int ph, // same data as above
                                    int char_index,             // character to display
-                                   float * xpos, float * ypos, // pointers to current position in screen pixel space
-                                   stbtt_aligned_quad * q,     // output: quad to draw
+                                   float *xpos, float *ypos, // pointers to current position in screen pixel space
+                                   stbtt_aligned_quad *q,     // output: quad to draw
                                    int align_to_integer);
 
-STBTT_DEF int  stbtt_PackFontRangesGatherRects(stbtt_pack_context * spc, const stbtt_fontinfo * info,
-                                               stbtt_pack_range * ranges, int num_ranges, stbrp_rect * rects);
-STBTT_DEF void stbtt_PackFontRangesPackRects(stbtt_pack_context * spc, stbrp_rect * rects, int num_rects);
-STBTT_DEF int  stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context * spc, const stbtt_fontinfo * info,
-                                                   stbtt_pack_range * ranges, int num_ranges, stbrp_rect * rects);
+STBTT_DEF int stbtt_PackFontRangesGatherRects(stbtt_pack_context *spc, const stbtt_fontinfo *info,
+                                              stbtt_pack_range *ranges, int num_ranges, stbrp_rect *rects);
+
+STBTT_DEF void stbtt_PackFontRangesPackRects(stbtt_pack_context *spc, stbrp_rect *rects, int num_rects);
+
+STBTT_DEF int stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context *spc, const stbtt_fontinfo *info,
+                                                  stbtt_pack_range *ranges, int num_ranges, stbrp_rect *rects);
 // Calling these functions in sequence is roughly equivalent to calling
 // stbtt_PackFontRanges(). If you more control over the packing of multiple
 // fonts, or if you want to pack custom data into a font texture, take a look
@@ -693,16 +696,16 @@ STBTT_DEF int  stbtt_PackFontRangesRenderIntoRects(stbtt_pack_context * spc, con
 // this is an opaque structure that you shouldn't mess with which holds
 // all the context needed from PackBegin to PackEnd.
 struct stbtt_pack_context {
-    void * user_allocator_context;
-    void * pack_info;
-    int   width;
-    int   height;
-    int   stride_in_bytes;
-    int   padding;
-    int   skip_missing;
-    unsigned int   h_oversample, v_oversample;
-    unsigned char * pixels;
-    void * nodes;
+    void *user_allocator_context;
+    void *pack_info;
+    int width;
+    int height;
+    int stride_in_bytes;
+    int padding;
+    int skip_missing;
+    unsigned int h_oversample, v_oversample;
+    unsigned char *pixels;
+    void *nodes;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -713,7 +716,9 @@ struct stbtt_pack_context {
 #ifdef STBTT_STREAM_TYPE
 STBTT_DEF int stbtt_GetNumberOfFonts(STBTT_STREAM_TYPE data);
 #else
-STBTT_DEF int stbtt_GetNumberOfFonts(const unsigned char * data);
+
+STBTT_DEF int stbtt_GetNumberOfFonts(const unsigned char *data);
+
 #endif
 // This function will determine the number of fonts in a font file.  TrueType
 // collection (.ttc) files may contain multiple fonts, while TrueType font
@@ -723,7 +728,9 @@ STBTT_DEF int stbtt_GetNumberOfFonts(const unsigned char * data);
 #ifdef STBTT_STREAM_TYPE
 STBTT_DEF int stbtt_GetFontOffsetForIndex(STBTT_STREAM_TYPE, int index);
 #else
-STBTT_DEF int stbtt_GetFontOffsetForIndex(const unsigned char * data, int index);
+
+STBTT_DEF int stbtt_GetFontOffsetForIndex(const unsigned char *data, int index);
+
 #endif
 
 // Each .ttf/.ttc file may have more than one font. Each font has a sequential
@@ -735,13 +742,13 @@ STBTT_DEF int stbtt_GetFontOffsetForIndex(const unsigned char * data, int index)
 // The following structure is defined publicly so you can declare one on
 // the stack or as a global or etc, but you should treat it as opaque.
 struct stbtt_fontinfo {
-    void * userdata;
+    void *userdata;
 #ifdef STBTT_STREAM_TYPE
     STBTT_STREAM_TYPE data;
 #else
-    unsigned char * data;             // pointer to .ttf file
+    unsigned char *data;             // pointer to .ttf file
 #endif
-    int              fontstart;         // offset of start of font
+    int fontstart;         // offset of start of font
 
     int numGlyphs;                     // number of glyphs, needed for range checking
 
@@ -759,7 +766,9 @@ struct stbtt_fontinfo {
 #ifdef STBTT_STREAM_TYPE
 STBTT_DEF int stbtt_InitFont(stbtt_fontinfo * info, STBTT_STREAM_TYPE data, int offset);
 #else
-STBTT_DEF int stbtt_InitFont(stbtt_fontinfo * info, const unsigned char * data, int offset);
+
+STBTT_DEF int stbtt_InitFont(stbtt_fontinfo *info, const unsigned char *data, int offset);
+
 #endif
 // Given an offset into the file that defines a font, this function builds
 // the necessary cached info for the rest of the system. You must allocate
@@ -771,7 +780,7 @@ STBTT_DEF int stbtt_InitFont(stbtt_fontinfo * info, const unsigned char * data, 
 //
 // CHARACTER TO GLYPH-INDEX CONVERSIOn
 
-STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo * info, int unicode_codepoint);
+STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo *info, int unicode_codepoint);
 // If you're going to perform multiple operations on the same character
 // and you want a speed-up, call this function with the character you're
 // going to process, then use glyph-based functions instead of the
@@ -783,7 +792,7 @@ STBTT_DEF int stbtt_FindGlyphIndex(const stbtt_fontinfo * info, int unicode_code
 // CHARACTER PROPERTIES
 //
 
-STBTT_DEF float stbtt_ScaleForPixelHeight(const stbtt_fontinfo * info, float pixels);
+STBTT_DEF float stbtt_ScaleForPixelHeight(const stbtt_fontinfo *info, float pixels);
 // computes a scale factor to produce a font whose "height" is 'pixels' tall.
 // Height is measured as the distance from the highest ascender to the lowest
 // descender; in other words, it's equivalent to calling stbtt_GetFontVMetrics
@@ -791,12 +800,12 @@ STBTT_DEF float stbtt_ScaleForPixelHeight(const stbtt_fontinfo * info, float pix
 //       scale = pixels / (ascent - descent)
 // so if you prefer to measure height by the ascent only, use a similar calculation.
 
-STBTT_DEF float stbtt_ScaleForMappingEmToPixels(const stbtt_fontinfo * info, float pixels);
+STBTT_DEF float stbtt_ScaleForMappingEmToPixels(const stbtt_fontinfo *info, float pixels);
 // computes a scale factor to produce a font whose EM size is mapped to
 // 'pixels' tall. This is probably what traditional APIs compute, but
 // I'm not positive.
 
-STBTT_DEF void stbtt_GetFontVMetrics(const stbtt_fontinfo * info, int * ascent, int * descent, int * lineGap);
+STBTT_DEF void stbtt_GetFontVMetrics(const stbtt_fontinfo *info, int *ascent, int *descent, int *lineGap);
 // ascent is the coordinate above the baseline the font extends; descent
 // is the coordinate below the baseline the font extends (i.e. it is typically negative)
 // lineGap is the spacing between one row's descent and the next row's ascent...
@@ -804,32 +813,34 @@ STBTT_DEF void stbtt_GetFontVMetrics(const stbtt_fontinfo * info, int * ascent, 
 //   these are expressed in unscaled coordinates, so you must multiply by
 //   the scale factor for a given size
 
-STBTT_DEF int  stbtt_GetFontVMetricsOS2(const stbtt_fontinfo * info, int * typoAscent, int * typoDescent,
-                                        int * typoLineGap);
+STBTT_DEF int stbtt_GetFontVMetricsOS2(const stbtt_fontinfo *info, int *typoAscent, int *typoDescent,
+                                       int *typoLineGap);
 // analogous to GetFontVMetrics, but returns the "typographic" values from the OS/2
 // table (specific to MS/Windows TTF files).
 //
 // Returns 1 on success (table present), 0 on failure.
 
-STBTT_DEF void stbtt_GetFontBoundingBox(const stbtt_fontinfo * info, int * x0, int * y0, int * x1, int * y1);
+STBTT_DEF void stbtt_GetFontBoundingBox(const stbtt_fontinfo *info, int *x0, int *y0, int *x1, int *y1);
 // the bounding box around all possible characters
 
-STBTT_DEF void stbtt_GetCodepointHMetrics(const stbtt_fontinfo * info, int codepoint, int * advanceWidth,
-                                          int * leftSideBearing);
+STBTT_DEF void stbtt_GetCodepointHMetrics(const stbtt_fontinfo *info, int codepoint, int *advanceWidth,
+                                          int *leftSideBearing);
 // leftSideBearing is the offset from the current horizontal position to the left edge of the character
 // advanceWidth is the offset from the current horizontal position to the next horizontal position
 //   these are expressed in unscaled coordinates
 
-STBTT_DEF int  stbtt_GetCodepointKernAdvance(const stbtt_fontinfo * info, int ch1, int ch2);
+STBTT_DEF int stbtt_GetCodepointKernAdvance(const stbtt_fontinfo *info, int ch1, int ch2);
 // an additional amount to add to the 'advance' value between ch1 and ch2
 
-STBTT_DEF int stbtt_GetCodepointBox(const stbtt_fontinfo * info, int codepoint, int * x0, int * y0, int * x1, int * y1);
+STBTT_DEF int stbtt_GetCodepointBox(const stbtt_fontinfo *info, int codepoint, int *x0, int *y0, int *x1, int *y1);
 // Gets the bounding box of the visible part of the glyph, in unscaled coordinates
 
-STBTT_DEF void stbtt_GetGlyphHMetrics(const stbtt_fontinfo * info, int glyph_index, int * advanceWidth,
-                                      int * leftSideBearing);
-STBTT_DEF int  stbtt_GetGlyphKernAdvance(const stbtt_fontinfo * info, int glyph1, int glyph2);
-STBTT_DEF int  stbtt_GetGlyphBox(const stbtt_fontinfo * info, int glyph_index, int * x0, int * y0, int * x1, int * y1);
+STBTT_DEF void stbtt_GetGlyphHMetrics(const stbtt_fontinfo *info, int glyph_index, int *advanceWidth,
+                                      int *leftSideBearing);
+
+STBTT_DEF int stbtt_GetGlyphKernAdvance(const stbtt_fontinfo *info, int glyph1, int glyph2);
+
+STBTT_DEF int stbtt_GetGlyphBox(const stbtt_fontinfo *info, int glyph_index, int *x0, int *y0, int *x1, int *y1);
 // as above, but takes one or more glyph indices for greater efficiency
 
 typedef struct _stbtt_kerningentry {
@@ -838,8 +849,9 @@ typedef struct _stbtt_kerningentry {
     int advance;
 } stbtt_kerningentry;
 
-STBTT_DEF int  stbtt_GetKerningTableLength(const stbtt_fontinfo * info);
-STBTT_DEF int  stbtt_GetKerningTable(const stbtt_fontinfo * info, stbtt_kerningentry * table, int table_length);
+STBTT_DEF int stbtt_GetKerningTableLength(const stbtt_fontinfo *info);
+
+STBTT_DEF int stbtt_GetKerningTable(const stbtt_fontinfo *info, stbtt_kerningentry *table, int table_length);
 // Retrieves a complete list of all of the kerning pairs provided by the font
 // stbtt_GetKerningTable never writes more than table_length entries and returns how many entries it did write.
 // The table will be sorted by (a.glyph1 == b.glyph1)?(a.glyph2 < b.glyph2):(a.glyph1 < b.glyph1)
@@ -868,11 +880,12 @@ typedef struct {
 } stbtt_vertex;
 #endif
 
-STBTT_DEF int stbtt_IsGlyphEmpty(const stbtt_fontinfo * info, int glyph_index);
+STBTT_DEF int stbtt_IsGlyphEmpty(const stbtt_fontinfo *info, int glyph_index);
 // returns non-zero if nothing is drawn for this glyph
 
-STBTT_DEF int stbtt_GetCodepointShape(const stbtt_fontinfo * info, int unicode_codepoint, stbtt_vertex ** vertices);
-STBTT_DEF int stbtt_GetGlyphShape(const stbtt_fontinfo * info, int glyph_index, stbtt_vertex ** vertices);
+STBTT_DEF int stbtt_GetCodepointShape(const stbtt_fontinfo *info, int unicode_codepoint, stbtt_vertex **vertices);
+
+STBTT_DEF int stbtt_GetGlyphShape(const stbtt_fontinfo *info, int glyph_index, stbtt_vertex **vertices);
 // returns # of vertices and fills *vertices with the pointer to them
 //   these are expressed in "unscaled" coordinates
 //
@@ -883,12 +896,14 @@ STBTT_DEF int stbtt_GetGlyphShape(const stbtt_fontinfo * info, int glyph_index, 
 // draws a quadratic bezier from previous endpoint to
 // its x,y, using cx,cy as the bezier control point.
 
-STBTT_DEF void stbtt_FreeShape(const stbtt_fontinfo * info, stbtt_vertex * vertices);
+STBTT_DEF void stbtt_FreeShape(const stbtt_fontinfo *info, stbtt_vertex *vertices);
 // frees the data allocated above
 
-STBTT_DEF stbtt_uint32 stbtt_FindSVGDoc(const stbtt_fontinfo * info, int gl);
-STBTT_DEF int stbtt_GetCodepointSVG(const stbtt_fontinfo * info, int unicode_codepoint, stbtt_uint32 * svgOfs);
-STBTT_DEF int stbtt_GetGlyphSVG(const stbtt_fontinfo * info, int gl, stbtt_uint32 * svgOfs);
+STBTT_DEF stbtt_uint32 stbtt_FindSVGDoc(const stbtt_fontinfo *info, int gl);
+
+STBTT_DEF int stbtt_GetCodepointSVG(const stbtt_fontinfo *info, int unicode_codepoint, stbtt_uint32 *svgOfs);
+
+STBTT_DEF int stbtt_GetGlyphSVG(const stbtt_fontinfo *info, int gl, stbtt_uint32 *svgOfs);
 // fills svg with the character's SVG data.
 // returns data size or 0 if SVG not found.
 
@@ -897,11 +912,11 @@ STBTT_DEF int stbtt_GetGlyphSVG(const stbtt_fontinfo * info, int gl, stbtt_uint3
 // BITMAP RENDERING
 //
 
-STBTT_DEF void stbtt_FreeBitmap(unsigned char * bitmap, void * userdata);
+STBTT_DEF void stbtt_FreeBitmap(unsigned char *bitmap, void *userdata);
 // frees the bitmap allocated below
 
-STBTT_DEF unsigned char * stbtt_GetCodepointBitmap(const stbtt_fontinfo * info, float scale_x, float scale_y,
-                                                   int codepoint, int * width, int * height, int * xoff, int * yoff);
+STBTT_DEF unsigned char *stbtt_GetCodepointBitmap(const stbtt_fontinfo *info, float scale_x, float scale_y,
+                                                  int codepoint, int *width, int *height, int *xoff, int *yoff);
 // allocates a large-enough single-channel 8bpp bitmap and renders the
 // specified character/glyph at the specified scale into it, with
 // antialiasing. 0 is no coverage (transparent), 255 is fully covered (opaque).
@@ -910,88 +925,104 @@ STBTT_DEF unsigned char * stbtt_GetCodepointBitmap(const stbtt_fontinfo * info, 
 //
 // xoff/yoff are the offset it pixel space from the glyph origin to the top-left of the bitmap
 
-STBTT_DEF unsigned char * stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo * info, float scale_x, float scale_y,
-                                                           float shift_x, float shift_y, int codepoint, int * width, int * height, int * xoff, int * yoff);
+STBTT_DEF unsigned char *stbtt_GetCodepointBitmapSubpixel(const stbtt_fontinfo *info, float scale_x, float scale_y,
+                                                          float shift_x, float shift_y, int codepoint, int *width,
+                                                          int *height, int *xoff, int *yoff);
 // the same as stbtt_GetCodepoitnBitmap, but you can specify a subpixel
 // shift for the character
 
-STBTT_DEF void stbtt_MakeCodepointBitmap(const stbtt_fontinfo * info, unsigned char * output, int out_w, int out_h,
+STBTT_DEF void stbtt_MakeCodepointBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h,
                                          int out_stride, float scale_x, float scale_y, int codepoint);
 // the same as stbtt_GetCodepointBitmap, but you pass in storage for the bitmap
 // in the form of 'output', with row spacing of 'out_stride' bytes. the bitmap
 // is clipped to out_w/out_h bytes. Call stbtt_GetCodepointBitmapBox to get the
 // width and height and positioning info for it first.
 
-STBTT_DEF void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo * info, unsigned char * output, int out_w,
-                                                 int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int codepoint);
+STBTT_DEF void stbtt_MakeCodepointBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w,
+                                                 int out_h, int out_stride, float scale_x, float scale_y, float shift_x,
+                                                 float shift_y, int codepoint);
 // same as stbtt_MakeCodepointBitmap, but you can specify a subpixel
 // shift for the character
 
-STBTT_DEF void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo * info, unsigned char * output,
-                                                          int out_w, int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int oversample_x,
-                                                          int oversample_y, float * sub_x, float * sub_y, int codepoint);
+STBTT_DEF void stbtt_MakeCodepointBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output,
+                                                          int out_w, int out_h, int out_stride, float scale_x,
+                                                          float scale_y, float shift_x, float shift_y, int oversample_x,
+                                                          int oversample_y, float *sub_x, float *sub_y, int codepoint);
 // same as stbtt_MakeCodepointBitmapSubpixel, but prefiltering
 // is performed (see stbtt_PackSetOversampling)
 
-STBTT_DEF void stbtt_GetCodepointBitmapBox(const stbtt_fontinfo * font, int codepoint, float scale_x, float scale_y,
-                                           int * ix0, int * iy0, int * ix1, int * iy1);
+STBTT_DEF void stbtt_GetCodepointBitmapBox(const stbtt_fontinfo *font, int codepoint, float scale_x, float scale_y,
+                                           int *ix0, int *iy0, int *ix1, int *iy1);
 // get the bbox of the bitmap centered around the glyph origin; so the
 // bitmap width is ix1-ix0, height is iy1-iy0, and location to place
 // the bitmap top left is (leftSideBearing*scale,iy0).
 // (Note that the bitmap uses y-increases-down, but the shape uses
 // y-increases-up, so CodepointBitmapBox and CodepointBox are inverted.)
 
-STBTT_DEF void stbtt_GetCodepointBitmapBoxSubpixel(const stbtt_fontinfo * font, int codepoint, float scale_x,
-                                                   float scale_y, float shift_x, float shift_y, int * ix0, int * iy0, int * ix1, int * iy1);
+STBTT_DEF void stbtt_GetCodepointBitmapBoxSubpixel(const stbtt_fontinfo *font, int codepoint, float scale_x,
+                                                   float scale_y, float shift_x, float shift_y, int *ix0, int *iy0,
+                                                   int *ix1, int *iy1);
 // same as stbtt_GetCodepointBitmapBox, but you can specify a subpixel
 // shift for the character
 
 // the following functions are equivalent to the above functions, but operate
 // on glyph indices instead of Unicode codepoints (for efficiency)
-STBTT_DEF unsigned char * stbtt_GetGlyphBitmap(const stbtt_fontinfo * info, float scale_x, float scale_y, int glyph,
-                                               int * width, int * height, int * xoff, int * yoff);
-STBTT_DEF unsigned char * stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo * info, float scale_x, float scale_y,
-                                                       float shift_x, float shift_y, int glyph, int * width, int * height, int * xoff, int * yoff);
-STBTT_DEF void stbtt_MakeGlyphBitmap(const stbtt_fontinfo * info, unsigned char * output, int out_w, int out_h,
+STBTT_DEF unsigned char *stbtt_GetGlyphBitmap(const stbtt_fontinfo *info, float scale_x, float scale_y, int glyph,
+                                              int *width, int *height, int *xoff, int *yoff);
+
+STBTT_DEF unsigned char *stbtt_GetGlyphBitmapSubpixel(const stbtt_fontinfo *info, float scale_x, float scale_y,
+                                                      float shift_x, float shift_y, int glyph, int *width, int *height,
+                                                      int *xoff, int *yoff);
+
+STBTT_DEF void stbtt_MakeGlyphBitmap(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h,
                                      int out_stride, float scale_x, float scale_y, int glyph);
-STBTT_DEF void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo * info, unsigned char * output, int out_w, int out_h,
-                                             int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int glyph);
-STBTT_DEF void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo * info, unsigned char * output, int out_w,
-                                                      int out_h, int out_stride, float scale_x, float scale_y, float shift_x, float shift_y, int oversample_x,
-                                                      int oversample_y, float * sub_x, float * sub_y, int glyph);
-STBTT_DEF void stbtt_GetGlyphBitmapBox(const stbtt_fontinfo * font, int glyph, float scale_x, float scale_y, int * ix0,
-                                       int * iy0, int * ix1, int * iy1);
-STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo * font, int glyph, float scale_x, float scale_y,
-                                               float shift_x, float shift_y, int * ix0, int * iy0, int * ix1, int * iy1);
+
+STBTT_DEF void stbtt_MakeGlyphBitmapSubpixel(const stbtt_fontinfo *info, unsigned char *output, int out_w, int out_h,
+                                             int out_stride, float scale_x, float scale_y, float shift_x, float shift_y,
+                                             int glyph);
+
+STBTT_DEF void stbtt_MakeGlyphBitmapSubpixelPrefilter(const stbtt_fontinfo *info, unsigned char *output, int out_w,
+                                                      int out_h, int out_stride, float scale_x, float scale_y,
+                                                      float shift_x, float shift_y, int oversample_x,
+                                                      int oversample_y, float *sub_x, float *sub_y, int glyph);
+
+STBTT_DEF void stbtt_GetGlyphBitmapBox(const stbtt_fontinfo *font, int glyph, float scale_x, float scale_y, int *ix0,
+                                       int *iy0, int *ix1, int *iy1);
+
+STBTT_DEF void stbtt_GetGlyphBitmapBoxSubpixel(const stbtt_fontinfo *font, int glyph, float scale_x, float scale_y,
+                                               float shift_x, float shift_y, int *ix0, int *iy0, int *ix1, int *iy1);
 
 // @TODO: don't expose this structure
 typedef struct {
     int w, h, stride;
-    unsigned char * pixels;
+    unsigned char *pixels;
 } stbtt__bitmap;
 
 // rasterize a shape with quadratic beziers into a bitmap
-STBTT_DEF void stbtt_Rasterize(stbtt__bitmap * result,       // 1-channel bitmap to draw into
+STBTT_DEF void stbtt_Rasterize(stbtt__bitmap *result,       // 1-channel bitmap to draw into
                                float flatness_in_pixels,     // allowable error of curve in pixels
-                               stbtt_vertex * vertices,      // array of vertices defining shape
+                               stbtt_vertex *vertices,      // array of vertices defining shape
                                int num_verts,                // number of vertices in above array
                                float scale_x, float scale_y, // scale applied to input vertices
                                float shift_x, float shift_y, // translation applied to input vertices
                                int x_off, int y_off,         // another translation applied to input
                                int invert,                   // if non-zero, vertically flip shape
-                               void * userdata);             // context for to STBTT_MALLOC
+                               void *userdata);             // context for to STBTT_MALLOC
 
 //////////////////////////////////////////////////////////////////////////////
 //
 // Signed Distance Function (or Field) rendering
 
-STBTT_DEF void stbtt_FreeSDF(unsigned char * bitmap, void * userdata);
+STBTT_DEF void stbtt_FreeSDF(unsigned char *bitmap, void *userdata);
 // frees the SDF bitmap allocated below
 
-STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo * info, float scale, int glyph, int padding,
-                                            unsigned char onedge_value, float pixel_dist_scale, int * width, int * height, int * xoff, int * yoff);
-STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo * info, float scale, int codepoint, int padding,
-                                                unsigned char onedge_value, float pixel_dist_scale, int * width, int * height, int * xoff, int * yoff);
+STBTT_DEF unsigned char *stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float scale, int glyph, int padding,
+                                           unsigned char onedge_value, float pixel_dist_scale, int *width, int *height,
+                                           int *xoff, int *yoff);
+
+STBTT_DEF unsigned char *stbtt_GetCodepointSDF(const stbtt_fontinfo *info, float scale, int codepoint, int padding,
+                                               unsigned char onedge_value, float pixel_dist_scale, int *width,
+                                               int *height, int *xoff, int *yoff);
 // These functions compute a discretized SDF field for a single character, suitable for storing
 // in a single-channel texture, sampling with bilinear filtering, and testing against
 // larger than some threshold to produce scalable fonts.
@@ -1063,7 +1094,9 @@ STBTT_DEF unsigned char * stbtt_GetCodepointSDF(const stbtt_fontinfo * info, flo
 #ifdef STBTT_STREAM_TYPE
 STBTT_DEF int stbtt_FindMatchingFont(STBTT_STREAM_TYPE fontdata, const char * name, int flags);
 #else
-STBTT_DEF int stbtt_FindMatchingFont(const unsigned char * fontdata, const char * name, int flags);
+
+STBTT_DEF int stbtt_FindMatchingFont(const unsigned char *fontdata, const char *name, int flags);
+
 #endif
 // returns the offset (not index) of the font that matches, or -1 if none
 //   if you use STBTT_MACSTYLE_DONTCARE, use a font name like "Arial Bold".
@@ -1079,13 +1112,15 @@ STBTT_DEF int stbtt_FindMatchingFont(const unsigned char * fontdata, const char 
 STBTT_DEF int stbtt_CompareUTF8toUTF16_bigendian(const char * s1, int len1, STBTT_STREAM_TYPE s2, stbtt_uint32 s2offs,
                                                  int len2);
 #else
-STBTT_DEF int stbtt_CompareUTF8toUTF16_bigendian(const char * s1, int len1, const char * s2, stbtt_uint32 s2offs,
+
+STBTT_DEF int stbtt_CompareUTF8toUTF16_bigendian(const char *s1, int len1, const char *s2, stbtt_uint32 s2offs,
                                                  int len2);
+
 #endif
 // returns 1/0 whether the first string interpreted as utf8 is identical to
 // the second string interpreted as big-endian utf16... useful for strings from next func
 
-STBTT_DEF stbtt_uint32 stbtt_GetFontNameString(const stbtt_fontinfo * font, int * length, int platformID,
+STBTT_DEF stbtt_uint32 stbtt_GetFontNameString(const stbtt_fontinfo *font, int *length, int platformID,
                                                int encodingID, int languageID, int nameID);
 
 // returns the string (which may be big-endian double byte, e.g. for unicode)
@@ -1160,23 +1195,23 @@ enum { // languageID for STBTT_PLATFORM_ID_MAC
 #ifdef STB_TRUETYPE_IMPLEMENTATION
 
 #ifndef STBTT_MAX_OVERSAMPLE
-    #define STBTT_MAX_OVERSAMPLE   8
+#define STBTT_MAX_OVERSAMPLE   8
 #endif
 
 #if STBTT_MAX_OVERSAMPLE > 255
-    #error "STBTT_MAX_OVERSAMPLE cannot be > 255"
+#error "STBTT_MAX_OVERSAMPLE cannot be > 255"
 #endif
 
 typedef int stbtt__test_oversample_pow2[(STBTT_MAX_OVERSAMPLE & (STBTT_MAX_OVERSAMPLE - 1)) == 0 ? 1 : -1];
 
 #ifndef STBTT_RASTERIZER_VERSION
-    #define STBTT_RASTERIZER_VERSION 2
+#define STBTT_RASTERIZER_VERSION 2
 #endif
 
 #ifdef _MSC_VER
-    #define STBTT__NOTUSED(v)  (void)(v)
+#define STBTT__NOTUSED(v)  (void)(v)
 #else
-    #define STBTT__NOTUSED(v)  (void)sizeof(v)
+#define STBTT__NOTUSED(v)  (void)sizeof(v)
 #endif
 
 //////////////////////////////////////////////////////////////////////////
@@ -5356,8 +5391,8 @@ static int stbtt__matchpair(stbtt_uint8 * fc, stbtt_uint32 nm, stbtt_uint8 * nam
 }
 
 #if defined(__GNUC__) || defined(__clang__)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wcast-qual"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
 #endif
 
 #ifdef STBTT_STREAM_TYPE
@@ -5446,8 +5481,8 @@ STBTT_DEF int stbtt_CompareUTF8toUTF16_bigendian(const char * s1, int len1, cons
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-    #pragma GCC diagnostic pop
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
 #endif // STB_TRUETYPE_IMPLEMENTATION

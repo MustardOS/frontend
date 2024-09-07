@@ -201,7 +201,7 @@ void glyph_task() {
 
 void init_elements() {
     lv_label_set_text(ui_lblMessage, _("Press POWER to finish testing"));
-    lv_obj_set_y(ui_pnlMessage, - 5);
+    lv_obj_set_y(ui_pnlMessage, -5);
     lv_obj_set_height(ui_pnlFooter, 0);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     apply_theme();
 
     char *current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);

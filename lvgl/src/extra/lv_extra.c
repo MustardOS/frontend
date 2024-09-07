@@ -32,8 +32,7 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_extra_init(void)
-{
+void lv_extra_init(void) {
 #if LV_USE_FLEX
     lv_flex_init();
 #endif

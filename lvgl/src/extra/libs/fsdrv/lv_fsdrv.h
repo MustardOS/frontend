@@ -37,7 +37,9 @@ lv_fs_drv_t * lv_fs_littlefs_set_driver(char label, void * lfs_p);
 #endif
 
 #if LV_USE_FS_STDIO != '\0'
+
 void lv_fs_stdio_init(void);
+
 #endif
 
 #if LV_USE_FS_POSIX != '\0'

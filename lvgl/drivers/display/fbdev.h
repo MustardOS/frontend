@@ -17,7 +17,9 @@ extern "C" {
 #ifdef LV_CONF_INCLUDE_SIMPLE
 #include "lv_drv_conf.h"
 #else
+
 #include "../../lv_drv_conf.h"
+
 #endif
 #endif
 
@@ -26,7 +28,9 @@ extern "C" {
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
 #include "lvgl.h"
 #else
+
 #include "../../lvgl.h"
+
 #endif
 
 /*********************
@@ -41,9 +45,13 @@ extern "C" {
  * GLOBAL PROTOTYPES
  **********************/
 void fbdev_init(const char *fbdev_path);
+
 void fbdev_exit(void);
-void fbdev_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_p);
+
+void fbdev_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p);
+
 void fbdev_get_sizes(uint32_t *width, uint32_t *height, uint32_t *dpi);
+
 /**
  * Set the X and Y offset in the variable framebuffer info.
  * @param xoffset horizontal offset
@@ -57,7 +65,7 @@ void fbdev_set_offset(uint32_t xoffset, uint32_t yoffset);
  * @param disp driver pointer to display driver which active screen should be get.
  */
 
-void fbdev_hdmi_rotate(lv_disp_drv_t * driver);
+void fbdev_hdmi_rotate(lv_disp_drv_t *driver);
 
 /**********************
  *      MACROS

@@ -34,8 +34,7 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-void LV_ATTRIBUTE_FAST_MEM lv_draw_rect_dsc_init(lv_draw_rect_dsc_t * dsc)
-{
+void LV_ATTRIBUTE_FAST_MEM lv_draw_rect_dsc_init(lv_draw_rect_dsc_t *dsc) {
     lv_memset_00(dsc, sizeof(lv_draw_rect_dsc_t));
     dsc->bg_color = lv_color_white();
     dsc->bg_grad.stops[0].color = lv_color_white();
@@ -59,9 +58,8 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_rect_dsc_init(lv_draw_rect_dsc_t * dsc)
  * @param mask the rectangle will be drawn only in this mask
  * @param dsc pointer to an initialized `lv_draw_rect_dsc_t` variable
  */
-void lv_draw_rect(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * dsc, const lv_area_t * coords)
-{
-    if(lv_area_get_height(coords) < 1 || lv_area_get_width(coords) < 1) return;
+void lv_draw_rect(lv_draw_ctx_t *draw_ctx, const lv_draw_rect_dsc_t *dsc, const lv_area_t *coords) {
+    if (lv_area_get_height(coords) < 1 || lv_area_get_width(coords) < 1) return;
 
     draw_ctx->draw_rect(draw_ctx, dsc, coords);
 

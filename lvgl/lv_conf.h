@@ -67,9 +67,9 @@ extern uint32_t mux_tick(void);
 
 #else       /*LV_MEM_CUSTOM*/
 #define LV_MEM_CUSTOM_INCLUDE <stdlib.h>   /*Header for the dynamic memory function*/
-    #define LV_MEM_CUSTOM_ALLOC   malloc
-    #define LV_MEM_CUSTOM_FREE    free
-    #define LV_MEM_CUSTOM_REALLOC realloc
+#define LV_MEM_CUSTOM_ALLOC   malloc
+#define LV_MEM_CUSTOM_FREE    free
+#define LV_MEM_CUSTOM_REALLOC realloc
 #endif     /*LV_MEM_CUSTOM*/
 
 /*Number of the intermediate memory buffer used during rendering and other internal processing mechanisms.
@@ -169,7 +169,7 @@ extern uint32_t mux_tick(void);
 #if LV_USE_GPU_STM32_DMA2D
 /*Must be defined to include path of CMSIS header of target processor
     e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
-    #define LV_GPU_DMA2D_CMSIS_INCLUDE
+#define LV_GPU_DMA2D_CMSIS_INCLUDE
 #endif
 
 /*Use NXP's PXP GPU iMX RTxxx platforms*/
@@ -180,7 +180,7 @@ extern uint32_t mux_tick(void);
     *   has to be defined in order to use FreeRTOS OSA, otherwise bare-metal implementation is selected.
     *0: lv_gpu_nxp_pxp_init() has to be called manually before lv_init()
     */
-    #define LV_USE_GPU_NXP_PXP_AUTO_INIT 0
+#define LV_USE_GPU_NXP_PXP_AUTO_INIT 0
 #endif
 
 /*Use NXP's VG-Lite GPU iMX RTxxx platforms*/
@@ -190,10 +190,10 @@ extern uint32_t mux_tick(void);
 #define LV_USE_GPU_SDL 0
 #if LV_USE_GPU_SDL
 #define LV_GPU_SDL_INCLUDE_PATH <SDL2/SDL.h>
-    /*Texture cache size, 8MB by default*/
-    #define LV_GPU_SDL_LRU_SIZE (1024 * 1024 * 8)
-    /*Custom blend mode for mask drawing, disable if you need to link with older SDL2 lib*/
-    #define LV_GPU_SDL_CUSTOM_BLEND_MODE (SDL_VERSION_ATLEAST(2, 0, 6))
+/*Texture cache size, 8MB by default*/
+#define LV_GPU_SDL_LRU_SIZE (1024 * 1024 * 8)
+/*Custom blend mode for mask drawing, disable if you need to link with older SDL2 lib*/
+#define LV_GPU_SDL_CUSTOM_BLEND_MODE (SDL_VERSION_ATLEAST(2, 0, 6))
 #endif
 
 /*-------------
@@ -211,21 +211,21 @@ extern uint32_t mux_tick(void);
     *LV_LOG_LEVEL_ERROR       Only critical issue, when the system may fail
     *LV_LOG_LEVEL_USER        Only logs added by the user
     *LV_LOG_LEVEL_NONE        Do not log anything*/
-    #define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
+#define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
 
     /*1: Print the log with 'printf';
     *0: User need to register a callback with `lv_log_register_print_cb()`*/
-    #define LV_LOG_PRINTF 0
+#define LV_LOG_PRINTF 0
 
     /*Enable/disable LV_LOG_TRACE in modules that produces a huge number of logs*/
-    #define LV_LOG_TRACE_MEM        1
-    #define LV_LOG_TRACE_TIMER      1
-    #define LV_LOG_TRACE_INDEV      1
-    #define LV_LOG_TRACE_DISP_REFR  1
-    #define LV_LOG_TRACE_EVENT      1
-    #define LV_LOG_TRACE_OBJ_CREATE 1
-    #define LV_LOG_TRACE_LAYOUT     1
-    #define LV_LOG_TRACE_ANIM       1
+#define LV_LOG_TRACE_MEM        1
+#define LV_LOG_TRACE_TIMER      1
+#define LV_LOG_TRACE_INDEV      1
+#define LV_LOG_TRACE_DISP_REFR  1
+#define LV_LOG_TRACE_EVENT      1
+#define LV_LOG_TRACE_OBJ_CREATE 1
+#define LV_LOG_TRACE_LAYOUT     1
+#define LV_LOG_TRACE_ANIM       1
 
 #endif  /*LV_USE_LOG*/
 
@@ -269,8 +269,8 @@ extern uint32_t mux_tick(void);
 #define LV_SPRINTF_CUSTOM 0
 #if LV_SPRINTF_CUSTOM
 #define LV_SPRINTF_INCLUDE <stdio.h>
-    #define lv_snprintf  snprintf
-    #define lv_vsnprintf vsnprintf
+#define lv_snprintf  snprintf
+#define lv_vsnprintf vsnprintf
 #else   /*LV_SPRINTF_CUSTOM*/
 #define LV_SPRINTF_USE_FLOAT 0
 #endif  /*LV_SPRINTF_CUSTOM*/
@@ -338,7 +338,7 @@ extern uint32_t mux_tick(void);
 #define LV_FONT_MONTSERRAT_14 0
 #define LV_FONT_MONTSERRAT_16 0
 #define LV_FONT_MONTSERRAT_18 0
-#define LV_FONT_MONTSERRAT_20 1
+#define LV_FONT_MONTSERRAT_20 0
 #define LV_FONT_MONTSERRAT_22 0
 #define LV_FONT_MONTSERRAT_24 0
 #define LV_FONT_MONTSERRAT_26 0
@@ -384,7 +384,7 @@ extern uint32_t mux_tick(void);
 #define LV_USE_FONT_SUBPX 1
 #if LV_USE_FONT_SUBPX
 /*Set the pixel order of the display. Physical order of RGB channels. Doesn't matter with "normal" fonts.*/
-    #define LV_FONT_SUBPX_BGR 0  /*0: RGB; 1:BGR order*/
+#define LV_FONT_SUBPX_BGR 0  /*0: RGB; 1:BGR order*/
 #endif
 
 /*=================
@@ -426,7 +426,7 @@ extern uint32_t mux_tick(void);
     *`LV_BASE_DIR_LTR` Left-to-Right
     *`LV_BASE_DIR_RTL` Right-to-Left
     *`LV_BASE_DIR_AUTO` detect texts base direction*/
-    #define LV_BIDI_BASE_DIR_DEF LV_BASE_DIR_AUTO
+#define LV_BIDI_BASE_DIR_DEF LV_BASE_DIR_AUTO
 #endif
 
 /*Enable Arabic/Persian processing
@@ -491,15 +491,15 @@ extern uint32_t mux_tick(void);
 #define LV_USE_CALENDAR   0
 #if LV_USE_CALENDAR
 #define LV_CALENDAR_WEEK_STARTS_MONDAY 0
-    #if LV_CALENDAR_WEEK_STARTS_MONDAY
-        #define LV_CALENDAR_DEFAULT_DAY_NAMES {"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"}
-    #else
-        #define LV_CALENDAR_DEFAULT_DAY_NAMES {"Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"}
-    #endif
+#if LV_CALENDAR_WEEK_STARTS_MONDAY
+#define LV_CALENDAR_DEFAULT_DAY_NAMES {"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"}
+#else
+#define LV_CALENDAR_DEFAULT_DAY_NAMES {"Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"}
+#endif
 
-    #define LV_CALENDAR_DEFAULT_MONTH_NAMES {"January", "February", "March",  "April", "May",  "June", "July", "August", "September", "October", "November", "December"}
-    #define LV_USE_CALENDAR_HEADER_ARROW 1
-    #define LV_USE_CALENDAR_HEADER_DROPDOWN 1
+#define LV_CALENDAR_DEFAULT_MONTH_NAMES {"January", "February", "March",  "April", "May",  "June", "July", "August", "September", "October", "November", "December"}
+#define LV_USE_CALENDAR_HEADER_ARROW 1
+#define LV_USE_CALENDAR_HEADER_DROPDOWN 1
 #endif  /*LV_USE_CALENDAR*/
 
 #define LV_USE_CHART      0
@@ -533,7 +533,7 @@ extern uint32_t mux_tick(void);
 #define LV_USE_SPAN       0
 #if LV_USE_SPAN
 /*A line text can contain maximum num of span descriptor */
-    #define LV_SPAN_SNIPPET_STACK_SIZE 64
+#define LV_SPAN_SNIPPET_STACK_SIZE 64
 #endif
 
 /*-----------
@@ -580,31 +580,31 @@ extern uint32_t mux_tick(void);
 #define LV_USE_FS_STDIO 1
 #if LV_USE_FS_STDIO
 #define LV_FS_STDIO_LETTER 'M'     /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
-    #define LV_FS_STDIO_PATH ""         /*Set the working directory. File/directory paths will be appended to it.*/
-    #define LV_FS_STDIO_CACHE_SIZE 0   /*>0 to cache this number of bytes in lv_fs_read()*/
+#define LV_FS_STDIO_PATH ""         /*Set the working directory. File/directory paths will be appended to it.*/
+#define LV_FS_STDIO_CACHE_SIZE 0   /*>0 to cache this number of bytes in lv_fs_read()*/
 #endif
 
 /*API for open, read, etc*/
 #define LV_USE_FS_POSIX 0
 #if LV_USE_FS_POSIX
 #define LV_FS_POSIX_LETTER '\0'     /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
-    #define LV_FS_POSIX_PATH ""         /*Set the working directory. File/directory paths will be appended to it.*/
-    #define LV_FS_POSIX_CACHE_SIZE  0   /*>0 to cache this number of bytes in lv_fs_read()*/
+#define LV_FS_POSIX_PATH ""         /*Set the working directory. File/directory paths will be appended to it.*/
+#define LV_FS_POSIX_CACHE_SIZE  0   /*>0 to cache this number of bytes in lv_fs_read()*/
 #endif
 
 /*API for CreateFile, ReadFile, etc*/
 #define LV_USE_FS_WIN32 0
 #if LV_USE_FS_WIN32
 #define LV_FS_WIN32_LETTER  '\0'    /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
-    #define LV_FS_WIN32_PATH ""         /*Set the working directory. File/directory paths will be appended to it.*/
-    #define LV_FS_WIN32_CACHE_SIZE 0    /*>0 to cache this number of bytes in lv_fs_read()*/
+#define LV_FS_WIN32_PATH ""         /*Set the working directory. File/directory paths will be appended to it.*/
+#define LV_FS_WIN32_CACHE_SIZE 0    /*>0 to cache this number of bytes in lv_fs_read()*/
 #endif
 
 /*API for FATFS (needs to be added separately). Uses f_open, f_read, etc*/
 #define LV_USE_FS_FATFS  0
 #if LV_USE_FS_FATFS
 #define LV_FS_FATFS_LETTER '\0'     /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
-    #define LV_FS_FATFS_CACHE_SIZE 0    /*>0 to cache this number of bytes in lv_fs_read()*/
+#define LV_FS_FATFS_CACHE_SIZE 0    /*>0 to cache this number of bytes in lv_fs_read()*/
 #endif
 
 /*PNG decoder library*/
@@ -627,17 +627,17 @@ extern uint32_t mux_tick(void);
 #define LV_USE_FREETYPE 0
 #if LV_USE_FREETYPE
 /*Memory used by FreeType to cache characters [bytes] (-1: no caching)*/
-    #define LV_FREETYPE_CACHE_SIZE (32 * 1024)
-    #if LV_FREETYPE_CACHE_SIZE >= 0
+#define LV_FREETYPE_CACHE_SIZE (32 * 1024)
+#if LV_FREETYPE_CACHE_SIZE >= 0
         /* 1: bitmap cache use the sbit cache, 0:bitmap cache use the image cache. */
         /* sbit cache:it is much more memory efficient for small bitmaps(font size < 256) */
         /* if font size >= 256, must be configured as image cache */
-        #define LV_FREETYPE_SBIT_CACHE 0
+#define LV_FREETYPE_SBIT_CACHE 0
         /* Maximum number of opened FT_Face/FT_Size objects managed by this cache instance. */
         /* (0:use system defaults) */
-        #define LV_FREETYPE_CACHE_FT_FACES 0
-        #define LV_FREETYPE_CACHE_FT_SIZES 0
-    #endif
+#define LV_FREETYPE_CACHE_FT_FACES 0
+#define LV_FREETYPE_CACHE_FT_SIZES 0
+#endif
 #endif
 
 /*Rlottie library*/
@@ -648,7 +648,7 @@ extern uint32_t mux_tick(void);
 #define LV_USE_FFMPEG  0
 #if LV_USE_FFMPEG
 /*Dump input information to stderr*/
-    #define LV_FFMPEG_AV_DUMP_FORMAT 0
+#define LV_FFMPEG_AV_DUMP_FORMAT 0
 #endif
 
 /*-----------

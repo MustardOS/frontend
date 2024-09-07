@@ -74,10 +74,10 @@ int lblIdentifierValue;
 int lblPasswordValue;
 int lblStatusValue;
 
-char * type_dhcp;
-char * type_static;
-char * enabled_true;
-char * enabled_false;
+char *type_dhcp;
+char *type_static;
+char *enabled_true;
+char *enabled_false;
 
 lv_obj_t *key_entry;
 lv_obj_t *num_entry;
@@ -217,15 +217,15 @@ void save_network_config() {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-        ui_pnlEnable,
-        ui_pnlIdentifier,
-        ui_pnlPassword,
-        ui_pnlType,
-        ui_pnlAddress,
-        ui_pnlSubnet,
-        ui_pnlGateway,
-        ui_pnlDNS,
-        ui_pnlConnect,
+            ui_pnlEnable,
+            ui_pnlIdentifier,
+            ui_pnlPassword,
+            ui_pnlType,
+            ui_pnlAddress,
+            ui_pnlSubnet,
+            ui_pnlGateway,
+            ui_pnlDNS,
+            ui_pnlConnect,
     };
 
     ui_objects[0] = ui_lblEnable;
@@ -346,7 +346,8 @@ void list_nav_next(int steps) {
         first_open = 0;
     } else {
         play_sound("navigate", nav_sound, 0);
-    }    for (int step = 0; step < steps; ++step) {
+    }
+    for (int step = 0; step < steps; ++step) {
         current_item_index++;
         nav_next(ui_group, 1);
         nav_next(ui_group_value, 1);
@@ -1432,7 +1433,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;

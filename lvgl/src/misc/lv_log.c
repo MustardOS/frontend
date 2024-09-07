@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "lv_log.h"
+
 #if LV_USE_LOG
 
 #include <stdarg.h>
@@ -15,7 +16,7 @@
 #include "../hal/lv_hal_tick.h"
 
 #if LV_LOG_PRINTF
-    #include <stdio.h>
+#include <stdio.h>
 #endif
 
 /*********************

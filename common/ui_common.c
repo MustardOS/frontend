@@ -680,7 +680,8 @@ lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
     return ui_glyph;
 }
 
-lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, struct footer_glyph nav_footer_glyph) {
+lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name,
+                              struct footer_glyph nav_footer_glyph) {
     lv_obj_t * ui_glyph;
 
     char footer_image_path[MAX_BUFFER_SIZE];
@@ -734,24 +735,24 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     return ui_lblNavText;
 }
 
-void update_battery_capacity(lv_obj_t * ui_staCapacity, struct theme_config *theme) {
+void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme) {
     char *battery_glyph_name = get_capacity();
-    
+
     if (str_startswith(battery_glyph_name, "capacity_charging_")) {
         lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.ACTIVE),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.ACTIVE_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                         LV_PART_MAIN | LV_STATE_DEFAULT);
     } else if (battery_capacity <= 15) {
         lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.LOW),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.LOW_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                         LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.NORMAL),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_img_recolor_opa(ui_staCapacity, theme->STATUS.BATTERY.NORMAL_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                         LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     char image_path[MAX_BUFFER_SIZE];
@@ -770,7 +771,7 @@ void update_battery_capacity(lv_obj_t * ui_staCapacity, struct theme_config *the
     if (file_exist(image_path)) lv_img_set_src(ui_staCapacity, image_embed);
 }
 
-void update_bluetooth_status(lv_obj_t * ui_staBluetooth, struct theme_config *theme) {
+void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
     if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/bluetooth.png",
@@ -787,20 +788,20 @@ void update_bluetooth_status(lv_obj_t * ui_staBluetooth, struct theme_config *th
     if (file_exist(image_path)) lv_img_set_src(ui_staBluetooth, image_embed);
 }
 
-void update_network_status(lv_obj_t * ui_staNetwork, struct theme_config *theme) {
+void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) {
     char *network_status;
     if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
         network_status = "active";
         lv_obj_set_style_img_recolor(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.ACTIVE),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_img_recolor_opa(ui_staNetwork, theme->STATUS.NETWORK.ACTIVE_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                         LV_PART_MAIN | LV_STATE_DEFAULT);
     } else {
         network_status = "normal";
         lv_obj_set_style_img_recolor(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.NORMAL),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_img_recolor_opa(ui_staNetwork, theme->STATUS.NETWORK.NORMAL_ALPHA,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+                                         LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     char image_path[MAX_BUFFER_SIZE];

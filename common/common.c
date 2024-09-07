@@ -979,14 +979,25 @@ void load_system(const char *value) {
     fclose(file);
 }
 
-void load_assign(const char *rom, const char *dir, const char *sys) {
+void load_assign(const char *rom, const char *dir, const char *sys, int forced) {
     FILE * file = fopen(MUOS_ASS_LOAD, "w");
     if (file == NULL) {
         perror("fopen");
         return;
     }
 
-    fprintf(file, "%s\n%s\n%s", rom, dir, sys);
+    fprintf(file, "%s\n%s\n%s\n%d", rom, dir, sys, forced);
+    fclose(file);
+}
+
+void load_gov(const char *rom, const char *dir, const char *sys, int forced) {
+    FILE * file = fopen(MUOS_GOV_LOAD, "w");
+    if (file == NULL) {
+        perror("fopen");
+        return;
+    }
+
+    fprintf(file, "%s\n%s\n%s\n%d", rom, dir, sys, forced);
     fclose(file);
 }
 

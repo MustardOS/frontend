@@ -46,6 +46,7 @@
  *********************/
 
 #include "../../../lvgl.h"
+
 #if LV_USE_SJPG
 
 #include "tjpgd.h"

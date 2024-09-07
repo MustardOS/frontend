@@ -31,12 +31,12 @@ extern "C" {
  *      TYPEDEFS
  **********************/
 enum {
-    LV_BASE_DIR_LTR      = 0x00,
-    LV_BASE_DIR_RTL      = 0x01,
-    LV_BASE_DIR_AUTO     = 0x02,
+    LV_BASE_DIR_LTR = 0x00,
+    LV_BASE_DIR_RTL = 0x01,
+    LV_BASE_DIR_AUTO = 0x02,
 
-    LV_BASE_DIR_NEUTRAL  = 0x20,
-    LV_BASE_DIR_WEAK     = 0x21,
+    LV_BASE_DIR_NEUTRAL = 0x20,
+    LV_BASE_DIR_WEAK = 0x21,
 };
 
 typedef uint8_t lv_base_dir_t;
@@ -119,6 +119,7 @@ void lv_bidi_calculate_align(lv_text_align_t * align, lv_base_dir_t * base_dir, 
  **********************/
 
 #else /*LV_USE_BIDI*/
+
 /**
  * For compatibility if LV_USE_BIDI = 0
  * Get the real text alignment from the a text alignment, base direction and a text.
@@ -126,12 +127,12 @@ void lv_bidi_calculate_align(lv_text_align_t * align, lv_base_dir_t * base_dir, 
  * @param base_dir  Unused
  * @param txt       Unused
  */
-static inline void lv_bidi_calculate_align(lv_text_align_t * align, lv_base_dir_t * base_dir, const char * txt)
-{
+static inline void lv_bidi_calculate_align(lv_text_align_t *align, lv_base_dir_t *base_dir, const char *txt) {
     LV_UNUSED(txt);
     LV_UNUSED(base_dir);
-    if(*align == LV_TEXT_ALIGN_AUTO) * align = LV_TEXT_ALIGN_LEFT;
+    if (*align == LV_TEXT_ALIGN_AUTO) *align = LV_TEXT_ALIGN_LEFT;
 }
+
 #endif /*LV_USE_BIDI*/
 
 #ifdef __cplusplus

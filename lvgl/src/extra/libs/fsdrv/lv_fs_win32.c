@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "../../../lvgl.h"
+
 #if LV_USE_FS_WIN32 != '\0'
 
 #include <windows.h>
@@ -459,7 +460,7 @@ static lv_fs_res_t fs_dir_close(lv_fs_drv_t * drv, void * dir_p)
 #else /*LV_USE_FS_WIN32 == 0*/
 
 #if defined(LV_FS_WIN32_LETTER) && LV_FS_WIN32_LETTER != '\0'
-    #warning "LV_USE_FS_WIN32 is not enabled but LV_FS_WIN32_LETTER is set"
+#warning "LV_USE_FS_WIN32 is not enabled but LV_FS_WIN32_LETTER is set"
 #endif
 
 #endif

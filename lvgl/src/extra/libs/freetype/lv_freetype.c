@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "lv_freetype.h"
+
 #if LV_USE_FREETYPE
 
 #include <ft2build.h>
@@ -77,13 +78,13 @@ static lv_ll_t names_ll;
     static FTC_CMapCache cmap_cache;
     static FT_Face current_face = NULL;
 
-    #if LV_FREETYPE_SBIT_CACHE
+#if LV_FREETYPE_SBIT_CACHE
         static FTC_SBitCache sbit_cache;
         static FTC_SBit sbit;
-    #else
+#else
         static FTC_ImageCache image_cache;
         static FT_Glyph       image_glyph;
-    #endif
+#endif
 
 #else
     static lv_faces_control_t face_control;

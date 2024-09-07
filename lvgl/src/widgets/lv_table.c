@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "lv_table.h"
+
 #if LV_USE_TABLE != 0
 
 #include "../core/lv_indev.h"

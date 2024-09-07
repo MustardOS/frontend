@@ -171,17 +171,17 @@ void elements_events_init() {
 
 void init_dropdown_settings() {
     Visuals settings[] = {
-            {battery.total,       battery.current},
-            {network.total,       network.current},
-            {bluetooth.total,     bluetooth.current},
-            {mux_clock.total,     mux_clock.current},
-            {boxart.total,        boxart.current},
-            {name.total,          name.current},
-            {dash.total,          dash.current},
-            {thetitleformat.total, thetitleformat.current},
+            {battery.total,         battery.current},
+            {network.total,         network.current},
+            {bluetooth.total,       bluetooth.current},
+            {mux_clock.total,       mux_clock.current},
+            {boxart.total,          boxart.current},
+            {name.total,            name.current},
+            {dash.total,            dash.current},
+            {thetitleformat.total,  thetitleformat.current},
             {folderitemcount.total, folderitemcount.current},
-            {counterfolder.total, counterfolder.current},
-            {counterfile.total,   counterfile.current}
+            {counterfolder.total,   counterfolder.current},
+            {counterfile.total,     counterfile.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -355,10 +355,11 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droNetwork, hidden_visible, 2);
     add_drop_down_options(ui_droBluetooth, hidden_visible, 2);
     add_drop_down_options(ui_droClock, hidden_visible, 2);
-    add_drop_down_options(ui_droBoxArt, (char *[]){
-                               _("Bottom + Behind"), _("Bottom + Front"), _("Middle + Behind"), _("Middle + Front"), 
-                               _("Top + Behind"), _("Top + Front"), _("Fullscreen + Behind"), _("Fullscreen + Front"), _("Disabled") }, 9);
-    add_drop_down_options(ui_droName, (char *[]){ _("Full Name"), _("Remove [ ]"), _("Remove ( )"), _("Remove [ ] and ( )") }, 4);
+    add_drop_down_options(ui_droBoxArt, (char *[]) {
+            _("Bottom + Behind"), _("Bottom + Front"), _("Middle + Behind"), _("Middle + Front"),
+            _("Top + Behind"), _("Top + Front"), _("Fullscreen + Behind"), _("Fullscreen + Front"), _("Disabled")}, 9);
+    add_drop_down_options(ui_droName,
+                          (char *[]) {_("Full Name"), _("Remove [ ]"), _("Remove ( )"), _("Remove [ ] and ( )")}, 4);
     add_drop_down_options(ui_droDash, disabled_enabled, 2);
     add_drop_down_options(ui_droTheTitleFormat, disabled_enabled, 2);
     add_drop_down_options(ui_droFolderItemCount, hidden_visible, 2);
@@ -952,7 +953,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;

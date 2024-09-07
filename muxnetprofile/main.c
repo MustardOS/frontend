@@ -165,7 +165,8 @@ void create_profile_items() {
             lv_group_add_obj(ui_group_glyph, ui_lblNetProfileItemGlyph);
             lv_group_add_obj(ui_group_panel, ui_pnlNetProfile);
 
-            apply_size_to_content(&theme, ui_pnlContent, ui_lblNetProfileItem, ui_lblNetProfileItemGlyph, base_filename);
+            apply_size_to_content(&theme, ui_pnlContent, ui_lblNetProfileItem, ui_lblNetProfileItemGlyph,
+                                  base_filename);
 
             free(base_filename);
         }
@@ -576,7 +577,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;

@@ -288,20 +288,21 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     mini_free(muos_theme);
 }
 
-void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem, 
-            lv_obj_t *ui_lblItemGlyph, const char *item_text) {
+void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
+                           lv_obj_t *ui_lblItemGlyph, const char *item_text) {
     if (theme->MISC.CONTENT.SIZE_TO_CONTENT) {
         const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
         lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
                                                       LV_TEXT_FLAG_EXPAND);
         int item_width = LV_MIN(theme->FONT.LIST_PAD_LEFT + act_line_length + theme->FONT.LIST_PAD_RIGHT,
-                            theme->MISC.CONTENT.WIDTH);
+                                theme->MISC.CONTENT.WIDTH);
         // When using size to content right padding needs to be zero to prevent text from wrapping.
         // The overall width of the control will include the right padding
         lv_obj_set_style_pad_right(ui_lblItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_width(ui_lblItem, item_width);
-        lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (item_width / 2) - 5); // - 5 at end to compensate for border width
+        lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (item_width / 2) -
+                                      5); // - 5 at end to compensate for border width
     }
 }
 
@@ -311,7 +312,7 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
         lv_obj_get_style_max_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
     } else {
         lv_obj_set_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
-    }    
+    }
     lv_obj_set_height(ui_pnlList, theme->MUX.ITEM.HEIGHT);
     lv_obj_set_scrollbar_mode(ui_pnlList, LV_SCROLLBAR_MODE_OFF);
 
@@ -428,7 +429,7 @@ void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t *ui_lblItem
     lv_coord_t font_height = lv_font_get_line_height(font);
     lv_obj_set_height(ui_lblItemDropDown, font_height);
     lv_obj_set_align(ui_lblItemDropDown, LV_ALIGN_RIGHT_MID);
-    lv_obj_add_flag(ui_lblItemDropDown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_add_flag(ui_lblItemDropDown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_set_scrollbar_mode(ui_lblItemDropDown, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lblItemDropDown, LV_DIR_RIGHT);
     lv_obj_set_style_text_color(ui_lblItemDropDown, lv_color_hex(theme->LIST_DEFAULT.TEXT),

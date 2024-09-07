@@ -85,7 +85,7 @@ void populate_languages() {
 
     char lang_dir[MAX_BUFFER_SIZE];
     snprintf(lang_dir, sizeof(lang_dir), "%s/language",
-                STORAGE_PATH);
+             STORAGE_PATH);
     DIR *dir = opendir(lang_dir);
 
     if (!dir) {
@@ -224,7 +224,8 @@ void *joystick_task() {
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-                                    write_text_to_file("/run/muos/global/settings/general/language", "w", CHAR, items[current_item_index].name);
+                                    write_text_to_file("/run/muos/global/settings/general/language", "w", CHAR,
+                                                       items[current_item_index].name);
 
                                     safe_quit = 1;
                                 } else if (ev.code == NAV_B) {
@@ -540,7 +541,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;

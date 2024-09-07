@@ -20,9 +20,11 @@
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
+#define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
 #define MUOS_ROM_LOAD "/tmp/rom_go" // ROM Content for Launching
-#define MUOS_SAA_LOAD "/tmp/saa_go" // Auto Assignment Flag
+#define MUOS_SAA_LOAD "/tmp/saa_go" // Auto Assign Core Flag
+#define MUOS_SAG_LOAD "/tmp/sag_go" // Auto Assign Governor Flag
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 
 #define BRIGHT_FILE "/opt/muos/config/brightness.txt"

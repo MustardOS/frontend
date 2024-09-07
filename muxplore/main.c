@@ -124,7 +124,7 @@ char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalo
     return b_core;
 }
 
-char *load_content_core(int force) {
+char *load_content_core(int force, int run_quit) {
     char content_core[MAX_BUFFER_SIZE];
 
     char *card_full;
@@ -163,8 +163,54 @@ char *load_content_core(int force) {
         return build_core(content_core, 1, 2, 3);
     } else {
         printf("NO GLOBAL CORE INFO AT: %s\n", content_core);
-        load_assign(items[current_item_index].name, sd_dir, "none");
-        safe_quit = 1;
+        load_assign(items[current_item_index].name, sd_dir, "none", force);
+        if (run_quit) safe_quit = 1;
+    }
+
+    return NULL;
+}
+
+char *load_content_governor(int force, int run_quit) {
+    char content_gov[MAX_BUFFER_SIZE];
+
+    char *card_full;
+    switch (module) {
+        case MMC:
+            card_full = SD1;
+            break;
+        case SDCARD:
+            card_full = SD2;
+            break;
+        case USB:
+            card_full = E_USB;
+            break;
+        default:
+            return NULL;
+    }
+
+    if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
+        snprintf(content_gov, sizeof(content_gov), "%s/info/core/core.gov",
+                 STORAGE_PATH);
+    } else {
+        snprintf(content_gov, sizeof(content_gov), "%s/info/core/%s/%s.gov",
+                 STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
+        if (file_exist(content_gov) && !force) {
+            printf("LOADING INDIVIDUAL GOVERNOR AT: %s\n", content_gov);
+            return read_text_from_file(content_gov);
+        } else {
+            printf("NO INDIVIDUAL GOVERNOR INFO AT: %s\n", content_gov);
+            snprintf(content_gov, sizeof(content_gov), "%s/info/core/%s/core.gov",
+                     STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+        }
+    }
+
+    if (file_exist(content_gov) && !force) {
+        printf("LOADING GLOBAL GOVERNOR AT: %s\n", content_gov);
+        return read_text_from_file(content_gov);
+    } else {
+        printf("NO GLOBAL GOVERNOR INFO AT: %s\n", content_gov);
+        load_gov(items[current_item_index].name, sd_dir, "none", force);
+        if (run_quit) safe_quit = 1;
     }
 
     return NULL;
@@ -929,11 +975,18 @@ void prepare_activity_file(char *act_content, char *act_path) {
 }
 
 int load_content(int add_favourite) {
-    char *assigned_core = load_content_core(0);
+    char *assigned_core = load_content_core(0, 1);
     printf("ASSIGNED CORE: %s\n", assigned_core);
+
+    char *assigned_gov = load_content_governor(0, 1);
+    printf("ASSIGNED GOVERNOR: %s\n", assigned_gov);
 
     if (assigned_core == NULL) {
         return 0;
+    }
+
+    if (assigned_gov == NULL) {
+        assigned_gov = device.CPU.DEFAULT;
     }
 
     char content_loader_file[MAX_BUFFER_SIZE];
@@ -1012,6 +1065,7 @@ int load_content(int add_favourite) {
                      strip_ext(items[current_item_index].name), curr_sd, read_line_from_file(content_loader_file, 5));
             prepare_activity_file(act_content, act_file);
 */
+            write_text_to_file(device.CPU.GOVERNOR, "w", CHAR, assigned_gov);
             write_text_to_file(add_to_hf, "w", CHAR, pointer);
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(content_loader_file));
         }
@@ -1496,7 +1550,13 @@ void *joystick_task() {
                                             case SDCARD:
                                             case USB:
                                                 write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
-                                                load_content_core(1);
+                                                write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
+
+                                                load_content_core(1, 0);
+                                                load_content_governor(1, 0);
+
+                                                load_mux("option");
+                                                safe_quit = 1;
                                                 break;
                                             default:
                                                 break;

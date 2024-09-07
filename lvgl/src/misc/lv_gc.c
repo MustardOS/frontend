@@ -25,7 +25,7 @@
  **********************/
 
 #if(!defined(LV_ENABLE_GC)) || LV_ENABLE_GC == 0
-    LV_ROOTS
+LV_ROOTS
 #endif /*LV_ENABLE_GC*/
 
 /**********************
@@ -36,8 +36,7 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-void _lv_gc_clear_roots(void)
-{
+void _lv_gc_clear_roots(void) {
 #define LV_CLEAR_ROOT(root_type, root_name) lv_memset_00(&LV_GC_ROOT(root_name), sizeof(LV_GC_ROOT(root_name)));
     LV_ITERATE_ROOTS(LV_CLEAR_ROOT)
 }

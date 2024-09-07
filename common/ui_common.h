@@ -4,15 +4,16 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme);
 
-lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name, struct footer_glyph nav_footer_glyph);
+lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name,
+                              struct footer_glyph nav_footer_glyph);
 
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha);
 
-void update_battery_capacity(lv_obj_t * ui_staCapacity, struct theme_config *theme);
+void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme);
 
-void update_bluetooth_status(lv_obj_t * ui_staBluetooth, struct theme_config *theme);
+void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme);
 
-void update_network_status(lv_obj_t * ui_staNetwork, struct theme_config *theme);
+void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme);
 
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;
@@ -67,8 +68,8 @@ extern lv_obj_t *ui_icoProgressVolume;
 extern lv_obj_t *ui_barProgressVolume;
 extern lv_obj_t *ui____initial_actions0;
 
-LV_IMG_DECLARE(ui_img_nothing_png);    // assets/nothing.png
-LV_IMG_DECLARE(ui_img_muoskofi_png);    // assets/muoskofi.png
+LV_IMG_DECLARE(ui_img_nothing_png);
+LV_IMG_DECLARE(ui_img_muoskofi_png);
 
 LV_FONT_DECLARE(ui_font_Awesome);
 LV_FONT_DECLARE(ui_font_AwesomeBig);

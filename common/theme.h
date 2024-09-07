@@ -6,7 +6,7 @@ extern struct theme_config theme;
 extern struct mux_config config;
 extern struct mux_device device;
 
-struct footer_glyph{
+struct footer_glyph {
     uint32_t GLYPH;
     int16_t GLYPH_ALPHA;
     int16_t GLYPH_RECOLOUR_ALPHA;
@@ -283,8 +283,8 @@ struct theme_config {
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name);
 
-void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem, 
-                          lv_obj_t *ui_lblItemGlyph, const char *item_text);
+void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
+                           lv_obj_t *ui_lblItemGlyph, const char *item_text);
 
 void apply_theme_list_panel(struct theme_config *theme, struct mux_device *device, lv_obj_t *ui_pnlList);
 

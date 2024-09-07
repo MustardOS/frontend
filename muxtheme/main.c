@@ -55,7 +55,7 @@ int nav_moved = 1;
 char *current_wall = "";
 
 lv_obj_t *msgbox_element = NULL;
-lv_obj_t * wall_img = NULL;
+lv_obj_t *wall_img = NULL;
 
 int progress_onscreen = -1;
 
@@ -591,7 +591,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
-    
+
     switch (theme.MISC.NAVIGATION_TYPE) {
         case 1:
             NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;

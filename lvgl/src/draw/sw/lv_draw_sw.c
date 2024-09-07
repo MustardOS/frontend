@@ -37,11 +37,10 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
-void lv_draw_sw_init_ctx(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
-{
+void lv_draw_sw_init_ctx(lv_disp_drv_t *drv, lv_draw_ctx_t *draw_ctx) {
     LV_UNUSED(drv);
 
-    lv_draw_sw_ctx_t * draw_sw_ctx = (lv_draw_sw_ctx_t *) draw_ctx;
+    lv_draw_sw_ctx_t *draw_sw_ctx = (lv_draw_sw_ctx_t *) draw_ctx;
     lv_memset_00(draw_sw_ctx, sizeof(lv_draw_sw_ctx_t));
 
     draw_sw_ctx->base_draw.draw_arc = lv_draw_sw_arc;
@@ -64,28 +63,25 @@ void lv_draw_sw_init_ctx(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
     draw_ctx->layer_instance_size = sizeof(lv_draw_sw_layer_ctx_t);
 }
 
-void lv_draw_sw_deinit_ctx(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
-{
+void lv_draw_sw_deinit_ctx(lv_disp_drv_t *drv, lv_draw_ctx_t *draw_ctx) {
     LV_UNUSED(drv);
 
-    lv_draw_sw_ctx_t * draw_sw_ctx = (lv_draw_sw_ctx_t *) draw_ctx;
+    lv_draw_sw_ctx_t *draw_sw_ctx = (lv_draw_sw_ctx_t *) draw_ctx;
     lv_memset_00(draw_sw_ctx, sizeof(lv_draw_sw_ctx_t));
 }
 
-void lv_draw_sw_wait_for_finish(lv_draw_ctx_t * draw_ctx)
-{
+void lv_draw_sw_wait_for_finish(lv_draw_ctx_t *draw_ctx) {
     LV_UNUSED(draw_ctx);
     /*Nothing to wait for*/
 }
 
-void lv_draw_sw_buffer_copy(lv_draw_ctx_t * draw_ctx,
-                            void * dest_buf, lv_coord_t dest_stride, const lv_area_t * dest_area,
-                            void * src_buf, lv_coord_t src_stride, const lv_area_t * src_area)
-{
+void lv_draw_sw_buffer_copy(lv_draw_ctx_t *draw_ctx,
+                            void *dest_buf, lv_coord_t dest_stride, const lv_area_t *dest_area,
+                            void *src_buf, lv_coord_t src_stride, const lv_area_t *src_area) {
     LV_UNUSED(draw_ctx);
 
-    lv_color_t * dest_bufc =  dest_buf;
-    lv_color_t * src_bufc =  src_buf;
+    lv_color_t * dest_bufc = dest_buf;
+    lv_color_t * src_bufc = src_buf;
 
     /*Got the first pixel of each buffer*/
     dest_bufc += dest_stride * dest_area->y1;
@@ -96,7 +92,7 @@ void lv_draw_sw_buffer_copy(lv_draw_ctx_t * draw_ctx,
 
     uint32_t line_length = lv_area_get_width(dest_area) * sizeof(lv_color_t);
     lv_coord_t y;
-    for(y = dest_area->y1; y <= dest_area->y2; y++) {
+    for (y = dest_area->y1; y <= dest_area->y2; y++) {
         lv_memcpy(dest_bufc, src_bufc, line_length);
         dest_bufc += dest_stride;
         src_bufc += src_stride;

@@ -327,7 +327,7 @@
  *  FreeBSD frame buffer device (/dev/fbx)
  *.........................................*/
 #ifndef USE_BSD_FBDEV
-#  define USE_BSD_FBDEV		0
+#  define USE_BSD_FBDEV        0
 #endif
 
 #if USE_BSD_FBDEV

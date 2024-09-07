@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "lv_arc.h"
+
 #if LV_USE_ARC != 0
 
 #include "../core/lv_group.h"

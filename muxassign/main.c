@@ -187,7 +187,6 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
             break;
         case PARENT: {
             delete_files_of_type(core_dir, "cfg", NULL, 1);
-
             create_core_assignment(core, sys, rom, cache, DIRECTORY);
 
             char **subdirs = get_subdirectories(core_dir);
@@ -227,6 +226,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
             fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
             fclose(file);
         }
+            break;
         case DIRECTORY_NO_WIPE:
         default: {
             char core_file[MAX_BUFFER_SIZE];
@@ -580,7 +580,7 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == NAV_A) {
                                     if (strcasecmp(rom_system, "none") == 0) {
-                                        load_assign(rom_name, rom_dir, str_trim(lv_label_get_text(element_focused)));
+                                        load_assign(rom_name, rom_dir, str_trim(lv_label_get_text(element_focused)), 0);
                                     } else {
                                         LOG_INFO(mux_prog, "Single Core Assignment Triggered");
 
@@ -617,7 +617,7 @@ void *joystick_task() {
                                         fprintf(file, "%s", "");
                                         fclose(file);
                                     } else {
-                                        load_assign(rom_name, rom_dir, "none");
+                                        load_assign(rom_name, rom_dir, "none", 0);
                                     }
 
                                     remove(MUOS_SAA_LOAD);
@@ -984,26 +984,26 @@ int main(int argc, char *argv[]) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_prog, "<Automatic Assign> Core Assigned: %s", ass_config);
+                LOG_INFO(mux_prog, "<Automatic Core Assign> Core Assigned: %s", ass_config);
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
                 snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/MUOS/info/assign/%s",
                          device.STORAGE.ROM.MOUNT, ass_config);
 
-                LOG_INFO(mux_prog, "<Automatic Assign> Obtaining Core INI: %s", assigned_core_ini);
+                LOG_INFO(mux_prog, "<Automatic Core Assign> Obtaining Core INI: %s", assigned_core_ini);
 
                 mini_t * core_config_ini = mini_load(assigned_core_ini);
 
                 static char def_core[MAX_BUFFER_SIZE];
                 strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
 
-                LOG_INFO(mux_prog, "<Automatic Assign> Default Core: %s", ass_config);
+                LOG_INFO(mux_prog, "<Automatic Core Assign> Default Core: %s", def_core);
 
                 if (strcmp(def_core, "none") != 0) {
                     static char auto_core[MAX_BUFFER_SIZE];
                     strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
 
-                    LOG_INFO(mux_prog, "<Automatic Assign> Assigned Core To: %s", auto_core);
+                    LOG_INFO(mux_prog, "<Automatic Core Assign> Assigned Core To: %s", auto_core);
 
                     if (strcmp(def_core, "invalid") != 0) {
                         static char core_catalogue[MAX_BUFFER_SIZE];
@@ -1011,13 +1011,13 @@ int main(int argc, char *argv[]) {
 
                         int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
 
-                        LOG_INFO(mux_prog, "<Automatic Assign> Core Cache: %d", name_cache);
-                        LOG_INFO(mux_prog, "<Automatic Assign> Core Catalogue: %s", core_catalogue);
+                        LOG_INFO(mux_prog, "<Automatic Core Assign> Core Cache: %d", name_cache);
+                        LOG_INFO(mux_prog, "<Automatic Core Assign> Core Catalogue: %s", core_catalogue);
 
                         create_core_assignment(auto_core, core_catalogue, rom_name, name_cache, DIRECTORY_NO_WIPE);
 
                         auto_assign_good = 1;
-                        LOG_SUCCESS(mux_prog, "<Automatic Assign> Successful");
+                        LOG_SUCCESS(mux_prog, "<Automatic Core Assign> Successful");
                     }
                 }
 

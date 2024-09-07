@@ -7,6 +7,7 @@
  *      INCLUDES
  *********************/
 #include "lv_win.h"
+
 #if LV_USE_WIN
 
 /*********************

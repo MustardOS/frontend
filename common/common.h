@@ -175,7 +175,9 @@ void decrease_option_value(lv_obj_t *element, int *current, int total);
 
 void load_system(const char *value);
 
-void load_assign(const char *rom, const char *dir, const char *sys);
+void load_assign(const char *rom, const char *dir, const char *sys, int forced);
+
+void load_gov(const char *rom, const char *dir, const char *sys, int forced);
 
 void load_mux(const char *value);
 
@@ -220,5 +222,5 @@ char *translate(char *key);
 
 void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count);
 
-char* generate_number_string(int min, int max, int increment, const char* prefix, const char* infix,
-                             const char* suffix, int infix_position);
+char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
+                             const char *suffix, int infix_position);
