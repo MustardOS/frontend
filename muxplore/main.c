@@ -1065,7 +1065,7 @@ int load_content(int add_favourite) {
                      strip_ext(items[current_item_index].name), curr_sd, read_line_from_file(content_loader_file, 5));
             prepare_activity_file(act_content, act_file);
 */
-            write_text_to_file(device.CPU.GOVERNOR, "w", CHAR, assigned_gov);
+            write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(add_to_hf, "w", CHAR, pointer);
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(content_loader_file));
         }
