@@ -284,7 +284,6 @@ void reset_label_long_mode() {
 }
 
 void set_label_long_mode() {
-
     char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
     size_t len = strlen(content_label);
@@ -478,7 +477,7 @@ void image_refresh(char *image_type) {
 int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     char full_path[PATH_MAX];
     snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, dir_name);
-    
+
     struct dirent *entry;
     DIR *dir = opendir(full_path);
 
@@ -818,8 +817,8 @@ void create_explore_items(void *count) {
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
             if (config.VISUAL.FOLDERITEMCOUNT) {
                 char display_name[MAX_BUFFER_SIZE];
-                snprintf(display_name, sizeof(display_name), "%s (%d)", new_item->display_name, 
-                            get_directory_item_count(curr_dir, new_item->name));
+                snprintf(display_name, sizeof(display_name), "%s (%d)", new_item->display_name,
+                         get_directory_item_count(curr_dir, new_item->name));
                 new_item->display_name = strdup(display_name);
             }
 
@@ -1653,8 +1652,6 @@ void *joystick_task() {
                 }
             }
         }
-
-        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -1858,20 +1855,6 @@ void glyph_task() {
         }
     }
 
-    if (!nav_moved & !fade_timeout) {
-        if (counter_fade > 0) {
-            lv_obj_set_style_opa(ui_lblCounter, counter_fade - theme.COUNTER.TEXT_FADE_TIME,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-            counter_fade -= theme.COUNTER.TEXT_FADE_TIME;
-        }
-        if (counter_fade < 0) {
-            lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
-            counter_fade = 0;
-        }
-    } else {
-        fade_timeout--;
-    }
-
     if (!swap_timeout) {
         if (module != ROOT && module != FAVOURITE && module != HISTORY) {
             char *last_dir = get_last_dir(sd_dir);
@@ -1905,6 +1888,20 @@ void glyph_task() {
 void ui_refresh_task() {
     lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
     lv_bar_set_value(ui_barProgressVolume, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_OFF);
+
+    if (!nav_moved & !fade_timeout) {
+        if (counter_fade > 0) {
+            lv_obj_set_style_opa(ui_lblCounter, counter_fade - theme.COUNTER.TEXT_FADE_TIME,
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+            counter_fade -= theme.COUNTER.TEXT_FADE_TIME;
+        }
+        if (counter_fade < 0) {
+            lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
+            counter_fade = 0;
+        }
+    } else {
+        fade_timeout--;
+    }
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
@@ -2283,7 +2280,7 @@ int main(int argc, char *argv[]) {
 
     while (!safe_quit) {
         lv_task_handler();
-        usleep(LVGL_DELAY);
+        usleep(device.SCREEN.WAIT);
     }
 
     pthread_cancel(joystick_thread);

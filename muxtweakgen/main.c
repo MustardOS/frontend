@@ -1135,8 +1135,6 @@ void *joystick_task() {
                 }
             }
         }
-
-        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -1472,7 +1470,7 @@ int main(int argc, char *argv[]) {
 
     while (!safe_quit) {
         lv_task_handler();
-        usleep(LVGL_DELAY);
+        usleep(device.SCREEN.WAIT);
     }
 
     pthread_cancel(joystick_thread);

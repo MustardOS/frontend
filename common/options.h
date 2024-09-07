@@ -9,8 +9,6 @@
 #define RTC_MAX_RETRIES 5
 #define RTC_RETRY_DELAY 1
 
-#define LVGL_DELAY 15000
-
 #define TIME_STRING_12 "%I:%M %p"
 #define TIME_STRING_24 "%H:%M"
 
