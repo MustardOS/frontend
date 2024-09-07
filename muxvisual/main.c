@@ -861,9 +861,11 @@ void ui_refresh_task() {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
-                    if (theme.MISC.ANIMATED_BACKGROUND) {
+                    if (theme.MISC.ANIMATED_BACKGROUND == 1) {
                         lv_obj_t * img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
+                    } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
                     } else {
                         lv_img_set_src(ui_imgWall, new_wall);
                     }
@@ -981,9 +983,11 @@ int main(int argc, char *argv[]) {
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
-        if (theme.MISC.ANIMATED_BACKGROUND) {
+        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
+        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
         } else {
             lv_img_set_src(ui_imgWall, current_wall);
         }

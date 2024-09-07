@@ -264,7 +264,8 @@ void *joystick_task() {
                                         char *chosen_theme = lv_label_get_text(element_focused);
                                         lv_label_set_text(ui_lblMessage, _("Loading Theme"));
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                        if (theme.MISC.ANIMATED_BACKGROUND) lv_obj_del(wall_img);
+                                        if (theme.MISC.ANIMATED_BACKGROUND == 1 && lv_obj_is_valid(wall_img)) lv_obj_del(wall_img);
+                                        if (theme.MISC.ANIMATED_BACKGROUND == 2) unload_image_animation();
 
                                         static char theme_script[MAX_BUFFER_SIZE];
                                         snprintf(theme_script, sizeof(theme_script),
@@ -497,9 +498,11 @@ void ui_refresh_task() {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
-                    if (theme.MISC.ANIMATED_BACKGROUND) {
+                   if (theme.MISC.ANIMATED_BACKGROUND == 1) {
                         wall_img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(wall_img, new_wall);
+                    } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
                     } else {
                         lv_img_set_src(ui_imgWall, new_wall);
                     }
@@ -619,9 +622,11 @@ int main(int argc, char *argv[]) {
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
-        if (theme.MISC.ANIMATED_BACKGROUND) {
+        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
             wall_img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(wall_img, current_wall);
+        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
         } else {
             lv_img_set_src(ui_imgWall, current_wall);
         }

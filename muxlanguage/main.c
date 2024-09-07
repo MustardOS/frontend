@@ -130,7 +130,12 @@ void create_language_items() {
 
         apply_size_to_content(&theme, ui_pnlContent, ui_lblLanguageItem, ui_lblLanguageGlyph, items[i].name);
     }
-    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+    if (ui_count > 0) {
+        lv_obj_update_layout(ui_pnlContent);
+    } else if (ui_count == 0) {
+        lv_label_set_text(ui_lblScreenMessage, _("No Languages Found..."));
+        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 void list_nav_prev(int steps) {
@@ -450,9 +455,11 @@ void ui_refresh_task() {
                     strcpy(current_wall, new_wall);
                     if (strlen(new_wall) > 3) {
                         printf("LOADING WALLPAPER: %s\n", new_wall);
-                        if (theme.MISC.ANIMATED_BACKGROUND) {
+                        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
                             lv_obj_t * img = lv_gif_create(ui_pnlWall);
                             lv_gif_set_src(img, new_wall);
+                        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+                            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
                         } else {
                             lv_img_set_src(ui_imgWall, new_wall);
                         }
@@ -569,9 +576,11 @@ int main(int argc, char *argv[]) {
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
-        if (theme.MISC.ANIMATED_BACKGROUND) {
+        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
+        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
         } else {
             lv_img_set_src(ui_imgWall, current_wall);
         }
@@ -595,7 +604,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    create_language_items();
+    pthread_t gen_item_thread;
+    pthread_create(&gen_item_thread, NULL, (void *(*)(void *)) create_language_items, NULL);
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
@@ -639,11 +649,6 @@ int main(int argc, char *argv[]) {
 
     pthread_t joystick_thread;
     pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
-
-    if (ui_count == 0) {
-        lv_label_set_text(ui_lblScreenMessage, _("No Languages Found..."));
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-    }
 
     while (!safe_quit) {
         lv_task_handler();

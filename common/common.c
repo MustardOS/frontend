@@ -22,6 +22,10 @@
 struct json translations;
 struct pattern skip_pattern_list = {NULL, 0, 0};
 int battery_capacity = 100;
+lv_anim_t animation;
+lv_obj_t * img_obj;
+const char **img_paths = NULL;
+int img_paths_count = 0;
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
@@ -1140,7 +1144,14 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
     static char wall_image_path[MAX_BUFFER_SIZE];
     static char wall_image_embed[MAX_BUFFER_SIZE];
 
-    const char *wall_extension = animated ? "gif" : "png";
+    const char *wall_extension;
+    if (animated == 1) {
+        wall_extension = "gif";
+    } else if (animated == 2) {
+        wall_extension = "0.png";
+    } else {
+        wall_extension = "png";
+    }
 
     if (ui_group != NULL) {
         if (lv_group_get_obj_count(ui_group) > 0) {
@@ -1232,6 +1243,60 @@ char *load_overlay_image() {
     }
 
     return "";
+}
+
+static void image_anim_cb(void *var, int32_t img_idx)
+{
+    lv_img_set_src(img_obj, img_paths[img_idx]);
+}
+
+void build_image_animation_array(char *base_image_path) {
+    char base_path[MAX_BUFFER_SIZE];
+    char path[MAX_BUFFER_SIZE];
+    char path_embed[MAX_BUFFER_SIZE];
+    int index = 0;
+
+    strncpy(base_path, base_image_path, strlen(base_image_path) - 6);
+    base_path[strlen(base_image_path) - 6] = '\0';
+
+    int file_exists = 1;
+    while (file_exists) {
+        snprintf(path, sizeof(path), "%s.%d.png", base_path + 2, index);
+        file_exists = file_exist(path);
+        if (file_exists) {
+            img_paths = realloc(img_paths, (img_paths_count + 1) * sizeof(char *));
+            snprintf(path_embed, sizeof(path_embed), "%s.%d.png", base_path, index);
+            img_paths[index] = strdup(path_embed);
+            img_paths_count++;
+        } else {
+            break;
+        }
+        index++;
+    }
+}
+
+void load_image_animation(lv_obj_t * ui_imgWall, int animation_time, char *base_image_path)
+{
+    printf("Load Image Animation: %s\n", base_image_path);
+    img_paths_count = 0;
+    build_image_animation_array(base_image_path);
+
+    img_obj = ui_imgWall;
+    lv_obj_center(img_obj);
+
+    lv_anim_init(&animation);
+    lv_anim_set_var(&animation, img_obj);
+    lv_anim_set_values(&animation, 0, img_paths_count - 1);
+    lv_anim_set_exec_cb(&animation, (lv_anim_exec_xcb_t)image_anim_cb);
+    lv_anim_set_time(&animation, animation_time * img_paths_count);
+    lv_anim_set_repeat_count(&animation, LV_ANIM_REPEAT_INFINITE);
+
+    lv_anim_start(&animation);
+}
+
+void unload_image_animation()
+{
+    if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 
 void load_font_text(const char *program, lv_obj_t *screen) {

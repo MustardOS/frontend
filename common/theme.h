@@ -21,6 +21,10 @@ struct theme_config {
     } SYSTEM;
 
     struct {
+        int16_t ANIMATION_DELAY;
+    } ANIMATION;
+
+    struct {
         struct {
             int16_t COUNT;
             int16_t HEIGHT;
