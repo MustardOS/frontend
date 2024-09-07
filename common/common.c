@@ -1247,18 +1247,15 @@ void build_image_animation_array(char *base_image_path) {
 
     strncpy(base_path, base_image_path, strlen(base_image_path) - 6);
     base_path[strlen(base_image_path) - 6] = '\0';
-    printf("base_path: %s\n", base_path);
 
     int file_exists = 1;
     while (file_exists) {
         snprintf(path, sizeof(path), "%s.%d.png", base_path + 2, index);
-        printf("path: %s\n", path);
         file_exists = file_exist(path);
         if (file_exists) {
             img_paths = realloc(img_paths, (img_paths_count + 1) * sizeof(char *));
             snprintf(path_embed, sizeof(path_embed), "%s.%d.png", base_path, index);
             img_paths[index] = strdup(path_embed);
-            printf("path_embed: %s\n", path_embed);
             img_paths_count++;
         } else {
             break;
@@ -1269,6 +1266,7 @@ void build_image_animation_array(char *base_image_path) {
 
 void load_image_animation(lv_obj_t * ui_pnlWall, int animation_time, char *base_image_path)
 {
+    printf("Load Image Animation: %s\n", base_image_path);
     build_image_animation_array(base_image_path);
 
     img_obj = lv_img_create(ui_pnlWall);
