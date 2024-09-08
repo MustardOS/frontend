@@ -1000,6 +1000,7 @@ void *joystick_task() {
                     lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
                     int volume = atoi(read_text_from_file(VOLUME_PERC));
                     switch (volume) {
+                        default:
                         case 0:
                             lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
                             break;
@@ -1304,8 +1305,7 @@ void glyph_task() {
 }
 
 void ui_refresh_task() {
-    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-    lv_bar_set_value(ui_barProgressVolume, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_OFF);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume);
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
@@ -1401,7 +1401,7 @@ void direct_to_previous() {
 int main(int argc, char *argv[]) {
     mux_prog = basename(argv[0]);
     load_device(&device);
-    srand(time(NULL));
+    seed_random();
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);

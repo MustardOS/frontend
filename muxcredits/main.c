@@ -37,7 +37,7 @@ lv_obj_t *msgbox_element = NULL;
 
 int main() {
     load_device(&device);
-    srand(time(NULL));
+    seed_random();
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);

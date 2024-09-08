@@ -1695,6 +1695,7 @@ void *joystick_task() {
                     lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
                     int volume = atoi(read_text_from_file(VOLUME_PERC));
                     switch (volume) {
+                        default:
                         case 0:
                             lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
                             break;
@@ -1946,8 +1947,7 @@ void glyph_task() {
 }
 
 void ui_refresh_task() {
-    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-    lv_bar_set_value(ui_barProgressVolume, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_OFF);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume);
 
     if (!nav_moved & !fade_timeout) {
         if (counter_fade > 0) {
@@ -2049,7 +2049,7 @@ void ui_refresh_task() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
-    srand(time(NULL));
+    seed_random();
 
     char *cmd_help = "\nmuOS Extras - System List\nUsage: %s <-im>\n\nOptions:\n"
                      "\t-i Index of content to skip to\n"

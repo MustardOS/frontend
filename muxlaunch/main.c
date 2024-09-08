@@ -69,30 +69,34 @@ lv_group_t *ui_group_panel;
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
 
+struct help_msg {
+    lv_obj_t *element;
+    char *message;
+};
+
 void show_help(lv_obj_t *element_focused) {
-    char *message = NO_HELP_FOUND;
+    struct help_msg help_messages[] = {
+            {ui_lblContent,    _("HELP.MSG.CONTENT")},
+            {ui_lblFavourites, _("HELP.MSG.FAVOURITES")},
+            {ui_lblHistory,    _("HELP.MSG.HISTORY")},
+            {ui_lblApps,       _("HELP.MSG.APPS")},
+            {ui_lblInfo,       _("HELP.MSG.INFO")},
+            {ui_lblConfig,     _("HELP.MSG.CONFIG")},
+            {ui_lblReboot,     _("HELP.MSG.REBOOT")},
+            {ui_lblShutdown,   _("HELP.MSG.SHUTDOWN")},
+    };
 
-    if (element_focused == ui_lblContent) {
-        message = MUXLAUNCH_CONTENT;
-    } else if (element_focused == ui_lblFavourites) {
-        message = MUXLAUNCH_FAVOURITES;
-    } else if (element_focused == ui_lblHistory) {
-        message = MUXLAUNCH_HISTORY;
-    } else if (element_focused == ui_lblApps) {
-        message = MUXLAUNCH_APPS;
-    } else if (element_focused == ui_lblInfo) {
-        message = MUXLAUNCH_INFO;
-    } else if (element_focused == ui_lblConfig) {
-        message = MUXLAUNCH_CONFIG;
-    } else if (element_focused == ui_lblReboot) {
-        message = MUXLAUNCH_REBOOT;
-    } else if (element_focused == ui_lblShutdown) {
-        message = MUXLAUNCH_SHUTDOWN;
+    char *message = _("No Help Message Found");
+    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
+
+    for (int i = 0; i < num_messages; i++) {
+        if (element_focused == help_messages[i].element) {
+            message = help_messages[i].message;
+            break;
+        }
     }
 
-    if (strlen(message) <= 1) {
-        message = NO_HELP_FOUND;
-    }
+    if (strlen(message) <= 1) message = _("No Help Message Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, lv_label_get_text(element_focused), message);
 }
@@ -398,6 +402,7 @@ void *joystick_task() {
                     lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
                     int volume = atoi(read_text_from_file(VOLUME_PERC));
                     switch (volume) {
+                        default:
                         case 0:
                             lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
                             break;
@@ -505,8 +510,7 @@ void glyph_task() {
 }
 
 void ui_refresh_task() {
-    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-    lv_bar_set_value(ui_barProgressVolume, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_OFF);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume);
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
@@ -602,7 +606,7 @@ void direct_to_previous() {
 int main(int argc, char *argv[]) {
     mux_prog = basename(argv[0]);
     load_device(&device);
-    srand(time(NULL));
+    seed_random();
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -763,5 +767,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }

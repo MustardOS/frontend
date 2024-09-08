@@ -1,11 +1,9 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <linux/joystick.h>
@@ -17,14 +15,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
-#include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/mini/mini.h"
 
 __thread uint64_t start_ms = 0;
 
@@ -70,15 +66,39 @@ int ui_count = 0;
 int current_item_index = 0;
 int first_open = 1;
 
+struct help_msg {
+    lv_obj_t *element;
+    char *message;
+};
+
+void show_help();
+
+void create_task_items();
+
+void list_nav_prev(int steps);
+
+void list_nav_next(int steps);
+
+void *joystick_task();
+
+void init_elements();
+
+void update_footer_nav_elements();
+
+void glyph_task();
+
+void ui_refresh_task();
+
 void show_help() {
     char *title = items[current_item_index].name;
-    char *message = MUXTASK_GENERIC;
 
-    if (strlen(message) <= 1) {
-        message = NO_HELP_FOUND;
-    }
+    char help_info[MAX_BUFFER_SIZE];
+    snprintf(help_info, sizeof(help_info),
+             "%s/MUOS/task/%s.sh", device.STORAGE.ROM.MOUNT, title);
+    char *message = get_script_value(help_info, "HELP");
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
+    if (strlen(message) <= 1) message = _("No Help Message Found");
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, _(title), message);
 }
 
 void create_task_items() {
@@ -98,19 +118,31 @@ void create_task_items() {
         snprintf(task_dir, sizeof(task_dir), "%s/", task_directories[dir_index]);
 
         DIR *ad = opendir(task_dir);
-        if (ad == NULL) {
-            continue;
-        }
+        if (ad == NULL) continue;
 
         struct dirent *tf;
         while ((tf = readdir(ad))) {
             if (tf->d_type == DT_REG) {
                 char *last_dot = strrchr(tf->d_name, '.');
                 if (last_dot != NULL && strcasecmp(last_dot, ".sh") == 0) {
-                    file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    static char full_task_name[MAX_BUFFER_SIZE];
+                    char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
+                    if (temp == NULL) {
+                        perror("Failed to allocate memory");
+                        free(file_names);
+                        closedir(ad);
+                        return;
+                    }
+                    file_names = temp;
+
+                    char full_task_name[MAX_BUFFER_SIZE];
                     snprintf(full_task_name, sizeof(full_task_name), "%s%s", task_dir, tf->d_name);
                     file_names[file_count] = strdup(full_task_name);
+                    if (file_names[file_count] == NULL) {
+                        perror("Failed to duplicate string");
+                        free(file_names);
+                        closedir(ad);
+                        return;
+                    }
                     file_count++;
                 }
             }
@@ -127,11 +159,11 @@ void create_task_items() {
     for (size_t i = 0; i < file_count; i++) {
         char *base_filename = file_names[i];
 
-        static char task_name[MAX_BUFFER_SIZE];
+        char task_name[MAX_BUFFER_SIZE];
         snprintf(task_name, sizeof(task_name), "%s",
                  str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
-        static char task_store[MAX_BUFFER_SIZE];
+        char task_store[MAX_BUFFER_SIZE];
         snprintf(task_store, sizeof(task_store), "%s", strip_ext(task_name));
 
         ui_count++;
@@ -139,23 +171,38 @@ void create_task_items() {
         add_item(&items, &item_count, task_store, _(task_store), ROM);
 
         lv_obj_t * ui_pnlTask = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(&theme, &device, ui_pnlTask);
+        if (ui_pnlTask) {
+            apply_theme_list_panel(&theme, &device, ui_pnlTask);
 
-        lv_obj_t * ui_lblTaskItem = lv_label_create(ui_pnlTask);
-        apply_theme_list_item(&theme, ui_lblTaskItem, _(task_store), false, false);
+            lv_obj_t * ui_lblTaskItem = lv_label_create(ui_pnlTask);
+            if (ui_lblTaskItem) apply_theme_list_item(&theme, ui_lblTaskItem, _(task_store), true, false);
 
-        lv_obj_t * ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
-        apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_prog, "task");
+            lv_obj_t * ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
+            if (ui_lblTaskItemGlyph) {
+                char get_icon[MAX_BUFFER_SIZE];
+                snprintf(get_icon, sizeof(get_icon),
+                         "%s/MUOS/task/%s.sh", device.STORAGE.ROM.MOUNT, task_store);
 
-        lv_group_add_obj(ui_group, ui_lblTaskItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlTask);
+                char *item_glyph = get_script_value(get_icon, "ICON");
+                if (!item_glyph || strlen(item_glyph) <= 1) {
+                    item_glyph = "task";
+                }
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblTaskItem, ui_lblTaskItemGlyph, task_store);
+                apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_prog, item_glyph);
+            }
+
+            lv_group_add_obj(ui_group, ui_lblTaskItem);
+            lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);
+            lv_group_add_obj(ui_group_panel, ui_pnlTask);
+
+            apply_size_to_content(&theme, ui_pnlContent, ui_lblTaskItem, ui_lblTaskItemGlyph, task_store);
+        }
 
         free(base_filename);
     }
+
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+
     free(file_names);
 }
 
@@ -224,7 +271,7 @@ void *joystick_task() {
 
         for (int i = 0; i < num_events; i++) {
             if (events[i].data.fd == js_fd) {
-                int ret = read(js_fd, &ev, sizeof(struct input_event));
+                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
                 if (ret == -1) {
                     perror("Error reading input");
                     continue;
@@ -234,7 +281,7 @@ void *joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -258,7 +305,7 @@ void *joystick_task() {
                                         printf("RUNNING: %s\n", command);
                                         system(command);
 
-                                        write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
+                                        write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
 
                                         load_mux("task");
                                         safe_quit = 1;
@@ -280,12 +327,10 @@ void *joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
                                     show_help();
                                 }
-                                */
                             }
                         }
                     case EV_ABS:
@@ -360,13 +405,14 @@ void *joystick_task() {
                     lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
                     lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-                    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+                    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_ON);
                 } else {
                     progress_onscreen = 2;
                     lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
                     int volume = atoi(read_text_from_file(VOLUME_PERC));
                     switch (volume) {
+                        default:
                         case 0:
                             lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
                             break;
@@ -380,7 +426,7 @@ void *joystick_task() {
                             lv_label_set_text(ui_icoProgressVolume, "\uF028");
                             break;
                     }
-                    lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
+                    lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_ON);
                 }
             }
         }
@@ -401,6 +447,9 @@ void init_elements() {
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);
@@ -471,7 +520,6 @@ void glyph_task() {
     //update_bluetooth_status(ui_staBluetooth, &theme);
 
     update_network_status(ui_staNetwork, &theme);
-
     update_battery_capacity(ui_staCapacity, &theme);
 
     if (progress_onscreen > 0) {
@@ -490,8 +538,7 @@ void glyph_task() {
 }
 
 void ui_refresh_task() {
-    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-    lv_bar_set_value(ui_barProgressVolume, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_OFF);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume);
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
@@ -566,9 +613,11 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    (void) argc;
+
     mux_prog = basename(argv[0]);
     load_device(&device);
-    srand(time(NULL));
+    seed_random();
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -635,8 +684,23 @@ int main(int argc, char *argv[]) {
     create_task_items();
     update_footer_nav_elements();
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    lv_obj_set_user_data(element_focused, items[current_item_index].name);
+    int tin_index = 0;
+    if (file_exist(MUOS_TIN_LOAD)) {
+        tin_index = atoi(read_line_from_file(MUOS_TIN_LOAD, 1));
+        printf("loading TIN at: %d\n", tin_index);
+        remove(MUOS_TIN_LOAD);
+    }
+
+    if (ui_count > 0) {
+        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) {
+            list_nav_next(tin_index);
+        }
+    } else {
+        lv_label_set_text(ui_lblScreenMessage, _("No Tasks Found"));
+        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
@@ -661,13 +725,6 @@ int main(int argc, char *argv[]) {
         } else {
             fprintf(stderr, "Failed to init SDL\n");
         }
-    }
-
-    int ain_index = 0;
-    if (file_exist(MUOS_AIN_LOAD)) {
-        ain_index = atoi(read_line_from_file(MUOS_AIN_LOAD, 1));
-        printf("loading AIN at: %d\n", ain_index);
-        remove(MUOS_AIN_LOAD);
     }
 
     struct dt_task_param dt_par;
@@ -704,15 +761,9 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     pthread_t joystick_thread;
-    pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
-
-    if (ui_count > 0) {
-        if (ain_index > -1 && ain_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(ain_index);
-        }
-    } else {
-        lv_label_set_text(ui_lblScreenMessage, _("No Tasks Found"));
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
+        perror("Failed to create joystick thread");
+        return 1;
     }
 
     while (!safe_quit) {
@@ -722,6 +773,7 @@ int main(int argc, char *argv[]) {
 
     pthread_cancel(joystick_thread);
 
+    free_items(items, item_count);
     close(js_fd);
 
     return 0;
@@ -734,5 +786,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }

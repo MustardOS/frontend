@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <errno.h>
+#include <limits.h>
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -23,7 +25,7 @@ struct json translations;
 struct pattern skip_pattern_list = {NULL, 0, 0};
 int battery_capacity = 100;
 lv_anim_t animation;
-lv_obj_t * img_obj;
+lv_obj_t *img_obj;
 const char **img_paths = NULL;
 int img_paths_count = 0;
 
@@ -32,7 +34,7 @@ int file_exist(char *filename) {
 }
 
 int check_file_size(char *filename, int filesize) {
-    FILE * file = fopen(filename, "rb");
+    FILE *file = fopen(filename, "rb");
 
     if (file == NULL) {
         perror("Error opening file");
@@ -53,7 +55,7 @@ int check_file_size(char *filename, int filesize) {
 }
 
 int get_file_size(char *filename) {
-    FILE * file = fopen(filename, "rb");
+    FILE *file = fopen(filename, "rb");
 
     if (file_exist(filename)) {
         fseek(file, 0, SEEK_END);
@@ -357,7 +359,7 @@ char *get_ext(char *text) {
 }
 
 char *get_execute_result(const char *command) {
-    FILE * fp = popen(command, "r");
+    FILE *fp = popen(command, "r");
     if (fp == NULL) {
         fprintf(stderr, "Failed to run: %s\n", command);
         return NULL;
@@ -388,7 +390,7 @@ char *current_datetime() {
 }
 
 int read_battery_capacity() {
-    FILE * file = fopen(device.BATTERY.CAPACITY, "r");
+    FILE *file = fopen(device.BATTERY.CAPACITY, "r");
 
     if (file == NULL) {
         perror("Error opening capacity file");
@@ -413,7 +415,7 @@ int read_battery_capacity() {
 }
 
 char *read_battery_health() {
-    FILE * file = fopen(device.BATTERY.HEALTH, "r");
+    FILE *file = fopen(device.BATTERY.HEALTH, "r");
 
     if (file == NULL) {
         perror("Error opening health file");
@@ -432,7 +434,7 @@ char *read_battery_health() {
 }
 
 char *read_battery_voltage() {
-    FILE * file = fopen(device.BATTERY.VOLTAGE, "r");
+    FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
 
     if (file == NULL) {
         perror("Error opening voltage file");
@@ -460,7 +462,7 @@ char *read_battery_voltage() {
 
 char *read_text_from_file(char *filename) {
     char *text = NULL;
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
 
     if (file == NULL) {
         return "";
@@ -490,7 +492,7 @@ char *read_text_from_file(char *filename) {
 
 char *read_line_from_file(char *filename, int line_number) {
     char *line = NULL;
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
 
     if (file == NULL) {
         return "";
@@ -548,7 +550,7 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
     uint32_t result;
 
     result = (uint32_t)
-    strtoul(meta, NULL, 16);
+            strtoul(meta, NULL, 16);
     //printf("HEX\t%s: %s (%d)\n", key, meta, result);
 
     return result;
@@ -562,7 +564,7 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
         result = default_value;
     } else {
         result = (int16_t)
-        strtol(meta, NULL, 10);
+                strtol(meta, NULL, 10);
     }
 
     //printf("INT\t%s: %s (%d)\n", key, meta, result);
@@ -614,7 +616,7 @@ char *format_meta_text(char *filename) {
     char meta_cut[MAX_BUFFER_SIZE];
     snprintf(meta_cut, sizeof(meta_cut), "/opt/muos/script/mux/metacut.sh \"%s\"", filename);
 
-    FILE * fp = popen(meta_cut, "r");
+    FILE *fp = popen(meta_cut, "r");
     if (fp == NULL) {
         perror("popen");
         return "Could not open metadata!";
@@ -640,7 +642,7 @@ char *format_meta_text(char *filename) {
 }
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...) {
-    FILE * file = fopen(filename, mode);
+    FILE *file = fopen(filename, mode);
 
     if (file == NULL) {
         perror("Error opening file for writing");
@@ -652,10 +654,10 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
 
     if (type == CHAR) { // type is general text!
         fprintf(file, "%s", va_arg(args,
-        const char *));
+                                   const char *));
     } else if (type == INT) { // type is a number!
         fprintf(file, "%d", va_arg(args,
-        int));
+                                   int));
     }
 
     va_end(args);
@@ -765,7 +767,7 @@ int count_items(const char *path, enum count_type type) {
 }
 
 int detect_sd2() {
-    FILE * fp;
+    FILE *fp;
     char line[MAX_BUFFER_SIZE];
     const char *target = device.STORAGE.SDCARD.DEVICE;
     int found = 0;
@@ -788,7 +790,7 @@ int detect_sd2() {
 }
 
 int detect_e_usb() {
-    FILE * fp;
+    FILE *fp;
     char line[MAX_BUFFER_SIZE];
     const char *target = device.STORAGE.USB.DEVICE;
     int found = 0;
@@ -933,7 +935,7 @@ void osd_task(lv_timer_t *timer) {
 }
 
 void set_governor(char *governor) {
-    FILE * file = fopen(device.CPU.GOVERNOR, "w");
+    FILE *file = fopen(device.CPU.GOVERNOR, "w");
     if (file != NULL) {
         fprintf(file, "%s", governor);
         fclose(file);
@@ -943,7 +945,7 @@ void set_governor(char *governor) {
 }
 
 void set_cpu_scale(int speed) {
-    FILE * file = fopen(device.CPU.SCALER, "w");
+    FILE *file = fopen(device.CPU.SCALER, "w");
     if (file != NULL) {
         fprintf(file, "%d", speed);
         fclose(file);
@@ -973,7 +975,7 @@ void decrease_option_value(lv_obj_t *element, int *current, int total) {
 }
 
 void load_system(const char *value) {
-    FILE * file = fopen(MUOS_SYS_LOAD, "w");
+    FILE *file = fopen(MUOS_SYS_LOAD, "w");
     if (file == NULL) {
         perror("fopen");
         return;
@@ -984,7 +986,7 @@ void load_system(const char *value) {
 }
 
 void load_assign(const char *rom, const char *dir, const char *sys, int forced) {
-    FILE * file = fopen(MUOS_ASS_LOAD, "w");
+    FILE *file = fopen(MUOS_ASS_LOAD, "w");
     if (file == NULL) {
         perror("fopen");
         return;
@@ -995,7 +997,7 @@ void load_assign(const char *rom, const char *dir, const char *sys, int forced) 
 }
 
 void load_gov(const char *rom, const char *dir, const char *sys, int forced) {
-    FILE * file = fopen(MUOS_GOV_LOAD, "w");
+    FILE *file = fopen(MUOS_GOV_LOAD, "w");
     if (file == NULL) {
         perror("fopen");
         return;
@@ -1006,7 +1008,7 @@ void load_gov(const char *rom, const char *dir, const char *sys, int forced) {
 }
 
 void load_mux(const char *value) {
-    FILE * file = fopen(MUOS_ACT_LOAD, "w");
+    FILE *file = fopen(MUOS_ACT_LOAD, "w");
     if (file == NULL) {
         perror("fopen");
         return;
@@ -1245,8 +1247,7 @@ char *load_overlay_image() {
     return "";
 }
 
-static void image_anim_cb(void *var, int32_t img_idx)
-{
+static void image_anim_cb(void *var, int32_t img_idx) {
     lv_img_set_src(img_obj, img_paths[img_idx]);
 }
 
@@ -1275,8 +1276,7 @@ void build_image_animation_array(char *base_image_path) {
     }
 }
 
-void load_image_animation(lv_obj_t * ui_imgWall, int animation_time, char *base_image_path)
-{
+void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *base_image_path) {
     printf("Load Image Animation: %s\n", base_image_path);
     img_paths_count = 0;
     build_image_animation_array(base_image_path);
@@ -1287,15 +1287,14 @@ void load_image_animation(lv_obj_t * ui_imgWall, int animation_time, char *base_
     lv_anim_init(&animation);
     lv_anim_set_var(&animation, img_obj);
     lv_anim_set_values(&animation, 0, img_paths_count - 1);
-    lv_anim_set_exec_cb(&animation, (lv_anim_exec_xcb_t)image_anim_cb);
+    lv_anim_set_exec_cb(&animation, (lv_anim_exec_xcb_t) image_anim_cb);
     lv_anim_set_time(&animation, animation_time * img_paths_count);
     lv_anim_set_repeat_count(&animation, LV_ANIM_REPEAT_INFINITE);
 
     lv_anim_start(&animation);
 }
 
-void unload_image_animation()
-{
+void unload_image_animation() {
     if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 
@@ -1430,7 +1429,7 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
 }
 
 void load_skip_patterns(const char *file_path) {
-    FILE * file = fopen(file_path, "r");
+    FILE *file = fopen(file_path, "r");
     if (!file) {
         perror("Failed to open skip.ini file");
         return;
@@ -1683,4 +1682,46 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
     *ptr = '\0';
 
     return number_string;
+}
+
+char *get_script_value(const char *filename, const char *key) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error opening file!");
+        return strdup("");
+    }
+
+    char line[MAX_BUFFER_SIZE];
+    char search_key[MAX_BUFFER_SIZE];
+    snprintf(search_key, sizeof(search_key), "# %s: ", key);
+
+    char *value = NULL;
+
+    while (fgets(line, sizeof(line), file)) {
+        if (strncmp(line, search_key, strlen(search_key)) == 0) {
+            value = strdup(line + strlen(search_key));
+            if (value) value[strcspn(value, "\n")] = 0;
+            break;
+        }
+    }
+
+    fclose(file);
+
+    if (value == NULL) value = strdup("");
+    return value;
+}
+
+void seed_random() {
+    unsigned int seed;
+    FILE *urandom = fopen("/dev/urandom", "r");
+
+    if (urandom) {
+        if (fread(&seed, sizeof(seed), 1, urandom) == 1) srand(seed);
+        fclose(urandom);
+    }
+}
+
+void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar) {
+    lv_bar_set_value(bright_bar, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_ON);
+    lv_bar_set_value(volume_bar, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_ON);
 }

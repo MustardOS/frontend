@@ -92,7 +92,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->HELP.BORDER_ALPHA = get_ini_int(muos_theme, "help", "HELP_BORDER_ALPHA", 255);
     theme->HELP.CONTENT = get_ini_hex(muos_theme, "help", "HELP_CONTENT");
     theme->HELP.TITLE = get_ini_hex(muos_theme, "help", "HELP_TITLE");
-    theme->HELP.RADIUS = get_ini_hex(muos_theme, "help", "HELP_RADIUS");
+    theme->HELP.RADIUS = get_ini_int(muos_theme, "help", "HELP_RADIUS", 3);
 
     theme->NAV.ALIGNMENT = get_ini_int(muos_theme, "navigation", "ALIGNMENT", 255);
 

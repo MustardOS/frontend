@@ -51,7 +51,7 @@ void setup_background_process() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
-    srand(time(NULL));
+    seed_random();
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <message>\n", argv[0]);

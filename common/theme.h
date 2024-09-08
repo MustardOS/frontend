@@ -287,17 +287,17 @@ struct theme_config {
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name);
 
-void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
+void apply_size_to_content(struct theme_config *c_theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
                            lv_obj_t *ui_lblItemGlyph, const char *item_text);
 
-void apply_theme_list_panel(struct theme_config *theme, struct mux_device *device, lv_obj_t *ui_pnlList);
+void apply_theme_list_panel(struct theme_config *p_theme, struct mux_device *p_device, lv_obj_t *ui_pnlList);
 
-void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text,
+void apply_theme_list_item(struct theme_config *li_theme, lv_obj_t *ui_lblItem, const char *item_text,
                            bool enable_scrolling_text, bool is_config_menu);
 
-void apply_theme_list_value(struct theme_config *theme, lv_obj_t *ui_lblItemValue, char *item_text);
+void apply_theme_list_value(struct theme_config *lv_theme, lv_obj_t *ui_lblItemValue, char *item_text);
 
-void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t *ui_lblItemValue, char *options);
+void apply_theme_list_drop_down(struct theme_config *d_theme, lv_obj_t *ui_lblItemValue, char *options);
 
-void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyph,
+void apply_theme_list_glyph(struct theme_config *g_theme, lv_obj_t *ui_lblItemGlyph,
                             const char *screen_name, char *item_glyph);

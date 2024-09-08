@@ -16,7 +16,7 @@
 #define STORAGE_PATH  "/run/muos/storage"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
-#define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index (used by mux[app|task])
+#define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
@@ -27,6 +27,7 @@
 #define MUOS_SAA_LOAD "/tmp/saa_go" // Auto Assign Core Flag
 #define MUOS_SAG_LOAD "/tmp/sag_go" // Auto Assign Governor Flag
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
+#define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
 
 #define BRIGHT_FILE "/opt/muos/config/brightness.txt"
 #define VOLUME_FILE "/opt/muos/config/volume.txt"

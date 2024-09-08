@@ -229,7 +229,7 @@ void init_elements() {
 int main(int argc, char *argv[]) {
     mux_prog = basename(argv[0]);
     load_device(&device);
-    srand(time(NULL));
+    seed_random();
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);

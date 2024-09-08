@@ -199,7 +199,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
 
 char *load_overlay_image();
 
-void load_image_animation(lv_obj_t * ui_imgWall, int animation_time, char *current_wall);
+void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *current_wall);
 
 void unload_image_animation();
 
@@ -215,6 +215,8 @@ void load_skip_patterns(const char *file_path);
 
 int should_skip(const char *name);
 
+void display_testing_message(lv_obj_t *screen);
+
 void adjust_visual_label(char *text, int method, int rep_dash);
 
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
@@ -228,3 +230,9 @@ void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int co
 
 char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
                              const char *suffix, int infix_position);
+
+char *get_script_value(const char *filename, const char *key);
+
+void seed_random();
+
+void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar);

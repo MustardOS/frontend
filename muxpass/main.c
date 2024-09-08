@@ -238,7 +238,7 @@ void glyph_task() {
 int main(int argc, char *argv[]) {
     mux_prog = basename(argv[0]);
     load_device(&device);
-    srand(time(NULL));
+    seed_random();
 
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
