@@ -536,20 +536,20 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
     load_skip_patterns(skip_ini);
 
-    int32_t item_count = 0;
+    int32_t dir_count = 0;
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
             if (entry->d_type == DT_DIR) {
                 if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-                    item_count++;
+                    dir_count++;
                 }
             } else if (entry->d_type == DT_REG) {
-                item_count++;
+                dir_count++;
             }
         }
     }
     closedir(dir);
-    return item_count;
+    return dir_count;
 }
 
 void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *dir_count,
@@ -594,7 +594,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
     closedir(dir);
 }
 
-void gen_label(int item_type, char *item_glyph, char *item_text, int glyph_pad) {
+void gen_label(char *item_glyph, char *item_text) {
     lv_obj_t * ui_pnlExplore = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlExplore);
 
@@ -752,19 +752,15 @@ void gen_item(char **file_names, int file_count) {
                      STORAGE_PATH, strip_ext(items[i].name));
 
             char *glyph_icon;
-            int glyph_pad;
             if (file_exist(fav_dir)) {
                 glyph_icon = "favourite";
-                glyph_pad = 10;
             } else if (file_exist(hist_dir)) {
                 glyph_icon = "history";
-                glyph_pad = 12;
             } else {
                 glyph_icon = "rom";
-                glyph_pad = 12;
             }
 
-            gen_label(ROM, glyph_icon, items[i].display_name, glyph_pad);
+            gen_label(glyph_icon, items[i].display_name);
         }
     }
     puts("FINISH GEN");
@@ -810,8 +806,8 @@ void create_root_items(char *dir_name) {
 void create_explore_items(void *count) {
     int *ui_count_ptr = (int *) count;
 
-    char curr_dir[PATH_MAX];
-    snprintf(curr_dir, sizeof(curr_dir), "%s", sd_dir);
+    char item_curr_dir[PATH_MAX];
+    snprintf(item_curr_dir, sizeof(item_curr_dir), "%s", sd_dir);
 
     char **dir_names = NULL;
     int dir_count = 0;
@@ -834,7 +830,7 @@ void create_explore_items(void *count) {
             break;
     }
 
-    add_directory_and_file_names(curr_dir, &dir_names, &dir_count, &file_names, &file_count);
+    add_directory_and_file_names(item_curr_dir, &dir_names, &dir_count, &file_names, &file_count);
 
     int fn_valid = 0;
     struct json fn_json;
@@ -864,7 +860,7 @@ void create_explore_items(void *count) {
             if (config.VISUAL.FOLDERITEMCOUNT) {
                 char display_name[MAX_BUFFER_SIZE];
                 snprintf(display_name, sizeof(display_name), "%s (%d)", new_item->display_name,
-                         get_directory_item_count(curr_dir, new_item->name));
+                         get_directory_item_count(item_curr_dir, new_item->name));
                 new_item->display_name = strdup(display_name);
             }
 
@@ -872,7 +868,7 @@ void create_explore_items(void *count) {
         }
         sort_items(items, item_count);
         for (int i = 0; i < dir_count; i++) {
-            gen_label(FOLDER, "folder", items[i].display_name, 12);
+            gen_label("folder", items[i].display_name);
             if (strcasecmp(items[i].name, prev_dir) == 0) {
                 sys_index = i;
             }
@@ -921,8 +917,8 @@ void explore_root() {
         case 6:
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
-            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
+            gen_label("folder", "SD1 (mmc)");
+            gen_label("folder", "SD2 (sdcard)");
             ui_count += 2;
             nav_moved = 1;
             break;
@@ -936,16 +932,16 @@ void explore_root() {
         case 10:
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "folder", "USB (external)", 12);
+            gen_label("folder", "SD1 (mmc)");
+            gen_label("folder", "USB (external)");
             ui_count += 2;
             nav_moved = 1;
             break;
         case 12:
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
-            gen_label(FOLDER, "folder", "USB (external)", 12);
+            gen_label("folder", "SD2 (sdcard)");
+            gen_label("folder", "USB (external)");
             ui_count += 2;
             nav_moved = 1;
             break;
@@ -953,9 +949,9 @@ void explore_root() {
             add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
             add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
             add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label(FOLDER, "folder", "SD1 (mmc)", 12);
-            gen_label(FOLDER, "folder", "SD2 (sdcard)", 12);
-            gen_label(FOLDER, "folder", "USB (external)", 12);
+            gen_label("folder", "SD1 (mmc)");
+            gen_label("folder", "SD2 (sdcard)");
+            gen_label("folder", "USB (external)");
             ui_count += 3;
             nav_moved = 1;
             break;
@@ -1310,11 +1306,7 @@ void *joystick_task() {
 
                                                         switch (module) {
                                                             case MMC:
-                                                                cache_message(n_dir);
-                                                                break;
                                                             case SDCARD:
-                                                                cache_message(n_dir);
-                                                                break;
                                                             case USB:
                                                                 cache_message(n_dir);
                                                                 break;
@@ -1372,16 +1364,12 @@ void *joystick_task() {
 
                                     safe_quit = 1;
                                     fail_quit:
-                                        break;
+                                    break;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
 
                                     switch (module) {
                                         case FAVOURITE:
-                                            write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
-                                            write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
-                                            load_mux("launcher");
-                                            break;
                                         case HISTORY:
                                             write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
                                             write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
@@ -1551,7 +1539,7 @@ void *joystick_task() {
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.SELECT) {
                                     if (ui_count != 0 && module != ROOT && module != FAVOURITE && module != HISTORY
-                                        && !strcasecmp(get_last_dir(sd_dir), "ROMS") == 0) {
+                                        && !(strcasecmp(get_last_dir(sd_dir), "ROMS") == 0)) {
                                         play_sound("confirm", nav_sound, 1);
 
                                         switch (module) {
@@ -1943,7 +1931,7 @@ void glyph_task() {
                         break;
                 }
             } else {
-                if (!strcasecmp(last_dir, "ROMS") == 0) {
+                if (!(strcasecmp(last_dir, "ROMS") == 0)) {
                     lv_label_set_text(ui_lblTitle, last_dir);
                 }
             }
