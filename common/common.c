@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
-#include <errno.h>
 #include <limits.h>
 #include <time.h>
 #include <unistd.h>
@@ -31,27 +30,6 @@ int img_paths_count = 0;
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
-}
-
-int check_file_size(char *filename, int filesize) {
-    FILE *file = fopen(filename, "rb");
-
-    if (file == NULL) {
-        perror("Error opening file");
-        return 1;
-    }
-
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-
-    if (file_size > filesize * 1024 * 1024) {
-        perror("File is larger than specified");
-        fclose(file);
-        return 1;
-    }
-
-    fclose(file);
-    return 0;
 }
 
 int get_file_size(char *filename) {
@@ -97,20 +75,6 @@ unsigned long long total_file_size(const char *path) {
 
     closedir(dir);
     return total_size;
-}
-
-char *str_append(char *old_text, const char *new_text) {
-    size_t len = old_text ? strlen(old_text) : 0;
-    char *temp = realloc(old_text, len + strlen(new_text) + 2);
-
-    if (!temp) return old_text;
-    old_text = temp;
-    strcpy(old_text + len, new_text);
-
-    *(old_text + len + strlen(new_text)) = '\n';
-    *(old_text + len + strlen(new_text) + 1) = '\0';
-
-    return old_text;
 }
 
 int str_compare(const void *a, const void *b) {
@@ -272,26 +236,6 @@ char *str_replace(char *orig, char *rep, char *with) {
     return result;
 }
 
-int get_label_placement(char *text) {
-    char *place_text = strstr(text, " :: ");
-
-    if (place_text != NULL) {
-        return atoi(place_text + strlen(" :: "));
-    }
-
-    return 0;
-}
-
-char *strip_label_placement(char *text) {
-    char *place_text = strstr(text, " :: ");
-
-    if (place_text != NULL) {
-        text[place_text - text] = '\0';
-    }
-
-    return text;
-}
-
 char *get_last_subdir(char *text, char separator, int n) {
     char *ptr = text;
     int count = 0;
@@ -338,26 +282,6 @@ char *strip_ext(char *text) {
     return result;
 }
 
-char *get_ext(char *text) {
-    size_t i;
-    int last_dot_index = -1;
-
-    for (i = strlen(text); i > 0; i--) {
-        if (text[i] == '.') {
-            last_dot_index = i;
-            break;
-        } else if (text[i] == '/' || text[i] == '\\') {
-            return "";
-        }
-    }
-
-    if (last_dot_index != -1) {
-        return &text[last_dot_index];
-    }
-
-    return "";
-}
-
 char *get_execute_result(const char *command) {
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
@@ -374,19 +298,6 @@ char *get_execute_result(const char *command) {
         *newline = '\0';
 
     return result;
-}
-
-char *current_datetime() {
-    time_t current_time;
-    struct tm *timeinfo;
-
-    time(&current_time);
-    timeinfo = localtime(&current_time);
-
-    char *formatted_time = (char *) malloc(22 * sizeof(char));
-    strftime(formatted_time, 22, "%Y-%m-%d %I:%M %p", timeinfo);
-
-    return formatted_time;
 }
 
 int read_battery_capacity() {
@@ -535,15 +446,6 @@ const char *get_random_hex() {
     return colour_hex;
 }
 
-const char *get_random_int() {
-    uint8_t random_num = rand() % (UINT8_MAX + 1);
-
-    char *result = (char *) malloc(2 * sizeof(char));
-    sprintf(result, "%d", random_num);
-
-    return result;
-}
-
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
     const char *meta = mini_get_string(ini_config, section, key, get_random_hex());
 
@@ -551,7 +453,6 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
 
     result = (uint32_t)
             strtoul(meta, NULL, 16);
-    //printf("HEX\t%s: %s (%d)\n", key, meta, result);
 
     return result;
 }
@@ -567,32 +468,7 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
                 strtol(meta, NULL, 10);
     }
 
-    //printf("INT\t%s: %s (%d)\n", key, meta, result);
-
     return result;
-}
-
-int set_ini_int(mini_t *ini_config, const char *section, const char *key, int value) {
-    int meta = mini_set_int(ini_config, section, key, value);
-    return meta;
-}
-
-const char *get_ini_unicode(mini_t *ini_config, const char *section, const char *key) {
-    const char *meta = mini_get_string(ini_config, section, key, "FFFF");
-
-    char *unicode = (char *) malloc(10);
-    if (unicode == NULL) {
-        fprintf(stderr, "Memory allocation failure\n");
-        return "\\uFFFF";
-    }
-
-    int codepoint;
-    sscanf(meta, "%x", &codepoint);
-    snprintf(unicode, 7, "\\u%04X", codepoint);
-
-    //printf("UNICODE\t%s: %s\t\t\t(%s)\n", key, meta, unicode);
-
-    return unicode;
 }
 
 char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value) {
@@ -602,13 +478,6 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
     strncpy(meta, result, MAX_BUFFER_SIZE - 1);
     meta[MAX_BUFFER_SIZE - 1] = '\0';
 
-    //printf("STR\t%s: %s\n", key, meta);
-
-    return meta;
-}
-
-int set_ini_string(mini_t *ini_config, const char *section, const char *key, const char *value) {
-    int meta = mini_set_string(ini_config, section, key, value);
     return meta;
 }
 
@@ -683,39 +552,6 @@ void create_directories(const char *path) {
     if (mkdir(path_copy, 0777) == -1) {
         free(path_copy);
     }
-}
-
-const char *read_directory(const char *path) {
-    DIR *dir = opendir(path);
-    if (!dir) {
-        perror("opendir");
-        exit(EXIT_FAILURE);
-    }
-
-    struct dirent *entry;
-    int count = 0;
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_DIR && strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-            count++;
-        }
-    }
-
-    const char **options = (const char **) malloc((count + 1) * sizeof(const char *));
-
-    rewinddir(dir);
-
-    count = 0;
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_DIR && strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-            options[count++] = strdup(entry->d_name);
-        }
-    }
-
-    options[count] = NULL;
-    closedir(dir);
-
-    return *options;
 }
 
 int count_items(const char *path, enum count_type type) {
@@ -974,17 +810,6 @@ void decrease_option_value(lv_obj_t *element, int *current, int total) {
     }
 }
 
-void load_system(const char *value) {
-    FILE *file = fopen(MUOS_SYS_LOAD, "w");
-    if (file == NULL) {
-        perror("fopen");
-        return;
-    }
-
-    fprintf(file, "%s\n", value);
-    fclose(file);
-}
-
 void load_assign(const char *rom, const char *dir, const char *sys, int forced) {
     FILE *file = fopen(MUOS_ASS_LOAD, "w");
     if (file == NULL) {
@@ -1113,31 +938,6 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
     } else {
         perror("Error opening directory");
     }
-}
-
-void hex_to_rgb(char hex[7], int *r, int *g, int *b) {
-    unsigned int hex_value = (unsigned int) strtol(hex, NULL, 16);
-    *r = (hex_value >> 16) & 0xFF;
-    *g = (hex_value >> 8) & 0xFF;
-    *b = hex_value & 0xFF;
-}
-
-char *extract_in_brackets(const char *input) {
-    const char *start = strchr(input, '(');
-    const char *end = strchr(input, ')');
-
-    if (start != NULL && end != NULL && start < end) {
-        size_t length = end - start - 1;
-
-        char *result = malloc(length + 1);
-
-        strncpy(result, start + 1, length);
-        result[length] = '\0';
-
-        return result;
-    }
-
-    return NULL;
 }
 
 char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {

@@ -24,10 +24,6 @@ enum visual_type {
     CLOCK, BLUETOOTH, NETWORK, BATTERY
 };
 
-enum element_type {
-    LABEL, VALUE, IGNORE, MISC_PAD, MISC_WIDTH
-};
-
 enum write_file_type {
     CHAR, INT
 };
@@ -46,13 +42,6 @@ struct osd_task_param {
     int count;
 };
 
-struct image_info {
-    char *type;
-    char *path_format;
-    lv_obj_t *ui_element;
-    lv_obj_t *ui_panel;
-};
-
 struct pattern {
     char **patterns;
     size_t count;
@@ -61,13 +50,9 @@ struct pattern {
 
 int file_exist(char *filename);
 
-int check_file_size(char *filename, int filesize);
-
 int get_file_size(char *filename);
 
 unsigned long long total_file_size(const char *path);
-
-char *str_append(char *old_text, const char *new_text);
 
 int str_compare(const void *a, const void *b);
 
@@ -85,10 +70,6 @@ char *str_replace(char *orig, char *rep, char *with);
 
 char *str_tolower(char *text);
 
-int get_label_placement(char *text);
-
-char *strip_label_placement(char *text);
-
 char *get_last_subdir(char *text, char separator, int n);
 
 char *get_last_dir(char *text);
@@ -97,11 +78,7 @@ char *strip_dir(char *text);
 
 char *strip_ext(char *text);
 
-char *get_ext(char *text);
-
 char *get_execute_result(const char *command);
-
-char *current_datetime();
 
 int read_battery_capacity();
 
@@ -115,27 +92,17 @@ char *read_line_from_file(char *filename, int line_number);
 
 const char *get_random_hex();
 
-const char *get_random_int();
-
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key);
 
 int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value);
 
-int set_ini_int(mini_t *ini_config, const char *section, const char *key, int value);
-
 char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value);
-
-const char *get_ini_unicode(mini_t *ini_config, const char *section, const char *key);
-
-int set_ini_string(mini_t *ini_config, const char *section, const char *key, const char *value);
 
 char *format_meta_text(char *filename);
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...);
 
 void create_directories(const char *path);
-
-const char *read_directory(const char *path);
 
 int count_items(const char *path, enum count_type type);
 
@@ -163,17 +130,9 @@ void capacity_task(lv_timer_t *timer);
 
 void osd_task(lv_timer_t *timer);
 
-void *turbo_task();
-
-void set_governor(char *governor);
-
-void set_cpu_scale(int speed);
-
 void increase_option_value(lv_obj_t *element, int *current, int total);
 
 void decrease_option_value(lv_obj_t *element, int *current, int total);
-
-void load_system(const char *value);
 
 void load_assign(const char *rom, const char *dir, const char *sys, int forced);
 
@@ -186,12 +145,6 @@ void play_sound(const char *sound, int enabled, int wait);
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive);
 
 void delete_files_of_name(const char *dir_path, const char *filename);
-
-void hex_to_rgb(char hex[7], int *r, int *g, int *b);
-
-char *extract_in_brackets(const char *input);
-
-void set_image(char *path, lv_obj_t *ui_element, lv_obj_t *ui_panel);
 
 char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated);
 

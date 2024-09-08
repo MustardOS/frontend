@@ -1,11 +1,9 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <linux/joystick.h>
@@ -23,7 +21,6 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/mini/mini.h"
 
 __thread uint64_t start_ms = 0;
 
@@ -760,5 +757,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }
