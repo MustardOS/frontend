@@ -1195,9 +1195,6 @@ void cache_message(char *n_dir) {
         default:
             break;
     }
-
-    lv_label_set_text(ui_lblMessage, _("Loading..."));
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 }
 
 void *joystick_task() {
@@ -1364,8 +1361,18 @@ void *joystick_task() {
                                         }
                                             break;
                                     }
+
+                                    lv_label_set_text(ui_lblMessage, _("Loading..."));
+                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                    lv_obj_move_foreground(ui_pnlMessage);
+
+                                    // Refresh and add a small delay to actually display the message!
+                                    lv_task_handler();
+                                    usleep(256);
+
                                     safe_quit = 1;
                                     fail_quit:
+                                        break;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
 
