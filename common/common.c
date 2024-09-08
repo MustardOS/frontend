@@ -436,14 +436,14 @@ char *read_battery_voltage() {
 
     if (file == NULL) {
         perror("Error opening voltage file");
-        return "0.00v";
+        return "0.00 V";
     }
 
     int raw_voltage;
     if (fscanf(file, "%d", &raw_voltage) != 1) {
         perror("Error reading integer");
         fclose(file);
-        return "0.00v";
+        return "0.00 V";
     }
 
     fclose(file);
@@ -451,10 +451,10 @@ char *read_battery_voltage() {
     char *form_voltage = (char *) malloc(10);
     if (form_voltage == NULL) {
         perror("Error allocating memory");
-        return "0.00v";
+        return "0.00 V";
     }
 
-    snprintf(form_voltage, 8, "%.2fv", raw_voltage / 1000000.0);
+    snprintf(form_voltage, 8, "%.2f V", raw_voltage / 1000000.0);
     return form_voltage;
 }
 
