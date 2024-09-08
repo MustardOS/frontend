@@ -60,7 +60,6 @@ int rtcMonthValue;
 int rtcDayValue;
 int rtcHourValue;
 int rtcMinuteValue;
-int rtcTimezoneValue = 0;
 int rtcNotationValue = 0;
 
 char rtc_buffer[32];

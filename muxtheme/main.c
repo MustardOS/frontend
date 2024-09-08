@@ -62,7 +62,6 @@ lv_group_t *ui_group_panel;
 int ui_count = 0;
 int current_item_index = 0;
 int first_open = 1;
-int content_panel_y = 0;
 
 void show_help() {
     char credits[MAX_BUFFER_SIZE];

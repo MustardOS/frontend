@@ -61,10 +61,6 @@ int key_curr = 0;
 int key_map = 0;
 
 char *lblCurrentValue;
-int lblEnabledValue;
-int lblIdentifierValue;
-int lblPasswordValue;
-int lblStatusValue;
 
 char *type_dhcp;
 char *type_static;

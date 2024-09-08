@@ -69,7 +69,6 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-int sd_card;
 char *sd_dir = NULL;
 
 static char SD1[MAX_BUFFER_SIZE];
@@ -79,14 +78,11 @@ static char E_USB[MAX_BUFFER_SIZE];
 char *current_wall = "";
 
 char *prev_dir;
-char *curr_dir;
-
 int sys_index = -1;
 
 int ui_count = 0;
 int ui_file_count = 0;
 int current_item_index = 0;
-int content_file_index = 0;
 int first_open = 1;
 int nav_moved = 1;
 int counter_fade = 0;
@@ -962,13 +958,16 @@ void explore_root() {
     }
 }
 
-void prepare_activity_file(char *act_content, char *act_path) {
-    if (!file_exist(act_path)) {
-        char activity_content[MAX_BUFFER_SIZE];
-        snprintf(activity_content, sizeof(activity_content), "%s\n0\n0", act_content);
-        write_text_to_file(act_path, "w", CHAR, activity_content);
-    }
-}
+/*
+ * void prepare_activity_file(char *act_content, char *act_path) {
+ *   if (!file_exist(act_path)) {
+ *       char activity_content[MAX_BUFFER_SIZE];
+ *       snprintf(activity_content, sizeof(activity_content), "%s\n0\n0", act_content);
+ *       write_text_to_file(act_path, "w", CHAR, activity_content);
+ *   }
+ * }
+ *
+*/
 
 int load_content(int add_favourite) {
     char *assigned_core = load_content_core(0, 1);

@@ -80,7 +80,7 @@ enum core_gen_type {
     DIRECTORY,
     PARENT,
     DIRECTORY_NO_WIPE
-} gen_method;
+};
 
 void show_help() {
     char *title = _("ASSIGN CORE");
