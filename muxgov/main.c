@@ -1,19 +1,15 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
-#include <sys/types.h>
 #include <fcntl.h>
-#include <ctype.h>
 #include <dirent.h>
 #include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
@@ -27,7 +23,6 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/json/json.h"
-#include "../common/mini/mini.h"
 
 __thread uint64_t start_ms = 0;
 
@@ -162,14 +157,14 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
     create_directories(core_dir);
 
     switch (method) {
-        case SINGLE:
+        case SINGLE: {
             char rom_path[MAX_BUFFER_SIZE];
             snprintf(rom_path, sizeof(rom_path), "%s/%s.gov",
                      core_dir, strip_ext(rom));
 
             if (file_exist(rom_path)) remove(rom_path);
 
-            FILE * rom_file = fopen(rom_path, "w");
+            FILE *rom_file = fopen(rom_path, "w");
             if (rom_file == NULL) {
                 perror("Error opening file rom_path file");
                 return;
@@ -178,6 +173,7 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
             LOG_INFO(mux_prog, "Single Governor Content: %s", gov);
             fprintf(rom_file, "%s", gov);
             fclose(rom_file);
+        }
             break;
         case PARENT: {
             delete_files_of_type(core_dir, "gov", NULL, 1);
@@ -191,7 +187,7 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
 
                     create_directories(strip_dir(subdir_file));
 
-                    FILE * subdir_file_handle = fopen(subdir_file, "w");
+                    FILE *subdir_file_handle = fopen(subdir_file, "w");
                     if (subdir_file_handle == NULL) {
                         perror("Error opening file");
                         continue;
@@ -211,7 +207,7 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
             snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.gov",
                      STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
-            FILE * file = fopen(core_file, "w");
+            FILE *file = fopen(core_file, "w");
             if (file == NULL) {
                 perror("Error opening file");
                 return;
@@ -227,7 +223,7 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
             snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.gov",
                      STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
-            FILE * file = fopen(core_file, "w");
+            FILE *file = fopen(core_file, "w");
             if (file == NULL) {
                 perror("Error opening file");
                 return;
@@ -245,7 +241,7 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
 }
 
 char **read_available_governors(const char *filename, int *count) {
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file");
         return NULL;
@@ -298,7 +294,7 @@ void create_gov_items(const char *target) {
     }
 
     char *assign_default = NULL;
-    mini_t * assign_ini = mini_try_load(filename);
+    mini_t *assign_ini = mini_try_load(filename);
 
     if (assign_ini) {
         const char *a_def = mini_get_string(assign_ini, "global", "governor", device.CPU.DEFAULT);
@@ -409,7 +405,7 @@ void *joystick_task() {
 
         for (int i = 0; i < num_events; i++) {
             if (events[i].data.fd == js_fd) {
-                int ret = read(js_fd, &ev, sizeof(struct input_event));
+                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
                 if (ret == -1) {
                     perror("Error reading input");
                     continue;
@@ -644,7 +640,6 @@ void glyph_task() {
     //update_bluetooth_status(ui_staBluetooth, &theme);
 
     update_network_status(ui_staNetwork, &theme);
-
     update_battery_capacity(ui_staCapacity, &theme);
 
     if (progress_onscreen > 0) {
@@ -811,7 +806,7 @@ int main(int argc, char *argv[]) {
 
                 LOG_INFO(mux_prog, "<Automatic Governor Assign> Obtaining Core INI: %s", assigned_core_ini);
 
-                mini_t * core_config_ini = mini_load(assigned_core_ini);
+                mini_t *core_config_ini = mini_load(assigned_core_ini);
 
                 static char def_gov[MAX_BUFFER_SIZE];
                 strcpy(def_gov, get_ini_string(core_config_ini, "global", "governor", "none"));
@@ -993,7 +988,10 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     pthread_t joystick_thread;
-    pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
+    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
+        perror("Failed to create joystick thread");
+        return 1;
+    }
 
     if (ui_count > 0) {
         LOG_SUCCESS(mux_prog, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s");
@@ -1026,5 +1024,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }

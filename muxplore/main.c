@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <linux/joystick.h>
@@ -13,22 +12,15 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <time.h>
-#include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
-#include "../common/help.h"
-#include "../common/options.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/array.h"
 #include "../common/collection.h"
 #include "../common/json/json.h"
-#include "../common/mini/mini.h"
 
 __thread uint64_t start_ms = 0;
 
@@ -222,7 +214,7 @@ char *load_content_description() {
     char *content_label = items[current_item_index].name;
 
     switch (module) {
-        case ROOT:
+        case ROOT: {
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
                 snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Root/text/sd1.txt",
                          STORAGE_PATH);
@@ -230,8 +222,9 @@ char *load_content_description() {
                 snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Root/text/sd2.txt",
                          STORAGE_PATH);
             }
+        }
             break;
-        case FAVOURITE:
+        case FAVOURITE: {
             char f_core_file[MAX_BUFFER_SIZE];
             char f_pointer[MAX_BUFFER_SIZE];
 
@@ -244,8 +237,9 @@ char *load_content_description() {
             snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/%s/text/%s.txt",
                      STORAGE_PATH, read_line_from_file(f_pointer, 3),
                      strip_ext(read_line_from_file(f_pointer, 7)));
+        }
             break;
-        case HISTORY:
+        case HISTORY: {
             char h_core_file[MAX_BUFFER_SIZE];
             char h_pointer[MAX_BUFFER_SIZE];
 
@@ -258,8 +252,9 @@ char *load_content_description() {
             snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/%s/text/%s.txt",
                      STORAGE_PATH, read_line_from_file(h_pointer, 3),
                      strip_ext(read_line_from_file(h_pointer, 7)));
+        }
             break;
-        default:
+        default: {
             char *card_full;
             switch (module) {
                 case MMC:
@@ -313,6 +308,7 @@ char *load_content_description() {
                              STORAGE_PATH, core_desc, desc_name);
                 }
             }
+        }
             break;
     }
 
@@ -367,7 +363,7 @@ void image_refresh(char *image_type) {
     char *content_label = items[current_item_index].name;
 
     switch (module) {
-        case ROOT:
+        case ROOT: {
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
                 snprintf(image, sizeof(image), "%s/info/catalogue/Root/%s/sd1.png",
                          STORAGE_PATH, image_type);
@@ -384,8 +380,9 @@ void image_refresh(char *image_type) {
                 snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/Root/%s/usb.png",
                          STORAGE_PATH, image_type);
             }
+        }
             break;
-        case FAVOURITE:
+        case FAVOURITE: {
             char f_core_file[MAX_BUFFER_SIZE];
             char f_pointer[MAX_BUFFER_SIZE];
 
@@ -407,8 +404,9 @@ void image_refresh(char *image_type) {
                      STORAGE_PATH, f_core_artwork, image_type, f_file_name);
             snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
                      STORAGE_PATH, f_core_artwork, image_type, f_file_name);
+        }
             break;
-        case HISTORY:
+        case HISTORY: {
             char h_core_file[MAX_BUFFER_SIZE];
             char h_pointer[MAX_BUFFER_SIZE];
 
@@ -430,8 +428,9 @@ void image_refresh(char *image_type) {
                      STORAGE_PATH, h_core_artwork, image_type, h_file_name);
             snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
                      STORAGE_PATH, h_core_artwork, image_type, h_file_name);
+        }
             break;
-        default:
+        default: {
             char *card_full;
             switch (module) {
                 case MMC:
@@ -489,6 +488,7 @@ void image_refresh(char *image_type) {
                              STORAGE_PATH, core_artwork, image_type, file_name);
                 }
             }
+        }
             break;
     }
 
@@ -1233,7 +1233,7 @@ void *joystick_task() {
 
         for (int i = 0; i < num_events; i++) {
             if (events[i].data.fd == js_fd) {
-                int ret = read(js_fd, &ev, sizeof(struct input_event));
+                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
                 if (ret == -1) {
                     perror("Error reading input");
                     continue;
@@ -1274,7 +1274,7 @@ void *joystick_task() {
                                     char *content_label = items[current_item_index].name;
 
                                     switch (module) {
-                                        case ROOT:
+                                        case ROOT: {
                                             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
                                                 write_text_to_file("/tmp/explore_card", "w", CHAR, "mmc");
                                                 write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD1));
@@ -1291,8 +1291,9 @@ void *joystick_task() {
                                                 load_mux("explore");
                                                 break;
                                             }
+                                        }
                                             break;
-                                        default:
+                                        default: {
                                             char f_content[MAX_BUFFER_SIZE];
                                             snprintf(f_content, sizeof(f_content), "%s.cfg",
                                                      strip_ext(items[current_item_index].name));
@@ -1360,6 +1361,7 @@ void *joystick_task() {
                                                 default:
                                                     break;
                                             }
+                                        }
                                             break;
                                     }
                                     safe_quit = 1;
@@ -1899,7 +1901,6 @@ void glyph_task() {
     //update_bluetooth_status(ui_staBluetooth, &theme);
 
     update_network_status(ui_staNetwork, &theme);
-
     update_battery_capacity(ui_staCapacity, &theme);
 
     if (progress_onscreen > 0) {
@@ -1976,7 +1977,7 @@ void ui_refresh_task() {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
-                   if (theme.MISC.ANIMATED_BACKGROUND == 1) {
+                    if (theme.MISC.ANIMATED_BACKGROUND == 1) {
                         lv_obj_t * img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
@@ -2230,7 +2231,7 @@ int main(int argc, char *argv[]) {
     pthread_t gen_item_thread;
 
     switch (module) {
-        case ROOT:
+        case ROOT: {
             explore_root();
 
             char *SD2_lc = str_tolower(strcpy(malloc(strlen(SD2) + 1), SD2));
@@ -2248,10 +2249,11 @@ int main(int argc, char *argv[]) {
             free(USB_lc);
 
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "explore");
+        }
             break;
         case MMC:
         case SDCARD:
-        case USB:
+        case USB: {
             char *ex_file = "/tmp/explore_dir";
             char *ex_path = read_line_from_file(ex_file, 1);
             if (file_exist(ex_file) && ex_path != NULL) {
@@ -2293,14 +2295,17 @@ int main(int argc, char *argv[]) {
             if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "roms") == 0) {
                 write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sd_dir, '/', 4));
             }
+        }
             break;
-        case FAVOURITE:
+        case FAVOURITE: {
             pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "favourite");
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "favourite");
+        }
             break;
-        case HISTORY:
+        case HISTORY: {
             pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "history");
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
+        }
             break;
     }
 
@@ -2361,5 +2366,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }

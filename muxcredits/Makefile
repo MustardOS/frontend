@@ -63,7 +63,6 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/device.c \
 		../common/common.c \
 		../common/theme.c \
-		theme.c \
 		$(EXTRA)
 	@printf "Building: $(TARGET)... DONE!\n"
 

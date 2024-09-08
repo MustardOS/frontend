@@ -1,11 +1,9 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "ui/ui.h"
-#include <sys/types.h>
-#include <linux/joystick.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
 #include "../common/common.h"
 #include "../common/config.h"
@@ -89,5 +87,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }

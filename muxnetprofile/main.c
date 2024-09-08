@@ -1,11 +1,9 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <linux/joystick.h>
@@ -23,7 +21,6 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/mini/mini.h"
 
 __thread uint64_t start_ms = 0;
 
@@ -86,8 +83,8 @@ void load_profile(char *name) {
     snprintf(config_file, sizeof(config_file),
              "%s/config/config.ini", INTERNAL_PATH);
 
-    mini_t * muos_config = mini_try_load(config_file);
-    mini_t * net_profile = mini_try_load(profile_file);
+    mini_t *muos_config = mini_try_load(config_file);
+    mini_t *net_profile = mini_try_load(profile_file);
 
     int net_type = 0;
     if (strcasecmp(mini_get_string(net_profile, "profile", "type", "dhcp"), "static") == 0) {
@@ -243,7 +240,7 @@ void *joystick_task() {
 
         for (int i = 0; i < num_events; i++) {
             if (events[i].data.fd == js_fd) {
-                int ret = read(js_fd, &ev, sizeof(struct input_event));
+                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
                 if (ret == -1) {
                     perror("Error reading input");
                     continue;
@@ -449,7 +446,6 @@ void glyph_task() {
     //update_bluetooth_status(ui_staBluetooth, &theme);
 
     update_network_status(ui_staNetwork, &theme);
-
     update_battery_capacity(ui_staCapacity, &theme);
 
     if (progress_onscreen > 0) {
@@ -542,6 +538,8 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    (void) argc;
+
     mux_prog = basename(argv[0]);
     load_device(&device);
     seed_random();
@@ -676,7 +674,10 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     pthread_t joystick_thread;
-    pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
+    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
+        perror("Failed to create joystick thread");
+        return 1;
+    }
 
     pthread_t gen_item_thread;
     pthread_create(&gen_item_thread, NULL, (void *(*)(void *)) create_profile_items, NULL);
@@ -700,5 +701,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }

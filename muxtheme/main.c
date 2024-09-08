@@ -1,11 +1,9 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
-#include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/epoll.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <linux/joystick.h>
@@ -17,13 +15,11 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
-#include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/mini/mini.h"
 
 __thread uint64_t start_ms = 0;
 
@@ -76,7 +72,7 @@ void show_help() {
     snprintf(command, sizeof(command), "unzip -p %s/theme/%s.zip credits.txt",
              STORAGE_PATH, lv_label_get_text(lv_group_get_focused(ui_group)));
 
-    FILE * fp = popen(command, "r");
+    FILE *fp = popen(command, "r");
     if (fp != NULL) {
         fgets(credits, sizeof(credits), fp);
         pclose(fp);
@@ -239,7 +235,7 @@ void *joystick_task() {
 
         for (int i = 0; i < num_events; i++) {
             if (events[i].data.fd == js_fd) {
-                int ret = read(js_fd, &ev, sizeof(struct input_event));
+                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
                 if (ret == -1) {
                     perror("Error reading input");
                     continue;
@@ -264,7 +260,8 @@ void *joystick_task() {
                                         char *chosen_theme = lv_label_get_text(element_focused);
                                         lv_label_set_text(ui_lblMessage, _("Loading Theme"));
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                        if (theme.MISC.ANIMATED_BACKGROUND == 1 && lv_obj_is_valid(wall_img)) lv_obj_del(wall_img);
+                                        if (theme.MISC.ANIMATED_BACKGROUND == 1 && lv_obj_is_valid(wall_img))
+                                            lv_obj_del(wall_img);
                                         if (theme.MISC.ANIMATED_BACKGROUND == 2) unload_image_animation();
 
                                         static char theme_script[MAX_BUFFER_SIZE];
@@ -464,7 +461,6 @@ void glyph_task() {
     //update_bluetooth_status(ui_staBluetooth, &theme);
 
     update_network_status(ui_staNetwork, &theme);
-
     update_battery_capacity(ui_staCapacity, &theme);
 
     if (progress_onscreen > 0) {
@@ -498,7 +494,7 @@ void ui_refresh_task() {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
-                   if (theme.MISC.ANIMATED_BACKGROUND == 1) {
+                    if (theme.MISC.ANIMATED_BACKGROUND == 1) {
                         wall_img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(wall_img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
@@ -558,6 +554,8 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    (void) argc;
+
     mux_prog = basename(argv[0]);
     load_device(&device);
     seed_random();
@@ -692,7 +690,10 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     pthread_t joystick_thread;
-    pthread_create(&joystick_thread, NULL, (void *(*)(void *)) joystick_task, NULL);
+    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
+        perror("Failed to create joystick thread");
+        return 1;
+    }
 
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
@@ -721,5 +722,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }
