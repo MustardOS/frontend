@@ -1,9 +1,4 @@
-#ifndef _MUXTWEAKGEN_UI_H
-#define _MUXTWEAKGEN_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
 
@@ -55,9 +50,3 @@ extern lv_obj_t *ui_droInterface;
 extern lv_obj_t *ui_droAdvanced;
 
 void ui_init(lv_obj_t *ui_pnlContent);
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif

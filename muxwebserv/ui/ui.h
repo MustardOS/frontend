@@ -1,9 +1,4 @@
-#ifndef _MUXWEBSERV_UI_H
-#define _MUXWEBSERV_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
 
@@ -35,9 +30,3 @@ extern lv_obj_t *ui_droResilio;
 extern lv_obj_t *ui_droNTP;
 
 void ui_init(lv_obj_t *ui_pnlContent);
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif

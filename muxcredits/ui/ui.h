@@ -1,9 +1,4 @@
-#ifndef _MUXCREDITS_UI_H
-#define _MUXCREDITS_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
 
@@ -90,9 +85,3 @@ int32_t _ui_anim_callback_get_image_angle(lv_anim_t *a);
 int32_t _ui_anim_callback_get_image_frame(lv_anim_t *a);
 
 void ui_init(void);
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif

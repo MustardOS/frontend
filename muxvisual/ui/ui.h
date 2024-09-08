@@ -1,9 +1,4 @@
-#ifndef _MUXVISUAL_UI_H
-#define _MUXVISUAL_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
 
@@ -55,9 +50,3 @@ extern lv_obj_t *ui_droMenuCounterFolder;
 extern lv_obj_t *ui_droMenuCounterFile;
 
 void ui_init(lv_obj_t *ui_pnlContent);
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif

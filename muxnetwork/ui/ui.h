@@ -1,9 +1,4 @@
-#ifndef _MUXNETWORK_UI_H
-#define _MUXNETWORK_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
 #include "../../common/theme.h"
@@ -56,9 +51,3 @@ extern lv_obj_t *ui_pnlEntry;
 extern lv_obj_t *ui_txtEntry;
 
 void ui_init(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme);
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif

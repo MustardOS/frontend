@@ -1,14 +1,3 @@
-#ifndef _MUXTIMEZONE_UI_H
-#define _MUXTIMEZONE_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif

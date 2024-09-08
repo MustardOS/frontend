@@ -1,9 +1,4 @@
-#ifndef _MUXSPLASH_UI_H
-#define _MUXSPLASH_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
 
@@ -17,9 +12,3 @@ LV_FONT_DECLARE(ui_font_GamepadNav);
 LV_FONT_DECLARE(ui_font_NotoSans);
 
 void ui_init(void);
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif

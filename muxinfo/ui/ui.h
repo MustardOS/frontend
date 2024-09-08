@@ -1,9 +1,4 @@
-#ifndef _MUXINFO_UI_H
-#define _MUXINFO_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
 
@@ -24,9 +19,3 @@ extern lv_obj_t *ui_icoSystem;
 extern lv_obj_t *ui_icoCredits;
 
 void ui_init(lv_obj_t *ui_pnlContent);
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif

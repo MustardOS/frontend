@@ -1,9 +1,4 @@
-#ifndef _MUXOPTION_UI_H
-#define _MUXOPTION_UI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "../../lvgl/lvgl.h"
 
@@ -18,9 +13,3 @@ extern lv_obj_t *ui_icoCore;
 extern lv_obj_t *ui_icoGovernor;
 
 void ui_init(lv_obj_t *ui_pnlContent);
-
-#ifdef __cplusplus
-} /*extern "C"*/
-#endif
-
-#endif
