@@ -58,7 +58,6 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
 		../common/json/json.c \
 		../common/mini/mini.c \
-		../common/array.c \
 		../common/config.c \
 		../common/device.c \
 		../common/common.c \

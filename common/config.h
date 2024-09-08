@@ -58,10 +58,6 @@ struct mux_config {
     } SETTINGS;
 
     struct {
-        char NAME[MAX_BUFFER_SIZE];
-    } THEME;
-
-    struct {
         int16_t BATTERY;
         int16_t NETWORK;
         int16_t BLUETOOTH;
