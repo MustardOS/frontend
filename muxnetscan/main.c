@@ -47,6 +47,8 @@ struct mux_config config;
 struct mux_device device;
 struct theme_config theme;
 
+pthread_t scan_networks_thread;
+
 int nav_moved = 1;
 char *current_wall = "";
 
@@ -73,12 +75,15 @@ void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
 }
 
+void* scan_networks(void* arg) {
+    system("/opt/muos/script/web/ssid.sh");
+    return NULL;
+}
+
 void create_network_items() {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
-
-    system("/opt/muos/script/web/ssid.sh");
 
     char *scan_file = "/tmp/net_scan";
     FILE *file = fopen(scan_file, "r");
@@ -624,14 +629,19 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
+    pthread_create(&scan_networks_thread, NULL, scan_networks, NULL);
+    while (pthread_tryjoin_np(scan_networks_thread, NULL) != 0) {
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
+    }
+
+    create_network_items();
+
     pthread_t joystick_thread;
     if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
         perror("Failed to create joystick thread");
         return 1;
     }
-
-    pthread_t gen_item_thread;
-    pthread_create(&gen_item_thread, NULL, (void *(*)(void *)) create_network_items, NULL);
 
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);

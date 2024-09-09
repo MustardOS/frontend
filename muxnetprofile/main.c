@@ -677,14 +677,13 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
+    create_profile_items();
+
     pthread_t joystick_thread;
     if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
         perror("Failed to create joystick thread");
         return 1;
     }
-
-    pthread_t gen_item_thread;
-    pthread_create(&gen_item_thread, NULL, (void *(*)(void *)) create_profile_items, NULL);
 
     while (!safe_quit) {
         usleep(device.SCREEN.WAIT);
