@@ -607,8 +607,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    pthread_t gen_item_thread;
-    pthread_create(&gen_item_thread, NULL, (void *(*)(void *)) create_language_items, NULL);
+    create_language_items();
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
