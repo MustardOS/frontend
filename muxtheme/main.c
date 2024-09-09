@@ -226,8 +226,6 @@ void *joystick_task() {
     }
 
     while (1) {
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
         int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
@@ -261,6 +259,8 @@ void *joystick_task() {
                                         char *chosen_theme = lv_label_get_text(element_focused);
                                         lv_label_set_text(ui_lblMessage, _("Loading Theme"));
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                                        lv_task_handler();
+                                        usleep(device.SCREEN.WAIT);
                                         if (theme.MISC.ANIMATED_BACKGROUND == 1 && lv_obj_is_valid(wall_img))
                                             lv_obj_del(wall_img);
                                         if (theme.MISC.ANIMATED_BACKGROUND == 2) unload_image_animation();
@@ -402,6 +402,8 @@ void *joystick_task() {
                 }
             }
         }
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
     }
 }
 

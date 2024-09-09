@@ -193,8 +193,6 @@ void *joystick_task() {
     }
 
     while (1) {
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
         int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
@@ -357,6 +355,8 @@ void *joystick_task() {
                 }
             }
         }
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
     }
 }
 

@@ -46,8 +46,6 @@ void *joystick_task() {
     struct input_event ev;
 
     while (1) {
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
         read(js_fd, &ev, sizeof(struct input_event));
         switch (ev.type) {
             case EV_KEY:
@@ -343,6 +341,7 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(glyph_timer);
 
     while (!safe_quit) {
+        lv_task_handler();
         usleep(device.SCREEN.WAIT);
     }
 

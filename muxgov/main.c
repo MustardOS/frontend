@@ -397,8 +397,6 @@ void *joystick_task() {
     }
 
     while (1) {
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
         int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
@@ -578,6 +576,8 @@ void *joystick_task() {
                 }
             }
         }
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -676,9 +676,11 @@ void ui_refresh_task() {
             if (strcasecmp(new_wall, old_wall) != 0) {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
-                    if (theme.MISC.ANIMATED_BACKGROUND) {
+                    if (theme.MISC.ANIMATED_BACKGROUND == 1) {
                         lv_obj_t * img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
+                    } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
                     } else {
                         lv_img_set_src(ui_imgWall, new_wall);
                     }
@@ -896,9 +898,11 @@ int main(int argc, char *argv[]) {
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
-        if (theme.MISC.ANIMATED_BACKGROUND) {
+        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
+        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
         } else {
             lv_img_set_src(ui_imgWall, current_wall);
         }
