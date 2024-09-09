@@ -345,7 +345,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void *joystick_task() {
+void joystick_task() {
     struct input_event ev;
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
@@ -359,14 +359,14 @@ void *joystick_task() {
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("Error creating EPOLL instance");
-        return NULL;
+        return;
     }
 
     event.events = EPOLLIN;
     event.data.fd = js_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
         perror("Error with EPOLL controller");
-        return NULL;
+        return;
     }
 
     while (1) {
