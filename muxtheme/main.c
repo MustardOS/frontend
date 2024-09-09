@@ -38,7 +38,6 @@ int msgbox_active = 0;
 int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
-int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
@@ -201,7 +200,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void *joystick_task() {
+void joystick_task() {
     struct input_event ev;
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
@@ -215,14 +214,14 @@ void *joystick_task() {
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("Error creating EPOLL instance");
-        return NULL;
+        return;
     }
 
     event.events = EPOLLIN;
     event.data.fd = js_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
         perror("Error with EPOLL controller");
-        return NULL;
+        return;
     }
 
     while (1) {
@@ -278,7 +277,7 @@ void *joystick_task() {
                                         play_sound("back", nav_sound, 1);
                                     }
                                     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "theme");
-                                    safe_quit = 1;
+                                    return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
                                         list_nav_prev(theme.MUX.ITEM.COUNT);
@@ -694,12 +693,6 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
-    pthread_t joystick_thread;
-    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
-        perror("Failed to create joystick thread");
-        return 1;
-    }
-
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
             list_nav_next(sys_index);
@@ -708,11 +701,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    while (!safe_quit) {
-        usleep(device.SCREEN.WAIT);
-    }
-
-    pthread_cancel(joystick_thread);
+    joystick_task();
 
     close(js_fd);
 

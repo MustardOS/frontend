@@ -36,7 +36,6 @@ int msgbox_active = 0;
 int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
-int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
@@ -597,7 +596,7 @@ void *joystick_task() {
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
-                                    safe_quit = 1;
+                                    return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
                                         play_sound("confirm", nav_sound, 1);
@@ -609,7 +608,7 @@ void *joystick_task() {
                                         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,
                                                            lv_obj_get_user_data(element_focused));
 
-                                        safe_quit = 1;
+                                        return;
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
@@ -621,7 +620,7 @@ void *joystick_task() {
                                         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,
                                                            lv_obj_get_user_data(element_focused));
 
-                                        safe_quit = 1;
+                                        return;
                                     }
                                 }
                             }
@@ -1526,21 +1525,11 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
-    pthread_t joystick_thread;
-    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
-        perror("Failed to create joystick thread");
-        return 1;
-    }
-
     init_osk();
     init_elements();
     direct_to_previous();
 
-    while (!safe_quit) {
-        usleep(device.SCREEN.WAIT);
-    }
-
-    pthread_cancel(joystick_thread);
+    joystick_task();
 
     close(js_fd);
 

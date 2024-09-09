@@ -39,7 +39,6 @@ int msgbox_active = 0;
 int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
-int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
@@ -198,10 +197,10 @@ void *joystick_task() {
                                              lv_label_get_text(lv_group_get_focused(ui_group)));
                                     system(tz);
 
-                                    safe_quit = 1;
+                                    return;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
-                                    safe_quit = 1;
+                                    return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
                                         list_nav_prev(theme.MUX.ITEM.COUNT);
@@ -618,22 +617,12 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
-    pthread_t joystick_thread;
-    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
-        perror("Failed to create joystick thread");
-        return 1;
-    }
-
     if (ui_count == 0) {
         lv_label_set_text(ui_lblScreenMessage, _("No Timezones Found..."));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    while (!safe_quit) {
-        usleep(device.SCREEN.WAIT);
-    }
-
-    pthread_cancel(joystick_thread);
+    joystick_task();
 
     close(js_fd);
 
