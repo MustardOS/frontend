@@ -164,8 +164,6 @@ void *joystick_task() {
     }
 
     while (1) {
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
         int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
@@ -277,8 +275,6 @@ void *joystick_task() {
                         break;
                 }
             }
-            lv_task_handler();
-            usleep(device.SCREEN.WAIT);
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {
@@ -328,6 +324,8 @@ void *joystick_task() {
                 }
             }
         }
+
+        refresh_screen();
     }
 }
 
@@ -645,7 +643,7 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     while (!safe_quit) {
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
     }
 
     pthread_cancel(joystick_thread);
@@ -662,5 +660,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }

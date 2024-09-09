@@ -69,8 +69,7 @@ int main() {
     int hold = 0;
     while (!safe_quit) {
         hold++;
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
         if (hold > 3500) {
             safe_quit = 1;
         }

@@ -1,7 +1,5 @@
 #include "ui.h"
 
-void ui_screen_init(lv_obj_t *ui_pnlContent);
-
 lv_obj_t *ui_pnlExplore;
 lv_obj_t *ui_pnlFavourites;
 lv_obj_t *ui_pnlHistory;

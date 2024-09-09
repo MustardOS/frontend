@@ -216,8 +216,6 @@ void *joystick_task() {
     }
 
     while (1) {
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
         int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
@@ -383,8 +381,6 @@ void *joystick_task() {
                         break;
                 }
             }
-            lv_task_handler();
-            usleep(device.SCREEN.WAIT);
         }
 
         if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1))) {
@@ -420,6 +416,8 @@ void *joystick_task() {
                 }
             }
         }
+
+        refresh_screen();
     }
 }
 
@@ -753,7 +751,7 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     while (!safe_quit) {
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
     }
 
     pthread_cancel(joystick_thread);

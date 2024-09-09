@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
+#include <pthread.h>
 #include <limits.h>
 #include <time.h>
 #include <unistd.h>
@@ -20,6 +21,7 @@
 #include "device.h"
 #include "mini/mini.h"
 
+pthread_mutex_t ui_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct json translations;
 struct pattern skip_pattern_list = {NULL, 0, 0};
 int battery_capacity = 100;
@@ -27,6 +29,14 @@ lv_anim_t animation;
 lv_obj_t *img_obj;
 const char **img_paths = NULL;
 int img_paths_count = 0;
+
+void refresh_screen() {
+    if (pthread_mutex_trylock(&ui_mutex) == 0) {
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
+        pthread_mutex_unlock(&ui_mutex);
+    }
+}
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
