@@ -1217,6 +1217,8 @@ void *joystick_task() {
     }
 
     while (1) {
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
         int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
@@ -1660,6 +1662,8 @@ void *joystick_task() {
                         break;
                 }
             }
+            lv_task_handler();
+            usleep(device.SCREEN.WAIT);
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {
@@ -1709,8 +1713,6 @@ void *joystick_task() {
                 }
             }
         }
-
-        refresh_screen();
     }
 }
 
@@ -2341,13 +2343,10 @@ int main(int argc, char *argv[]) {
     update_file_counter();
 
     pthread_t joystick_thread;
-    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
-        perror("Failed to create joystick thread");
-        return 1;
-    }
+    pthread_create(&joystick_thread, NULL, (void *) joystick_task, NULL);
 
     while (!safe_quit) {
-        refresh_screen();
+        usleep(device.SCREEN.WAIT);
     }
 
     pthread_cancel(joystick_thread);

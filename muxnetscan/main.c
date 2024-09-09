@@ -180,6 +180,8 @@ void *joystick_task() {
     }
 
     while (1) {
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
         int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
             perror("Error with EPOLL wait event timer");
@@ -289,6 +291,8 @@ void *joystick_task() {
                         break;
                 }
             }
+            lv_task_handler();
+            usleep(device.SCREEN.WAIT);
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {
@@ -338,8 +342,6 @@ void *joystick_task() {
                 }
             }
         }
-
-        refresh_screen();
     }
 }
 
@@ -629,7 +631,8 @@ int main(int argc, char *argv[]) {
 
     pthread_create(&scan_networks_thread, NULL, scan_networks, NULL);
     while (pthread_tryjoin_np(scan_networks_thread, NULL) != 0) {
-        refresh_screen();
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
     }
 
     create_network_items();
@@ -641,7 +644,7 @@ int main(int argc, char *argv[]) {
     }
 
     while (!safe_quit) {
-        refresh_screen();
+        usleep(device.SCREEN.WAIT);
     }
 
     pthread_cancel(joystick_thread);
