@@ -132,11 +132,11 @@ void joystick_task() {
             }
             lv_task_handler();
             usleep(device.SCREEN.WAIT);
-            if (exit_status >=0) return;
+            if (exit_status >= 0) return;
         }
         lv_task_handler();
         usleep(device.SCREEN.WAIT);
-        if (exit_status >=0) return;
+        if (exit_status >= 0) return;
     }
 }
 
