@@ -262,6 +262,7 @@ void joystick_task() {
                                     } else if (element_focused == ui_lblConfig) {
                                         play_sound("confirm", nav_sound, 1);
                                         load_mux("config");
+                                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
                                     } else if (element_focused == ui_lblReboot) {
                                         play_sound("reboot", nav_sound, 1);
                                         load_mux("reboot");
