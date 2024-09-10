@@ -1192,7 +1192,7 @@ void cache_message(char *n_dir) {
     }
 }
 
-void *joystick_task() {
+void joystick_task() {
     struct input_event ev;
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
@@ -1206,14 +1206,14 @@ void *joystick_task() {
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("Error creating EPOLL instance");
-        return NULL;
+        return;
     }
 
     event.events = EPOLLIN;
     event.data.fd = js_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
         perror("Error with EPOLL controller");
-        return NULL;
+        return;
     }
 
     while (1) {
@@ -1361,7 +1361,7 @@ void *joystick_task() {
                                     lv_task_handler();
                                     usleep(256);
 
-                                    safe_quit = 1;
+                                    return;
                                     fail_quit:
                                     break;
                                 } else if (ev.code == NAV_B) {
@@ -1399,7 +1399,7 @@ void *joystick_task() {
                                             }
                                             break;
                                     }
-                                    safe_quit = 1;
+                                    return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (ui_count == 0) {
                                         goto nothing_ever_happens;
@@ -1474,7 +1474,7 @@ void *joystick_task() {
                                     load_mux("explore");
 
                                     ttq:
-                                    safe_quit = 1;
+                                    return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     play_sound("confirm", nav_sound, 1);
 
@@ -1531,7 +1531,7 @@ void *joystick_task() {
                                             remove("/tmp/explore_dir");
                                             load_mux("explore");
 
-                                            safe_quit = 1;
+                                            return;
                                             break;
                                         default:
                                             break;
@@ -1549,10 +1549,12 @@ void *joystick_task() {
                                                 write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
 
                                                 load_content_core(1, 0);
+                                                if (safe_quit) return;
                                                 load_content_governor(1, 0);
+                                                if (safe_quit) return;
 
                                                 load_mux("option");
-                                                safe_quit = 1;
+                                                return;
                                                 break;
                                             default:
                                                 break;
@@ -1660,6 +1662,8 @@ void *joystick_task() {
                         break;
                 }
             }
+            lv_task_handler();
+            usleep(device.SCREEN.WAIT);
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {
@@ -1709,8 +1713,8 @@ void *joystick_task() {
                 }
             }
         }
-
-        refresh_screen();
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -2340,17 +2344,8 @@ int main(int argc, char *argv[]) {
 
     update_file_counter();
 
-    pthread_t joystick_thread;
-    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
-        perror("Failed to create joystick thread");
-        return 1;
-    }
+    joystick_task();
 
-    while (!safe_quit) {
-        refresh_screen();
-    }
-
-    pthread_cancel(joystick_thread);
     free_items(items, item_count);
     close(js_fd);
 

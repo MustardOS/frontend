@@ -65,7 +65,7 @@ void set_brightness(int brightness) {
     system(command);
 }
 
-void *joystick_task() {
+void joystick_task() {
     struct input_event ev;
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
@@ -73,14 +73,14 @@ void *joystick_task() {
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("Error creating EPOLL instance");
-        return NULL;
+        return;
     }
 
     event.events = EPOLLIN;
     event.data.fd = js_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
         perror("Error with EPOLL controller");
-        return NULL;
+        return;
     }
 
     while (1) {
@@ -118,6 +118,7 @@ void *joystick_task() {
                                     usleep(device.SCREEN.WAIT);
 
                                     exit_status = 0;
+                                    return;
                                 }
 
                                 blank = 0;
@@ -129,9 +130,13 @@ void *joystick_task() {
                         break;
                 }
             }
+            lv_task_handler();
+            usleep(device.SCREEN.WAIT);
+            if (exit_status >= 0) return;
         }
-
-        refresh_screen();
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
+        if (exit_status >= 0) return;
     }
 }
 
@@ -241,17 +246,7 @@ int main(int argc, char *argv[]) {
     battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
     lv_timer_ready(battery_timer);
 
-    pthread_t joystick_thread;
-    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
-        perror("Failed to create joystick thread");
-        return 1;
-    }
-
-    while (exit_status < 0) {
-        usleep(device.SCREEN.WAIT);
-    }
-
-    pthread_cancel(joystick_thread);
+    joystick_task();
 
     close(js_fd);
 

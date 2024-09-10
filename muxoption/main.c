@@ -39,7 +39,6 @@ int msgbox_active = 0;
 int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
-int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
@@ -139,7 +138,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void *joystick_task() {
+void joystick_task() {
     struct input_event ev;
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
@@ -153,14 +152,14 @@ void *joystick_task() {
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("Error creating EPOLL instance");
-        return NULL;
+        return;
     }
 
     event.events = EPOLLIN;
     event.data.fd = js_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
         perror("Error with EPOLL controller");
-        return NULL;
+        return;
     }
 
     while (1) {
@@ -201,14 +200,14 @@ void *joystick_task() {
                                         load_mux("governor");
                                     }
 
-                                    safe_quit = 1;
+                                    return;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
 
                                     remove(MUOS_SAA_LOAD);
                                     remove(MUOS_SAG_LOAD);
 
-                                    safe_quit = 1;
+                                    return;
                                 }
                             }
                         } else {
@@ -275,6 +274,8 @@ void *joystick_task() {
                         break;
                 }
             }
+            lv_task_handler();
+            usleep(device.SCREEN.WAIT);
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {
@@ -324,8 +325,8 @@ void *joystick_task() {
                 }
             }
         }
-
-        refresh_screen();
+        lv_task_handler();
+        usleep(device.SCREEN.WAIT);
     }
 }
 
@@ -423,9 +424,11 @@ void ui_refresh_task() {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
-                    if (theme.MISC.ANIMATED_BACKGROUND) {
+                    if (theme.MISC.ANIMATED_BACKGROUND == 1) {
                         lv_obj_t * img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
+                    } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
                     } else {
                         lv_img_set_src(ui_imgWall, new_wall);
                     }
@@ -565,9 +568,11 @@ int main(int argc, char *argv[]) {
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
-        if (theme.MISC.ANIMATED_BACKGROUND) {
+        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
             lv_obj_t * img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
+        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
+            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
         } else {
             lv_img_set_src(ui_imgWall, current_wall);
         }
@@ -633,20 +638,10 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
-    pthread_t joystick_thread;
-    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
-        perror("Failed to create joystick thread");
-        return 1;
-    }
-
     init_elements();
     direct_to_previous();
 
-    while (!safe_quit) {
-        refresh_screen();
-    }
-
-    pthread_cancel(joystick_thread);
+    joystick_task();
 
     close(js_fd);
 
@@ -660,5 +655,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t) (now_ms - start_ms);
+    return (uint32_t)(now_ms - start_ms);
 }
