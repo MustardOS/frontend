@@ -10,7 +10,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlGovernor = lv_obj_create(ui_pnlContent);
     ui_pnlMemory = lv_obj_create(ui_pnlContent);
     ui_pnlTemp = lv_obj_create(ui_pnlContent);
-    ui_pnlServices = lv_obj_create(ui_pnlContent);
+    ui_pnlService = lv_obj_create(ui_pnlContent);
     ui_pnlBatteryCap = lv_obj_create(ui_pnlContent);
     ui_pnlVoltage = lv_obj_create(ui_pnlContent);
 
@@ -23,7 +23,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblGovernor = lv_label_create(ui_pnlGovernor);
     ui_lblMemory = lv_label_create(ui_pnlMemory);
     ui_lblTemp = lv_label_create(ui_pnlTemp);
-    ui_lblServices = lv_label_create(ui_pnlServices);
+    ui_lblService = lv_label_create(ui_pnlService);
     ui_lblBatteryCap = lv_label_create(ui_pnlBatteryCap);
     ui_lblVoltage = lv_label_create(ui_pnlVoltage);
 
@@ -36,7 +36,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoGovernor = lv_img_create(ui_pnlGovernor);
     ui_icoMemory = lv_img_create(ui_pnlMemory);
     ui_icoTemp = lv_img_create(ui_pnlTemp);
-    ui_icoServices = lv_img_create(ui_pnlServices);
+    ui_icoService = lv_img_create(ui_pnlService);
     ui_icoBatteryCap = lv_img_create(ui_pnlBatteryCap);
     ui_icoVoltage = lv_img_create(ui_pnlVoltage);
 
@@ -49,7 +49,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblGovernorValue = lv_label_create(ui_pnlGovernor);
     ui_lblMemoryValue = lv_label_create(ui_pnlMemory);
     ui_lblTempValue = lv_label_create(ui_pnlTemp);
-    ui_lblServicesValue = lv_label_create(ui_pnlServices);
+    ui_lblServiceValue = lv_label_create(ui_pnlService);
     ui_lblBatteryCapValue = lv_label_create(ui_pnlBatteryCap);
     ui_lblVoltageValue = lv_label_create(ui_pnlVoltage);
 }

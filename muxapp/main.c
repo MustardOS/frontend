@@ -96,8 +96,8 @@ void show_help() {
              "%s/MUOS/application/%s.sh", device.STORAGE.ROM.MOUNT, title);
     char *message = get_script_value(help_info, "HELP");
 
-    if (strlen(message) <= 1) message = _("No Help Message Found");
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, _(title), message);
+    if (strlen(message) <= 1) message = _("HELP.MSG.NONE");
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, _(title), _(message));
 }
 
 void create_app_items() {

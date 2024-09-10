@@ -77,7 +77,7 @@ void show_help() {
     }
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lv_label_get_text(lv_group_get_focused(ui_group)), credits);
+                     _(lv_label_get_text(lv_group_get_focused(ui_group))), _(credits));
 }
 
 void image_refresh() {
@@ -243,7 +243,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -292,12 +292,10 @@ void joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
                                     show_help();
                                 }
-                                */
                             }
                         }
                     case EV_ABS:
@@ -421,6 +419,9 @@ void init_elements() {
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);

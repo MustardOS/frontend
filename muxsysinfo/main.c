@@ -50,6 +50,7 @@ struct theme_config theme;
 int nav_moved = 1;
 char *current_wall = "";
 int current_item_index = 0;
+int ui_count = 0;
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -63,40 +64,41 @@ lv_group_t *ui_group_panel;
 #define UI_COUNT 12
 lv_obj_t *ui_objects[UI_COUNT];
 
+struct help_msg {
+    lv_obj_t *element;
+    char *message;
+};
+
 void show_help(lv_obj_t *element_focused) {
-    char *message = NO_HELP_FOUND;
+    struct help_msg help_messages[] = {
+            {ui_lblVersion,    "HELP.MSG.VERSION"},
+            {ui_lblDevice,     "HELP.MSG.DEVICE"},
+            {ui_lblKernel,     "HELP.MSG.KERNEL"},
+            {ui_lblUptime,     "HELP.MSG.UPTIME"},
+            {ui_lblCPU,        "HELP.MSG.CPU"},
+            {ui_lblSpeed,      "HELP.MSG.SPEED"},
+            {ui_lblGovernor,   "HELP.MSG.GOVERNOR"},
+            {ui_lblMemory,     "HELP.MSG.MEMORY"},
+            {ui_lblTemp,       "HELP.MSG.TEMP"},
+            {ui_lblService,    "HELP.MSG.SERVICE"},
+            {ui_lblBatteryCap, "HELP.MSG.BATTERY"},
+            {ui_lblVoltage,    "HELP.MSG.VOLTAGE"},
+    };
 
-    if (element_focused == ui_lblVersion) {
-        message = MUXSYSINFO_VERSION;
-    } else if (element_focused == ui_lblDevice) {
-        message = MUXSYSINFO_DEVICE;
-    } else if (element_focused == ui_lblKernel) {
-        message = MUXSYSINFO_KERNEL;
-    } else if (element_focused == ui_lblUptime) {
-        message = MUXSYSINFO_UPTIME;
-    } else if (element_focused == ui_lblCPU) {
-        message = MUXSYSINFO_CPU;
-    } else if (element_focused == ui_lblSpeed) {
-        message = MUXSYSINFO_SPEED;
-    } else if (element_focused == ui_lblGovernor) {
-        message = MUXSYSINFO_GOVERNOR;
-    } else if (element_focused == ui_lblMemory) {
-        message = MUXSYSINFO_MEMORY;
-    } else if (element_focused == ui_lblTemp) {
-        message = MUXSYSINFO_TEMP;
-    } else if (element_focused == ui_lblServices) {
-        message = MUXSYSINFO_SERVICES;
-    } else if (element_focused == ui_lblBatteryCap) {
-        message = MUXSYSINFO_BATTCAP;
-    } else if (element_focused == ui_lblVoltage) {
-        message = MUXSYSINFO_VOLTAGE;
+    char *message = "HELP.MSG.NONE";
+    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
+
+    for (int i = 0; i < num_messages; i++) {
+        if (element_focused == help_messages[i].element) {
+            message = help_messages[i].message;
+            break;
+        }
     }
 
-    if (strlen(message) <= 1) {
-        message = NO_HELP_FOUND;
-    }
+    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, lv_label_get_text(element_focused), message);
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     _(lv_label_get_text(element_focused)), _(message));
 }
 
 char *remove_comma(const char *str) {
@@ -180,7 +182,7 @@ void update_system_info() {
                       get_execute_result(
                               "cat /sys/class/thermal/thermal_zone0/temp | awk '{printf \"%.2f\", $1/1000}'"
                       ));
-    lv_label_set_text(ui_lblServicesValue,
+    lv_label_set_text(ui_lblServiceValue,
                       get_execute_result(
                               "ps | grep -v 'COMMAND' | grep -v 'grep' | sed '/\\[/d' | wc -l"
                       ));
@@ -199,7 +201,7 @@ void init_navigation_groups() {
             ui_pnlGovernor,
             ui_pnlMemory,
             ui_pnlTemp,
-            ui_pnlServices,
+            ui_pnlService,
             ui_pnlBatteryCap,
             ui_pnlVoltage,
     };
@@ -213,7 +215,7 @@ void init_navigation_groups() {
     ui_objects[6] = ui_lblGovernor;
     ui_objects[7] = ui_lblMemory;
     ui_objects[8] = ui_lblTemp;
-    ui_objects[9] = ui_lblServices;
+    ui_objects[9] = ui_lblService;
     ui_objects[10] = ui_lblBatteryCap;
     ui_objects[11] = ui_lblVoltage;
 
@@ -227,7 +229,7 @@ void init_navigation_groups() {
             ui_lblGovernorValue,
             ui_lblMemoryValue,
             ui_lblTempValue,
-            ui_lblServicesValue,
+            ui_lblServiceValue,
             ui_lblBatteryCapValue,
             ui_lblVoltageValue
     };
@@ -242,7 +244,7 @@ void init_navigation_groups() {
             ui_icoGovernor,
             ui_icoMemory,
             ui_icoTemp,
-            ui_icoServices,
+            ui_icoService,
             ui_icoBatteryCap,
             ui_icoVoltage
     };
@@ -256,7 +258,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlGovernor);
     apply_theme_list_panel(&theme, &device, ui_pnlMemory);
     apply_theme_list_panel(&theme, &device, ui_pnlTemp);
-    apply_theme_list_panel(&theme, &device, ui_pnlServices);
+    apply_theme_list_panel(&theme, &device, ui_pnlService);
     apply_theme_list_panel(&theme, &device, ui_pnlBatteryCap);
     apply_theme_list_panel(&theme, &device, ui_pnlVoltage);
 
@@ -269,7 +271,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblGovernor, _("CPU Governor"), false, true);
     apply_theme_list_item(&theme, ui_lblMemory, _("RAM Usage"), false, true);
     apply_theme_list_item(&theme, ui_lblTemp, _("Temperature"), false, true);
-    apply_theme_list_item(&theme, ui_lblServices, _("Running Services"), false, true);
+    apply_theme_list_item(&theme, ui_lblService, _("Running Services"), false, true);
     apply_theme_list_item(&theme, ui_lblBatteryCap, _("Battery Capacity"), false, true);
     apply_theme_list_item(&theme, ui_lblVoltage, _("Battery Voltage"), false, true);
 
@@ -282,7 +284,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoGovernor, mux_prog, "governor");
     apply_theme_list_glyph(&theme, ui_icoMemory, mux_prog, "memory");
     apply_theme_list_glyph(&theme, ui_icoTemp, mux_prog, "temp");
-    apply_theme_list_glyph(&theme, ui_icoServices, mux_prog, "services");
+    apply_theme_list_glyph(&theme, ui_icoService, mux_prog, "service");
     apply_theme_list_glyph(&theme, ui_icoBatteryCap, mux_prog, "capacity");
     apply_theme_list_glyph(&theme, ui_icoVoltage, mux_prog, "voltage");
 
@@ -295,7 +297,7 @@ void init_navigation_groups() {
     apply_theme_list_value(&theme, ui_lblGovernorValue, "");
     apply_theme_list_value(&theme, ui_lblMemoryValue, "");
     apply_theme_list_value(&theme, ui_lblTempValue, "");
-    apply_theme_list_value(&theme, ui_lblServicesValue, "");
+    apply_theme_list_value(&theme, ui_lblServiceValue, "");
     apply_theme_list_value(&theme, ui_lblBatteryCapValue, "");
     apply_theme_list_value(&theme, ui_lblVoltageValue, "");
 
@@ -304,7 +306,8 @@ void init_navigation_groups() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
+    for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
@@ -386,7 +389,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -412,12 +415,10 @@ void joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
                                     show_help(element_focused);
                                 }
-                                */
                             }
                         }
                     case EV_ABS:
@@ -545,6 +546,9 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
+
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);
     process_visual_element(NETWORK, ui_staNetwork);
@@ -583,7 +587,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblGovernor, "governor");
     lv_obj_set_user_data(ui_lblMemory, "memory");
     lv_obj_set_user_data(ui_lblTemp, "temp");
-    lv_obj_set_user_data(ui_lblServices, "service");
+    lv_obj_set_user_data(ui_lblService, "service");
     lv_obj_set_user_data(ui_lblBatteryCap, "capacity");
     lv_obj_set_user_data(ui_lblVoltage, "voltage");
 

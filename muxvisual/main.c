@@ -68,54 +68,56 @@ int folderitemcount_total, folderitemcount_current;
 int menu_counter_folder_total, menu_counter_folder_current;
 int menu_counter_file_total, menu_counter_file_current;
 
+#define UI_COUNT 11
+lv_obj_t *ui_objects[UI_COUNT];
+
 typedef struct {
     int *total;
     int *current;
 } Visuals;
 
-Visuals battery, network, bluetooth, mux_clock, boxart, name, dash, thetitleformat, folderitemcount, counterfolder, counterfile;
+Visuals battery, network, bluetooth, mux_clock, boxart, name, dash,
+        thetitleformat, folderitemcount, counterfolder, counterfile;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 10
-lv_obj_t *ui_objects[UI_COUNT];
-lv_obj_t *ui_icons[UI_COUNT];
+struct help_msg {
+    lv_obj_t *element;
+    char *message;
+};
 
 void show_help(lv_obj_t *element_focused) {
-    char *message = NO_HELP_FOUND;
+    struct help_msg help_messages[] = {
+            {ui_lblBattery,           "HELP.MSG.BATTERY"},
+            {ui_lblNetwork,           "HELP.MSG.NETWORK"},
+            {ui_lblBluetooth,         "HELP.MSG.BLUETOOTH"},
+            {ui_lblClock,             "HELP.MSG.CLOCK"},
+            {ui_lblBoxArt,            "HELP.MSG.BOXART"},
+            {ui_lblName,              "HELP.MSG.NAME"},
+            {ui_lblDash,              "HELP.MSG.DASH"},
+            {ui_lblTheTitleFormat,    "HELP.MSG.TITLE_FORMAT"},
+            {ui_lblFolderItemCount,   "HELP.MSG.FOLDER.ITEM"},
+            {ui_lblMenuCounterFolder, "HELP.MSG.COUNTER.FOLDER"},
+            {ui_lblMenuCounterFile,   "HELP.MSG.COUNTER.FILE"},
+    };
 
-    if (element_focused == ui_lblBattery) {
-        message = MUXVISUAL_BATTERY;
-    } else if (element_focused == ui_lblNetwork) {
-        message = MUXVISUAL_NETWORK;
-    } else if (element_focused == ui_lblBluetooth) {
-        message = MUXVISUAL_BLUETOOTH;
-    } else if (element_focused == ui_lblClock) {
-        message = MUXVISUAL_CLOCK;
-    } else if (element_focused == ui_lblBoxArt) {
-        message = MUXVISUAL_BOXART;
-    } else if (element_focused == ui_lblName) {
-        message = MUXVISUAL_NAME;
-    } else if (element_focused == ui_lblDash) {
-        message = MUXVISUAL_DASH;
-    } else if (element_focused == ui_lblTheTitleFormat) {
-        message = MUXVISUAL_THETITLEFORMAT;
-    } else if (element_focused == ui_lblFolderItemCount) {
-        message = MUXVISUAL_FOLDERITEMCOUNT;
-    } else if (element_focused == ui_lblMenuCounterFolder) {
-        message = MUXVISUAL_MENU_COUNTER_FOLDERS;
-    } else if (element_focused == ui_lblMenuCounterFile) {
-        message = MUXVISUAL_MENU_COUNTER_FILES;
+    char *message = "HELP.MSG.NONE";
+    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
+
+    for (int i = 0; i < num_messages; i++) {
+        if (element_focused == help_messages[i].element) {
+            message = help_messages[i].message;
+            break;
+        }
     }
 
-    if (strlen(message) <= 1) {
-        message = NO_HELP_FOUND;
-    }
+    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, lv_label_get_text(element_focused), message);
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     _(lv_label_get_text(element_focused)), _(message));
 }
 
 void init_pointers(Visuals *visuals, int *total, int *current) {
@@ -255,19 +257,17 @@ void init_navigation_groups() {
             ui_pnlMenuCounterFile
     };
 
-    lv_obj_t *ui_objects[] = {
-            ui_lblBattery,
-            ui_lblNetwork,
-            ui_lblBluetooth,
-            ui_lblClock,
-            ui_lblBoxArt,
-            ui_lblName,
-            ui_lblDash,
-            ui_lblTheTitleFormat,
-            ui_lblFolderItemCount,
-            ui_lblMenuCounterFolder,
-            ui_lblMenuCounterFile
-    };
+    ui_objects[0] = ui_lblBattery;
+    ui_objects[1] = ui_lblNetwork;
+    ui_objects[2] = ui_lblBluetooth;
+    ui_objects[3] = ui_lblClock;
+    ui_objects[4] = ui_lblBoxArt;
+    ui_objects[5] = ui_lblName;
+    ui_objects[6] = ui_lblDash;
+    ui_objects[7] = ui_lblTheTitleFormat;
+    ui_objects[8] = ui_lblFolderItemCount;
+    ui_objects[9] = ui_lblMenuCounterFolder;
+    ui_objects[10] = ui_lblMenuCounterFile;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droBattery,
@@ -367,13 +367,14 @@ void init_navigation_groups() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
-        ui_count++;
+    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
+    for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
+
 }
 
 void list_nav_prev(int steps) {
@@ -450,7 +451,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -524,12 +525,10 @@ void joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
                                     show_help(element_focused);
                                 }
-                                */
                             }
                         }
                     case EV_ABS:
@@ -758,6 +757,9 @@ void init_elements() {
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);

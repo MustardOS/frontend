@@ -190,6 +190,9 @@ void init_elements() {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
+
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);
     process_visual_element(NETWORK, ui_staNetwork);

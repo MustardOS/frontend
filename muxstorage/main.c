@@ -66,6 +66,9 @@ int screenshot_total, screenshot_current;
 int look_total, look_current;
 int language_total, language_current;
 
+#define UI_COUNT 9
+lv_obj_t *ui_objects[UI_COUNT];
+
 typedef struct {
     int *total;
     int *current;
@@ -78,34 +81,38 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
+struct help_msg {
+    lv_obj_t *element;
+    char *message;
+};
+
 void show_help(lv_obj_t *element_focused) {
-    char *message = NO_HELP_FOUND;
+    struct help_msg help_messages[] = {
+            {ui_lblBIOS,       "HELP.MSG.BIOS"},
+            {ui_lblConfig,     "HELP.MSG.CONFIG"},
+            {ui_lblCatalogue,  "HELP.MSG.CATALOGUE"},
+            {ui_lblConman,     "HELP.MSG.CONTENT"},
+            {ui_lblMusic,      "HELP.MSG.MUSIC"},
+            {ui_lblSave,       "HELP.MSG.SAVE"},
+            {ui_lblScreenshot, "HELP.MSG.SCREENSHOT"},
+            {ui_lblTheme,      "HELP.MSG.THEME"},
+            {ui_lblLanguage,   "HELP.MSG.LANGUAGE"},
+    };
 
-    if (element_focused == ui_lblBIOS) {
-        message = MUXSTORAGE_BIOS;
-    } else if (element_focused == ui_lblConfig) {
-        message = MUXSTORAGE_CONFIG;
-    } else if (element_focused == ui_lblCatalogue) {
-        message = MUXSTORAGE_CATALOGUE;
-    } else if (element_focused == ui_lblConman) {
-        message = MUXSTORAGE_CONTENT;
-    } else if (element_focused == ui_lblMusic) {
-        message = MUXSTORAGE_MUSIC;
-    } else if (element_focused == ui_lblSave) {
-        message = MUXSTORAGE_SAVE;
-    } else if (element_focused == ui_lblScreenshot) {
-        message = MUXSTORAGE_SCREENSHOT;
-    } else if (element_focused == ui_lblTheme) {
-        message = MUXSTORAGE_THEME;
-    } else if (element_focused == ui_lblLanguage) {
-        message = MUXSTORAGE_LANGUAGE;
+    char *message = "HELP.MSG.NONE";
+    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
+
+    for (int i = 0; i < num_messages; i++) {
+        if (element_focused == help_messages[i].element) {
+            message = help_messages[i].message;
+            break;
+        }
     }
 
-    if (strlen(message) <= 1) {
-        message = NO_HELP_FOUND;
-    }
+    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, lv_label_get_text(element_focused), message);
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     _(lv_label_get_text(element_focused)), _(message));
 }
 
 void init_pointers(Storage *storage, int *total, int *current) {
@@ -229,17 +236,15 @@ void init_navigation_groups() {
             ui_pnlLanguage
     };
 
-    lv_obj_t *ui_objects[] = {
-            ui_lblBIOS,
-            ui_lblConfig,
-            ui_lblCatalogue,
-            ui_lblConman,
-            ui_lblMusic,
-            ui_lblSave,
-            ui_lblScreenshot,
-            ui_lblTheme,
-            ui_lblLanguage
-    };
+    ui_objects[0] = ui_lblBIOS;
+    ui_objects[1] = ui_lblConfig;
+    ui_objects[2] = ui_lblCatalogue;
+    ui_objects[3] = ui_lblConman;
+    ui_objects[4] = ui_lblMusic;
+    ui_objects[5] = ui_lblSave;
+    ui_objects[6] = ui_lblScreenshot;
+    ui_objects[7] = ui_lblTheme;
+    ui_objects[8] = ui_lblLanguage;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droBIOS,
@@ -395,7 +400,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -461,12 +466,10 @@ void joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
                                     show_help(element_focused);
                                 }
-                                */
                             }
                         }
                     case EV_ABS:
@@ -677,6 +680,9 @@ void init_elements() {
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);

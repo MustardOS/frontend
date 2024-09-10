@@ -82,14 +82,8 @@ enum core_gen_type {
 };
 
 void show_help() {
-    char *title = _("ASSIGN CORE");
-    char *message = MUXASSIGN_GENERIC;
-
-    if (strlen(message) <= 1) {
-        message = NO_HELP_FOUND;
-    }
-
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     _(lv_label_get_text(ui_lblTitle)), _("HELP.MSG.ASSIGN"));
 }
 
 char **get_subdirectories(const char *base_dir) {
@@ -161,14 +155,14 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
     create_directories(core_dir);
 
     switch (method) {
-        case SINGLE:
+        case SINGLE: {
             char rom_path[MAX_BUFFER_SIZE];
             snprintf(rom_path, sizeof(rom_path), "%s/%s.cfg",
                      core_dir, strip_ext(rom));
 
             if (file_exist(rom_path)) remove(rom_path);
 
-            FILE * rom_file = fopen(rom_path, "w");
+            FILE *rom_file = fopen(rom_path, "w");
             if (rom_file == NULL) {
                 perror("Error opening file rom_path file");
                 return;
@@ -184,6 +178,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
                     get_last_subdir(rom_dir, '/', 4), rom);
             fclose(rom_file);
             break;
+        }
         case PARENT: {
             delete_files_of_type(core_dir, "cfg", NULL, 1);
             create_core_assignment(core, sys, rom, cache, DIRECTORY);
@@ -196,7 +191,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
 
                     create_directories(strip_dir(subdir_file));
 
-                    FILE * subdir_file_handle = fopen(subdir_file, "w");
+                    FILE *subdir_file_handle = fopen(subdir_file, "w");
                     if (subdir_file_handle == NULL) {
                         perror("Error opening file");
                         continue;
@@ -216,7 +211,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
             snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
                      STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
-            FILE * file = fopen(core_file, "w");
+            FILE *file = fopen(core_file, "w");
             if (file == NULL) {
                 perror("Error opening file");
                 return;
@@ -232,7 +227,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
             snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
                      STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
 
-            FILE * file = fopen(core_file, "w");
+            FILE *file = fopen(core_file, "w");
             if (file == NULL) {
                 perror("Error opening file");
                 return;
@@ -258,7 +253,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
 }
 
 char **read_assign_ini(const char *filename, int *cores) {
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file!");
         return NULL;
@@ -368,7 +363,7 @@ void create_core_items(const char *target) {
     }
 
     char *assign_default = NULL;
-    mini_t * assign_ini = mini_try_load(filename);
+    mini_t *assign_ini = mini_try_load(filename);
 
     if (assign_ini) {
         const char *a_def = mini_get_string(assign_ini, "global", "default", "");
@@ -508,7 +503,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -528,7 +523,7 @@ void joystick_task() {
                                                  "%s/MUOS/info/assign/%s.ini",
                                                  device.STORAGE.ROM.MOUNT, rom_system);
 
-                                        mini_t * chosen_core = mini_load(chosen_core_ini);
+                                        mini_t *chosen_core = mini_load(chosen_core_ini);
 
                                         const char *raw_core = mini_get_string(
                                                 chosen_core, str_trim(lv_label_get_text(element_focused)),
@@ -558,7 +553,7 @@ void joystick_task() {
                                                  "%s/MUOS/info/assign/%s.ini",
                                                  device.STORAGE.ROM.MOUNT, rom_system);
 
-                                        mini_t * chosen_core = mini_load(chosen_core_ini);
+                                        mini_t *chosen_core = mini_load(chosen_core_ini);
 
                                         const char *raw_core = mini_get_string(
                                                 chosen_core, str_trim(lv_label_get_text(element_focused)),
@@ -590,7 +585,7 @@ void joystick_task() {
                                                  "%s/MUOS/info/assign/%s.ini",
                                                  device.STORAGE.ROM.MOUNT, rom_system);
 
-                                        mini_t * chosen_core = mini_load(chosen_core_ini);
+                                        mini_t *chosen_core = mini_load(chosen_core_ini);
 
                                         const char *raw_core = mini_get_string(
                                                 chosen_core, str_trim(lv_label_get_text(element_focused)),
@@ -612,7 +607,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
 
                                     if (strcasecmp(rom_system, "none") == 0) {
-                                        FILE * file = fopen(MUOS_SYS_LOAD, "w");
+                                        FILE *file = fopen(MUOS_SYS_LOAD, "w");
                                         fprintf(file, "%s", "");
                                         fclose(file);
                                     } else {
@@ -635,12 +630,10 @@ void joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
                                     show_help();
                                 }
-                                */
                             }
                         }
                     case EV_ABS:
@@ -761,6 +754,9 @@ void init_elements() {
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);
@@ -996,7 +992,7 @@ int main(int argc, char *argv[]) {
 
                 LOG_INFO(mux_prog, "<Automatic Core Assign> Obtaining Core INI: %s", assigned_core_ini);
 
-                mini_t * core_config_ini = mini_load(assigned_core_ini);
+                mini_t *core_config_ini = mini_load(assigned_core_ini);
 
                 static char def_core[MAX_BUFFER_SIZE];
                 strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
@@ -1199,5 +1195,5 @@ uint32_t mux_tick(void) {
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
     start_ms = start_ms || now_ms;
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }

@@ -1235,7 +1235,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -1571,7 +1571,8 @@ void joystick_task() {
                                 }
                             }
                         } else {
-                            if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                            if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
+                                ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
                                 if (progress_onscreen == -1) {
                                     if (ui_count == 0) {

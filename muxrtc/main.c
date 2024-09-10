@@ -49,6 +49,7 @@ struct theme_config theme;
 int nav_moved = 1;
 char *current_wall = "";
 int current_item_index = 0;
+int ui_count = 0;
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -75,15 +76,14 @@ const char *notation[] = {
         "12 Hour", "24 Hour"
 };
 
+struct help_msg {
+    lv_obj_t *element;
+    char *message;
+};
+
 void show_help() {
-    char *title = lv_label_get_text(ui_lblTitle);
-    char *message = MUXRTC_GENERIC;
-
-    if (strlen(message) <= 1) {
-        message = NO_HELP_FOUND;
-    }
-
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, title, message);
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     _(lv_label_get_text(ui_lblTitle)), _("HELP.MSG.RTC"));
 }
 
 void confirm_rtc_config() {
@@ -297,7 +297,8 @@ void init_navigation_groups() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
+    for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
@@ -379,7 +380,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -480,12 +481,10 @@ void joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
                                     show_help();
                                 }
-                                */
                             }
                         }
                     case EV_ABS:
@@ -733,6 +732,9 @@ void init_elements() {
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);

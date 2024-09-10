@@ -71,17 +71,17 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblContent,    _("HELP.MSG.CONTENT")},
-            {ui_lblFavourites, _("HELP.MSG.FAVOURITES")},
-            {ui_lblHistory,    _("HELP.MSG.HISTORY")},
-            {ui_lblApps,       _("HELP.MSG.APPS")},
-            {ui_lblInfo,       _("HELP.MSG.INFO")},
-            {ui_lblConfig,     _("HELP.MSG.CONFIG")},
-            {ui_lblReboot,     _("HELP.MSG.REBOOT")},
-            {ui_lblShutdown,   _("HELP.MSG.SHUTDOWN")},
+            {ui_lblContent,    "HELP.MSG.CONTENT"},
+            {ui_lblFavourites, "HELP.MSG.FAVOURITES"},
+            {ui_lblHistory,    "HELP.MSG.HISTORY"},
+            {ui_lblApps,       "HELP.MSG.APPS"},
+            {ui_lblInfo,       "HELP.MSG.INFO"},
+            {ui_lblConfig,     "HELP.MSG.CONFIG"},
+            {ui_lblReboot,     "HELP.MSG.REBOOT"},
+            {ui_lblShutdown,   "HELP.MSG.SHUTDOWN"},
     };
 
-    char *message = _("No Help Message Found");
+    char *message = "HELP.MSG.NONE";
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -91,9 +91,10 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = _("No Help Message Found");
+    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, lv_label_get_text(element_focused), message);
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     _(lv_label_get_text(element_focused)), _(message));
 }
 
 void init_navigation_groups() {
@@ -234,7 +235,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 0);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -281,12 +282,10 @@ void joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 0);
                                     show_help(element_focused);
                                 }
-                                */
                             }
                         }
                     case EV_ABS:
@@ -437,6 +436,9 @@ void init_elements() {
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);

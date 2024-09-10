@@ -74,9 +74,10 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-lv_obj_t *ui_objects[9];
-lv_obj_t *ui_values[9];
-lv_obj_t *ui_icons[9];
+#define UI_COUNT 9
+lv_obj_t *ui_objects[UI_COUNT];
+lv_obj_t *ui_values[UI_COUNT];
+lv_obj_t *ui_icons[UI_COUNT];
 
 static const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
                                       "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
@@ -104,30 +105,38 @@ static const char *key_number_map[] = {"7", "8", "9", "\n",
                                        "1", "2", "3", "\n",
                                        "0", ".", "OK", NULL};
 
-void show_help(lv_obj_t *element_focused) {
-    char *message = "HELP NOT FOUND";
+struct help_msg {
+    lv_obj_t *element;
+    char *message;
+};
 
-    if (element_focused == ui_lblEnable) {
-        message = MUXNETWORK_ENABLED;
-    } else if (element_focused == ui_lblIdentifier) {
-        message = MUXNETWORK_IDENTIFIER;
-    } else if (element_focused == ui_lblPassword) {
-        message = MUXNETWORK_PASSWORD;
-    } else if (element_focused == ui_lblType) {
-        message = MUXNETWORK_TYPE;
-    } else if (element_focused == ui_lblAddress) {
-        message = MUXNETWORK_ADDRESS;
-    } else if (element_focused == ui_lblSubnet) {
-        message = MUXNETWORK_SUBNET;
-    } else if (element_focused == ui_lblGateway) {
-        message = MUXNETWORK_GATEWAY;
-    } else if (element_focused == ui_lblStatus) {
-        message = MUXNETWORK_STATUS;
-    } else if (element_focused == ui_lblConnect) {
-        message = MUXNETWORK_CONNECT;
+void show_help(lv_obj_t *element_focused) {
+    struct help_msg help_messages[] = {
+            {ui_lblEnable,     "HELP.MSG.ENABLE"},
+            {ui_lblIdentifier, "HELP.MSG.IDENTIFIER"},
+            {ui_lblPassword,   "HELP.MSG.PASSWORD"},
+            {ui_lblType,       "HELP.MSG.TYPE"},
+            {ui_lblAddress,    "HELP.MSG.ADDRESS"},
+            {ui_lblSubnet,     "HELP.MSG.SUBNET"},
+            {ui_lblGateway,    "HELP.MSG.GATEWAY"},
+            {ui_lblStatus,     "HELP.MSG.STATUS"},
+            {ui_lblConnect,    "HELP.MSG.CONNECT"},
+    };
+
+    char *message = "HELP.MSG.NONE";
+    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
+
+    for (int i = 0; i < num_messages; i++) {
+        if (element_focused == help_messages[i].element) {
+            message = help_messages[i].message;
+            break;
+        }
     }
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, lv_label_get_text(element_focused), message);
+    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
+
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     _(lv_label_get_text(element_focused)), _(message));
 }
 
 void get_current_ip() {
@@ -297,7 +306,8 @@ void init_navigation_groups() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
+    for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_values[i]);
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
@@ -389,7 +399,7 @@ void joystick_task() {
                     case EV_KEY:
                         if (ev.value == 1) {
                             if (msgbox_active) {
-                                if (ev.code == NAV_B || ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
+                                if (ev.code == NAV_B) {
                                     play_sound("confirm", nav_sound, 1);
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
@@ -628,12 +638,10 @@ void joystick_task() {
                             if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
-                                /* DISABLED HELP SCREEN TEMPORARILY
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
                                     show_help(element_focused);
                                 }
-                                */
                             }
                         }
                         break;
@@ -1066,6 +1074,9 @@ void init_elements() {
     if (bar_header) {
         lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
+    lv_label_set_text(ui_lblPreviewHeader, "");
+    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
 
     process_visual_element(CLOCK, ui_lblDatetime);
     process_visual_element(BLUETOOTH, ui_staBluetooth);
