@@ -104,7 +104,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblMenuCounterFile,   "HELP.COUNTER.FILE"},
     };
 
-    char *message = "HELP.NONE";
+    char *message = "No Help Information Found";
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -114,7 +114,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "HELP.NONE";
+    if (strlen(message) <= 1) message = "No Help Information Found";
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      _(lv_label_get_text(element_focused)), _(message));
