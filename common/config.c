@@ -67,6 +67,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.FOLDERITEMCOUNT, "visual/folderitemcount");
     CFG_INT_FIELD(config->VISUAL.COUNTERFOLDER, "visual/counterfolder");
     CFG_INT_FIELD(config->VISUAL.COUNTERFILE, "visual/counterfile");
+    CFG_INT_FIELD(config->VISUAL.BACKGROUNDANIMATION, "visual/backgroundanimation");
 
     CFG_INT_FIELD(config->WEB.SHELL, "web/shell");
     CFG_INT_FIELD(config->WEB.BROWSER, "web/browser");

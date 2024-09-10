@@ -13,6 +13,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlFolderItemCount = lv_obj_create(ui_pnlContent);
     ui_pnlMenuCounterFolder = lv_obj_create(ui_pnlContent);
     ui_pnlMenuCounterFile = lv_obj_create(ui_pnlContent);
+    ui_pnlBackgroundAnimation = lv_obj_create(ui_pnlContent);
 
     ui_lblBattery = lv_label_create(ui_pnlBattery);
     ui_lblNetwork = lv_label_create(ui_pnlNetwork);
@@ -25,6 +26,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblFolderItemCount = lv_label_create(ui_pnlFolderItemCount);
     ui_lblMenuCounterFolder = lv_label_create(ui_pnlMenuCounterFolder);
     ui_lblMenuCounterFile = lv_label_create(ui_pnlMenuCounterFile);
+    ui_lblBackgroundAnimation = lv_label_create(ui_pnlBackgroundAnimation);
 
     ui_icoBattery = lv_img_create(ui_pnlBattery);
     ui_icoNetwork = lv_img_create(ui_pnlNetwork);
@@ -37,6 +39,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoFolderItemCount = lv_img_create(ui_pnlFolderItemCount);
     ui_icoMenuCounterFolder = lv_img_create(ui_pnlMenuCounterFolder);
     ui_icoMenuCounterFile = lv_img_create(ui_pnlMenuCounterFile);
+    ui_icoBackgroundAnimation = lv_img_create(ui_pnlBackgroundAnimation);
 
     ui_droBattery = lv_dropdown_create(ui_pnlBattery);
     ui_droNetwork = lv_dropdown_create(ui_pnlNetwork);
@@ -49,4 +52,5 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droFolderItemCount = lv_dropdown_create(ui_pnlFolderItemCount);
     ui_droMenuCounterFolder = lv_dropdown_create(ui_pnlMenuCounterFolder);
     ui_droMenuCounterFile = lv_dropdown_create(ui_pnlMenuCounterFile);
+    ui_droBackgroundAnimation = lv_dropdown_create(ui_pnlBackgroundAnimation);
 }

@@ -69,6 +69,7 @@ struct mux_config {
         int16_t FOLDERITEMCOUNT;
         int16_t COUNTERFOLDER;
         int16_t COUNTERFILE;
+        int16_t BACKGROUNDANIMATION;
     } VISUAL;
 
     struct {
