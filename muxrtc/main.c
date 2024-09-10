@@ -83,7 +83,7 @@ struct help_msg {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.MSG.RTC"));
+                     _(lv_label_get_text(ui_lblTitle)), _("HELP.RTC"));
 }
 
 void confirm_rtc_config() {

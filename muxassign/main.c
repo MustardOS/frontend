@@ -83,7 +83,7 @@ enum core_gen_type {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.MSG.ASSIGN"));
+                     _(lv_label_get_text(ui_lblTitle)), _("HELP.ASSIGN"));
 }
 
 char **get_subdirectories(const char *base_dir) {

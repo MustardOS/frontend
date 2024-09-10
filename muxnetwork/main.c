@@ -112,18 +112,18 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblEnable,     "HELP.MSG.ENABLE"},
-            {ui_lblIdentifier, "HELP.MSG.IDENTIFIER"},
-            {ui_lblPassword,   "HELP.MSG.PASSWORD"},
-            {ui_lblType,       "HELP.MSG.TYPE"},
-            {ui_lblAddress,    "HELP.MSG.ADDRESS"},
-            {ui_lblSubnet,     "HELP.MSG.SUBNET"},
-            {ui_lblGateway,    "HELP.MSG.GATEWAY"},
-            {ui_lblStatus,     "HELP.MSG.STATUS"},
-            {ui_lblConnect,    "HELP.MSG.CONNECT"},
+            {ui_lblEnable,     "HELP.ENABLE"},
+            {ui_lblIdentifier, "HELP.IDENTIFIER"},
+            {ui_lblPassword,   "HELP.PASSWORD"},
+            {ui_lblType,       "HELP.TYPE"},
+            {ui_lblAddress,    "HELP.ADDRESS"},
+            {ui_lblSubnet,     "HELP.SUBNET"},
+            {ui_lblGateway,    "HELP.GATEWAY"},
+            {ui_lblStatus,     "HELP.STATUS"},
+            {ui_lblConnect,    "HELP.CONNECT"},
     };
 
-    char *message = "HELP.MSG.NONE";
+    char *message = "HELP.NONE";
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -133,7 +133,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
+    if (strlen(message) <= 1) message = "HELP.NONE";
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      _(lv_label_get_text(element_focused)), _(message));

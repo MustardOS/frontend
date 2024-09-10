@@ -71,21 +71,21 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblVersion,    "HELP.MSG.VERSION"},
-            {ui_lblDevice,     "HELP.MSG.DEVICE"},
-            {ui_lblKernel,     "HELP.MSG.KERNEL"},
-            {ui_lblUptime,     "HELP.MSG.UPTIME"},
-            {ui_lblCPU,        "HELP.MSG.CPU"},
-            {ui_lblSpeed,      "HELP.MSG.SPEED"},
-            {ui_lblGovernor,   "HELP.MSG.GOVERNOR"},
-            {ui_lblMemory,     "HELP.MSG.MEMORY"},
-            {ui_lblTemp,       "HELP.MSG.TEMP"},
-            {ui_lblService,    "HELP.MSG.SERVICE"},
-            {ui_lblBatteryCap, "HELP.MSG.BATTERY"},
-            {ui_lblVoltage,    "HELP.MSG.VOLTAGE"},
+            {ui_lblVersion,    "HELP.VERSION"},
+            {ui_lblDevice,     "HELP.DEVICE"},
+            {ui_lblKernel,     "HELP.KERNEL"},
+            {ui_lblUptime,     "HELP.UPTIME"},
+            {ui_lblCPU,        "HELP.CPU"},
+            {ui_lblSpeed,      "HELP.SPEED"},
+            {ui_lblGovernor,   "HELP.GOVERNOR"},
+            {ui_lblMemory,     "HELP.MEMORY"},
+            {ui_lblTemp,       "HELP.TEMP"},
+            {ui_lblService,    "HELP.SERVICE"},
+            {ui_lblBatteryCap, "HELP.BATTERY"},
+            {ui_lblVoltage,    "HELP.VOLTAGE"},
     };
 
-    char *message = "HELP.MSG.NONE";
+    char *message = "HELP.NONE";
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -95,7 +95,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
+    if (strlen(message) <= 1) message = "HELP.NONE";
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      _(lv_label_get_text(element_focused)), _(message));

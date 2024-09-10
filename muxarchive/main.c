@@ -67,7 +67,7 @@ int first_open = 1;
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.MSG.ARCHIVE"));
+                     _(lv_label_get_text(ui_lblTitle)), _("HELP.ARCHIVE"));
 }
 
 void create_archive_items() {

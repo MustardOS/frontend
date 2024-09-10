@@ -64,7 +64,7 @@ int first_open = 1;
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.MSG.NETPROFILE"));
+                     _(lv_label_get_text(ui_lblTitle)), _("HELP.NETPROFILE"));
 }
 
 void load_profile(char *name) {

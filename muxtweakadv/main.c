@@ -93,24 +93,24 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblAccelerate, "HELP.MSG.ACCELERATE"},
-            {ui_lblSwap,       "HELP.MSG.SWAP"},
-            {ui_lblThermal,    "HELP.MSG.THERMAL"},
-            {ui_lblFont,       "HELP.MSG.FONT"},
-            {ui_lblVolume,     "HELP.MSG.VOLUME"},
-            {ui_lblBrightness, "HELP.MSG.BRIGHTNESS"},
-            {ui_lblOffset,     "HELP.MSG.OFFSET"},
-            {ui_lblPasscode,   "HELP.MSG.PASSCODE"},
-            {ui_lblLED,        "HELP.MSG.LED"},
-            {ui_lblTheme,      "HELP.MSG.THEME"},
-            {ui_lblRetroWait,  "HELP.MSG.RETROWAIT"},
-            {ui_lblAndroid,    "HELP.MSG.ANDROID"},
-            {ui_lblState,      "HELP.MSG.STATE"},
-            {ui_lblVerbose,    "HELP.MSG.VERBOSE"},
-            {ui_lblStorage,    "HELP.MSG.STORAGE"},
+            {ui_lblAccelerate, "HELP.ACCELERATE"},
+            {ui_lblSwap,       "HELP.SWAP"},
+            {ui_lblThermal,    "HELP.THERMAL"},
+            {ui_lblFont,       "HELP.FONT"},
+            {ui_lblVolume,     "HELP.VOLUME"},
+            {ui_lblBrightness, "HELP.BRIGHTNESS"},
+            {ui_lblOffset,     "HELP.OFFSET"},
+            {ui_lblPasscode,   "HELP.PASSCODE"},
+            {ui_lblLED,        "HELP.LED"},
+            {ui_lblTheme,      "HELP.THEME"},
+            {ui_lblRetroWait,  "HELP.RETROWAIT"},
+            {ui_lblAndroid,    "HELP.ANDROID"},
+            {ui_lblState,      "HELP.STATE"},
+            {ui_lblVerbose,    "HELP.VERBOSE"},
+            {ui_lblStorage,    "HELP.STORAGE"},
     };
 
-    char *message = "HELP.MSG.NONE";
+    char *message = "HELP.NONE";
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -120,7 +120,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
+    if (strlen(message) <= 1) message = "HELP.NONE";
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      _(lv_label_get_text(element_focused)), _(message));

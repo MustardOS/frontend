@@ -96,7 +96,7 @@ void show_help() {
              "%s/MUOS/task/%s.sh", device.STORAGE.ROM.MOUNT, title);
     char *message = get_script_value(help_info, "HELP");
 
-    if (strlen(message) <= 1) message = _("HELP.MSG.NONE");
+    if (strlen(message) <= 1) message = _("HELP.NONE");
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, _(title), _(message));
 }
 

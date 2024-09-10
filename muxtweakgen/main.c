@@ -88,20 +88,20 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblHidden,     "HELP.MSG.HIDDEN"},
-            {ui_lblBGM,        "HELP.MSG.BGM"},
-            {ui_lblSound,      "HELP.MSG.SOUND"},
-            {ui_lblStartup,    "HELP.MSG.STARTUP"},
-            {ui_lblColour,     "HELP.MSG.COLOUR"},
-            {ui_lblBrightness, "HELP.MSG.BRIGHTNESS"},
-            {ui_lblHDMI,       "HELP.MSG.HDMI"},
-            {ui_lblShutdown,   "HELP.MSG.SHUTDOWN"},
-            {ui_lblBattery,    "HELP.MSG.BATTERY"},
-            {ui_lblInterface,  "HELP.MSG.INTERFACE"},
-            {ui_lblAdvanced,   "HELP.MSG.ADVANCED"},
+            {ui_lblHidden,     "HELP.HIDDEN"},
+            {ui_lblBGM,        "HELP.BGM"},
+            {ui_lblSound,      "HELP.SOUND"},
+            {ui_lblStartup,    "HELP.STARTUP"},
+            {ui_lblColour,     "HELP.COLOUR"},
+            {ui_lblBrightness, "HELP.BRIGHTNESS"},
+            {ui_lblHDMI,       "HELP.HDMI"},
+            {ui_lblShutdown,   "HELP.SHUTDOWN"},
+            {ui_lblBattery,    "HELP.BATTERY"},
+            {ui_lblInterface,  "HELP.INTERFACE"},
+            {ui_lblAdvanced,   "HELP.ADVANCED"},
     };
 
-    char *message = "HELP.MSG.NONE";
+    char *message = "HELP.NONE";
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -111,7 +111,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
+    if (strlen(message) <= 1) message = "HELP.NONE";
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      _(lv_label_get_text(element_focused)), _(message));

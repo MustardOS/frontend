@@ -91,20 +91,20 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBattery,           "HELP.MSG.BATTERY"},
-            {ui_lblNetwork,           "HELP.MSG.NETWORK"},
-            {ui_lblBluetooth,         "HELP.MSG.BLUETOOTH"},
-            {ui_lblClock,             "HELP.MSG.CLOCK"},
-            {ui_lblBoxArt,            "HELP.MSG.BOXART"},
-            {ui_lblName,              "HELP.MSG.NAME"},
-            {ui_lblDash,              "HELP.MSG.DASH"},
-            {ui_lblTheTitleFormat,    "HELP.MSG.TITLE_FORMAT"},
-            {ui_lblFolderItemCount,   "HELP.MSG.FOLDER.ITEM"},
-            {ui_lblMenuCounterFolder, "HELP.MSG.COUNTER.FOLDER"},
-            {ui_lblMenuCounterFile,   "HELP.MSG.COUNTER.FILE"},
+            {ui_lblBattery,           "HELP.BATTERY"},
+            {ui_lblNetwork,           "HELP.NETWORK"},
+            {ui_lblBluetooth,         "HELP.BLUETOOTH"},
+            {ui_lblClock,             "HELP.CLOCK"},
+            {ui_lblBoxArt,            "HELP.BOXART"},
+            {ui_lblName,              "HELP.NAME"},
+            {ui_lblDash,              "HELP.DASH"},
+            {ui_lblTheTitleFormat,    "HELP.TITLE_FORMAT"},
+            {ui_lblFolderItemCount,   "HELP.FOLDER.ITEM"},
+            {ui_lblMenuCounterFolder, "HELP.COUNTER.FOLDER"},
+            {ui_lblMenuCounterFile,   "HELP.COUNTER.FILE"},
     };
 
-    char *message = "HELP.MSG.NONE";
+    char *message = "HELP.NONE";
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -114,7 +114,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
+    if (strlen(message) <= 1) message = "HELP.NONE";
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      _(lv_label_get_text(element_focused)), _(message));

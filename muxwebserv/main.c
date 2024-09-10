@@ -85,15 +85,15 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblShell,     "HELP.MSG.SHELL"},
-            {ui_lblBrowser,   "HELP.MSG.BROWSER"},
-            {ui_lblTerminal,  "HELP.MSG.TERMINAL"},
-            {ui_lblSyncthing, "HELP.MSG.SYNCTHING"},
-            {ui_lblResilio,   "HELP.MSG.RESILIO"},
-            {ui_lblNTP,       "HELP.MSG.NTP"},
+            {ui_lblShell,     "HELP.SHELL"},
+            {ui_lblBrowser,   "HELP.BROWSER"},
+            {ui_lblTerminal,  "HELP.TERMINAL"},
+            {ui_lblSyncthing, "HELP.SYNCTHING"},
+            {ui_lblResilio,   "HELP.RESILIO"},
+            {ui_lblNTP,       "HELP.NTP"},
     };
 
-    char *message = "HELP.MSG.NONE";
+    char *message = "HELP.NONE";
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -103,7 +103,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "HELP.MSG.NONE";
+    if (strlen(message) <= 1) message = "HELP.NONE";
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      _(lv_label_get_text(element_focused)), _(message));

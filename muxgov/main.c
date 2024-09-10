@@ -78,7 +78,7 @@ enum gov_gen_type {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.MSG.GOVERNOR"));
+                     _(lv_label_get_text(ui_lblTitle)), _("HELP.GOVERNOR"));
 }
 
 char **get_subdirectories(const char *base_dir) {
