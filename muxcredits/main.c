@@ -61,17 +61,17 @@ int main() {
     ui_init();
 
     animFade_Animation(ui_conStart, -1000);
-    animScroll_Animation(ui_conScroll, 10000);
-    animFade_Animation(ui_conKofi, 50000);
+    animScroll_Animation(ui_conScroll, 12000);
+    animFade_Animation(ui_conKofi, 55000);
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
+    if (!config.BOOT.FACTORY_RESET) write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
 
     int hold = 0;
     while (!safe_quit) {
         hold++;
         lv_task_handler();
         usleep(device.SCREEN.WAIT);
-        if (hold > 3500) {
+        if (hold > 310000) {
             safe_quit = 1;
         }
         //printf("%d\n", hold);

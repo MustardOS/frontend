@@ -537,8 +537,13 @@ void joystick_task() {
                                             lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
                                         }
                                     } else if (element_focused == ui_lblConnect) {
-                                        lv_label_set_text(ui_lblStatusValue, "Trying to Connect...");
+                                        lv_label_set_text(ui_lblStatusValue, _("Trying to Connect..."));
+
+                                        lv_task_handler();
+                                        usleep(device.SCREEN.WAIT);
+
                                         save_network_config();
+
                                         if (config.NETWORK.ENABLED) {
                                             write_text_to_file("/tmp/net_ssid", "w", CHAR,
                                                                lv_label_get_text(ui_lblIdentifierValue));
@@ -551,7 +556,7 @@ void joystick_task() {
                                             get_current_ip();
                                             input_disable = 0;
                                         } else {
-                                            lv_label_set_text(ui_lblStatusValue, "Network Disabled");
+                                            lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
                                         }
                                     } else {
                                         key_curr = 0;
@@ -1020,7 +1025,7 @@ void joystick_task() {
 
 static void osk_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     switch (code) {
         case LV_EVENT_SCROLL:
@@ -1037,7 +1042,7 @@ static void osk_handler(lv_event_t *e) {
 
 static void num_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     switch (code) {
         case LV_EVENT_SCROLL:
@@ -1116,7 +1121,7 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_screen);
+        lv_obj_t *overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
@@ -1320,7 +1325,7 @@ void ui_refresh_task() {
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
                     if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-                        lv_obj_t * img = lv_gif_create(ui_pnlWall);
+                        lv_obj_t *img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
                         load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -1398,6 +1403,8 @@ void direct_to_previous() {
 }
 
 int main(int argc, char *argv[]) {
+    (void) argc;
+
     mux_prog = basename(argv[0]);
     load_device(&device);
     seed_random();
@@ -1463,7 +1470,7 @@ int main(int argc, char *argv[]) {
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+            lv_obj_t *img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
             load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);

@@ -114,6 +114,7 @@ void joystick_task() {
 
                                     lv_label_set_text(ui_lblBoot, _("Booting System - Please Wait..."));
 
+                                    lv_task_handler();
                                     usleep(device.SCREEN.WAIT);
 
                                     exit_status = 0;

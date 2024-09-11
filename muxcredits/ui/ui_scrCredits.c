@@ -1,4 +1,3 @@
-
 #include "ui.h"
 
 void ui_scrCredits_screen_init(void) {
@@ -108,7 +107,7 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_x(ui_lblOfficialTitle, 0);
     lv_obj_set_y(ui_lblOfficialTitle, 20);
     lv_obj_set_align(ui_lblOfficialTitle, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_lblOfficialTitle, "muOS Team");
+    lv_label_set_text(ui_lblOfficialTitle, "muOS Crew");
     lv_obj_set_scroll_dir(ui_lblOfficialTitle, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblOfficialTitle, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblOfficialTitle, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -162,7 +161,11 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_width(ui_lblCommanderPeople, lv_pct(100));
     lv_obj_set_height(ui_lblCommanderPeople, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblCommanderPeople, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblCommanderPeople, "xonglebongle\nantiKk\nCorey");
+    lv_label_set_text(ui_lblCommanderPeople,
+                      "xonglebongle\n"
+                      "antiKk\n"
+                      "Corey"
+    );
     lv_obj_set_scroll_dir(ui_lblCommanderPeople, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblCommanderPeople, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblCommanderPeople, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -212,7 +215,13 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_width(ui_lblEnforcerPeople, lv_pct(100));
     lv_obj_set_height(ui_lblEnforcerPeople, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblEnforcerPeople, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblEnforcerPeople, "acmeplus\nbgelmini\nCasey\nduncanyoyo1\nbirdie");
+    lv_label_set_text(ui_lblEnforcerPeople,
+                      "acmeplus\n"
+                      "bgelmini\n"
+                      "Casey\n"
+                      "duncanyoyo1\n"
+                      "birdie"
+    );
     lv_obj_set_scroll_dir(ui_lblEnforcerPeople, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblEnforcerPeople, lv_color_hex(0xFF4500), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblEnforcerPeople, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -239,7 +248,7 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_x(ui_lblWizardTitle, 0);
     lv_obj_set_y(ui_lblWizardTitle, 20);
     lv_obj_set_align(ui_lblWizardTitle, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_lblWizardTitle, "muOS Wizards");
+    lv_label_set_text(ui_lblWizardTitle, "Wizards");
     lv_obj_set_scroll_dir(ui_lblWizardTitle, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblWizardTitle, lv_color_hex(0xED6900), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblWizardTitle, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -271,7 +280,18 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_y(ui_lblWizardLeft, 30);
     lv_obj_set_align(ui_lblWizardLeft, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblWizardLeft,
-                      "Cebion\ne1000\nirilivibi\nJohnny on Flame\njoyrider3774\njupyter!\nkloptops\nmustardbucket\nRosey\nshauninman\nshengy");
+                      "Cebion\n"
+                      "e1000\n"
+                      "irilivibi\n"
+                      "Johnny on Flame\n"
+                      "joyrider3774\n"
+                      "jupyter!\n"
+                      "kloptops\n"
+                      "mustardbucket\n"
+                      "Rosey\n"
+                      "shauninman\n"
+                      "shengy"
+    );
     lv_obj_set_scroll_dir(ui_lblWizardLeft, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblWizardLeft, lv_color_hex(0xED6900), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblWizardLeft, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -298,7 +318,17 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_y(ui_lblWizardRight, 30);
     lv_obj_set_align(ui_lblWizardRight, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lblWizardRight,
-                      "SiliconExarch\nSkorpy\nGamma\ntokyovigilante\ntrngaje\nHabbening\nXQuader\nAjmandourah\nVagueParade\nStanley");
+                      "SiliconExarch\n"
+                      "Skorpy\n"
+                      "Gamma\n"
+                      "tokyovigilante\n"
+                      "trngaje\n"
+                      "Habbening\n"
+                      "XQuader\n"
+                      "Ajmandourah\n"
+                      "VagueParade\n"
+                      "Stanley"
+    );
     lv_obj_set_scroll_dir(ui_lblWizardRight, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblWizardRight, lv_color_hex(0xED6900), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblWizardRight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -324,7 +354,7 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_x(ui_lblHeroTitle, 0);
     lv_obj_set_y(ui_lblHeroTitle, 20);
     lv_obj_set_align(ui_lblHeroTitle, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_lblHeroTitle, "muOS Heroes");
+    lv_label_set_text(ui_lblHeroTitle, "Heroes");
     lv_obj_set_scroll_dir(ui_lblHeroTitle, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroTitle, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHeroTitle, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -356,7 +386,30 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_y(ui_lblHeroLeft, 30);
     lv_obj_set_align(ui_lblHeroLeft, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblHeroLeft,
-                      "Eronauta\nX-Tremis\nLmarcomiranda\nFabio C. Barrionuevo\nlord | Hegen Deroes\ninteLLiAim\nKenton\nliloconf\nRobbie Trencheny\nBazkart\nJoey's Retro Handhelds\nsniper257\nBenjamin Bercy\nZadeis\nVari Primedus\nsaniko\nhotcereal\npaletochen\nnacho_chicken\nAndika\nnova\nj0hn\nSNESFAN");
+                      "Eronauta\n"
+                      "X-Tremis\n"
+                      "Lmarcomiranda\n"
+                      "Fabio C. Barrionuevo\n"
+                      "lord | Hegen Deroes\n"
+                      "inteLLiAim\n"
+                      "Kenton\n"
+                      "liloconf\n"
+                      "Robbie Trencheny\n"
+                      "Bazkart\n"
+                      "Joey's Retro Handhelds\n"
+                      "sniper257\n"
+                      "Benjamin Bercy\n"
+                      "Zadeis\n"
+                      "Vari Primedus\n"
+                      "saniko\n"
+                      "hotcereal\n"
+                      "paletochen\n"
+                      "nacho_chicken\n"
+                      "Andika\n"
+                      "nova\n"
+                      "j0hn\n"
+                      "SNESFAN"
+    );
     lv_obj_set_scroll_dir(ui_lblHeroLeft, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroLeft, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHeroLeft, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -383,7 +436,30 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_y(ui_lblHeroRight, 30);
     lv_obj_set_align(ui_lblHeroRight, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lblHeroRight,
-                      "zazouboy\nN0FPV\nrabite\nCombustify\nVoyagerXyX\nJott\nTsuica\nzaka1w3\nndguardian\nNico_Linber\nLinber\nPR0J3KT2501\nKyle Faun\nMeowMan\nKaeltis\nmrwhistles\nSeth\nMia\nGio\nkney1988\nAvior\nSpartan_029\nbnnoirjean");
+                      "zazouboy\n"
+                      "N0FPV\n"
+                      "rabite\n"
+                      "Combustify\n"
+                      "VoyagerXyX\n"
+                      "Jott\n"
+                      "Tsuica\n"
+                      "zaka1w3\n"
+                      "ndguardian\n"
+                      "Nico_Linber\n"
+                      "Linber\n"
+                      "PR0J3KT2501\n"
+                      "Kyle Faun\n"
+                      "MeowMan\n"
+                      "Kaeltis\n"
+                      "mrwhistles\n"
+                      "Seth\n"
+                      "Mia\n"
+                      "Gio\n"
+                      "kney1988\n"
+                      "Avior\n"
+                      "Spartan_029\n"
+                      "bnnoirjean"
+    );
     lv_obj_set_scroll_dir(ui_lblHeroRight, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroRight, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHeroRight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -409,7 +485,7 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_x(ui_lblKnightTitle, 0);
     lv_obj_set_y(ui_lblKnightTitle, 20);
     lv_obj_set_align(ui_lblKnightTitle, LV_ALIGN_TOP_MID);
-    lv_label_set_text(ui_lblKnightTitle, "muOS Knights");
+    lv_label_set_text(ui_lblKnightTitle, "Knights");
     lv_obj_set_scroll_dir(ui_lblKnightTitle, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKnightTitle, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKnightTitle, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -441,7 +517,28 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_y(ui_lblKnightLeft, 30);
     lv_obj_set_align(ui_lblKnightLeft, LV_ALIGN_LEFT_MID);
     lv_label_set_text(ui_lblKnightLeft,
-                      "SkyArcher\nFractalShoggoth\nNecroPoster (BillyNaing)\nLeonidas\nMrbadpour\nEric - Retro Handheld Guides\nPhyrex Techs\nDEFENSE MECHANISM\nDelored\nHex Maniack\nwonkysharks\nreapDG\nthedreadpirates\narkholt\nrbndr\nfifth\nHiyarosu\nderekg49\npubsubdub\nYami\nnuketcg");
+                      "SkyArcher\n"
+                      "FractalShoggoth\n"
+                      "NecroPoster (BillyNaing)\n"
+                      "Leonidas\n"
+                      "Mrbadpour\n"
+                      "Eric - Retro Handheld Guides\n"
+                      "Phyrex Techs\n"
+                      "DEFENSE MECHANISM\n"
+                      "Delored\n"
+                      "Hex Maniack\n"
+                      "wonkysharks\n"
+                      "reapDG\n"
+                      "thedreadpirates\n"
+                      "arkholt\n"
+                      "rbndr\n"
+                      "fifth\n"
+                      "Hiyarosu\n"
+                      "derekg49\n"
+                      "pubsubdub\n"
+                      "Yami\n"
+                      "nuketcg"
+    );
     lv_obj_set_scroll_dir(ui_lblKnightLeft, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKnightLeft, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKnightLeft, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -468,7 +565,28 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_y(ui_lblKnightRight, 30);
     lv_obj_set_align(ui_lblKnightRight, LV_ALIGN_RIGHT_MID);
     lv_label_set_text(ui_lblKnightRight,
-                      "Andrew\nfibroidjames\nAllepac\nNickcs\nArobee\nPa'Wan\nCap\nLuke\ndrisc\nnuke_67641\nGallo\nkiko\nAb\nMrMinholi\nunentitled\nVJ425\nRySpy\naj15\nStarship9\nbiffoutt\nClemPurp");
+                      "Andrew\n"
+                      "fibroidjames\n"
+                      "Allepac\n"
+                      "Nickcs\n"
+                      "Arobee\n"
+                      "Pa'Wan\n"
+                      "Cap\n"
+                      "Luke\n"
+                      "drisc\n"
+                      "nuke_67641\n"
+                      "Gallo\n"
+                      "kiko\n"
+                      "Ab\n"
+                      "MrMinholi\n"
+                      "unentitled\n"
+                      "VJ425\n"
+                      "RySpy\n"
+                      "aj15\n"
+                      "Starship9\n"
+                      "biffoutt\n"
+                      "ClemPurp"
+    );
     lv_obj_set_scroll_dir(ui_lblKnightRight, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKnightRight, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKnightRight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -526,7 +644,8 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_y(ui_lblSpecialMid, 30);
     lv_obj_set_align(ui_lblSpecialMid, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblSpecialMid,
-                      "To all the artificers, druids, porters, and translators a huge thank you!\n\nTo my amazing wife MrsBongle who has been an amazing supporter!");
+                      "To all the artificers, druids, porters, and translators a huge thank you!\n"
+                      "\nTo my amazing wife MrsBongle who has been an amazing supporter!");
     lv_obj_set_scroll_dir(ui_lblSpecialMid, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblSpecialMid, lv_color_hex(0x87C97C), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblSpecialMid, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -602,7 +721,8 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_y(ui_lblKofiMessageOne, 30);
     lv_obj_set_align(ui_lblKofiMessageOne, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblKofiMessageOne,
-                      "You can support muOS by donating or subscribing which helps the development of this project. This project is done as a hobby!");
+                      "You can support muOS by donating or subscribing which helps the "
+                      "development of this project. This project is done as a hobby!");
     lv_obj_set_scroll_dir(ui_lblKofiMessageOne, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKofiMessageOne, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKofiMessageOne, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
