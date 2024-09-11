@@ -1082,16 +1082,21 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *base_i
     build_image_animation_array(base_image_path);
 
     img_obj = ui_imgWall;
-    lv_obj_center(img_obj);
 
-    lv_anim_init(&animation);
-    lv_anim_set_var(&animation, img_obj);
-    lv_anim_set_values(&animation, 0, img_paths_count - 1);
-    lv_anim_set_exec_cb(&animation, (lv_anim_exec_xcb_t) image_anim_cb);
-    lv_anim_set_time(&animation, animation_time * img_paths_count);
-    lv_anim_set_repeat_count(&animation, LV_ANIM_REPEAT_INFINITE);
+    if (img_paths_count > 1 && config.VISUAL.BACKGROUNDANIMATION) {
+        lv_obj_center(img_obj);
 
-    lv_anim_start(&animation);
+        lv_anim_init(&animation);
+        lv_anim_set_var(&animation, img_obj);
+        lv_anim_set_values(&animation, 0, img_paths_count - 1);
+        lv_anim_set_exec_cb(&animation, (lv_anim_exec_xcb_t) image_anim_cb);
+        lv_anim_set_time(&animation, animation_time * img_paths_count);
+        lv_anim_set_repeat_count(&animation, LV_ANIM_REPEAT_INFINITE);
+
+        lv_anim_start(&animation);
+    } else {
+        image_anim_cb(NULL, 0);
+    }
 }
 
 void unload_image_animation() {

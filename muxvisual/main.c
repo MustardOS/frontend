@@ -67,8 +67,9 @@ int thetitleformat_total, thetitleformat_current;
 int folderitemcount_total, folderitemcount_current;
 int menu_counter_folder_total, menu_counter_folder_current;
 int menu_counter_file_total, menu_counter_file_current;
+int background_animation_total, background_animation_current;
 
-#define UI_COUNT 11
+#define UI_COUNT 12
 lv_obj_t *ui_objects[UI_COUNT];
 
 typedef struct {
@@ -77,7 +78,7 @@ typedef struct {
 } Visuals;
 
 Visuals battery, network, bluetooth, mux_clock, boxart, name, dash,
-        thetitleformat, folderitemcount, counterfolder, counterfile;
+        thetitleformat, folderitemcount, counterfolder, counterfile, backgroundanimation;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -102,6 +103,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblFolderItemCount,   "HELP.FOLDER.ITEM"},
             {ui_lblMenuCounterFolder, "HELP.COUNTER.FOLDER"},
             {ui_lblMenuCounterFile,   "HELP.COUNTER.FILE"},
+            {ui_lblBackgroundAnimation, "HELP.BACKGROUND.ANIMATION"},
     };
 
     char *message = "No Help Information Found";
@@ -148,6 +150,7 @@ void elements_events_init() {
             ui_droFolderItemCount,
             ui_droMenuCounterFolder,
             ui_droMenuCounterFile,
+            ui_droBackgroundAnimation,
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -165,6 +168,7 @@ void elements_events_init() {
     init_pointers(&folderitemcount, &folderitemcount_total, &folderitemcount_current);
     init_pointers(&counterfolder, &menu_counter_folder_total, &menu_counter_folder_current);
     init_pointers(&counterfile, &menu_counter_file_total, &menu_counter_file_current);
+    init_pointers(&backgroundanimation, &background_animation_total, &background_animation_current);
 }
 
 void init_dropdown_settings() {
@@ -179,7 +183,8 @@ void init_dropdown_settings() {
             {thetitleformat.total,  thetitleformat.current},
             {folderitemcount.total, folderitemcount.current},
             {counterfolder.total,   counterfolder.current},
-            {counterfile.total,     counterfile.current}
+            {counterfile.total,     counterfile.current},
+            {backgroundanimation.total,     backgroundanimation.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -193,7 +198,8 @@ void init_dropdown_settings() {
             ui_droTheTitleFormat,
             ui_droFolderItemCount,
             ui_droMenuCounterFolder,
-            ui_droMenuCounterFile
+            ui_droMenuCounterFile,
+            ui_droBackgroundAnimation
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -214,6 +220,7 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droFolderItemCount, config.VISUAL.FOLDERITEMCOUNT);
     lv_dropdown_set_selected(ui_droMenuCounterFolder, config.VISUAL.COUNTERFOLDER);
     lv_dropdown_set_selected(ui_droMenuCounterFile, config.VISUAL.COUNTERFILE);
+    lv_dropdown_set_selected(ui_droBackgroundAnimation, config.VISUAL.BACKGROUNDANIMATION);
 }
 
 void save_visual_options() {
@@ -228,6 +235,7 @@ void save_visual_options() {
     int idx_folderitemcount = lv_dropdown_get_selected(ui_droFolderItemCount);
     int idx_counterfolder = lv_dropdown_get_selected(ui_droMenuCounterFolder);
     int idx_counterfile = lv_dropdown_get_selected(ui_droMenuCounterFile);
+    int idx_backgroundanimation = lv_dropdown_get_selected(ui_droBackgroundAnimation);
 
     write_text_to_file("/run/muos/global/visual/battery", "w", INT, idx_battery);
     write_text_to_file("/run/muos/global/visual/network", "w", INT, idx_network);
@@ -240,6 +248,7 @@ void save_visual_options() {
     write_text_to_file("/run/muos/global/visual/folderitemcount", "w", INT, idx_folderitemcount);
     write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_counterfolder);
     write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_counterfile);
+    write_text_to_file("/run/muos/global/visual/backgroundanimation", "w", INT, idx_backgroundanimation);
 }
 
 void init_navigation_groups() {
@@ -254,7 +263,8 @@ void init_navigation_groups() {
             ui_pnlTheTitleFormat,
             ui_pnlFolderItemCount,
             ui_pnlMenuCounterFolder,
-            ui_pnlMenuCounterFile
+            ui_pnlMenuCounterFile,
+            ui_pnlBackgroundAnimation
     };
 
     ui_objects[0] = ui_lblBattery;
@@ -268,6 +278,7 @@ void init_navigation_groups() {
     ui_objects[8] = ui_lblFolderItemCount;
     ui_objects[9] = ui_lblMenuCounterFolder;
     ui_objects[10] = ui_lblMenuCounterFile;
+    ui_objects[11] = ui_lblBackgroundAnimation;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droBattery,
@@ -280,7 +291,8 @@ void init_navigation_groups() {
             ui_droTheTitleFormat,
             ui_droFolderItemCount,
             ui_droMenuCounterFolder,
-            ui_droMenuCounterFile
+            ui_droMenuCounterFile,
+            ui_droBackgroundAnimation
     };
 
     lv_obj_t *ui_objects_glyph[] = {
@@ -294,7 +306,8 @@ void init_navigation_groups() {
             ui_icoTheTitleFormat,
             ui_icoFolderItemCount,
             ui_icoMenuCounterFolder,
-            ui_icoMenuCounterFile
+            ui_icoMenuCounterFile,
+            ui_icoBackgroundAnimation
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlBattery);
@@ -308,6 +321,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlFolderItemCount);
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFolder);
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFile);
+    apply_theme_list_panel(&theme, &device, ui_pnlBackgroundAnimation);
 
     apply_theme_list_item(&theme, ui_lblBattery, _("Battery"), false, true);
     apply_theme_list_item(&theme, ui_lblNetwork, _("Network"), false, true);
@@ -320,6 +334,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblFolderItemCount, _("Folder Item Count"), false, true);
     apply_theme_list_item(&theme, ui_lblMenuCounterFolder, _("Menu Counter Folder"), false, true);
     apply_theme_list_item(&theme, ui_lblMenuCounterFile, _("Menu Counter File"), false, true);
+    apply_theme_list_item(&theme, ui_lblBackgroundAnimation, _("Background Animation"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_prog, "battery");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_prog, "network");
@@ -332,6 +347,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoFolderItemCount, mux_prog, "folderitemcount");
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFolder, mux_prog, "counterfolder");
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFile, mux_prog, "counterfile");
+    apply_theme_list_glyph(&theme, ui_icoBackgroundAnimation, mux_prog, "backgroundanimation");
 
     apply_theme_list_drop_down(&theme, ui_droBattery, NULL);
     apply_theme_list_drop_down(&theme, ui_droNetwork, NULL);
@@ -344,6 +360,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droFolderItemCount, NULL);
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, NULL);
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, NULL);
+    apply_theme_list_drop_down(&theme, ui_droBackgroundAnimation, NULL);
 
     char *hidden_visible[] = {_("Hidden"), _("Visible")};
     char *disabled_enabled[] = {_("Disabled"), _("Enabled")};
@@ -361,6 +378,7 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droFolderItemCount, hidden_visible, 2);
     add_drop_down_options(ui_droMenuCounterFolder, hidden_visible, 2);
     add_drop_down_options(ui_droMenuCounterFile, hidden_visible, 2);
+    add_drop_down_options(ui_droBackgroundAnimation, disabled_enabled, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -506,6 +524,10 @@ void joystick_task() {
                                         increase_option_value(ui_droMenuCounterFile,
                                                               &menu_counter_file_current,
                                                               menu_counter_file_total);
+                                    } else if (element_focused == ui_lblBackgroundAnimation) {
+                                        increase_option_value(ui_droBackgroundAnimation,
+                                                              &background_animation_current,
+                                                              background_animation_total);
                                     }
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
@@ -631,6 +653,10 @@ void joystick_task() {
                                     decrease_option_value(ui_droMenuCounterFile,
                                                           &menu_counter_file_current,
                                                           menu_counter_file_total);
+                                } else if (element_focused == ui_lblBackgroundAnimation) {
+                                    decrease_option_value(ui_droBackgroundAnimation,
+                                                          &background_animation_current,
+                                                          background_animation_total);
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
@@ -680,6 +706,10 @@ void joystick_task() {
                                     increase_option_value(ui_droMenuCounterFile,
                                                           &menu_counter_file_current,
                                                           menu_counter_file_total);
+                                } else if (element_focused == ui_lblBackgroundAnimation) {
+                                    increase_option_value(ui_droBackgroundAnimation,
+                                                          &background_animation_current,
+                                                          background_animation_total);
                                 }
                             }
                         }
@@ -801,6 +831,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblFolderItemCount, "folderitemcount");
     lv_obj_set_user_data(ui_lblMenuCounterFolder, "counterfolder");
     lv_obj_set_user_data(ui_lblMenuCounterFile, "counterfile");
+    lv_obj_set_user_data(ui_lblBackgroundAnimation, "backgroundanimation");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
