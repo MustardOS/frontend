@@ -887,11 +887,11 @@ void explore_root() {
         single_card += 2;
     }
 
-    if (detect_sd2() && count_items(SD2, DIRECTORIES_ONLY) > 0) {
+    if (detect_storage(device.STORAGE.SDCARD.DEVICE) && count_items(SD2, DIRECTORIES_ONLY) > 0) {
         single_card += 4;
     }
 
-    if (detect_e_usb() && count_items(E_USB, DIRECTORIES_ONLY) > 0) {
+    if (detect_storage(device.STORAGE.USB.DEVICE) && count_items(E_USB, DIRECTORIES_ONLY) > 0) {
         single_card += 8;
     }
 

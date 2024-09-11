@@ -602,33 +602,9 @@ int count_items(const char *path, enum count_type type) {
     return count;
 }
 
-int detect_sd2() {
+int detect_storage(const char *target) {
     FILE *fp;
     char line[MAX_BUFFER_SIZE];
-    const char *target = device.STORAGE.SDCARD.DEVICE;
-    int found = 0;
-
-    fp = fopen("/proc/partitions", "r");
-    if (!fp) {
-        perror("Error opening /proc/partitions");
-        return 0;
-    }
-
-    while (fgets(line, sizeof(line), fp)) {
-        if (strstr(line, target)) {
-            found = 1;
-            break;
-        }
-    }
-
-    fclose(fp);
-    return found;
-}
-
-int detect_e_usb() {
-    FILE *fp;
-    char line[MAX_BUFFER_SIZE];
-    const char *target = device.STORAGE.USB.DEVICE;
     int found = 0;
 
     fp = fopen("/proc/partitions", "r");
@@ -1288,7 +1264,7 @@ void display_testing_message(lv_obj_t *screen) {
                          "test image! This is a test image! This is a test image! This is a test image! This is a\n"
                          "image! This is a test image! This is a test image! This is a test image! This is a test\n";
 
-    lv_obj_t * ui_conTest = lv_obj_create(screen);
+    lv_obj_t *ui_conTest = lv_obj_create(screen);
     lv_obj_remove_style_all(ui_conTest);
     lv_obj_set_width(ui_conTest, device.SCREEN.WIDTH);
     lv_obj_set_height(ui_conTest, device.SCREEN.HEIGHT);
@@ -1300,7 +1276,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_obj_set_style_text_letter_space(ui_conTest, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_conTest, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_t * ui_lblTestBottom = lv_label_create(ui_conTest);
+    lv_obj_t *ui_lblTestBottom = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestBottom, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblTestBottom, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblTestBottom, 0);
@@ -1309,7 +1285,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_label_set_text(ui_lblTestBottom, test_message);
     lv_obj_add_flag(ui_lblTestBottom, LV_OBJ_FLAG_FLOATING);
 
-    lv_obj_t * ui_lblTestTop = lv_label_create(ui_conTest);
+    lv_obj_t *ui_lblTestTop = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestTop, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblTestTop, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblTestTop, 0);
@@ -1387,10 +1363,10 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
     // how many items should be above the currently selected item when scrolling
     double item_distribution = (mux_item_count - 1) / (double) 2;
     // how many items are off screen
-    double scrollMultiplier = (current_item_index > item_distribution) ? (current_item_index - item_distribution) : 0;
+    double scroll_multiplier = (current_item_index > item_distribution) ? (current_item_index - item_distribution) : 0;
     // max scroll value
     bool isAtBottom = (current_item_index >= ui_count - item_distribution - 1);
-    if (isAtBottom) scrollMultiplier = ui_count - mux_item_count;
+    if (isAtBottom) scroll_multiplier = ui_count - mux_item_count;
 
     if (mux_item_count % 2 == 0 && current_item_index > item_distribution && !isAtBottom) {
         lv_obj_set_scroll_snap_y(ui_pnlContent, LV_SCROLL_SNAP_CENTER);
@@ -1398,7 +1374,7 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
         lv_obj_set_scroll_snap_y(ui_pnlContent, LV_SCROLL_SNAP_START);
     }
 
-    int content_panel_y = scrollMultiplier * mux_item_panel;
+    int content_panel_y = scroll_multiplier * mux_item_panel;
     lv_obj_scroll_to_y(ui_pnlContent, content_panel_y, LV_ANIM_OFF);
     lv_obj_update_snap(ui_pnlContent, LV_ANIM_OFF);
 }
