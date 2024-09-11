@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
+#include <ctype.h>
 #include "collection.h"
 #include "common.h"
 #include "config.h"
@@ -144,7 +144,8 @@ void free_items(content_item *content_items, size_t count) {
 void print_items(content_item *content_items, size_t count) {
     for (size_t i = 0; i < count; i++) {
         char message[1024];
-        snprintf(message, sizeof(message), "Item %zu  file_name=%s  display_name=%s  sort_name=%s  content_type=%d\n",
+        snprintf(message, sizeof(message),
+                 "\nItem %zu\n\tfile_name=%s\n\tdisplay_name=%s\n\tsort_name=%s\n\tcontent_type=%d\n",
                  i, content_items[i].name, content_items[i].display_name, content_items[i].sort_name,
                  content_items[i].content_type);
         write_text_to_file("/mnt/mmc/MUOS/log/collection.log", "a", CHAR, message);

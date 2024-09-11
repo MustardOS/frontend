@@ -18,14 +18,14 @@
 #define SUCCESS_SYMBOL GREEN  "+" RESET
 #define DEBUG_SYMBOL   ORANGE "?" RESET
 
-#define LOG(level, symbol, mux_prog, msg, ...) {        \
-    time_t now = time(NULL);                            \
-    struct tm *timeinfo = localtime(&now);              \
-    char time_buffer[20];                               \
-    strftime(time_buffer, sizeof(time_buffer),          \
-    "%Y-%m-%d %H:%M:%S", timeinfo);                     \
+#define LOG(level, symbol, mux_prog, msg, ...) {         \
+    time_t now = time(NULL);                             \
+    struct tm *timeinfo = localtime(&now);               \
+    char time_buffer[20];                                \
+    strftime(time_buffer, sizeof(time_buffer),           \
+    "%Y-%m-%d %H:%M:%S", timeinfo);                      \
     fprintf(stderr, "[%s] [" symbol "] [%s]\t" msg "\n", \
-    time_buffer, mux_prog, ##__VA_ARGS__);              \
+    time_buffer, mux_prog, ##__VA_ARGS__);               \
 }
 
 #define LOG_INFO(mux_prog, msg, ...)    LOG(INFO,    INFO_SYMBOL,    mux_prog, msg, ##__VA_ARGS__)
