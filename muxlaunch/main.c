@@ -3,7 +3,6 @@
 #include "../lvgl/drivers/indev/evdev.h"
 #include "ui/ui.h"
 #include <unistd.h>
-#include <pthread.h>
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include <linux/joystick.h>

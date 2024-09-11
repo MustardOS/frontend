@@ -2,7 +2,6 @@
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
 #include <unistd.h>
-#include <pthread.h>
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -16,7 +15,6 @@
 #include <SDL2/SDL_mixer.h>
 #include "../common/log.h"
 #include "../common/common.h"
-#include "../common/help.h"
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"

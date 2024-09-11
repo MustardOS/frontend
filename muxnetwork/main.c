@@ -3,7 +3,6 @@
 #include "../lvgl/drivers/indev/evdev.h"
 #include "ui/ui.h"
 #include <unistd.h>
-#include <pthread.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
 #include <linux/joystick.h>
@@ -14,7 +13,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/common.h"
-#include "../common/help.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
