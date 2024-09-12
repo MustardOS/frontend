@@ -12,7 +12,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlLED = lv_obj_create(ui_pnlContent);
     ui_pnlTheme = lv_obj_create(ui_pnlContent);
     ui_pnlRetroWait = lv_obj_create(ui_pnlContent);
-    ui_pnlAndroid = lv_obj_create(ui_pnlContent);
+    ui_pnlUSBFunction = lv_obj_create(ui_pnlContent);
     ui_pnlState = lv_obj_create(ui_pnlContent);
     ui_pnlVerbose = lv_obj_create(ui_pnlContent);
     ui_pnlStorage = lv_obj_create(ui_pnlContent);
@@ -28,7 +28,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblLED = lv_label_create(ui_pnlLED);
     ui_lblTheme = lv_label_create(ui_pnlTheme);
     ui_lblRetroWait = lv_label_create(ui_pnlRetroWait);
-    ui_lblAndroid = lv_label_create(ui_pnlAndroid);
+    ui_lblUSBFunction = lv_label_create(ui_pnlUSBFunction);
     ui_lblState = lv_label_create(ui_pnlState);
     ui_lblVerbose = lv_label_create(ui_pnlVerbose);
     ui_lblStorage = lv_label_create(ui_pnlStorage);
@@ -44,7 +44,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoLED = lv_img_create(ui_pnlLED);
     ui_icoTheme = lv_img_create(ui_pnlTheme);
     ui_icoRetroWait = lv_img_create(ui_pnlRetroWait);
-    ui_icoAndroid = lv_img_create(ui_pnlAndroid);
+    ui_icoUSBFunction = lv_img_create(ui_pnlUSBFunction);
     ui_icoState = lv_img_create(ui_pnlState);
     ui_icoVerbose = lv_img_create(ui_pnlVerbose);
     ui_icoStorage = lv_img_create(ui_pnlStorage);
@@ -60,7 +60,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droLED = lv_dropdown_create(ui_pnlLED);
     ui_droTheme = lv_dropdown_create(ui_pnlTheme);
     ui_droRetroWait = lv_dropdown_create(ui_pnlRetroWait);
-    ui_droAndroid = lv_dropdown_create(ui_pnlAndroid);
+    ui_droUSBFunction = lv_dropdown_create(ui_pnlUSBFunction);
     ui_droState = lv_dropdown_create(ui_pnlState);
     ui_droVerbose = lv_dropdown_create(ui_pnlVerbose);
     ui_droStorage = lv_dropdown_create(ui_pnlStorage);

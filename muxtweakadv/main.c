@@ -65,7 +65,7 @@ int lockdown_total, lockdown_current;
 int led_total, led_current;
 int random_theme_total, random_theme_current;
 int retrowait_total, retrowait_current;
-int android_total, android_current;
+int usbfunction_total, usbfunction_current;
 int state_total, state_current;
 int verbose_total, verbose_current;
 
@@ -74,7 +74,8 @@ typedef struct {
     int *current;
 } Tweak;
 
-Tweak accelerate, swap, thermal, font, volume, brightness, offset, lockdown, led, random_theme, retrowait, android, state, verbose;
+Tweak accelerate, swap, thermal, font, volume, brightness, offset, lockdown,
+        led, random_theme, retrowait, usbfunction, state, verbose;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -91,21 +92,21 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblAccelerate, "HELP.ACCELERATE"},
-            {ui_lblSwap,       "HELP.SWAP"},
-            {ui_lblThermal,    "HELP.THERMAL"},
-            {ui_lblFont,       "HELP.FONT"},
-            {ui_lblVolume,     "HELP.VOLUME"},
-            {ui_lblBrightness, "HELP.BRIGHTNESS"},
-            {ui_lblOffset,     "HELP.OFFSET"},
-            {ui_lblPasscode,   "HELP.PASSCODE"},
-            {ui_lblLED,        "HELP.LED"},
-            {ui_lblTheme,      "HELP.THEME"},
-            {ui_lblRetroWait,  "HELP.RETROWAIT"},
-            {ui_lblAndroid,    "HELP.ANDROID"},
-            {ui_lblState,      "HELP.STATE"},
-            {ui_lblVerbose,    "HELP.VERBOSE"},
-            {ui_lblStorage,    "HELP.STORAGE"},
+            {ui_lblAccelerate,  "HELP.ACCELERATE"},
+            {ui_lblSwap,        "HELP.SWAP"},
+            {ui_lblThermal,     "HELP.THERMAL"},
+            {ui_lblFont,        "HELP.FONT"},
+            {ui_lblVolume,      "HELP.VOLUME"},
+            {ui_lblBrightness,  "HELP.BRIGHTNESS"},
+            {ui_lblOffset,      "HELP.OFFSET"},
+            {ui_lblPasscode,    "HELP.PASSCODE"},
+            {ui_lblLED,         "HELP.LED"},
+            {ui_lblTheme,       "HELP.THEME"},
+            {ui_lblRetroWait,   "HELP.RETROWAIT"},
+            {ui_lblUSBFunction, "HELP.USBFUNCTION"},
+            {ui_lblState,       "HELP.STATE"},
+            {ui_lblVerbose,     "HELP.VERBOSE"},
+            {ui_lblStorage,     "HELP.STORAGE"},
     };
 
     char *message = "No Help Information Found";
@@ -131,7 +132,7 @@ void init_pointers(Tweak *tweak, int *total, int *current) {
 
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         char buf[MAX_BUFFER_SIZE];
@@ -152,7 +153,7 @@ void elements_events_init() {
             ui_droLED,
             ui_droTheme,
             ui_droRetroWait,
-            ui_droAndroid,
+            ui_droUSBFunction,
             ui_droState,
             ui_droVerbose,
             ui_droStorage
@@ -173,7 +174,7 @@ void elements_events_init() {
     init_pointers(&led, &led_total, &led_current);
     init_pointers(&random_theme, &random_theme_total, &random_theme_current);
     init_pointers(&retrowait, &retrowait_total, &retrowait_current);
-    init_pointers(&android, &android_total, &android_current);
+    init_pointers(&usbfunction, &usbfunction_total, &usbfunction_current);
     init_pointers(&state, &state_total, &state_current);
     init_pointers(&verbose, &verbose_total, &verbose_current);
 }
@@ -191,7 +192,7 @@ void init_dropdown_settings() {
             {led.total,          led.current},
             {random_theme.total, random_theme.current},
             {retrowait.total,    retrowait.current},
-            {android.total,      android.current},
+            {usbfunction.total,  usbfunction.current},
             {state.total,        state.current},
             {verbose.total,      verbose.current}
     };
@@ -208,7 +209,7 @@ void init_dropdown_settings() {
             ui_droLED,
             ui_droTheme,
             ui_droRetroWait,
-            ui_droAndroid,
+            ui_droUSBFunction,
             ui_droState,
             ui_droVerbose
     };
@@ -308,12 +309,18 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droLED, config.SETTINGS.ADVANCED.LED);
     lv_dropdown_set_selected(ui_droTheme, config.SETTINGS.ADVANCED.THEME);
     lv_dropdown_set_selected(ui_droRetroWait, config.SETTINGS.ADVANCED.RETROWAIT);
-    lv_dropdown_set_selected(ui_droAndroid, config.SETTINGS.ADVANCED.ANDROID);
+
+    const char *usb_type = config.SETTINGS.ADVANCED.USBFUNCTION;
+    if (strcasecmp(usb_type, "adb") == 0) {
+        lv_dropdown_set_selected(ui_droUSBFunction, 1);
+    } else if (strcasecmp(usb_type, "mtp") == 0) {
+        lv_dropdown_set_selected(ui_droUSBFunction, 2);
+    } else {
+        lv_dropdown_set_selected(ui_droUSBFunction, 0);
+    }
 
     const char *state_type = config.SETTINGS.ADVANCED.STATE;
-    if (strcasecmp(state_type, "mem") == 0) {
-        lv_dropdown_set_selected(ui_droState, 0);
-    } else if (strcasecmp(state_type, "freeze") == 0) {
+    if (strcasecmp(state_type, "freeze") == 0) {
         lv_dropdown_set_selected(ui_droState, 1);
     } else {
         lv_dropdown_set_selected(ui_droState, 0);
@@ -415,14 +422,24 @@ void save_tweak_options() {
 
     char *idx_state;
     switch (lv_dropdown_get_selected(ui_droState)) {
-        case 0:
-            idx_state = "mem";
-            break;
         case 1:
             idx_state = "freeze";
             break;
         default:
             idx_state = "mem";
+            break;
+    }
+
+    char *idx_usbfunction;
+    switch (lv_dropdown_get_selected(ui_droUSBFunction)) {
+        case 1:
+            idx_usbfunction = "adb";
+            break;
+        case 2:
+            idx_usbfunction = "mtp";
+            break;
+        default:
+            idx_usbfunction = "none";
             break;
     }
 
@@ -434,7 +451,6 @@ void save_tweak_options() {
     int idx_led = lv_dropdown_get_selected(ui_droLED);
     int idx_random_theme = lv_dropdown_get_selected(ui_droTheme);
     int idx_retrowait = lv_dropdown_get_selected(ui_droRetroWait);
-    int idx_android = lv_dropdown_get_selected(ui_droAndroid);
     int idx_verbose = lv_dropdown_get_selected(ui_droVerbose);
 
     write_text_to_file("/run/muos/global/settings/advanced/accelerate", "w", INT, idx_accelerate);
@@ -448,7 +464,7 @@ void save_tweak_options() {
     write_text_to_file("/run/muos/global/settings/advanced/led", "w", INT, idx_led);
     write_text_to_file("/run/muos/global/settings/advanced/random_theme", "w", INT, idx_random_theme);
     write_text_to_file("/run/muos/global/settings/advanced/retrowait", "w", INT, idx_retrowait);
-    write_text_to_file("/run/muos/global/settings/advanced/android", "w", INT, idx_android);
+    write_text_to_file("/run/muos/global/settings/advanced/usb_function", "w", CHAR, idx_usbfunction);
     write_text_to_file("/run/muos/global/settings/advanced/state", "w", CHAR, idx_state);
     write_text_to_file("/run/muos/global/settings/advanced/verbose", "w", INT, idx_verbose);
 
@@ -471,7 +487,7 @@ void init_navigation_groups() {
             ui_pnlLED,
             ui_pnlTheme,
             ui_pnlRetroWait,
-            ui_pnlAndroid,
+            ui_pnlUSBFunction,
             ui_pnlState,
             ui_pnlVerbose,
             ui_pnlStorage
@@ -488,7 +504,7 @@ void init_navigation_groups() {
     ui_objects[8] = ui_lblLED;
     ui_objects[9] = ui_lblTheme;
     ui_objects[10] = ui_lblRetroWait;
-    ui_objects[11] = ui_lblAndroid;
+    ui_objects[11] = ui_lblUSBFunction;
     ui_objects[12] = ui_lblState;
     ui_objects[13] = ui_lblVerbose;
     ui_objects[14] = ui_lblStorage;
@@ -505,7 +521,7 @@ void init_navigation_groups() {
             ui_droLED,
             ui_droTheme,
             ui_droRetroWait,
-            ui_droAndroid,
+            ui_droUSBFunction,
             ui_droState,
             ui_droVerbose,
             ui_droStorage
@@ -523,7 +539,7 @@ void init_navigation_groups() {
             ui_icoLED,
             ui_icoTheme,
             ui_icoRetroWait,
-            ui_icoAndroid,
+            ui_icoUSBFunction,
             ui_icoState,
             ui_icoVerbose,
             ui_icoStorage
@@ -540,7 +556,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlLED);
     apply_theme_list_panel(&theme, &device, ui_pnlTheme);
     apply_theme_list_panel(&theme, &device, ui_pnlRetroWait);
-    apply_theme_list_panel(&theme, &device, ui_pnlAndroid);
+    apply_theme_list_panel(&theme, &device, ui_pnlUSBFunction);
     apply_theme_list_panel(&theme, &device, ui_pnlState);
     apply_theme_list_panel(&theme, &device, ui_pnlVerbose);
     apply_theme_list_panel(&theme, &device, ui_pnlStorage);
@@ -556,7 +572,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblLED, _("LED During Play"), false, true);
     apply_theme_list_item(&theme, ui_lblTheme, _("Random Theme on Boot"), false, true);
     apply_theme_list_item(&theme, ui_lblRetroWait, _("RetroArch Network Wait"), false, true);
-    apply_theme_list_item(&theme, ui_lblAndroid, _("Android Debug Bridge"), false, true);
+    apply_theme_list_item(&theme, ui_lblUSBFunction, _("USB Function"), false, true);
     apply_theme_list_item(&theme, ui_lblState, _("Suspend Power State"), false, true);
     apply_theme_list_item(&theme, ui_lblVerbose, _("Verbose Messages"), false, true);
     apply_theme_list_item(&theme, ui_lblStorage, _("Storage Preference"), false, true);
@@ -572,7 +588,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoLED, mux_prog, "led");
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
     apply_theme_list_glyph(&theme, ui_icoRetroWait, mux_prog, "retrowait");
-    apply_theme_list_glyph(&theme, ui_icoAndroid, mux_prog, "android");
+    apply_theme_list_glyph(&theme, ui_icoUSBFunction, mux_prog, "usbfunction");
     apply_theme_list_glyph(&theme, ui_icoState, mux_prog, "state");
     apply_theme_list_glyph(&theme, ui_icoVerbose, mux_prog, "verbose");
     apply_theme_list_glyph(&theme, ui_icoStorage, mux_prog, "storage");
@@ -595,7 +611,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droLED, NULL);
     apply_theme_list_drop_down(&theme, ui_droTheme, NULL);
     apply_theme_list_drop_down(&theme, ui_droRetroWait, NULL);
-    apply_theme_list_drop_down(&theme, ui_droAndroid, NULL);
+    apply_theme_list_drop_down(&theme, ui_droUSBFunction, NULL);
     apply_theme_list_drop_down(&theme, ui_droState, NULL);
     apply_theme_list_drop_down(&theme, ui_droVerbose, NULL);
     apply_theme_list_drop_down(&theme, ui_droStorage, "");
@@ -610,7 +626,7 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droLED, disabled_enabled, 2);
     add_drop_down_options(ui_droTheme, disabled_enabled, 2);
     add_drop_down_options(ui_droRetroWait, disabled_enabled, 2);
-    add_drop_down_options(ui_droAndroid, disabled_enabled, 2);
+    add_drop_down_options(ui_droUSBFunction, (char *[]) {_("Disabled"), "ADB", "MTP"}, 3);
     add_drop_down_options(ui_droState, (char *[]) {"mem", "freeze"}, 2);
     add_drop_down_options(ui_droVerbose, disabled_enabled, 2);
 
@@ -757,10 +773,10 @@ void joystick_task() {
                                         increase_option_value(ui_droRetroWait,
                                                               &retrowait_current,
                                                               retrowait_total);
-                                    } else if (element_focused == ui_lblAndroid) {
-                                        increase_option_value(ui_droAndroid,
-                                                              &android_current,
-                                                              android_total);
+                                    } else if (element_focused == ui_lblUSBFunction) {
+                                        increase_option_value(ui_droUSBFunction,
+                                                              &usbfunction_current,
+                                                              usbfunction_total);
                                     } else if (element_focused == ui_lblState) {
                                         increase_option_value(ui_droState,
                                                               &state_current,
@@ -897,10 +913,10 @@ void joystick_task() {
                                     decrease_option_value(ui_droRetroWait,
                                                           &retrowait_current,
                                                           retrowait_total);
-                                } else if (element_focused == ui_lblAndroid) {
-                                    decrease_option_value(ui_droAndroid,
-                                                          &android_current,
-                                                          android_total);
+                                } else if (element_focused == ui_lblUSBFunction) {
+                                    decrease_option_value(ui_droUSBFunction,
+                                                          &usbfunction_current,
+                                                          usbfunction_total);
                                 } else if (element_focused == ui_lblState) {
                                     decrease_option_value(ui_droState,
                                                           &state_current,
@@ -958,10 +974,10 @@ void joystick_task() {
                                     increase_option_value(ui_droRetroWait,
                                                           &retrowait_current,
                                                           retrowait_total);
-                                } else if (element_focused == ui_lblAndroid) {
-                                    increase_option_value(ui_droAndroid,
-                                                          &android_current,
-                                                          android_total);
+                                } else if (element_focused == ui_lblUSBFunction) {
+                                    increase_option_value(ui_droUSBFunction,
+                                                          &usbfunction_current,
+                                                          usbfunction_total);
                                 } else if (element_focused == ui_lblState) {
                                     increase_option_value(ui_droState,
                                                           &state_current,
@@ -1091,7 +1107,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblLED, "led");
     lv_obj_set_user_data(ui_lblTheme, "theme");
     lv_obj_set_user_data(ui_lblRetroWait, "retrowait");
-    lv_obj_set_user_data(ui_lblAndroid, "android");
+    lv_obj_set_user_data(ui_lblUSBFunction, "usbfunction");
     lv_obj_set_user_data(ui_lblState, "state");
     lv_obj_set_user_data(ui_lblVerbose, "verbose");
     lv_obj_set_user_data(ui_lblStorage, "storage");
@@ -1104,7 +1120,7 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_screen);
+        lv_obj_t *overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
@@ -1151,7 +1167,7 @@ void ui_refresh_task() {
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
                     if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-                        lv_obj_t * img = lv_gif_create(ui_pnlWall);
+                        lv_obj_t *img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
                         load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -1296,7 +1312,7 @@ int main(int argc, char *argv[]) {
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+            lv_obj_t *img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
             load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);

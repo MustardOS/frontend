@@ -51,7 +51,7 @@ struct mux_config {
             int16_t LED;
             int16_t THEME;
             int16_t RETROWAIT;
-            int16_t ANDROID;
+            char USBFUNCTION[MAX_BUFFER_SIZE];
             char STATE[MAX_BUFFER_SIZE];
             int16_t VERBOSE;
         } ADVANCED;
