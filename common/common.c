@@ -28,6 +28,11 @@ lv_obj_t *img_obj;
 const char **img_paths = NULL;
 int img_paths_count = 0;
 
+void refresh_screen() {
+    lv_task_handler();
+    usleep(device.SCREEN.WAIT);
+}
+
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
 }

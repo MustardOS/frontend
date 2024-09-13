@@ -48,6 +48,8 @@ struct pattern {
     size_t capacity;
 };
 
+void refresh_screen();
+
 int file_exist(char *filename);
 
 int get_file_size(char *filename);

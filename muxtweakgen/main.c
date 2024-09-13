@@ -122,7 +122,7 @@ void init_pointers(Tweak *tweak, int *total, int *current) {
 
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         char buf[MAX_BUFFER_SIZE];
@@ -1134,8 +1134,7 @@ void joystick_task() {
                 }
             }
         }
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
     }
 }
 
@@ -1206,7 +1205,7 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_screen);
+        lv_obj_t *overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
@@ -1253,7 +1252,7 @@ void ui_refresh_task() {
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
                     if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-                        lv_obj_t * img = lv_gif_create(ui_pnlWall);
+                        lv_obj_t *img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
                         load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -1398,7 +1397,7 @@ int main(int argc, char *argv[]) {
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+            lv_obj_t *img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
             load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -1473,6 +1472,7 @@ int main(int argc, char *argv[]) {
 
     direct_to_previous();
 
+    refresh_screen();
     joystick_task();
 
     close(js_fd);

@@ -324,13 +324,13 @@ void create_system_items() {
             char *base_filename = file_names[i];
             ui_count++;
 
-            lv_obj_t * ui_pnlCore = lv_obj_create(ui_pnlContent);
+            lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
             apply_theme_list_panel(&theme, &device, ui_pnlCore);
 
-            lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
+            lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
             apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, false, false);
 
-            lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
+            lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
             apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_prog, "system");
 
             lv_group_add_obj(ui_group, ui_lblCoreItem);
@@ -393,13 +393,13 @@ void create_core_items(const char *target) {
 
         ui_count++;
 
-        lv_obj_t * ui_pnlCore = lv_obj_create(ui_pnlContent);
+        lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlCore);
 
-        lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
+        lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
         apply_theme_list_item(&theme, ui_lblCoreItem, core_headers[i], false, false);
 
-        lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
+        lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
 
         char *glyph = (strcasecmp(core_headers[i], assign_default) == 0) ? "default" : "core";
         apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_prog, glyph);
@@ -728,8 +728,7 @@ void joystick_task() {
                 }
             }
         }
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
     }
 }
 
@@ -804,7 +803,7 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_screen);
+        lv_obj_t *overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
@@ -850,7 +849,7 @@ void ui_refresh_task() {
                 strcpy(current_wall, new_wall);
                 if (strlen(new_wall) > 3) {
                     if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-                        lv_obj_t * img = lv_gif_create(ui_pnlWall);
+                        lv_obj_t *img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
                         load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -1083,7 +1082,7 @@ int main(int argc, char *argv[]) {
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+            lv_obj_t *img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
             load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -1172,6 +1171,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
+    refresh_screen();
     joystick_task();
 
     close(js_fd);

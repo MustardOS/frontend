@@ -134,8 +134,7 @@ void joystick_task() {
             usleep(device.SCREEN.WAIT);
             if (exit_status >= 0) return;
         }
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
         if (exit_status >= 0) return;
     }
 }
@@ -200,7 +199,7 @@ int main(int argc, char *argv[]) {
     char *current_wall = load_wallpaper(ui_scrCharge, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+            lv_obj_t *img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
             load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -246,6 +245,7 @@ int main(int argc, char *argv[]) {
     battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
     lv_timer_ready(battery_timer);
 
+    refresh_screen();
     joystick_task();
 
     close(js_fd);

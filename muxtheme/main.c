@@ -143,13 +143,13 @@ void create_theme_items() {
 
             ui_count++;
 
-            lv_obj_t * ui_pnlTheme = lv_obj_create(ui_pnlContent);
+            lv_obj_t *ui_pnlTheme = lv_obj_create(ui_pnlContent);
             apply_theme_list_panel(&theme, &device, ui_pnlTheme);
 
-            lv_obj_t * ui_lblThemeItem = lv_label_create(ui_pnlTheme);
+            lv_obj_t *ui_lblThemeItem = lv_label_create(ui_pnlTheme);
             apply_theme_list_item(&theme, ui_lblThemeItem, base_filename, false, false);
 
-            lv_obj_t * ui_lblThemeItemGlyph = lv_img_create(ui_pnlTheme);
+            lv_obj_t *ui_lblThemeItemGlyph = lv_img_create(ui_pnlTheme);
             apply_theme_list_glyph(&theme, ui_lblThemeItemGlyph, mux_prog, "theme");
 
             lv_group_add_obj(ui_group, ui_lblThemeItem);
@@ -398,8 +398,7 @@ void joystick_task() {
                 }
             }
         }
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
     }
 }
 
@@ -452,7 +451,7 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_screen);
+        lv_obj_t *overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
@@ -701,6 +700,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
+    refresh_screen();
     joystick_task();
 
     close(js_fd);

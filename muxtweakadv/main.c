@@ -1044,8 +1044,7 @@ void joystick_task() {
                 }
             }
         }
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
     }
 }
 
@@ -1387,6 +1386,7 @@ int main(int argc, char *argv[]) {
 
     direct_to_previous();
 
+    refresh_screen();
     joystick_task();
 
     close(js_fd);

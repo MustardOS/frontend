@@ -67,7 +67,7 @@ void show_help() {
                      _(lv_label_get_text(ui_lblTitle)), _("HELP.NETSCAN"));
 }
 
-void* scan_networks(void* arg) {
+void *scan_networks(void *arg) {
     system("/opt/muos/script/web/ssid.sh");
     return NULL;
 }
@@ -96,13 +96,13 @@ void create_network_items() {
     while (fgets(ssid, sizeof(ssid), file)) {
         ui_count++;
 
-        lv_obj_t * ui_pnlNetScan = lv_obj_create(ui_pnlContent);
+        lv_obj_t *ui_pnlNetScan = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlNetScan);
 
-        lv_obj_t * ui_lblNetScanItem = lv_label_create(ui_pnlNetScan);
+        lv_obj_t *ui_lblNetScanItem = lv_label_create(ui_pnlNetScan);
         apply_theme_list_item(&theme, ui_lblNetScanItem, str_nonew(ssid), false, false);
 
-        lv_obj_t * ui_lblNetScanGlyph = lv_img_create(ui_pnlNetScan);
+        lv_obj_t *ui_lblNetScanGlyph = lv_img_create(ui_pnlNetScan);
         apply_theme_list_glyph(&theme, ui_lblNetScanGlyph, mux_prog, "netscan");
 
         lv_group_add_obj(ui_group, ui_lblNetScanItem);
@@ -330,8 +330,7 @@ void joystick_task() {
                 }
             }
         }
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
     }
 }
 
@@ -382,7 +381,7 @@ void init_elements() {
 
     char *overlay = load_overlay_image();
     if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t * overlay_img = lv_img_create(ui_screen);
+        lv_obj_t *overlay_img = lv_img_create(ui_screen);
         lv_img_set_src(overlay_img, overlay);
         lv_obj_move_foreground(overlay_img);
     }
@@ -429,7 +428,7 @@ void ui_refresh_task() {
                 if (strlen(new_wall) > 3) {
                     printf("LOADING WALLPAPER: %s\n", new_wall);
                     if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-                        lv_obj_t * img = lv_gif_create(ui_pnlWall);
+                        lv_obj_t *img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(img, new_wall);
                     } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
                         load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -555,7 +554,7 @@ int main(int argc, char *argv[]) {
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-            lv_obj_t * img = lv_gif_create(ui_pnlWall);
+            lv_obj_t *img = lv_gif_create(ui_pnlWall);
             lv_gif_set_src(img, current_wall);
         } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
             load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
@@ -624,12 +623,12 @@ int main(int argc, char *argv[]) {
 
     pthread_create(&scan_networks_thread, NULL, scan_networks, NULL);
     while (pthread_tryjoin_np(scan_networks_thread, NULL) != 0) {
-        lv_task_handler();
-        usleep(device.SCREEN.WAIT);
+        refresh_screen();
     }
 
     create_network_items();
 
+    refresh_screen();
     joystick_task();
 
     close(js_fd);
