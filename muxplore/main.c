@@ -389,17 +389,20 @@ void image_refresh(char *image_type) {
                      STORAGE_PATH, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
 
             char *f_core_artwork = read_line_from_file(f_pointer, 3);
+
             if (strlen(f_core_artwork) <= 1) {
-                printf("CORE IS NOT SET - ARTWORK NOT LOADED\n");
-                return;
+                snprintf(image, sizeof(image), "%s/image/none_box.png",
+                         ACTIVE_THEME);
+                snprintf(image_path, sizeof(image_path), "M:%s/image/none_box.png",
+                         ACTIVE_THEME);
+            } else {
+                char *f_file_name = strip_ext(read_line_from_file(f_pointer, 7));
+
+                snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
+                         STORAGE_PATH, f_core_artwork, image_type, f_file_name);
+                snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
+                         STORAGE_PATH, f_core_artwork, image_type, f_file_name);
             }
-
-            char *f_file_name = strip_ext(read_line_from_file(f_pointer, 7));
-
-            snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                     STORAGE_PATH, f_core_artwork, image_type, f_file_name);
-            snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
-                     STORAGE_PATH, f_core_artwork, image_type, f_file_name);
         }
             break;
         case HISTORY: {
@@ -414,16 +417,18 @@ void image_refresh(char *image_type) {
 
             char *h_core_artwork = read_line_from_file(h_pointer, 3);
             if (strlen(h_core_artwork) <= 1) {
-                printf("CORE IS NOT SET - ARTWORK NOT LOADED\n");
-                return;
+                snprintf(image, sizeof(image), "%s/image/none_box.png",
+                         ACTIVE_THEME);
+                snprintf(image_path, sizeof(image_path), "M:%s/image/none_box.png",
+                         ACTIVE_THEME);
+            } else {
+                char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
+
+                snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
+                         STORAGE_PATH, h_core_artwork, image_type, h_file_name);
+                snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
+                         STORAGE_PATH, h_core_artwork, image_type, h_file_name);
             }
-
-            char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
-
-            snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                     STORAGE_PATH, h_core_artwork, image_type, h_file_name);
-            snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
-                     STORAGE_PATH, h_core_artwork, image_type, h_file_name);
         }
             break;
         default: {
@@ -468,20 +473,22 @@ void image_refresh(char *image_type) {
                 }
 
                 if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
-                    printf("CORE IS NOT SET - ARTWORK NOT LOADED\n");
-                    return;
-                }
-
-                if (items[current_item_index].content_type == FOLDER) {
-                    snprintf(image, sizeof(image), "%s/info/catalogue/Folder/%s/%s.png",
-                             STORAGE_PATH, image_type, content_label);
-                    snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/Folder/%s/%s.png",
-                             STORAGE_PATH, image_type, content_label);
+                    snprintf(image, sizeof(image), "%s/image/none_box.png",
+                             ACTIVE_THEME);
+                    snprintf(image_path, sizeof(image_path), "M:%s/image/none_box.png",
+                             ACTIVE_THEME);
                 } else {
-                    snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                             STORAGE_PATH, core_artwork, image_type, file_name);
-                    snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
-                             STORAGE_PATH, core_artwork, image_type, file_name);
+                    if (items[current_item_index].content_type == FOLDER) {
+                        snprintf(image, sizeof(image), "%s/info/catalogue/Folder/%s/%s.png",
+                                 STORAGE_PATH, image_type, content_label);
+                        snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/Folder/%s/%s.png",
+                                 STORAGE_PATH, image_type, content_label);
+                    } else {
+                        snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
+                                 STORAGE_PATH, core_artwork, image_type, file_name);
+                        snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
+                                 STORAGE_PATH, core_artwork, image_type, file_name);
+                    }
                 }
             }
         }
@@ -2032,8 +2039,6 @@ void ui_refresh_task() {
                 }
             }
         }
-        image_refresh("box");
-        lv_obj_invalidate(ui_pnlBox);
 
         const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         snprintf(current_content_label, sizeof(current_content_label), "%s", content_label);
