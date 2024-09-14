@@ -4,8 +4,6 @@
 
 #define MAX_BUFFER_SIZE 512
 
-#define DUMMY_DIR "00000DIR"
-
 #define RTC_MAX_RETRIES 5
 #define RTC_RETRY_DELAY 1
 
@@ -29,9 +27,6 @@
 #define MUOS_SAG_LOAD "/tmp/sag_go" // Auto Assign Governor Flag
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
-
-#define BRIGHT_FILE "/opt/muos/config/brightness.txt"
-#define VOLUME_FILE "/opt/muos/config/volume.txt"
 
 #define BRIGHT_PERC "/tmp/current_brightness_percent"
 #define VOLUME_PERC "/tmp/current_volume_percent"
