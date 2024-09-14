@@ -257,8 +257,9 @@ void joystick_task() {
                                         char *chosen_theme = lv_label_get_text(element_focused);
                                         lv_label_set_text(ui_lblMessage, _("Loading Theme"));
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                                        lv_task_handler();
-                                        usleep(device.SCREEN.WAIT);
+
+                                        refresh_screen();
+
                                         if (theme.MISC.ANIMATED_BACKGROUND == 1 && lv_obj_is_valid(wall_img))
                                             lv_obj_del(wall_img);
                                         if (theme.MISC.ANIMATED_BACKGROUND == 2) unload_image_animation();
@@ -347,8 +348,7 @@ void joystick_task() {
                         break;
                 }
             }
-            lv_task_handler();
-            usleep(device.SCREEN.WAIT);
+            refresh_screen();
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {

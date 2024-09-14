@@ -379,8 +379,7 @@ void joystick_task() {
                         break;
                 }
             }
-            lv_task_handler();
-            usleep(device.SCREEN.WAIT);
+            refresh_screen();
         }
 
         if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1))) {

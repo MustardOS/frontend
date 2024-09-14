@@ -539,9 +539,7 @@ void joystick_task() {
                                     } else if (element_focused == ui_lblConnect) {
                                         lv_label_set_text(ui_lblStatusValue, _("Trying to Connect..."));
 
-                                        lv_task_handler();
-                                        usleep(device.SCREEN.WAIT);
-
+                                        refresh_screen();
                                         save_network_config();
 
                                         if (config.NETWORK.ENABLED) {
@@ -967,8 +965,7 @@ void joystick_task() {
                         break;
                 }
             }
-            lv_task_handler();
-            usleep(device.SCREEN.WAIT);
+            refresh_screen();
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {

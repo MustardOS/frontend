@@ -473,8 +473,7 @@ void joystick_task() {
                         break;
                 }
             }
-            lv_task_handler();
-            usleep(device.SCREEN.WAIT);
+            refresh_screen();
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {

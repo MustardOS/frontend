@@ -169,8 +169,6 @@ int joystick_task() {
                         break;
                 }
             }
-            lv_task_handler();
-            usleep(device.SCREEN.WAIT);
         }
         refresh_screen();
     }

@@ -391,10 +391,10 @@ void image_refresh(char *image_type) {
             char *f_core_artwork = read_line_from_file(f_pointer, 3);
 
             if (strlen(f_core_artwork) <= 1) {
-                snprintf(image, sizeof(image), "%s/image/none_box.png",
-                         ACTIVE_THEME);
-                snprintf(image_path, sizeof(image_path), "M:%s/image/none_box.png",
-                         ACTIVE_THEME);
+                snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                         ACTIVE_THEME, image_type);
+                snprintf(image_path, sizeof(image_path), "M:%s/image/none_%s.png",
+                         ACTIVE_THEME, image_type);
             } else {
                 char *f_file_name = strip_ext(read_line_from_file(f_pointer, 7));
 
@@ -417,10 +417,10 @@ void image_refresh(char *image_type) {
 
             char *h_core_artwork = read_line_from_file(h_pointer, 3);
             if (strlen(h_core_artwork) <= 1) {
-                snprintf(image, sizeof(image), "%s/image/none_box.png",
-                         ACTIVE_THEME);
-                snprintf(image_path, sizeof(image_path), "M:%s/image/none_box.png",
-                         ACTIVE_THEME);
+                snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                         ACTIVE_THEME, image_type);
+                snprintf(image_path, sizeof(image_path), "M:%s/image/none_%s.png",
+                         ACTIVE_THEME, image_type);
             } else {
                 char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
 
@@ -473,10 +473,10 @@ void image_refresh(char *image_type) {
                 }
 
                 if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
-                    snprintf(image, sizeof(image), "%s/image/none_box.png",
-                             ACTIVE_THEME);
-                    snprintf(image_path, sizeof(image_path), "M:%s/image/none_box.png",
-                             ACTIVE_THEME);
+                    snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                             ACTIVE_THEME, image_type);
+                    snprintf(image_path, sizeof(image_path), "M:%s/image/none_%s.png",
+                             ACTIVE_THEME, image_type);
                 } else {
                     if (items[current_item_index].content_type == FOLDER) {
                         snprintf(image, sizeof(image), "%s/info/catalogue/Folder/%s/%s.png",
@@ -1264,9 +1264,7 @@ void joystick_task() {
                                     JOYDOWN_pressed = 0;
                                     nav_hold = 0;
                                 } else if (ev.code == NAV_A) {
-                                    if (ui_count == 0) {
-                                        goto nothing_ever_happens;
-                                    }
+                                    if (ui_count == 0) goto nothing_ever_happens;
 
                                     play_sound("confirm", nav_sound, 1);
 
@@ -1365,7 +1363,7 @@ void joystick_task() {
                                     lv_obj_move_foreground(ui_pnlMessage);
 
                                     // Refresh and add a small delay to actually display the message!
-                                    lv_task_handler();
+                                    refresh_screen();
                                     usleep(256);
 
                                     return;
@@ -1408,9 +1406,7 @@ void joystick_task() {
                                     }
                                     return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
-                                    if (ui_count == 0) {
-                                        goto nothing_ever_happens;
-                                    }
+                                    if (ui_count == 0) goto nothing_ever_happens;
 
                                     char n_dir[MAX_BUFFER_SIZE];
                                     snprintf(n_dir, sizeof(n_dir), "%s", sd_dir);
@@ -1483,6 +1479,8 @@ void joystick_task() {
                                     ttq:
                                     return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
+                                    if (ui_count == 0) goto nothing_ever_happens;
+
                                     play_sound("confirm", nav_sound, 1);
 
                                     char f_content[MAX_BUFFER_SIZE];
@@ -1582,9 +1580,7 @@ void joystick_task() {
                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                 JOYHOTKEY_pressed = 0;
                                 if (progress_onscreen == -1) {
-                                    if (ui_count == 0) {
-                                        goto nothing_ever_happens;
-                                    }
+                                    if (ui_count == 0) goto nothing_ever_happens;
 
                                     play_sound("confirm", nav_sound, 1);
                                     image_refresh("preview");
@@ -1670,8 +1666,7 @@ void joystick_task() {
                         break;
                 }
             }
-            lv_task_handler();
-            usleep(device.SCREEN.WAIT);
+            refresh_screen();
         }
 
         if (JOYUP_pressed || JOYDOWN_pressed) {

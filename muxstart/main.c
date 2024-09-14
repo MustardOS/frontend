@@ -106,9 +106,7 @@ int main(int argc, char *argv[]) {
 
     lv_obj_set_y(ui_pnlMessage, theme.VERBOSE_BOOT.Y_POS);
     lv_label_set_text(ui_lblMessage, argv[1]);
-    lv_task_handler();
-
-    usleep(device.SCREEN.WAIT);
+    refresh_screen();
 
     return 0;
 }

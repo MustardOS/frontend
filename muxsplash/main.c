@@ -64,9 +64,7 @@ int main(int argc, char *argv[]) {
     lv_obj_t *img = lv_img_create(ui_scrSplash);
     lv_img_set_src(img, init_wall);
 
-    lv_task_handler();
-
-    usleep(device.SCREEN.WAIT);
+    refresh_screen();
 
     return 0;
 }
