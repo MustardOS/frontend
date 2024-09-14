@@ -838,20 +838,22 @@ void create_explore_items(void *count) {
     int fn_valid = 0;
     struct json fn_json;
 
-    char folder_name_file[MAX_BUFFER_SIZE];
-    snprintf(folder_name_file, sizeof(folder_name_file), "%s/info/name/folder.json",
-             STORAGE_PATH);
+    if (config.VISUAL.FRIENDLYFOLDER) {
+        char folder_name_file[MAX_BUFFER_SIZE];
+        snprintf(folder_name_file, sizeof(folder_name_file), "%s/info/name/folder.json",
+                 STORAGE_PATH);
 
-    if (json_valid(read_text_from_file(folder_name_file))) {
-        fn_valid = 1;
-        fn_json = json_parse(read_text_from_file(folder_name_file));
+        if (json_valid(read_text_from_file(folder_name_file))) {
+            fn_valid = 1;
+            fn_json = json_parse(read_text_from_file(folder_name_file));
+        }
     }
 
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {
             content_item *new_item = NULL;
             char good_name[MAX_BUFFER_SIZE];
-            if (fn_valid) {
+            if (config.VISUAL.FRIENDLYFOLDER && fn_valid) {
                 struct json good_name_json = json_object_get(fn_json, dir_names[i]);
                 if (json_exists(good_name_json)) {
                     json_string_copy(good_name_json, good_name, sizeof(good_name));

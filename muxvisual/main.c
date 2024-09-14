@@ -61,13 +61,14 @@ int mux_clock_total, mux_clock_current;
 int boxart_total, boxart_current;
 int name_total, name_current;
 int dash_total, dash_current;
+int friendlyfolder_total, friendlyfolder_current;
 int thetitleformat_total, thetitleformat_current;
 int folderitemcount_total, folderitemcount_current;
 int menu_counter_folder_total, menu_counter_folder_current;
 int menu_counter_file_total, menu_counter_file_current;
 int background_animation_total, background_animation_current;
 
-#define UI_COUNT 12
+#define UI_COUNT 13
 lv_obj_t *ui_objects[UI_COUNT];
 
 typedef struct {
@@ -75,7 +76,7 @@ typedef struct {
     int *current;
 } Visuals;
 
-Visuals battery, network, bluetooth, mux_clock, boxart, name, dash,
+Visuals battery, network, bluetooth, mux_clock, boxart, name, dash, friendlyfolder,
         thetitleformat, folderitemcount, counterfolder, counterfile, backgroundanimation;
 
 lv_group_t *ui_group;
@@ -97,7 +98,8 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblBoxArt,              "HELP.BOXART"},
             {ui_lblName,                "HELP.NAME"},
             {ui_lblDash,                "HELP.DASH"},
-            {ui_lblTheTitleFormat,      "HELP.TITLE_FORMAT"},
+            {ui_lblFriendlyFolder,      "HELP.FRIENDLY.FOLDER"},
+            {ui_lblTheTitleFormat,      "HELP.TITLE.FORMAT"},
             {ui_lblFolderItemCount,     "HELP.FOLDER.ITEM"},
             {ui_lblMenuCounterFolder,   "HELP.COUNTER.FOLDER"},
             {ui_lblMenuCounterFile,     "HELP.COUNTER.FILE"},
@@ -144,6 +146,7 @@ void elements_events_init() {
             ui_droBoxArt,
             ui_droName,
             ui_droDash,
+            ui_droFriendlyFolder,
             ui_droTheTitleFormat,
             ui_droFolderItemCount,
             ui_droMenuCounterFolder,
@@ -162,6 +165,7 @@ void elements_events_init() {
     init_pointers(&boxart, &boxart_total, &boxart_current);
     init_pointers(&name, &name_total, &name_current);
     init_pointers(&dash, &dash_total, &dash_current);
+    init_pointers(&friendlyfolder, &friendlyfolder_total, &friendlyfolder_current);
     init_pointers(&thetitleformat, &thetitleformat_total, &thetitleformat_current);
     init_pointers(&folderitemcount, &folderitemcount_total, &folderitemcount_current);
     init_pointers(&counterfolder, &menu_counter_folder_total, &menu_counter_folder_current);
@@ -178,6 +182,7 @@ void init_dropdown_settings() {
             {boxart.total,              boxart.current},
             {name.total,                name.current},
             {dash.total,                dash.current},
+            {friendlyfolder.total,      friendlyfolder.current},
             {thetitleformat.total,      thetitleformat.current},
             {folderitemcount.total,     folderitemcount.current},
             {counterfolder.total,       counterfolder.current},
@@ -193,6 +198,7 @@ void init_dropdown_settings() {
             ui_droBoxArt,
             ui_droName,
             ui_droDash,
+            ui_droFriendlyFolder,
             ui_droTheTitleFormat,
             ui_droFolderItemCount,
             ui_droMenuCounterFolder,
@@ -214,6 +220,7 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droBoxArt, config.VISUAL.BOX_ART);
     lv_dropdown_set_selected(ui_droName, config.VISUAL.NAME);
     lv_dropdown_set_selected(ui_droDash, config.VISUAL.DASH);
+    lv_dropdown_set_selected(ui_droFriendlyFolder, config.VISUAL.FRIENDLYFOLDER);
     lv_dropdown_set_selected(ui_droTheTitleFormat, config.VISUAL.THETITLEFORMAT);
     lv_dropdown_set_selected(ui_droFolderItemCount, config.VISUAL.FOLDERITEMCOUNT);
     lv_dropdown_set_selected(ui_droMenuCounterFolder, config.VISUAL.COUNTERFOLDER);
@@ -229,6 +236,7 @@ void save_visual_options() {
     int idx_boxart = lv_dropdown_get_selected(ui_droBoxArt);
     int idx_name = lv_dropdown_get_selected(ui_droName);
     int idx_dash = lv_dropdown_get_selected(ui_droDash);
+    int idx_friendlyfolder = lv_dropdown_get_selected(ui_droFriendlyFolder);
     int idx_thetitleformat = lv_dropdown_get_selected(ui_droTheTitleFormat);
     int idx_folderitemcount = lv_dropdown_get_selected(ui_droFolderItemCount);
     int idx_counterfolder = lv_dropdown_get_selected(ui_droMenuCounterFolder);
@@ -242,6 +250,7 @@ void save_visual_options() {
     write_text_to_file("/run/muos/global/visual/boxart", "w", INT, idx_boxart);
     write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
     write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
+    write_text_to_file("/run/muos/global/visual/friendlyfolder", "w", INT, idx_friendlyfolder);
     write_text_to_file("/run/muos/global/visual/thetitleformat", "w", INT, idx_thetitleformat);
     write_text_to_file("/run/muos/global/visual/folderitemcount", "w", INT, idx_folderitemcount);
     write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_counterfolder);
@@ -258,6 +267,7 @@ void init_navigation_groups() {
             ui_pnlBoxArt,
             ui_pnlName,
             ui_pnlDash,
+            ui_pnlFriendlyFolder,
             ui_pnlTheTitleFormat,
             ui_pnlFolderItemCount,
             ui_pnlMenuCounterFolder,
@@ -272,11 +282,12 @@ void init_navigation_groups() {
     ui_objects[4] = ui_lblBoxArt;
     ui_objects[5] = ui_lblName;
     ui_objects[6] = ui_lblDash;
-    ui_objects[7] = ui_lblTheTitleFormat;
-    ui_objects[8] = ui_lblFolderItemCount;
-    ui_objects[9] = ui_lblMenuCounterFolder;
-    ui_objects[10] = ui_lblMenuCounterFile;
-    ui_objects[11] = ui_lblBackgroundAnimation;
+    ui_objects[7] = ui_lblFriendlyFolder;
+    ui_objects[8] = ui_lblTheTitleFormat;
+    ui_objects[9] = ui_lblFolderItemCount;
+    ui_objects[10] = ui_lblMenuCounterFolder;
+    ui_objects[11] = ui_lblMenuCounterFile;
+    ui_objects[12] = ui_lblBackgroundAnimation;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droBattery,
@@ -286,6 +297,7 @@ void init_navigation_groups() {
             ui_droBoxArt,
             ui_droName,
             ui_droDash,
+            ui_droFriendlyFolder,
             ui_droTheTitleFormat,
             ui_droFolderItemCount,
             ui_droMenuCounterFolder,
@@ -301,6 +313,7 @@ void init_navigation_groups() {
             ui_icoBoxArt,
             ui_icoName,
             ui_icoDash,
+            ui_icoFriendlyFolder,
             ui_icoTheTitleFormat,
             ui_icoFolderItemCount,
             ui_icoMenuCounterFolder,
@@ -315,6 +328,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlBoxArt);
     apply_theme_list_panel(&theme, &device, ui_pnlName);
     apply_theme_list_panel(&theme, &device, ui_pnlDash);
+    apply_theme_list_panel(&theme, &device, ui_pnlFriendlyFolder);
     apply_theme_list_panel(&theme, &device, ui_pnlTheTitleFormat);
     apply_theme_list_panel(&theme, &device, ui_pnlFolderItemCount);
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFolder);
@@ -328,6 +342,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblBoxArt, _("Content Box Art"), false, true);
     apply_theme_list_item(&theme, ui_lblName, _("Content Name Scheme"), false, true);
     apply_theme_list_item(&theme, ui_lblDash, _("Content Dash Replacement"), false, true);
+    apply_theme_list_item(&theme, ui_lblFriendlyFolder, _("Friendly Folder Names"), false, true);
     apply_theme_list_item(&theme, ui_lblTheTitleFormat, _("Display Title Reformatting"), false, true);
     apply_theme_list_item(&theme, ui_lblFolderItemCount, _("Folder Item Count"), false, true);
     apply_theme_list_item(&theme, ui_lblMenuCounterFolder, _("Menu Counter Folder"), false, true);
@@ -341,6 +356,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoBoxArt, mux_prog, "boxart");
     apply_theme_list_glyph(&theme, ui_icoName, mux_prog, "name");
     apply_theme_list_glyph(&theme, ui_icoDash, mux_prog, "dash");
+    apply_theme_list_glyph(&theme, ui_icoFriendlyFolder, mux_prog, "friendlyfolder");
     apply_theme_list_glyph(&theme, ui_icoTheTitleFormat, mux_prog, "thetitleformat");
     apply_theme_list_glyph(&theme, ui_icoFolderItemCount, mux_prog, "folderitemcount");
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFolder, mux_prog, "counterfolder");
@@ -354,6 +370,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droBoxArt, NULL);
     apply_theme_list_drop_down(&theme, ui_droName, NULL);
     apply_theme_list_drop_down(&theme, ui_droDash, NULL);
+    apply_theme_list_drop_down(&theme, ui_droFriendlyFolder, NULL);
     apply_theme_list_drop_down(&theme, ui_droTheTitleFormat, NULL);
     apply_theme_list_drop_down(&theme, ui_droFolderItemCount, NULL);
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, NULL);
@@ -372,6 +389,7 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droName,
                           (char *[]) {_("Full Name"), _("Remove [ ]"), _("Remove ( )"), _("Remove [ ] and ( )")}, 4);
     add_drop_down_options(ui_droDash, disabled_enabled, 2);
+    add_drop_down_options(ui_droFriendlyFolder, disabled_enabled, 2);
     add_drop_down_options(ui_droTheTitleFormat, disabled_enabled, 2);
     add_drop_down_options(ui_droFolderItemCount, hidden_visible, 2);
     add_drop_down_options(ui_droMenuCounterFolder, hidden_visible, 2);
@@ -506,6 +524,10 @@ void joystick_task() {
                                         increase_option_value(ui_droDash,
                                                               &dash_current,
                                                               dash_total);
+                                    } else if (element_focused == ui_lblFriendlyFolder) {
+                                        increase_option_value(ui_droFriendlyFolder,
+                                                              &friendlyfolder_current,
+                                                              friendlyfolder_total);
                                     } else if (element_focused == ui_lblTheTitleFormat) {
                                         increase_option_value(ui_droTheTitleFormat,
                                                               &thetitleformat_current,
@@ -635,6 +657,10 @@ void joystick_task() {
                                     decrease_option_value(ui_droDash,
                                                           &dash_current,
                                                           dash_total);
+                                } else if (element_focused == ui_lblFriendlyFolder) {
+                                    decrease_option_value(ui_droFriendlyFolder,
+                                                          &friendlyfolder_current,
+                                                          friendlyfolder_total);
                                 } else if (element_focused == ui_lblTheTitleFormat) {
                                     decrease_option_value(ui_droTheTitleFormat,
                                                           &thetitleformat_current,
@@ -692,6 +718,10 @@ void joystick_task() {
                                     increase_option_value(ui_droTheTitleFormat,
                                                           &thetitleformat_current,
                                                           thetitleformat_total);
+                                } else if (element_focused == ui_lblFriendlyFolder) {
+                                    increase_option_value(ui_droFriendlyFolder,
+                                                          &folderitemcount_current,
+                                                          friendlyfolder_total);
                                 } else if (element_focused == ui_lblFolderItemCount) {
                                     increase_option_value(ui_droFolderItemCount,
                                                           &folderitemcount_current,
@@ -823,6 +853,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBoxArt, "boxart");
     lv_obj_set_user_data(ui_lblName, "name");
     lv_obj_set_user_data(ui_lblDash, "dash");
+    lv_obj_set_user_data(ui_lblFriendlyFolder, "friendlyfolder");
     lv_obj_set_user_data(ui_lblTheTitleFormat, "thetitleformat");
     lv_obj_set_user_data(ui_lblFolderItemCount, "folderitemcount");
     lv_obj_set_user_data(ui_lblMenuCounterFolder, "counterfolder");
