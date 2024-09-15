@@ -111,7 +111,7 @@ int save_profile() {
     const char *p_gateway = read_text_from_file("/run/muos/global/network/gateway");
     const char *p_dns = read_text_from_file("/run/muos/global/network/dns");
 
-    if (strlen(p_ssid) == 0 && strlen(p_pass) == 0) {
+    if (strlen(p_ssid) == 0 && strlen(p_pass) < 64) {
         osd_message = _("Please check network settings");
         lv_label_set_text(ui_lblMessage, osd_message);
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
