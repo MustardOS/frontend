@@ -29,6 +29,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->NETWORK.TYPE, "network/type", 0)
     CFG_STR_FIELD(config->NETWORK.INTERFACE, "network/interface", "wlan0")
     CFG_STR_FIELD(config->NETWORK.SSID, "network/ssid", "")
+    CFG_STR_FIELD(config->NETWORK.PASS, "network/pass", "")
     CFG_STR_FIELD(config->NETWORK.ADDRESS, "network/address", "192.168.0.123")
     CFG_STR_FIELD(config->NETWORK.GATEWAY, "network/gateway", "192.168.0.1")
     CFG_STR_FIELD(config->NETWORK.SUBNET, "network/subnet", "24")
@@ -91,6 +92,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->STORAGE.SCREENSHOT, "storage/screenshot", 2)
     CFG_INT_FIELD(config->STORAGE.THEME, "storage/theme", 2)
     CFG_INT_FIELD(config->STORAGE.LANGUAGE, "storage/language", 2)
+    CFG_INT_FIELD(config->STORAGE.NETWORK, "storage/network", 2)
 
 #undef CFG_INT_FIELD
 #undef CFG_STR_FIELD

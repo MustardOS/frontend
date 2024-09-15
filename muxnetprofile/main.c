@@ -17,6 +17,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
+#include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
 
@@ -52,6 +53,9 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
+size_t item_count = 0;
+content_item *items = NULL;
+
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
@@ -68,99 +72,184 @@ void show_help() {
 void load_profile(char *name) {
     static char profile_file[MAX_BUFFER_SIZE];
     snprintf(profile_file, sizeof(profile_file),
-             "%s/MUOS/network/%s.ini", device.STORAGE.ROM.MOUNT, name);
+             "%s/network/%s.ini", STORAGE_PATH, name);
 
-    static char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    mini_t *muos_config = mini_try_load(config_file);
     mini_t *net_profile = mini_try_load(profile_file);
 
-    int net_type = 0;
-    if (strcasecmp(mini_get_string(net_profile, "profile", "type", "dhcp"), "static") == 0) {
-        net_type = 1;
+    write_text_to_file("/run/muos/global/network/type", "w", INT,
+                       (strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static") == 0) ? 1 : 0);
+
+    write_text_to_file("/run/muos/global/network/ssid", "w", CHAR,
+                       mini_get_string(net_profile, "network", "ssid", ""));
+
+    const char *p_pass = mini_get_string(net_profile, "network", "pass", "");
+    write_text_to_file("/run/muos/global/network/pass", "w", CHAR,
+                       (strlen(p_pass) == 64) ? p_pass : "");
+    write_text_to_file("/tmp/net_pass", "w", CHAR, p_pass);
+
+    write_text_to_file("/run/muos/global/network/address", "w", CHAR,
+                       mini_get_string(net_profile, "network", "address", ""));
+
+    write_text_to_file("/run/muos/global/network/subnet", "w", CHAR,
+                       mini_get_string(net_profile, "network", "subnet", ""));
+
+    write_text_to_file("/run/muos/global/network/gateway", "w", CHAR,
+                       mini_get_string(net_profile, "network", "gateway", ""));
+
+    write_text_to_file("/run/muos/global/network/dns", "w", CHAR,
+                       mini_get_string(net_profile, "network", "dns", ""));
+
+    mini_free(net_profile);
+}
+
+int save_profile() {
+    const char *p_type = read_text_from_file("/run/muos/global/network/type");
+    const char *p_ssid = read_text_from_file("/run/muos/global/network/ssid");
+    const char *p_pass = read_text_from_file("/run/muos/global/network/pass");
+    const char *p_address = read_text_from_file("/run/muos/global/network/address");
+    const char *p_subnet = read_text_from_file("/run/muos/global/network/subnet");
+    const char *p_gateway = read_text_from_file("/run/muos/global/network/gateway");
+    const char *p_dns = read_text_from_file("/run/muos/global/network/dns");
+
+    if (strlen(p_ssid) == 0 && strlen(p_pass) == 0) {
+        osd_message = _("Please check network settings");
+        lv_label_set_text(ui_lblMessage, osd_message);
+        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+
+        refresh_screen();
+        return 0;
     }
 
-    mini_set_int(muos_config, "network", "enabled", 1);
-    mini_set_int(muos_config, "network", "type", net_type);
+    static char profile_file[MAX_BUFFER_SIZE];
+    int counter = 1;
 
-    mini_set_string(muos_config, "network", "ssid", mini_get_string(net_profile, "profile", "ssid", ""));
-    mini_set_string(muos_config, "network", "address", mini_get_string(net_profile, "profile", "device_ip", ""));
-    mini_set_string(muos_config, "network", "subnet", mini_get_string(net_profile, "profile", "subnet_cidr", ""));
-    mini_set_string(muos_config, "network", "gateway", mini_get_string(net_profile, "profile", "gateway", ""));
-    mini_set_string(muos_config, "network", "dns", mini_get_string(net_profile, "profile", "dns", ""));
+    snprintf(profile_file, sizeof(profile_file),
+             "%s/network/%s.ini", STORAGE_PATH, p_ssid);
 
-    mini_save(muos_config, MINI_FLAGS_SKIP_EMPTY_GROUPS);
-    mini_free(muos_config);
+    while (file_exist(profile_file)) {
+        snprintf(profile_file, sizeof(profile_file),
+                 "%s/network/%s - %d.ini", STORAGE_PATH, p_ssid, ++counter);
+    }
+
+    mini_t *net_profile = mini_try_load(profile_file);
+
+    mini_set_string(net_profile, "network", "ssid", p_ssid);
+    mini_set_string(net_profile, "network", "pass", p_pass);
+    mini_set_string(net_profile, "network", "type", (p_type == 0) ? "dhcp" : "static");
+    mini_set_string(net_profile, "network", "address", p_address);
+    mini_set_string(net_profile, "network", "subnet", p_subnet);
+    mini_set_string(net_profile, "network", "gateway", p_gateway);
+    mini_set_string(net_profile, "network", "dns", p_dns);
+
+    mini_save(net_profile, MINI_FLAGS_SKIP_EMPTY_GROUPS);
+    mini_free(net_profile);
+
+    return 1;
 }
 
 void create_profile_items() {
-    DIR *pd;
-    struct dirent *tf;
+    char profile_path[MAX_BUFFER_SIZE];
+    snprintf(profile_path, sizeof(profile_path),
+             "%s/network", STORAGE_PATH);
 
-    char net_profile_dir[PATH_MAX];
-    snprintf(net_profile_dir, sizeof(net_profile_dir), "%s/MUOS/network", device.STORAGE.ROM.MOUNT);
-
-    pd = opendir(net_profile_dir);
-    if (pd == NULL) {
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
+    const char *profile_directories[] = {
+            profile_path
+    };
+    char profile_dir[MAX_BUFFER_SIZE];
 
     char **file_names = NULL;
     size_t file_count = 0;
 
-    while ((tf = readdir(pd))) {
-        if (tf->d_type == DT_REG) {
-            char filename[FILENAME_MAX];
-            snprintf(filename, sizeof(filename), "%s/%s", net_profile_dir, tf->d_name);
+    for (size_t dir_index = 0; dir_index < sizeof(profile_directories) / sizeof(profile_directories[0]); ++dir_index) {
+        snprintf(profile_dir, sizeof(profile_dir), "%s/", profile_directories[dir_index]);
 
-            char *last_dot = strrchr(tf->d_name, '.');
-            if (last_dot != NULL) {
-                *last_dot = '\0';
+        DIR *pd = opendir(profile_dir);
+        if (pd == NULL) continue;
+
+        struct dirent *pf;
+        while ((pf = readdir(pd))) {
+            if (pf->d_type == DT_REG) {
+                char *last_dot = strrchr(pf->d_name, '.');
+                if (last_dot != NULL && strcasecmp(last_dot, ".ini") == 0) {
+                    char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
+                    if (temp == NULL) {
+                        perror("Failed to allocate memory");
+                        free(file_names);
+                        closedir(pd);
+                        return;
+                    }
+                    file_names = temp;
+
+                    char full_app_name[MAX_BUFFER_SIZE];
+                    snprintf(full_app_name, sizeof(full_app_name), "%s%s", profile_dir, pf->d_name);
+                    file_names[file_count] = strdup(full_app_name);
+                    if (file_names[file_count] == NULL) {
+                        perror("Failed to duplicate string");
+                        free(file_names);
+                        closedir(pd);
+                        return;
+                    }
+                    file_count++;
+                }
             }
-
-            file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
-            file_names[file_count] = strdup(tf->d_name);
-            file_count++;
         }
+        closedir(pd);
     }
 
-    closedir(pd);
     qsort(file_names, file_count, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    if (file_count > 0) {
-        for (size_t i = 0; i < file_count; i++) {
-            char *base_filename = file_names[i];
+    for (size_t i = 0; i < file_count; i++) {
+        char *base_filename = file_names[i];
 
-            ui_count++;
+        static char profile_name[MAX_BUFFER_SIZE];
+        snprintf(profile_name, sizeof(profile_name), "%s",
+                 str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
-            lv_obj_t *ui_pnlNetProfile = lv_obj_create(ui_pnlContent);
-            apply_theme_list_panel(&theme, &device, ui_pnlNetProfile);
+        static char profile_store[MAX_BUFFER_SIZE];
+        snprintf(profile_store, sizeof(profile_store), "%s", strip_ext(profile_name));
 
-            lv_obj_t *ui_lblNetProfileItem = lv_label_create(ui_pnlNetProfile);
-            apply_theme_list_item(&theme, ui_lblNetProfileItem, base_filename, false, false);
+        ui_count++;
 
-            lv_obj_t *ui_lblNetProfileItemGlyph = lv_img_create(ui_pnlNetProfile);
-            apply_theme_list_glyph(&theme, ui_lblNetProfileItemGlyph, mux_prog, "netprofile");
+        add_item(&items, &item_count, profile_store, profile_store, ROM);
 
-            lv_group_add_obj(ui_group, ui_lblNetProfileItem);
-            lv_group_add_obj(ui_group_glyph, ui_lblNetProfileItemGlyph);
-            lv_group_add_obj(ui_group_panel, ui_pnlNetProfile);
+        lv_obj_t *ui_pnlProfile = lv_obj_create(ui_pnlContent);
+        if (ui_pnlProfile) {
+            apply_theme_list_panel(&theme, &device, ui_pnlProfile);
 
-            apply_size_to_content(&theme, ui_pnlContent, ui_lblNetProfileItem, ui_lblNetProfileItemGlyph,
-                                  base_filename);
+            lv_obj_t *ui_lblProfileItem = lv_label_create(ui_pnlProfile);
+            if (ui_lblProfileItem) apply_theme_list_item(&theme, ui_lblProfileItem, profile_store, true, false);
 
-            free(base_filename);
+            lv_obj_t *ui_lblProfileItemGlyph = lv_img_create(ui_pnlProfile);
+            apply_theme_list_glyph(&theme, ui_lblProfileItemGlyph, mux_prog, "profile");
+
+            lv_group_add_obj(ui_group, ui_lblProfileItem);
+            lv_group_add_obj(ui_group_glyph, ui_lblProfileItemGlyph);
+            lv_group_add_obj(ui_group_panel, ui_pnlProfile);
+
+            apply_size_to_content(&theme, ui_pnlContent, ui_lblProfileItem, ui_lblProfileItemGlyph, profile_store);
         }
-        if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+
+        free(base_filename);
+    }
+
+    if (ui_count > 0) {
+        lv_obj_update_layout(ui_pnlContent);
         free(file_names);
+
         lv_label_set_text(ui_lblScreenMessage, "");
+
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
     } else {
         lv_label_set_text(ui_lblScreenMessage, _("No Saved Network Profiles Found"));
     }
@@ -237,6 +326,7 @@ void joystick_task() {
                     continue;
                 }
 
+                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
                 switch (ev.type) {
                     case EV_KEY:
                         if (ev.value == 1) {
@@ -252,8 +342,14 @@ void joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
-                                    // TODO: LOAD PROFILE INTO CONFIGURATION
+                                    load_profile(lv_label_get_text(element_focused));
                                     return;
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
+                                    play_sound("confirm", nav_sound, 1);
+                                    if (save_profile()) {
+                                        load_mux("net_profile");
+                                        return;
+                                    }
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
                                     return;
@@ -406,12 +502,11 @@ void init_elements() {
 
     lv_label_set_text(ui_lblNavA, _("Load"));
     lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavX, _("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
             ui_lblNavC,
-            ui_lblNavXGlyph,
-            ui_lblNavX,
             ui_lblNavYGlyph,
             ui_lblNavY,
             ui_lblNavZGlyph,
@@ -423,6 +518,17 @@ void init_elements() {
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
+    }
+
+    if (!ui_count) {
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();

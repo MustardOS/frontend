@@ -19,6 +19,7 @@ struct mux_config {
         char INTERFACE[MAX_BUFFER_SIZE];
         int16_t TYPE;
         char SSID[MAX_BUFFER_SIZE];
+        char PASS[MAX_BUFFER_SIZE];
         char ADDRESS[MAX_BUFFER_SIZE];
         char GATEWAY[MAX_BUFFER_SIZE];
         char SUBNET[MAX_BUFFER_SIZE];
@@ -92,6 +93,7 @@ struct mux_config {
         int16_t SCREENSHOT;
         int16_t THEME;
         int16_t LANGUAGE;
+        int16_t NETWORK;
     } STORAGE;
 };
 

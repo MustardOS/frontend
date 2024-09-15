@@ -10,6 +10,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlScreenshot = lv_obj_create(ui_pnlContent);
     ui_pnlTheme = lv_obj_create(ui_pnlContent);
     ui_pnlLanguage = lv_obj_create(ui_pnlContent);
+    ui_pnlNetwork = lv_obj_create(ui_pnlContent);
 
     ui_lblBIOS = lv_label_create(ui_pnlBIOS);
     ui_lblConfig = lv_label_create(ui_pnlConfig);
@@ -20,6 +21,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblScreenshot = lv_label_create(ui_pnlScreenshot);
     ui_lblTheme = lv_label_create(ui_pnlTheme);
     ui_lblLanguage = lv_label_create(ui_pnlLanguage);
+    ui_lblNetwork = lv_label_create(ui_pnlNetwork);
 
     ui_icoBIOS = lv_img_create(ui_pnlBIOS);
     ui_icoConfig = lv_img_create(ui_pnlConfig);
@@ -30,6 +32,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoScreenshot = lv_img_create(ui_pnlScreenshot);
     ui_icoTheme = lv_img_create(ui_pnlTheme);
     ui_icoLanguage = lv_img_create(ui_pnlLanguage);
+    ui_icoNetwork = lv_img_create(ui_pnlNetwork);
 
     ui_droBIOS = lv_dropdown_create(ui_pnlBIOS);
     ui_droConfig = lv_dropdown_create(ui_pnlConfig);
@@ -40,4 +43,5 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droScreenshot = lv_dropdown_create(ui_pnlScreenshot);
     ui_droTheme = lv_dropdown_create(ui_pnlTheme);
     ui_droLanguage = lv_dropdown_create(ui_pnlLanguage);
+    ui_droNetwork = lv_dropdown_create(ui_pnlNetwork);
 }

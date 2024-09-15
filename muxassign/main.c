@@ -280,15 +280,15 @@ char **read_assign_ini(const char *filename, int *cores) {
 }
 
 void create_system_items() {
-    DIR *td;
-    struct dirent *tf;
+    DIR *ad;
+    struct dirent *af;
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), "%s/MUOS/info/assign",
              device.STORAGE.ROM.MOUNT);
 
-    td = opendir(assign_dir);
-    if (td == NULL) {
+    ad = opendir(assign_dir);
+    if (ad == NULL) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
         return;
     }
@@ -296,23 +296,23 @@ void create_system_items() {
     char **file_names = NULL;
     size_t file_count = 0;
 
-    while ((tf = readdir(td))) {
-        if (tf->d_type == DT_REG) {
+    while ((af = readdir(ad))) {
+        if (af->d_type == DT_REG) {
             char filename[FILENAME_MAX];
-            snprintf(filename, sizeof(filename), "%s/%s", assign_dir, tf->d_name);
+            snprintf(filename, sizeof(filename), "%s/%s", assign_dir, af->d_name);
 
-            char *last_dot = strrchr(tf->d_name, '.');
+            char *last_dot = strrchr(af->d_name, '.');
             if (last_dot != NULL) {
                 *last_dot = '\0';
             }
 
             file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
-            file_names[file_count] = strdup(tf->d_name);
+            file_names[file_count] = strdup(af->d_name);
             file_count++;
         }
     }
 
-    closedir(td);
+    closedir(ad);
     qsort(file_names, file_count, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();

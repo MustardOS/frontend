@@ -86,19 +86,31 @@ void create_archive_items() {
         snprintf(archive_dir, sizeof(archive_dir), "%s/", archive_directories[dir_index]);
 
         DIR *ad = opendir(archive_dir);
-        if (ad == NULL) {
-            continue;
-        }
+        if (ad == NULL) continue;
 
-        struct dirent *tf;
-        while ((tf = readdir(ad))) {
-            if (tf->d_type == DT_REG) {
-                char *last_dot = strrchr(tf->d_name, '.');
+        struct dirent *af;
+        while ((af = readdir(ad))) {
+            if (af->d_type == DT_REG) {
+                char *last_dot = strrchr(af->d_name, '.');
                 if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
-                    file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    static char full_archive_name[MAX_BUFFER_SIZE];
-                    snprintf(full_archive_name, sizeof(full_archive_name), "%s%s", archive_dir, tf->d_name);
-                    file_names[file_count] = strdup(full_archive_name);
+                    char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
+                    if (temp == NULL) {
+                        perror("Failed to allocate memory");
+                        free(file_names);
+                        closedir(ad);
+                        return;
+                    }
+                    file_names = temp;
+
+                    char full_app_name[MAX_BUFFER_SIZE];
+                    snprintf(full_app_name, sizeof(full_app_name), "%s%s", archive_dir, af->d_name);
+                    file_names[file_count] = strdup(full_app_name);
+                    if (file_names[file_count] == NULL) {
+                        perror("Failed to duplicate string");
+                        free(file_names);
+                        closedir(ad);
+                        return;
+                    }
                     file_count++;
                 }
             }

@@ -186,9 +186,7 @@ void restore_network_values() {
     lv_label_set_text(ui_lblGatewayValue, config.NETWORK.GATEWAY);
     lv_label_set_text(ui_lblDNSValue, config.NETWORK.DNS);
 
-    if (get_file_size("/etc/wpa_supplicant.conf") > 90 && strlen(config.NETWORK.SSID) > 0) {
-        lv_label_set_text(ui_lblPasswordValue, "******");
-    }
+    if (strlen(config.NETWORK.PASS) == 64) lv_label_set_text(ui_lblPasswordValue, "******");
 
     get_current_ip();
 }
@@ -392,6 +390,12 @@ void joystick_task() {
                     continue;
                 }
 
+                if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
+                    lv_label_set_text(ui_lblMessage, "");
+                    lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                    refresh_screen();
+                }
+
                 struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
                 switch (ev.type) {
                     case EV_KEY:
@@ -496,6 +500,8 @@ void joystick_task() {
                                             lv_obj_add_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                         } else {
                                             lv_label_set_text(ui_lblEnableValue, enabled_true);
                                             lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
@@ -505,6 +511,8 @@ void joystick_task() {
                                             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                                                 lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -537,24 +545,59 @@ void joystick_task() {
                                             lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
                                         }
                                     } else if (element_focused == ui_lblConnect) {
-                                        lv_label_set_text(ui_lblStatusValue, _("Trying to Connect..."));
+                                        int valid_info = 0;
+                                        const char *cv_ssid = lv_label_get_text(ui_lblIdentifierValue);
+                                        const char *cv_pass = lv_label_get_text(ui_lblPasswordValue);
 
-                                        refresh_screen();
-                                        save_network_config();
+                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+                                            const char *cv_address = lv_label_get_text(ui_lblAddressValue);
+                                            const char *cv_subnet = lv_label_get_text(ui_lblSubnetValue);
+                                            const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue);
+                                            const char *cv_dns = lv_label_get_text(ui_lblDNSValue);
 
-                                        if (config.NETWORK.ENABLED) {
-                                            write_text_to_file("/tmp/net_ssid", "w", CHAR,
-                                                               lv_label_get_text(ui_lblIdentifierValue));
-                                            write_text_to_file("/tmp/net_pass", "w", CHAR,
-                                                               lv_label_get_text(ui_lblPasswordValue));
-
-                                            system("/opt/muos/script/web/password.sh");
-                                            system("/opt/muos/script/system/network.sh");
-
-                                            get_current_ip();
-                                            input_disable = 0;
+                                            if (strlen(cv_ssid) > 0 && strlen(cv_pass) > 0 &&
+                                                strlen(cv_address) > 0 && strlen(cv_subnet) > 0 &&
+                                                strlen(cv_gateway) > 0 && strlen(cv_dns) > 0) {
+                                                valid_info = 1;
+                                            }
                                         } else {
-                                            lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
+                                            if (strlen(cv_ssid) > 0 && strlen(cv_pass) > 0) {
+                                                valid_info = 1;
+                                            }
+                                        }
+
+                                        if (valid_info) {
+                                            save_network_config();
+
+                                            if (config.NETWORK.ENABLED) {
+                                                write_text_to_file("/tmp/net_ssid", "w", CHAR, cv_ssid);
+
+                                                if (strlen(config.NETWORK.PASS) < 64) {
+                                                    write_text_to_file("/tmp/net_pass", "w", CHAR, cv_pass);
+                                                }
+
+                                                lv_label_set_text(ui_lblStatusValue, _("Encrypting Password..."));
+                                                lv_label_set_text(ui_lblPasswordValue, "******");
+                                                refresh_screen();
+                                                usleep(256);
+                                                system("/opt/muos/script/web/password.sh");
+
+                                                lv_label_set_text(ui_lblStatusValue, _("Trying to Connect..."));
+                                                refresh_screen();
+                                                usleep(256);
+                                                system("/opt/muos/script/system/network.sh");
+
+                                                get_current_ip();
+                                            } else {
+                                                lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
+                                                refresh_screen();
+                                            }
+                                        } else {
+                                            osd_message = _("Please check network settings");
+                                            lv_label_set_text(ui_lblMessage, osd_message);
+                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+
+                                            refresh_screen();
                                         }
                                     } else {
                                         key_curr = 0;
@@ -626,6 +669,7 @@ void joystick_task() {
                                         play_sound("confirm", nav_sound, 1);
 
                                         input_disable = 1;
+                                        save_network_config();
                                         load_mux("net_profile");
 
                                         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,
@@ -827,6 +871,8 @@ void joystick_task() {
                                             lv_obj_add_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                         } else {
                                             lv_label_set_text(ui_lblEnableValue, enabled_true);
                                             lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
@@ -836,6 +882,8 @@ void joystick_task() {
                                             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                                                 lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -912,6 +960,8 @@ void joystick_task() {
                                             lv_obj_add_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                         } else {
                                             lv_label_set_text(ui_lblEnableValue, enabled_true);
                                             lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
@@ -921,6 +971,8 @@ void joystick_task() {
                                             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                                                 lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                                                 lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -1058,6 +1110,7 @@ void init_elements() {
     type_static = _("Static");
     enabled_false = _("False");
     enabled_true = _("True");
+
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
     lv_obj_move_foreground(ui_pnlHelp);
@@ -1134,6 +1187,8 @@ void init_elements() {
         lv_obj_add_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
@@ -1142,6 +1197,8 @@ void init_elements() {
         lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
         if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
             lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -1306,6 +1363,7 @@ void glyph_task() {
 
 void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume);
+
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {

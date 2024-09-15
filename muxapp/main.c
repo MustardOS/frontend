@@ -118,10 +118,10 @@ void create_app_items() {
         DIR *ad = opendir(app_dir);
         if (ad == NULL) continue;
 
-        struct dirent *tf;
-        while ((tf = readdir(ad))) {
-            if (tf->d_type == DT_REG) {
-                char *last_dot = strrchr(tf->d_name, '.');
+        struct dirent *af;
+        while ((af = readdir(ad))) {
+            if (af->d_type == DT_REG) {
+                char *last_dot = strrchr(af->d_name, '.');
                 if (last_dot != NULL && strcasecmp(last_dot, ".sh") == 0) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
                     if (temp == NULL) {
@@ -133,7 +133,7 @@ void create_app_items() {
                     file_names = temp;
 
                     char full_app_name[MAX_BUFFER_SIZE];
-                    snprintf(full_app_name, sizeof(full_app_name), "%s%s", app_dir, tf->d_name);
+                    snprintf(full_app_name, sizeof(full_app_name), "%s%s", app_dir, af->d_name);
                     file_names[file_count] = strdup(full_app_name);
                     if (file_names[file_count] == NULL) {
                         perror("Failed to duplicate string");

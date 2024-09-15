@@ -47,7 +47,7 @@ void ui_screen_init(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_c
     lv_obj_set_align(ui_pnlStatusCore, LV_ALIGN_BOTTOM_MID);
     lv_obj_set_y(ui_pnlStatusCore, -theme->FOOTER.HEIGHT - 5);
     lv_obj_set_flex_flow(ui_pnlStatusCore, LV_FLEX_FLOW_COLUMN);
-    lv_obj_clear_flag(ui_pnlStatusCore, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);      /// Flags
+    lv_obj_clear_flag(ui_pnlStatusCore, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_style_bg_color(ui_pnlStatusCore, lv_color_hex(0x0D0803), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlStatusCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlStatusCore, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
