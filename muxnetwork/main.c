@@ -147,7 +147,7 @@ void get_current_ip() {
     snprintf(address_file, sizeof(address_file),
              "%s/config/address.txt", INTERNAL_PATH);
 
-    const char *curr_ip = read_text_from_file(address_file);
+    char *curr_ip = read_text_from_file(address_file);
     static char net_message[MAX_BUFFER_SIZE];
 
     if (strcasecmp(curr_ip, "0.0.0.0") == 0 ||
@@ -571,10 +571,7 @@ void joystick_task() {
 
                                             if (config.NETWORK.ENABLED) {
                                                 write_text_to_file("/tmp/net_ssid", "w", CHAR, cv_ssid);
-
-                                                if (strlen(config.NETWORK.PASS) < 64) {
-                                                    write_text_to_file("/tmp/net_pass", "w", CHAR, cv_pass);
-                                                }
+                                                write_text_to_file("/tmp/net_pass", "w", CHAR, cv_pass);
 
                                                 lv_label_set_text(ui_lblStatusValue, _("Encrypting Password..."));
                                                 lv_label_set_text(ui_lblPasswordValue, "******");
@@ -635,6 +632,7 @@ void joystick_task() {
                                         write_text_to_file("/run/muos/global/network/interface", "w", CHAR, "wlan0");
                                         write_text_to_file("/run/muos/global/network/type", "w", INT, 0);
                                         write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, "");
+                                        write_text_to_file("/run/muos/global/network/pass", "w", CHAR, "");
                                         write_text_to_file("/run/muos/global/network/address", "w", CHAR,
                                                            "192.168.0.123");
                                         write_text_to_file("/run/muos/global/network/subnet", "w", INT, 24);
@@ -668,8 +666,15 @@ void joystick_task() {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
                                         play_sound("confirm", nav_sound, 1);
 
+                                        const char *np_ssid = lv_label_get_text(ui_lblIdentifierValue);
+                                        const char *np_pass = lv_label_get_text(ui_lblPasswordValue);
+
+                                        write_text_to_file("/tmp/net_ssid", "w", CHAR, np_ssid);
+                                        write_text_to_file("/tmp/net_pass", "w", CHAR, np_pass);
+
                                         input_disable = 1;
                                         save_network_config();
+                                        system("/opt/muos/script/web/password.sh");
                                         load_mux("net_profile");
 
                                         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,
