@@ -571,7 +571,10 @@ void joystick_task() {
 
                                             if (config.NETWORK.ENABLED) {
                                                 write_text_to_file("/tmp/net_ssid", "w", CHAR, cv_ssid);
-                                                write_text_to_file("/tmp/net_pass", "w", CHAR, cv_pass);
+                                                write_text_to_file("/tmp/net_pass", "w", CHAR,
+                                                                   strlen(config.NETWORK.PASS) < 64
+                                                                   ? cv_pass
+                                                                   : config.NETWORK.PASS);
 
                                                 lv_label_set_text(ui_lblStatusValue, _("Encrypting Password..."));
                                                 lv_label_set_text(ui_lblPasswordValue, "******");
@@ -670,7 +673,10 @@ void joystick_task() {
                                         const char *np_pass = lv_label_get_text(ui_lblPasswordValue);
 
                                         write_text_to_file("/tmp/net_ssid", "w", CHAR, np_ssid);
-                                        write_text_to_file("/tmp/net_pass", "w", CHAR, np_pass);
+                                        write_text_to_file("/tmp/net_pass", "w", CHAR,
+                                                           strlen(config.NETWORK.PASS) < 64
+                                                           ? np_pass
+                                                           : config.NETWORK.PASS);
 
                                         input_disable = 1;
                                         save_network_config();
