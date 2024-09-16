@@ -135,11 +135,11 @@ int save_profile() {
 
     mini_set_string(net_profile, "network", "ssid", p_ssid);
     mini_set_string(net_profile, "network", "pass", p_pass);
-    mini_set_string(net_profile, "network", "type", (p_type == 0) ? "dhcp" : "static");
-    mini_set_string(net_profile, "network", "address", p_address);
-    mini_set_string(net_profile, "network", "subnet", p_subnet);
-    mini_set_string(net_profile, "network", "gateway", p_gateway);
-    mini_set_string(net_profile, "network", "dns", p_dns);
+    mini_set_string(net_profile, "network", "type", (atoi(p_type) == 0) ? "dhcp" : "static");
+    mini_set_string(net_profile, "network", "address", (atoi(p_type) == 0) ? "" : p_address);
+    mini_set_string(net_profile, "network", "subnet", (atoi(p_type) == 0) ? "" : p_subnet);
+    mini_set_string(net_profile, "network", "gateway", (atoi(p_type) == 0) ? "" : p_gateway);
+    mini_set_string(net_profile, "network", "dns", (atoi(p_type) == 0) ? "" : p_dns);
 
     mini_save(net_profile, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(net_profile);
@@ -246,10 +246,6 @@ void create_profile_items() {
         lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
     } else {
         lv_label_set_text(ui_lblScreenMessage, _("No Saved Network Profiles Found"));
     }
@@ -525,10 +521,6 @@ void init_elements() {
         lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();

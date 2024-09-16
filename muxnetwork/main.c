@@ -1449,9 +1449,14 @@ void direct_to_previous() {
             }
         }
 
-        if (text_hit != 0) {
-            list_nav_next(text_hit);
+        if (!config.NETWORK.TYPE && strcasecmp(prev, "connect") == 0) {
+            list_nav_next(4);
             nav_moved = 1;
+        } else {
+            if (text_hit != 0) {
+                list_nav_next(text_hit);
+                nav_moved = 1;
+            }
         }
     }
 }
