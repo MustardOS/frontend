@@ -1011,7 +1011,6 @@ int main(int argc, char *argv[]) {
 
     ui_common_screen_init(&theme, &device, _("INTERFACE OPTIONS"));
     ui_init(ui_pnlContent);
-    init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
@@ -1118,6 +1117,7 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
+    init_elements();
     refresh_screen();
     joystick_task();
 
