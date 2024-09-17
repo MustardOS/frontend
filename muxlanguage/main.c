@@ -25,6 +25,7 @@ __thread uint64_t start_ms = 0;
 
 char *mux_prog;
 static int js_fd;
+static int js_fd_sys;
 
 int NAV_DPAD_HOR;
 int NAV_ANLG_HOR;
@@ -167,6 +168,7 @@ void joystick_task() {
     int JOYUP_pressed = 0;
     int JOYDOWN_pressed = 0;
     int JOYHOTKEY_pressed = 0;
+    int JOYHOTKEY_screenshot = 0;
 
     int nav_hold = 0;
 
@@ -183,6 +185,12 @@ void joystick_task() {
         return;
     }
 
+    event.data.fd = js_fd_sys;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd_sys, &event) == -1) {
+        perror("Error with EPOLL controller");
+        return;
+    }
+
     while (1) {
         int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
         if (num_events == -1) {
@@ -191,7 +199,17 @@ void joystick_task() {
         }
 
         for (int i = 0; i < num_events; i++) {
-            if (events[i].data.fd == js_fd) {
+            if (events[i].data.fd == js_fd_sys) {
+                ssize_t ret = read(js_fd_sys, &ev, sizeof(struct input_event));
+                if (ret == -1) {
+                    perror("Error reading input");
+                    continue;
+                }
+                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 && 
+                        (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
+                    JOYHOTKEY_screenshot = 1;   
+                }
+            } else if (events[i].data.fd == js_fd) {
                 ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
                 if (ret == -1) {
                     perror("Error reading input");
@@ -211,6 +229,7 @@ void joystick_task() {
                             } else {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
+                                    JOYHOTKEY_screenshot = 0;
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
 
@@ -236,8 +255,8 @@ void joystick_task() {
                                 }
                             }
                         } else {
-                            if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
-                                ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
+                            if ((ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
+                                ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
                                 JOYHOTKEY_pressed = 0;
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
@@ -615,6 +634,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
+    if (js_fd_sys < 0) {
+        perror("Failed to open joystick device");
+        return 1;
+    }
+
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
 
@@ -645,6 +670,7 @@ int main(int argc, char *argv[]) {
 
     free_items(items, item_count);
     close(js_fd);
+    close(js_fd_sys);
 
     return 0;
 }
