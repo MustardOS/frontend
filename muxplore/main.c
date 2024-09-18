@@ -282,7 +282,7 @@ char *load_content_description() {
                 printf("TRYING TO READ CONFIG AT: %s\n", core_file);
 
                 if (!file_exist(core_file)) {
-                    snprintf(core_desc, sizeof(core_desc), "%s/info/core/%s/core.cfg",
+                    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
                              STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
                     snprintf(core_desc, sizeof(core_desc), "%s",
                              read_line_from_file(core_file, 2));
