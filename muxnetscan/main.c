@@ -222,6 +222,11 @@ void joystick_task() {
                                     play_sound("confirm", nav_sound, 1);
                                     write_text_to_file("/run/muos/global/network/ssid", "w", CHAR,
                                                        lv_label_get_text(lv_group_get_focused(ui_group)));
+                                    write_text_to_file("/run/muos/global/network/pass", "w", CHAR, "");
+                                    write_text_to_file("/run/muos/global/network/address", "w", CHAR, "");
+                                    write_text_to_file("/run/muos/global/network/subnet", "w", CHAR, "");
+                                    write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, "");
+                                    write_text_to_file("/run/muos/global/network/dns", "w", CHAR, "");
                                     return;
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);

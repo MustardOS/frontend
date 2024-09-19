@@ -112,13 +112,39 @@ int save_profile() {
     const char *p_gateway = read_text_from_file("/run/muos/global/network/gateway");
     const char *p_dns = read_text_from_file("/run/muos/global/network/dns");
 
-    if (strlen(p_ssid) == 0 && strlen(p_pass) < 64) {
-        osd_message = _("Please check network settings");
-        lv_label_set_text(ui_lblMessage, osd_message);
+    if (!p_ssid || strlen(p_ssid) == 0) {
+        lv_label_set_text(ui_lblMessage, _("Invalid SSID"));
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
         refresh_screen();
         return 0;
+    }
+
+    if (!p_pass || strlen(p_pass) < 8 || strlen(p_pass) > 63) {
+        if (strlen(p_pass) != 64) { // If it's 64 characters then it must be encoded... let's assume!
+            lv_label_set_text(ui_lblMessage, _("Password must be 8..63 characters!")); // From wpa_passphrase!
+            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+
+            refresh_screen();
+            return 0;
+        }
+    }
+
+    int type = atoi(p_type);
+    if (type) {
+        if (!p_address || strlen(p_address) == 0 ||
+            !p_subnet || strlen(p_subnet) == 0 ||
+            !p_gateway || strlen(p_gateway) == 0 ||
+            !p_dns || strlen(p_dns) == 0) {
+            lv_label_set_text(ui_lblMessage, _("Invalid Network Settings"));
+            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+            refresh_screen();
+            return 0;
+        }
+    } else {
+        p_address = "";
+        p_subnet = "";
+        p_gateway = "";
+        p_dns = "";
     }
 
     static char profile_file[MAX_BUFFER_SIZE];
@@ -136,11 +162,11 @@ int save_profile() {
 
     mini_set_string(net_profile, "network", "ssid", p_ssid);
     mini_set_string(net_profile, "network", "pass", p_pass);
-    mini_set_string(net_profile, "network", "type", (atoi(p_type) == 0) ? "dhcp" : "static");
-    mini_set_string(net_profile, "network", "address", (atoi(p_type) == 0) ? "" : p_address);
-    mini_set_string(net_profile, "network", "subnet", (atoi(p_type) == 0) ? "" : p_subnet);
-    mini_set_string(net_profile, "network", "gateway", (atoi(p_type) == 0) ? "" : p_gateway);
-    mini_set_string(net_profile, "network", "dns", (atoi(p_type) == 0) ? "" : p_dns);
+    mini_set_string(net_profile, "network", "type", (type == 0) ? "dhcp" : "static");
+    mini_set_string(net_profile, "network", "address", (type == 0) ? "" : p_address);
+    mini_set_string(net_profile, "network", "subnet", (type == 0) ? "" : p_subnet);
+    mini_set_string(net_profile, "network", "gateway", (type == 0) ? "" : p_gateway);
+    mini_set_string(net_profile, "network", "dns", (type == 0) ? "" : p_dns);
 
     mini_save(net_profile, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(net_profile);
@@ -329,9 +355,9 @@ void joystick_task() {
                     perror("Error reading input");
                     continue;
                 }
-                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 && 
-                        (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
-                    JOYHOTKEY_screenshot = 1;   
+                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 &&
+                    (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
+                    JOYHOTKEY_screenshot = 1;
                 }
             } else if (events[i].data.fd == js_fd) {
                 ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
@@ -380,7 +406,7 @@ void joystick_task() {
                             }
                         } else {
                             if ((ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
-                                ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
+                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
                                 JOYHOTKEY_pressed = 0;
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
@@ -512,8 +538,6 @@ void init_elements() {
     process_visual_element(BLUETOOTH, ui_staBluetooth);
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
-
-    lv_label_set_text(ui_lblMessage, osd_message);
 
     lv_label_set_text(ui_lblNavA, _("Load"));
     lv_label_set_text(ui_lblNavB, _("Back"));

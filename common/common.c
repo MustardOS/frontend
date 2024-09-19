@@ -1180,7 +1180,6 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
 
 int is_network_connected() {
     if (!config.NETWORK.ENABLED) return 0;
-    if (!config.VISUAL.NETWORK) return 0;
 
     if (file_exist(device.NETWORK.STATE)) {
         if (strcasecmp("up", read_text_from_file(device.NETWORK.STATE)) == 0) return 1;

@@ -47,8 +47,9 @@ int nav_moved = 1;
 char *current_wall = "";
 int current_item_index = 0;
 int first_open = 1;
-
 int ui_count = 0;
+
+#define PASS_ENCODE "******"
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -74,6 +75,7 @@ lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
 #define UI_COUNT 9
+lv_obj_t *ui_panels[UI_COUNT];
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_values[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
@@ -138,6 +140,28 @@ void show_help(lv_obj_t *element_focused) {
                      _(lv_label_get_text(element_focused)), _(message));
 }
 
+void can_scan_check() {
+    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
+        if (is_network_connected()) {
+            lv_label_set_text(ui_lblConnect, _("Disconnect"));
+
+            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
+            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+        } else {
+            lv_label_set_text(ui_lblConnect, _("Connect"));
+
+            lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
+            lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+
+            lv_label_set_text(ui_lblStatusValue, _("Not Connected"));
+        }
+    }
+}
+
 void get_current_ip() {
     if (!config.NETWORK.ENABLED) {
         lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
@@ -151,16 +175,16 @@ void get_current_ip() {
     char *curr_ip = read_text_from_file(address_file);
     static char net_message[MAX_BUFFER_SIZE];
 
-    if (strcasecmp(curr_ip, "0.0.0.0") == 0 ||
-        strcasecmp(curr_ip, "127.0.0.1") == 0 ||
-        strcasecmp(curr_ip, "") == 0 ||
-        curr_ip == NULL) {
-        lv_label_set_text(ui_lblStatusValue, _("Not Connected"));
-        return;
-    } else {
+    if (strlen(curr_ip) > 1) {
         snprintf(net_message, sizeof(net_message), "%s - %s", _("Connected"), curr_ip);
         lv_label_set_text(ui_lblStatusValue, net_message);
-        return;
+        lv_label_set_text(ui_lblConnect, _("Disconnect"));
+        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+    } else {
+        can_scan_check();
     }
 }
 
@@ -179,15 +203,14 @@ void restore_network_values() {
         ui_count = 5;
     }
 
-    lv_label_set_text(ui_lblPasswordValue, "");
-
     lv_label_set_text(ui_lblIdentifierValue, config.NETWORK.SSID);
+    lv_label_set_text(ui_lblPasswordValue, config.NETWORK.PASS);
     lv_label_set_text(ui_lblAddressValue, config.NETWORK.ADDRESS);
     lv_label_set_text(ui_lblSubnetValue, config.NETWORK.SUBNET);
     lv_label_set_text(ui_lblGatewayValue, config.NETWORK.GATEWAY);
     lv_label_set_text(ui_lblDNSValue, config.NETWORK.DNS);
 
-    if (strlen(config.NETWORK.PASS) == 64) lv_label_set_text(ui_lblPasswordValue, "******");
+    if (strlen(config.NETWORK.PASS) >= 64) lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
 
     get_current_ip();
 }
@@ -202,6 +225,11 @@ void save_network_config() {
     write_text_to_file("/run/muos/global/network/enabled", "w", INT, idx_enable);
     write_text_to_file("/run/muos/global/network/type", "w", INT, idx_type);
     write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue));
+
+    if (strcasecmp(lv_label_get_text(ui_lblPasswordValue), PASS_ENCODE) != 0) {
+        write_text_to_file("/run/muos/global/network/pass", "w", CHAR, lv_label_get_text(ui_lblPasswordValue));
+    }
+
     write_text_to_file("/run/muos/global/network/address", "w", CHAR, lv_label_get_text(ui_lblAddressValue));
     write_text_to_file("/run/muos/global/network/subnet", "w", CHAR, lv_label_get_text(ui_lblSubnetValue));
     write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, lv_label_get_text(ui_lblGatewayValue));
@@ -209,17 +237,15 @@ void save_network_config() {
 }
 
 void init_navigation_groups() {
-    lv_obj_t *ui_objects_panel[] = {
-            ui_pnlEnable,
-            ui_pnlIdentifier,
-            ui_pnlPassword,
-            ui_pnlType,
-            ui_pnlAddress,
-            ui_pnlSubnet,
-            ui_pnlGateway,
-            ui_pnlDNS,
-            ui_pnlConnect,
-    };
+    ui_panels[0] = ui_pnlEnable;
+    ui_panels[1] = ui_pnlIdentifier;
+    ui_panels[2] = ui_pnlPassword;
+    ui_panels[3] = ui_pnlType;
+    ui_panels[4] = ui_pnlAddress;
+    ui_panels[5] = ui_pnlSubnet;
+    ui_panels[6] = ui_pnlGateway;
+    ui_panels[7] = ui_pnlDNS;
+    ui_panels[8] = ui_pnlConnect;
 
     ui_objects[0] = ui_lblEnable;
     ui_objects[1] = ui_lblIdentifier;
@@ -308,7 +334,7 @@ void init_navigation_groups() {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_values[i]);
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
+        lv_group_add_obj(ui_group_panel, ui_panels[i]);
     }
 }
 
@@ -397,21 +423,15 @@ void joystick_task() {
                     perror("Error reading input");
                     continue;
                 }
-                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 && 
-                        (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
-                    JOYHOTKEY_screenshot = 1;   
+                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 &&
+                    (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
+                    JOYHOTKEY_screenshot = 1;
                 }
             } else if (events[i].data.fd == js_fd) {
                 ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
                 if (ret == -1) {
                     perror("Error reading input");
                     continue;
-                }
-
-                if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
-                    lv_label_set_text(ui_lblMessage, "");
-                    lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                    refresh_screen();
                 }
 
                 struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -540,118 +560,133 @@ void joystick_task() {
                                             }
                                         }
                                     } else if (element_focused == ui_lblType) {
-                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
-                                            lv_label_set_text(ui_lblTypeValue, type_dhcp);
-                                            ui_count = 5;
-                                            lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                        if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+                                                lv_label_set_text(ui_lblTypeValue, type_dhcp);
+                                                ui_count = 5;
+                                                lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            } else {
+                                                lv_label_set_text(ui_lblTypeValue, type_static);
+                                                ui_count = 9;
+                                                lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            }
                                         } else {
-                                            lv_label_set_text(ui_lblTypeValue, type_static);
-                                            ui_count = 9;
-                                            lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            lv_label_set_text(ui_lblMessage, _("Cannot modify while connected!"));
+                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                         }
                                     } else if (element_focused == ui_lblConnect) {
-                                        int valid_info = 0;
-                                        const char *cv_ssid = lv_label_get_text(ui_lblIdentifierValue);
-                                        const char *cv_pass = lv_label_get_text(ui_lblPasswordValue);
-
-                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
-                                            const char *cv_address = lv_label_get_text(ui_lblAddressValue);
-                                            const char *cv_subnet = lv_label_get_text(ui_lblSubnetValue);
-                                            const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue);
-                                            const char *cv_dns = lv_label_get_text(ui_lblDNSValue);
-
-                                            if (strlen(cv_ssid) > 0 && strlen(cv_pass) > 0 &&
-                                                strlen(cv_address) > 0 && strlen(cv_subnet) > 0 &&
-                                                strlen(cv_gateway) > 0 && strlen(cv_dns) > 0) {
-                                                valid_info = 1;
-                                            }
+                                        if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+                                            write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
+                                            system("/opt/muos/script/system/network.sh");
+                                            write_text_to_file("/run/muos/global/network/enabled", "w", INT, 1);
+                                            can_scan_check();
                                         } else {
-                                            if (strlen(cv_ssid) > 0 && strlen(cv_pass) > 0) {
-                                                valid_info = 1;
-                                            }
-                                        }
+                                            int valid_info = 0;
+                                            const char *cv_ssid = lv_label_get_text(ui_lblIdentifierValue);
+                                            const char *cv_pass = lv_label_get_text(ui_lblPasswordValue);
 
-                                        if (valid_info) {
-                                            save_network_config();
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+                                                const char *cv_address = lv_label_get_text(ui_lblAddressValue);
+                                                const char *cv_subnet = lv_label_get_text(ui_lblSubnetValue);
+                                                const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue);
+                                                const char *cv_dns = lv_label_get_text(ui_lblDNSValue);
 
-                                            if (config.NETWORK.ENABLED) {
-                                                write_text_to_file("/tmp/net_ssid", "w", CHAR, cv_ssid);
-                                                write_text_to_file("/tmp/net_pass", "w", CHAR,
-                                                                   strlen(config.NETWORK.PASS) < 64
-                                                                   ? cv_pass
-                                                                   : config.NETWORK.PASS);
-
-                                                lv_label_set_text(ui_lblStatusValue, _("Encrypting Password..."));
-                                                lv_label_set_text(ui_lblPasswordValue, "******");
-                                                refresh_screen();
-                                                usleep(256);
-                                                system("/opt/muos/script/web/password.sh");
-
-                                                lv_label_set_text(ui_lblStatusValue, _("Trying to Connect..."));
-                                                refresh_screen();
-                                                usleep(256);
-                                                system("/opt/muos/script/system/network.sh");
-
-                                                get_current_ip();
+                                                if (strlen(cv_ssid) > 0 && strlen(cv_pass) > 0 &&
+                                                    strlen(cv_address) > 0 && strlen(cv_subnet) > 0 &&
+                                                    strlen(cv_gateway) > 0 && strlen(cv_dns) > 0) {
+                                                    valid_info = 1;
+                                                }
                                             } else {
-                                                lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
+                                                if (strlen(cv_ssid) > 0 && strlen(cv_pass) > 0) {
+                                                    valid_info = 1;
+                                                }
+                                            }
+
+                                            if (valid_info) {
+                                                save_network_config();
+
+                                                if (config.NETWORK.ENABLED) {
+                                                    if (strcasecmp(cv_pass, PASS_ENCODE) != 0) {
+                                                        lv_label_set_text(ui_lblStatusValue,
+                                                                          _("Encrypting Password..."));
+                                                        lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
+                                                        refresh_screen();
+                                                        usleep(256);
+                                                    }
+
+                                                    lv_label_set_text(ui_lblStatusValue, _("Trying to Connect..."));
+                                                    refresh_screen();
+                                                    usleep(256);
+                                                    system("/opt/muos/script/web/password.sh");
+                                                    usleep(256);
+                                                    system("/opt/muos/script/system/network.sh");
+
+                                                    get_current_ip();
+                                                } else {
+                                                    lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
+                                                    refresh_screen();
+                                                }
+                                            } else {
+                                                lv_label_set_text(ui_lblMessage, _("Please check network settings"));
+                                                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 refresh_screen();
                                             }
-                                        } else {
-                                            osd_message = _("Please check network settings");
-                                            lv_label_set_text(ui_lblMessage, osd_message);
-                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
-                                            refresh_screen();
                                         }
                                     } else {
-                                        key_curr = 0;
-                                        if (element_focused == ui_lblIdentifier || element_focused == ui_lblPassword) {
-                                            lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
+                                        if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+                                            key_curr = 0;
+                                            if (element_focused == ui_lblIdentifier ||
+                                                element_focused == ui_lblPassword) {
+                                                lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
-                                            lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_state(num_entry, LV_STATE_DISABLED);
+                                                lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_state(num_entry, LV_STATE_DISABLED);
 
-                                            key_show = 1;
+                                                key_show = 1;
+                                            } else {
+                                                lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
+
+                                                lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_state(key_entry, LV_STATE_DISABLED);
+
+                                                key_show = 2;
+                                            }
+                                            lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
+                                            if (element_focused == ui_lblPassword) {
+                                                lv_textarea_set_text(ui_txtEntry, "");
+                                            } else {
+                                                lv_textarea_set_text(ui_txtEntry, lblCurrentValue);
+                                            }
                                         } else {
-                                            lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
-
-                                            lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_state(key_entry, LV_STATE_DISABLED);
-
-                                            key_show = 2;
-                                        }
-                                        lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-                                        if (element_focused == ui_lblPassword) {
-                                            lv_textarea_set_text(ui_txtEntry, "");
-                                        } else {
-                                            lv_textarea_set_text(ui_txtEntry, lblCurrentValue);
+                                            lv_label_set_text(ui_lblMessage, _("Cannot modify while connected!"));
+                                            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                         }
                                     }
                                 } else if (ev.code == NAV_B) {
                                     play_sound("back", nav_sound, 1);
 
-                                    input_disable = 1;
                                     save_network_config();
+
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
                                         write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
-                                        write_text_to_file("/run/muos/global/network/interface", "w", CHAR, "wlan0");
+                                        write_text_to_file("/run/muos/global/network/interface", "w", CHAR,
+                                                           device.NETWORK.INTERFACE);
                                         write_text_to_file("/run/muos/global/network/type", "w", INT, 0);
                                         write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, "");
                                         write_text_to_file("/run/muos/global/network/pass", "w", CHAR, "");
@@ -665,39 +700,29 @@ void joystick_task() {
                                         system("/opt/muos/script/system/network.sh");
                                     }
 
-                                    osd_message = _("Changes Saved");
-                                    lv_label_set_text(ui_lblMessage, osd_message);
+                                    lv_label_set_text(ui_lblMessage, _("Changes Saved"));
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
                                     return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
-                                        play_sound("confirm", nav_sound, 1);
+                                        if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+                                            play_sound("confirm", nav_sound, 1);
 
-                                        input_disable = 1;
-                                        save_network_config();
-                                        load_mux("net_scan");
+                                            save_network_config();
+                                            load_mux("net_scan");
 
-                                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,
-                                                           lv_obj_get_user_data(element_focused));
+                                            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,
+                                                               lv_obj_get_user_data(element_focused));
 
-                                        return;
+                                            return;
+                                        }
                                     }
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
                                     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
                                         play_sound("confirm", nav_sound, 1);
 
-                                        const char *np_ssid = lv_label_get_text(ui_lblIdentifierValue);
-                                        const char *np_pass = lv_label_get_text(ui_lblPasswordValue);
-
-                                        write_text_to_file("/tmp/net_ssid", "w", CHAR, np_ssid);
-                                        write_text_to_file("/tmp/net_pass", "w", CHAR,
-                                                           strlen(config.NETWORK.PASS) < 64
-                                                           ? np_pass
-                                                           : config.NETWORK.PASS);
-
-                                        input_disable = 1;
                                         save_network_config();
                                         system("/opt/muos/script/web/password.sh");
                                         load_mux("net_profile");
@@ -711,7 +736,7 @@ void joystick_task() {
                             }
                         } else {
                             if ((ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
-                                ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
+                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
                                 JOYHOTKEY_pressed = 0;
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
@@ -899,8 +924,6 @@ void joystick_task() {
                                             lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                         } else {
@@ -910,8 +933,6 @@ void joystick_task() {
                                             lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
@@ -921,33 +942,37 @@ void joystick_task() {
                                                 lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
                                             }
                                         }
+
+                                        can_scan_check();
                                         break;
                                     }
                                     if (element_focused == ui_lblType) {
-                                        play_sound("navigate", nav_sound, 0);
+                                        if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+                                            play_sound("navigate", nav_sound, 0);
 
-                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
-                                            lv_label_set_text(ui_lblTypeValue, type_dhcp);
-                                            ui_count = 5;
-                                            lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
-                                        } else {
-                                            lv_label_set_text(ui_lblTypeValue, type_static);
-                                            ui_count = 9;
-                                            lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+                                                lv_label_set_text(ui_lblTypeValue, type_dhcp);
+                                                ui_count = 5;
+                                                lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            } else {
+                                                lv_label_set_text(ui_lblTypeValue, type_static);
+                                                ui_count = 9;
+                                                lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            }
                                         }
                                         break;
                                     }
@@ -988,8 +1013,6 @@ void joystick_task() {
                                             lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                         } else {
@@ -999,8 +1022,6 @@ void joystick_task() {
                                             lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
                                             lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                                             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
@@ -1010,33 +1031,37 @@ void joystick_task() {
                                                 lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
                                             }
                                         }
+
+                                        can_scan_check();
                                         break;
                                     }
                                     if (element_focused == ui_lblType) {
-                                        play_sound("navigate", nav_sound, 0);
+                                        if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+                                            play_sound("navigate", nav_sound, 0);
 
-                                        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
-                                            lv_label_set_text(ui_lblTypeValue, type_dhcp);
-                                            ui_count = 5;
-                                            lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
-                                        } else {
-                                            lv_label_set_text(ui_lblTypeValue, type_static);
-                                            ui_count = 9;
-                                            lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
-                                            lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
-                                            lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+                                                lv_label_set_text(ui_lblTypeValue, type_dhcp);
+                                                ui_count = 5;
+                                                lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            } else {
+                                                lv_label_set_text(ui_lblTypeValue, type_static);
+                                                ui_count = 9;
+                                                lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
+                                                lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_FLOATING);
+                                                lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
+                                            }
                                         }
                                         break;
                                     }
@@ -1164,8 +1189,6 @@ void init_elements() {
     process_visual_element(BLUETOOTH, ui_staBluetooth);
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
-
-    lv_label_set_text(ui_lblMessage, osd_message);
 
     lv_label_set_text(ui_lblNavB, _("Back"));
     lv_label_set_text(ui_lblNavX, _("Scan"));
@@ -1394,8 +1417,12 @@ void glyph_task() {
 void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume);
 
-
     if (nav_moved) {
+        if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
+            lv_label_set_text(ui_lblMessage, "");
+            lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+        }
+
         if (lv_group_get_obj_count(ui_group) > 0) {
             static char old_wall[MAX_BUFFER_SIZE];
             static char new_wall[MAX_BUFFER_SIZE];
@@ -1639,6 +1666,7 @@ int main(int argc, char *argv[]) {
     init_osk();
     init_elements();
     direct_to_previous();
+    can_scan_check();
 
     refresh_screen();
     joystick_task();
