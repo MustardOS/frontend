@@ -334,7 +334,7 @@ mini_t *mini_wload_ex(const wchar_t *path, int *err)
 #endif
 
 mini_t *mini_create(const char *path) {
-    mini_t * result = malloc(sizeof(mini_t));
+    mini_t *result = malloc(sizeof(mini_t));
     if (path)
         result->path = mini_strdup(path);
     result->head = make_group(NULL);
@@ -343,7 +343,7 @@ mini_t *mini_create(const char *path) {
 }
 
 mini_t *mini_try_load_ex(const char *path, int *err) {
-    mini_t * result = mini_load_ex(path, err);
+    mini_t *result = mini_load_ex(path, err);
 
     if (!result)
         result = mini_create(path);
@@ -351,14 +351,14 @@ mini_t *mini_try_load_ex(const char *path, int *err) {
 }
 
 mini_t *mini_load_ex(const char *path, int *err) {
-    mini_t * result = NULL;
+    mini_t *result = NULL;
     struct stat buf;
 
     if (stat(path, &buf) != 0) {
         if (err)
             *err = MINI_FILE_NOT_FOUND;
     } else {
-        FILE * fp = NULL;
+        FILE *fp = NULL;
 #if WIN32
         fopen_s(&fp, path, "r");
 #else
@@ -378,7 +378,7 @@ mini_t *mini_load_ex(const char *path, int *err) {
 }
 
 mini_t *mini_loadf_ex(FILE *f, int *err) {
-    mini_t * result = mini_create(NULL);
+    mini_t *result = mini_create(NULL);
     mini_group_t *current;
     char buffer[MINI_CHUNK_SIZE];
 
@@ -412,7 +412,7 @@ int mini_save(const mini_t *mini, int flags) {
     if (!mini->path || strlen(mini->path) < 1) {
         result = MINI_INVALID_PATH;
     } else {
-        FILE * fp = NULL;
+        FILE *fp = NULL;
 #if WIN32
         _wfopen_s(&fp, mini_utf8_to_wide_char(mini->path), L"w");
 #else

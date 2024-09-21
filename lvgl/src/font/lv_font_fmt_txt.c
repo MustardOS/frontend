@@ -170,7 +170,7 @@ bool lv_font_get_glyph_dsc_fmt_txt(const lv_font_t *font, lv_font_glyph_dsc_t *d
     /*Put together a glyph dsc*/
     const lv_font_fmt_txt_glyph_dsc_t *gdsc = &fdsc->glyph_dsc[gid];
 
-    int32_t kv = ((int32_t)((int32_t) kvalue * fdsc->kern_scale) >> 4);
+    int32_t kv = ((int32_t) ((int32_t) kvalue * fdsc->kern_scale) >> 4);
 
     uint32_t adv_w = gdsc->adv_w;
     if (is_tab) adv_w *= 2;
@@ -184,7 +184,7 @@ bool lv_font_get_glyph_dsc_fmt_txt(const lv_font_t *font, lv_font_glyph_dsc_t *d
     dsc_out->ofs_x = gdsc->ofs_x;
     dsc_out->ofs_y = gdsc->ofs_y;
     dsc_out->bpp = (uint8_t)
-    fdsc->bpp;
+            fdsc->bpp;
     dsc_out->is_placeholder = false;
 
     if (is_tab) dsc_out->box_w = dsc_out->box_w * 2;
@@ -230,8 +230,8 @@ static uint32_t get_glyph_dsc_id(const lv_font_t *font, uint32_t letter) {
             glyph_id = fdsc->cmaps[i].glyph_id_start + gid_ofs_8[rcp];
         } else if (fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_SPARSE_TINY) {
             uint16_t key = rcp;
-            uint16_t * p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list_length,
-                                             sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_compare);
+            uint16_t *p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list_length,
+                                            sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_compare);
 
             if (p) {
                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
@@ -239,8 +239,8 @@ static uint32_t get_glyph_dsc_id(const lv_font_t *font, uint32_t letter) {
             }
         } else if (fdsc->cmaps[i].type == LV_FONT_FMT_TXT_CMAP_SPARSE_FULL) {
             uint16_t key = rcp;
-            uint16_t * p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list_length,
-                                             sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_compare);
+            uint16_t *p = _lv_utils_bsearch(&key, fdsc->cmaps[i].unicode_list, fdsc->cmaps[i].list_length,
+                                            sizeof(fdsc->cmaps[i].unicode_list[0]), unicode_list_compare);
 
             if (p) {
                 lv_uintptr_t ofs = p - fdsc->cmaps[i].unicode_list;
@@ -278,7 +278,7 @@ static int8_t get_kern_value(const lv_font_t *font, uint32_t gid_left, uint32_t 
              *The pairs are ordered left_id first, then right_id secondly.*/
             const uint16_t *g_ids = kdsc->glyph_ids;
             uint16_t g_id_both = (gid_right << 8) + gid_left; /*Create one number from the ids*/
-            uint16_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 2, kern_pair_8_compare);
+            uint16_t *kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 2, kern_pair_8_compare);
 
             /*If the `g_id_both` were found get its index from the pointer*/
             if (kid_p) {
@@ -290,7 +290,7 @@ static int8_t get_kern_value(const lv_font_t *font, uint32_t gid_left, uint32_t 
              *The pairs are ordered left_id first, then right_id secondly.*/
             const uint32_t *g_ids = kdsc->glyph_ids;
             uint32_t g_id_both = (gid_right << 16) + gid_left; /*Create one number from the ids*/
-            uint32_t * kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 4, kern_pair_16_compare);
+            uint32_t *kid_p = _lv_utils_bsearch(&g_id_both, g_ids, kdsc->pair_cnt, 4, kern_pair_16_compare);
 
             /*If the `g_id_both` were found get its index from the pointer*/
             if (kid_p) {
@@ -581,7 +581,7 @@ static inline uint8_t rle_next(void)
  *
  */
 static int32_t unicode_list_compare(const void *ref, const void *element) {
-    return ((int32_t)(*(uint16_t * )
-    ref)) -((int32_t)(*(uint16_t * )
-    element));
+    return ((int32_t) (*(uint16_t *)
+            ref)) - ((int32_t) (*(uint16_t *)
+            element));
 }

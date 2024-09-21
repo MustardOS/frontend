@@ -72,8 +72,8 @@ static lv_opa_t *get_next_line(_lv_draw_mask_radius_circle_dsc_t *c, lv_coord_t 
                                lv_coord_t *x_start);
 
 static inline lv_opa_t /* LV_ATTRIBUTE_FAST_MEM */ mask_mix(lv_opa_t
-mask_act,
-lv_opa_t mask_new
+                                                            mask_act,
+                                                            lv_opa_t mask_new
 );
 
 /**********************
@@ -647,7 +647,7 @@ static lv_draw_mask_res_t LV_ATTRIBUTE_FAST_MEM line_mask_flat(lv_opa_t *mask_bu
                                                                lv_draw_mask_line_param_t *p) {
 
     int32_t y_at_x;
-    y_at_x = (int32_t)((int32_t) p->yx_steep * abs_x) >> 10;
+    y_at_x = (int32_t) ((int32_t) p->yx_steep * abs_x) >> 10;
 
     if (p->yx_steep > 0) {
         if (y_at_x > abs_y) {
@@ -669,7 +669,7 @@ static lv_draw_mask_res_t LV_ATTRIBUTE_FAST_MEM line_mask_flat(lv_opa_t *mask_bu
 
     /*At the end of the mask if the limit line is smaller than the mask's y.
      *Then the mask is in the "good" area*/
-    y_at_x = (int32_t)((int32_t) p->yx_steep * (abs_x + len)) >> 10;
+    y_at_x = (int32_t) ((int32_t) p->yx_steep * (abs_x + len)) >> 10;
     if (p->yx_steep > 0) {
         if (y_at_x < abs_y) {
             if (p->inv) {
@@ -757,7 +757,7 @@ static lv_draw_mask_res_t LV_ATTRIBUTE_FAST_MEM line_mask_steep(lv_opa_t *mask_b
     int32_t x_at_y;
     /*At the beginning of the mask if the limit line is greater than the mask's y.
      *Then the mask is in the "wrong" area*/
-    x_at_y = (int32_t)((int32_t) p->xy_steep * abs_y) >> 10;
+    x_at_y = (int32_t) ((int32_t) p->xy_steep * abs_y) >> 10;
     if (p->xy_steep > 0) x_at_y++;
     if (x_at_y < abs_x) {
         if (p->inv) {
@@ -769,7 +769,7 @@ static lv_draw_mask_res_t LV_ATTRIBUTE_FAST_MEM line_mask_steep(lv_opa_t *mask_b
 
     /*At the end of the mask if the limit line is smaller than the mask's y.
      *Then the mask is in the "good" area*/
-    x_at_y = (int32_t)((int32_t) p->xy_steep * (abs_y)) >> 10;
+    x_at_y = (int32_t) ((int32_t) p->xy_steep * (abs_y)) >> 10;
     if (x_at_y > abs_x + len) {
         if (p->inv) {
             return LV_DRAW_MASK_RES_TRANSP;
@@ -1085,7 +1085,7 @@ static lv_draw_mask_res_t LV_ATTRIBUTE_FAST_MEM lv_draw_mask_radius(lv_opa_t *ma
     } else {
         cir_y = abs_y - (h - radius);
     }
-    lv_opa_t * aa_opa = get_next_line(p->circle, cir_y, &aa_len, &x_start);
+    lv_opa_t *aa_opa = get_next_line(p->circle, cir_y, &aa_len, &x_start);
     lv_coord_t cir_x_right = k + w - radius + x_start;
     lv_coord_t cir_x_left = k + radius - x_start - 1;
     lv_coord_t i;
@@ -1160,7 +1160,7 @@ static lv_draw_mask_res_t LV_ATTRIBUTE_FAST_MEM lv_draw_mask_fade(lv_opa_t *mask
         /*Calculate the opa proportionally*/
         int16_t opa_diff = p->cfg.opa_bottom - p->cfg.opa_top;
         int32_t y_diff = p->cfg.y_bottom - p->cfg.y_top + 1;
-        lv_opa_t opa_act = (int32_t)((int32_t)(abs_y - p->cfg.y_top) * opa_diff) / y_diff;
+        lv_opa_t opa_act = (int32_t) ((int32_t) (abs_y - p->cfg.y_top) * opa_diff) / y_diff;
         opa_act += p->cfg.opa_top;
 
         for (i = 0; i < len; i++) {
@@ -1321,8 +1321,8 @@ static void circ_calc_aa4(_lv_draw_mask_radius_circle_dsc_t *c, lv_coord_t radiu
     c->buf = lv_mem_alloc(radius * 6 + 6);  /*Use uint16_t for opa_start_on_y and x_start_on_y*/
     LV_ASSERT_MALLOC(c->buf);
     c->cir_opa = c->buf;
-    c->opa_start_on_y = (uint16_t * )(c->buf + 2 * radius + 2);
-    c->x_start_on_y = (uint16_t * )(c->buf + 4 * radius + 4);
+    c->opa_start_on_y = (uint16_t *) (c->buf + 2 * radius + 2);
+    c->x_start_on_y = (uint16_t *) (c->buf + 4 * radius + 4);
 
     /*Special case, handle manually*/
     if (radius == 1) {
@@ -1333,8 +1333,8 @@ static void circ_calc_aa4(_lv_draw_mask_radius_circle_dsc_t *c, lv_coord_t radiu
         return;
     }
 
-    lv_coord_t * cir_x = lv_mem_buf_get((radius + 1) * 2 * 2 * sizeof(lv_coord_t));
-    lv_coord_t * cir_y = &cir_x[(radius + 1) * 2];
+    lv_coord_t *cir_x = lv_mem_buf_get((radius + 1) * 2 * 2 * sizeof(lv_coord_t));
+    lv_coord_t *cir_y = &cir_x[(radius + 1) * 2];
 
     uint32_t y_8th_cnt = 0;
     lv_point_t cp;
@@ -1467,15 +1467,15 @@ static lv_opa_t *get_next_line(_lv_draw_mask_radius_circle_dsc_t *c, lv_coord_t 
 
 static inline lv_opa_t
 LV_ATTRIBUTE_FAST_MEM mask_mix(lv_opa_t
-mask_act,
-lv_opa_t mask_new
-)
-{
-if(mask_new >= LV_OPA_MAX) return
-mask_act;
-if(mask_new <= LV_OPA_MIN) return 0;
+                               mask_act,
+                               lv_opa_t mask_new
+) {
+    if (mask_new >= LV_OPA_MAX)
+        return
+                mask_act;
+    if (mask_new <= LV_OPA_MIN) return 0;
 
-return LV_UDIV255(mask_act * mask_new);// >> 8);
+    return LV_UDIV255(mask_act * mask_new);// >> 8);
 }
 
 

@@ -190,8 +190,8 @@ static void rgb_no_aa(const uint8_t *src, lv_coord_t src_w, lv_coord_t src_h, lv
 #elif LV_COLOR_DEPTH == 32
             const uint8_t *src_tmp = src;
             src_tmp += (ys_int * src_stride * sizeof(lv_color_t)) + xs_int * sizeof(lv_color_t);
-            cbuf[x].full = *((uint32_t * )
-            src_tmp);
+            cbuf[x].full = *((uint32_t *)
+                    src_tmp);
 #endif
         }
         if (cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED && cbuf[x].full == ck.full) {
@@ -224,8 +224,8 @@ static void argb_no_aa(const uint8_t *src, lv_coord_t src_w, lv_coord_t src_h, l
 #elif LV_COLOR_DEPTH == 16
             cbuf[x].full = src_tmp[0] + (src_tmp[1] << 8);
 #elif LV_COLOR_DEPTH == 32
-            cbuf[x].full = *((uint32_t * )
-            src_tmp);
+            cbuf[x].full = *((uint32_t *)
+                    src_tmp);
 #endif
             abuf[x] = src_tmp[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
         }
@@ -399,12 +399,12 @@ static void argb_and_rgb_aa(const uint8_t *src, lv_coord_t src_w, lv_coord_t src
                 c_ver.full = px_ver[0] + (px_ver[1] << 8);
                 c_hor.full = px_hor[0] + (px_hor[1] << 8);
 #elif LV_COLOR_DEPTH == 32
-                c_base.full = *((uint32_t * )
-                px_base);
-                c_ver.full = *((uint32_t * )
-                px_ver);
-                c_hor.full = *((uint32_t * )
-                px_hor);
+                c_base.full = *((uint32_t *)
+                        px_base);
+                c_ver.full = *((uint32_t *)
+                        px_ver);
+                c_hor.full = *((uint32_t *)
+                        px_hor);
 #endif
             }
                 /*No alpha channel -> RGB*/
@@ -430,8 +430,8 @@ static void argb_and_rgb_aa(const uint8_t *src, lv_coord_t src_w, lv_coord_t src
 #elif LV_COLOR_DEPTH == 16
             cbuf[x].full = src_tmp[0] + (src_tmp[1] << 8);
 #elif LV_COLOR_DEPTH == 32
-            cbuf[x].full = *((uint32_t * )
-            src_tmp);
+            cbuf[x].full = *((uint32_t *)
+                    src_tmp);
 #endif
             lv_opa_t a;
             switch (cf) {
@@ -473,8 +473,8 @@ static void transform_point_upscaled(point_transform_dsc_t *t, int32_t xin, int3
     yin -= t->pivot.y;
 
     if (t->angle == 0) {
-        *xout = ((int32_t)(xin * t->zoom)) + (t->pivot_x_256);
-        *yout = ((int32_t)(yin * t->zoom)) + (t->pivot_y_256);
+        *xout = ((int32_t) (xin * t->zoom)) + (t->pivot_x_256);
+        *yout = ((int32_t) (yin * t->zoom)) + (t->pivot_y_256);
     } else if (t->zoom == LV_IMG_ZOOM_NONE) {
         *xout = ((t->cosma * xin - t->sinma * yin) >> 2) + (t->pivot_x_256);
         *yout = ((t->sinma * xin + t->cosma * yin) >> 2) + (t->pivot_y_256);

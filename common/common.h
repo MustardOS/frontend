@@ -52,8 +52,6 @@ void refresh_screen();
 
 int file_exist(char *filename);
 
-int get_file_size(char *filename);
-
 unsigned long long total_file_size(const char *path);
 
 int str_compare(const void *a, const void *b);
@@ -90,7 +88,7 @@ char *read_battery_voltage();
 
 char *read_text_from_file(char *filename);
 
-char *read_line_from_file(char *filename, int line_number);
+char *read_line_from_file(const char *filename, size_t line_number);
 
 const char *get_random_hex();
 
@@ -146,11 +144,13 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
 void delete_files_of_name(const char *dir_path, const char *filename);
 
-char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated);
+char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random);
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
 
 char *load_overlay_image();
+
+void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
 
 void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *current_wall);
 
@@ -185,7 +185,5 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
                              const char *suffix, int infix_position);
 
 char *get_script_value(const char *filename, const char *key);
-
-void seed_random();
 
 void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar);

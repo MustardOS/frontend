@@ -130,7 +130,7 @@ lv_coord_t lv_obj_get_scroll_bottom(lv_obj_t *obj) {
     uint32_t i;
     uint32_t child_cnt = lv_obj_get_child_cnt(obj);
     for (i = 0; i < child_cnt; i++) {
-        lv_obj_t * child = obj->spec_attr->children[i];
+        lv_obj_t *child = obj->spec_attr->children[i];
         if (lv_obj_has_flag_any(child, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
         child_res = LV_MAX(child_res, child->coords.y2);
     }
@@ -170,7 +170,7 @@ lv_coord_t lv_obj_get_scroll_left(lv_obj_t *obj) {
     lv_coord_t x1 = LV_COORD_MAX;
     uint32_t child_cnt = lv_obj_get_child_cnt(obj);
     for (i = 0; i < child_cnt; i++) {
-        lv_obj_t * child = obj->spec_attr->children[i];
+        lv_obj_t *child = obj->spec_attr->children[i];
         if (lv_obj_has_flag_any(child, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
         x1 = LV_MIN(x1, child->coords.x1);
 
@@ -205,7 +205,7 @@ lv_coord_t lv_obj_get_scroll_right(lv_obj_t *obj) {
     uint32_t i;
     uint32_t child_cnt = lv_obj_get_child_cnt(obj);
     for (i = 0; i < child_cnt; i++) {
-        lv_obj_t * child = obj->spec_attr->children[i];
+        lv_obj_t *child = obj->spec_attr->children[i];
         if (lv_obj_has_flag_any(child, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
         child_res = LV_MAX(child_res, child->coords.x2);
     }
@@ -378,8 +378,8 @@ void lv_obj_scroll_to_view_recursive(lv_obj_t *obj, lv_anim_enable_t anim_en) {
     lv_obj_update_layout(obj);
 
     lv_point_t p = {0, 0};
-    lv_obj_t * child = obj;
-    lv_obj_t * parent = lv_obj_get_parent(child);
+    lv_obj_t *child = obj;
+    lv_obj_t *parent = lv_obj_get_parent(child);
     while (parent) {
         scroll_area_into_view(&obj->coords, child, &p, anim_en);
         child = parent;
@@ -649,7 +649,7 @@ static void scroll_anim_ready_cb(lv_anim_t *a) {
 
 static void scroll_area_into_view(const lv_area_t *area, lv_obj_t *child, lv_point_t *scroll_value,
                                   lv_anim_enable_t anim_en) {
-    lv_obj_t * parent = lv_obj_get_parent(child);
+    lv_obj_t *parent = lv_obj_get_parent(child);
     if (!lv_obj_has_flag(parent, LV_OBJ_FLAG_SCROLLABLE)) return;
 
     lv_dir_t scroll_dir = lv_obj_get_scroll_dir(parent);

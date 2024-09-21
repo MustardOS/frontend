@@ -769,11 +769,10 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_set_style_text_opa(ui_lblKofiMessageTwo, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_imgKofi = lv_img_create(ui_conKofi);
-    lv_img_set_src(ui_imgKofi, &ui_img_muoskofi_png);
+    lv_img_set_src(ui_imgKofi, &ui_image_Kofi);
     lv_obj_set_width(ui_imgKofi, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgKofi, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgKofi, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_imgKofi, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgKofi, LV_OBJ_FLAG_SCROLLABLE);
-
 }

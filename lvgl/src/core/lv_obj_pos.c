@@ -83,7 +83,7 @@ bool lv_obj_refr_size(lv_obj_t *obj) {
     /*If the width or height is set by a layout do not modify them*/
     if (obj->w_layout && obj->h_layout) return false;
 
-    lv_obj_t * parent = lv_obj_get_parent(obj);
+    lv_obj_t *parent = lv_obj_get_parent(obj);
     if (parent == NULL) return false;
 
     lv_coord_t sl_ori = lv_obj_get_scroll_left(obj);
@@ -262,7 +262,7 @@ void lv_obj_set_layout(lv_obj_t *obj, uint32_t layout) {
 bool lv_obj_is_layout_positioned(const lv_obj_t *obj) {
     if (lv_obj_has_flag_any(obj, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_FLOATING)) return false;
 
-    lv_obj_t * parent = lv_obj_get_parent(obj);
+    lv_obj_t *parent = lv_obj_get_parent(obj);
     if (parent == NULL) return false;
 
     uint32_t layout = lv_obj_get_style_layout(parent, LV_PART_MAIN);
@@ -274,7 +274,7 @@ void lv_obj_mark_layout_as_dirty(lv_obj_t *obj) {
     obj->layout_inv = 1;
 
     /*Mark the screen as dirty too to mark that there is something to do on this screen*/
-    lv_obj_t * scr = lv_obj_get_screen(obj);
+    lv_obj_t *scr = lv_obj_get_screen(obj);
     scr->scr_layout_inv = 1;
 
     /*Make the display refreshing*/
@@ -290,7 +290,7 @@ void lv_obj_update_layout(const lv_obj_t *obj) {
     }
     mutex = true;
 
-    lv_obj_t * scr = lv_obj_get_screen(obj);
+    lv_obj_t *scr = lv_obj_get_screen(obj);
 
     /*Repeat until there where layout invalidations*/
     while (scr->scr_layout_inv) {
@@ -333,7 +333,7 @@ void lv_obj_align_to(lv_obj_t *obj, const lv_obj_t *base, lv_align_t align, lv_c
     lv_coord_t x = 0;
     lv_coord_t y = 0;
 
-    lv_obj_t * parent = lv_obj_get_parent(obj);
+    lv_obj_t *parent = lv_obj_get_parent(obj);
     lv_coord_t pborder = lv_obj_get_style_border_width(parent, LV_PART_MAIN);
     lv_coord_t pleft = lv_obj_get_style_pad_left(parent, LV_PART_MAIN) + pborder;
     lv_coord_t ptop = lv_obj_get_style_pad_top(parent, LV_PART_MAIN) + pborder;
@@ -472,7 +472,7 @@ lv_coord_t lv_obj_get_x(const lv_obj_t *obj) {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
     lv_coord_t rel_x;
-    lv_obj_t * parent = lv_obj_get_parent(obj);
+    lv_obj_t *parent = lv_obj_get_parent(obj);
     if (parent) {
         rel_x = obj->coords.x1 - parent->coords.x1;
         rel_x += lv_obj_get_scroll_x(parent);
@@ -494,7 +494,7 @@ lv_coord_t lv_obj_get_y(const lv_obj_t *obj) {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
     lv_coord_t rel_y;
-    lv_obj_t * parent = lv_obj_get_parent(obj);
+    lv_obj_t *parent = lv_obj_get_parent(obj);
     if (parent) {
         rel_y = obj->coords.y1 - parent->coords.y1;
         rel_y += lv_obj_get_scroll_y(parent);
@@ -591,7 +591,7 @@ void lv_obj_refr_pos(lv_obj_t *obj) {
     if (lv_obj_is_layout_positioned(obj)) return;
 
 
-    lv_obj_t * parent = lv_obj_get_parent(obj);
+    lv_obj_t *parent = lv_obj_get_parent(obj);
     lv_coord_t x = lv_obj_get_style_x(obj, LV_PART_MAIN);
     lv_coord_t y = lv_obj_get_style_y(obj, LV_PART_MAIN);
 
@@ -667,7 +667,7 @@ void lv_obj_refr_pos(lv_obj_t *obj) {
 
 void lv_obj_move_to(lv_obj_t *obj, lv_coord_t x, lv_coord_t y) {
     /*Convert x and y to absolute coordinates*/
-    lv_obj_t * parent = obj->parent;
+    lv_obj_t *parent = obj->parent;
 
     if (parent) {
         lv_coord_t pad_left = lv_obj_get_style_pad_left(parent, LV_PART_MAIN);
@@ -740,7 +740,7 @@ void lv_obj_move_children_by(lv_obj_t *obj, lv_coord_t x_diff, lv_coord_t y_diff
     uint32_t i;
     uint32_t child_cnt = lv_obj_get_child_cnt(obj);
     for (i = 0; i < child_cnt; i++) {
-        lv_obj_t * child = obj->spec_attr->children[i];
+        lv_obj_t *child = obj->spec_attr->children[i];
         if (ignore_floating && lv_obj_has_flag(child, LV_OBJ_FLAG_FLOATING)) continue;
         child->coords.x1 += x_diff;
         child->coords.y1 += y_diff;
@@ -820,7 +820,7 @@ bool lv_obj_area_is_visible(const lv_obj_t *obj, lv_area_t *area) {
     if (lv_obj_has_flag(obj, LV_OBJ_FLAG_HIDDEN)) return false;
 
     /*Invalidate the object only if it belongs to the current or previous or one of the layers'*/
-    lv_obj_t * obj_scr = lv_obj_get_screen(obj);
+    lv_obj_t *obj_scr = lv_obj_get_screen(obj);
     lv_disp_t *disp = lv_obj_get_disp(obj_scr);
     if (obj_scr != lv_disp_get_scr_act(disp) &&
         obj_scr != lv_disp_get_scr_prev(disp) &&
@@ -847,7 +847,7 @@ bool lv_obj_area_is_visible(const lv_obj_t *obj, lv_area_t *area) {
 
 
     /*Truncate recursively to the parents*/
-    lv_obj_t * par = lv_obj_get_parent(obj);
+    lv_obj_t *par = lv_obj_get_parent(obj);
     while (par != NULL) {
         /*If the parent is hidden then the child is hidden and won't be drawn*/
         if (lv_obj_has_flag(par, LV_OBJ_FLAG_HIDDEN)) return false;
@@ -950,7 +950,7 @@ static lv_coord_t calc_content_width(lv_obj_t *obj) {
     /*With RTL find the left most coordinate*/
     if (lv_obj_get_style_base_dir(obj, LV_PART_MAIN) == LV_BASE_DIR_RTL) {
         for (i = 0; i < child_cnt; i++) {
-            lv_obj_t * child = obj->spec_attr->children[i];
+            lv_obj_t *child = obj->spec_attr->children[i];
             if (lv_obj_has_flag_any(child, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
 
             if (!lv_obj_is_layout_positioned(child)) {
@@ -981,7 +981,7 @@ static lv_coord_t calc_content_width(lv_obj_t *obj) {
         /*Else find the right most coordinate*/
     else {
         for (i = 0; i < child_cnt; i++) {
-            lv_obj_t * child = obj->spec_attr->children[i];
+            lv_obj_t *child = obj->spec_attr->children[i];
             if (lv_obj_has_flag_any(child, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
 
             if (!lv_obj_is_layout_positioned(child)) {
@@ -1029,7 +1029,7 @@ static lv_coord_t calc_content_height(lv_obj_t *obj) {
     uint32_t i;
     uint32_t child_cnt = lv_obj_get_child_cnt(obj);
     for (i = 0; i < child_cnt; i++) {
-        lv_obj_t * child = obj->spec_attr->children[i];
+        lv_obj_t *child = obj->spec_attr->children[i];
         if (lv_obj_has_flag_any(child, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)) continue;
 
 
@@ -1069,7 +1069,7 @@ static void layout_update_core(lv_obj_t *obj) {
     uint32_t i;
     uint32_t child_cnt = lv_obj_get_child_cnt(obj);
     for (i = 0; i < child_cnt; i++) {
-        lv_obj_t * child = obj->spec_attr->children[i];
+        lv_obj_t *child = obj->spec_attr->children[i];
         layout_update_core(child);
     }
 

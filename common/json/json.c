@@ -52,19 +52,19 @@ static inline struct vutf8res vutf8(const uint8_t data[], int64_t len) {
     if (data[0] >> 4 == 14) {
         if (len < 3) goto fail;
         if (((data[1] >> 6) | (data[2] >> 6 << 2)) != 10) goto fail;
-        cp = ((uint32_t)(data[0] & 15) << 12) | ((uint32_t)(data[1] & 63) << 6) |
-             ((uint32_t)(data[2] & 63));
+        cp = ((uint32_t) (data[0] & 15) << 12) | ((uint32_t) (data[1] & 63) << 6) |
+             ((uint32_t) (data[2] & 63));
         n = 3;
     } else if (data[0] >> 3 == 30) {
         if (len < 4) goto fail;
         if (((data[1] >> 6) | (data[2] >> 6 << 2) | (data[3] >> 6 << 4)) != 42) goto fail;
-        cp = ((uint32_t)(data[0] & 7) << 18) | ((uint32_t)(data[1] & 63) << 12) |
-             ((uint32_t)(data[2] & 63) << 6) | ((uint32_t)(data[3] & 63));
+        cp = ((uint32_t) (data[0] & 7) << 18) | ((uint32_t) (data[1] & 63) << 12) |
+             ((uint32_t) (data[2] & 63) << 6) | ((uint32_t) (data[3] & 63));
         n = 4;
     } else if (data[0] >> 5 == 6) {
         if (len < 2) goto fail;
         if (data[1] >> 6 != 2) goto fail;
-        cp = ((uint32_t)(data[0] & 31) << 6) | ((uint32_t)(data[1] & 63));
+        cp = ((uint32_t) (data[0] & 31) << 6) | ((uint32_t) (data[1] & 63));
         n = 2;
     } else {
         goto fail;
@@ -439,40 +439,40 @@ static const uint8_t strtoksa[256] = {
 
 static inline size_t
 count_string(uint8_t
-*raw,
-uint8_t *end,
-int *infoout
+             *raw,
+             uint8_t *end,
+             int *infoout
 ) {
-size_t len = end - raw;
-size_t i = 1;
-int info = 0;
-bool e = false;
-while (1) {
-for8(i, len, {
-    if (strtoksa[raw[i]]) goto tok;
-    e = false;
-});
-break;
-tok:
-if (raw[i] == '"') {
-i++;
-if (!e) {
-break;
-}
-e = false;
-continue;
-}
-if (raw[i] == '\\') {
-info |=
-IESC;
-e = !e;
-}
-i++;
-}
-*
-infoout = info;
-return
-i;
+    size_t len = end - raw;
+    size_t i = 1;
+    int info = 0;
+    bool e = false;
+    while (1) {
+        for8(i, len, {
+            if (strtoksa[raw[i]]) goto tok;
+            e = false;
+        });
+        break;
+        tok:
+        if (raw[i] == '"') {
+            i++;
+            if (!e) {
+                break;
+            }
+            e = false;
+            continue;
+        }
+        if (raw[i] == '\\') {
+            info |=
+                    IESC;
+            e = !e;
+        }
+        i++;
+    }
+    *
+            infoout = info;
+    return
+            i;
 }
 
 static struct json take_string(uint8_t *raw, uint8_t *end) {
@@ -604,9 +604,9 @@ JSON_EXTERN struct json json_parsen(const char *json_str, size_t len) {
         return jmake(0, json_str, json_str + len, 0);
     }
     if (len == 0) return (struct json) {0};
-    return peek_any((uint8_t * )
-    json_str, (uint8_t * )
-    json_str + len);
+    return peek_any((uint8_t *)
+                            json_str, (uint8_t *)
+                                              json_str + len);
 }
 
 JSON_EXTERN struct json json_parse(const char *json_str) {
@@ -786,7 +786,7 @@ int json_string_comparen(struct json json, const char *str, size_t slen) {
         return strcmpn((char *) raw, rlen, str, slen);
     }
     int cmp = 0;
-    uint8_t *sp = (uint8_t * )(str ? str : "");
+    uint8_t *sp = (uint8_t *) (str ? str : "");
     for_each_utf8(raw, rlen, {
         if (!*sp || ch > *sp) {
             cmp = 1;
@@ -881,7 +881,7 @@ static double stod(const uint8_t *str, size_t len, char *buf) {
     buf[len] = '\0';
     char *ptr;
     double x = strtod(buf, &ptr);
-    return (size_t)(ptr - buf) == len ? x : 0;
+    return (size_t) (ptr - buf) == len ? x : 0;
 }
 
 static double parse_double_big(const uint8_t *str, size_t len) {
@@ -905,9 +905,9 @@ static int64_t parse_int64(const uint8_t *s, size_t len) {
         buf[len] = '\0';
         char *ptr = NULL;
         int64_t x = strtoll(buf, &ptr, 10);
-        if ((size_t)(ptr - buf) == len) return x;
+        if ((size_t) (ptr - buf) == len) return x;
         y = strtod(buf, &ptr);
-        if ((size_t)(ptr - buf) == len) goto clamp;
+        if ((size_t) (ptr - buf) == len) goto clamp;
     }
     y = parse_double(s, len);
     clamp:
@@ -926,9 +926,9 @@ static uint64_t parse_uint64(const uint8_t *s, size_t len) {
         buf[len] = '\0';
         char *ptr = NULL;
         uint64_t x = strtoull(buf, &ptr, 10);
-        if ((size_t)(ptr - buf) == len) return x;
+        if ((size_t) (ptr - buf) == len) return x;
         y = strtod(buf, &ptr);
-        if ((size_t)(ptr - buf) == len) goto clamp;
+        if ((size_t) (ptr - buf) == len) goto clamp;
     }
     y = parse_double(s, len);
     clamp:
@@ -967,8 +967,8 @@ JSON_EXTERN int64_t json_int64(struct json json) {
 
 JSON_EXTERN int json_int(struct json json) {
     int64_t x = json_int64(json);
-    if (x < (int64_t)INT_MIN) return INT_MIN;
-    if (x > (int64_t)INT_MAX) return INT_MAX;
+    if (x < (int64_t) INT_MIN) return INT_MIN;
+    if (x > (int64_t) INT_MAX) return INT_MAX;
     return x;
 }
 
@@ -1035,12 +1035,12 @@ jesc_append_ux(struct jesc_buf *buf, uint8_t c1, uint8_t c2, uint16_t x) {
 JSON_EXTERN
 size_t json_escapen(const char *str, size_t len, char *esc, size_t n) {
     uint8_t cpbuf[4];
-    struct jesc_buf buf = {.esc = (uint8_t * )esc, .esclen = n};
+    struct jesc_buf buf = {.esc = (uint8_t *) esc, .esclen = n};
     jesc_append(&buf, '"');
     for (size_t i = 0; i < len; i++) {
         uint32_t
                 c = (uint8_t)
-        str[i];
+                str[i];
         if (c < ' ') {
             switch (c) {
                 case '\n':
@@ -1069,7 +1069,7 @@ size_t json_escapen(const char *str, size_t len, char *esc, size_t n) {
         } else if (c == '"') {
             jesc_append2(&buf, '\\', '"');
         } else if (c > 127) {
-            struct vutf8res res = vutf8((uint8_t * )(str + i), len - i);
+            struct vutf8res res = vutf8((uint8_t *) (str + i), len - i);
             if (res.n == 0) {
                 res.n = 1;
                 res.cp = 0xfffd;

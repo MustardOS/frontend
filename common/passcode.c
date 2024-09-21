@@ -9,7 +9,7 @@ void load_passcode(struct mux_passcode *passcode, struct mux_device *device) {
     snprintf(pass_file, sizeof(pass_file),
              "%s/MUOS/info/pass.ini", device->STORAGE.ROM.MOUNT);
 
-    mini_t * muos_pass = mini_try_load(pass_file);
+    mini_t *muos_pass = mini_try_load(pass_file);
 
     strncpy(passcode->CODE.BOOT, get_ini_string(muos_pass, "code", "boot", "000000"),
             MAX_BUFFER_SIZE - 1);

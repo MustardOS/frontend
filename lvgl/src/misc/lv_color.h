@@ -468,9 +468,9 @@ static inline lv_color_t LV_ATTRIBUTE_FAST_MEM lv_color_mix(lv_color_t c1, lv_co
 
 static inline void LV_ATTRIBUTE_FAST_MEM lv_color_premult(lv_color_t c, uint8_t mix, uint16_t *out) {
 #if LV_COLOR_DEPTH != 1
-    out[0] = (uint16_t)LV_COLOR_GET_R(c) * mix;
-    out[1] = (uint16_t)LV_COLOR_GET_G(c) * mix;
-    out[2] = (uint16_t)LV_COLOR_GET_B(c) * mix;
+    out[0] = (uint16_t) LV_COLOR_GET_R(c) * mix;
+    out[1] = (uint16_t) LV_COLOR_GET_G(c) * mix;
+    out[2] = (uint16_t) LV_COLOR_GET_B(c) * mix;
 #else
     (void) mix;
     /*Pre-multiplication can't be used with 1 bpp*/
@@ -556,9 +556,9 @@ static inline void LV_ATTRIBUTE_FAST_MEM lv_color_mix_with_alpha(lv_color_t bg_c
             bg_color_save.full = bg_color.full;
             /*Info:
              * https://en.wikipedia.org/wiki/Alpha_compositing#Analytical_derivation_of_the_over_operator*/
-            res_opa_saved = 255 - ((uint16_t)((uint16_t)(255 - fg_opa) * (255 - bg_opa)) >> 8);
+            res_opa_saved = 255 - ((uint16_t) ((uint16_t) (255 - fg_opa) * (255 - bg_opa)) >> 8);
             LV_ASSERT(res_opa_saved != 0);
-            lv_opa_t ratio = (uint16_t)((uint16_t) fg_opa * 255) / res_opa_saved;
+            lv_opa_t ratio = (uint16_t) ((uint16_t) fg_opa * 255) / res_opa_saved;
             res_color_saved = lv_color_mix(fg_color, bg_color, ratio);
 
         }
@@ -578,8 +578,8 @@ static inline void LV_ATTRIBUTE_FAST_MEM lv_color_mix_with_alpha(lv_color_t bg_c
 static inline uint8_t lv_color_brightness(lv_color_t color) {
     lv_color32_t c32;
     c32.full = lv_color_to32(color);
-    uint16_t bright = (uint16_t)(3u * LV_COLOR_GET_R32(c32) + LV_COLOR_GET_B32(c32) + 4u * LV_COLOR_GET_G32(c32));
-    return (uint8_t)(bright >> 3);
+    uint16_t bright = (uint16_t) (3u * LV_COLOR_GET_R32(c32) + LV_COLOR_GET_B32(c32) + 4u * LV_COLOR_GET_G32(c32));
+    return (uint8_t) (bright >> 3);
 }
 
 static inline lv_color_t lv_color_make(uint8_t r, uint8_t g, uint8_t b) {
@@ -620,8 +620,8 @@ static inline lv_color_t lv_color_hex(uint32_t c) {
 }
 
 static inline lv_color_t lv_color_hex3(uint32_t c) {
-    return lv_color_make((uint8_t)(((c >> 4) & 0xF0) | ((c >> 8) & 0xF)), (uint8_t)((c & 0xF0) | ((c & 0xF0) >> 4)),
-                         (uint8_t)((c & 0xF) | ((c & 0xF) << 4)));
+    return lv_color_make((uint8_t) (((c >> 4) & 0xF0) | ((c >> 8) & 0xF)), (uint8_t) ((c & 0xF0) | ((c & 0xF0) >> 4)),
+                         (uint8_t) ((c & 0xF) | ((c & 0xF) << 4)));
 }
 
 static inline void lv_color_filter_dsc_init(lv_color_filter_dsc_t *dsc, lv_color_filter_cb_t cb) {

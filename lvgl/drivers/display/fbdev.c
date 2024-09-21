@@ -227,44 +227,44 @@ void fbdev_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p)
 
     /*32 or 24 bit per pixel*/
     if (vinfo.bits_per_pixel == 32 || vinfo.bits_per_pixel == 24) {
-        uint32_t *fbp32 = (uint32_t * )
-        fbp;
+        uint32_t * fbp32 = (uint32_t *)
+                fbp;
         int32_t y;
         for (y = act_y1; y <= act_y2; y++) {
             location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length / 4;
-            memcpy(&fbp32[location], (uint32_t * )
-            color_p, (act_x2 - act_x1 + 1) * 4);
+            memcpy(&fbp32[location], (uint32_t *)
+                    color_p, (act_x2 - act_x1 + 1) * 4);
             color_p += w;
         }
     }
         /*16 bit per pixel*/
     else if (vinfo.bits_per_pixel == 16) {
-        uint16_t *fbp16 = (uint16_t * )
-        fbp;
+        uint16_t * fbp16 = (uint16_t *)
+                fbp;
         int32_t y;
         for (y = act_y1; y <= act_y2; y++) {
             location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length / 2;
-            memcpy(&fbp16[location], (uint32_t * )
-            color_p, (act_x2 - act_x1 + 1) * 2);
+            memcpy(&fbp16[location], (uint32_t *)
+                    color_p, (act_x2 - act_x1 + 1) * 2);
             color_p += w;
         }
     }
         /*8 bit per pixel*/
     else if (vinfo.bits_per_pixel == 8) {
-        uint8_t *fbp8 = (uint8_t * )
-        fbp;
+        uint8_t *fbp8 = (uint8_t *)
+                fbp;
         int32_t y;
         for (y = act_y1; y <= act_y2; y++) {
             location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length;
-            memcpy(&fbp8[location], (uint32_t * )
-            color_p, (act_x2 - act_x1 + 1));
+            memcpy(&fbp8[location], (uint32_t *)
+                    color_p, (act_x2 - act_x1 + 1));
             color_p += w;
         }
     }
         /*1 bit per pixel*/
     else if (vinfo.bits_per_pixel == 1) {
-        uint8_t *fbp8 = (uint8_t * )
-        fbp;
+        uint8_t *fbp8 = (uint8_t *)
+                fbp;
         int32_t x;
         int32_t y;
         for (y = act_y1; y <= act_y2; y++) {
@@ -272,8 +272,8 @@ void fbdev_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p)
                 location = (x + vinfo.xoffset) + (y + vinfo.yoffset) * vinfo.xres;
                 byte_location = location / 8; /* find the byte we need to change */
                 bit_location = location % 8; /* inside the byte found, find the bit we need to change */
-                fbp8[byte_location] &= ~(((uint8_t)(1)) << bit_location);
-                fbp8[byte_location] |= ((uint8_t)(color_p->full)) << bit_location;
+                fbp8[byte_location] &= ~(((uint8_t) (1)) << bit_location);
+                fbp8[byte_location] |= ((uint8_t) (color_p->full)) << bit_location;
                 color_p++;
             }
 

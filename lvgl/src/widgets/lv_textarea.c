@@ -355,8 +355,9 @@ void lv_textarea_set_cursor_pos(lv_obj_t *obj, int32_t pos) {
     LV_ASSERT_OBJ(obj, MY_CLASS);
 
     lv_textarea_t *ta = (lv_textarea_t *) obj;
-    if ((uint32_t)ta->cursor.pos == (uint32_t)
-    pos) return;
+    if ((uint32_t) ta->cursor.pos == (uint32_t)
+            pos)
+        return;
 
     uint32_t len = _lv_txt_get_encoded_length(lv_label_get_text(ta->label));
 
@@ -850,8 +851,8 @@ static void lv_textarea_event(const lv_obj_class_t *class_p, lv_event_t *e) {
         start_cursor_blink(obj);
     } else if (code == LV_EVENT_KEY) {
         uint32_t
-                c = *((uint32_t * )
-        lv_event_get_param(e)); /*uint32_t because can be UTF-8*/
+                c = *((uint32_t *)
+                lv_event_get_param(e)); /*uint32_t because can be UTF-8*/
         if (c == LV_KEY_RIGHT)
             lv_textarea_cursor_right(obj);
         else if (c == LV_KEY_LEFT)

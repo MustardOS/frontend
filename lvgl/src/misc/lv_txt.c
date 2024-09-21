@@ -399,7 +399,7 @@ lv_coord_t lv_txt_get_width(const char *txt, uint32_t length, const lv_font_t *f
 bool _lv_txt_is_cmd(lv_text_cmd_state_t *state, uint32_t c) {
     bool ret = false;
 
-    if (c == (uint32_t)LV_TXT_COLOR_CMD[0]) {
+    if (c == (uint32_t) LV_TXT_COLOR_CMD[0]) {
         if (*state == LV_TEXT_CMD_STATE_WAIT) { /*Start char*/
             *state = LV_TEXT_CMD_STATE_PAR;
             ret = true;
@@ -558,8 +558,8 @@ static uint32_t lv_txt_unicode_to_utf8(uint32_t letter_uni) {
         return 0;
     }
 
-    uint32_t *res_p = (uint32_t * )
-    bytes;
+    uint32_t *res_p = (uint32_t *)
+            bytes;
     return *res_p;
 }
 
@@ -619,7 +619,7 @@ static uint32_t lv_txt_utf8_next(const char *txt, uint32_t *i) {
     else {
         /*2 bytes UTF-8 code*/
         if (LV_IS_2BYTES_UTF8_CODE(txt[*i])) {
-            result = (uint32_t)(txt[*i] & 0x1F) << 6;
+            result = (uint32_t) (txt[*i] & 0x1F) << 6;
             (*i)++;
             if (LV_IS_INVALID_UTF8_CODE(txt[*i])) return 0;
             result += (txt[*i] & 0x3F);
@@ -627,11 +627,11 @@ static uint32_t lv_txt_utf8_next(const char *txt, uint32_t *i) {
         }
             /*3 bytes UTF-8 code*/
         else if (LV_IS_3BYTES_UTF8_CODE(txt[*i])) {
-            result = (uint32_t)(txt[*i] & 0x0F) << 12;
+            result = (uint32_t) (txt[*i] & 0x0F) << 12;
             (*i)++;
 
             if (LV_IS_INVALID_UTF8_CODE(txt[*i])) return 0;
-            result += (uint32_t)(txt[*i] & 0x3F) << 6;
+            result += (uint32_t) (txt[*i] & 0x3F) << 6;
             (*i)++;
 
             if (LV_IS_INVALID_UTF8_CODE(txt[*i])) return 0;
@@ -640,15 +640,15 @@ static uint32_t lv_txt_utf8_next(const char *txt, uint32_t *i) {
         }
             /*4 bytes UTF-8 code*/
         else if (LV_IS_4BYTES_UTF8_CODE(txt[*i])) {
-            result = (uint32_t)(txt[*i] & 0x07) << 18;
+            result = (uint32_t) (txt[*i] & 0x07) << 18;
             (*i)++;
 
             if (LV_IS_INVALID_UTF8_CODE(txt[*i])) return 0;
-            result += (uint32_t)(txt[*i] & 0x3F) << 12;
+            result += (uint32_t) (txt[*i] & 0x3F) << 12;
             (*i)++;
 
             if (LV_IS_INVALID_UTF8_CODE(txt[*i])) return 0;
-            result += (uint32_t)(txt[*i] & 0x3F) << 6;
+            result += (uint32_t) (txt[*i] & 0x3F) << 6;
             (*i)++;
 
             if (LV_IS_INVALID_UTF8_CODE(txt[*i])) return 0;

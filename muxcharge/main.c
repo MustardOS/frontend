@@ -14,12 +14,13 @@
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "theme.h"
+#include "ui/theme.h"
 
 __thread uint64_t start_ms = 0;
 
@@ -158,13 +159,13 @@ int main(int argc, char *argv[]) {
 
     mux_prog = basename(argv[0]);
     load_device(&device);
-    seed_random();
+
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
 
     static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = device.SCREEN.BUFFER;
+    uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
     lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
     lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
@@ -179,6 +180,8 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = device.SCREEN.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
+    disp_drv.full_refresh = 0;
+    disp_drv.direct_mode = 0;
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
@@ -192,18 +195,26 @@ int main(int argc, char *argv[]) {
 
     lv_obj_set_user_data(ui_scrCharge, "muxcharge");
 
-    char *current_wall = load_wallpaper(ui_scrCharge, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    char *current_wall = load_wallpaper(ui_scrCharge, NULL, theme.MISC.ANIMATED_BACKGROUND,
+                                        theme.MISC.RANDOM_BACKGROUND);
     if (strlen(current_wall) > 3) {
-        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-            lv_obj_t *img = lv_gif_create(ui_pnlWall);
-            lv_gif_set_src(img, current_wall);
-        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
-            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
+        if (theme.MISC.RANDOM_BACKGROUND) {
+            load_image_random(ui_imgWall, current_wall);
         } else {
-            lv_img_set_src(ui_imgWall, current_wall);
+            switch (theme.MISC.ANIMATED_BACKGROUND) {
+                case 1:
+                    lv_gif_set_src(lv_gif_create(ui_pnlWall), current_wall);
+                    break;
+                case 2:
+                    load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
+                    break;
+                default:
+                    lv_img_set_src(ui_imgWall, current_wall);
+                    break;
+            }
         }
     } else {
-        lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
+        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     }
 
     load_font_text(basename(argv[0]), ui_scrCharge);

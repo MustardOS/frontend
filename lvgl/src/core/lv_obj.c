@@ -156,14 +156,14 @@ void lv_init(void) {
     /*Test if the IDE has UTF-8 encoding*/
     char *txt = "Á";
 
-    uint8_t *txt_u8 = (uint8_t * )
-    txt;
+    uint8_t *txt_u8 = (uint8_t *)
+            txt;
     if (txt_u8[0] != 0xc3 || txt_u8[1] != 0x81 || txt_u8[2] != 0x00) {
         LV_LOG_WARN("The strings have no UTF-8 encoding. Non-ASCII characters won't be displayed.");
     }
 
     uint32_t endianess_test = 0x11223344;
-    uint8_t *endianess_test_p = (uint8_t * ) & endianess_test;
+    uint8_t *endianess_test_p = (uint8_t *) &endianess_test;
     bool big_endian = endianess_test_p[0] == 0x11 ? true : false;
 
     if (big_endian) {
@@ -217,7 +217,7 @@ void lv_deinit(void)
 
 lv_obj_t *lv_obj_create(lv_obj_t *parent) {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
 }
@@ -245,7 +245,7 @@ void lv_obj_add_flag(lv_obj_t *obj, lv_obj_flag_t f) {
             lv_group_t *group = lv_obj_get_group(obj);
             if (group != NULL) {
                 lv_group_focus_next(group);
-                lv_obj_t * next_obj = lv_group_get_focused(group);
+                lv_obj_t *next_obj = lv_group_get_focused(group);
                 if (next_obj != NULL) {
                     lv_obj_invalidate(next_obj);
                 }
@@ -410,7 +410,7 @@ static void lv_obj_constructor(const lv_obj_class_t *class_p, lv_obj_t *obj) {
     LV_UNUSED(class_p);
     LV_TRACE_OBJ_CREATE("begin");
 
-    lv_obj_t * parent = obj->parent;
+    lv_obj_t *parent = obj->parent;
     if (parent) {
         lv_coord_t sl = lv_obj_get_scroll_left(parent);
         lv_coord_t st = lv_obj_get_scroll_top(parent);
@@ -470,7 +470,7 @@ static void lv_obj_destructor(const lv_obj_class_t *class_p, lv_obj_t *obj) {
 
 static void lv_obj_draw(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
     if (code == LV_EVENT_COVER_CHECK) {
         lv_cover_check_info_t *info = lv_event_get_param(e);
         if (info->res == LV_COVER_RES_MASKED) return;
@@ -706,7 +706,7 @@ static void lv_obj_event(const lv_obj_class_t *class_p, lv_event_t *e) {
     LV_UNUSED(class_p);
 
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_current_target(e);
+    lv_obj_t *obj = lv_event_get_current_target(e);
     if (code == LV_EVENT_PRESSED) {
         lv_obj_add_state(obj, LV_STATE_PRESSED);
     } else if (code == LV_EVENT_RELEASED) {
@@ -725,7 +725,7 @@ static void lv_obj_event(const lv_obj_class_t *class_p, lv_event_t *e) {
     } else if (code == LV_EVENT_STYLE_CHANGED) {
         uint32_t child_cnt = lv_obj_get_child_cnt(obj);
         for (uint32_t i = 0; i < child_cnt; i++) {
-            lv_obj_t * child = obj->spec_attr->children[i];
+            lv_obj_t *child = obj->spec_attr->children[i];
             lv_obj_mark_layout_as_dirty(child);
         }
     } else if (code == LV_EVENT_KEY) {
@@ -814,7 +814,7 @@ static void lv_obj_event(const lv_obj_class_t *class_p, lv_event_t *e) {
         uint32_t i;
         uint32_t child_cnt = lv_obj_get_child_cnt(obj);
         for (i = 0; i < child_cnt; i++) {
-            lv_obj_t * child = obj->spec_attr->children[i];
+            lv_obj_t *child = obj->spec_attr->children[i];
             lv_obj_mark_layout_as_dirty(child);
         }
     } else if (code == LV_EVENT_CHILD_CHANGED) {
@@ -915,7 +915,7 @@ static bool obj_valid_child(const lv_obj_t *parent, const lv_obj_t *obj_to_find)
     if (parent->spec_attr) child_cnt = parent->spec_attr->child_cnt;
     uint32_t i;
     for (i = 0; i < child_cnt; i++) {
-        lv_obj_t * child = parent->spec_attr->children[i];
+        lv_obj_t *child = parent->spec_attr->children[i];
         if (child == obj_to_find) {
             return true;
         }

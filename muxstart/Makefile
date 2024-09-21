@@ -27,8 +27,7 @@ EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 LVGL_DIR_NAME ?= lvgl
 LVGL_DIR ?= ${shell pwd}/..
 
-SSRCS := ${shell ls -1 ./ui/*.c}
-
+SSRCS := $(wildcard ./ui/*.c)
 MAINSRC = ./main.c
 
 include $(LVGL_DIR)/$(LVGL_DIR_NAME)/lvgl.mk
@@ -54,17 +53,23 @@ clean:
 	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
-	@printf "Building: $(TARGET)...\r"
-	@$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
+	@printf "Building: %s... " "$(TARGET)"
+	@START=$$(date +%s); \
+	$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
+		../common/font/awesome_small.c \
+		../common/font/gamepad_nav.c \
+		../common/font/notosans.c \
+		../common/img/nothing.c \
 		../common/json/json.c \
 		../common/mini/mini.c \
 		../common/config.c \
 		../common/device.c \
 		../common/common.c \
 		../common/theme.c \
-		theme.c \
-		$(EXTRA)
-	@printf "Building: $(TARGET)... DONE!\n"
+		$(EXTRA); \
+	END=$$(date +%s); \
+	ELAPSED_TIME=$$((END - START)); \
+	printf "DONE (%ds)\n" "$${ELAPSED_TIME}"
 
 move:
 	@mkdir -p ../bin

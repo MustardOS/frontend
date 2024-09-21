@@ -8,12 +8,13 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <libgen.h>
+#include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "theme.h"
+#include "ui/theme.h"
 
 __thread uint64_t start_ms = 0;
 
@@ -47,7 +48,7 @@ void setup_background_process() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
-    seed_random();
+
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <message>\n", argv[0]);
@@ -60,7 +61,7 @@ int main(int argc, char *argv[]) {
     fbdev_init(device.SCREEN.DEVICE);
 
     static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = device.SCREEN.BUFFER;
+    uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
     lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
     lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
@@ -75,6 +76,8 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = device.SCREEN.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
+    disp_drv.full_refresh = 0;
+    disp_drv.direct_mode = 0;
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
@@ -91,13 +94,13 @@ int main(int argc, char *argv[]) {
         snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/muxstart.png", INTERNAL_PATH);
         current_wall = strdup(init_wall);
     } else {
-        current_wall = load_wallpaper(ui_scrStart, NULL, 0);
+        current_wall = load_wallpaper(ui_scrStart, NULL, 0, 0);
     }
 
     if (strlen(current_wall) > 3) {
         lv_img_set_src(ui_imgWall, current_wall);
     } else {
-        lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
+        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     }
 
     load_font_text(basename(argv[0]), ui_scrStart);

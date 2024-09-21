@@ -93,7 +93,7 @@ void _lv_area_set_pos(lv_area_t *area_p, lv_coord_t x, lv_coord_t y) {
 uint32_t lv_area_get_size(const lv_area_t *area_p) {
     uint32_t size;
 
-    size = (uint32_t)(area_p->x2 - area_p->x1 + 1) * (area_p->y2 - area_p->y1 + 1);
+    size = (uint32_t) (area_p->x2 - area_p->x1 + 1) * (area_p->y2 - area_p->y1 + 1);
 
     return size;
 }
@@ -522,8 +522,8 @@ void lv_point_transform(lv_point_t *p, int32_t angle, int32_t zoom, const lv_poi
     p->y -= pivot->y;
 
     if (angle == 0) {
-        p->x = (((int32_t)(p->x) * zoom) >> 8) + pivot->x;
-        p->y = (((int32_t)(p->y) * zoom) >> 8) + pivot->y;
+        p->x = (((int32_t) (p->x) * zoom) >> 8) + pivot->x;
+        p->y = (((int32_t) (p->y) * zoom) >> 8) + pivot->y;
         return;
     }
 

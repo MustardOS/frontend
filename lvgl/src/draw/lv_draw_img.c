@@ -303,8 +303,8 @@ static lv_res_t LV_ATTRIBUTE_FAST_MEM decode_and_draw(lv_draw_ctx_t *draw_ctx,
 
         int32_t width = lv_area_get_width(&mask_com);
 
-        uint8_t * buf = lv_mem_buf_get(lv_area_get_width(&mask_com) *
-                                       LV_IMG_PX_SIZE_ALPHA_BYTE);  /*+1 because of the possible alpha byte*/
+        uint8_t *buf = lv_mem_buf_get(lv_area_get_width(&mask_com) *
+                                      LV_IMG_PX_SIZE_ALPHA_BYTE);  /*+1 because of the possible alpha byte*/
 
         const lv_area_t *clip_area_ori = draw_ctx->clip_area;
         lv_area_t line;

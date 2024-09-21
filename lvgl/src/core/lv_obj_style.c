@@ -142,8 +142,8 @@ void lv_obj_remove_style(lv_obj_t *obj, lv_style_t *style, lv_style_selector_t s
 
         /*Shift the styles after `i` by one*/
         uint32_t j;
-        for (j = i; j < (uint32_t)obj->style_cnt - 1;
-        j++) {
+        for (j = i; j < (uint32_t) obj->style_cnt - 1;
+             j++) {
             obj->styles[j] = obj->styles[j + 1];
         }
 
@@ -196,7 +196,7 @@ void lv_obj_refresh_style(lv_obj_t *obj, lv_style_selector_t selector, lv_style_
         }
     }
     if ((part == LV_PART_ANY || part == LV_PART_MAIN) && (prop == LV_STYLE_PROP_ANY || is_layout_refr)) {
-        lv_obj_t * parent = lv_obj_get_parent(obj);
+        lv_obj_t *parent = lv_obj_get_parent(obj);
         if (parent) lv_obj_mark_layout_as_dirty(parent);
     }
 
@@ -494,7 +494,7 @@ lv_opa_t lv_obj_get_style_opa_recursive(const lv_obj_t *obj, lv_part_t part) {
     lv_opa_t opa_final = LV_OPA_COVER;
     if (opa_obj < LV_OPA_MAX) {
         opa_final = ((uint32_t)
-        opa_final * opa_obj) >> 8;
+                             opa_final * opa_obj) >> 8;
     }
 
     if (part != LV_PART_MAIN) {
@@ -508,7 +508,7 @@ lv_opa_t lv_obj_get_style_opa_recursive(const lv_obj_t *obj, lv_part_t part) {
         if (opa_obj <= LV_OPA_MIN) return LV_OPA_TRANSP;
         if (opa_obj < LV_OPA_MAX) {
             opa_final = ((uint32_t)
-            opa_final * opa_obj) >> 8;
+                                 opa_final * opa_obj) >> 8;
         }
 
         obj = lv_obj_get_parent(obj);
@@ -683,7 +683,7 @@ static void refresh_children_style(lv_obj_t *obj) {
     uint32_t i;
     uint32_t child_cnt = lv_obj_get_child_cnt(obj);
     for (i = 0; i < child_cnt; i++) {
-        lv_obj_t * child = obj->spec_attr->children[i];
+        lv_obj_t *child = obj->spec_attr->children[i];
         lv_obj_invalidate(child);
         lv_event_send(child, LV_EVENT_STYLE_CHANGED, NULL);
         lv_obj_invalidate(child);
@@ -737,7 +737,7 @@ static bool trans_del(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop, trans
 
 static void trans_anim_cb(void *_tr, int32_t v) {
     trans_t *tr = _tr;
-    lv_obj_t * obj = tr->obj;
+    lv_obj_t *obj = tr->obj;
 
     uint32_t i;
     for (i = 0; i < obj->style_cnt; i++) {
@@ -780,7 +780,7 @@ static void trans_anim_cb(void *_tr, int32_t v) {
                 else if (v == 255) value_final.num = tr->end_value.num;
                 else
                     value_final.num = tr->start_value.num +
-                                      ((int32_t)((int32_t)(tr->end_value.num - tr->start_value.num) * v) >> 8);
+                                      ((int32_t) ((int32_t) (tr->end_value.num - tr->start_value.num) * v) >> 8);
                 break;
         }
 
@@ -822,7 +822,7 @@ static void trans_anim_start_cb(lv_anim_t *a) {
 
 static void trans_anim_ready_cb(lv_anim_t *a) {
     trans_t *tr = a->var;
-    lv_obj_t * obj = tr->obj;
+    lv_obj_t *obj = tr->obj;
     lv_style_prop_t prop = tr->prop;
 
     /*Remove the transitioned property from trans. style

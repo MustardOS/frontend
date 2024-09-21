@@ -140,7 +140,7 @@ static size_t lodepng_strlen(const char *a) {
     /* avoid warning about unused function in case of disabled COMPILE... macros */
     (void) (&lodepng_strlen);
     while (*a) a++;
-    return (size_t)(a - orig);
+    return (size_t) (a - orig);
 }
 
 #define LODEPNG_MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -2856,7 +2856,7 @@ result than lodepng_get_raw_size. Set h to 1 to get the size of 1 row including 
 static size_t lodepng_get_raw_size_idat(unsigned w, unsigned h, unsigned bpp) {
     /* + 1 for the filter byte, and possibly plus padding bits per line. */
     /* Ignoring casts, the expression is equal to (w * bpp + 7) / 8 + 1, but avoids overflow of w * bpp */
-    size_t line = ((size_t)(w / 8u) * bpp) + 1u + ((w & 7u) * bpp + 7u) / 8u;
+    size_t line = ((size_t) (w / 8u) * bpp) + 1u + ((w & 7u) * bpp + 7u) / 8u;
     return (size_t) h * line;
 }
 
@@ -2880,7 +2880,7 @@ static int lodepng_pixel_overflow(unsigned w, unsigned h,
     if (lodepng_mulofl(numpixels, 8, &total)) return 1; /* bit pointer with 8-bit color, or 8 bytes per channel color */
 
     /* Bytes per scanline with the expression "(w / 8u) * bpp) + ((w & 7u) * bpp + 7u) / 8u" */
-    if (lodepng_mulofl((size_t)(w / 8u), bpp, &line)) return 1;
+    if (lodepng_mulofl((size_t) (w / 8u), bpp, &line)) return 1;
     if (lodepng_addofl(line, ((w & 7u) * bpp + 7u) / 8u, &line)) return 1;
 
     if (lodepng_addofl(line, 5, &line)) return 1; /* 5 bytes overhead per line: 1 filterbyte, 4 for Adam7 worst case */
@@ -4876,7 +4876,7 @@ static void decodeGeneric(unsigned char **out, unsigned *w, unsigned *h,
         const unsigned char *data; /*the data in the chunk*/
 
         /*error: size of the in buffer too small to contain next chunk*/
-        if ((size_t)((chunk - in) + 12) > insize || chunk < in) {
+        if ((size_t) ((chunk - in) + 12) > insize || chunk < in) {
             if (state->decoder.ignore_end) break; /*other errors may still happen though*/
             CERROR_BREAK(state->error, 30);
         }
@@ -4889,7 +4889,7 @@ static void decodeGeneric(unsigned char **out, unsigned *w, unsigned *h,
             CERROR_BREAK(state->error, 63);
         }
 
-        if ((size_t)((chunk - in) + chunkLength + 12) > insize || (chunk + chunkLength + 12) < in) {
+        if ((size_t) ((chunk - in) + chunkLength + 12) > insize || (chunk + chunkLength + 12) < in) {
             CERROR_BREAK(state->error, 64); /*error: size of the in buffer too small to contain next chunk*/
         }
 
@@ -5887,7 +5887,7 @@ static unsigned preProcessScanlines(unsigned char **out, size_t *outsize, const 
 
 static unsigned addUnknownChunks(ucvector *out, unsigned char *data, size_t datasize) {
     unsigned char *inchunk = data;
-    while ((size_t)(inchunk - data) < datasize) {
+    while ((size_t) (inchunk - data) < datasize) {
         CERROR_TRY_RETURN(lodepng_chunk_append(&out->data, &out->size, inchunk));
         out->allocsize = out->size; /*fix the allocsize again*/
         inchunk = lodepng_chunk_next(inchunk, data + datasize);

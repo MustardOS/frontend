@@ -183,7 +183,7 @@ void lv_obj_redraw(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj) {
         uint32_t i;
         uint32_t child_cnt = lv_obj_get_child_cnt(obj);
         for (i = 0; i < child_cnt; i++) {
-            lv_obj_t * child = obj->spec_attr->children[i];
+            lv_obj_t *child = obj->spec_attr->children[i];
             refr_obj(draw_ctx, child);
         }
     }
@@ -699,7 +699,7 @@ static void refr_area_part(lv_draw_ctx_t *draw_ctx) {
      * In single buffered mode wait here until the buffer is freed.
      * In full double buffered mode wait here while the buffers are swapped and a buffer becomes available*/
     bool full_sized = draw_buf->size == (uint32_t)
-    disp_refr->driver->hor_res * disp_refr->driver->ver_res;
+                                                disp_refr->driver->hor_res * disp_refr->driver->ver_res;
     if ((draw_buf->buf1 && !draw_buf->buf2) ||
         (draw_buf->buf1 && draw_buf->buf2 && full_sized)) {
         while (draw_buf->flushing) {
@@ -720,8 +720,8 @@ static void refr_area_part(lv_draw_ctx_t *draw_ctx) {
 #endif
     }
 
-    lv_obj_t * top_act_scr = NULL;
-    lv_obj_t * top_prev_scr = NULL;
+    lv_obj_t *top_act_scr = NULL;
+    lv_obj_t *top_prev_scr = NULL;
 
     /*Get the most top object which is not covered by others*/
     top_act_scr = lv_refr_get_top_obj(draw_ctx->buf_area, lv_disp_get_scr_act(disp_refr));
@@ -796,7 +796,7 @@ static void refr_area_part(lv_draw_ctx_t *draw_ctx) {
  * @return
  */
 static lv_obj_t *lv_refr_get_top_obj(const lv_area_t *area_p, lv_obj_t *obj) {
-    lv_obj_t * found_p = NULL;
+    lv_obj_t *found_p = NULL;
 
     if (_lv_area_is_in(area_p, &obj->coords, 0) == false) return NULL;
     if (lv_obj_has_flag(obj, LV_OBJ_FLAG_HIDDEN)) return NULL;
@@ -812,7 +812,7 @@ static lv_obj_t *lv_refr_get_top_obj(const lv_area_t *area_p, lv_obj_t *obj) {
     int32_t i;
     int32_t child_cnt = lv_obj_get_child_cnt(obj);
     for (i = child_cnt - 1; i >= 0; i--) {
-        lv_obj_t * child = obj->spec_attr->children[i];
+        lv_obj_t *child = obj->spec_attr->children[i];
         found_p = lv_refr_get_top_obj(area_p, child);
 
         /*If a children is ok then break*/
@@ -845,8 +845,8 @@ static void refr_obj_and_children(lv_draw_ctx_t *draw_ctx, lv_obj_t *top_obj) {
     refr_obj(draw_ctx, top_obj);
 
     /*Draw the 'younger' sibling objects because they can be on top_obj*/
-    lv_obj_t * parent;
-    lv_obj_t * border_p = top_obj;
+    lv_obj_t *parent;
+    lv_obj_t *border_p = top_obj;
 
     parent = lv_obj_get_parent(top_obj);
 
@@ -856,7 +856,7 @@ static void refr_obj_and_children(lv_draw_ctx_t *draw_ctx, lv_obj_t *top_obj) {
         uint32_t i;
         uint32_t child_cnt = lv_obj_get_child_cnt(parent);
         for (i = 0; i < child_cnt; i++) {
-            lv_obj_t * child = parent->spec_attr->children[i];
+            lv_obj_t *child = parent->spec_attr->children[i];
             if (!go) {
                 if (child == border_p) go = true;
             } else {
@@ -1035,7 +1035,7 @@ void refr_obj(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj) {
 static uint32_t get_max_row(lv_disp_t *disp, lv_coord_t area_w, lv_coord_t area_h) {
     int32_t
             max_row = (uint32_t)
-    disp->driver->draw_buf->size / area_w;
+                              disp->driver->draw_buf->size / area_w;
 
     if (max_row > area_h) max_row = area_h;
 
@@ -1248,7 +1248,7 @@ static void draw_buf_flush(lv_disp_t *disp) {
     /* In partial double buffered mode wait until the other buffer is freed
      * and driver is ready to receive the new buffer */
     bool full_sized = draw_buf->size == (uint32_t)
-    disp_refr->driver->hor_res * disp_refr->driver->ver_res;
+                                                disp_refr->driver->hor_res * disp_refr->driver->ver_res;
     if (draw_buf->buf1 && draw_buf->buf2 && !full_sized) {
         while (draw_buf->flushing) {
             if (disp_refr->driver->wait_cb) disp_refr->driver->wait_cb(disp_refr->driver);

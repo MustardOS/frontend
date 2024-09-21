@@ -272,6 +272,7 @@ struct theme_config {
     struct {
         int16_t STATIC_ALIGNMENT;
         int16_t ANIMATED_BACKGROUND;
+        int16_t RANDOM_BACKGROUND;
         int16_t IMAGE_OVERLAY;
         int16_t NAVIGATION_TYPE;
         struct {

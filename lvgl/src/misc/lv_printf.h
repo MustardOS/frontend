@@ -36,6 +36,7 @@
 
 #if defined(__has_include)
 #if __has_include(<inttypes.h>)
+
 #include <inttypes.h>
 /* platform-specific printf format for int32_t, usually "d" or "ld" */
 #define LV_PRId32 PRId32

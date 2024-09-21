@@ -105,8 +105,8 @@ static lv_res_t decoder_info(struct _lv_img_decoder_t *decoder, const void *src,
     else if (src_type == LV_IMG_SRC_VARIABLE) {
         const lv_img_dsc_t *img_dsc = src;
         const uint32_t data_size = img_dsc->data_size;
-        const uint32_t *size = ((uint32_t * )
-        img_dsc->data) +4;
+        const uint32_t *size = ((uint32_t *)
+                img_dsc->data) + 4;
         const uint8_t magic[] = {0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};
         if (data_size < sizeof(magic)) return LV_RES_INV;
         if (memcmp(magic, img_dsc->data, sizeof(magic))) return LV_RES_INV;
@@ -147,7 +147,7 @@ static lv_res_t decoder_open(lv_img_decoder_t *decoder, lv_img_decoder_dsc_t *ds
     (void) decoder; /*Unused*/
     uint32_t error;                 /*For the return values of PNG decoder functions*/
 
-    uint8_t * img_data = NULL;
+    uint8_t *img_data = NULL;
 
     /*If it's a PNG file...*/
     if (dsc->src_type == LV_IMG_SRC_FILE) {
@@ -217,8 +217,8 @@ static lv_res_t decoder_open(lv_img_decoder_t *decoder, lv_img_decoder_dsc_t *ds
 static void decoder_close(lv_img_decoder_t *decoder, lv_img_decoder_dsc_t *dsc) {
     LV_UNUSED(decoder); /*Unused*/
     if (dsc->img_data) {
-        lv_mem_free((uint8_t * )
-        dsc->img_data);
+        lv_mem_free((uint8_t *)
+                            dsc->img_data);
         dsc->img_data = NULL;
     }
 }

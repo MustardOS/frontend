@@ -304,29 +304,29 @@ static void draw_indic(lv_event_t *e) {
 
     if (LV_BAR_IS_ANIMATING(bar->start_value_anim)) {
         lv_coord_t anim_start_value_start_x =
-                (int32_t)((int32_t) anim_length * (bar->start_value_anim.anim_start - bar->min_value)) / range;
+                (int32_t) ((int32_t) anim_length * (bar->start_value_anim.anim_start - bar->min_value)) / range;
         lv_coord_t anim_start_value_end_x =
-                (int32_t)((int32_t) anim_length * (bar->start_value_anim.anim_end - bar->min_value)) / range;
+                (int32_t) ((int32_t) anim_length * (bar->start_value_anim.anim_end - bar->min_value)) / range;
 
         anim_start_value_x = (((anim_start_value_end_x - anim_start_value_start_x) * bar->start_value_anim.anim_state) /
                               LV_BAR_ANIM_STATE_END);
 
         anim_start_value_x += anim_start_value_start_x;
     } else {
-        anim_start_value_x = (int32_t)((int32_t) anim_length * (bar->start_value - bar->min_value)) / range;
+        anim_start_value_x = (int32_t) ((int32_t) anim_length * (bar->start_value - bar->min_value)) / range;
     }
 
     if (LV_BAR_IS_ANIMATING(bar->cur_value_anim)) {
         lv_coord_t anim_cur_value_start_x =
-                (int32_t)((int32_t) anim_length * (bar->cur_value_anim.anim_start - bar->min_value)) / range;
+                (int32_t) ((int32_t) anim_length * (bar->cur_value_anim.anim_start - bar->min_value)) / range;
         lv_coord_t anim_cur_value_end_x =
-                (int32_t)((int32_t) anim_length * (bar->cur_value_anim.anim_end - bar->min_value)) / range;
+                (int32_t) ((int32_t) anim_length * (bar->cur_value_anim.anim_end - bar->min_value)) / range;
 
         anim_cur_value_x = anim_cur_value_start_x + (((anim_cur_value_end_x - anim_cur_value_start_x) *
                                                       bar->cur_value_anim.anim_state) /
                                                      LV_BAR_ANIM_STATE_END);
     } else {
-        anim_cur_value_x = (int32_t)((int32_t) anim_length * (bar->cur_value - bar->min_value)) / range;
+        anim_cur_value_x = (int32_t) ((int32_t) anim_length * (bar->cur_value - bar->min_value)) / range;
     }
 
     lv_base_dir_t base_dir = lv_obj_get_style_base_dir(obj, LV_PART_MAIN);

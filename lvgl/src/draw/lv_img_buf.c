@@ -40,8 +40,8 @@
 
 lv_color_t lv_img_buf_get_px_color(const lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y, lv_color_t color) {
     lv_color_t p_color = lv_color_black();
-    uint8_t *buf_u8 = (uint8_t * )
-    dsc->data;
+    uint8_t *buf_u8 = (uint8_t *)
+            dsc->data;
 
     if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR || dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED ||
         dsc->header.cf == LV_IMG_CF_TRUE_COLOR_ALPHA || dsc->header.cf == LV_IMG_CF_RGB565A8) {
@@ -93,8 +93,8 @@ lv_color_t lv_img_buf_get_px_color(const lv_img_dsc_t *dsc, lv_coord_t x, lv_coo
 }
 
 lv_opa_t lv_img_buf_get_px_alpha(const lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y) {
-    uint8_t *buf_u8 = (uint8_t * )
-    dsc->data;
+    uint8_t *buf_u8 = (uint8_t *)
+            dsc->data;
 
     if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR_ALPHA) {
         uint32_t px = dsc->header.w * y * LV_IMG_PX_SIZE_ALPHA_BYTE + x * LV_IMG_PX_SIZE_ALPHA_BYTE;
@@ -144,8 +144,8 @@ lv_opa_t lv_img_buf_get_px_alpha(const lv_img_dsc_t *dsc, lv_coord_t x, lv_coord
 }
 
 void lv_img_buf_set_px_alpha(const lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y, lv_opa_t opa) {
-    uint8_t *buf_u8 = (uint8_t * )
-    dsc->data;
+    uint8_t *buf_u8 = (uint8_t *)
+            dsc->data;
 
     if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR_ALPHA) {
         uint8_t px_size = lv_img_cf_get_px_size(dsc->header.cf) >> 3;
@@ -191,8 +191,8 @@ void lv_img_buf_set_px_alpha(const lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y
 }
 
 void lv_img_buf_set_px_color(const lv_img_dsc_t *dsc, lv_coord_t x, lv_coord_t y, lv_color_t c) {
-    uint8_t *buf_u8 = (uint8_t * )
-    dsc->data;
+    uint8_t *buf_u8 = (uint8_t *)
+            dsc->data;
 
     if (dsc->header.cf == LV_IMG_CF_TRUE_COLOR || dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED) {
         uint8_t px_size = lv_img_cf_get_px_size(dsc->header.cf) >> 3;
@@ -253,8 +253,8 @@ void lv_img_buf_set_palette(const lv_img_dsc_t *dsc, uint8_t id, lv_color_t c) {
 
     lv_color32_t c32;
     c32.full = lv_color_to32(c);
-    uint8_t *buf = (uint8_t * )
-    dsc->data;
+    uint8_t *buf = (uint8_t *)
+            dsc->data;
     lv_memcpy_small(&buf[id * sizeof(c32)], &c32, sizeof(c32));
 }
 
@@ -279,8 +279,8 @@ lv_img_dsc_t *lv_img_buf_alloc(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf) {
         lv_mem_free(dsc);
         return NULL;
     }
-    lv_memset_00((uint8_t * )
-    dsc->data, dsc->data_size);
+    lv_memset_00((uint8_t *)
+                         dsc->data, dsc->data_size);
 
     /*Fill in header*/
     dsc->header.always_zero = 0;

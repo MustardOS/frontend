@@ -61,7 +61,7 @@ const lv_obj_class_t lv_img_class = {
 
 lv_obj_t *lv_img_create(lv_obj_t *parent) {
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
 }
@@ -429,7 +429,7 @@ static void lv_img_event(const lv_obj_class_t *class_p, lv_event_t *e) {
         if (res != LV_RES_OK) return;
     }
 
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
     lv_img_t *img = (lv_img_t *) obj;
 
     if (code == LV_EVENT_STYLE_CHANGED) {
@@ -494,7 +494,7 @@ static void lv_img_event(const lv_obj_class_t *class_p, lv_event_t *e) {
 
 static void draw_img(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
     lv_img_t *img = (lv_img_t *) obj;
     if (code == LV_EVENT_COVER_CHECK) {
         lv_cover_check_info_t *info = lv_event_get_param(e);

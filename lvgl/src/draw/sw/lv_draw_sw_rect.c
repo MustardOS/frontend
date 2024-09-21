@@ -491,11 +491,11 @@ static void LV_ATTRIBUTE_FAST_MEM draw_shadow(lv_draw_ctx_t *draw_ctx, const lv_
     } else {
         /*A larger buffer is required for calculation*/
         sh_buf = lv_mem_buf_get(corner_size * corner_size * sizeof(uint16_t));
-        shadow_draw_corner_buf(&core_area, (uint16_t * )
-        sh_buf, dsc->shadow_width, r_sh);
+        shadow_draw_corner_buf(&core_area, (uint16_t *)
+                sh_buf, dsc->shadow_width, r_sh);
 
         /*Cache the corner if it fits into the cache size*/
-        if ((uint32_t)corner_size * corner_size < sizeof(sh_cache)) {
+        if ((uint32_t) corner_size * corner_size < sizeof(sh_cache)) {
             lv_memcpy(sh_cache, sh_buf, corner_size * corner_size);
             sh_cache_size = corner_size;
             sh_cache_r = r_sh;
@@ -972,8 +972,8 @@ static void LV_ATTRIBUTE_FAST_MEM shadow_draw_corner_buf(const lv_area_t *coords
 
     int32_t y;
     lv_opa_t * mask_line = lv_mem_buf_get(size);
-    uint16_t *sh_ups_tmp_buf = (uint16_t * )
-    sh_buf;
+    uint16_t * sh_ups_tmp_buf = (uint16_t *)
+            sh_buf;
     for (y = 0; y < size; y++) {
         lv_memset_ff(mask_line, size);
         lv_draw_mask_res_t mask_res = mask_param.dsc.cb(mask_line, 0, y, size, &mask_param);
@@ -1017,8 +1017,8 @@ static void LV_ATTRIBUTE_FAST_MEM shadow_draw_corner_buf(const lv_area_t *coords
     if (sw > 1) {
         uint32_t i;
         uint32_t max_v_div = (LV_OPA_COVER << SHADOW_UPSCALE_SHIFT) / sw;
-        for (i = 0; i < (uint32_t)size * size;
-        i++) {
+        for (i = 0; i < (uint32_t) size * size;
+             i++) {
             if (sh_buf[i] == 0) continue;
             else if (sh_buf[i] == LV_OPA_COVER) sh_buf[i] = max_v_div;
             else sh_buf[i] = (sh_buf[i] << SHADOW_UPSCALE_SHIFT) / sw;
@@ -1072,8 +1072,8 @@ static void LV_ATTRIBUTE_FAST_MEM shadow_blur_corner(lv_coord_t size, lv_coord_t
     uint32_t i;
     uint32_t max_v = LV_OPA_COVER << SHADOW_UPSCALE_SHIFT;
     uint32_t max_v_div = max_v / sw;
-    for (i = 0; i < (uint32_t)size * size;
-    i++) {
+    for (i = 0; i < (uint32_t) size * size;
+         i++) {
         if (sh_ups_buf[i] == 0) continue;
         else if (sh_ups_buf[i] == max_v) sh_ups_buf[i] = max_v_div;
         else sh_ups_buf[i] = sh_ups_buf[i] / sw;

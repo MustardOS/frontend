@@ -372,7 +372,7 @@ static void LV_ATTRIBUTE_FAST_MEM draw_line_skew(struct _lv_draw_ctx_t *draw_ctx
     int32_t h;
     uint32_t
             hor_res = (uint32_t)
-    lv_disp_get_hor_res(_lv_refr_get_disp_refreshing());
+            lv_disp_get_hor_res(_lv_refr_get_disp_refreshing());
     size_t mask_buf_size = LV_MIN(lv_area_get_size(&blend_area), hor_res);
     lv_opa_t * mask_buf = lv_mem_buf_get(mask_buf_size);
 
@@ -400,8 +400,7 @@ static void LV_ATTRIBUTE_FAST_MEM draw_line_skew(struct _lv_draw_ctx_t *draw_ctx
         mask_p += draw_area_w;
         if ((uint32_t) mask_p + draw_area_w < mask_buf_size) {
             blend_area.y2++;
-        }
-        else {
+        } else {
             blend_dsc.mask_res = LV_DRAW_MASK_RES_CHANGED;
             lv_draw_sw_blend(draw_ctx, &blend_dsc);
 

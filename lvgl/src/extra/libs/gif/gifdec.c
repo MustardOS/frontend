@@ -40,7 +40,7 @@ read_num(gd_GIF *gif) {
 
     f_gif_read(gif, bytes, 2);
     return bytes[0] + (((uint16_t)
-    bytes[1]) << 8);
+            bytes[1]) << 8);
 }
 
 
@@ -72,7 +72,7 @@ static gd_GIF *gif_open(gd_GIF *gif_base) {
     uint16_t width, height, depth;
     uint8_t fdsz, bgidx, aspect;
     int i;
-    uint8_t * bgcolor;
+    uint8_t *bgcolor;
     int gct_sz;
     gd_GIF *gif = NULL;
 
@@ -126,7 +126,7 @@ static gd_GIF *gif_open(gd_GIF *gif_base) {
     f_gif_read(gif, gif->gct.colors, 3 * gif->gct.size);
     gif->palette = &gif->gct;
     gif->bgindex = bgidx;
-    gif->canvas = (uint8_t * ) & gif[1];
+    gif->canvas = (uint8_t *) &gif[1];
 #if LV_COLOR_DEPTH == 32
     gif->frame = &gif->canvas[4 * width * height];
 #elif LV_COLOR_DEPTH == 16
@@ -346,7 +346,7 @@ get_key(gd_GIF *gif, int key_size, uint8_t *sub_len, uint8_t *shift, uint8_t *by
             (*sub_len)--;
         }
         frag_size = MIN(key_size - bits_read, 8 - rpad);
-        key |= ((uint16_t)((*byte) >> rpad)) << bits_read;
+        key |= ((uint16_t) ((*byte) >> rpad)) << bits_read;
     }
     /* Clear extra bits to the left. */
     key &= (1 << key_size) - 1;
@@ -513,7 +513,7 @@ render_frame_rect(gd_GIF *gif, uint8_t *buffer) {
 static void
 dispose(gd_GIF *gif) {
     int i, j, k;
-    uint8_t * bgcolor;
+    uint8_t *bgcolor;
     switch (gif->gce.disposal) {
         case 2: /* Restore to background color. */
             bgcolor = &gif->palette->colors[gif->bgindex * 3];

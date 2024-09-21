@@ -603,7 +603,7 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const
             width = _atoi(&format);
         } else if (*format == '*') {
             const int w = va_arg(va,
-            int);
+                                 int);
             if (w < 0) {
                 flags |= FLAGS_LEFT;    // reverse padding
                 width = (unsigned int) -w;
@@ -622,7 +622,7 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const
                 precision = _atoi(&format);
             } else if (*format == '*') {
                 const int prec = (int) va_arg(va,
-                int);
+                                              int);
                 precision = prec > 0 ? (unsigned int) prec : 0U;
                 format++;
             }
@@ -720,28 +720,30 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const
                     if (flags & FLAGS_LONG_LONG) {
 #if defined(PRINTF_SUPPORT_LONG_LONG)
                         const long long value = va_arg(va,
-                        long long);
+                                                       long long);
                         idx = _ntoa_long_long(out, buffer, idx, maxlen,
                                               (unsigned long long) (value > 0 ? value : 0 - value), value < 0, base,
                                               precision, width, flags);
 #endif
                     } else if (flags & FLAGS_LONG) {
                         const long value = va_arg(va,
-                        long);
+                                                  long);
                         idx = _ntoa_long(out, buffer, idx, maxlen, (unsigned long) (value > 0 ? value : 0 - value),
                                          value < 0, base, precision,
                                          width, flags);
                     } else {
                         const int value = (flags & FLAGS_CHAR) ? (char) va_arg(va,
-                        int) : (flags & FLAGS_SHORT) ? (short int) va_arg(va,
-                        int) : va_arg(va,
-                        int);
+                                                                               int) : (flags & FLAGS_SHORT)
+                                                                                      ? (short int) va_arg(va,
+                                                                                                           int)
+                                                                                      : va_arg(va,
+                                                                                               int);
                         idx = _ntoa_long(out, buffer, idx, maxlen, (unsigned int) (value > 0 ? value : 0 - value),
                                          value < 0, base, precision,
                                          width, flags);
                     }
                 } else if (*format == 'V') {
-                    lv_vaformat_t *vaf = va_arg(va, lv_vaformat_t * );
+                    lv_vaformat_t *vaf = va_arg(va, lv_vaformat_t *);
                     va_list copy;
 
                     va_copy(copy, *vaf->va);
@@ -752,16 +754,21 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const
                     if (flags & FLAGS_LONG_LONG) {
 #if defined(PRINTF_SUPPORT_LONG_LONG)
                         idx = _ntoa_long_long(out, buffer, idx, maxlen, va_arg(va,
-                        unsigned long long), false, base, precision, width, flags);
+                                                                               unsigned long long), false, base,
+                                              precision, width, flags);
 #endif
                     } else if (flags & FLAGS_LONG) {
                         idx = _ntoa_long(out, buffer, idx, maxlen, va_arg(va,
-                        unsigned long), false, base, precision, width, flags);
+                                                                          unsigned long), false, base, precision, width,
+                                         flags);
                     } else {
                         const unsigned int value = (flags & FLAGS_CHAR) ? (unsigned char) va_arg(va,
-                        unsigned int) : (flags & FLAGS_SHORT) ? (unsigned short int) va_arg(va,
-                        unsigned int) : va_arg(va,
-                        unsigned int);
+                                                                                                 unsigned int)
+                                                                        : (flags & FLAGS_SHORT)
+                                                                          ? (unsigned short int) va_arg(va,
+                                                                                                        unsigned int)
+                                                                          : va_arg(va,
+                                                                                   unsigned int);
                         idx = _ntoa_long(out, buffer, idx, maxlen, value, false, base, precision, width, flags);
                     }
                 }
@@ -797,7 +804,7 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const
                 }
                 // char output
                 out((char) va_arg(va,
-                int), buffer, idx++, maxlen);
+                                  int), buffer, idx++, maxlen);
                 // post padding
                 if (flags & FLAGS_LEFT) {
                     while (l++ < width) {
@@ -810,8 +817,8 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen, const
 
             case 's' : {
                 const char *p = va_arg(va,
-                char *);
-                unsigned int l = _strnlen_s(p, precision ? precision : (size_t) - 1);
+                                       char *);
+                unsigned int l = _strnlen_s(p, precision ? precision : (size_t) -1);
                 // pre padding
                 if (flags & FLAGS_PRECISION) {
                     l = (l < precision ? l : precision);

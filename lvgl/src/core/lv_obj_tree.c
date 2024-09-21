@@ -295,7 +295,7 @@ lv_obj_t *lv_obj_get_child(const lv_obj_t *obj, int32_t id) {
         id = obj->spec_attr->child_cnt + id;
         if (id < 0) return NULL;
         idu = (uint32_t)
-        id;
+                id;
     } else {
         idu = id;
     }

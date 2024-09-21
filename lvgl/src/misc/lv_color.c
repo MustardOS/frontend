@@ -145,12 +145,12 @@ lv_color_t lv_color_change_lightness(lv_color_t c, lv_opa_t lvl) {
  * @return the given RGB color in RGB (with LV_COLOR_DEPTH depth)
  */
 lv_color_t lv_color_hsv_to_rgb(uint16_t h, uint8_t s, uint8_t v) {
-    h = (uint32_t)((uint32_t)
-    h * 255) / 360;
-    s = (uint16_t)((uint16_t)
-    s * 255) / 100;
-    v = (uint16_t)((uint16_t)
-    v * 255) / 100;
+    h = (uint32_t) ((uint32_t)
+                            h * 255) / 360;
+    s = (uint16_t) ((uint16_t)
+                            s * 255) / 100;
+    v = (uint16_t) ((uint16_t)
+                            v * 255) / 100;
 
     uint8_t r, g, b;
 
@@ -214,13 +214,13 @@ lv_color_t lv_color_hsv_to_rgb(uint16_t h, uint8_t s, uint8_t v) {
 lv_color_hsv_t lv_color_rgb_to_hsv(uint8_t r8, uint8_t g8, uint8_t b8) {
     uint16_t
             r = ((uint32_t)
-    r8 << 10) / 255;
+            r8 << 10) / 255;
     uint16_t
             g = ((uint32_t)
-    g8 << 10) / 255;
+            g8 << 10) / 255;
     uint16_t
             b = ((uint32_t)
-    b8 << 10) / 255;
+            b8 << 10) / 255;
 
     uint16_t rgbMin = r < g ? (r < b ? r : b) : (g < b ? g : b);
     uint16_t rgbMax = r > g ? (r > b ? r : b) : (g > b ? g : b);

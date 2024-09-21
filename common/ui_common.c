@@ -1,3 +1,4 @@
+#include "img/nothing.h"
 #include "common.h"
 #include "config.h"
 #include "theme.h"
@@ -84,7 +85,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlWall, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
 
     ui_imgWall = lv_img_create(ui_pnlWall);
-    lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
+    lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     lv_obj_set_width(ui_imgWall, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgWall, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgWall, LV_ALIGN_CENTER);
@@ -145,7 +146,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlBox, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
 
     ui_imgBox = lv_img_create(ui_pnlBox);
-    lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
+    lv_img_set_src(ui_imgBox, &ui_image_Nothing);
     lv_obj_set_width(ui_imgBox, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgBox, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
@@ -167,6 +168,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_radius(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHeader, lv_color_hex(theme->HEADER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHeader, theme->HEADER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -232,6 +234,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_radius(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlFooter, lv_color_hex(theme->FOOTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlFooter, theme->FOOTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_pnlFooter, 12, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -487,7 +490,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_pnlHelpPreviewImage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_imgHelpPreviewImage = lv_img_create(ui_pnlHelpPreviewImage);
-    lv_img_set_src(ui_imgHelpPreviewImage, &ui_img_nothing_png);
+    lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
     lv_obj_set_width(ui_imgHelpPreviewImage, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_imgHelpPreviewImage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_imgHelpPreviewImage, LV_ALIGN_CENTER);
@@ -668,7 +671,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 }
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
-    lv_obj_t * ui_glyph;
+    lv_obj_t *ui_glyph;
     ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
@@ -682,7 +685,7 @@ lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
 
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name,
                               struct footer_glyph nav_footer_glyph) {
-    lv_obj_t * ui_glyph;
+    lv_obj_t *ui_glyph;
 
     char footer_image_path[MAX_BUFFER_SIZE];
     char footer_image_embed[MAX_BUFFER_SIZE];
@@ -717,7 +720,7 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 }
 
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha) {
-    lv_obj_t * ui_lblNavText = lv_label_create(parent);
+    lv_obj_t *ui_lblNavText = lv_label_create(parent);
     lv_obj_set_width(ui_lblNavText, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblNavText, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavText, -220);

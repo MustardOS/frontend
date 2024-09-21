@@ -257,7 +257,7 @@ static bool load_cmaps_tables(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
         switch (cmap_table[i].format_type) {
             case LV_FONT_FMT_TXT_CMAP_FORMAT0_FULL: {
                 uint8_t ids_size = sizeof(uint8_t) * cmap_table[i].data_entries_count;
-                uint8_t * glyph_id_ofs_list = lv_mem_alloc(ids_size);
+                uint8_t *glyph_id_ofs_list = lv_mem_alloc(ids_size);
 
                 cmap->glyph_id_ofs_list = glyph_id_ofs_list;
 
@@ -273,8 +273,8 @@ static bool load_cmaps_tables(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
             case LV_FONT_FMT_TXT_CMAP_SPARSE_FULL:
             case LV_FONT_FMT_TXT_CMAP_SPARSE_TINY: {
                 uint32_t list_size = sizeof(uint16_t) * cmap_table[i].data_entries_count;
-                uint16_t *unicode_list = (uint16_t * )
-                lv_mem_alloc(list_size);
+                uint16_t * unicode_list = (uint16_t *)
+                        lv_mem_alloc(list_size);
 
                 cmap->unicode_list = unicode_list;
                 cmap->list_length = cmap_table[i].data_entries_count;
@@ -391,7 +391,7 @@ static int32_t load_glyph(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
 
         int nbits = header->advance_width_bits + 2 * header->xy_bits + 2 * header->wh_bits;
         int next_offset = (i < loca_count - 1) ? glyph_offset[i + 1] : (uint32_t)
-        glyph_length;
+                glyph_length;
         int bmp_size = next_offset - glyph_offset[i] - nbits / 8;
 
         if (i == 0) {
@@ -408,8 +408,8 @@ static int32_t load_glyph(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
         }
     }
 
-    uint8_t *glyph_bmp = (uint8_t * )
-    lv_mem_alloc(sizeof(uint8_t) * cur_bmp_size);
+    uint8_t *glyph_bmp = (uint8_t *)
+            lv_mem_alloc(sizeof(uint8_t) * cur_bmp_size);
 
     font_dsc->glyph_bitmap = glyph_bmp;
 
@@ -434,7 +434,7 @@ static int32_t load_glyph(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
         }
 
         int next_offset = (i < loca_count - 1) ? glyph_offset[i + 1] : (uint32_t)
-        glyph_length;
+                glyph_length;
         int bmp_size = next_offset - glyph_offset[i] - nbits / 8;
 
         if (nbits % 8 == 0) {  /*Fast path*/
@@ -609,7 +609,7 @@ int32_t load_kern(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc, uint8_t for
             ids_size = sizeof(int16_t) * 2 * glyph_entries;
         }
 
-        uint8_t * glyph_ids = lv_mem_alloc(ids_size);
+        uint8_t *glyph_ids = lv_mem_alloc(ids_size);
         int8_t *values = lv_mem_alloc(glyph_entries);
 
         kern_pair->glyph_ids_size = format;
@@ -645,8 +645,8 @@ int32_t load_kern(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc, uint8_t for
 
         int kern_values_length = sizeof(int8_t) * kern_table_rows * kern_table_cols;
 
-        uint8_t * kern_left = lv_mem_alloc(kern_class_mapping_length);
-        uint8_t * kern_right = lv_mem_alloc(kern_class_mapping_length);
+        uint8_t *kern_left = lv_mem_alloc(kern_class_mapping_length);
+        uint8_t *kern_right = lv_mem_alloc(kern_class_mapping_length);
         int8_t *kern_values = lv_mem_alloc(kern_values_length);
 
         kern_classes->left_class_mapping = kern_left;

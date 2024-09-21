@@ -240,7 +240,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
             _lv_txt_encoded_letter_next_2(bidi_txt, &letter, &letter_next, &i);
             /*Handle the re-color command*/
             if ((dsc->flag & LV_TEXT_FLAG_RECOLOR) != 0) {
-                if (letter == (uint32_t)LV_TXT_COLOR_CMD[0]) {
+                if (letter == (uint32_t) LV_TXT_COLOR_CMD[0]) {
                     if (cmd_state == CMD_STATE_WAIT) { /*Start char*/
                         par_start = i;
                         cmd_state = CMD_STATE_PAR;

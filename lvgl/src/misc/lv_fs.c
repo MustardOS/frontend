@@ -137,7 +137,8 @@ static lv_fs_res_t lv_fs_read_cached(lv_fs_file_t *file_p, char *buf, uint32_t b
         /* Data can be read from cache buffer */
         uint16_t buffer_offset = file_position - start;
         uint32_t
-        buffer_remaining_length = LV_MIN((uint32_t)buffer_size - buffer_offset, (uint32_t)end - file_position);
+                buffer_remaining_length = LV_MIN((uint32_t) buffer_size - buffer_offset,
+                                                 (uint32_t) end - file_position);
 
         if (btr <= buffer_remaining_length) {
             /*Data is in cache buffer, and buffer end not reached, no need to read from FS*/

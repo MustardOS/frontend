@@ -324,8 +324,7 @@ static void LV_ATTRIBUTE_FAST_MEM draw_letter_normal(lv_draw_ctx_t *draw_ctx, co
 
         if ((uint32_t) mask_p + (col_end - col_start) < mask_buf_size) {
             fill_area.y2++;
-        }
-        else {
+        } else {
             blend_dsc.mask_res = LV_DRAW_MASK_RES_CHANGED;
             lv_draw_sw_blend(draw_ctx, &blend_dsc);
 
@@ -463,9 +462,9 @@ static void draw_letter_subpx(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t
                 if (opa >= LV_OPA_MAX) {
                     px_opa = bpp == 8 ? letter_px : bpp_opa_table[letter_px];
                 } else {
-                    px_opa = bpp == 8 ? (uint32_t)((uint32_t)letter_px * opa) >> 8
-                    : (uint32_t)((uint32_t)
-                    bpp_opa_table[letter_px] * opa) >> 8;
+                    px_opa = bpp == 8 ? (uint32_t) ((uint32_t) letter_px * opa) >> 8
+                                      : (uint32_t) ((uint32_t)
+                                                            bpp_opa_table[letter_px] * opa) >> 8;
                 }
             } else {
                 px_opa = 0;
@@ -491,15 +490,18 @@ static void draw_letter_subpx(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t
                 res_color.ch.red = (uint32_t)((uint16_t)txt_rgb[0] * font_rgb[2] + (bg_rgb[0] * (255 - font_rgb[2]))) >> 8;
                 res_color.ch.blue = (uint32_t)((uint16_t)txt_rgb[2] * font_rgb[0] + (bg_rgb[2] * (255 - font_rgb[0]))) >> 8;
 #else
-                res_color.ch.red = (uint32_t)((uint16_t)
-                txt_rgb[0] * font_rgb[0] + (bg_rgb[0] * (255 - font_rgb[0]))) >> 8;
-                res_color.ch.blue = (uint32_t)((uint16_t)
-                txt_rgb[2] * font_rgb[2] + (bg_rgb[2] * (255 - font_rgb[2]))) >> 8;
+                res_color.ch.red = (uint32_t) ((uint16_t)
+                                                       txt_rgb[0] * font_rgb[0] + (bg_rgb[0] * (255 - font_rgb[0])))
+                        >> 8;
+                res_color.ch.blue = (uint32_t) ((uint16_t)
+                                                        txt_rgb[2] * font_rgb[2] + (bg_rgb[2] * (255 - font_rgb[2])))
+                        >> 8;
 #endif
 
 #if LV_COLOR_16_SWAP == 0
-                res_color.ch.green = (uint32_t)((uint32_t)
-                txt_rgb[1] * font_rgb[1] + (bg_rgb[1] * (255 - font_rgb[1]))) >> 8;
+                res_color.ch.green = (uint32_t) ((uint32_t)
+                                                         txt_rgb[1] * font_rgb[1] + (bg_rgb[1] * (255 - font_rgb[1])))
+                        >> 8;
 #else
                 uint8_t green = (uint32_t)((uint32_t)txt_rgb[1] * font_rgb[1] + (bg_rgb[1] * (255 - font_rgb[1]))) >> 8;
                 res_color.ch.green_h = green >> 3;
@@ -520,7 +522,7 @@ static void draw_letter_subpx(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t
             }
 
             /*Go to the next column*/
-            if (col_bit < (int32_t)(8 - bpp)) {
+            if (col_bit < (int32_t) (8 - bpp)) {
                 col_bit += bpp;
                 bitmask = bitmask >> bpp;
             } else {

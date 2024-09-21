@@ -51,7 +51,7 @@ const lv_obj_class_t lv_gif_class = {
 lv_obj_t *lv_gif_create(lv_obj_t *parent) {
 
     LV_LOG_INFO("begin");
-    lv_obj_t * obj = lv_obj_class_create_obj(MY_CLASS, parent);
+    lv_obj_t *obj = lv_obj_class_create_obj(MY_CLASS, parent);
     lv_obj_class_init_obj(obj);
     return obj;
 }
@@ -125,7 +125,7 @@ static void lv_gif_destructor(const lv_obj_class_t *class_p, lv_obj_t *obj) {
 }
 
 static void next_frame_task_cb(lv_timer_t *t) {
-    lv_obj_t * obj = t->user_data;
+    lv_obj_t *obj = t->user_data;
     lv_gif_t *gifobj = (lv_gif_t *) obj;
     uint32_t elaps = lv_tick_elaps(gifobj->last_call);
     if (elaps < gifobj->gif->gce.delay * 10) return;
@@ -140,8 +140,8 @@ static void next_frame_task_cb(lv_timer_t *t) {
         if (res != LV_FS_RES_OK) return;
     }
 
-    gd_render_frame(gifobj->gif, (uint8_t * )
-    gifobj->imgdsc.data);
+    gd_render_frame(gifobj->gif, (uint8_t *)
+            gifobj->imgdsc.data);
 
     lv_img_cache_invalidate_src(lv_img_get_src(obj));
     lv_obj_invalidate(obj);

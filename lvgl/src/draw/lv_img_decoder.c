@@ -355,7 +355,7 @@ lv_res_t lv_img_decoder_built_in_open(lv_img_decoder_t *decoder, lv_img_decoder_
             /*If it's a file, read all to memory*/
             uint32_t len = dsc->header.w * dsc->header.h;
             len *= cf == LV_IMG_CF_RGB565A8 ? 3 : 1;
-            uint8_t * fs_buf = lv_mem_alloc(len);
+            uint8_t *fs_buf = lv_mem_alloc(len);
             if (fs_buf == NULL) return LV_RES_INV;
 
             lv_img_decoder_built_in_data_t *user_data = dsc->user_data;
@@ -553,7 +553,7 @@ static lv_res_t lv_img_decoder_built_in_line_alpha(lv_img_decoder_dsc_t *dsc, lv
         buf[i * LV_IMG_PX_SIZE_ALPHA_BYTE] = bg_color.full & 0xFF;
         buf[i * LV_IMG_PX_SIZE_ALPHA_BYTE + 1] = (bg_color.full >> 8) & 0xFF;
 #elif LV_COLOR_DEPTH == 32
-        *((uint32_t * ) & buf[i * LV_IMG_PX_SIZE_ALPHA_BYTE]) = bg_color.full;
+        *((uint32_t *) &buf[i * LV_IMG_PX_SIZE_ALPHA_BYTE]) = bg_color.full;
 #else
 #error "Invalid LV_COLOR_DEPTH. Check it in lv_conf.h"
 #endif
@@ -593,7 +593,7 @@ static lv_res_t lv_img_decoder_built_in_line_alpha(lv_img_decoder_dsc_t *dsc, lv
     }
 
     lv_img_decoder_built_in_data_t *user_data = dsc->user_data;
-    uint8_t * fs_buf = lv_mem_buf_get(w);
+    uint8_t *fs_buf = lv_mem_buf_get(w);
     if (fs_buf == NULL) return LV_RES_INV;
 
     const uint8_t *data_tmp = NULL;
@@ -660,7 +660,7 @@ static lv_res_t lv_img_decoder_built_in_line_indexed(lv_img_decoder_dsc_t *dsc, 
 
     lv_img_decoder_built_in_data_t *user_data = dsc->user_data;
 
-    uint8_t * fs_buf = lv_mem_buf_get(w);
+    uint8_t *fs_buf = lv_mem_buf_get(w);
     if (fs_buf == NULL) return LV_RES_INV;
     const uint8_t *data_tmp = NULL;
     if (dsc->src_type == LV_IMG_SRC_VARIABLE) {
@@ -684,7 +684,7 @@ static lv_res_t lv_img_decoder_built_in_line_indexed(lv_img_decoder_dsc_t *dsc, 
         buf[i * LV_IMG_PX_SIZE_ALPHA_BYTE] = color.full & 0xFF;
         buf[i * LV_IMG_PX_SIZE_ALPHA_BYTE + 1] = (color.full >> 8) & 0xFF;
 #elif LV_COLOR_DEPTH == 32
-        *((uint32_t * ) & buf[i * LV_IMG_PX_SIZE_ALPHA_BYTE]) = color.full;
+        *((uint32_t *) &buf[i * LV_IMG_PX_SIZE_ALPHA_BYTE]) = color.full;
 #else
 #error "Invalid LV_COLOR_DEPTH. Check it in lv_conf.h"
 #endif

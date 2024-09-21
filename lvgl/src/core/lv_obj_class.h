@@ -55,7 +55,7 @@ typedef struct _lv_obj_class_t {
     void (*destructor_cb)(const struct _lv_obj_class_t *class_p, struct _lv_obj_t *obj);
 
 #if LV_USE_USER_DATA
-    void * user_data;
+    void *user_data;
 #endif
 
     void (*event_cb)(const struct _lv_obj_class_t *class_p,

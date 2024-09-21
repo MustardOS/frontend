@@ -80,8 +80,8 @@ void lv_draw_sw_buffer_copy(lv_draw_ctx_t *draw_ctx,
                             void *src_buf, lv_coord_t src_stride, const lv_area_t *src_area) {
     LV_UNUSED(draw_ctx);
 
-    lv_color_t * dest_bufc = dest_buf;
-    lv_color_t * src_bufc = src_buf;
+    lv_color_t *dest_bufc = dest_buf;
+    lv_color_t *src_bufc = src_buf;
 
     /*Got the first pixel of each buffer*/
     dest_bufc += dest_stride * dest_area->y1;

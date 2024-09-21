@@ -107,7 +107,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_sw_img_decoded(struct _lv_draw_ctx_t *draw_ct
         lv_coord_t blend_w = lv_area_get_width(&blend_area);
 
         uint32_t
-        max_buf_size = MAX_BUF_SIZE;
+                max_buf_size = MAX_BUF_SIZE;
         uint32_t blend_size = lv_area_get_size(&blend_area);
         uint32_t buf_h;
         uint32_t buf_w = blend_w;
@@ -205,7 +205,7 @@ static void convert_cb(const lv_area_t *dest_area, const void *src_buf, lv_coord
     LV_UNUSED(src_h);
     LV_UNUSED(src_w);
 
-    const uint8_t *src_tmp8 = (const uint8_t *)src_buf;
+    const uint8_t *src_tmp8 = (const uint8_t *) src_buf;
     lv_coord_t y;
     lv_coord_t x;
 
@@ -236,8 +236,8 @@ static void convert_cb(const lv_area_t *dest_area, const void *src_buf, lv_coord
             uint16_t * cbuf_uint = (uint16_t *)cbuf;
             uint16_t chk_v = chk.full;
 #elif LV_COLOR_DEPTH == 32
-            uint32_t *cbuf_uint = (uint32_t * )
-            cbuf;
+            uint32_t * cbuf_uint = (uint32_t *)
+                    cbuf;
             uint32_t chk_v = chk.full;
 #endif
             for (i = 0; i < px_cnt; i++) {
@@ -284,7 +284,7 @@ static void convert_cb(const lv_area_t *dest_area, const void *src_buf, lv_coord
             src_tmp8 += src_stride_byte;
         }
 
-        src_tmp8 = (const uint8_t *)src_buf;
+        src_tmp8 = (const uint8_t *) src_buf;
         src_tmp8 += sizeof(lv_color_t) * src_w * src_h;
         src_tmp8 += src_stride * dest_area->y1 + dest_area->x1;
         for (y = 0; y < dest_h; y++) {

@@ -85,7 +85,7 @@ lv_anim_t *lv_anim_start(const lv_anim_t *a) {
     }
 
     /*Add the new animation to the animation linked list*/
-    lv_anim_t * new_anim = _lv_ll_ins_head(&LV_GC_ROOT(_lv_anim_ll));
+    lv_anim_t *new_anim = _lv_ll_ins_head(&LV_GC_ROOT(_lv_anim_ll));
     LV_ASSERT_MALLOC(new_anim);
     if (new_anim == NULL) return NULL;
 
@@ -134,8 +134,8 @@ uint32_t lv_anim_get_playtime(lv_anim_t *a) {
 }
 
 bool lv_anim_del(void *var, lv_anim_exec_xcb_t exec_cb) {
-    lv_anim_t * a;
-    lv_anim_t * a_next;
+    lv_anim_t *a;
+    lv_anim_t *a_next;
     bool del = false;
     a = _lv_ll_get_head(&LV_GC_ROOT(_lv_anim_ll));
     while (a != NULL) {
@@ -163,7 +163,7 @@ void lv_anim_del_all(void) {
 }
 
 lv_anim_t *lv_anim_get(void *var, lv_anim_exec_xcb_t exec_cb) {
-    lv_anim_t * a;
+    lv_anim_t *a;
     _LV_LL_READ(&LV_GC_ROOT(_lv_anim_ll), a) {
         if (a->var == var && (a->exec_cb == exec_cb || exec_cb == NULL)) {
             return a;
@@ -179,7 +179,7 @@ struct _lv_timer_t *lv_anim_get_timer(void) {
 
 uint16_t lv_anim_count_running(void) {
     uint16_t cnt = 0;
-    lv_anim_t * a;
+    lv_anim_t *a;
     _LV_LL_READ(&LV_GC_ROOT(_lv_anim_ll), a) cnt++;
 
     return cnt;
@@ -335,7 +335,7 @@ static void anim_timer(lv_timer_t *param) {
     /*Flip the run round*/
     anim_run_round = anim_run_round ? false : true;
 
-    lv_anim_t * a = _lv_ll_get_head(&LV_GC_ROOT(_lv_anim_ll));
+    lv_anim_t *a = _lv_ll_get_head(&LV_GC_ROOT(_lv_anim_ll));
 
     while (a != NULL) {
         /*It can be set by `lv_anim_del()` typically in `end_cb`. If set then an animation delete
@@ -418,11 +418,11 @@ static void anim_ready_handler(lv_anim_t *a) {
     }
         /*If the animation is not deleted then restart it*/
     else {
-        a->act_time = -(int32_t)(a->repeat_delay); /*Restart the animation*/
+        a->act_time = -(int32_t) (a->repeat_delay); /*Restart the animation*/
         /*Swap the start and end values in play back mode*/
         if (a->playback_time != 0) {
             /*If now turning back use the 'playback_pause*/
-            if (a->playback_now == 0) a->act_time = -(int32_t)(a->playback_delay);
+            if (a->playback_now == 0) a->act_time = -(int32_t) (a->playback_delay);
 
             /*Toggle the play back state*/
             a->playback_now = a->playback_now == 0 ? 1 : 0;

@@ -153,7 +153,7 @@ static inline void lv_anim_set_time(lv_anim_t *a, uint32_t duration) {
  * @param delay     delay before the animation in milliseconds
  */
 static inline void lv_anim_set_delay(lv_anim_t *a, uint32_t delay) {
-    a->act_time = -(int32_t)(delay);
+    a->act_time = -(int32_t) (delay);
 }
 
 /**

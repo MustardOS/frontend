@@ -194,7 +194,7 @@ lv_disp_t *lv_disp_drv_register(lv_disp_drv_t *driver) {
         return NULL;
     }
 
-    if (driver->full_refresh && driver->draw_buf->size < (uint32_t)driver->hor_res * driver->ver_res) {
+    if (driver->full_refresh && driver->draw_buf->size < (uint32_t) driver->hor_res * driver->ver_res) {
         driver->full_refresh = 0;
         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)");
     }
@@ -247,7 +247,7 @@ void lv_disp_drv_update(lv_disp_t *disp, lv_disp_drv_t *new_drv) {
 
     if (disp->driver->full_refresh &&
         disp->driver->draw_buf->size < (uint32_t)
-        disp->driver->hor_res * disp->driver->ver_res) {
+                                               disp->driver->hor_res * disp->driver->ver_res) {
         disp->driver->full_refresh = 0;
         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)");
     }
@@ -645,8 +645,8 @@ static void set_px_alpha_generic(lv_img_dsc_t *d, lv_coord_t x, lv_coord_t y, lv
     uint8_t br = lv_color_brightness(color);
     if (opa < LV_OPA_MAX) {
         uint8_t bg = lv_img_buf_get_px_alpha(d, x, y);
-        br = (uint16_t)((uint16_t)
-        br * opa + (bg * (255 - opa))) >> 8;
+        br = (uint16_t) ((uint16_t)
+                                 br * opa + (bg * (255 - opa))) >> 8;
     }
 
     lv_img_buf_set_px_alpha(d, x, y, br);
@@ -657,7 +657,7 @@ static void set_px_true_color_alpha(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_co
                                     lv_color_t color, lv_opa_t opa) {
     (void) disp_drv; /*Unused*/
 
-    uint8_t * buf_px = buf + (buf_w * y * LV_IMG_PX_SIZE_ALPHA_BYTE + x * LV_IMG_PX_SIZE_ALPHA_BYTE);
+    uint8_t *buf_px = buf + (buf_w * y * LV_IMG_PX_SIZE_ALPHA_BYTE + x * LV_IMG_PX_SIZE_ALPHA_BYTE);
 
     lv_color_t bg_color;
     lv_color_t res_color;

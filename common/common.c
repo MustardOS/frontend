@@ -13,6 +13,8 @@
 #include <sys/stat.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include "../common/img/nothing.h"
+#include "img/nothing.h"
 #include "json/json.h"
 #include "common.h"
 #include "options.h"
@@ -35,19 +37,6 @@ void refresh_screen() {
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
-}
-
-int get_file_size(char *filename) {
-    FILE *file = fopen(filename, "rb");
-
-    if (file_exist(filename)) {
-        fseek(file, 0, SEEK_END);
-        int size = ftell(file);
-        fclose(file);
-        return size;
-    }
-
-    return 0;
 }
 
 unsigned long long total_file_size(const char *path) {
@@ -406,7 +395,7 @@ char *read_text_from_file(char *filename) {
     return text;
 }
 
-char *read_line_from_file(char *filename, int line_number) {
+char *read_line_from_file(const char *filename, size_t line_number) {
     char *line = NULL;
     FILE *file = fopen(filename, "r");
 
@@ -414,12 +403,11 @@ char *read_line_from_file(char *filename, int line_number) {
         return "";
     }
 
-    size_t buffer_size = MAX_BUFFER_SIZE;
-    line = (char *) malloc(buffer_size);
+    line = (char *) malloc(MAX_BUFFER_SIZE);
 
     if (line != NULL) {
-        int current_line = 0;
-        while (current_line < line_number && fgets(line, buffer_size, file) != NULL) {
+        size_t current_line = 0;
+        while (current_line < line_number && fgets(line, MAX_BUFFER_SIZE, file) != NULL) {
             current_line++;
         }
 
@@ -751,26 +739,6 @@ void osd_task(lv_timer_t *timer) {
     }
 }
 
-void set_governor(char *governor) {
-    FILE *file = fopen(device.CPU.GOVERNOR, "w");
-    if (file != NULL) {
-        fprintf(file, "%s", governor);
-        fclose(file);
-    } else {
-        perror("Failed to open governor file");
-    }
-}
-
-void set_cpu_scale(int speed) {
-    FILE *file = fopen(device.CPU.SCALER, "w");
-    if (file != NULL) {
-        fprintf(file, "%d", speed);
-        fclose(file);
-    } else {
-        perror("Failed to open scaler file");
-    }
-}
-
 void increase_option_value(lv_obj_t *element, int *current, int total) {
     if (*current < (total - 1)) {
         (*current)++;
@@ -921,19 +889,26 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
     }
 }
 
-char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated) {
+char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random) {
     const char *program = lv_obj_get_user_data(ui_screen);
 
     static char wall_image_path[MAX_BUFFER_SIZE];
     static char wall_image_embed[MAX_BUFFER_SIZE];
 
     const char *wall_extension;
-    if (animated == 1) {
-        wall_extension = "gif";
-    } else if (animated == 2) {
+    if (random) {
         wall_extension = "0.png";
     } else {
-        wall_extension = "png";
+        switch (animated) {
+            case 1:
+                wall_extension = "gif";
+                break;
+            case 2:
+                wall_extension = "0.png";
+                break;
+            default:
+                wall_extension = "png";
+        }
     }
 
     if (ui_group != NULL) {
@@ -1032,7 +1007,7 @@ static void image_anim_cb(void *var, int32_t img_idx) {
     lv_img_set_src(img_obj, img_paths[img_idx]);
 }
 
-void build_image_animation_array(char *base_image_path) {
+void build_image_array(char *base_image_path) {
     char base_path[MAX_BUFFER_SIZE];
     char path[MAX_BUFFER_SIZE];
     char path_embed[MAX_BUFFER_SIZE];
@@ -1057,10 +1032,24 @@ void build_image_animation_array(char *base_image_path) {
     }
 }
 
+void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path) {
+    printf("Load Image Random: %s\n", base_image_path);
+    img_paths_count = 0;
+    build_image_array(base_image_path);
+
+    img_obj = ui_imgWall;
+
+    if (img_paths_count > 0) {
+        lv_img_set_src(ui_imgWall, img_paths[arc4random() % (img_paths_count - 1)]);
+    } else {
+        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
+    }
+}
+
 void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *base_image_path) {
     printf("Load Image Animation: %s\n", base_image_path);
     img_paths_count = 0;
-    build_image_animation_array(base_image_path);
+    build_image_array(base_image_path);
 
     img_obj = ui_imgWall;
 
@@ -1414,11 +1403,6 @@ void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int co
 
 char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
                              const char *suffix, int infix_position) {
-    int count = 0;
-    for (int i = min; (increment > 0 ? i <= max : i >= max); i += increment) {
-        count++;
-    }
-
     int buffer_size = 0;
     int prefix_len = prefix ? strlen(prefix) : 0;
     int infix_len = infix ? strlen(infix) : 0;
@@ -1494,16 +1478,6 @@ char *get_script_value(const char *filename, const char *key) {
 
     if (value == NULL) value = strdup("");
     return value;
-}
-
-void seed_random() {
-    unsigned int seed;
-    FILE *urandom = fopen("/dev/urandom", "r");
-
-    if (urandom) {
-        if (fread(&seed, sizeof(seed), 1, urandom) == 1) srand(seed);
-        fclose(urandom);
-    }
 }
 
 void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar) {

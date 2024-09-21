@@ -283,7 +283,7 @@ lv_timer_t *lv_indev_get_read_timer(lv_disp_t *indev) {
 
 
 lv_obj_t *lv_indev_search_obj(lv_obj_t *obj, lv_point_t *point) {
-    lv_obj_t * found_p = NULL;
+    lv_obj_t *found_p = NULL;
 
     /*If this obj is hidden the children are hidden too so return immediately*/
     if (lv_obj_has_flag(obj, LV_OBJ_FLAG_HIDDEN)) return NULL;
@@ -300,7 +300,7 @@ lv_obj_t *lv_indev_search_obj(lv_obj_t *obj, lv_point_t *point) {
 
         /*If a child matches use it*/
         for (i = child_cnt - 1; i >= 0; i--) {
-            lv_obj_t * child = obj->spec_attr->children[i];
+            lv_obj_t *child = obj->spec_attr->children[i];
             found_p = lv_indev_search_obj(child, &p_trans);
             if (found_p) return found_p;
         }
@@ -832,7 +832,7 @@ static void indev_proc_press(_lv_indev_proc_t *proc) {
         /*If a new object found the previous was lost, so send a Call the ancestor's event handler*/
         if (proc->types.pointer.act_obj != NULL) {
             /*Save the obj because in special cases `act_obj` can change in the Call the ancestor's event handler function*/
-            lv_obj_t * last_obj = proc->types.pointer.act_obj;
+            lv_obj_t *last_obj = proc->types.pointer.act_obj;
 
             lv_event_send(last_obj, LV_EVENT_PRESS_LOST, indev_act);
             if (indev_reset_check(proc)) return;
@@ -933,7 +933,7 @@ static void indev_proc_release(_lv_indev_proc_t *proc) {
         proc->wait_until_release = 0;
     }
     indev_obj_act = proc->types.pointer.act_obj;
-    lv_obj_t * scroll_obj = proc->types.pointer.scroll_obj;
+    lv_obj_t *scroll_obj = proc->types.pointer.scroll_obj;
 
     /*Forget the act obj and send a released Call the ancestor's event handler*/
     if (indev_obj_act) {
@@ -964,7 +964,7 @@ static void indev_proc_release(_lv_indev_proc_t *proc) {
             int16_t angle = 0;
             int16_t zoom = 256;
             lv_point_t pivot = {0, 0};
-            lv_obj_t * parent = scroll_obj;
+            lv_obj_t *parent = scroll_obj;
             while (parent) {
                 angle += lv_obj_get_style_transform_angle(parent, 0);
                 zoom *= (lv_obj_get_style_transform_zoom(parent, 0) / 256);
@@ -1092,7 +1092,7 @@ void indev_gesture(_lv_indev_proc_t *proc) {
     if (proc->types.pointer.scroll_obj) return;
     if (proc->types.pointer.gesture_sent) return;
 
-    lv_obj_t * gesture_obj = proc->types.pointer.act_obj;
+    lv_obj_t *gesture_obj = proc->types.pointer.act_obj;
 
     /*If gesture parent is active check recursively the gesture attribute*/
     while (gesture_obj && lv_obj_has_flag(gesture_obj, LV_OBJ_FLAG_GESTURE_BUBBLE)) {

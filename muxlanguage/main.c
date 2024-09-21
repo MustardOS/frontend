@@ -13,6 +13,7 @@
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
@@ -205,9 +206,9 @@ void joystick_task() {
                     perror("Error reading input");
                     continue;
                 }
-                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 && 
-                        (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
-                    JOYHOTKEY_screenshot = 1;   
+                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 &&
+                    (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
+                    JOYHOTKEY_screenshot = 1;
                 }
             } else if (events[i].data.fd == js_fd) {
                 ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
@@ -256,7 +257,7 @@ void joystick_task() {
                             }
                         } else {
                             if ((ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
-                                ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
+                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
                                 JOYHOTKEY_pressed = 0;
                                 if (progress_onscreen == -1) {
                                     play_sound("confirm", nav_sound, 1);
@@ -459,23 +460,28 @@ void ui_refresh_task() {
 
                 snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
                 snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                        ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND));
+                        ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND));
 
                 if (strcasecmp(new_wall, old_wall) != 0) {
                     strcpy(current_wall, new_wall);
                     if (strlen(new_wall) > 3) {
-                        printf("LOADING WALLPAPER: %s\n", new_wall);
-                        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-                            lv_obj_t *img = lv_gif_create(ui_pnlWall);
-                            lv_gif_set_src(img, new_wall);
-                        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
-                            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
+                        if (theme.MISC.RANDOM_BACKGROUND) {
+                            load_image_random(ui_imgWall, new_wall);
                         } else {
-                            lv_img_set_src(ui_imgWall, new_wall);
+                            switch (theme.MISC.ANIMATED_BACKGROUND) {
+                                case 1:
+                                    lv_gif_set_src(lv_gif_create(ui_pnlWall), new_wall);
+                                    break;
+                                case 2:
+                                    load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, new_wall);
+                                    break;
+                                default:
+                                    lv_img_set_src(ui_imgWall, new_wall);
+                                    break;
+                            }
                         }
-                        lv_obj_invalidate(ui_pnlWall);
                     } else {
-                        lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
+                        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
                     }
                 }
             }
@@ -515,7 +521,7 @@ void ui_refresh_task() {
 
                 lv_img_set_src(ui_imgBox, static_image);
             } else {
-                lv_img_set_src(ui_imgBox, &ui_img_nothing_png);
+                lv_img_set_src(ui_imgBox, &ui_image_Nothing);
             }
         }
         nav_moved = 0;
@@ -527,13 +533,13 @@ int main(int argc, char *argv[]) {
 
     mux_prog = basename(argv[0]);
     load_device(&device);
-    seed_random();
+
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
 
     static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = device.SCREEN.BUFFER;
+    uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
     lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
     lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
@@ -548,6 +554,8 @@ int main(int argc, char *argv[]) {
     disp_drv.ver_res = device.SCREEN.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
+    disp_drv.full_refresh = 0;
+    disp_drv.direct_mode = 0;
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
@@ -586,18 +594,25 @@ int main(int argc, char *argv[]) {
             break;
     }
 
-    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND);
+    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
     if (strlen(current_wall) > 3) {
-        if (theme.MISC.ANIMATED_BACKGROUND == 1) {
-            lv_obj_t *img = lv_gif_create(ui_pnlWall);
-            lv_gif_set_src(img, current_wall);
-        } else if (theme.MISC.ANIMATED_BACKGROUND == 2) {
-            load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
+        if (theme.MISC.RANDOM_BACKGROUND) {
+            load_image_random(ui_imgWall, current_wall);
         } else {
-            lv_img_set_src(ui_imgWall, current_wall);
+            switch (theme.MISC.ANIMATED_BACKGROUND) {
+                case 1:
+                    lv_gif_set_src(lv_gif_create(ui_pnlWall), current_wall);
+                    break;
+                case 2:
+                    load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
+                    break;
+                default:
+                    lv_img_set_src(ui_imgWall, current_wall);
+                    break;
+            }
         }
     } else {
-        lv_img_set_src(ui_imgWall, &ui_img_nothing_png);
+        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     }
 
     load_font_text(basename(argv[0]), ui_screen);

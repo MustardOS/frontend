@@ -114,7 +114,7 @@ void lv_anim_timeline_stop(lv_anim_timeline_t *at) {
     LV_ASSERT_NULL(at);
 
     for (uint32_t i = 0; i < at->anim_dsc_cnt; i++) {
-        lv_anim_t * a = &(at->anim_dsc[i].anim);
+        lv_anim_t *a = &(at->anim_dsc[i].anim);
         lv_anim_del(a->var, a->exec_cb);
     }
 }
@@ -131,7 +131,7 @@ void lv_anim_timeline_set_progress(lv_anim_timeline_t *at, uint16_t progress) {
     const uint32_t act_time = progress * playtime / 0xFFFF;
 
     for (uint32_t i = 0; i < at->anim_dsc_cnt; i++) {
-        lv_anim_t * a = &(at->anim_dsc[i].anim);
+        lv_anim_t *a = &(at->anim_dsc[i].anim);
 
         if (a->exec_cb == NULL) {
             continue;
