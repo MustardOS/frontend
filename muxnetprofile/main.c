@@ -71,6 +71,19 @@ void show_help() {
                      _(lv_label_get_text(ui_lblTitle)), _("HELP.NETPROFILE"));
 }
 
+int remove_profile(char *name) {
+    static char profile_file[MAX_BUFFER_SIZE];
+    snprintf(profile_file, sizeof(profile_file),
+             "%s/network/%s.ini", STORAGE_PATH, name);
+
+    if (file_exist(profile_file)) {
+        remove(profile_file);
+        return 1;
+    }
+
+    return 0;
+}
+
 void load_profile(char *name) {
     static char profile_file[MAX_BUFFER_SIZE];
     snprintf(profile_file, sizeof(profile_file),
@@ -274,6 +287,10 @@ void create_profile_items() {
         lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
     } else {
         lv_label_set_text(ui_lblScreenMessage, _("No Saved Network Profiles Found"));
     }
@@ -383,8 +400,13 @@ void joystick_task() {
                                     JOYHOTKEY_pressed = 1;
                                     JOYHOTKEY_screenshot = 0;
                                 } else if (ev.code == NAV_A) {
-                                    play_sound("confirm", nav_sound, 1);
-                                    load_profile(lv_label_get_text(element_focused));
+                                    if (ui_count > 0) {
+                                        play_sound("confirm", nav_sound, 1);
+                                        load_profile(lv_label_get_text(element_focused));
+                                    }
+                                    return;
+                                } else if (ev.code == NAV_B) {
+                                    play_sound("back", nav_sound, 1);
                                     return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
                                     play_sound("confirm", nav_sound, 1);
@@ -392,8 +414,12 @@ void joystick_task() {
                                         load_mux("net_profile");
                                         return;
                                     }
-                                } else if (ev.code == NAV_B) {
-                                    play_sound("back", nav_sound, 1);
+                                } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
+                                    if (ui_count > 0) {
+                                        if (remove_profile(lv_label_get_text(element_focused))) {
+                                            load_mux("net_profile");
+                                        }
+                                    }
                                     return;
                                 } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
                                     if (current_item_index >= 0 && current_item_index < ui_count) {
@@ -543,12 +569,11 @@ void init_elements() {
     lv_label_set_text(ui_lblNavA, _("Load"));
     lv_label_set_text(ui_lblNavB, _("Back"));
     lv_label_set_text(ui_lblNavX, _("Save"));
+    lv_label_set_text(ui_lblNavY, _("Remove"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
             ui_lblNavC,
-            ui_lblNavYGlyph,
-            ui_lblNavY,
             ui_lblNavZGlyph,
             ui_lblNavZ,
             ui_lblNavMenuGlyph,
@@ -565,6 +590,10 @@ void init_elements() {
         lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
     }
 
     char *overlay = load_overlay_image();

@@ -606,13 +606,13 @@ void joystick_task() {
                                                 const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue);
                                                 const char *cv_dns = lv_label_get_text(ui_lblDNSValue);
 
-                                                if (strlen(cv_ssid) > 0 && strlen(cv_pass) > 0 &&
+                                                if (strlen(cv_ssid) > 0 && strlen(cv_pass) >= 8 &&
                                                     strlen(cv_address) > 0 && strlen(cv_subnet) > 0 &&
                                                     strlen(cv_gateway) > 0 && strlen(cv_dns) > 0) {
                                                     valid_info = 1;
                                                 }
                                             } else {
-                                                if (strlen(cv_ssid) > 0 && strlen(cv_pass) > 0) {
+                                                if (strlen(cv_ssid) > 0 && strlen(cv_pass) >= 8) {
                                                     valid_info = 1;
                                                 }
                                             }
