@@ -62,6 +62,7 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/img/nothing.c \
 		../common/json/json.c \
 		../common/mini/mini.c \
+		../common/miniz/miniz.c \
 		../common/config.c \
 		../common/device.c \
 		../common/common.c \
@@ -76,4 +77,3 @@ move:
 	@mkdir -p ../bin
 	@mv $(TARGET) ../bin/
 	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
-

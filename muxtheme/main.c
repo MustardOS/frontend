@@ -14,6 +14,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/img/nothing.h"
+#include "../common/miniz/miniz.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
@@ -63,18 +64,43 @@ int ui_count = 0;
 int current_item_index = 0;
 int first_open = 1;
 
+static int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path) {
+    mz_zip_archive zip;
+    memset(&zip, 0, sizeof(zip));
+
+    if (!mz_zip_reader_init_file(&zip, zip_path, 0)) {
+        printf("Error: Could not open theme archive '%s' - Corrupt?\n", zip_path);
+        return 1;
+    }
+
+    int file_index = mz_zip_reader_locate_file(&zip, file_name, NULL, 0);
+    if (file_index == -1) {
+        printf("Error: '%s' not found in theme archive\n", file_name);
+        mz_zip_reader_end(&zip);
+        return 1;
+    }
+
+    if (!mz_zip_reader_extract_to_file(&zip, file_index, output_path, 0)) {
+        printf("Error: Could not extract '%s'\n", file_name);
+        mz_zip_reader_end(&zip);
+        return 1;
+    }
+
+    mz_zip_reader_end(&zip);
+    return 0;
+}
+
 void show_help() {
+    char *theme_name = lv_label_get_text(lv_group_get_focused(ui_group));
+    char theme_archive[MAX_BUFFER_SIZE];
+
+    snprintf(theme_archive, sizeof(theme_archive), "%s/theme/%s.zip", STORAGE_PATH, theme_name);
+
     char credits[MAX_BUFFER_SIZE];
-    strcpy(credits, "This theme has no attributed credits!");
-
-    char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "unzip -p %s/theme/%s.zip credits.txt",
-             STORAGE_PATH, lv_label_get_text(lv_group_get_focused(ui_group)));
-
-    FILE *fp = popen(command, "r");
-    if (fp != NULL) {
-        fgets(credits, sizeof(credits), fp);
-        pclose(fp);
+    if (extract_file_from_zip(theme_archive, "credits.txt", "/tmp/credits.txt")) {
+        strcpy(credits, "This theme has no attributed credits!");
+    } else {
+        strcpy(credits, read_text_from_file("/tmp/credits.txt"));
     }
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
@@ -83,21 +109,16 @@ void show_help() {
 
 void image_refresh() {
     char *theme_name = lv_label_get_text(lv_group_get_focused(ui_group));
-    char theme_image[MAX_BUFFER_SIZE];
+    char theme_archive[MAX_BUFFER_SIZE];
 
-    snprintf(theme_image, sizeof(theme_image),
-             "%s/theme/preview/%s.png",
-             STORAGE_PATH, theme_name);
+    snprintf(theme_archive, sizeof(theme_archive), "%s/theme/%s.zip", STORAGE_PATH, theme_name);
 
-    if (file_exist(theme_image)) {
-        char theme_image_path[MAX_BUFFER_SIZE];
-        snprintf(theme_image_path, sizeof(theme_image_path),
-                 "M:%s/theme/preview/%s.png",
-                 STORAGE_PATH, theme_name);
-        lv_img_set_src(ui_imgBox, theme_image_path);
-    } else {
+    if (extract_file_from_zip(theme_archive, "preview.png", "/tmp/preview.png")) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        return;
     }
+
+    lv_img_set_src(ui_imgBox, "M:/tmp/preview.png");
 }
 
 void create_theme_items() {
