@@ -14,7 +14,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/img/nothing.h"
-#include "../common/miniz/miniz.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
@@ -63,32 +62,6 @@ lv_group_t *ui_group_panel;
 int ui_count = 0;
 int current_item_index = 0;
 int first_open = 1;
-
-static int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path) {
-    mz_zip_archive zip;
-    memset(&zip, 0, sizeof(zip));
-
-    if (!mz_zip_reader_init_file(&zip, zip_path, 0)) {
-        printf("Error: Could not open theme archive '%s' - Corrupt?\n", zip_path);
-        return 1;
-    }
-
-    int file_index = mz_zip_reader_locate_file(&zip, file_name, NULL, 0);
-    if (file_index == -1) {
-        printf("Error: '%s' not found in theme archive\n", file_name);
-        mz_zip_reader_end(&zip);
-        return 1;
-    }
-
-    if (!mz_zip_reader_extract_to_file(&zip, file_index, output_path, 0)) {
-        printf("Error: Could not extract '%s'\n", file_name);
-        mz_zip_reader_end(&zip);
-        return 1;
-    }
-
-    mz_zip_reader_end(&zip);
-    return 0;
-}
 
 void show_help() {
     char *theme_name = lv_label_get_text(lv_group_get_focused(ui_group));

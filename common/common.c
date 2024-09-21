@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
-#include "../common/img/nothing.h"
+#include "../common/miniz/miniz.h"
 #include "img/nothing.h"
 #include "json/json.h"
 #include "common.h"
@@ -1483,4 +1483,30 @@ char *get_script_value(const char *filename, const char *key) {
 void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar) {
     lv_bar_set_value(bright_bar, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_ON);
     lv_bar_set_value(volume_bar, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_ON);
+}
+
+int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path) {
+    mz_zip_archive zip;
+    memset(&zip, 0, sizeof(zip));
+
+    if (!mz_zip_reader_init_file(&zip, zip_path, 0)) {
+        printf("Error: Could not open archive '%s' - Corrupt?\n", zip_path);
+        return 1;
+    }
+
+    int file_index = mz_zip_reader_locate_file(&zip, file_name, NULL, 0);
+    if (file_index == -1) {
+        printf("Error: '%s' not found in archive\n", file_name);
+        mz_zip_reader_end(&zip);
+        return 1;
+    }
+
+    if (!mz_zip_reader_extract_to_file(&zip, file_index, output_path, 0)) {
+        printf("Error: Could not extract '%s'\n", file_name);
+        mz_zip_reader_end(&zip);
+        return 1;
+    }
+
+    mz_zip_reader_end(&zip);
+    return 0;
 }
