@@ -71,7 +71,7 @@ void show_help() {
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(theme_archive, "credits.txt", "/tmp/credits.txt")) {
-        strcpy(credits, "This theme has no attributed credits!");
+        strcpy(credits, _("This theme has no attributed credits!"));
     } else {
         strcpy(credits, read_text_from_file("/tmp/credits.txt"));
     }
