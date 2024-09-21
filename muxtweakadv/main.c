@@ -70,6 +70,7 @@ int retrowait_total, retrowait_current;
 int usbfunction_total, usbfunction_current;
 int state_total, state_current;
 int verbose_total, verbose_current;
+int hdmi_output_total, hdmi_output_current;
 
 typedef struct {
     int *total;
@@ -77,14 +78,14 @@ typedef struct {
 } Tweak;
 
 Tweak accelerate, swap, thermal, font, volume, brightness, offset, lockdown,
-        led, random_theme, retrowait, usbfunction, state, verbose;
+        led, random_theme, retrowait, usbfunction, state, verbose, hdmi_output;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 15
+#define UI_COUNT 16
 lv_obj_t *ui_objects[UI_COUNT];
 
 struct help_msg {
@@ -108,6 +109,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblUSBFunction, "HELP.USBFUNCTION"},
             {ui_lblState,       "HELP.STATE"},
             {ui_lblVerbose,     "HELP.VERBOSE"},
+            {ui_lblHDMIOutput,  "HELP.HDMI_OUTPUT"},
             {ui_lblStorage,     "HELP.STORAGE"},
     };
 
@@ -158,6 +160,7 @@ void elements_events_init() {
             ui_droUSBFunction,
             ui_droState,
             ui_droVerbose,
+            ui_droHDMIOutput,
             ui_droStorage
     };
 
@@ -179,6 +182,7 @@ void elements_events_init() {
     init_pointers(&usbfunction, &usbfunction_total, &usbfunction_current);
     init_pointers(&state, &state_total, &state_current);
     init_pointers(&verbose, &verbose_total, &verbose_current);
+    init_pointers(&hdmi_output, &hdmi_output_total, &hdmi_output_current);
 }
 
 void init_dropdown_settings() {
@@ -196,7 +200,8 @@ void init_dropdown_settings() {
             {retrowait.total,    retrowait.current},
             {usbfunction.total,  usbfunction.current},
             {state.total,        state.current},
-            {verbose.total,      verbose.current}
+            {verbose.total,      verbose.current},
+            {hdmi_output.total,  hdmi_output.current},
     };
 
     lv_obj_t *dropdowns[] = {
@@ -213,7 +218,8 @@ void init_dropdown_settings() {
             ui_droRetroWait,
             ui_droUSBFunction,
             ui_droState,
-            ui_droVerbose
+            ui_droVerbose,
+            ui_droHDMIOutput
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -329,6 +335,7 @@ void restore_tweak_options() {
     }
 
     lv_dropdown_set_selected(ui_droVerbose, config.SETTINGS.ADVANCED.VERBOSE);
+    lv_dropdown_set_selected(ui_droHDMIOutput, config.SETTINGS.ADVANCED.HDMIOUTPUT);
 }
 
 void save_tweak_options() {
@@ -454,6 +461,7 @@ void save_tweak_options() {
     int idx_random_theme = lv_dropdown_get_selected(ui_droTheme);
     int idx_retrowait = lv_dropdown_get_selected(ui_droRetroWait);
     int idx_verbose = lv_dropdown_get_selected(ui_droVerbose);
+    int idx_hdmi_output = lv_dropdown_get_selected(ui_droHDMIOutput);
 
     write_text_to_file("/run/muos/global/settings/advanced/accelerate", "w", INT, idx_accelerate);
     write_text_to_file("/run/muos/global/settings/advanced/swap", "w", INT, idx_swap);
@@ -469,6 +477,7 @@ void save_tweak_options() {
     write_text_to_file("/run/muos/global/settings/advanced/usb_function", "w", CHAR, idx_usbfunction);
     write_text_to_file("/run/muos/global/settings/advanced/state", "w", CHAR, idx_state);
     write_text_to_file("/run/muos/global/settings/advanced/verbose", "w", INT, idx_verbose);
+    write_text_to_file("/run/muos/global/settings/advanced/hdmi_output", "w", INT, idx_hdmi_output);
 
     static char tweak_script[MAX_BUFFER_SIZE];
     snprintf(tweak_script, sizeof(tweak_script),
@@ -492,6 +501,7 @@ void init_navigation_groups() {
             ui_pnlUSBFunction,
             ui_pnlState,
             ui_pnlVerbose,
+            ui_pnlHDMIOutput,
             ui_pnlStorage
     };
 
@@ -509,7 +519,8 @@ void init_navigation_groups() {
     ui_objects[11] = ui_lblUSBFunction;
     ui_objects[12] = ui_lblState;
     ui_objects[13] = ui_lblVerbose;
-    ui_objects[14] = ui_lblStorage;
+    ui_objects[14] = ui_lblHDMIOutput;
+    ui_objects[15] = ui_lblStorage;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droAccelerate,
@@ -526,6 +537,7 @@ void init_navigation_groups() {
             ui_droUSBFunction,
             ui_droState,
             ui_droVerbose,
+            ui_droHDMIOutput,
             ui_droStorage
     };
 
@@ -544,6 +556,7 @@ void init_navigation_groups() {
             ui_icoUSBFunction,
             ui_icoState,
             ui_icoVerbose,
+            ui_icoHDMIOutput,
             ui_icoStorage
     };
 
@@ -561,6 +574,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlUSBFunction);
     apply_theme_list_panel(&theme, &device, ui_pnlState);
     apply_theme_list_panel(&theme, &device, ui_pnlVerbose);
+    apply_theme_list_panel(&theme, &device, ui_pnlHDMIOutput);
     apply_theme_list_panel(&theme, &device, ui_pnlStorage);
 
     apply_theme_list_item(&theme, ui_lblAccelerate, _("Menu Acceleration"), false, true);
@@ -577,6 +591,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblUSBFunction, _("USB Function"), false, true);
     apply_theme_list_item(&theme, ui_lblState, _("Suspend Power State"), false, true);
     apply_theme_list_item(&theme, ui_lblVerbose, _("Verbose Messages"), false, true);
+    apply_theme_list_item(&theme, ui_lblHDMIOutput, _("HDMI Audio Output"), false, true);
     apply_theme_list_item(&theme, ui_lblStorage, _("Storage Preference"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoAccelerate, mux_prog, "accelerate");
@@ -593,6 +608,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoUSBFunction, mux_prog, "usbfunction");
     apply_theme_list_glyph(&theme, ui_icoState, mux_prog, "state");
     apply_theme_list_glyph(&theme, ui_icoVerbose, mux_prog, "verbose");
+    apply_theme_list_glyph(&theme, ui_icoHDMIOutput, mux_prog, "hdmi");
     apply_theme_list_glyph(&theme, ui_icoStorage, mux_prog, "storage");
 
     char *accelerate_string = generate_number_string(16, 256, 16, "Disabled", NULL, NULL, 0);
@@ -616,6 +632,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droUSBFunction, NULL);
     apply_theme_list_drop_down(&theme, ui_droState, NULL);
     apply_theme_list_drop_down(&theme, ui_droVerbose, NULL);
+    apply_theme_list_drop_down(&theme, ui_droHDMIOutput, NULL);
     apply_theme_list_drop_down(&theme, ui_droStorage, "");
 
     char *disabled_enabled[] = {_("Disabled"), _("Enabled")};
@@ -631,6 +648,7 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droUSBFunction, (char *[]) {_("Disabled"), "ADB", "MTP"}, 3);
     add_drop_down_options(ui_droState, (char *[]) {"mem", "freeze"}, 2);
     add_drop_down_options(ui_droVerbose, disabled_enabled, 2);
+    add_drop_down_options(ui_droHDMIOutput, (char *[]) {_("External"), _("Internal")}, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -805,6 +823,10 @@ void joystick_task() {
                                         increase_option_value(ui_droVerbose,
                                                               &verbose_current,
                                                               verbose_total);
+                                    } else if (element_focused == ui_lblHDMIOutput) {
+                                        increase_option_value(ui_droHDMIOutput,
+                                                              &hdmi_output_current,
+                                                              hdmi_output_total);
                                     } else if (element_focused == ui_lblStorage) {
                                         save_tweak_options();
 
@@ -945,6 +967,10 @@ void joystick_task() {
                                     decrease_option_value(ui_droVerbose,
                                                           &verbose_current,
                                                           verbose_total);
+                                } else if (element_focused == ui_lblHDMIOutput) {
+                                    decrease_option_value(ui_droHDMIOutput,
+                                                          &hdmi_output_current,
+                                                          hdmi_output_total);
                                 }
                             } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
                                         ev.value <= (device.INPUT.AXIS_MAX)) ||
@@ -1006,6 +1032,10 @@ void joystick_task() {
                                     increase_option_value(ui_droVerbose,
                                                           &verbose_current,
                                                           verbose_total);
+                                } else if (element_focused == ui_lblHDMIOutput) {
+                                    increase_option_value(ui_droHDMIOutput,
+                                                          &hdmi_output_current,
+                                                          hdmi_output_total);
                                 }
                             }
                         }
@@ -1030,7 +1060,7 @@ void joystick_task() {
             nav_hold = 0;
         }
 
-        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1))) {
+        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
             if (ev.type == EV_KEY && ev.value == 1 &&
                 (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
                 if (JOYHOTKEY_pressed) {
@@ -1128,11 +1158,18 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblUSBFunction, "usbfunction");
     lv_obj_set_user_data(ui_lblState, "state");
     lv_obj_set_user_data(ui_lblVerbose, "verbose");
+    lv_obj_set_user_data(ui_lblHDMIOutput, "hdmi");
     lv_obj_set_user_data(ui_lblStorage, "storage");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_FLOATING);
+        ui_count--;
+    }
+
+    if (!device.DEVICE.HAS_HDMI) {
+        lv_obj_add_flag(ui_pnlHDMIOutput, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlHDMIOutput, LV_OBJ_FLAG_FLOATING);
         ui_count--;
     }
 

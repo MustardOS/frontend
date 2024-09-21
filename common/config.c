@@ -61,6 +61,7 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.VOLUME, "settings/advanced/volume", "previous")
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, "settings/advanced/brightness", "previous")
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.STATE, "settings/advanced/state", "mem")
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.HDMIOUTPUT, "settings/advanced/hdmi_output", 0)
 
     CFG_INT_FIELD(config->VISUAL.BATTERY, "visual/battery", 1)
     CFG_INT_FIELD(config->VISUAL.NETWORK, "visual/network", 0)

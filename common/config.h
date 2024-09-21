@@ -55,6 +55,7 @@ struct mux_config {
             char USBFUNCTION[MAX_BUFFER_SIZE];
             char STATE[MAX_BUFFER_SIZE];
             int16_t VERBOSE;
+            int16_t HDMIOUTPUT;
         } ADVANCED;
     } SETTINGS;
 

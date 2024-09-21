@@ -15,6 +15,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlUSBFunction = lv_obj_create(ui_pnlContent);
     ui_pnlState = lv_obj_create(ui_pnlContent);
     ui_pnlVerbose = lv_obj_create(ui_pnlContent);
+    ui_pnlHDMIOutput = lv_obj_create(ui_pnlContent);
     ui_pnlStorage = lv_obj_create(ui_pnlContent);
 
     ui_lblAccelerate = lv_label_create(ui_pnlAccelerate);
@@ -31,6 +32,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblUSBFunction = lv_label_create(ui_pnlUSBFunction);
     ui_lblState = lv_label_create(ui_pnlState);
     ui_lblVerbose = lv_label_create(ui_pnlVerbose);
+    ui_lblHDMIOutput = lv_label_create(ui_pnlHDMIOutput);
     ui_lblStorage = lv_label_create(ui_pnlStorage);
 
     ui_icoAccelerate = lv_img_create(ui_pnlAccelerate);
@@ -47,6 +49,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoUSBFunction = lv_img_create(ui_pnlUSBFunction);
     ui_icoState = lv_img_create(ui_pnlState);
     ui_icoVerbose = lv_img_create(ui_pnlVerbose);
+    ui_icoHDMIOutput = lv_img_create(ui_pnlHDMIOutput);
     ui_icoStorage = lv_img_create(ui_pnlStorage);
 
     ui_droAccelerate = lv_dropdown_create(ui_pnlAccelerate);
@@ -63,5 +66,6 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droUSBFunction = lv_dropdown_create(ui_pnlUSBFunction);
     ui_droState = lv_dropdown_create(ui_pnlState);
     ui_droVerbose = lv_dropdown_create(ui_pnlVerbose);
+    ui_droHDMIOutput = lv_dropdown_create(ui_pnlHDMIOutput);
     ui_droStorage = lv_dropdown_create(ui_pnlStorage);
 }

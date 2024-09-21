@@ -65,7 +65,6 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->NETWORK.STATE, "network/state")
 
     DEV_INT_FIELD(device->SCREEN.BRIGHT, "screen/bright")
-    DEV_INT_FIELD(device->SCREEN.BUFFER, "screen/buffer")
     DEV_INT_FIELD(device->SCREEN.WIDTH, "screen/width")
     DEV_INT_FIELD(device->SCREEN.HEIGHT, "screen/height")
     DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/rotate")

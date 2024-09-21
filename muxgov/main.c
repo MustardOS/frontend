@@ -551,7 +551,7 @@ void joystick_task() {
             nav_hold = 0;
         }
 
-        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1))) {
+        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
             if (ev.type == EV_KEY && ev.value == 1 &&
                 (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
                 if (JOYHOTKEY_pressed) {
