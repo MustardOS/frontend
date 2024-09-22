@@ -81,6 +81,9 @@ void show_help() {
 }
 
 void image_refresh() {
+    // Invalidate the cache for this image path
+    lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox)); 
+
     char *theme_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char theme_archive[MAX_BUFFER_SIZE];
 
