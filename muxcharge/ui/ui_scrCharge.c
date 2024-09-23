@@ -110,7 +110,7 @@ void ui_scrCharge_screen_init(void) {
     lv_obj_set_width(ui_lblBoot, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblBoot, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblBoot, LV_LABEL_LONG_CLIP);
-    lv_label_set_text(ui_lblBoot, _("Press POWER button to continue booting..."));
+    lv_label_set_text(ui_lblBoot, TS("Press POWER button to continue booting..."));
     lv_label_set_recolor(ui_lblBoot, "true");
     lv_obj_clear_flag(ui_lblBoot, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
                                   LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |

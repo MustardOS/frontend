@@ -68,7 +68,7 @@ int first_open = 1;
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.LANGUAGE"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.LANGUAGE"));
 }
 
 void populate_languages() {
@@ -89,7 +89,7 @@ void populate_languages() {
             size_t len = strlen(entry->d_name);
             if (len > 5 && strcasecmp(entry->d_name + len - 5, ".json") == 0) {
                 entry->d_name[len - 5] = '\0';
-                add_item(&items, &item_count, entry->d_name, _(entry->d_name), ROM);
+                add_item(&items, &item_count, entry->d_name, TS(entry->d_name), ROM);
             }
         }
     }
@@ -124,7 +124,7 @@ void create_language_items() {
     if (ui_count > 0) {
         lv_obj_update_layout(ui_pnlContent);
     } else if (ui_count == 0) {
-        lv_label_set_text(ui_lblScreenMessage, _("No Languages Found..."));
+        lv_label_set_text(ui_lblScreenMessage, TS("No Languages Found..."));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 }
@@ -234,7 +234,7 @@ void joystick_task() {
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
 
-                                    osd_message = _("Saving Language");
+                                    osd_message = TS("Saving Language");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -402,8 +402,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Confirm"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavA, TG("Select"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -572,7 +572,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("LANGUAGES"));
+    ui_common_screen_init(&theme, &device, TS("LANGUAGES"));
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));

@@ -78,7 +78,7 @@ enum gov_gen_type {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.GOVERNOR"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.GOVERNOR"));
 }
 
 char **get_subdirectories(const char *base_dir) {
@@ -621,10 +621,10 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Individual"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
-    lv_label_set_text(ui_lblNavX, _("Directory"));
-    lv_label_set_text(ui_lblNavY, _("Recursive"));
+    lv_label_set_text(ui_lblNavA, TG("Individual"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavX, TG("Directory"));
+    lv_label_set_text(ui_lblNavY, TG("Recursive"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -960,7 +960,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    lv_label_set_text(ui_lblScreenMessage, _("No Governors Found..."));
+    lv_label_set_text(ui_lblScreenMessage, TS("No Governors Found..."));
 
     if (strcasecmp(rom_system, "none") == 0) {
         char assign_file[MAX_BUFFER_SIZE];
@@ -1038,7 +1038,7 @@ int main(int argc, char *argv[]) {
     if (ui_count > 0) {
         LOG_SUCCESS(mux_prog, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s");
         char title[MAX_BUFFER_SIZE];
-        snprintf(title, sizeof(title), "%s - %s", _("GOVERNOR"), get_last_dir(rom_dir));
+        snprintf(title, sizeof(title), "%s - %s", TS("GOVERNOR"), get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
     } else {
         LOG_ERROR(mux_prog, "No Governors Detected!");

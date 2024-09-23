@@ -3,7 +3,8 @@
 #include "../lvgl/lvgl.h"
 #include "mini/mini.h"
 
-#define _(String) translate(String)
+#define TS(str) translate_specific(str)
+#define TG(str) translate_generic(str)
 
 extern int battery_capacity;
 extern int msgbox_active;
@@ -177,7 +178,8 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 
 void load_language(const char *program);
 
-char *translate(char *key);
+char *translate_specific(char *key);
+char *translate_generic(char *key);
 
 void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count);
 

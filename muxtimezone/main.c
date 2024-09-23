@@ -64,7 +64,7 @@ int first_open = 1;
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.TIMEZONE"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.TIMEZONE"));
 }
 
 void create_timezone_items() {
@@ -200,7 +200,7 @@ void joystick_task() {
                                 } else if (ev.code == NAV_A) {
                                     play_sound("confirm", nav_sound, 1);
 
-                                    osd_message = _("Saving Timezone");
+                                    osd_message = TS("Saving Timezone");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -370,7 +370,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Confirm"));
+    lv_label_set_text(ui_lblNavA, TG("Select"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavBGlyph,
@@ -541,7 +541,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("TIMEZONE"));
+    ui_common_screen_init(&theme, &device, TS("TIMEZONE"));
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
@@ -659,7 +659,7 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     if (ui_count == 0) {
-        lv_label_set_text(ui_lblScreenMessage, _("No Timezones Found..."));
+        lv_label_set_text(ui_lblScreenMessage, TS("No Timezones Found..."));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 

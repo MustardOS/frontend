@@ -93,7 +93,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblNTP,       "HELP.NTP"},
     };
 
-    char *message = "No Help Information Found";
+    char *message = TG("No Help Information Found");
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -103,10 +103,10 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "No Help Information Found";
+    if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(element_focused)), _(message));
+                     TS(lv_label_get_text(element_focused)), TS(message));
 }
 
 void init_pointers(WebServices *web, int *total, int *current) {
@@ -244,12 +244,12 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlResilio);
     apply_theme_list_panel(&theme, &device, ui_pnlNTP);
 
-    apply_theme_list_item(&theme, ui_lblShell, _("Secure Shell"), false, true);
-    apply_theme_list_item(&theme, ui_lblBrowser, _("SFTP + Filebrowser"), false, true);
-    apply_theme_list_item(&theme, ui_lblTerminal, _("Virtual Terminal"), false, true);
-    apply_theme_list_item(&theme, ui_lblSyncthing, _("Syncthing"), false, true);
-    apply_theme_list_item(&theme, ui_lblResilio, _("Resilio"), false, true);
-    apply_theme_list_item(&theme, ui_lblNTP, _("Network Time Sync"), false, true);
+    apply_theme_list_item(&theme, ui_lblShell, TS("Secure Shell"), false, true);
+    apply_theme_list_item(&theme, ui_lblBrowser, TS("SFTP + Filebrowser"), false, true);
+    apply_theme_list_item(&theme, ui_lblTerminal, TS("Virtual Terminal"), false, true);
+    apply_theme_list_item(&theme, ui_lblSyncthing, TS("Syncthing"), false, true);
+    apply_theme_list_item(&theme, ui_lblResilio, TS("Resilio"), false, true);
+    apply_theme_list_item(&theme, ui_lblNTP, TS("Network Time Sync"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoShell, mux_prog, "shell");
     apply_theme_list_glyph(&theme, ui_icoBrowser, mux_prog, "browser");
@@ -259,7 +259,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoNTP, mux_prog, "ntp");
 
     char options[MAX_BUFFER_SIZE];
-    snprintf(options, sizeof(options), "%s\n%s", _("Disabled"), _("Enabled"));
+    snprintf(options, sizeof(options), "%s\n%s", TS("Disabled"), TS("Enabled"));
     apply_theme_list_drop_down(&theme, ui_droShell, options);
     apply_theme_list_drop_down(&theme, ui_droBrowser, options);
     apply_theme_list_drop_down(&theme, ui_droTerminal, options);
@@ -413,7 +413,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = _("Saving Changes");
+                                    osd_message = TS("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -638,7 +638,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, _("Save"));
+    lv_label_set_text(ui_lblNavB, TG("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -811,7 +811,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("WEB SERVICES"));
+    ui_common_screen_init(&theme, &device, TS("WEB SERVICES"));
     ui_init(ui_pnlContent);
     init_elements();
 

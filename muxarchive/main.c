@@ -67,7 +67,7 @@ int first_open = 1;
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.ARCHIVE"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.ARCHIVE"));
 }
 
 void create_archive_items() {
@@ -172,7 +172,7 @@ void create_archive_items() {
         apply_theme_list_item(&theme, ui_lblArchiveItem, archive_store, false, true);
 
         lv_obj_t *ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
-        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? _("INSTALLED") : "");
+        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? TS("INSTALLED") : "");
 
         lv_obj_t *ui_lblArchiveItemData = lv_label_create(ui_pnlArchive);
         lv_label_set_text(ui_lblArchiveItemData, base_filename);
@@ -488,8 +488,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Extract"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavA, TG("Extract"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -663,7 +663,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("ARCHIVE MANAGER"));
+    ui_common_screen_init(&theme, &device, TS("ARCHIVE MANAGER"));
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
@@ -784,7 +784,7 @@ int main(int argc, char *argv[]) {
             list_nav_next(sys_index);
         }
     } else {
-        lv_label_set_text(ui_lblScreenMessage, _("No Archives Found"));
+        lv_label_set_text(ui_lblScreenMessage, TS("No Archives Found"));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 

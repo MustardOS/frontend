@@ -71,13 +71,13 @@ void show_help() {
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(theme_archive, "credits.txt", "/tmp/credits.txt")) {
-        strcpy(credits, _("This theme has no attributed credits!"));
+        strcpy(credits, TS("This theme has no attributed credits!"));
     } else {
         strcpy(credits, read_text_from_file("/tmp/credits.txt"));
     }
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(lv_group_get_focused(ui_group))), _(credits));
+                     TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits));
 }
 
 void image_refresh() {
@@ -272,7 +272,7 @@ void joystick_task() {
                                     if (ev.code == NAV_A) {
                                         play_sound("confirm", nav_sound, 1);
                                         char *chosen_theme = lv_label_get_text(element_focused);
-                                        lv_label_set_text(ui_lblMessage, _("Loading Theme"));
+                                        lv_label_set_text(ui_lblMessage, TS("Loading Theme"));
                                         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                         refresh_screen();
@@ -455,8 +455,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Confirm"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavA, TG("Select"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -622,9 +622,9 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("THEME PICKER"));
+    ui_common_screen_init(&theme, &device, TS("THEME PICKER"));
     init_elements();
-    lv_label_set_text(ui_lblScreenMessage, _("No Themes Found"));
+    lv_label_set_text(ui_lblScreenMessage, TS("No Themes Found"));
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 

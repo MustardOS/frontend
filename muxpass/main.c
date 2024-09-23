@@ -205,8 +205,8 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblNavA, _("Confirm"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavA, TG("Select"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -314,7 +314,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("PASSCODE"));
+    ui_common_screen_init(&theme, &device, TS("PASSCODE"));
     ui_init(ui_pnlContent);
     init_elements();
 

@@ -113,7 +113,7 @@ void joystick_task() {
                                     lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_FLOATING);
                                     lv_obj_add_flag(ui_lblHealth, LV_OBJ_FLAG_FLOATING);
 
-                                    lv_label_set_text(ui_lblBoot, _("Booting System - Please Wait..."));
+                                    lv_label_set_text(ui_lblBoot, TS("Booting System - Please Wait..."));
 
                                     refresh_screen();
 
@@ -137,9 +137,9 @@ void joystick_task() {
 }
 
 void battery_task() {
-    snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", _("Capacity"), read_battery_capacity());
-    snprintf(voltage_info, sizeof(voltage_info), "%s: %s", _("Voltage"), read_battery_voltage());
-    snprintf(health_info, sizeof(health_info), "%s: %s", _("Health"), read_battery_health());
+    snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", TS("Capacity"), read_battery_capacity());
+    snprintf(voltage_info, sizeof(voltage_info), "%s: %s", TS("Voltage"), read_battery_voltage());
+    snprintf(health_info, sizeof(health_info), "%s: %s", TS("Health"), read_battery_health());
 
     lv_label_set_text(ui_lblCapacity, capacity_info);
     lv_label_set_text(ui_lblVoltage, voltage_info);

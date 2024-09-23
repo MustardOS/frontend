@@ -79,7 +79,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblLanguage,     "HELP.CONFIG"},
     };
 
-    char *message = "No Help Information Found";
+    char *message = TG("No Help Information Found");
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -89,10 +89,10 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "No Help Information Found";
+    if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(element_focused)), _(message));
+                     TS(lv_label_get_text(element_focused)), TS(message));
 }
 
 void init_navigation_groups() {
@@ -126,12 +126,12 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlRTC);
     apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
 
-    apply_theme_list_item(&theme, ui_lblTweakGeneral, _("General Settings"), false, false);
-    apply_theme_list_item(&theme, ui_lblTheme, _("Theme Picker"), false, false);
-    apply_theme_list_item(&theme, ui_lblNetwork, _("Wi-Fi Network"), false, false);
-    apply_theme_list_item(&theme, ui_lblServices, _("Web Services"), false, false);
-    apply_theme_list_item(&theme, ui_lblRTC, _("Date and Time"), false, false);
-    apply_theme_list_item(&theme, ui_lblLanguage, _("Language"), false, false);
+    apply_theme_list_item(&theme, ui_lblTweakGeneral, TS("General Settings"), false, false);
+    apply_theme_list_item(&theme, ui_lblTheme, TS("Theme Picker"), false, false);
+    apply_theme_list_item(&theme, ui_lblNetwork, TS("Wi-Fi Network"), false, false);
+    apply_theme_list_item(&theme, ui_lblServices, TS("Web Services"), false, false);
+    apply_theme_list_item(&theme, ui_lblRTC, TS("Date and Time"), false, false);
+    apply_theme_list_item(&theme, ui_lblLanguage, TS("Language"), false, false);
 
     apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_prog, "general");
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_prog, "theme");
@@ -426,8 +426,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Confirm"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavA, TG("Select"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -626,7 +626,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("CONFIGURATION"));
+    ui_common_screen_init(&theme, &device, TS("CONFIGURATION"));
     ui_init(ui_pnlContent);
     init_elements();
 

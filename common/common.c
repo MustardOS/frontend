@@ -22,7 +22,8 @@
 #include "device.h"
 #include "mini/mini.h"
 
-struct json translations;
+struct json translation_specific;
+struct json translation_generic;
 struct pattern skip_pattern_list = {NULL, 0, 0};
 int battery_capacity = 100;
 lv_anim_t animation;
@@ -1383,15 +1384,27 @@ void load_language(const char *program) {
              STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
 
     if (json_valid(read_text_from_file(language_file))) {
-        translations = json_object_get(json_parse(read_text_from_file(language_file)), program);
+        translation_specific = json_object_get(json_parse(read_text_from_file(language_file)), program);
+        translation_generic = json_object_get(json_parse(read_text_from_file(language_file)), "generic");
     }
 }
 
-char *translate(char *key) {
-    struct json translation_json = json_object_get(translations, key);
-    if (json_exists(translation_json)) {
+char *translate_specific(char *key) {
+    struct json translation_specific_json = json_object_get(translation_specific, key);
+    if (json_exists(translation_specific_json)) {
         char translation[MAX_BUFFER_SIZE];
-        json_string_copy(translation_json, translation, sizeof(translation));
+        json_string_copy(translation_specific_json, translation, sizeof(translation));
+        return strdup(translation);
+    }
+
+    return key;
+}
+
+char *translate_generic(char *key) {
+    struct json translation_generic_json = json_object_get(translation_generic, key);
+    if (json_exists(translation_generic_json)) {
+        char translation[MAX_BUFFER_SIZE];
+        json_string_copy(translation_generic_json, translation, sizeof(translation));
         return strdup(translation);
     }
 

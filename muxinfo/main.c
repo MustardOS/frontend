@@ -78,7 +78,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblCredits, "HELP.CREDIT"},
     };
 
-    char *message = "No Help Information Found";
+    char *message = TG("No Help Information Found");
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -88,10 +88,10 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "No Help Information Found";
+    if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(element_focused)), _(message));
+                     TS(lv_label_get_text(element_focused)), TS(message));
 }
 
 void init_navigation_groups() {
@@ -114,10 +114,10 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlSystem);
     apply_theme_list_panel(&theme, &device, ui_pnlCredits);
 
-    //apply_theme_list_item(&theme, ui_lblTracker, _("Activity Tracker"), false, false, false);
-    apply_theme_list_item(&theme, ui_lblTester, _("Input Tester"), false, false);
-    apply_theme_list_item(&theme, ui_lblSystem, _("System Details"), false, false);
-    apply_theme_list_item(&theme, ui_lblCredits, _("Supporters"), false, false);
+    //apply_theme_list_item(&theme, ui_lblTracker, TS("Activity Tracker"), false, false, false);
+    apply_theme_list_item(&theme, ui_lblTester, TS("Input Tester"), false, false);
+    apply_theme_list_item(&theme, ui_lblSystem, TS("System Details"), false, false);
+    apply_theme_list_item(&theme, ui_lblCredits, TS("Supporters"), false, false);
 
     //apply_theme_list_glyph(&theme, ui_icoTracker, mux_prog, "tracker");
     apply_theme_list_glyph(&theme, ui_icoTester, mux_prog, "tester");
@@ -402,8 +402,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Confirm"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavA, TG("Select"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -592,7 +592,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("INFORMATION"));
+    ui_common_screen_init(&theme, &device, TS("INFORMATION"));
     ui_init(ui_pnlContent);
     init_elements();
 

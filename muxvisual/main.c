@@ -108,7 +108,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblBackgroundAnimation, "HELP.BACKGROUND.ANIMATION"},
     };
 
-    char *message = "No Help Information Found";
+    char *message = TG("No Help Information Found");
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -118,10 +118,10 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "No Help Information Found";
+    if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(element_focused)), _(message));
+                     TS(lv_label_get_text(element_focused)), TS(message));
 }
 
 void init_pointers(Visuals *visuals, int *total, int *current) {
@@ -337,19 +337,19 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFile);
     apply_theme_list_panel(&theme, &device, ui_pnlBackgroundAnimation);
 
-    apply_theme_list_item(&theme, ui_lblBattery, _("Battery"), false, true);
-    apply_theme_list_item(&theme, ui_lblNetwork, _("Network"), false, true);
-    apply_theme_list_item(&theme, ui_lblBluetooth, _("Bluetooth"), false, true);
-    apply_theme_list_item(&theme, ui_lblClock, _("Clock"), false, true);
-    apply_theme_list_item(&theme, ui_lblBoxArt, _("Content Box Art"), false, true);
-    apply_theme_list_item(&theme, ui_lblName, _("Content Name Scheme"), false, true);
-    apply_theme_list_item(&theme, ui_lblDash, _("Content Dash Replacement"), false, true);
-    apply_theme_list_item(&theme, ui_lblFriendlyFolder, _("Friendly Folder Names"), false, true);
-    apply_theme_list_item(&theme, ui_lblTheTitleFormat, _("Display Title Reformatting"), false, true);
-    apply_theme_list_item(&theme, ui_lblFolderItemCount, _("Folder Item Count"), false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, _("Menu Counter Folder"), false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFile, _("Menu Counter File"), false, true);
-    apply_theme_list_item(&theme, ui_lblBackgroundAnimation, _("Background Animation"), false, true);
+    apply_theme_list_item(&theme, ui_lblBattery, TS("Battery"), false, true);
+    apply_theme_list_item(&theme, ui_lblNetwork, TS("Network"), false, true);
+    apply_theme_list_item(&theme, ui_lblBluetooth, TS("Bluetooth"), false, true);
+    apply_theme_list_item(&theme, ui_lblClock, TS("Clock"), false, true);
+    apply_theme_list_item(&theme, ui_lblBoxArt, TS("Content Box Art"), false, true);
+    apply_theme_list_item(&theme, ui_lblName, TS("Content Name Scheme"), false, true);
+    apply_theme_list_item(&theme, ui_lblDash, TS("Content Dash Replacement"), false, true);
+    apply_theme_list_item(&theme, ui_lblFriendlyFolder, TS("Friendly Folder Names"), false, true);
+    apply_theme_list_item(&theme, ui_lblTheTitleFormat, TS("Display Title Reformatting"), false, true);
+    apply_theme_list_item(&theme, ui_lblFolderItemCount, TS("Folder Item Count"), false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, TS("Menu Counter Folder"), false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFile, TS("Menu Counter File"), false, true);
+    apply_theme_list_item(&theme, ui_lblBackgroundAnimation, TS("Background Animation"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_prog, "battery");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_prog, "network");
@@ -379,17 +379,17 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, NULL);
     apply_theme_list_drop_down(&theme, ui_droBackgroundAnimation, NULL);
 
-    char *hidden_visible[] = {_("Hidden"), _("Visible")};
-    char *disabled_enabled[] = {_("Disabled"), _("Enabled")};
+    char *hidden_visible[] = {_("Hidden"), TS("Visible")};
+    char *disabled_enabled[] = {_("Disabled"), TS("Enabled")};
     add_drop_down_options(ui_droBattery, hidden_visible, 2);
     add_drop_down_options(ui_droNetwork, hidden_visible, 2);
     add_drop_down_options(ui_droBluetooth, hidden_visible, 2);
     add_drop_down_options(ui_droClock, hidden_visible, 2);
     add_drop_down_options(ui_droBoxArt, (char *[]) {
-            _("Bottom + Behind"), _("Bottom + Front"), _("Middle + Behind"), _("Middle + Front"),
-            _("Top + Behind"), _("Top + Front"), _("Fullscreen + Behind"), _("Fullscreen + Front"), _("Disabled")}, 9);
+            TS("Bottom + Behind"), TS("Bottom + Front"), TS("Middle + Behind"), TS("Middle + Front"),
+            TS("Top + Behind"), TS("Top + Front"), TS("Fullscreen + Behind"), TS("Fullscreen + Front"), TS("Disabled")}, 9);
     add_drop_down_options(ui_droName,
-                          (char *[]) {_("Full Name"), _("Remove [ ]"), _("Remove ( )"), _("Remove [ ] and ( )")}, 4);
+                          (char *[]) {_("Full Name"), TS("Remove [ ]"), TS("Remove ( )"), TS("Remove [ ] and ( )")}, 4);
     add_drop_down_options(ui_droDash, disabled_enabled, 2);
     add_drop_down_options(ui_droFriendlyFolder, disabled_enabled, 2);
     add_drop_down_options(ui_droTheTitleFormat, disabled_enabled, 2);
@@ -573,7 +573,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = _("Saving Changes");
+                                    osd_message = TS("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -854,7 +854,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, _("Save"));
+    lv_label_set_text(ui_lblNavB, TG("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -1046,7 +1046,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("INTERFACE OPTIONS"));
+    ui_common_screen_init(&theme, &device, TS("INTERFACE OPTIONS"));
     ui_init(ui_pnlContent);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));

@@ -66,7 +66,7 @@ int first_open = 1;
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.NETSCAN"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.NETSCAN"));
 }
 
 void *scan_networks(void *arg) {
@@ -83,12 +83,12 @@ void create_network_items() {
     FILE *file = fopen(scan_file, "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file %s\n", scan_file);
-        lv_label_set_text(ui_lblScreenMessage, _("No Wi-Fi Networks Found"));
+        lv_label_set_text(ui_lblScreenMessage, TS("No Wi-Fi Networks Found"));
         return;
     }
 
     if (strcmp(read_line_from_file(scan_file, 1), "0") == 0) {
-        lv_label_set_text(ui_lblScreenMessage, _("No Wi-Fi Networks Found"));
+        lv_label_set_text(ui_lblScreenMessage, TS("No Wi-Fi Networks Found"));
         return;
     } else {
         lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
@@ -393,9 +393,9 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Use"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
-    lv_label_set_text(ui_lblNavX, _("Rescan"));
+    lv_label_set_text(ui_lblNavA, TG("Use"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavX, TG("Rescan"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -558,9 +558,9 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("NETWORK SCAN"));
+    ui_common_screen_init(&theme, &device, TS("NETWORK SCAN"));
     init_elements();
-    lv_label_set_text(ui_lblScreenMessage, _("Scanning for Wi-Fi Networks..."));
+    lv_label_set_text(ui_lblScreenMessage, TS("Scanning for Wi-Fi Networks..."));
     lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));

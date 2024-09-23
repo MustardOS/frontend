@@ -125,7 +125,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblConnect,    "HELP.CONNECT"},
     };
 
-    char *message = "No Help Information Found";
+    char *message = TG("No Help Information Found");
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -135,37 +135,37 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "No Help Information Found";
+    if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(element_focused)), _(message));
+                     TS(lv_label_get_text(element_focused)), TS(message));
 }
 
 void can_scan_check() {
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
         if (is_network_connected()) {
-            lv_label_set_text(ui_lblConnect, _("Disconnect"));
+            lv_label_set_text(ui_lblConnect, TS("Disconnect"));
 
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
         } else {
-            lv_label_set_text(ui_lblConnect, _("Connect"));
+            lv_label_set_text(ui_lblConnect, TS("Connect"));
 
             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
 
-            lv_label_set_text(ui_lblStatusValue, _("Not Connected"));
+            lv_label_set_text(ui_lblStatusValue, TS("Not Connected"));
         }
     }
 }
 
 void get_current_ip() {
     if (!config.NETWORK.ENABLED) {
-        lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
+        lv_label_set_text(ui_lblStatusValue, TS("Network Disabled"));
         return;
     }
 
@@ -177,9 +177,9 @@ void get_current_ip() {
     static char net_message[MAX_BUFFER_SIZE];
 
     if (strlen(curr_ip) > 1) {
-        snprintf(net_message, sizeof(net_message), "%s - %s", _("Connected"), curr_ip);
+        snprintf(net_message, sizeof(net_message), "%s - %s", TS("Connected"), curr_ip);
         lv_label_set_text(ui_lblStatusValue, net_message);
-        lv_label_set_text(ui_lblConnect, _("Disconnect"));
+        lv_label_set_text(ui_lblConnect, TS("Disconnect"));
         lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -289,17 +289,17 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlConnect);
     apply_theme_list_panel(&theme, &device, ui_pnlStatus);
 
-    apply_theme_list_item(&theme, ui_lblEnable, _("Enabled"), false, true);
-    apply_theme_list_item(&theme, ui_lblIdentifier, _("Identifier"), false, true);
-    apply_theme_list_item(&theme, ui_lblPassword, _("Password"), false, true);
-    apply_theme_list_item(&theme, ui_lblType, _("Network Type"), false, true);
-    apply_theme_list_item(&theme, ui_lblAddress, _("Device IP"), false, true);
-    apply_theme_list_item(&theme, ui_lblSubnet, _("Subnet CIDR"), false, true);
-    apply_theme_list_item(&theme, ui_lblGateway, _("Gateway IP"), false, true);
-    apply_theme_list_item(&theme, ui_lblDNS, _("DNS Server"), false, true);
-    apply_theme_list_item(&theme, ui_lblConnect, _("Connect"), false, true);
+    apply_theme_list_item(&theme, ui_lblEnable, TS("Enabled"), false, true);
+    apply_theme_list_item(&theme, ui_lblIdentifier, TS("Identifier"), false, true);
+    apply_theme_list_item(&theme, ui_lblPassword, TS("Password"), false, true);
+    apply_theme_list_item(&theme, ui_lblType, TS("Network Type"), false, true);
+    apply_theme_list_item(&theme, ui_lblAddress, TS("Device IP"), false, true);
+    apply_theme_list_item(&theme, ui_lblSubnet, TS("Subnet CIDR"), false, true);
+    apply_theme_list_item(&theme, ui_lblGateway, TS("Gateway IP"), false, true);
+    apply_theme_list_item(&theme, ui_lblDNS, TS("DNS Server"), false, true);
+    apply_theme_list_item(&theme, ui_lblConnect, TS("Connect"), false, true);
 
-    apply_theme_list_item(&theme, ui_lblStatus, _("Status"), false, false);
+    apply_theme_list_item(&theme, ui_lblStatus, TS("Status"), false, false);
 
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_prog, "enable");
     apply_theme_list_glyph(&theme, ui_icoIdentifier, mux_prog, "identifier");
@@ -586,7 +586,7 @@ void joystick_task() {
                                                 lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
                                             }
                                         } else {
-                                            lv_label_set_text(ui_lblMessage, _("Cannot modify while connected!"));
+                                            lv_label_set_text(ui_lblMessage, TS("Cannot modify while connected!"));
                                             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                         }
                                     } else if (element_focused == ui_lblConnect) {
@@ -623,13 +623,13 @@ void joystick_task() {
                                                 if (config.NETWORK.ENABLED) {
                                                     if (strcasecmp(cv_pass, PASS_ENCODE) != 0) {
                                                         lv_label_set_text(ui_lblStatusValue,
-                                                                          _("Encrypting Password..."));
+                                                                          TS("Encrypting Password..."));
                                                         lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
                                                         refresh_screen();
                                                         usleep(256);
                                                     }
 
-                                                    lv_label_set_text(ui_lblStatusValue, _("Trying to Connect..."));
+                                                    lv_label_set_text(ui_lblStatusValue, TS("Trying to Connect..."));
                                                     refresh_screen();
                                                     usleep(256);
                                                     system("/opt/muos/script/web/password.sh");
@@ -638,11 +638,11 @@ void joystick_task() {
 
                                                     get_current_ip();
                                                 } else {
-                                                    lv_label_set_text(ui_lblStatusValue, _("Network Disabled"));
+                                                    lv_label_set_text(ui_lblStatusValue, TS("Network Disabled"));
                                                     refresh_screen();
                                                 }
                                             } else {
-                                                lv_label_set_text(ui_lblMessage, _("Please check network settings"));
+                                                lv_label_set_text(ui_lblMessage, TS("Please check network settings"));
                                                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                                 refresh_screen();
                                             }
@@ -675,7 +675,7 @@ void joystick_task() {
                                                 lv_textarea_set_text(ui_txtEntry, lblCurrentValue);
                                             }
                                         } else {
-                                            lv_label_set_text(ui_lblMessage, _("Cannot modify while connected!"));
+                                            lv_label_set_text(ui_lblMessage, TS("Cannot modify while connected!"));
                                             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
                                         }
                                     }
@@ -701,7 +701,7 @@ void joystick_task() {
                                         system("/opt/muos/script/system/network.sh");
                                     }
 
-                                    lv_label_set_text(ui_lblMessage, _("Changes Saved"));
+                                    lv_label_set_text(ui_lblMessage, TS("Changes Saved"));
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
@@ -1172,10 +1172,10 @@ static void num_handler(lv_event_t *e) {
 }
 
 void init_elements() {
-    type_dhcp = _("DHCP");
-    type_static = _("Static");
-    enabled_false = _("False");
-    enabled_true = _("True");
+    type_dhcp = TS("DHCP");
+    type_static = TS("Static");
+    enabled_false = TS("False");
+    enabled_true = TS("True");
 
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
@@ -1201,9 +1201,9 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblNavB, _("Back"));
-    lv_label_set_text(ui_lblNavX, _("Scan"));
-    lv_label_set_text(ui_lblNavY, _("Profiles"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavX, TG("Scan"));
+    lv_label_set_text(ui_lblNavY, TG("Profiles"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -1568,7 +1568,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("WI-FI NETWORK"));
+    ui_common_screen_init(&theme, &device, TS("WI-FI NETWORK"));
     ui_init(ui_screen, ui_pnlContent, &theme);
     init_elements();
 

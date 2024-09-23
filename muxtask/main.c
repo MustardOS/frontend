@@ -97,8 +97,8 @@ void show_help() {
              "%s/MUOS/task/%s.sh", device.STORAGE.ROM.MOUNT, title);
     char *message = get_script_value(help_info, "HELP");
 
-    if (strlen(message) <= 1) message = _("No Help Information Found");
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, _(title), _(message));
+    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
 }
 
 void create_task_items() {
@@ -168,14 +168,14 @@ void create_task_items() {
 
         ui_count++;
 
-        add_item(&items, &item_count, task_store, _(task_store), ROM);
+        add_item(&items, &item_count, task_store, TS(task_store), ROM);
 
         lv_obj_t *ui_pnlTask = lv_obj_create(ui_pnlContent);
         if (ui_pnlTask) {
             apply_theme_list_panel(&theme, &device, ui_pnlTask);
 
             lv_obj_t *ui_lblTaskItem = lv_label_create(ui_pnlTask);
-            if (ui_lblTaskItem) apply_theme_list_item(&theme, ui_lblTaskItem, _(task_store), true, false);
+            if (ui_lblTaskItem) apply_theme_list_item(&theme, ui_lblTaskItem, TS(task_store), true, false);
 
             lv_obj_t *ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
             if (ui_lblTaskItemGlyph) {
@@ -488,8 +488,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Launch"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
+    lv_label_set_text(ui_lblNavA, TG("Launch"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -681,7 +681,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("TASK TOOLKIT"));
+    ui_common_screen_init(&theme, &device, TS("TASK TOOLKIT"));
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
@@ -733,7 +733,7 @@ int main(int argc, char *argv[]) {
             list_nav_next(tin_index);
         }
     } else {
-        lv_label_set_text(ui_lblScreenMessage, _("No Tasks Found"));
+        lv_label_set_text(ui_lblScreenMessage, TS("No Tasks Found"));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 

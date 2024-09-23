@@ -68,7 +68,7 @@ int first_open = 1;
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(ui_lblTitle)), _("HELP.NETPROFILE"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.NETPROFILE"));
 }
 
 int remove_profile(char *name) {
@@ -127,7 +127,7 @@ int save_profile() {
     const char *p_dns = read_text_from_file("/run/muos/global/network/dns");
 
     if (!p_ssid || strlen(p_ssid) == 0) {
-        lv_label_set_text(ui_lblMessage, _("Invalid SSID"));
+        lv_label_set_text(ui_lblMessage, TS("Invalid SSID"));
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         refresh_screen();
         return 0;
@@ -135,7 +135,7 @@ int save_profile() {
 
     if (!p_pass || strlen(p_pass) < 8 || strlen(p_pass) > 63) {
         if (strlen(p_pass) != 64) { // If it's 64 characters then it must be encoded... let's assume!
-            lv_label_set_text(ui_lblMessage, _("Password must be 8..63 characters!")); // From wpa_passphrase!
+            lv_label_set_text(ui_lblMessage, TS("Password must be 8..63 characters!")); // From wpa_passphrase!
             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
             refresh_screen();
@@ -149,7 +149,7 @@ int save_profile() {
             !p_subnet || strlen(p_subnet) == 0 ||
             !p_gateway || strlen(p_gateway) == 0 ||
             !p_dns || strlen(p_dns) == 0) {
-            lv_label_set_text(ui_lblMessage, _("Invalid Network Settings"));
+            lv_label_set_text(ui_lblMessage, TS("Invalid Network Settings"));
             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
             refresh_screen();
             return 0;
@@ -292,7 +292,7 @@ void create_profile_items() {
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
     } else {
-        lv_label_set_text(ui_lblScreenMessage, _("No Saved Network Profiles Found"));
+        lv_label_set_text(ui_lblScreenMessage, TS("No Saved Network Profiles Found"));
     }
 }
 
@@ -576,10 +576,10 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblNavA, _("Load"));
-    lv_label_set_text(ui_lblNavB, _("Back"));
-    lv_label_set_text(ui_lblNavX, _("Save"));
-    lv_label_set_text(ui_lblNavY, _("Remove"));
+    lv_label_set_text(ui_lblNavA, TG("Load"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavX, TG("Save"));
+    lv_label_set_text(ui_lblNavY, TG("Remove"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -751,9 +751,9 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("NETWORK PROFILE"));
+    ui_common_screen_init(&theme, &device, TS("NETWORK PROFILE"));
     init_elements();
-    lv_label_set_text(ui_lblScreenMessage, _("Loading Network Profiles..."));
+    lv_label_set_text(ui_lblScreenMessage, TS("Loading Network Profiles..."));
     lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));

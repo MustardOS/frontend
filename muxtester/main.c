@@ -198,7 +198,7 @@ void glyph_task() {
 }
 
 void init_elements() {
-    lv_label_set_text(ui_lblMessage, _("Press POWER to finish testing"));
+    lv_label_set_text(ui_lblMessage, TS("Press POWER to finish testing"));
     lv_obj_set_y(ui_pnlMessage, -5);
     lv_obj_set_height(ui_pnlFooter, 0);
     lv_obj_move_foreground(ui_pnlHeader);
@@ -261,7 +261,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("INPUT TESTER"));
+    ui_common_screen_init(&theme, &device, TS("INPUT TESTER"));
     ui_init(ui_pnlContent);
     init_elements();
 

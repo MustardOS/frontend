@@ -82,7 +82,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblShutdown,   "HELP.SHUTDOWN"},
     };
 
-    char *message = "No Help Information Found";
+    char *message = TG("No Help Information Found");
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -92,10 +92,10 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "No Help Information Found";
+    if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(element_focused)), _(message));
+                     TS(lv_label_get_text(element_focused)), TS(message));
 }
 
 void init_navigation_groups() {
@@ -137,14 +137,14 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlReboot);
     apply_theme_list_panel(&theme, &device, ui_pnlShutdown);
 
-    apply_theme_list_item(&theme, ui_lblContent, _("Explore Content"), false, false);
-    apply_theme_list_item(&theme, ui_lblFavourites, _("Favourites"), false, false);
-    apply_theme_list_item(&theme, ui_lblHistory, _("History"), false, false);
-    apply_theme_list_item(&theme, ui_lblApps, _("Applications"), false, false);
-    apply_theme_list_item(&theme, ui_lblInfo, _("Information"), false, false);
-    apply_theme_list_item(&theme, ui_lblConfig, _("Configuration"), false, false);
-    apply_theme_list_item(&theme, ui_lblReboot, _("Reboot"), false, false);
-    apply_theme_list_item(&theme, ui_lblShutdown, _("Shutdown"), false, false);
+    apply_theme_list_item(&theme, ui_lblContent, TS("Explore Content"), false, false);
+    apply_theme_list_item(&theme, ui_lblFavourites, TS("Favourites"), false, false);
+    apply_theme_list_item(&theme, ui_lblHistory, TS("History"), false, false);
+    apply_theme_list_item(&theme, ui_lblApps, TS("Applications"), false, false);
+    apply_theme_list_item(&theme, ui_lblInfo, TS("Information"), false, false);
+    apply_theme_list_item(&theme, ui_lblConfig, TS("Configuration"), false, false);
+    apply_theme_list_item(&theme, ui_lblReboot, TS("Reboot"), false, false);
+    apply_theme_list_item(&theme, ui_lblShutdown, TS("Shutdown"), false, false);
 
     apply_theme_list_glyph(&theme, ui_icoContent, mux_prog, "explore");
     apply_theme_list_glyph(&theme, ui_icoFavourites, mux_prog, "favourite");
@@ -474,7 +474,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, _("Confirm"));
+    lv_label_set_text(ui_lblNavA, TG("Select"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavBGlyph,
@@ -669,7 +669,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("MAIN MENU"));
+    ui_common_screen_init(&theme, &device, TS("MAIN MENU"));
     ui_init(ui_pnlContent);
     init_elements();
 

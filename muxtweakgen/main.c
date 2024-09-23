@@ -101,7 +101,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblAdvanced,   "HELP.ADVANCED"},
     };
 
-    char *message = "No Help Information Found";
+    char *message = TG("No Help Information Found");
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -111,10 +111,10 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = "No Help Information Found";
+    if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     _(lv_label_get_text(element_focused)), _(message));
+                     TS(lv_label_get_text(element_focused)), TS(message));
 }
 
 void init_pointers(Tweak *tweak, int *total, int *current) {
@@ -695,17 +695,17 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlInterface);
     apply_theme_list_panel(&theme, &device, ui_pnlAdvanced);
 
-    apply_theme_list_item(&theme, ui_lblHidden, _("Show Hidden Content"), false, true);
-    apply_theme_list_item(&theme, ui_lblBGM, _("Background Music"), false, true);
-    apply_theme_list_item(&theme, ui_lblSound, _("Navigation Sound"), false, true);
-    apply_theme_list_item(&theme, ui_lblStartup, _("Device Startup"), false, true);
-    apply_theme_list_item(&theme, ui_lblColour, _("Colour Temperature"), false, true);
-    apply_theme_list_item(&theme, ui_lblBrightness, _("Brightness"), false, true);
-    apply_theme_list_item(&theme, ui_lblHDMI, _("HDMI Output"), false, true);
-    apply_theme_list_item(&theme, ui_lblShutdown, _("Sleep Function"), false, true);
-    apply_theme_list_item(&theme, ui_lblBattery, _("Low Battery Indicator"), false, true);
-    apply_theme_list_item(&theme, ui_lblInterface, _("Interface Options"), false, true);
-    apply_theme_list_item(&theme, ui_lblAdvanced, _("Advanced Settings"), false, true);
+    apply_theme_list_item(&theme, ui_lblHidden, TS("Show Hidden Content"), false, true);
+    apply_theme_list_item(&theme, ui_lblBGM, TS("Background Music"), false, true);
+    apply_theme_list_item(&theme, ui_lblSound, TS("Navigation Sound"), false, true);
+    apply_theme_list_item(&theme, ui_lblStartup, TS("Device Startup"), false, true);
+    apply_theme_list_item(&theme, ui_lblColour, TS("Colour Temperature"), false, true);
+    apply_theme_list_item(&theme, ui_lblBrightness, TS("Brightness"), false, true);
+    apply_theme_list_item(&theme, ui_lblHDMI, TS("HDMI Output"), false, true);
+    apply_theme_list_item(&theme, ui_lblShutdown, TS("Sleep Function"), false, true);
+    apply_theme_list_item(&theme, ui_lblBattery, TS("Low Battery Indicator"), false, true);
+    apply_theme_list_item(&theme, ui_lblInterface, TS("Interface Options"), false, true);
+    apply_theme_list_item(&theme, ui_lblAdvanced, TS("Advanced Settings"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoHidden, mux_prog, "hidden");
     apply_theme_list_glyph(&theme, ui_icoBGM, mux_prog, "bgm");
@@ -739,28 +739,28 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droInterface, "");
     apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
 
-    char *disabled_enabled[] = {_("Disabled"), _("Enabled")};
+    char *disabled_enabled[] = {_("Disabled"), TS("Enabled")};
     add_drop_down_options(ui_droHidden, disabled_enabled, 2);
     add_drop_down_options(ui_droBGM, disabled_enabled, 2);
     add_drop_down_options(ui_droSound, disabled_enabled, 2);
     add_drop_down_options(ui_droStartup, (char *[]) {
-            _("Main Menu"), _("Content Explorer"), _("Favourites"),
-            _("History"), _("Last Game"), _("Resume Game")}, 6);
+            TS("Main Menu"), TS("Content Explorer"), TS("Favourites"),
+            TS("History"), TS("Last Game"), TS("Resume Game")}, 6);
     add_drop_down_options(ui_droColour, (char *[]) {
-            _("Deep Arctic (-256)"), _("Icy Chill (-224)"), _("Frosty Breeze (-192)"),
-            _("Cool Glacier (-160)"), _("Arctic Frost (-128)"), _("Winter Sky (-96)"),
-            _("Frostbite Blue (-64)"), _("Arctic Blue (-32)"), _("Neutral White (0)"), _("Daylight White (32)"),
-            _("Warm White (64)"), _("Soft Ivory (96)"), _("Candlelight Yellow (128)"), _("Warm Glow (160)"),
-            _("Sunset Orange (192)"), _("Amber Flame (224)"), _("Deep Ember (256)")}, 17);
+            TS("Deep Arctic (-256)"), TS("Icy Chill (-224)"), TS("Frosty Breeze (-192)"),
+            TS("Cool Glacier (-160)"), TS("Arctic Frost (-128)"), TS("Winter Sky (-96)"),
+            TS("Frostbite Blue (-64)"), TS("Arctic Blue (-32)"), TS("Neutral White (0)"), TS("Daylight White (32)"),
+            TS("Warm White (64)"), TS("Soft Ivory (96)"), TS("Candlelight Yellow (128)"), TS("Warm Glow (160)"),
+            TS("Sunset Orange (192)"), TS("Amber Flame (224)"), TS("Deep Ember (256)")}, 17);
     add_drop_down_options(ui_droHDMI, (char *[]) {
-            _("Disabled"), _("480i"), _("576i"), _("480p"), _("576p"), _("720p + 50hz"), _("720p + 60hz"),
-            _("1080i + 50hz"), _("1080i + 60hz"), _("1080p + 24hz"), _("1080p + 50hz"), _("1080p + 60hz")}, 12);
+            TS("Disabled"), TS("480i"), TS("576i"), TS("480p"), TS("576p"), TS("720p + 50hz"), TS("720p + 60hz"),
+            TS("1080i + 50hz"), TS("1080i + 60hz"), TS("1080p + 24hz"), TS("1080p + 50hz"), TS("1080p + 60hz")}, 12);
     add_drop_down_options(ui_droShutdown, (char *[]) {
-            _("Disabled"), _("Sleep Suspend"), _("Instant Shutdown"),
-            _("Sleep 10s + Shutdown"), _("Sleep 30s + Shutdown"),
-            _("Sleep 60s + Shutdown"), _("Sleep 2m + Shutdown"),
-            _("Sleep 5m + Shutdown"), _("Sleep 10m + Shutdown"),
-            _("Sleep 30m + Shutdown"), _("Sleep 60m + Shutdown")}, 11);
+            TS("Disabled"), TS("Sleep Suspend"), TS("Instant Shutdown"),
+            TS("Sleep 10s + Shutdown"), TS("Sleep 30s + Shutdown"),
+            TS("Sleep 60s + Shutdown"), TS("Sleep 2m + Shutdown"),
+            TS("Sleep 5m + Shutdown"), TS("Sleep 10m + Shutdown"),
+            TS("Sleep 30m + Shutdown"), TS("Sleep 60m + Shutdown")}, 11);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -930,7 +930,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    lv_label_set_text(ui_lblMessage, _("Saving Changes"));
+                                    lv_label_set_text(ui_lblMessage, TS("Saving Changes"));
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     save_tweak_options();
@@ -1192,7 +1192,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, _("Save"));
+    lv_label_set_text(ui_lblNavB, TG("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -1397,7 +1397,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_prog);
 
-    ui_common_screen_init(&theme, &device, _("GENERAL SETTINGS"));
+    ui_common_screen_init(&theme, &device, TS("GENERAL SETTINGS"));
     ui_init(ui_pnlContent);
     init_elements();
 
