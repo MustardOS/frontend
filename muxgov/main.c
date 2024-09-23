@@ -92,9 +92,7 @@ char **get_subdirectories(const char *base_dir) {
         return NULL;
     }
 
-    char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
-    load_skip_patterns(skip_ini);
+    load_skip_patterns();
 
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
@@ -584,6 +582,16 @@ void joystick_task() {
                 }
             }
         }
+
+        if (file_exist("/tmp/hdmi_do_refresh")) {
+            if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
+                remove("/tmp/hdmi_do_refresh");
+                lv_obj_invalidate(ui_pnlHeader);
+                lv_obj_invalidate(ui_pnlContent);
+                lv_obj_invalidate(ui_pnlFooter);
+            }
+        }
+
         refresh_screen();
     }
 }

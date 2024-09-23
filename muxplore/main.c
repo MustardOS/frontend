@@ -537,9 +537,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
         return 0;
     }
 
-    char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
-    load_skip_patterns(skip_ini);
+    load_skip_patterns();
 
     int32_t dir_count = 0;
     while ((entry = readdir(dir)) != NULL) {
@@ -567,9 +565,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
         return;
     }
 
-    char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
-    load_skip_patterns(skip_ini);
+    load_skip_patterns();
 
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
@@ -1738,6 +1734,16 @@ void joystick_task() {
                 }
             }
         }
+
+        if (file_exist("/tmp/hdmi_do_refresh")) {
+            if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
+                remove("/tmp/hdmi_do_refresh");
+                lv_obj_invalidate(ui_pnlHeader);
+                lv_obj_invalidate(ui_pnlContent);
+                lv_obj_invalidate(ui_pnlFooter);
+            }
+        }
+
         refresh_screen();
     }
 }

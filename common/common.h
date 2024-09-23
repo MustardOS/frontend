@@ -164,7 +164,7 @@ int is_network_connected();
 
 void process_visual_element(enum visual_type visual, lv_obj_t *element);
 
-void load_skip_patterns(const char *file_path);
+void load_skip_patterns();
 
 int should_skip(const char *name);
 

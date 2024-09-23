@@ -353,6 +353,16 @@ void joystick_task() {
                 }
             }
         }
+
+        if (file_exist("/tmp/hdmi_do_refresh")) {
+            if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
+                remove("/tmp/hdmi_do_refresh");
+                lv_obj_invalidate(ui_pnlHeader);
+                lv_obj_invalidate(ui_pnlContent);
+                lv_obj_invalidate(ui_pnlFooter);
+            }
+        }
+
         refresh_screen();
     }
 }

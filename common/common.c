@@ -560,9 +560,7 @@ int count_items(const char *path, enum count_type type) {
         return 0;
     }
 
-    char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
-    load_skip_patterns(skip_ini);
+    load_skip_patterns();
 
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
@@ -1202,10 +1200,17 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     }
 }
 
-void load_skip_patterns(const char *file_path) {
-    FILE *file = fopen(file_path, "r");
+void load_skip_patterns() {
+    char skip_ini[MAX_BUFFER_SIZE];
+    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
+
+    if (!file_exist(skip_ini)) {
+        snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+    }
+
+    FILE *file = fopen(skip_ini, "r");
     if (!file) {
-        perror("Failed to open skip.ini file");
+        perror("Failed to open 'skip.ini' file");
         return;
     }
 
