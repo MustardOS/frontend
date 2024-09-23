@@ -50,7 +50,7 @@ int current_item_index = 0;
 int first_open = 1;
 int ui_count = 0;
 
-#define PASS_ENCODE "******"
+#define PASS_ENCODE "********"
 
 lv_obj_t *msgbox_element = NULL;
 
