@@ -538,7 +538,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     }
 
     char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
     load_skip_patterns(skip_ini);
 
     int32_t dir_count = 0;
@@ -568,7 +568,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
     }
 
     char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
     load_skip_patterns(skip_ini);
 
     while ((entry = readdir(dir)) != NULL) {

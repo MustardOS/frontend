@@ -93,7 +93,7 @@ char **get_subdirectories(const char *base_dir) {
     }
 
     char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
     load_skip_patterns(skip_ini);
 
     while ((entry = readdir(dir)) != NULL) {
