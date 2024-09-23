@@ -491,7 +491,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = TS("Saving Changes");
+                                    osd_message = TG("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 

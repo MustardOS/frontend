@@ -289,7 +289,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlConnect);
     apply_theme_list_panel(&theme, &device, ui_pnlStatus);
 
-    apply_theme_list_item(&theme, ui_lblEnable, TS("Enabled"), false, true);
+    apply_theme_list_item(&theme, ui_lblEnable, TG("Enabled"), false, true);
     apply_theme_list_item(&theme, ui_lblIdentifier, TS("Identifier"), false, true);
     apply_theme_list_item(&theme, ui_lblPassword, TS("Password"), false, true);
     apply_theme_list_item(&theme, ui_lblType, TS("Network Type"), false, true);
@@ -1174,8 +1174,8 @@ static void num_handler(lv_event_t *e) {
 void init_elements() {
     type_dhcp = TS("DHCP");
     type_static = TS("Static");
-    enabled_false = TS("False");
-    enabled_true = TS("True");
+    enabled_false = TG("False");
+    enabled_true = TG("True");
 
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);

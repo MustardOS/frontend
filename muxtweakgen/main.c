@@ -739,7 +739,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droInterface, "");
     apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
 
-    char *disabled_enabled[] = {_("Disabled"), TS("Enabled")};
+    char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
     add_drop_down_options(ui_droHidden, disabled_enabled, 2);
     add_drop_down_options(ui_droBGM, disabled_enabled, 2);
     add_drop_down_options(ui_droSound, disabled_enabled, 2);
@@ -753,10 +753,10 @@ void init_navigation_groups() {
             TS("Warm White (64)"), TS("Soft Ivory (96)"), TS("Candlelight Yellow (128)"), TS("Warm Glow (160)"),
             TS("Sunset Orange (192)"), TS("Amber Flame (224)"), TS("Deep Ember (256)")}, 17);
     add_drop_down_options(ui_droHDMI, (char *[]) {
-            TS("Disabled"), TS("480i"), TS("576i"), TS("480p"), TS("576p"), TS("720p + 50hz"), TS("720p + 60hz"),
+            TG("Disabled"), TS("480i"), TS("576i"), TS("480p"), TS("576p"), TS("720p + 50hz"), TS("720p + 60hz"),
             TS("1080i + 50hz"), TS("1080i + 60hz"), TS("1080p + 24hz"), TS("1080p + 50hz"), TS("1080p + 60hz")}, 12);
     add_drop_down_options(ui_droShutdown, (char *[]) {
-            TS("Disabled"), TS("Sleep Suspend"), TS("Instant Shutdown"),
+            TG("Disabled"), TS("Sleep Suspend"), TS("Instant Shutdown"),
             TS("Sleep 10s + Shutdown"), TS("Sleep 30s + Shutdown"),
             TS("Sleep 60s + Shutdown"), TS("Sleep 2m + Shutdown"),
             TS("Sleep 5m + Shutdown"), TS("Sleep 10m + Shutdown"),
@@ -930,7 +930,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    lv_label_set_text(ui_lblMessage, TS("Saving Changes"));
+                                    lv_label_set_text(ui_lblMessage, TG("Saving Changes"));
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
                                     save_tweak_options();

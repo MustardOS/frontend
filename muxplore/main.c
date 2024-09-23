@@ -1867,7 +1867,7 @@ void init_footer_elements() {
         case USB:
         case FAVOURITE:
         case HISTORY: {
-            set_nav_text(_("Open"), TS("Back"), module == ROOT ? NULL : TS("Refresh"),
+            set_nav_text(TG("Open"), TG("Back"), module == ROOT ? NULL : TS("Refresh"),
                          module == ROOT ? NULL : TS("Favourite"), TS("Info"));
             if (lv_group_get_obj_count(ui_group) <= 0) {
                 lv_obj_t *nav_keep[] = {ui_lblNavBGlyph, ui_lblNavB};

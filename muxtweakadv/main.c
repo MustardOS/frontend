@@ -635,20 +635,20 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droHDMIOutput, NULL);
     apply_theme_list_drop_down(&theme, ui_droStorage, "");
 
-    char *disabled_enabled[] = {_("Disabled"), TS("Enabled")};
+    char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
     add_drop_down_options(ui_droSwap, disabled_enabled, 2);
     add_drop_down_options(ui_droThermal, disabled_enabled, 2);
-    add_drop_down_options(ui_droFont, (char *[]) {_("Language"), TS("Theme")}, 2);
-    add_drop_down_options(ui_droVolume, (char *[]) {_("Previous"), TS("Quiet"), TS("Loud")}, 3);
-    add_drop_down_options(ui_droBrightness, (char *[]) {_("Previous"), TS("Low"), TS("High")}, 3);
+    add_drop_down_options(ui_droFont, (char *[]) {TS("Language"), TS("Theme")}, 2);
+    add_drop_down_options(ui_droVolume, (char *[]) {TG("Previous"), TS("Quiet"), TS("Loud")}, 3);
+    add_drop_down_options(ui_droBrightness, (char *[]) {TG("Previous"), TS("Low"), TS("High")}, 3);
     add_drop_down_options(ui_droPasscode, disabled_enabled, 2);
     add_drop_down_options(ui_droLED, disabled_enabled, 2);
     add_drop_down_options(ui_droTheme, disabled_enabled, 2);
     add_drop_down_options(ui_droRetroWait, disabled_enabled, 2);
-    add_drop_down_options(ui_droUSBFunction, (char *[]) {_("Disabled"), "ADB", "MTP"}, 3);
+    add_drop_down_options(ui_droUSBFunction, (char *[]) {TG("Disabled"), "ADB", "MTP"}, 3);
     add_drop_down_options(ui_droState, (char *[]) {"mem", "freeze"}, 2);
     add_drop_down_options(ui_droVerbose, disabled_enabled, 2);
-    add_drop_down_options(ui_droHDMIOutput, (char *[]) {_("External"), TS("Internal")}, 2);
+    add_drop_down_options(ui_droHDMIOutput, (char *[]) {TG("External"), TG("Internal")}, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -837,7 +837,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = TS("Saving Changes");
+                                    osd_message = TG("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 

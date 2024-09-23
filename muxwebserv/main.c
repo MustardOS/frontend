@@ -259,7 +259,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoNTP, mux_prog, "ntp");
 
     char options[MAX_BUFFER_SIZE];
-    snprintf(options, sizeof(options), "%s\n%s", TS("Disabled"), TS("Enabled"));
+    snprintf(options, sizeof(options), "%s\n%s", TG("Disabled"), TG("Enabled"));
     apply_theme_list_drop_down(&theme, ui_droShell, options);
     apply_theme_list_drop_down(&theme, ui_droBrowser, options);
     apply_theme_list_drop_down(&theme, ui_droTerminal, options);
@@ -413,7 +413,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = TS("Saving Changes");
+                                    osd_message = TG("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 

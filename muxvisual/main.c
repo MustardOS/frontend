@@ -379,17 +379,17 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, NULL);
     apply_theme_list_drop_down(&theme, ui_droBackgroundAnimation, NULL);
 
-    char *hidden_visible[] = {_("Hidden"), TS("Visible")};
-    char *disabled_enabled[] = {_("Disabled"), TS("Enabled")};
+    char *hidden_visible[] = {TG("Hidden"), TG("Visible")};
+    char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
     add_drop_down_options(ui_droBattery, hidden_visible, 2);
     add_drop_down_options(ui_droNetwork, hidden_visible, 2);
     add_drop_down_options(ui_droBluetooth, hidden_visible, 2);
     add_drop_down_options(ui_droClock, hidden_visible, 2);
     add_drop_down_options(ui_droBoxArt, (char *[]) {
             TS("Bottom + Behind"), TS("Bottom + Front"), TS("Middle + Behind"), TS("Middle + Front"),
-            TS("Top + Behind"), TS("Top + Front"), TS("Fullscreen + Behind"), TS("Fullscreen + Front"), TS("Disabled")}, 9);
+            TS("Top + Behind"), TS("Top + Front"), TS("Fullscreen + Behind"), TS("Fullscreen + Front"), TG("Disabled")}, 9);
     add_drop_down_options(ui_droName,
-                          (char *[]) {_("Full Name"), TS("Remove [ ]"), TS("Remove ( )"), TS("Remove [ ] and ( )")}, 4);
+                          (char *[]) {TS("Full Name"), TS("Remove [ ]"), TS("Remove ( )"), TS("Remove [ ] and ( )")}, 4);
     add_drop_down_options(ui_droDash, disabled_enabled, 2);
     add_drop_down_options(ui_droFriendlyFolder, disabled_enabled, 2);
     add_drop_down_options(ui_droTheTitleFormat, disabled_enabled, 2);
@@ -573,7 +573,7 @@ void joystick_task() {
                                     play_sound("back", nav_sound, 1);
                                     input_disable = 1;
 
-                                    osd_message = TS("Saving Changes");
+                                    osd_message = TG("Saving Changes");
                                     lv_label_set_text(ui_lblMessage, osd_message);
                                     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
