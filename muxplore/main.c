@@ -1204,12 +1204,19 @@ void joystick_task() {
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
 
-    int JOYUP_pressed = 0;
-    int JOYDOWN_pressed = 0;
+    typedef enum {
+        JOY_NONE,
+        JOY_UP,
+        JOY_DOWN,
+    } joy_direction;
+
+    joy_direction joy_pressed = JOY_NONE;
+    joy_direction joy_held = JOY_NONE;
+    // System clock (millis) when D-pad/joystick hold started. Reset each time we scroll the list.
+    uint32_t joy_hold_tick = 0;
+
     int JOYHOTKEY_pressed = 0;
     int JOYHOTKEY_screenshot = 0;
-
-    int nav_hold = 0;
 
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -1278,9 +1285,7 @@ void joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                     JOYHOTKEY_screenshot = 0;
-                                    JOYUP_pressed = 0;
-                                    JOYDOWN_pressed = 0;
-                                    nav_hold = 0;
+                                    joy_pressed = JOY_NONE;
                                 } else if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
                                     if (ui_count == 0) goto nothing_ever_happens;
 
@@ -1623,66 +1628,22 @@ void joystick_task() {
                                 }
                             }
                         }
+                        break;
                     case EV_ABS:
                         if (msgbox_active) {
+                            joy_pressed = JOY_NONE;
                             break;
                         }
-                        if ((ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) &&
-                            (ev.value > -device.INPUT.AXIS && ev.value < device.INPUT.AXIS)) {
-                            break;
+                        if ((ev.code == NAV_DPAD_VER && ev.value == -1) ||
+                                (ev.code == NAV_ANLG_VER && ev.value <= -4096/*device.INPUT.AXIS*/)) {
+                            joy_pressed = JOY_UP;
+                        } else if ((ev.code == NAV_DPAD_VER && ev.value == 1) ||
+                                (ev.code == NAV_ANLG_VER && ev.value >= 4096/*device.INPUT.AXIS*/)) {
+                            joy_pressed = JOY_DOWN;
+                        } else if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
+                            joy_pressed = JOY_NONE;
                         }
-                        if (ev.code == ABS_Y) {
-                            JOYUP_pressed = 0;
-                            JOYDOWN_pressed = 0;
-                            nav_hold = 0;
-                            break;
-                        }
-                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
-                                if (current_item_index == 0) {
-                                    reset_label_long_mode();
-                                    current_item_index = ui_count - 1;
-                                    nav_prev(ui_group, 1);
-                                    nav_prev(ui_group_glyph, 1);
-                                    nav_prev(ui_group_panel, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                                                           current_item_index, ui_pnlContent);
-                                    nav_moved = 1;
-                                    image_refresh("box");
-                                    set_label_long_mode();
-                                    update_file_counter();
-                                } else if (current_item_index > 0) {
-                                    JOYUP_pressed = (ev.value != 0);
-                                    list_nav_prev(1);
-                                    nav_moved = 1;
-                                }
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
-                                if (current_item_index == ui_count - 1) {
-                                    reset_label_long_mode();
-                                    current_item_index = 0;
-                                    nav_next(ui_group, 1);
-                                    nav_next(ui_group_glyph, 1);
-                                    nav_next(ui_group_panel, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                                                           current_item_index, ui_pnlContent);
-                                    nav_moved = 1;
-                                    image_refresh("box");
-                                    set_label_long_mode();
-                                    update_file_counter();
-                                } else if (current_item_index < ui_count - 1) {
-                                    JOYDOWN_pressed = (ev.value != 0);
-                                    list_nav_next(1);
-                                    nav_moved = 1;
-                                }
-                            } else {
-                                JOYUP_pressed = 0;
-                                JOYDOWN_pressed = 0;
-                            }
-                        }
+                        break;
                     default:
                     nothing_ever_happens:
                         break;
@@ -1691,19 +1652,52 @@ void joystick_task() {
             refresh_screen();
         }
 
-        if (JOYUP_pressed || JOYDOWN_pressed) {
-            if (nav_hold > 2) {
-                if (JOYUP_pressed && current_item_index > 0) {
-                    list_nav_prev(1);
+        if (joy_pressed == JOY_UP) {
+            if (current_item_index == 0) {
+                // Stop scroll acceleration at top of list.
+                if (joy_held == JOY_NONE) {
+                    reset_label_long_mode();
+                    current_item_index = ui_count - 1;
+                    nav_prev(ui_group, 1);
+                    nav_prev(ui_group_glyph, 1);
+                    nav_prev(ui_group_panel, 1);
+                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                           current_item_index, ui_pnlContent);
+                    nav_moved = 1;
+                    image_refresh("box");
+                    set_label_long_mode();
+                    update_file_counter();
+                    joy_hold_tick = mux_tick();
                 }
-                if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
-                    list_nav_next(1);
-                }
+            } else if (joy_held == JOY_NONE || (joy_held == JOY_UP &&
+                    mux_tick() - joy_hold_tick > config.SETTINGS.ADVANCED.ACCELERATE)) {
+                list_nav_prev(1);
+                joy_hold_tick = mux_tick();
             }
-            nav_hold++;
-        } else {
-            nav_hold = 0;
+        } else if (joy_pressed == JOY_DOWN) {
+            if (current_item_index == ui_count - 1) {
+                // Stop scroll acceleration at bottom of list.
+                if (joy_held == JOY_NONE) {
+                    reset_label_long_mode();
+                    current_item_index = 0;
+                    nav_next(ui_group, 1);
+                    nav_next(ui_group_glyph, 1);
+                    nav_next(ui_group_panel, 1);
+                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                                           current_item_index, ui_pnlContent);
+                    nav_moved = 1;
+                    image_refresh("box");
+                    set_label_long_mode();
+                    update_file_counter();
+                    joy_hold_tick = mux_tick();
+                }
+            } else if (joy_held == JOY_NONE || (joy_held == JOY_DOWN &&
+                    mux_tick() - joy_hold_tick > config.SETTINGS.ADVANCED.ACCELERATE)) {
+                list_nav_next(1);
+                joy_hold_tick = mux_tick();
+            }
         }
+        joy_held = joy_pressed;
 
         if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
             if (ev.type == EV_KEY && ev.value == 1 &&
