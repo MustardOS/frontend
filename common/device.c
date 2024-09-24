@@ -85,8 +85,7 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->BATTERY.VOLTAGE, "battery/voltage")
     DEV_STR_FIELD(device->BATTERY.CHARGER, "battery/charger")
 
-    DEV_INT_FIELD(device->INPUT.AXIS_MIN, "input/axis_min")
-    DEV_INT_FIELD(device->INPUT.AXIS_MAX, "input/axis_max")
+    DEV_INT_FIELD(device->INPUT.AXIS, "input/axis")
     DEV_STR_FIELD(device->INPUT.EV0, "input/ev0")
     DEV_STR_FIELD(device->INPUT.EV1, "input/ev1")
 

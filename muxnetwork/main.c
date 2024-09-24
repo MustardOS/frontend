@@ -454,7 +454,7 @@ void joystick_task() {
                                 } else {
                                     is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
                                 }
-                                if (ev.code == NAV_A) {
+                                if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
                                     if (strcasecmp(is_key, "OK") == 0) {
                                         key_show = 0;
                                         if (element_focused == ui_lblIdentifier) {
@@ -523,7 +523,7 @@ void joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                     JOYHOTKEY_screenshot = 0;
-                                } else if (ev.code == NAV_A) {
+                                } else if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
                                     play_sound("confirm", nav_sound, 1);
 
                                     if (element_focused == ui_lblEnable) {
@@ -750,6 +750,10 @@ void joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
+                        if ((ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) &&
+                            (ev.value > -device.INPUT.AXIS && ev.value < device.INPUT.AXIS)) {
+                            break;
+                        }
                         if (ev.code == ABS_Y) {
                             JOYUP_pressed = 0;
                             JOYDOWN_pressed = 0;
@@ -757,8 +761,8 @@ void joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
+                            if ((ev.value >= -device.INPUT.AXIS &&
+                                 ev.value <= -device.INPUT.AXIS) ||
                                 ev.value == -1) {
                                 if (key_show > 0) {
                                     if (key_curr >= 1) {
@@ -819,8 +823,8 @@ void joystick_task() {
                                     lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
                                     break;
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS) &&
+                                        ev.value <= (device.INPUT.AXIS)) ||
                                        ev.value == 1) {
                                 if (key_show > 0) {
                                     int max_key;
@@ -895,8 +899,8 @@ void joystick_task() {
                                 JOYDOWN_pressed = 0;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
+                            if ((ev.value >= -device.INPUT.AXIS &&
+                                 ev.value <= -device.INPUT.AXIS) ||
                                 ev.value == -1) {
                                 if (key_show > 0) {
                                     if (key_curr >= 1) {
@@ -978,8 +982,8 @@ void joystick_task() {
                                         break;
                                     }
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS) &&
+                                        ev.value <= (device.INPUT.AXIS)) ||
                                        ev.value == 1) {
                                 if (key_show > 0) {
                                     int max_key;

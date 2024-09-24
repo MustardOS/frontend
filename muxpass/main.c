@@ -114,7 +114,7 @@ int joystick_task() {
                 switch (ev.type) {
                     case EV_KEY:
                         if (ev.value == 1) {
-                            if (ev.code == NAV_A) {
+                            if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
                                 char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
                                 uint32_t bs = sizeof(b1);
 
@@ -137,28 +137,28 @@ int joystick_task() {
                         }
                     case EV_ABS:
                         if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
+                            if ((ev.value >= -device.INPUT.AXIS &&
+                                 ev.value <= -device.INPUT.AXIS) ||
                                 ev.value == -1) {
                                 play_sound("navigate", nav_sound, 0);
                                 nav_prev(ui_group, 1);
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS) &&
+                                        ev.value <= (device.INPUT.AXIS)) ||
                                        ev.value == 1) {
                                 play_sound("navigate", nav_sound, 0);
                                 nav_next(ui_group, 1);
                             }
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
+                            if ((ev.value >= -device.INPUT.AXIS &&
+                                 ev.value <= -device.INPUT.AXIS) ||
                                 ev.value == -1) {
                                 play_sound("navigate", nav_sound, 0);
                                 lv_roller_set_selected(element_focused,
                                                        lv_roller_get_selected(element_focused) - 1,
                                                        LV_ANIM_ON);
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS) &&
+                                        ev.value <= (device.INPUT.AXIS)) ||
                                        ev.value == 1) {
                                 play_sound("navigate", nav_sound, 0);
                                 lv_roller_set_selected(element_focused,

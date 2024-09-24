@@ -1264,7 +1264,7 @@ void joystick_task() {
                                     msgbox_active = 0;
                                     progress_onscreen = 0;
                                     lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                } else if (ev.code == NAV_A) {
+                                } else if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
                                     play_sound("confirm", nav_sound, 1);
                                     if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
                                         lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
@@ -1281,7 +1281,7 @@ void joystick_task() {
                                     JOYUP_pressed = 0;
                                     JOYDOWN_pressed = 0;
                                     nav_hold = 0;
-                                } else if (ev.code == NAV_A) {
+                                } else if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
                                     if (ui_count == 0) goto nothing_ever_happens;
 
                                     play_sound("confirm", nav_sound, 1);
@@ -1627,6 +1627,10 @@ void joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
+                        if ((ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) &&
+                            (ev.value > -device.INPUT.AXIS && ev.value < device.INPUT.AXIS)) {
+                            break;
+                        }
                         if (ev.code == ABS_Y) {
                             JOYUP_pressed = 0;
                             JOYDOWN_pressed = 0;
@@ -1634,8 +1638,8 @@ void joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
+                            if ((ev.value >= -device.INPUT.AXIS &&
+                                 ev.value <= -device.INPUT.AXIS) ||
                                 ev.value == -1) {
                                 if (current_item_index == 0) {
                                     reset_label_long_mode();
@@ -1654,8 +1658,8 @@ void joystick_task() {
                                     list_nav_prev(1);
                                     nav_moved = 1;
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS) &&
+                                        ev.value <= (device.INPUT.AXIS)) ||
                                        ev.value == 1) {
                                 if (current_item_index == ui_count - 1) {
                                     reset_label_long_mode();

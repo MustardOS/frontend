@@ -263,7 +263,7 @@ void joystick_task() {
                                 if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
                                     JOYHOTKEY_pressed = 1;
                                     JOYHOTKEY_screenshot = 0;
-                                } else if (ev.code == NAV_A) {
+                                } else if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
                                     if (element_focused == ui_lblContent) {
                                         play_sound("confirm", nav_sound, 1);
                                         load_mux("explore");
@@ -311,9 +311,13 @@ void joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
+                        if ((ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) &&
+                            (ev.value > -device.INPUT.AXIS && ev.value < device.INPUT.AXIS)) {
+                            break;
+                        }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
+                            if ((ev.value >= -device.INPUT.AXIS &&
+                                 ev.value <= -device.INPUT.AXIS) ||
                                 ev.value == -1) {
                                 // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
                                 if (theme.MISC.NAVIGATION_TYPE == 4 &&
@@ -329,8 +333,8 @@ void joystick_task() {
                                     list_nav_prev(1);
                                 }
 
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= device.INPUT.AXIS &&
+                                        ev.value <= device.INPUT.AXIS) ||
                                        ev.value == 1) {
                                 // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
                                 if (theme.MISC.NAVIGATION_TYPE == 4 &&
@@ -350,12 +354,12 @@ void joystick_task() {
                         // Horizontal Navigation with 2 rows of 4 items
                         if ((theme.MISC.NAVIGATION_TYPE == 2 || theme.MISC.NAVIGATION_TYPE == 4) &&
                             (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
+                            if ((ev.value >= -device.INPUT.AXIS &&
+                                 ev.value <= -device.INPUT.AXIS) ||
                                 ev.value == -1) {
                                 list_nav_prev(4);
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS) &&
+                                        ev.value <= (device.INPUT.AXIS)) ||
                                        ev.value == 1) {
                                 list_nav_next(4);
                             }
@@ -363,8 +367,8 @@ void joystick_task() {
                         // Horizontal Navigation with 3 item first row, 5 item second row
                         if ((theme.MISC.NAVIGATION_TYPE == 3 || theme.MISC.NAVIGATION_TYPE == 5) &&
                             (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
-                            if ((ev.value >= ((device.INPUT.AXIS_MAX) * -1) &&
-                                 ev.value <= ((device.INPUT.AXIS_MIN) * -1)) ||
+                            if ((ev.value >= -device.INPUT.AXIS &&
+                                 ev.value <= -device.INPUT.AXIS) ||
                                 ev.value == -1) {
                                 switch (current_item_index) {
                                     case 3:
@@ -379,8 +383,8 @@ void joystick_task() {
                                         list_nav_prev(5);
                                         break;
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS_MIN) &&
-                                        ev.value <= (device.INPUT.AXIS_MAX)) ||
+                            } else if ((ev.value >= (device.INPUT.AXIS) &&
+                                        ev.value <= (device.INPUT.AXIS)) ||
                                        ev.value == 1) {
                                 switch (current_item_index) {
                                     case 0:

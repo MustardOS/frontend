@@ -107,8 +107,7 @@ struct mux_device {
     struct {
         char EV0[MAX_BUFFER_SIZE];
         char EV1[MAX_BUFFER_SIZE];
-        uint32_t AXIS_MIN;
-        uint32_t AXIS_MAX;
+        uint32_t AXIS;
     } INPUT;
 
     struct {
