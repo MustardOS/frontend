@@ -345,6 +345,7 @@ void joystick_task() {
             refresh_screen();
         }
 
+        // Handle vertical scrolling.
         bool joy_scrolled = false;
         if (joy_pressed == JOY_UP) {
             if (current_item_index == 0) {
@@ -382,13 +383,12 @@ void joystick_task() {
             }
         }
 
+        // Handle scroll acceleration.
         if (joy_pressed == JOY_NONE) {
             joy_hold_delay = 0;
         } else if (joy_scrolled) {
             // Skip an extra delay interval before starting scroll acceleration on initial hold.
-            joy_hold_delay = !joy_hold_delay ?
-                2 * config.SETTINGS.ADVANCED.ACCELERATE :
-                config.SETTINGS.ADVANCED.ACCELERATE;
+            joy_hold_delay = (!joy_hold_delay ? 2 : 1) * config.SETTINGS.ADVANCED.ACCELERATE;
             joy_hold_tick = mux_tick();
         }
 
