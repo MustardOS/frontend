@@ -73,7 +73,7 @@ lv_group_t *ui_group_panel;
 lv_obj_t *ui_objects[UI_COUNT];
 
 const char *notation[] = {
-        "12 Hour", "24 Hour"
+        NULL, NULL
 };
 
 struct help_msg {
@@ -1043,6 +1043,9 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Failed to init SDL\n");
         }
     }
+
+    notation[0] = TS("12 Hour");
+    notation[1] = TS("24 Hour");
 
     init_navigation_groups();
     restore_clock_settings();

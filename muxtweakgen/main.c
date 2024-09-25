@@ -732,7 +732,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droHDMI, NULL);
     apply_theme_list_drop_down(&theme, ui_droShutdown, NULL);
 
-    char *battery_string = generate_number_string(5, 50, 5, "Disabled", NULL, NULL, 0);
+    char *battery_string = generate_number_string(5, 50, 5, TG("Disabled"), NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droBattery, battery_string);
     free(battery_string);
 

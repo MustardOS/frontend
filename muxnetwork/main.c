@@ -1206,8 +1206,8 @@ void init_elements() {
     process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblNavB, TG("Back"));
-    lv_label_set_text(ui_lblNavX, TG("Scan"));
-    lv_label_set_text(ui_lblNavY, TG("Profiles"));
+    lv_label_set_text(ui_lblNavX, TS("Scan"));
+    lv_label_set_text(ui_lblNavY, TS("Profiles"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,

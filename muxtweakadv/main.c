@@ -611,7 +611,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoHDMIOutput, mux_prog, "hdmi");
     apply_theme_list_glyph(&theme, ui_icoStorage, mux_prog, "storage");
 
-    char *accelerate_string = generate_number_string(16, 256, 16, "Disabled", NULL, NULL, 0);
+    char *accelerate_string = generate_number_string(16, 256, 16, TG("Disabled"), NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate, accelerate_string);
     free(accelerate_string);
 
