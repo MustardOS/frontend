@@ -1636,10 +1636,10 @@ void joystick_task() {
                             break;
                         }
                         if ((ev.code == NAV_DPAD_VER && ev.value == -1) ||
-                                (ev.code == NAV_ANLG_VER && ev.value <= -4096/*device.INPUT.AXIS*/)) {
+                                (ev.code == NAV_ANLG_VER && ev.value <= -(int)device.INPUT.AXIS)) {
                             joy_pressed = JOY_UP;
                         } else if ((ev.code == NAV_DPAD_VER && ev.value == 1) ||
-                                (ev.code == NAV_ANLG_VER && ev.value >= 4096/*device.INPUT.AXIS*/)) {
+                                (ev.code == NAV_ANLG_VER && ev.value >= (int)device.INPUT.AXIS)) {
                             joy_pressed = JOY_DOWN;
                         } else if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             joy_pressed = JOY_NONE;
