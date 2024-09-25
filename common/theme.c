@@ -54,7 +54,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->STATUS.ALIGN = get_ini_int(muos_theme, "status", "ALIGN", 1);
     theme->STATUS.PADDING_LEFT = get_ini_int(muos_theme, "status", "PADDING_LEFT", 0);
     theme->STATUS.PADDING_RIGHT = get_ini_int(muos_theme, "status", "PADDING_RIGHT", 0);
-    theme->STATUS.PADDING_TOP = get_ini_int(muos_theme, "status", "PADDING_TOP", 0);
 
     theme->STATUS.BATTERY.NORMAL = get_ini_hex(muos_theme, "battery", "BATTERY_NORMAL");
     theme->STATUS.BATTERY.ACTIVE = get_ini_hex(muos_theme, "battery", "BATTERY_ACTIVE");
@@ -78,7 +77,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->DATETIME.ALIGN = get_ini_int(muos_theme, "date", "DATETIME_ALIGN", 1);
     theme->DATETIME.PADDING_LEFT = get_ini_int(muos_theme, "date", "PADDING_LEFT", 0);
     theme->DATETIME.PADDING_RIGHT = get_ini_int(muos_theme, "date", "PADDING_RIGHT", 0);
-    theme->DATETIME.PADDING_TOP = get_ini_int(muos_theme, "date", "PADDING_TOP", 9);
 
     theme->FOOTER.HEIGHT = get_ini_int(muos_theme, "footer", "FOOTER_HEIGHT", 42);
     theme->FOOTER.BACKGROUND = get_ini_hex(muos_theme, "footer", "FOOTER_BACKGROUND");
@@ -92,6 +90,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->HEADER.TEXT = get_ini_hex(muos_theme, "header", "HEADER_TEXT");
     theme->HEADER.TEXT_ALPHA = get_ini_int(muos_theme, "header", "HEADER_TEXT_ALPHA", 255);
     theme->HEADER.TEXT_ALIGN = get_ini_int(muos_theme, "header", "HEADER_TEXT_ALIGN", 2);
+    theme->HEADER.PADDING_LEFT = get_ini_int(muos_theme, "header", "PADDING_LEFT", 0);
+    theme->HEADER.PADDING_RIGHT = get_ini_int(muos_theme, "header", "PADDING_RIGHT", 0);
 
     theme->HELP.BACKGROUND = get_ini_hex(muos_theme, "help", "HELP_BACKGROUND");
     theme->HELP.BACKGROUND_ALPHA = get_ini_int(muos_theme, "help", "HELP_BACKGROUND_ALPHA", 255);
