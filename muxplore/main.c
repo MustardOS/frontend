@@ -1204,14 +1204,14 @@ void joystick_task() {
     int epoll_fd;
     struct epoll_event event, events[device.DEVICE.EVENT];
 
-    typedef enum {
+    enum {
         JOY_NONE,
         JOY_UP,
         JOY_DOWN,
-    } joy_direction;
+    } joy_pressed = JOY_NONE;
 
-    joy_direction joy_pressed = JOY_NONE;
-    joy_direction joy_held = JOY_NONE;
+    // Delay (millis) before scrolling again on D-pad/joystick hold. Zero indicates no active hold.
+    uint32_t joy_hold_delay = 0;
     // System clock (millis) when D-pad/joystick hold started. Reset each time we scroll the list.
     uint32_t joy_hold_tick = 0;
 
@@ -1652,10 +1652,11 @@ void joystick_task() {
             refresh_screen();
         }
 
+        bool joy_scrolled = false;
         if (joy_pressed == JOY_UP) {
             if (current_item_index == 0) {
                 // Stop scroll acceleration at top of list.
-                if (joy_held == JOY_NONE) {
+                if (!joy_hold_delay) {
                     reset_label_long_mode();
                     current_item_index = ui_count - 1;
                     nav_prev(ui_group, 1);
@@ -1667,17 +1668,16 @@ void joystick_task() {
                     image_refresh("box");
                     set_label_long_mode();
                     update_file_counter();
-                    joy_hold_tick = mux_tick();
+                    joy_scrolled = true;
                 }
-            } else if (joy_held == JOY_NONE || (joy_held == JOY_UP &&
-                    mux_tick() - joy_hold_tick > config.SETTINGS.ADVANCED.ACCELERATE)) {
+            } else if (mux_tick() - joy_hold_tick >= joy_hold_delay) {
                 list_nav_prev(1);
-                joy_hold_tick = mux_tick();
+                joy_scrolled = true;
             }
         } else if (joy_pressed == JOY_DOWN) {
             if (current_item_index == ui_count - 1) {
                 // Stop scroll acceleration at bottom of list.
-                if (joy_held == JOY_NONE) {
+                if (!joy_hold_delay) {
                     reset_label_long_mode();
                     current_item_index = 0;
                     nav_next(ui_group, 1);
@@ -1689,15 +1689,23 @@ void joystick_task() {
                     image_refresh("box");
                     set_label_long_mode();
                     update_file_counter();
-                    joy_hold_tick = mux_tick();
+                    joy_scrolled = true;
                 }
-            } else if (joy_held == JOY_NONE || (joy_held == JOY_DOWN &&
-                    mux_tick() - joy_hold_tick > config.SETTINGS.ADVANCED.ACCELERATE)) {
+            } else if (mux_tick() - joy_hold_tick >= joy_hold_delay) {
                 list_nav_next(1);
-                joy_hold_tick = mux_tick();
+                joy_scrolled = true;
             }
         }
-        joy_held = joy_pressed;
+
+        if (joy_pressed == JOY_NONE) {
+            joy_hold_delay = 0;
+        } else if (joy_scrolled) {
+            // Skip an extra delay interval before starting scroll acceleration on initial hold.
+            joy_hold_delay = !joy_hold_delay ?
+                2 * config.SETTINGS.ADVANCED.ACCELERATE :
+                config.SETTINGS.ADVANCED.ACCELERATE;
+            joy_hold_tick = mux_tick();
+        }
 
         if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
             if (ev.type == EV_KEY && ev.value == 1 &&
