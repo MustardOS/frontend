@@ -136,29 +136,21 @@ int joystick_task() {
                         }
                     case EV_ABS:
                         if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 play_sound("navigate", nav_sound, 0);
                                 nav_prev(ui_group, 1);
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 play_sound("navigate", nav_sound, 0);
                                 nav_next(ui_group, 1);
                             }
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 play_sound("navigate", nav_sound, 0);
                                 lv_roller_set_selected(element_focused,
                                                        lv_roller_get_selected(element_focused) - 1,
                                                        LV_ANIM_ON);
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 play_sound("navigate", nav_sound, 0);
                                 lv_roller_set_selected(element_focused,
                                                        lv_roller_get_selected(element_focused) + 1,

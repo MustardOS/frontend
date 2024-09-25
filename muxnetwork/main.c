@@ -750,10 +750,6 @@ void joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if ((ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) &&
-                            (ev.value > -device.INPUT.AXIS && ev.value < device.INPUT.AXIS)) {
-                            break;
-                        }
                         if (ev.code == ABS_Y) {
                             JOYUP_pressed = 0;
                             JOYDOWN_pressed = 0;
@@ -761,9 +757,7 @@ void joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 if (key_show > 0) {
                                     if (key_curr >= 1) {
                                         switch (key_curr) {
@@ -823,9 +817,7 @@ void joystick_task() {
                                     lblCurrentValue = lv_label_get_text(lv_group_get_focused(ui_group_value));
                                     break;
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 if (key_show > 0) {
                                     int max_key;
                                     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
@@ -899,9 +891,7 @@ void joystick_task() {
                                 JOYDOWN_pressed = 0;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 if (key_show > 0) {
                                     if (key_curr >= 1) {
                                         key_curr--;
@@ -982,9 +972,7 @@ void joystick_task() {
                                         break;
                                     }
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 if (key_show > 0) {
                                     int max_key;
                                     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {

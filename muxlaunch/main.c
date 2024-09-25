@@ -310,14 +310,8 @@ void joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if ((ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) &&
-                            (ev.value > -device.INPUT.AXIS && ev.value < device.INPUT.AXIS)) {
-                            break;
-                        }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
                                 if (theme.MISC.NAVIGATION_TYPE == 4 &&
                                     (current_item_index == 0 || current_item_index == 4)) {
@@ -331,10 +325,7 @@ void joystick_task() {
                                 } else {
                                     list_nav_prev(1);
                                 }
-
-                            } else if ((ev.value >= device.INPUT.AXIS &&
-                                        ev.value <= device.INPUT.AXIS) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
                                 if (theme.MISC.NAVIGATION_TYPE == 4 &&
                                     (current_item_index == 3 || current_item_index == 7)) {
@@ -353,22 +344,16 @@ void joystick_task() {
                         // Horizontal Navigation with 2 rows of 4 items
                         if ((theme.MISC.NAVIGATION_TYPE == 2 || theme.MISC.NAVIGATION_TYPE == 4) &&
                             (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 list_nav_prev(4);
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 list_nav_next(4);
                             }
                         }
                         // Horizontal Navigation with 3 item first row, 5 item second row
                         if ((theme.MISC.NAVIGATION_TYPE == 3 || theme.MISC.NAVIGATION_TYPE == 5) &&
                             (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR)) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 switch (current_item_index) {
                                     case 3:
                                     case 4:
@@ -382,9 +367,7 @@ void joystick_task() {
                                         list_nav_prev(5);
                                         break;
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 switch (current_item_index) {
                                     case 0:
                                         list_nav_next(3);

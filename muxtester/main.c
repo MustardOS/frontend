@@ -123,9 +123,9 @@ void *joystick_task() {
                            ev.code == device.RAW_INPUT.ANALOG.LEFT.DOWN) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value >= -device.INPUT.AXIS && ev.value <= -device.INPUT.AXIS) {
+                    if (ev.value == -device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "↾");
-                    } else if (ev.value >= device.INPUT.AXIS && ev.value <= device.INPUT.AXIS) {
+                    } else if (ev.value == device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "⇂");
                     } else {
                         lv_label_set_text(ui_lblButton, " ");
@@ -134,9 +134,9 @@ void *joystick_task() {
                            ev.code == device.RAW_INPUT.ANALOG.LEFT.RIGHT) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value >= -device.INPUT.AXIS && ev.value <= -device.INPUT.AXIS) {
+                    if (ev.value == -device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "↼");
-                    } else if (ev.value >= device.INPUT.AXIS && ev.value <= device.INPUT.AXIS) {
+                    } else if (ev.value == device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "⇀");
                     } else {
                         lv_label_set_text(ui_lblButton, " ");
@@ -144,7 +144,7 @@ void *joystick_task() {
                 } else if (ev.code == ABS_RZ) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value >= -device.INPUT.AXIS && ev.value <= -device.INPUT.AXIS) {
+                    if (ev.value == -device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "↿");
                     } else if (ev.value >= device.INPUT.AXIS && ev.value <= device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "⇃");
@@ -154,9 +154,9 @@ void *joystick_task() {
                 } else if (ev.code == ABS_RY) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value >= -device.INPUT.AXIS && ev.value <= -device.INPUT.AXIS) {
+                    if (ev.value == -device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "↽");
-                    } else if (ev.value >= device.INPUT.AXIS && ev.value <= device.INPUT.AXIS) {
+                    } else if (ev.value == device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "⇁");
                     } else {
                         lv_label_set_text(ui_lblButton, " ");
