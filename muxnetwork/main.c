@@ -1061,6 +1061,7 @@ void joystick_task() {
                                 }
                             }
                         }
+                        break;
                     default:
                         break;
                 }

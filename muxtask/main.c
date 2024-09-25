@@ -351,6 +351,7 @@ void joystick_task() {
                                 }
                             }
                         }
+                        break;
                     case EV_ABS:
                         if (msgbox_active) {
                             break;
@@ -391,6 +392,7 @@ void joystick_task() {
                                 JOYDOWN_pressed = 0;
                             }
                         }
+                        break;
                     default:
                         break;
                 }

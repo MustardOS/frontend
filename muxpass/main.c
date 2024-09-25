@@ -134,6 +134,7 @@ int joystick_task() {
                                 return 2;
                             }
                         }
+                        break;
                     case EV_ABS:
                         if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
                             if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
@@ -157,6 +158,7 @@ int joystick_task() {
                                                        LV_ANIM_ON);
                             }
                         }
+                        break;
                     default:
                         break;
                 }

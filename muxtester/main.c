@@ -162,6 +162,7 @@ void *joystick_task() {
                         lv_label_set_text(ui_lblButton, " ");
                     }
                 }
+                break;
             default:
                 break;
         }
