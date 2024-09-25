@@ -60,7 +60,6 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-// Modify the following integer to number of static menu elements
 #define UI_COUNT 8
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];

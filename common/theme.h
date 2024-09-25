@@ -54,7 +54,10 @@ struct theme_config {
     } FONT;
 
     struct {
+        int16_t ALIGN;
+        int16_t PADDING_LEFT;
         int16_t PADDING_RIGHT;
+        int16_t PADDING_TOP;
         struct {
             uint32_t NORMAL;
             uint32_t ACTIVE;
@@ -80,7 +83,10 @@ struct theme_config {
     struct {
         uint32_t TEXT;
         int16_t ALPHA;
+        int16_t ALIGN;
         int16_t PADDING_LEFT;
+        int16_t PADDING_RIGHT;
+        int16_t PADDING_TOP;
     } DATETIME;
 
     struct {
@@ -97,6 +103,7 @@ struct theme_config {
         uint16_t BACKGROUND_ALPHA;
         uint32_t TEXT;
         int16_t TEXT_ALPHA;
+        int16_t TEXT_ALIGN;
     } HEADER;
 
     struct {

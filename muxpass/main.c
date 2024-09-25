@@ -58,7 +58,6 @@ lv_obj_t *msgbox_element = NULL;
 
 lv_group_t *ui_group;
 
-// Modify the following integer to number of static menu elements
 #define UI_COUNT 6
 lv_obj_t *ui_objects[UI_COUNT];
 
