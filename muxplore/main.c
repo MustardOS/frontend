@@ -1630,6 +1630,7 @@ void joystick_task() {
                         }
                         break;
                     case EV_ABS:
+                        if (ui_count == 0) goto nothing_ever_happens;
                         if (msgbox_active) {
                             joy_pressed = JOY_NONE;
                             break;
