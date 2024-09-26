@@ -383,7 +383,8 @@ void joystick_task() {
     int JOYHOTKEY_pressed = 0;
     int JOYHOTKEY_screenshot = 0;
 
-    int nav_hold = 0;
+    uint32_t nav_hold = 0; // Delay (millis) before scrolling again when up/down is held.
+    uint32_t nav_tick = 0; // Clock tick (millis) when the navigation list was last scrolled.
 
     epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -516,12 +517,6 @@ void joystick_task() {
                         if (msgbox_active) {
                             break;
                         }
-                        if (ev.code == ABS_Y) {
-                            JOYUP_pressed = 0;
-                            JOYDOWN_pressed = 0;
-                            nav_hold = 0;
-                            break;
-                        }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
                             if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 if (current_item_index == 0) {
@@ -534,10 +529,11 @@ void joystick_task() {
                                                            ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index > 0) {
-                                    JOYUP_pressed = (ev.value != 0);
                                     list_nav_prev(1);
-                                    nav_moved = 1;
                                 }
+                                JOYUP_pressed = 1;
+                                nav_hold = 2 * config.SETTINGS.ADVANCED.ACCELERATE;
+                                nav_tick = mux_tick();
                             } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 if (current_item_index == ui_count - 1) {
                                     current_item_index = 0;
@@ -549,10 +545,11 @@ void joystick_task() {
                                                            ui_count, current_item_index, ui_pnlContent);
                                     nav_moved = 1;
                                 } else if (current_item_index < ui_count - 1) {
-                                    JOYDOWN_pressed = (ev.value != 0);
                                     list_nav_next(1);
-                                    nav_moved = 1;
                                 }
+                                JOYDOWN_pressed = 1;
+                                nav_hold = 2 * config.SETTINGS.ADVANCED.ACCELERATE;
+                                nav_tick = mux_tick();
                             } else {
                                 JOYUP_pressed = 0;
                                 JOYDOWN_pressed = 0;
@@ -654,18 +651,17 @@ void joystick_task() {
             refresh_screen();
         }
 
-        if (JOYUP_pressed || JOYDOWN_pressed) {
-            if (nav_hold > 2) {
-                if (JOYUP_pressed && current_item_index > 0) {
-                    list_nav_prev(1);
-                }
-                if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
-                    list_nav_next(1);
-                }
+        // Handle menu acceleration.
+        if (mux_tick() - nav_tick >= nav_hold) {
+            if (JOYUP_pressed && current_item_index > 0) {
+                list_nav_prev(1);
+                nav_hold = config.SETTINGS.ADVANCED.ACCELERATE;
+                nav_tick = mux_tick();
+            } else if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
+                list_nav_next(1);
+                nav_hold = config.SETTINGS.ADVANCED.ACCELERATE;
+                nav_tick = mux_tick();
             }
-            nav_hold++;
-        } else {
-            nav_hold = 0;
         }
 
         if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
