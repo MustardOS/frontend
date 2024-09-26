@@ -58,6 +58,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROWAIT, "settings/advanced/retrowait", 0)
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.USBFUNCTION, "settings/advanced/usb_function", "none")
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.VERBOSE, "settings/advanced/verbose", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RUMBLE, "settings/advanced/rumble", 0)
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.VOLUME, "settings/advanced/volume", "previous")
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, "settings/advanced/brightness", "previous")
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.STATE, "settings/advanced/state", "mem")
