@@ -81,65 +81,6 @@ void show_help() {
                      TS(lv_label_get_text(ui_lblTitle)), TS("HELP.GOVERNOR"));
 }
 
-char **get_subdirectories(const char *base_dir) {
-    struct dirent *entry;
-    DIR *dir = opendir(base_dir);
-    char **dir_names = NULL;
-    int dir_count = 0;
-
-    if (!dir) {
-        perror("opendir");
-        return NULL;
-    }
-
-    load_skip_patterns();
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            if (entry->d_type == DT_DIR) {
-                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-                    char *subdir_name = (char *) malloc(strlen(entry->d_name) + 1);
-                    if (!subdir_name) {
-                        perror("malloc");
-                        closedir(dir);
-                        return NULL;
-                    }
-                    snprintf(subdir_name, strlen(entry->d_name) + 1, "%s", entry->d_name);
-
-                    dir_names = (char **) realloc(dir_names, (dir_count + 1) * sizeof(char *));
-                    if (!dir_names) {
-                        perror("realloc");
-                        closedir(dir);
-                        return NULL;
-                    }
-                    dir_names[dir_count] = subdir_name;
-                    dir_count++;
-                }
-            }
-        }
-    }
-
-    dir_names = (char **) realloc(dir_names, (dir_count + 1) * sizeof(char *));
-    if (!dir_names) {
-        perror("realloc");
-        closedir(dir);
-        return NULL;
-    }
-    dir_names[dir_count] = NULL;
-
-    closedir(dir);
-    return dir_names;
-}
-
-void free_subdirectories(char **dir_names) {
-    if (dir_names == NULL) return;
-
-    for (int i = 0; dir_names[i] != NULL; i++) {
-        free(dir_names[i]);
-    }
-    free(dir_names);
-}
-
 void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/info/core/%s/",
@@ -170,7 +111,7 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
             delete_files_of_type(core_dir, "gov", NULL, 1);
             create_gov_assignment(gov, sys, rom, DIRECTORY);
 
-            char **subdirs = get_subdirectories(core_dir);
+            char **subdirs = get_subdirectories(rom_dir);
             if (subdirs != NULL) {
                 for (int i = 0; subdirs[i] != NULL; i++) {
                     char subdir_file[MAX_BUFFER_SIZE];

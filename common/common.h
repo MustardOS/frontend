@@ -179,6 +179,7 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 void load_language(const char *program);
 
 char *translate_specific(char *key);
+
 char *translate_generic(char *key);
 
 void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count);
@@ -191,3 +192,7 @@ char *get_script_value(const char *filename, const char *key);
 void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar);
 
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path);
+
+char **get_subdirectories(const char *base_dir);
+
+void free_subdirectories(char **dir_names);
