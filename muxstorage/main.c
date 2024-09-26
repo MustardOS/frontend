@@ -511,12 +511,9 @@ void joystick_task() {
                                 }
                             }
                         }
+                        break;
                     case EV_ABS:
                         if (msgbox_active) {
-                            break;
-                        }
-                        if ((ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) &&
-                            (ev.value > -device.INPUT.AXIS && ev.value < device.INPUT.AXIS)) {
                             break;
                         }
                         if (ev.code == ABS_Y) {
@@ -526,9 +523,7 @@ void joystick_task() {
                             break;
                         }
                         if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 if (current_item_index == 0) {
                                     current_item_index = ui_count - 1;
                                     nav_prev(ui_group, 1);
@@ -543,9 +538,7 @@ void joystick_task() {
                                     list_nav_prev(1);
                                     nav_moved = 1;
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 if (current_item_index == ui_count - 1) {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
@@ -565,9 +558,7 @@ void joystick_task() {
                                 JOYDOWN_pressed = 0;
                             }
                         } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if ((ev.value >= -device.INPUT.AXIS &&
-                                 ev.value <= -device.INPUT.AXIS) ||
-                                ev.value == -1) {
+                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
                                 play_sound("navigate", nav_sound, 0);
                                 if (element_focused == ui_lblBIOS) {
                                     decrease_option_value(ui_droBIOS,
@@ -610,9 +601,7 @@ void joystick_task() {
                                                           &network_current,
                                                           network_total);
                                 }
-                            } else if ((ev.value >= (device.INPUT.AXIS) &&
-                                        ev.value <= (device.INPUT.AXIS)) ||
-                                       ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 play_sound("navigate", nav_sound, 0);
                                 if (element_focused == ui_lblBIOS) {
                                     increase_option_value(ui_droBIOS,
@@ -657,6 +646,7 @@ void joystick_task() {
                                 }
                             }
                         }
+                        break;
                     default:
                         break;
                 }
