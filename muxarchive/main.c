@@ -373,7 +373,7 @@ void joystick_task() {
                                     JOYUP_pressed = (ev.value != 0);
                                     list_nav_prev(1);
                                 }
-                            if (ev.value == device.INPUT.AXIS || ev.value == 1) {
+                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
                                 if (current_item_index == ui_count - 1) {
                                     current_item_index = 0;
                                     nav_next(ui_group, 1);
