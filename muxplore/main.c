@@ -1625,7 +1625,7 @@ void joystick_task() {
                         }
                         break;
                     case EV_ABS:
-                        if (msgbox_active) {
+                        if (msgbox_active || ui_count == 0) {
                             break;
                         }
                         if (ev.code == ABS_Y) {
