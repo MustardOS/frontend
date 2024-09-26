@@ -175,10 +175,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblDatetime = lv_label_create(ui_pnlHeader);
-    lv_obj_add_flag(ui_lblDatetime, LV_OBJ_FLAG_FLOATING);
     lv_obj_set_width(ui_lblDatetime, device->MUX.WIDTH);
-    lv_obj_set_height(ui_lblDatetime, theme->HEADER.HEIGHT);
-    lv_obj_set_align(ui_lblDatetime, LV_ALIGN_TOP_MID);
+    lv_obj_set_height(ui_lblDatetime, LV_SIZE_CONTENT);
     lv_label_set_long_mode(ui_lblDatetime, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblDatetime, "");
     lv_obj_clear_flag(ui_lblDatetime, LV_OBJ_FLAG_SCROLLABLE);
@@ -188,36 +186,34 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_lblDatetime, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblDatetime, theme->DATETIME.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblDatetime, theme->DATETIME.PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblDatetime, theme->DATETIME.PADDING_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblDatetime, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblDatetime, theme->FONT.HEADER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblDatetime, theme->FONT.HEADER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblTitle = lv_label_create(ui_pnlHeader);
-    lv_obj_add_flag(ui_lblTitle, LV_OBJ_FLAG_FLOATING);
     lv_obj_set_width(ui_lblTitle, device->MUX.WIDTH);
-    lv_obj_set_height(ui_lblTitle, theme->HEADER.HEIGHT);
+    lv_obj_set_height(ui_lblTitle, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblTitle, LV_ALIGN_TOP_MID);
     lv_label_set_long_mode(ui_lblTitle, LV_LABEL_LONG_DOT);
     lv_label_set_text(ui_lblTitle, title);
     lv_obj_set_style_text_color(ui_lblTitle, lv_color_hex(theme->HEADER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblTitle, theme->HEADER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblTitle, theme->HEADER.TEXT_ALIGN, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblTitle, theme->HEADER.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblTitle, theme->HEADER.PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblTitle, theme->FONT.HEADER_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblTitle, theme->FONT.HEADER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_conGlyphs = lv_obj_create(ui_pnlHeader);
-    lv_obj_add_flag(ui_conGlyphs, LV_OBJ_FLAG_FLOATING);
     lv_obj_set_width(ui_conGlyphs, device->MUX.WIDTH);
-    lv_obj_set_height(ui_conGlyphs, theme->HEADER.HEIGHT);
+    lv_obj_set_height(ui_conGlyphs, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_conGlyphs, LV_ALIGN_TOP_MID);
     lv_obj_set_flex_flow(ui_conGlyphs, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_conGlyphs, theme->STATUS.ALIGN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_conGlyphs, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_pad_left(ui_conGlyphs, theme->STATUS.PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_conGlyphs, theme->STATUS.PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_conGlyphs, theme->STATUS.PADDING_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_conGlyphs, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_conGlyphs, theme->FONT.HEADER_ICON_PAD_TOP * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_conGlyphs, theme->FONT.HEADER_PAD_BOTTOM * 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_staBluetooth = create_header_glyph(ui_conGlyphs, theme);
     //update_bluetooth_status(ui_staBluetooth, theme);
