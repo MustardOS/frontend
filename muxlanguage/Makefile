@@ -16,9 +16,9 @@ CC = ccache $(CROSS_COMPILE)gcc -O3
 
 CFLAGS  = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
 	-flto -finline-functions -Wall -Wno-format-zero-length \
-	-Wno-implicit-function-declaration
+	-Wno-implicit-function-declaration -I../common/font
 
-LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
+LDFLAGS = $(CFLAGS) -L../common/font -lnotosansjp -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fno-unroll-loops -fmerge-all-constants -fno-ident \
