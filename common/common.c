@@ -16,6 +16,8 @@
 #include "../common/miniz/miniz.h"
 #include "../common/font/notosans_jp.h"
 #include "../common/font/notosans_kr.h"
+#include "../common/font/notosans_sc.h"
+#include "../common/font/notosans_tc.h"
 #include "img/nothing.h"
 #include "json/json.h"
 #include "common.h"
@@ -1111,23 +1113,29 @@ void load_font_text(const char *program, lv_obj_t *screen) {
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
         }
     } else {
-        if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0 ) {
+        if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Simplified)") == 0) {
+            lv_obj_set_style_text_font(screen, &ui_font_NotoSans_SC,
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Traditional)") == 0) {
+            lv_obj_set_style_text_font(screen, &ui_font_NotoSans_TC,
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0) {
             lv_obj_set_style_text_font(screen, &ui_font_NotoSans_JP,
                                        LV_PART_MAIN | LV_STATE_DEFAULT);
-        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0 ) {
+        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0) {
             lv_obj_set_style_text_font(screen, &ui_font_NotoSans_KR,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             char theme_font_language[MAX_BUFFER_SIZE];
             snprintf(theme_font_language, sizeof(theme_font_language), "%s/language/%s.bin",
-                    STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
+                     STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
 
             if (file_exist(theme_font_language)) {
                 char theme_font_language_fs[MAX_BUFFER_SIZE];
                 snprintf(theme_font_language_fs, sizeof(theme_font_language_fs),
-                        "M:%s/language/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
+                         "M:%s/language/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
                 lv_obj_set_style_text_font(screen, lv_font_load(theme_font_language_fs),
-                                        LV_PART_MAIN | LV_STATE_DEFAULT);
+                                           LV_PART_MAIN | LV_STATE_DEFAULT);
             }
         }
     }

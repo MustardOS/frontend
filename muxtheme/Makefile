@@ -23,7 +23,9 @@ CFONTS = -L../bin/lib \
 	-lgamepad_nav \
 	-lnotosans \
 	-lnotosans_jp \
-	-lnotosans_kr
+	-lnotosans_kr \
+	-lnotosans_sc \
+	-lnotosans_tc
 
 LDFLAGS = $(CFLAGS) $(CFONTS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
