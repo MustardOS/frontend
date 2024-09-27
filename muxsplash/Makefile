@@ -44,21 +44,21 @@ MAINOBJ = $(MAINSRC:.c=$(OBJEXT))
 SRCS = $(ASRCS) $(CSRCS) $(SSRCS) $(MAINSRC)
 OBJS = $(AOBJS) $(COBJS) $(SOBJS)
 
-all: clean compile move
+all: clean start compile move
 
 %.o: %.c
 	@$(CC) -D$(DEVICE) $(CFLAGS) -c $< -o $@ $(EXTRA)
 
 clean:
-	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
+	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET) .start
+
+start:
+	@date +%s > .start
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@printf "Building: %s... " "$(TARGET)"
-	@START=$$(date +%s); \
+	@START=$$(cat .start); \
 	$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
-		../common/font/awesome_small.c \
-		../common/font/gamepad_nav.c \
-		../common/font/notosans.c \
 		../common/img/nothing.c \
 		../common/mini/mini.c \
 		../common/device.c \
@@ -71,5 +71,4 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 move:
 	@mkdir -p ../bin
 	@mv $(TARGET) ../bin/
-	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
-
+	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET) .start

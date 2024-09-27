@@ -1,3 +1,6 @@
+#include "font/awesome_small.h"
+#include "font/gamepad_nav.h"
+#include "font/notosans.h"
 #include "img/nothing.h"
 #include "common.h"
 #include "config.h"
@@ -56,7 +59,6 @@ lv_obj_t *ui_barProgressBrightness;
 lv_obj_t *ui_pnlProgressVolume;
 lv_obj_t *ui_icoProgressVolume;
 lv_obj_t *ui_barProgressVolume;
-lv_obj_t *ui____initial_actions0;
 
 void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title) {
     ui_screen = lv_obj_create(NULL);
@@ -667,7 +669,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA,
                             LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_screen);
 }
 

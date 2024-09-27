@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "../../common/font/notosans_big.h"
 
 void ui_scrPass_screen_init(lv_obj_t *ui_pnlContent) {
     lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_ROW_WRAP);

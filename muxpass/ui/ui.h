@@ -11,6 +11,4 @@ extern lv_obj_t *ui_rolComboFour;
 extern lv_obj_t *ui_rolComboFive;
 extern lv_obj_t *ui_rolComboSix;
 
-LV_FONT_DECLARE(ui_font_NotoSansBig);
-
 void ui_init(lv_obj_t *ui_pnlContent);

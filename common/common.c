@@ -14,7 +14,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/miniz/miniz.h"
-#include "../common/font/notosansjp.h"
+#include "../common/font/notosans_jp.h"
+#include "../common/font/notosans_kr.h"
 #include "img/nothing.h"
 #include "json/json.h"
 #include "common.h"
@@ -1112,6 +1113,9 @@ void load_font_text(const char *program, lv_obj_t *screen) {
     } else {
         if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0 ) {
             lv_obj_set_style_text_font(screen, &ui_font_NotoSans_JP,
+                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0 ) {
+            lv_obj_set_style_text_font(screen, &ui_font_NotoSans_KR,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         } else {
             char theme_font_language[MAX_BUFFER_SIZE];

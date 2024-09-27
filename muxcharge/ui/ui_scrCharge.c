@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "../../common/font/notosans.h"
 #include "../../common/img/nothing.h"
 #include "../../common/common.h"
 

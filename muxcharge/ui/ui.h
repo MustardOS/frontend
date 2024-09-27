@@ -12,13 +12,8 @@ extern lv_obj_t *ui_lblCapacity;
 extern lv_obj_t *ui_lblVoltage;
 extern lv_obj_t *ui_lblHealth;
 extern lv_obj_t *ui_lblBoot;
-extern lv_obj_t *ui____initial_actions0;
 
 LV_IMG_DECLARE(ui_img_nothing_png);
-
-LV_FONT_DECLARE(ui_font_AwesomeSmall);
-LV_FONT_DECLARE(ui_font_GamepadNav);
-LV_FONT_DECLARE(ui_font_NotoSans);
 
 void ui_init(void);
 

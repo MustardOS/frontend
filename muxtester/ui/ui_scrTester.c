@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "../../common/font/gamepad.h"
 #include "../../common/common.h"
 
 void ui_scrTester_screen_init(lv_obj_t *ui_pnlContent) {

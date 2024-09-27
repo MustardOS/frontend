@@ -18,7 +18,13 @@ CFLAGS  = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
 	-flto -finline-functions -Wall -Wno-format-zero-length \
 	-Wno-implicit-function-declaration
 
-LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
+CFONTS = -L../bin/lib \
+	-lawesome_small \
+	-lgamepad_nav \
+	-lnotosans \
+	-lnotosans_big
+
+LDFLAGS = $(CFLAGS) $(CFONTS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fno-unroll-loops -fmerge-all-constants -fno-ident \
@@ -44,22 +50,21 @@ MAINOBJ = $(MAINSRC:.c=$(OBJEXT))
 SRCS = $(ASRCS) $(CSRCS) $(SSRCS) $(MAINSRC)
 OBJS = $(AOBJS) $(COBJS) $(SOBJS)
 
-all: clean compile move
+all: clean start compile move
 
 %.o: %.c
 	@$(CC) -D$(DEVICE) $(CFLAGS) -c $< -o $@ $(EXTRA)
 
 clean:
-	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
+	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET) .start
+
+start:
+	@date +%s > .start
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@printf "Building: %s... " "$(TARGET)"
-	@START=$$(date +%s); \
+	@START=$$(cat .start); \
 	$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
-		../common/font/awesome_small.c \
-		../common/font/gamepad_nav.c \
-		../common/font/notosans.c \
-		../common/font/notosans_big.c \
 		../common/img/kofi.c \
 		../common/img/nothing.c \
 		../common/json/json.c \
@@ -76,5 +81,4 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 move:
 	@mkdir -p ../bin
 	@mv $(TARGET) ../bin/
-	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
-
+	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET) .start

@@ -39,11 +39,6 @@ extern lv_obj_t *ui_imgKofi;
 LV_IMG_DECLARE(ui_image_Kofi)
 LV_IMG_DECLARE(ui_image_Nothing)
 
-LV_FONT_DECLARE(ui_font_AwesomeSmall)
-LV_FONT_DECLARE(ui_font_GamepadNav)
-LV_FONT_DECLARE(ui_font_NotoSans)
-LV_FONT_DECLARE(ui_font_NotoSansBig)
-
 typedef struct ui_anim_user_data_t {
     lv_obj_t *target;
     int32_t val;

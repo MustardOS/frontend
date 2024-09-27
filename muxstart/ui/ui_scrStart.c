@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "../../common/font/notosans.h"
 #include "../../common/img/nothing.h"
 
 void ui_scrStart_screen_init(void) {

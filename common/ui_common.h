@@ -66,19 +66,6 @@ extern lv_obj_t *ui_barProgressBrightness;
 extern lv_obj_t *ui_pnlProgressVolume;
 extern lv_obj_t *ui_icoProgressVolume;
 extern lv_obj_t *ui_barProgressVolume;
-extern lv_obj_t *ui____initial_actions0;
 
 LV_IMG_DECLARE(ui_img_nothing_png);
 LV_IMG_DECLARE(ui_img_muoskofi_png);
-
-LV_FONT_DECLARE(ui_font_Awesome);
-LV_FONT_DECLARE(ui_font_AwesomeBig);
-LV_FONT_DECLARE(ui_font_AwesomeBrand);
-LV_FONT_DECLARE(ui_font_AwesomeBrandSmall);
-LV_FONT_DECLARE(ui_font_AwesomeSmall);
-LV_FONT_DECLARE(ui_font_Gamepad);
-LV_FONT_DECLARE(ui_font_GamepadNav);
-LV_FONT_DECLARE(ui_font_JGS_Ascii);
-LV_FONT_DECLARE(ui_font_NotoSans);
-LV_FONT_DECLARE(ui_font_NotoSansBig);
-LV_FONT_DECLARE(ui_font_NotoSansSmall);
