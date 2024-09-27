@@ -46,6 +46,12 @@ lv_obj_t *msgbox_element = NULL;
 void *joystick_task() {
     struct input_event ev;
 
+    // Track pressed joystick directions to filter out jitter when the stick is centered.
+    bool analog_left_vert = false;
+    bool analog_left_hor = false;
+    bool analog_right_vert = false;
+    bool analog_right_hor = false;
+
     while (1) {
         read(js_fd, &ev, sizeof(struct input_event));
         switch (ev.type) {
@@ -125,10 +131,13 @@ void *joystick_task() {
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     if (ev.value == -device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "↾");
+                        analog_left_vert = true;
                     } else if (ev.value == device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "⇂");
-                    } else {
+                        analog_left_vert = true;
+                    } else if (analog_left_vert) {
                         lv_label_set_text(ui_lblButton, " ");
+                        analog_left_vert = false;
                     }
                 } else if (ev.code == device.RAW_INPUT.ANALOG.LEFT.LEFT ||
                            ev.code == device.RAW_INPUT.ANALOG.LEFT.RIGHT) {
@@ -136,30 +145,41 @@ void *joystick_task() {
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     if (ev.value == -device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "↼");
+                        analog_left_hor = true;
                     } else if (ev.value == device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "⇀");
-                    } else {
+                        analog_left_hor = true;
+                    } else if (analog_left_hor) {
                         lv_label_set_text(ui_lblButton, " ");
+                        analog_left_hor = false;
                     }
-                } else if (ev.code == ABS_RZ) {
+                } else if (ev.code == device.RAW_INPUT.ANALOG.RIGHT.UP ||
+                           ev.code == device.RAW_INPUT.ANALOG.RIGHT.DOWN) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     if (ev.value == -device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "↿");
+                        analog_right_vert = true;
                     } else if (ev.value >= device.INPUT.AXIS && ev.value <= device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "⇃");
-                    } else {
+                        analog_right_vert = true;
+                    } else if (analog_right_vert) {
                         lv_label_set_text(ui_lblButton, " ");
+                        analog_right_vert = false;
                     }
-                } else if (ev.code == ABS_RY) {
+                } else if (ev.code == device.RAW_INPUT.ANALOG.RIGHT.LEFT ||
+                           ev.code == device.RAW_INPUT.ANALOG.RIGHT.RIGHT) {
                     lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                     if (ev.value == -device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "↽");
+                        analog_right_hor = true;
                     } else if (ev.value == device.INPUT.AXIS) {
                         lv_label_set_text(ui_lblButton, "⇁");
-                    } else {
+                        analog_right_hor = true;
+                    } else if (analog_right_hor) {
                         lv_label_set_text(ui_lblButton, " ");
+                        analog_right_hor = false;
                     }
                 }
                 break;
