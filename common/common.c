@@ -14,6 +14,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/miniz/miniz.h"
+#include "../common/font/notosans.h"
 #include "../common/font/notosans_jp.h"
 #include "../common/font/notosans_kr.h"
 #include "../common/font/notosans_sc.h"
@@ -1076,7 +1077,30 @@ void unload_image_animation() {
     if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 
+const lv_font_t *get_language_font() {
+        if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Simplified)") == 0) {
+            return &ui_font_NotoSans_SC;
+        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Traditional)") == 0) {
+            return &ui_font_NotoSans_TC;
+        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0) {
+            return &ui_font_NotoSans_JP;
+        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0) {
+            return &ui_font_NotoSans_KR;
+        } else {
+            return &ui_font_NotoSans;
+        }
+}
+
+void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
+    char theme_font_text_fs[MAX_BUFFER_SIZE];
+    snprintf(theme_font_text_fs, sizeof(theme_font_text_fs), "M:%s", filepath);
+    lv_font_t * font = lv_font_load(theme_font_text_fs);
+    font->fallback = get_language_font();
+    lv_obj_set_style_text_font(element, font, LV_PART_MAIN | LV_STATE_DEFAULT);
+}
+
 void load_font_text(const char *program, lv_obj_t *screen) {
+    const lv_font_t * language_font = get_language_font();
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
         char theme_font_text[MAX_BUFFER_SIZE];
@@ -1084,60 +1108,26 @@ void load_font_text(const char *program, lv_obj_t *screen) {
         if (snprintf(theme_font_text, sizeof(theme_font_text),
                      "%s/theme/active/font/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program) >= 0 &&
             file_exist(theme_font_text)) {
-            char theme_font_text_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
-                     "M:%s/theme/active/font/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program);
-            lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            load_font_text_from_file(theme_font_text, screen);
         } else if (snprintf(theme_font_text, sizeof(theme_font_text_default),
                             "%s/theme/active/font/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE) >=
                    0 && file_exist(theme_font_text)) {
-            char theme_font_text_default_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                     "M:%s/theme/active/font/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
-            lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            load_font_text_from_file(theme_font_text, screen);
         } else if (snprintf(theme_font_text, sizeof(theme_font_text),
                             "%s/theme/active/font/%s.bin", STORAGE_PATH, program) >= 0 && file_exist(theme_font_text)) {
-            char theme_font_text_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
-                     "M:%s/theme/active/font/%s.bin", STORAGE_PATH, program);
-            lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            load_font_text_from_file(theme_font_text, screen); 
         } else if (snprintf(theme_font_text, sizeof(theme_font_text_default),
                             "%s/theme/active/font/default.bin", STORAGE_PATH) >= 0 && file_exist(theme_font_text)) {
-            char theme_font_text_default_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                     "M:%s/theme/active/font/default.bin", STORAGE_PATH);
-            lv_obj_set_style_text_font(screen, lv_font_load(theme_font_text_default_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        }
-    } else {
-        if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Simplified)") == 0) {
-            lv_obj_set_style_text_font(screen, &ui_font_NotoSans_SC,
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Traditional)") == 0) {
-            lv_obj_set_style_text_font(screen, &ui_font_NotoSans_TC,
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0) {
-            lv_obj_set_style_text_font(screen, &ui_font_NotoSans_JP,
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
-        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0) {
-            lv_obj_set_style_text_font(screen, &ui_font_NotoSans_KR,
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            load_font_text_from_file(theme_font_text, screen); 
         } else {
-            char theme_font_language[MAX_BUFFER_SIZE];
-            snprintf(theme_font_language, sizeof(theme_font_language), "%s/language/%s.bin",
-                     STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
-
-            if (file_exist(theme_font_language)) {
-                char theme_font_language_fs[MAX_BUFFER_SIZE];
-                snprintf(theme_font_language_fs, sizeof(theme_font_language_fs),
-                         "M:%s/language/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
-                lv_obj_set_style_text_font(screen, lv_font_load(theme_font_language_fs),
-                                           LV_PART_MAIN | LV_STATE_DEFAULT);
+            if (&ui_font_NotoSans != language_font) {
+                printf("Theme does not contain a font and language font exists\n");
+                lv_obj_set_style_text_font(screen, language_font, LV_PART_MAIN | LV_STATE_DEFAULT);            
             }
         }
+    } else {
+        lv_obj_set_style_text_font(screen, language_font,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 }
 
@@ -1149,37 +1139,19 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
         if (snprintf(theme_font_section, sizeof(theme_font_section),
                      "%s/theme/active/font/%s/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section,
                      program) >= 0 && file_exist(theme_font_section)) {
-            char theme_font_text_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
-                     "M:%s/theme/active/font/%s/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section,
-                     program);
-            lv_obj_set_style_text_font(element, lv_font_load(theme_font_text_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            load_font_text_from_file(theme_font_section, element); 
         } else if (snprintf(theme_font_section_default, sizeof(theme_font_section_default),
                             "%s/theme/active/font/%s/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE,
                             section) >= 0 && file_exist(theme_font_section_default)) {
-            char theme_font_text_default_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                     "M:%s/theme/active/font/%s/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE,
-                     section);
-            lv_obj_set_style_text_font(element, lv_font_load(theme_font_text_default_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            load_font_text_from_file(theme_font_section_default, element); 
         } else if (snprintf(theme_font_section, sizeof(theme_font_section),
                             "%s/theme/active/font/%s/%s.bin", STORAGE_PATH, section, program) >= 0 &&
                    file_exist(theme_font_section)) {
-            char theme_font_text_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_text_fs, sizeof(theme_font_text_fs),
-                     "M:%s/theme/active/font/%s/%s.bin", STORAGE_PATH, section, program);
-            lv_obj_set_style_text_font(element, lv_font_load(theme_font_text_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            load_font_text_from_file(theme_font_section, element); 
         } else if (snprintf(theme_font_section_default, sizeof(theme_font_section_default),
                             "%s/theme/active/font/%s/default.bin", STORAGE_PATH, section) >= 0 &&
                    file_exist(theme_font_section_default)) {
-            char theme_font_text_default_fs[MAX_BUFFER_SIZE];
-            snprintf(theme_font_text_default_fs, sizeof(theme_font_text_default_fs),
-                     "M:%s/theme/active/font/%s/default.bin", STORAGE_PATH, section);
-            lv_obj_set_style_text_font(element, lv_font_load(theme_font_text_default_fs),
-                                       LV_PART_MAIN | LV_STATE_DEFAULT);
+            load_font_text_from_file(theme_font_section_default, element); 
         }
     }
 }
