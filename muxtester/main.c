@@ -20,6 +20,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/input.h"
 #include "ui/theme.h"
 
 __thread uint64_t start_ms = 0;
@@ -33,7 +34,6 @@ int msgbox_active = 0;
 int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
-int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
@@ -43,171 +43,71 @@ struct mux_device device;
 
 lv_obj_t *msgbox_element = NULL;
 
-void *joystick_task() {
-    struct input_event ev;
+void handle_input(mux_input_type type, mux_input_action action) {
+    const char *glyph[MUX_INPUT_COUNT] = {
+        // Gamepad buttons:
+        [MUX_INPUT_A] = "↦⇓",
+        [MUX_INPUT_B] = "↧⇒",
+        [MUX_INPUT_X] = "↥⇐",
+        [MUX_INPUT_Y] = "↤⇑",
+        [MUX_INPUT_L1] = "↖",
+        [MUX_INPUT_L2] = "↲",
+        [MUX_INPUT_L3] = "↺",
+        [MUX_INPUT_R1] = "↗",
+        [MUX_INPUT_R2] = "↳",
+        [MUX_INPUT_R3] = "↻",
+        [MUX_INPUT_SELECT] = "⇷",
+        [MUX_INPUT_START] = "⇸",
 
-    // Track pressed joystick directions to filter out jitter when the stick is centered.
-    bool analog_left_vert = false;
-    bool analog_left_hor = false;
-    bool analog_right_vert = false;
-    bool analog_right_hor = false;
+        // D-pad:
+        [MUX_INPUT_DPAD_UP] = "↟",
+        [MUX_INPUT_DPAD_DOWN] = "↡",
+        [MUX_INPUT_DPAD_LEFT] = "↞",
+        [MUX_INPUT_DPAD_RIGHT] = "↠",
 
-    while (1) {
-        read(js_fd, &ev, sizeof(struct input_event));
-        switch (ev.type) {
-            case EV_KEY:
-                if (ev.value == 1) {
-                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.code == device.RAW_INPUT.BUTTON.A) {
-                        lv_label_set_text(ui_lblButton, "↦⇓");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.B) {
-                        lv_label_set_text(ui_lblButton, "↧⇒");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.C) {
-                        // TODO: Add glyph icon for this!
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.X) {
-                        lv_label_set_text(ui_lblButton, "↥⇐");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.Y) {
-                        lv_label_set_text(ui_lblButton, "↤⇑");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.Z) {
-                        // TODO: Add glyph icon for this!
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.L1) {
-                        lv_label_set_text(ui_lblButton, "↖");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.R1) {
-                        lv_label_set_text(ui_lblButton, "↗");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.L2) {
-                        lv_label_set_text(ui_lblButton, "↲");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.R2) {
-                        lv_label_set_text(ui_lblButton, "↳");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
-                               ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
-                        lv_label_set_text(ui_lblButton, "⇹");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT ||
-                               ev.code == device.RAW_INPUT.BUTTON.POWER_LONG) {
-                        lv_label_set_text(ui_lblButton, "↧⇒");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP) {
-                        lv_label_set_text(ui_lblButton, "⇾");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN) {
-                        lv_label_set_text(ui_lblButton, "⇽");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.START) {
-                        lv_label_set_text(ui_lblButton, "⇸");
-                    } else if (ev.code == device.RAW_INPUT.BUTTON.SELECT) {
-                        lv_label_set_text(ui_lblButton, "⇷");
-                    } else if (ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
-                        lv_label_set_text(ui_lblButton, "↺");
-                    } else if (ev.code == device.RAW_INPUT.ANALOG.RIGHT.CLICK) {
-                        lv_label_set_text(ui_lblButton, "↻");
-                    }
-                } else {
-                    lv_label_set_text(ui_lblButton, " ");
-                }
-                break;
-            case EV_ABS:
-                if (ev.code == device.RAW_INPUT.DPAD.UP ||
-                    ev.code == device.RAW_INPUT.DPAD.DOWN) {
-                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value == -1) {
-                        lv_label_set_text(ui_lblButton, "↟");
-                    } else if (ev.value == 1) {
-                        lv_label_set_text(ui_lblButton, "↡");
-                    } else {
-                        lv_label_set_text(ui_lblButton, " ");
-                    }
-                } else if (ev.code == device.RAW_INPUT.DPAD.LEFT ||
-                           ev.code == device.RAW_INPUT.DPAD.RIGHT) {
-                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value == -1) {
-                        lv_label_set_text(ui_lblButton, "↞");
-                    } else if (ev.value == 1) {
-                        lv_label_set_text(ui_lblButton, "↠");
-                    } else {
-                        lv_label_set_text(ui_lblButton, " ");
-                    }
-                } else if (ev.code == device.RAW_INPUT.ANALOG.LEFT.UP ||
-                           ev.code == device.RAW_INPUT.ANALOG.LEFT.DOWN) {
-                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value == -device.INPUT.AXIS) {
-                        lv_label_set_text(ui_lblButton, "↾");
-                        analog_left_vert = true;
-                    } else if (ev.value == device.INPUT.AXIS) {
-                        lv_label_set_text(ui_lblButton, "⇂");
-                        analog_left_vert = true;
-                    } else if (analog_left_vert) {
-                        lv_label_set_text(ui_lblButton, " ");
-                        analog_left_vert = false;
-                    }
-                } else if (ev.code == device.RAW_INPUT.ANALOG.LEFT.LEFT ||
-                           ev.code == device.RAW_INPUT.ANALOG.LEFT.RIGHT) {
-                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value == -device.INPUT.AXIS) {
-                        lv_label_set_text(ui_lblButton, "↼");
-                        analog_left_hor = true;
-                    } else if (ev.value == device.INPUT.AXIS) {
-                        lv_label_set_text(ui_lblButton, "⇀");
-                        analog_left_hor = true;
-                    } else if (analog_left_hor) {
-                        lv_label_set_text(ui_lblButton, " ");
-                        analog_left_hor = false;
-                    }
-                } else if (ev.code == device.RAW_INPUT.ANALOG.RIGHT.UP ||
-                           ev.code == device.RAW_INPUT.ANALOG.RIGHT.DOWN) {
-                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value == -device.INPUT.AXIS) {
-                        lv_label_set_text(ui_lblButton, "↿");
-                        analog_right_vert = true;
-                    } else if (ev.value >= device.INPUT.AXIS && ev.value <= device.INPUT.AXIS) {
-                        lv_label_set_text(ui_lblButton, "⇃");
-                        analog_right_vert = true;
-                    } else if (analog_right_vert) {
-                        lv_label_set_text(ui_lblButton, " ");
-                        analog_right_vert = false;
-                    }
-                } else if (ev.code == device.RAW_INPUT.ANALOG.RIGHT.LEFT ||
-                           ev.code == device.RAW_INPUT.ANALOG.RIGHT.RIGHT) {
-                    lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
-                    if (ev.value == -device.INPUT.AXIS) {
-                        lv_label_set_text(ui_lblButton, "↽");
-                        analog_right_hor = true;
-                    } else if (ev.value == device.INPUT.AXIS) {
-                        lv_label_set_text(ui_lblButton, "⇁");
-                        analog_right_hor = true;
-                    } else if (analog_right_hor) {
-                        lv_label_set_text(ui_lblButton, " ");
-                        analog_right_hor = false;
-                    }
-                }
-                break;
-            default:
-                break;
-        }
+        // Left stick:
+        [MUX_INPUT_LS_UP] = "↾",
+        [MUX_INPUT_LS_DOWN] = "⇂",
+        [MUX_INPUT_LS_LEFT] = "↼",
+        [MUX_INPUT_LS_RIGHT] = "⇀",
+
+        // Right stick:
+        [MUX_INPUT_RS_UP] = "↿",
+        [MUX_INPUT_RS_DOWN] = "⇃",
+        [MUX_INPUT_RS_LEFT] = "↽",
+        [MUX_INPUT_RS_RIGHT] = "⇁",
+
+        // Volume buttons:
+        [MUX_INPUT_VOL_UP] = "⇾",
+        [MUX_INPUT_VOL_DOWN] = "⇽",
+
+        // Function buttons:
+        [MUX_INPUT_MENU_LONG] = "⇹",
+    };
+
+    switch (action) {
+        case MUX_INPUT_PRESS:
+            if (glyph[type]) {
+                lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
+                lv_label_set_text(ui_lblButton, glyph[type]);
+            }
+            break;
+        case MUX_INPUT_RELEASE:
+            lv_label_set_text(ui_lblButton, " ");
+            break;
+        case MUX_INPUT_HOLD:
+            break;
     }
 }
 
-void *joystick_system_task() {
-    struct input_event ev;
+void handle_idle() {
+    refresh_screen();
+}
 
-    while (1) {
-        read(js_fd_sys, &ev, sizeof(struct input_event));
-        switch (ev.type) {
-            case EV_KEY:
-                if (ev.value == 1) {
-                    if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT ||
-                        ev.code == device.RAW_INPUT.BUTTON.POWER_LONG) {
-                        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
-                        safe_quit = 1;
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-    }
+void handle_power() {
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
+    mux_input_stop();
 }
 
 void glyph_task() {
@@ -344,18 +244,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    pthread_t joystick_thread;
-    if (pthread_create(&joystick_thread, NULL, joystick_task, NULL) != 0) {
-        perror("Failed to create main joystick thread");
-        return 1;
-    }
-
-    pthread_t joystick_system_thread;
-    if (pthread_create(&joystick_system_thread, NULL, joystick_system_task, NULL) != 0) {
-        perror("Failed to create system joystick thread");
-        return 1;
-    }
-
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
 
@@ -374,14 +262,22 @@ int main(int argc, char *argv[]) {
     lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);
 
-    while (!safe_quit) {
-        refresh_screen();
-    }
+    refresh_screen();
 
-    pthread_cancel(joystick_thread);
-    pthread_cancel(joystick_system_thread);
+    mux_input_options input_opts = {
+        .gamepad_fd = js_fd,
+        .system_fd = js_fd_sys,
+        .press_handler = {
+            [MUX_INPUT_POWER_SHORT] = handle_power,
+            [MUX_INPUT_POWER_LONG] = handle_power,
+        },
+        .input_handler = handle_input,
+        .idle_handler = handle_idle,
+    };
+    mux_input_task(&input_opts);
 
     close(js_fd);
+    close(js_fd_sys);
 
     return 0;
 }
