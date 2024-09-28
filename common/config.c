@@ -44,6 +44,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 96)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HDMI, "settings/general/hdmi", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.SHUTDOWN, "settings/general/shutdown", 0)
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.IDLE_DISPLAY, "settings/general/idle_display", 0)
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.IDLE_SLEEP, "settings/general/idle_sleep", 0)
     CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, "settings/general/startup", "launcher")
     CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, "settings/general/language", "English")
 

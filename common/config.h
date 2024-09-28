@@ -39,6 +39,8 @@ struct mux_config {
             int16_t HDMI;
             int16_t SHUTDOWN;
             char LANGUAGE[MAX_BUFFER_SIZE];
+            int16_t IDLE_DISPLAY;
+            int16_t IDLE_SLEEP;
         } GENERAL;
         struct {
             int16_t ACCELERATE;
