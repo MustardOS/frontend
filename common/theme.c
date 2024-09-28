@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "common.h"
 #include "options.h"
 #include "theme.h"
@@ -299,6 +300,31 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     mini_free(muos_theme);
 }
 
+void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem, const char *item_text) {
+        const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
+        const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
+        lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
+                                                      LV_TEXT_FLAG_EXPAND);
+        int max_item_width = theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_LEFT - theme->FONT.LIST_PAD_RIGHT;
+
+        if (act_line_length > max_item_width) {
+            int len = strlen(item_text); 
+            for (int i = len; i >= 0; i--) {
+                char *new_string = (char *)malloc(i + 4);
+                strncpy(new_string, item_text, i);
+                new_string[i] = '\0';
+                strcat(new_string, "...");
+
+                if (max_item_width  >= lv_txt_get_width(new_string, strlen(new_string), font, letter_space, LV_TEXT_FLAG_EXPAND)) {
+                    lv_label_set_text(ui_lblItem, new_string);
+                    free(new_string);
+                    return;
+                }
+                free(new_string);
+            }
+        }
+}
+
 void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
                            lv_obj_t *ui_lblItemGlyph, const char *item_text) {
     if (theme->MISC.CONTENT.SIZE_TO_CONTENT) {
@@ -377,10 +403,8 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, con
         lv_style_set_anim(&item_style, &item_anim);
         lv_obj_add_style(ui_lblItem, &item_style, LV_PART_MAIN);
         lv_obj_set_style_anim_speed(ui_lblItem, 70, LV_PART_MAIN);
-        lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_DOT);
-    } else {
-        lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
     }
+    lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
 
     lv_obj_set_width(ui_lblItem, theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_RIGHT);
     const lv_font_t *font = lv_obj_get_style_text_font(ui_lblItem, LV_PART_MAIN);

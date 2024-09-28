@@ -321,7 +321,7 @@ char *load_content_description() {
 }
 
 void reset_label_long_mode() {
-    lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_DOT);
+    apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),  items[current_item_index].display_name);
 }
 
 void set_label_long_mode() {
@@ -332,6 +332,7 @@ void set_label_long_mode() {
 
     if (strcasecmp(items[current_item_index].display_name, content_label) != 0 && ends_with_ellipse) {
         lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
+        lv_label_set_text(lv_group_get_focused(ui_group), items[current_item_index].display_name);
     }
 }
 
@@ -611,6 +612,7 @@ void gen_label(char *item_glyph, char *item_text) {
     lv_group_add_obj(ui_group_panel, ui_pnlExplore);
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, ui_lblExploreItemGlyph, item_text);
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
 }
 
 void gen_item(char **file_names, int file_count) {
