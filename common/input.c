@@ -67,40 +67,47 @@ static void process_key(const mux_input_options *opts, const struct input_event 
 // Processes gamepad axes (D-pad and the sticks).
 static void process_abs(const mux_input_options *opts, const struct input_event *event) {
     int axis;
-    int threshold;
+    bool analog;
     if (event->code == device.RAW_INPUT.DPAD.UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-        threshold = 1;
+        analog = false;
     } else if (event->code == device.RAW_INPUT.DPAD.LEFT) {
         // Axis: D-pad horizontal
         axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-        threshold = 1;
+        analog = false;
     } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.UP) {
         // Axis: left stick vertical
         axis = !opts->swap_axis ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
-        threshold = device.INPUT.AXIS;
+        analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.LEFT) {
         // Axis: left stick horizontal
         axis = !opts->swap_axis ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
-        threshold = device.INPUT.AXIS;
+        analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.UP) {
         // Axis: right stick vertical
         axis = !opts->swap_axis ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
-        threshold = device.INPUT.AXIS;
+        analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.LEFT) {
         // Axis: right stick horizontal
         axis = !opts->swap_axis ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
-        threshold = device.INPUT.AXIS;
+        analog = true;
     } else {
         return;
     }
 
-    if (event->value == -threshold) {
+    // Sometimes, hardware issues prevent sticks from reaching the full range of the analog axis.
+    // (This is especially common with cheap Hall-effect sticks.)
+    //
+    // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
+    // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
+    if ((analog && event->value <= -device.INPUT.AXIS + device.INPUT.AXIS / 5) ||
+            (!analog && event->value == -1)) {
         // Direction: up/left
         pressed[axis] = true;
         pressed[axis + 1] = false;
-    } else if (event->value == threshold) {
+    } else if ((analog && event->value >= device.INPUT.AXIS - device.INPUT.AXIS / 5) ||
+            (!analog && event->value == 1)) {
         // Direction: down/right
         pressed[axis] = false;
         pressed[axis + 1] = true;
