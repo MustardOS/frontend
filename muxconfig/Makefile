@@ -76,6 +76,7 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/common.c \
 		../common/ui_common.c \
 		../common/theme.c \
+		../common/input.c \
 		$(EXTRA); \
 	END=$$(date +%s); \
 	ELAPSED_TIME=$$((END - START)); \
