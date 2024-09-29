@@ -746,8 +746,6 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        int auto_assign_good = 0;
-
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), "%s/MUOS/info/assign.json",
                  device.STORAGE.ROM.MOUNT);
@@ -788,17 +786,20 @@ int main(int argc, char *argv[]) {
                     LOG_INFO(mux_prog, "<Automatic Governor Assign> Assigned Governor To: %s", auto_gov);
                     create_gov_assignment(auto_gov, rom_system, rom_name, DIRECTORY_NO_WIPE);
 
-                    auto_assign_good = 1;
                     LOG_SUCCESS(mux_prog, "<Automatic Governor Assign> Successful");
+                } else {
+                    LOG_INFO(mux_prog, "Assigned Governor To Default: %s", device.CPU.DEFAULT);
+                    create_gov_assignment(device.CPU.DEFAULT, rom_system, rom_name, DIRECTORY_NO_WIPE);
                 }
 
                 mini_free(core_config_ini);
+                return 0;
             } else {
-                if (strcmp(rom_system, "none") == 0) return 0;
+                LOG_INFO(mux_prog, "Assigned Governor To Default: %s", device.CPU.DEFAULT);
+                create_gov_assignment(device.CPU.DEFAULT, rom_system, rom_name, DIRECTORY_NO_WIPE);
+                return 0;
             }
         }
-
-        if (auto_assign_good) return 0;
     }
 
     lv_init();
