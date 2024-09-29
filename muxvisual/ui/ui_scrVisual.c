@@ -11,6 +11,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlDash = lv_obj_create(ui_pnlContent);
     ui_pnlFriendlyFolder = lv_obj_create(ui_pnlContent);
     ui_pnlTheTitleFormat = lv_obj_create(ui_pnlContent);
+    ui_pnlTitleIncludeRootDrive = lv_obj_create(ui_pnlContent);
     ui_pnlFolderItemCount = lv_obj_create(ui_pnlContent);
     ui_pnlMenuCounterFolder = lv_obj_create(ui_pnlContent);
     ui_pnlMenuCounterFile = lv_obj_create(ui_pnlContent);
@@ -25,6 +26,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblDash = lv_label_create(ui_pnlDash);
     ui_lblFriendlyFolder = lv_label_create(ui_pnlFriendlyFolder);
     ui_lblTheTitleFormat = lv_label_create(ui_pnlTheTitleFormat);
+    ui_lblTitleIncludeRootDrive = lv_label_create(ui_pnlTitleIncludeRootDrive);
     ui_lblFolderItemCount = lv_label_create(ui_pnlFolderItemCount);
     ui_lblMenuCounterFolder = lv_label_create(ui_pnlMenuCounterFolder);
     ui_lblMenuCounterFile = lv_label_create(ui_pnlMenuCounterFile);
@@ -39,6 +41,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoDash = lv_img_create(ui_pnlDash);
     ui_icoFriendlyFolder = lv_img_create(ui_pnlFriendlyFolder);
     ui_icoTheTitleFormat = lv_img_create(ui_pnlTheTitleFormat);
+    ui_icoTitleIncludeRootDrive = lv_img_create(ui_pnlTitleIncludeRootDrive);
     ui_icoFolderItemCount = lv_img_create(ui_pnlFolderItemCount);
     ui_icoMenuCounterFolder = lv_img_create(ui_pnlMenuCounterFolder);
     ui_icoMenuCounterFile = lv_img_create(ui_pnlMenuCounterFile);
@@ -53,6 +56,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droDash = lv_dropdown_create(ui_pnlDash);
     ui_droFriendlyFolder = lv_dropdown_create(ui_pnlFriendlyFolder);
     ui_droTheTitleFormat = lv_dropdown_create(ui_pnlTheTitleFormat);
+    ui_droTitleIncludeRootDrive = lv_dropdown_create(ui_pnlTitleIncludeRootDrive);
     ui_droFolderItemCount = lv_dropdown_create(ui_pnlFolderItemCount);
     ui_droMenuCounterFolder = lv_dropdown_create(ui_pnlMenuCounterFolder);
     ui_droMenuCounterFile = lv_dropdown_create(ui_pnlMenuCounterFile);

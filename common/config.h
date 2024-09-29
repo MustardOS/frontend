@@ -72,6 +72,7 @@ struct mux_config {
         int16_t DASH;
         int16_t FRIENDLYFOLDER;
         int16_t THETITLEFORMAT;
+        int16_t TITLEINCLUDEROOTDRIVE;
         int16_t FOLDERITEMCOUNT;
         int16_t COUNTERFOLDER;
         int16_t COUNTERFILE;

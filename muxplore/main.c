@@ -83,7 +83,6 @@ int first_open = 1;
 int nav_moved = 1;
 int counter_fade = 0;
 int fade_timeout = 3;
-int swap_timeout = 3;
 int starter_image = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
@@ -763,6 +762,32 @@ void gen_item(char **file_names, int file_count) {
     puts("FINISH GEN");
 }
 
+void update_title(char *folder_path, int fn_valid, struct json fn_json) {
+    char display_title[MAX_BUFFER_SIZE];
+    snprintf(display_title, sizeof(display_title), "%s", get_last_dir(folder_path));
+    if (config.VISUAL.FRIENDLYFOLDER && fn_valid) {
+        struct json good_name_json = json_object_get(fn_json, display_title);
+        if (json_exists(good_name_json)) {
+            json_string_copy(good_name_json, display_title, sizeof(display_title));
+            adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
+        }
+    }
+    if (!config.VISUAL.TITLEINCLUDEROOTDRIVE) {
+        lv_label_set_text(ui_lblTitle, display_title);
+    } else {
+        char title[PATH_MAX];
+        if (module == MMC) {
+            snprintf(title, sizeof(title), "%s (SD1)",  display_title);
+        } else if (module == SDCARD) {
+            snprintf(title, sizeof(title), "%s (SD2)",  display_title);
+        } else if (module == USB) {
+            snprintf(title, sizeof(title), "%s (USB)",  display_title);
+        }
+        lv_label_set_text(ui_lblTitle, title);
+    }
+    
+}
+
 void create_root_items(char *dir_name) {
     char spec_dir[PATH_MAX];
 
@@ -842,6 +867,8 @@ void create_explore_items(void *count) {
             fn_json = json_parse(read_text_from_file(folder_name_file));
         }
     }
+
+    update_title(item_curr_dir, fn_valid, fn_json);
 
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {
@@ -1884,35 +1911,6 @@ void glyph_task() {
         if (!msgbox_active) {
             progress_onscreen = -1;
         }
-    }
-
-    if (!swap_timeout) {
-        if (module != ROOT && module != FAVOURITE && module != HISTORY) {
-            char *last_dir = get_last_dir(sd_dir);
-            if (strcasecmp(lv_label_get_text(ui_lblTitle), last_dir) == 0) {
-                switch (module) {
-                    case MMC:
-                        lv_label_set_text(ui_lblTitle, TS("EXPLORE (SD1)"));
-                        break;
-                    case SDCARD:
-                        lv_label_set_text(ui_lblTitle, TS("EXPLORE (SD2)"));
-                        break;
-                    case USB:
-                        lv_label_set_text(ui_lblTitle, TS("EXPLORE (USB)"));
-                        break;
-                    default:
-                        lv_label_set_text(ui_lblTitle, TS("EXPLORE"));
-                        break;
-                }
-            } else {
-                if (!(strcasecmp(last_dir, "ROMS") == 0)) {
-                    lv_label_set_text(ui_lblTitle, last_dir);
-                }
-            }
-        }
-        swap_timeout = 3;
-    } else {
-        swap_timeout--;
     }
 }
 
