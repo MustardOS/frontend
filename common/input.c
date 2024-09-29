@@ -166,6 +166,15 @@ static void handle_input(const mux_input_options *opts,
 }
 
 void mux_input_task(const mux_input_options *opts) {
+    // Delay (millis) to wait for an input event before timing out. This determines two things:
+    //
+    // 1. The min rate at which hold_handlers are called. (This delay should be no longer than the
+    //    shortly expected "menu acceleration" setting.)
+    // 2. The min rate at which idle_handler is called. (This controls the screen refresh interval.)
+    //
+    // We use 16ms, as this is the shortest acceleration setting in the UI, and also roughly 60 FPS.
+    const int IDLE_DELAY = 16;
+
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("mux_input_task: epoll_create1");
@@ -197,8 +206,7 @@ void mux_input_task(const mux_input_options *opts) {
 
     // Input event loop:
     while (!stop) {
-        int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT,
-                                    config.SETTINGS.ADVANCED.ACCELERATE);
+        int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT, IDLE_DELAY);
         if (num_events == -1) {
             perror("mux_input_task: epoll_wait");
             continue;
