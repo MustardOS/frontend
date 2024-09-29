@@ -67,40 +67,47 @@ static void process_key(const mux_input_options *opts, const struct input_event 
 // Processes gamepad axes (D-pad and the sticks).
 static void process_abs(const mux_input_options *opts, const struct input_event *event) {
     int axis;
-    int threshold;
+    bool analog;
     if (event->code == device.RAW_INPUT.DPAD.UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-        threshold = 1;
+        analog = false;
     } else if (event->code == device.RAW_INPUT.DPAD.LEFT) {
         // Axis: D-pad horizontal
         axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-        threshold = 1;
+        analog = false;
     } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.UP) {
         // Axis: left stick vertical
         axis = !opts->swap_axis ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
-        threshold = device.INPUT.AXIS;
+        analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.LEFT) {
         // Axis: left stick horizontal
         axis = !opts->swap_axis ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
-        threshold = device.INPUT.AXIS;
+        analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.UP) {
         // Axis: right stick vertical
         axis = !opts->swap_axis ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
-        threshold = device.INPUT.AXIS;
+        analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.LEFT) {
         // Axis: right stick horizontal
         axis = !opts->swap_axis ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
-        threshold = device.INPUT.AXIS;
+        analog = true;
     } else {
         return;
     }
 
-    if (event->value == -threshold) {
+    // Sometimes, hardware issues prevent sticks from reaching the full range of the analog axis.
+    // (This is especially common with cheap Hall-effect sticks.)
+    //
+    // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
+    // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
+    if ((analog && event->value <= -device.INPUT.AXIS + device.INPUT.AXIS / 5) ||
+            (!analog && event->value == -1)) {
         // Direction: up/left
         pressed[axis] = true;
         pressed[axis + 1] = false;
-    } else if (event->value == threshold) {
+    } else if ((analog && event->value >= device.INPUT.AXIS - device.INPUT.AXIS / 5) ||
+            (!analog && event->value == 1)) {
         // Direction: down/right
         pressed[axis] = false;
         pressed[axis + 1] = true;
@@ -159,6 +166,15 @@ static void handle_input(const mux_input_options *opts,
 }
 
 void mux_input_task(const mux_input_options *opts) {
+    // Delay (millis) to wait for an input event before timing out. This determines two things:
+    //
+    // 1. The min rate at which hold_handlers are called. (This delay should be no longer than the
+    //    shortly expected "menu acceleration" setting.)
+    // 2. The min rate at which idle_handler is called. (This controls the screen refresh interval.)
+    //
+    // We use 16ms, as this is the shortest acceleration setting in the UI, and also roughly 60 FPS.
+    const int IDLE_DELAY = 16;
+
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("mux_input_task: epoll_create1");
@@ -190,8 +206,7 @@ void mux_input_task(const mux_input_options *opts) {
 
     // Input event loop:
     while (!stop) {
-        int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT,
-                                    config.SETTINGS.ADVANCED.ACCELERATE);
+        int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT, IDLE_DELAY);
         if (num_events == -1) {
             perror("mux_input_task: epoll_wait");
             continue;

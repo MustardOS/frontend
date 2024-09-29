@@ -28,13 +28,6 @@ char *mux_prog;
 static int js_fd;
 static int js_fd_sys;
 
-int NAV_DPAD_HOR;
-int NAV_ANLG_HOR;
-int NAV_DPAD_VER;
-int NAV_ANLG_VER;
-int NAV_A;
-int NAV_B;
-
 int turbo_mode = 0;
 int msgbox_active = 0;
 int input_disable = 0;
