@@ -177,13 +177,17 @@ void get_current_ip() {
     static char net_message[MAX_BUFFER_SIZE];
 
     if (strlen(curr_ip) > 1) {
-        snprintf(net_message, sizeof(net_message), "%s - %s", TS("Connected"), curr_ip);
-        lv_label_set_text(ui_lblStatusValue, net_message);
-        lv_label_set_text(ui_lblConnect, TS("Disconnect"));
-        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+        if (strcasecmp(curr_ip, "0.0.0.0") == 0) {
+            can_scan_check();
+        } else {
+            snprintf(net_message, sizeof(net_message), "%s - %s", TS("Connected"), curr_ip);
+            lv_label_set_text(ui_lblStatusValue, net_message);
+            lv_label_set_text(ui_lblConnect, TS("Disconnect"));
+            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
+            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+        }
     } else {
         can_scan_check();
     }
