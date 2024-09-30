@@ -837,20 +837,17 @@ void create_explore_items(void *count) {
     char **file_names = NULL;
     int file_count = 0;
 
-    switch (module) {
-        case MMC:
-            lv_label_set_text(ui_lblTitle, TS("EXPLORE (SD1)"));
-            break;
-        case SDCARD:
-            lv_label_set_text(ui_lblTitle, TS("EXPLORE (SD2)"));
-            break;
-        case USB:
-            lv_label_set_text(ui_lblTitle, TS("EXPLORE (USB)"));
-            break;
-        default:
-            lv_label_set_text(ui_lblTitle, TS("EXPLORE"));
-            break;
+    char title[PATH_MAX];
+    if (module == MMC) {
+        snprintf(title, sizeof(title), "%s (SD1)",  device.STORAGE.ROM.LABEL);
+    } else if (module == SDCARD) {
+        snprintf(title, sizeof(title), "%s (SD2)",  device.STORAGE.SDCARD.LABEL);
+    } else if (module == USB) {
+        snprintf(title, sizeof(title), "%s (USB)",  device.STORAGE.USB.LABEL);
+    } else {
+        snprintf(title, sizeof(title), "EXPLORE");
     }
+    lv_label_set_text(ui_lblTitle, title);
 
     add_directory_and_file_names(item_curr_dir, &dir_names, &dir_count, &file_names, &file_count);
 
@@ -1242,6 +1239,7 @@ void handle_a() {
     play_sound("confirm", nav_sound, 1);
 
     char *content_label = items[current_item_index].name;
+    char f_content[MAX_BUFFER_SIZE];
 
     switch (module) {
         case ROOT:
@@ -1260,7 +1258,6 @@ void handle_a() {
             }
             break;
         default:
-            char f_content[MAX_BUFFER_SIZE];
             snprintf(f_content, sizeof(f_content), "%s.cfg",
                      strip_ext(items[current_item_index].name));
 

@@ -30,6 +30,7 @@ struct mux_device {
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
+            char LABEL[MAX_BUFFER_SIZE];
         } BOOT;
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
@@ -37,6 +38,7 @@ struct mux_device {
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
+            char LABEL[MAX_BUFFER_SIZE];
         } ROM;
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
@@ -44,6 +46,7 @@ struct mux_device {
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
+            char LABEL[MAX_BUFFER_SIZE];
         } ROOT;
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
@@ -51,6 +54,7 @@ struct mux_device {
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
+            char LABEL[MAX_BUFFER_SIZE];
         } SDCARD;
         struct {
             char DEVICE[MAX_BUFFER_SIZE];
@@ -58,6 +62,7 @@ struct mux_device {
             int16_t PARTITION;
             char MOUNT[MAX_BUFFER_SIZE];
             char TYPE[MAX_BUFFER_SIZE];
+            char LABEL[MAX_BUFFER_SIZE];
         } USB;
     } STORAGE;
 

@@ -25,7 +25,8 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->STORAGE.field.DEVICE,    "storage/" path "/dev"  ); \
     DEV_STR_FIELD(device->STORAGE.field.SEPARATOR, "storage/" path "/sep"  ); \
     DEV_STR_FIELD(device->STORAGE.field.MOUNT,     "storage/" path "/mount"); \
-    DEV_STR_FIELD(device->STORAGE.field.TYPE,      "storage/" path "/type" );
+    DEV_STR_FIELD(device->STORAGE.field.TYPE,      "storage/" path "/type" ); \
+    DEV_STR_FIELD(device->STORAGE.field.LABEL,     "storage/" path "/label");
 
 #define DEV_ALG_FIELD(field, path)                                                           \
     DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.UP,    "input/code/analog/" path "/up"   ); \
