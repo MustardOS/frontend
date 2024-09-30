@@ -804,8 +804,8 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json) {
         module_type = "";
     }
 
-    str_remchars(folder_path, "/");
-    str_remchars(module_path, "/");
+    folder_path = str_replace(folder_path, "/", "");
+    module_path = str_replace(module_path, "/", "");
 
     snprintf(title, sizeof(title), "%s%s",
              (strcasecmp(folder_path, module_path) == 0) ? label : display_title, module_type);
@@ -919,76 +919,57 @@ void create_explore_items(void *count) {
     }
 }
 
+void explore_single(const char *card_type, char *directory) {
+    write_text_to_file("/tmp/explore_card", "w", CHAR, card_type);
+    write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(directory));
+    write_text_to_file("/tmp/single_card", "w", CHAR, "");
+    load_mux("explore");
+    quick_exit(0);
+}
+
 void explore_root() {
     lv_label_set_text(ui_lblTitle, TS("EXPLORE"));
     int single_card = 0;
 
-    if (count_items(SD1, DIRECTORIES_ONLY) > 0) {
-        single_card += 2;
-    }
+    if (count_items(SD1, DIRECTORIES_ONLY) > 0) single_card += 2;
+    if (detect_storage(device.STORAGE.SDCARD.DEVICE) && count_items(SD2, DIRECTORIES_ONLY) > 0) single_card += 4;
+    if (detect_storage(device.STORAGE.USB.DEVICE) && count_items(E_USB, DIRECTORIES_ONLY) > 0) single_card += 8;
 
-    if (detect_storage(device.STORAGE.SDCARD.DEVICE) && count_items(SD2, DIRECTORIES_ONLY) > 0) {
-        single_card += 4;
-    }
+    const char *labels[3] = {
+            device.STORAGE.ROM.LABEL,
+            device.STORAGE.SDCARD.LABEL,
+            device.STORAGE.USB.LABEL
+    };
+    const char *prefixes[3] = {" (SD1)", " (SD2)", " (USB)"};
 
-    if (detect_storage(device.STORAGE.USB.DEVICE) && count_items(E_USB, DIRECTORIES_ONLY) > 0) {
-        single_card += 8;
+    char full_labels[3][PATH_MAX];
+    for (int i = 0; i < 3; i++) {
+        snprintf(full_labels[i], sizeof(full_labels[i]), "%s%s", labels[i], prefixes[i]);
     }
 
     switch (single_card) {
         case 2:
-            write_text_to_file("/tmp/explore_card", "w", CHAR, "mmc");
-            write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD1));
-            write_text_to_file("/tmp/single_card", "w", CHAR, "");
-            load_mux("explore");
-            quick_exit(0);
+            explore_single("mmc", SD1);
             break;
         case 4:
-            write_text_to_file("/tmp/explore_card", "w", CHAR, "sdcard");
-            write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(SD2));
-            write_text_to_file("/tmp/single_card", "w", CHAR, "");
-            load_mux("explore");
-            quick_exit(0);
-            break;
-        case 6:
-            add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
-            add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
-            gen_label("folder", "SD1 (mmc)");
-            gen_label("folder", "SD2 (sdcard)");
-            ui_count += 2;
-            nav_moved = 1;
+            explore_single("sdcard", SD2);
             break;
         case 8:
-            write_text_to_file("/tmp/explore_card", "w", CHAR, "usb");
-            write_text_to_file("/tmp/explore_dir", "w", CHAR, strip_dir(E_USB));
-            write_text_to_file("/tmp/single_card", "w", CHAR, "");
-            load_mux("explore");
-            quick_exit(0);
+            explore_single("usb", E_USB);
             break;
+        case 6:
         case 10:
-            add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
-            add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label("folder", "SD1 (mmc)");
-            gen_label("folder", "USB (external)");
-            ui_count += 2;
-            nav_moved = 1;
-            break;
         case 12:
-            add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
-            add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label("folder", "SD2 (sdcard)");
-            gen_label("folder", "USB (external)");
-            ui_count += 2;
-            nav_moved = 1;
-            break;
-        case 14:
-            add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
-            add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
-            add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
-            gen_label("folder", "SD1 (mmc)");
-            gen_label("folder", "SD2 (sdcard)");
-            gen_label("folder", "USB (external)");
-            ui_count += 3;
+        case 14: // All the single cards put your hands up!
+            if (single_card & 2) add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
+            if (single_card & 4) add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
+            if (single_card & 8) add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
+
+            if (single_card & 2) gen_label("folder", full_labels[0]);
+            if (single_card & 4) gen_label("folder", full_labels[1]);
+            if (single_card & 8) gen_label("folder", full_labels[2]);
+
+            ui_count += (single_card == 14) ? 3 : 2;
             nav_moved = 1;
             break;
         default:
