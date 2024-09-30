@@ -762,16 +762,21 @@ void gen_item(char **file_names, int file_count) {
     puts("FINISH GEN");
 }
 
-void update_title(char *folder_path, int fn_valid, struct json fn_json) {
-    char display_title[MAX_BUFFER_SIZE];
-    snprintf(display_title, sizeof(display_title), "%s", get_last_dir(folder_path));
-    if (config.VISUAL.FRIENDLYFOLDER && fn_valid) {
-        struct json good_name_json = json_object_get(fn_json, display_title);
-        if (json_exists(good_name_json)) {
-            json_string_copy(good_name_json, display_title, sizeof(display_title));
-            adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
-        }
+char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
+    char *friendly_folder_name = (char *)malloc(MAX_BUFFER_SIZE);
+    strcpy(friendly_folder_name, folder_name);
+    if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
+    struct json good_name_json = json_object_get(fn_json, folder_name);
+    if (json_exists(good_name_json)) {
+        json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
     }
+    return friendly_folder_name;
+}
+
+
+void update_title(char *folder_path, int fn_valid, struct json fn_json) {
+    char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
+    adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
 
     char title[PATH_MAX];
     char *label = NULL;
@@ -780,17 +785,17 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json) {
 
     switch (module) {
         case MMC:
-            label = device.STORAGE.ROM.LABEL;
+            label = get_friendly_folder_name(device.STORAGE.ROM.LABEL, fn_valid, fn_json);
             module_type = " (SD1)";
             module_path = SD1;
             break;
         case SDCARD:
-            label = device.STORAGE.SDCARD.LABEL;
+            label = get_friendly_folder_name(device.STORAGE.SDCARD.LABEL, fn_valid, fn_json);
             module_type = " (SD2)";
             module_path = SD2;
             break;
         case USB:
-            label = device.STORAGE.USB.LABEL;
+            label = get_friendly_folder_name(device.STORAGE.USB.LABEL, fn_valid, fn_json);
             module_type = " (USB)";
             module_path = E_USB;
             break;
@@ -808,9 +813,11 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json) {
     module_path = str_replace(module_path, "/", "");
 
     snprintf(title, sizeof(title), "%s%s",
-             (strcasecmp(folder_path, module_path) == 0) ? label : display_title, module_type);
+             (strcasecmp(folder_path, module_path) == 0 && label != NULL && label[0] != '\0') ? label : display_title, module_type);
 
     lv_label_set_text(ui_lblTitle, title);
+    free(display_title);
+    free(label);
 }
 
 void create_root_items(char *dir_name) {
@@ -883,15 +890,8 @@ void create_explore_items(void *count) {
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {
             content_item *new_item = NULL;
-            char good_name[MAX_BUFFER_SIZE];
-            if (config.VISUAL.FRIENDLYFOLDER && fn_valid) {
-                struct json good_name_json = json_object_get(fn_json, dir_names[i]);
-                if (json_exists(good_name_json)) {
-                    json_string_copy(good_name_json, good_name, sizeof(good_name));
-                    new_item = add_item(&items, &item_count, dir_names[i], good_name, FOLDER);
-                }
-            }
-            if (new_item == NULL) new_item = add_item(&items, &item_count, dir_names[i], dir_names[i], FOLDER);
+            char *friendly_folder_name =  get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
+            new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, FOLDER);
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
             if (config.VISUAL.FOLDERITEMCOUNT) {
                 char display_name[MAX_BUFFER_SIZE];
@@ -900,6 +900,7 @@ void create_explore_items(void *count) {
                 new_item->display_name = strdup(display_name);
             }
 
+            free(friendly_folder_name);
             free(dir_names[i]);
         }
         sort_items(items, item_count);
@@ -936,9 +937,9 @@ void explore_root() {
     if (detect_storage(device.STORAGE.USB.DEVICE) && count_items(E_USB, DIRECTORIES_ONLY) > 0) single_card += 8;
 
     const char *labels[3] = {
-            device.STORAGE.ROM.LABEL,
-            device.STORAGE.SDCARD.LABEL,
-            device.STORAGE.USB.LABEL
+            device.STORAGE.ROM.LABEL[0] != '\0' ? device.STORAGE.ROM.LABEL : "ROMS",
+            device.STORAGE.SDCARD.LABEL[0] != '\0' ? device.STORAGE.SDCARD.LABEL : "ROMS",
+            device.STORAGE.USB.LABEL[0] != '\0' ? device.STORAGE.USB.LABEL : "ROMS",
     };
     const char *prefixes[3] = {" (SD1)", " (SD2)", " (USB)"};
 
