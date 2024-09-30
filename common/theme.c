@@ -314,6 +314,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 }
 
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem, const char *item_text) {
+        lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
         const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
         lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
