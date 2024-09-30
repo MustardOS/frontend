@@ -28,13 +28,6 @@ char *mux_prog;
 static int js_fd;
 static int js_fd_sys;
 
-int NAV_DPAD_HOR;
-int NAV_ANLG_HOR;
-int NAV_DPAD_VER;
-int NAV_ANLG_VER;
-int NAV_A;
-int NAV_B;
-
 int turbo_mode = 0;
 int msgbox_active = 0;
 int input_disable = 0;
@@ -362,52 +355,6 @@ void handle_down_hold() {
     }
 }
 
-void handle_volume() {
-    if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
-        if (mux_input_pressed(MUX_INPUT_MENU_LONG)) {
-            progress_onscreen = 1;
-            lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-            lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-        } else {
-            progress_onscreen = 2;
-            lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-            int volume = atoi(read_text_from_file(VOLUME_PERC));
-            switch (volume) {
-                default:
-                case 0:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
-                    break;
-                case 1 ... 46:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF026");
-                    break;
-                case 47 ... 71:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF027");
-                    break;
-                case 72 ... 100:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF028");
-                    break;
-            }
-            lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
-        }
-    }
-}
-
-void handle_idle() {
-    if (file_exist("/tmp/hdmi_do_refresh")) {
-        if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
-            remove("/tmp/hdmi_do_refresh");
-            lv_obj_invalidate(ui_pnlHeader);
-            lv_obj_invalidate(ui_pnlContent);
-            lv_obj_invalidate(ui_pnlFooter);
-        }
-    }
-
-    refresh_screen();
-}
-
 void init_elements() {
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
@@ -615,31 +562,6 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    switch (theme.MISC.NAVIGATION_TYPE) {
-        case 1:
-            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
-            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
-            NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
-            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
-            break;
-        default:
-            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.RIGHT;
-            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
-            NAV_DPAD_VER = device.RAW_INPUT.DPAD.DOWN;
-            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.DOWN;
-    }
-
-    switch (config.SETTINGS.ADVANCED.SWAP) {
-        case 1:
-            NAV_A = device.RAW_INPUT.BUTTON.B;
-            NAV_B = device.RAW_INPUT.BUTTON.A;
-            break;
-        default:
-            NAV_A = device.RAW_INPUT.BUTTON.A;
-            NAV_B = device.RAW_INPUT.BUTTON.B;
-            break;
-    }
-
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.RANDOM_BACKGROUND) {
@@ -750,8 +672,8 @@ int main(int argc, char *argv[]) {
             [MUX_INPUT_LS_UP] = handle_up,
             [MUX_INPUT_DPAD_DOWN] = handle_down,
             [MUX_INPUT_LS_DOWN] = handle_down,
-            [MUX_INPUT_VOL_UP] = handle_volume,
-            [MUX_INPUT_VOL_DOWN] = handle_volume,
+            [MUX_INPUT_VOL_UP] = ui_common_handle_volume,
+            [MUX_INPUT_VOL_DOWN] = ui_common_handle_volume,
             [MUX_INPUT_MENU_SHORT] = handle_menu,
         },
         .hold_handler = {
@@ -762,7 +684,7 @@ int main(int argc, char *argv[]) {
             [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
             [MUX_INPUT_LS_DOWN] = handle_down_hold,
         },
-        .idle_handler = handle_idle,
+        .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

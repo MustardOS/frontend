@@ -15,6 +15,7 @@ extern int nav_sound;
 extern int bar_header;
 extern int bar_footer;
 extern char *osd_message;
+extern int progress_onscreen;
 extern struct mux_config config;
 
 enum count_type {

@@ -342,52 +342,6 @@ void handle_right() {
     }
 }
 
-void handle_volume() {
-    if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
-        if (mux_input_pressed(MUX_INPUT_MENU_LONG)) {
-            progress_onscreen = 1;
-            lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-            lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-        } else {
-            progress_onscreen = 2;
-            lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-            int volume = atoi(read_text_from_file(VOLUME_PERC));
-            switch (volume) {
-                default:
-                case 0:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
-                    break;
-                case 1 ... 46:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF026");
-                    break;
-                case 47 ... 71:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF027");
-                    break;
-                case 72 ... 100:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF028");
-                    break;
-            }
-            lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
-        }
-    }
-}
-
-void handle_idle() {
-    if (file_exist("/tmp/hdmi_do_refresh")) {
-        if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
-            remove("/tmp/hdmi_do_refresh");
-            lv_obj_invalidate(ui_pnlHeader);
-            lv_obj_invalidate(ui_pnlContent);
-            lv_obj_invalidate(ui_pnlFooter);
-        }
-    }
-
-    refresh_screen();
-}
-
 void init_elements() {
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
@@ -723,11 +677,11 @@ int main(int argc, char *argv[]) {
             [MUX_INPUT_LS_LEFT] = handle_left,
             [MUX_INPUT_DPAD_RIGHT] = handle_right,
             [MUX_INPUT_LS_RIGHT] = handle_right,
-            [MUX_INPUT_VOL_UP] = handle_volume,
-            [MUX_INPUT_VOL_DOWN] = handle_volume,
+            [MUX_INPUT_VOL_UP] = ui_common_handle_volume,
+            [MUX_INPUT_VOL_DOWN] = ui_common_handle_volume,
             [MUX_INPUT_MENU_SHORT] = handle_menu,
         },
-        .idle_handler = handle_idle,
+        .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 
