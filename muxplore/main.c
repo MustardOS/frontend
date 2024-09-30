@@ -313,7 +313,7 @@ char *load_content_description() {
 }
 
 void reset_label_long_mode() {
-    apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),  items[current_item_index].display_name);
+    apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
 }
 
 void set_label_long_mode() {
@@ -772,20 +772,45 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json) {
             adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
         }
     }
-    if (!config.VISUAL.TITLEINCLUDEROOTDRIVE) {
-        lv_label_set_text(ui_lblTitle, display_title);
-    } else {
-        char title[PATH_MAX];
-        if (module == MMC) {
-            snprintf(title, sizeof(title), "%s (SD1)",  display_title);
-        } else if (module == SDCARD) {
-            snprintf(title, sizeof(title), "%s (SD2)",  display_title);
-        } else if (module == USB) {
-            snprintf(title, sizeof(title), "%s (USB)",  display_title);
-        }
-        lv_label_set_text(ui_lblTitle, title);
+
+    char title[PATH_MAX];
+    char *label = NULL;
+    char *module_type = NULL;
+    char *module_path = NULL;
+
+    switch (module) {
+        case MMC:
+            label = device.STORAGE.ROM.LABEL;
+            module_type = " (SD1)";
+            module_path = SD1;
+            break;
+        case SDCARD:
+            label = device.STORAGE.SDCARD.LABEL;
+            module_type = " (SD2)";
+            module_path = SD2;
+            break;
+        case USB:
+            label = device.STORAGE.USB.LABEL;
+            module_type = " (USB)";
+            module_path = E_USB;
+            break;
+        default:
+            label = "EXPLORE";
+            module_type = "";
+            module_path = SD1;
     }
-    
+
+    if (!config.VISUAL.TITLEINCLUDEROOTDRIVE) {
+        module_type = "";
+    }
+
+    str_remchars(folder_path, "/");
+    str_remchars(module_path, "/");
+
+    snprintf(title, sizeof(title), "%s%s",
+             (strcasecmp(folder_path, module_path) == 0) ? label : display_title, module_type);
+
+    lv_label_set_text(ui_lblTitle, title);
 }
 
 void create_root_items(char *dir_name) {
@@ -836,18 +861,6 @@ void create_explore_items(void *count) {
 
     char **file_names = NULL;
     int file_count = 0;
-
-    char title[PATH_MAX];
-    if (module == MMC) {
-        snprintf(title, sizeof(title), "%s (SD1)",  device.STORAGE.ROM.LABEL);
-    } else if (module == SDCARD) {
-        snprintf(title, sizeof(title), "%s (SD2)",  device.STORAGE.SDCARD.LABEL);
-    } else if (module == USB) {
-        snprintf(title, sizeof(title), "%s (USB)",  device.STORAGE.USB.LABEL);
-    } else {
-        snprintf(title, sizeof(title), "EXPLORE");
-    }
-    lv_label_set_text(ui_lblTitle, title);
 
     add_directory_and_file_names(item_curr_dir, &dir_names, &dir_count, &file_names, &file_count);
 
@@ -1449,7 +1462,7 @@ void handle_x() {
     write_text_to_file("/tmp/explore_dir", "w", CHAR, n_dir);
     load_mux("explore");
 
-ttq:
+    ttq:
     mux_input_stop();
 }
 
@@ -1530,7 +1543,7 @@ void handle_select() {
     }
 
     if (module != ROOT && module != FAVOURITE && module != HISTORY &&
-            strcasecmp(get_last_dir(sd_dir), "ROMS") != 0) {
+        strcasecmp(get_last_dir(sd_dir), "ROMS") != 0) {
         play_sound("confirm", nav_sound, 1);
 
         switch (module) {
@@ -2303,37 +2316,37 @@ int main(int argc, char *argv[]) {
     refresh_screen();
 
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .swap_nav = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .press_handler = {
-            [MUX_INPUT_A] = handle_a,
-            [MUX_INPUT_L3] = handle_a,
-            [MUX_INPUT_B] = handle_b,
-            [MUX_INPUT_X] = handle_x,
-            [MUX_INPUT_Y] = handle_y,
-            [MUX_INPUT_L1] = handle_l1,
-            [MUX_INPUT_R1] = handle_r1,
-            [MUX_INPUT_SELECT] = handle_select,
-            [MUX_INPUT_START] = handle_start,
-            [MUX_INPUT_DPAD_UP] = handle_up,
-            [MUX_INPUT_LS_UP] = handle_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_down,
-            [MUX_INPUT_LS_DOWN] = handle_down,
-            [MUX_INPUT_VOL_UP] = handle_volume,
-            [MUX_INPUT_VOL_DOWN] = handle_volume,
-            [MUX_INPUT_MENU_SHORT] = handle_menu,
-        },
-        .hold_handler = {
-            [MUX_INPUT_L1] = handle_l1,
-            [MUX_INPUT_R1] = handle_r1,
-            [MUX_INPUT_DPAD_UP] = handle_up_hold,
-            [MUX_INPUT_LS_UP] = handle_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
-            [MUX_INPUT_LS_DOWN] = handle_down_hold,
-        },
-        .idle_handler = handle_idle,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .swap_nav = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_L3] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
+                    [MUX_INPUT_L1] = handle_l1,
+                    [MUX_INPUT_R1] = handle_r1,
+                    [MUX_INPUT_SELECT] = handle_select,
+                    [MUX_INPUT_START] = handle_start,
+                    [MUX_INPUT_DPAD_UP] = handle_up,
+                    [MUX_INPUT_LS_UP] = handle_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down,
+                    [MUX_INPUT_LS_DOWN] = handle_down,
+                    [MUX_INPUT_VOL_UP] = handle_volume,
+                    [MUX_INPUT_VOL_DOWN] = handle_volume,
+                    [MUX_INPUT_MENU_SHORT] = handle_menu,
+            },
+            .hold_handler = {
+                    [MUX_INPUT_L1] = handle_l1,
+                    [MUX_INPUT_R1] = handle_r1,
+                    [MUX_INPUT_DPAD_UP] = handle_up_hold,
+                    [MUX_INPUT_LS_UP] = handle_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+                    [MUX_INPUT_LS_DOWN] = handle_down_hold,
+            },
+            .idle_handler = handle_idle,
     };
     mux_input_task(&input_opts);
 
