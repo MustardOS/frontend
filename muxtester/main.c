@@ -265,7 +265,6 @@ int main(int argc, char *argv[]) {
         .system_fd = js_fd_sys,
         .press_handler = {
             [MUX_INPUT_POWER_SHORT] = handle_power,
-            [MUX_INPUT_POWER_LONG] = handle_power,
         },
         .input_handler = handle_input,
         .idle_handler = ui_common_handle_idle,

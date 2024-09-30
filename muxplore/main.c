@@ -2256,11 +2256,11 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
         .gamepad_fd = js_fd,
         .system_fd = js_fd_sys,
-        .swap_nav = config.SETTINGS.ADVANCED.SWAP,
+        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
         .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+        .stick_nav = true,
         .press_handler = {
             [MUX_INPUT_A] = handle_a,
-            [MUX_INPUT_L3] = handle_a,
             [MUX_INPUT_B] = handle_b,
             [MUX_INPUT_X] = handle_x,
             [MUX_INPUT_Y] = handle_y,
@@ -2269,9 +2269,7 @@ int main(int argc, char *argv[]) {
             [MUX_INPUT_SELECT] = handle_select,
             [MUX_INPUT_START] = handle_start,
             [MUX_INPUT_DPAD_UP] = handle_up,
-            [MUX_INPUT_LS_UP] = handle_up,
             [MUX_INPUT_DPAD_DOWN] = handle_down,
-            [MUX_INPUT_LS_DOWN] = handle_down,
             [MUX_INPUT_VOL_UP] = ui_common_handle_volume,
             [MUX_INPUT_VOL_DOWN] = ui_common_handle_volume,
             [MUX_INPUT_MENU_SHORT] = handle_menu,
@@ -2280,9 +2278,7 @@ int main(int argc, char *argv[]) {
             [MUX_INPUT_L1] = handle_l1,
             [MUX_INPUT_R1] = handle_r1,
             [MUX_INPUT_DPAD_UP] = handle_up_hold,
-            [MUX_INPUT_LS_UP] = handle_up_hold,
             [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
-            [MUX_INPUT_LS_DOWN] = handle_down_hold,
         },
         .idle_handler = ui_common_handle_idle,
     };
