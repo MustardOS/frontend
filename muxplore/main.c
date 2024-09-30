@@ -1550,6 +1550,8 @@ void handle_select() {
             case MMC:
             case SDCARD:
             case USB:
+                write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+
                 write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
                 write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
 
