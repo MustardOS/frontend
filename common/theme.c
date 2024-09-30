@@ -298,9 +298,23 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MISC.CONTENT.HEIGHT = theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT;
 
     mini_free(muos_theme);
+
+    char scheme_override[MAX_BUFFER_SIZE];
+    snprintf(scheme_override, sizeof(scheme), "%s/theme/theme_overrides.txt", STORAGE_PATH);
+    if (file_exist(scheme_override)) {
+        mini_t *muos_theme_overrides = mini_try_load(scheme_override);
+        int16_t pad_right = get_ini_int(muos_theme_overrides, "font", "FONT_LIST_PAD_RIGHT", -1);
+        int16_t content_width = get_ini_int(muos_theme_overrides, "misc", "CONTENT_WIDTH", -1);
+
+        if (pad_right > -1) theme->FONT.LIST_PAD_RIGHT = pad_right;
+        if (content_width > -1) theme->MISC.CONTENT.WIDTH = content_width;
+
+        mini_free(muos_theme_overrides);
+    }
 }
 
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem, const char *item_text) {
+        lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
         const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
         lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
