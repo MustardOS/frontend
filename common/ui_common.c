@@ -432,7 +432,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_lblPreviewHeaderGlyph, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblPreviewHeaderGlyph, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblPreviewHeaderGlyph, LV_LABEL_LONG_CLIP);
-    lv_label_set_text(ui_lblPreviewHeaderGlyph, "⇓");
+    if (config.SETTINGS.ADVANCED.SWAP) {
+        lv_label_set_text(ui_lblPreviewHeaderGlyph, "\u21D2");
+    } else {
+        lv_label_set_text(ui_lblPreviewHeaderGlyph, "\u21D3");
+    }
     lv_obj_set_style_text_color(ui_lblPreviewHeaderGlyph, lv_color_hex(theme->NAV.A.GLYPH),
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblPreviewHeaderGlyph, theme->NAV.A.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -533,7 +537,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_lblHelpPreviewInfoGlyph, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpPreviewInfoGlyph, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpPreviewInfoGlyph, LV_LABEL_LONG_CLIP);
-    lv_label_set_text(ui_lblHelpPreviewInfoGlyph, "⇓");
+    if (config.SETTINGS.ADVANCED.SWAP) {
+        lv_label_set_text(ui_lblHelpPreviewInfoGlyph, "\u21D2");
+    } else {
+        lv_label_set_text(ui_lblHelpPreviewInfoGlyph, "\u21D3");
+    }
     lv_obj_set_style_text_color(ui_lblHelpPreviewInfoGlyph, lv_color_hex(theme->NAV.A.GLYPH),
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHelpPreviewInfoGlyph, theme->NAV.A.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
