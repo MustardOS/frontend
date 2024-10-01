@@ -73,10 +73,13 @@ typedef struct {
     int system_fd;
 
     // Whether to swap the A & B buttons.
-    bool swap_nav;
+    bool swap_btn;
 
     // Whether to swap the up/down and left/right axes on the D-pad and sticks.
     bool swap_axis;
+
+    // Whether use the left stick for navigation (direction -> D-pad, click -> A button).
+    bool stick_nav;
 
     // Callback functions for inputs. Fired in sequence: one press, zero or more holds, one release.
     //
@@ -88,7 +91,7 @@ typedef struct {
     // Generic handler for input press/hold/release events. For programs that want to "go offroad"
     // and handle every input event in a custom way.
     //
-    // Most use case are probably easier to read if they use the individual handlers above instead.
+    // Most use cases are probably easier to read if they use the individual handlers above instead.
     //
     // May be NULL, in which case no input handler will be invoked.
     mux_input_catchall_handler input_handler;

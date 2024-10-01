@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <sys/param.h>
 #include <unistd.h>
 
 #include "config.h"
@@ -23,9 +24,9 @@ static bool pressed[MUX_INPUT_COUNT] = {};
 static void process_key(const mux_input_options *opts, const struct input_event *event) {
     mux_input_type type;
     if (event->code == device.RAW_INPUT.BUTTON.A) {
-        type = !opts->swap_nav ? MUX_INPUT_A : MUX_INPUT_B;
+        type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
     } else if (event->code == device.RAW_INPUT.BUTTON.B) {
-        type = !opts->swap_nav ? MUX_INPUT_B : MUX_INPUT_A;
+        type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
     } else if (event->code == device.RAW_INPUT.BUTTON.C) {
         type = MUX_INPUT_C;
     } else if (event->code == device.RAW_INPUT.BUTTON.X) {
@@ -141,6 +142,30 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
 static void handle_input(const mux_input_options *opts,
                          mux_input_type type,
                          mux_input_action action) {
+    // Remap input types when using left stick as D-pad. (We still track pressed and held status for
+    // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
+    if (opts->stick_nav) {
+        switch (type) {
+            case MUX_INPUT_L3:
+                type = MUX_INPUT_A;
+                break;
+            case MUX_INPUT_LS_UP:
+                type = MUX_INPUT_DPAD_UP;
+                break;
+            case MUX_INPUT_LS_DOWN:
+                type = MUX_INPUT_DPAD_DOWN;
+                break;
+            case MUX_INPUT_LS_LEFT:
+                type = MUX_INPUT_DPAD_LEFT;
+                break;
+            case MUX_INPUT_LS_RIGHT:
+                type = MUX_INPUT_DPAD_RIGHT;
+                break;
+            default:
+                break;
+        }
+    }
+
     mux_input_handler handler = NULL;
     switch (action) {
         case MUX_INPUT_PRESS:
@@ -166,15 +191,6 @@ static void handle_input(const mux_input_options *opts,
 }
 
 void mux_input_task(const mux_input_options *opts) {
-    // Delay (millis) to wait for an input event before timing out. This determines two things:
-    //
-    // 1. The min rate at which hold_handlers are called. (This delay should be no longer than the
-    //    shortly expected "menu acceleration" setting.)
-    // 2. The min rate at which idle_handler is called. (This controls the screen refresh interval.)
-    //
-    // We use 16ms, as this is the shortest acceleration setting in the UI, and also roughly 60 FPS.
-    const int IDLE_DELAY = 16;
-
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("mux_input_task: epoll_create1");
@@ -204,9 +220,22 @@ void mux_input_task(const mux_input_options *opts) {
     // Tick (millis) each input was last pressed or held.
     uint32_t hold_tick[MUX_INPUT_COUNT] = {};
 
+    // Delay (millis) to wait for an input event before timing out. This determines two things:
+    //
+    // 1. The min rate at which hold_handlers are called. (This delay should be no longer than the
+    //    shortly expected "menu acceleration" setting.)
+    // 2. The min rate at which idle_handler is called. (This controls the screen refresh interval.)
+    //
+    // When there's an idle handler registered, force a delay of no more than 16ms, roughly 60 FPS.
+    // Otherwise, wait up to the hold delay to reduce CPU usage.
+    int idle_delay = config.SETTINGS.ADVANCED.ACCELERATE;
+    if (opts->idle_handler) {
+        idle_delay = MIN(16, idle_delay);
+    }
+
     // Input event loop:
     while (!stop) {
-        int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT, IDLE_DELAY);
+        int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT, idle_delay);
         if (num_events == -1) {
             perror("mux_input_task: epoll_wait");
             continue;

@@ -20,19 +20,13 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/input.h"
 
 __thread uint64_t start_ms = 0;
 
 char *mux_prog;
 static int js_fd;
 static int js_fd_sys;
-
-int NAV_DPAD_HOR;
-int NAV_ANLG_HOR;
-int NAV_DPAD_VER;
-int NAV_ANLG_VER;
-int NAV_A;
-int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -182,216 +176,108 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void joystick_task() {
-    struct input_event ev;
-    int epoll_fd;
-    struct epoll_event event, events[device.DEVICE.EVENT];
-
-    int JOYUP_pressed = 0;
-    int JOYDOWN_pressed = 0;
-    int JOYHOTKEY_pressed = 0;
-    int JOYHOTKEY_screenshot = 0;
-
-    uint32_t nav_hold = 0; // Delay (millis) before scrolling again when up/down is held.
-    uint32_t nav_tick = 0; // Clock tick (millis) when the navigation list was last scrolled.
-
-    epoll_fd = epoll_create1(0);
-    if (epoll_fd == -1) {
-        perror("Error creating EPOLL instance");
+void handle_a() {
+    if (msgbox_active) {
         return;
     }
 
-    event.events = EPOLLIN;
-    event.data.fd = js_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
-        perror("Error with EPOLL controller");
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+    play_sound("confirm", nav_sound, 1);
+    if (element_focused == ui_lblTweakGeneral) {
+        load_mux("tweakgen");
+    } else if (element_focused == ui_lblTheme) {
+        load_mux("theme");
+    } else if (element_focused == ui_lblNetwork) {
+        load_mux("network");
+    } else if (element_focused == ui_lblServices) {
+        load_mux("webserv");
+    } else if (element_focused == ui_lblRTC) {
+        load_mux("rtc");
+    } else if (element_focused == ui_lblLanguage) {
+        load_mux("language");
+    }
+    mux_input_stop();
+}
+
+void handle_b() {
+    if (msgbox_active) {
+        play_sound("confirm", nav_sound, 1);
+        msgbox_active = 0;
+        progress_onscreen = 0;
+        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    event.data.fd = js_fd_sys;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd_sys, &event) == -1) {
-        perror("Error with EPOLL controller");
+    play_sound("back", nav_sound, 1);
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
+    mux_input_stop();
+}
+
+void handle_menu() {
+    if (msgbox_active) {
         return;
     }
 
-    while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
-        if (num_events == -1) {
-            perror("Error with EPOLL wait event timer");
-            continue;
-        }
+    if (progress_onscreen == -1) {
+        play_sound("confirm", nav_sound, 1);
+        show_help(lv_group_get_focused(ui_group));
+    }
+}
 
-        for (int i = 0; i < num_events; i++) {
-            if (events[i].data.fd == js_fd_sys) {
-                ssize_t ret = read(js_fd_sys, &ev, sizeof(struct input_event));
-                if (ret == -1) {
-                    perror("Error reading input");
-                    continue;
-                }
-                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 &&
-                    (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
-                    JOYHOTKEY_screenshot = 1;
-                }
-            } else if (events[i].data.fd == js_fd) {
-                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
-                if (ret == -1) {
-                    perror("Error reading input");
-                    continue;
-                }
+void handle_up() {
+    if (msgbox_active) {
+        return;
+    }
 
-                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-                switch (ev.type) {
-                    case EV_KEY:
-                        if (ev.value == 1) {
-                            if (msgbox_active) {
-                                if (ev.code == NAV_B) {
-                                    play_sound("confirm", nav_sound, 1);
-                                    msgbox_active = 0;
-                                    progress_onscreen = 0;
-                                    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                }
-                            } else {
-                                if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
-                                    JOYHOTKEY_pressed = 1;
-                                    JOYHOTKEY_screenshot = 0;
-                                } else if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
-                                    play_sound("confirm", nav_sound, 1);
-                                    if (element_focused == ui_lblTweakGeneral) {
-                                        load_mux("tweakgen");
-                                    } else if (element_focused == ui_lblTheme) {
-                                        load_mux("theme");
-                                    } else if (element_focused == ui_lblNetwork) {
-                                        load_mux("network");
-                                    } else if (element_focused == ui_lblServices) {
-                                        load_mux("webserv");
-                                    } else if (element_focused == ui_lblRTC) {
-                                        load_mux("rtc");
-                                    } else if (element_focused == ui_lblLanguage) {
-                                        load_mux("language");
-                                    }
-                                    return;
-                                } else if (ev.code == NAV_B) {
-                                    play_sound("back", nav_sound, 1);
-                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
-                                    return;
-                                }
-                            }
-                        } else {
-                            if ((ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
-                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
-                                JOYHOTKEY_pressed = 0;
-                                if (progress_onscreen == -1) {
-                                    play_sound("confirm", nav_sound, 1);
-                                    show_help(element_focused);
-                                }
-                            }
-                        }
-                        break;
-                    case EV_ABS:
-                        if (msgbox_active) {
-                            break;
-                        }
-                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
-                                if (current_item_index == 0) {
-                                    current_item_index = ui_count - 1;
-                                    nav_prev(ui_group, 1);
-                                    nav_prev(ui_group_glyph, 1);
-                                    nav_prev(ui_group_panel, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                                                           current_item_index, ui_pnlContent);
-                                    nav_moved = 1;
-                                } else if (current_item_index > 0) {
-                                    list_nav_prev(1);
-                                }
-                                JOYUP_pressed = 1;
-                                nav_hold = 2 * config.SETTINGS.ADVANCED.ACCELERATE;
-                                nav_tick = mux_tick();
-                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
-                                if (current_item_index == ui_count - 1) {
-                                    current_item_index = 0;
-                                    nav_next(ui_group, 1);
-                                    nav_next(ui_group_glyph, 1);
-                                    nav_next(ui_group_panel, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                                                           current_item_index, ui_pnlContent);
-                                    nav_moved = 1;
-                                } else if (current_item_index < ui_count - 1) {
-                                    list_nav_next(1);
-                                }
-                                JOYDOWN_pressed = 1;
-                                nav_hold = 2 * config.SETTINGS.ADVANCED.ACCELERATE;
-                                nav_tick = mux_tick();
-                            } else {
-                                JOYUP_pressed = 0;
-                                JOYDOWN_pressed = 0;
-                            }
-                            break;
-                        }
-                    default:
-                        break;
-                }
-            }
-            refresh_screen();
-        }
+    if (current_item_index == 0) {
+        current_item_index = ui_count - 1;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_glyph, 1);
+        nav_prev(ui_group_panel, 1);
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                               current_item_index, ui_pnlContent);
+        nav_moved = 1;
+    } else if (current_item_index > 0) {
+        list_nav_prev(1);
+    }
+}
 
-        // Handle menu acceleration.
-        if (mux_tick() - nav_tick >= nav_hold) {
-            if (JOYUP_pressed && current_item_index > 0) {
-                list_nav_prev(1);
-                nav_hold = config.SETTINGS.ADVANCED.ACCELERATE;
-                nav_tick = mux_tick();
-            } else if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
-                list_nav_next(1);
-                nav_hold = config.SETTINGS.ADVANCED.ACCELERATE;
-                nav_tick = mux_tick();
-            }
-        }
+void handle_up_hold() {
+    if (msgbox_active) {
+        return;
+    }
 
-        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
-            if (ev.type == EV_KEY && ev.value == 1 &&
-                (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
-                if (JOYHOTKEY_pressed) {
-                    progress_onscreen = 1;
-                    lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-                    lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-                    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-                } else {
-                    progress_onscreen = 2;
-                    lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-                    int volume = atoi(read_text_from_file(VOLUME_PERC));
-                    switch (volume) {
-                        default:
-                        case 0:
-                            lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
-                            break;
-                        case 1 ... 46:
-                            lv_label_set_text(ui_icoProgressVolume, "\uF026");
-                            break;
-                        case 47 ... 71:
-                            lv_label_set_text(ui_icoProgressVolume, "\uF027");
-                            break;
-                        case 72 ... 100:
-                            lv_label_set_text(ui_icoProgressVolume, "\uF028");
-                            break;
-                    }
-                    lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
-                }
-            }
-        }
+    if (current_item_index > 0) {
+        list_nav_prev(1);
+    }
+}
 
-        if (file_exist("/tmp/hdmi_do_refresh")) {
-            if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
-                remove("/tmp/hdmi_do_refresh");
-                lv_obj_invalidate(ui_pnlHeader);
-                lv_obj_invalidate(ui_pnlContent);
-                lv_obj_invalidate(ui_pnlFooter);
-            }
-        }
+void handle_down() {
+    if (msgbox_active) {
+        return;
+    }
 
-        refresh_screen();
+    if (current_item_index == ui_count - 1) {
+        current_item_index = 0;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_glyph, 1);
+        nav_next(ui_group_panel, 1);
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
+                               current_item_index, ui_pnlContent);
+        nav_moved = 1;
+    } else if (current_item_index < ui_count - 1) {
+        list_nav_next(1);
+    }
+}
+
+void handle_down_hold() {
+    if (msgbox_active) {
+        return;
+    }
+
+    if (current_item_index < ui_count - 1) {
+        list_nav_next(1);
     }
 }
 
@@ -628,31 +514,6 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    switch (theme.MISC.NAVIGATION_TYPE) {
-        case 1:
-            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
-            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
-            NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
-            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
-            break;
-        default:
-            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.RIGHT;
-            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
-            NAV_DPAD_VER = device.RAW_INPUT.DPAD.DOWN;
-            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.DOWN;
-    }
-
-    switch (config.SETTINGS.ADVANCED.SWAP) {
-        case 1:
-            NAV_A = device.RAW_INPUT.BUTTON.B;
-            NAV_B = device.RAW_INPUT.BUTTON.A;
-            break;
-        default:
-            NAV_A = device.RAW_INPUT.BUTTON.A;
-            NAV_B = device.RAW_INPUT.BUTTON.B;
-            break;
-    }
-
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.RANDOM_BACKGROUND) {
@@ -742,7 +603,29 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     refresh_screen();
-    joystick_task();
+
+    mux_input_options input_opts = {
+        .gamepad_fd = js_fd,
+        .system_fd = js_fd_sys,
+        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+        .stick_nav = true,
+        .press_handler = {
+            [MUX_INPUT_A] = handle_a,
+            [MUX_INPUT_B] = handle_b,
+            [MUX_INPUT_DPAD_UP] = handle_up,
+            [MUX_INPUT_DPAD_DOWN] = handle_down,
+            [MUX_INPUT_VOL_UP] = ui_common_handle_volume,
+            [MUX_INPUT_VOL_DOWN] = ui_common_handle_volume,
+            [MUX_INPUT_MENU_SHORT] = handle_menu,
+        },
+        .hold_handler = {
+            [MUX_INPUT_DPAD_UP] = handle_up_hold,
+            [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+        },
+        .idle_handler = ui_common_handle_idle,
+    };
+    mux_input_task(&input_opts);
 
     close(js_fd);
     close(js_fd_sys);

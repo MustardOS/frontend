@@ -2,6 +2,10 @@
 
 void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title);
 
+void ui_common_handle_volume();
+
+void ui_common_handle_idle();
+
 lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme);
 
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name,

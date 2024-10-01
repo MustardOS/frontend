@@ -101,10 +101,6 @@ void handle_input(mux_input_type type, mux_input_action action) {
     }
 }
 
-void handle_idle() {
-    refresh_screen();
-}
-
 void handle_power() {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
     mux_input_stop();
@@ -269,10 +265,9 @@ int main(int argc, char *argv[]) {
         .system_fd = js_fd_sys,
         .press_handler = {
             [MUX_INPUT_POWER_SHORT] = handle_power,
-            [MUX_INPUT_POWER_LONG] = handle_power,
         },
         .input_handler = handle_input,
-        .idle_handler = handle_idle,
+        .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 
