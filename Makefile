@@ -30,6 +30,6 @@ $(MODULES):
 
 notify:
 	@BUILD_COUNT=$$(cat $(BUILD_FILE) 2>/dev/null || echo 0); \
-	printf "Compiled $$BUILD_COUNT of $(BUILD_TOTAL) Modules\n============== Complete! =============="; \
-	notify-send "muOS Frontend Builder" "Compiled $$BUILD_COUNT of $(BUILD_TOTAL) Modules" && echo -e '\a'
+	printf "Compiled $$BUILD_COUNT of $(BUILD_TOTAL) Modules\n============== Complete! ==============\a\n"; \
+	notify-send "muOS Frontend Builder" "Compiled $$BUILD_COUNT of $(BUILD_TOTAL) Modules" 2>/dev/null || true
 	@rm -rf $(BUILD_FILE)
