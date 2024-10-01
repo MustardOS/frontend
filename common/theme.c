@@ -301,7 +301,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     char scheme_override[MAX_BUFFER_SIZE];
     snprintf(scheme_override, sizeof(scheme), "%s/theme/theme_overrides.txt", STORAGE_PATH);
-    if (file_exist(scheme_override)) {
+    if (file_exist(scheme_override) &&
+           (strcasecmp(mux_name, "muxplore") == 0 || strcasecmp(mux_name, "muxfavourite") == 0 || strcasecmp(mux_name, "muxhistory") == 0)) {
         mini_t *muos_theme_overrides = mini_try_load(scheme_override);
         int16_t pad_right = get_ini_int(muos_theme_overrides, "font", "FONT_LIST_PAD_RIGHT", -1);
         int16_t content_width = get_ini_int(muos_theme_overrides, "misc", "CONTENT_WIDTH", -1);
