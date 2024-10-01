@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
 // Every input (button, D-pad, or stick direction) we support.
 typedef enum {
@@ -66,6 +67,26 @@ typedef void (*mux_input_handler)();
 // Callback function invoked in response to any arbitrary input type and action.
 typedef void (*mux_input_catchall_handler)(mux_input_type, mux_input_action);
 
+// Callback function invoked in response to a multi-input combo.
+typedef void (*mux_input_catchall_combo_handler)(int, mux_input_action);
+
+// Maximum number of combos allowed per input task.
+#define MUX_INPUT_COMBO_COUNT 16
+
+// Configuration for a multi-input combo.
+typedef struct {
+    // Bitmask of input types included in the combo. Every input in this mask must be pressed for
+    // the combo to activate.
+    uint64_t type_mask;
+
+    // Callback functions for combo. Fired in sequence: one press, zero or more holds, one release.
+    //
+    // Handlers may be NULL, in which case that input will be ignored.
+    mux_input_handler press_handler;
+    mux_input_handler hold_handler;
+    mux_input_handler release_handler;
+} mux_input_combo;
+
 // Configuration for the muOS input subsystem.
 typedef struct {
     // File descriptors for the underlying evdev devices.
@@ -95,6 +116,20 @@ typedef struct {
     //
     // May be NULL, in which case no input handler will be invoked.
     mux_input_catchall_handler input_handler;
+
+    // Multi-input combo definitions. At most one combo can be active at once, so order matters.
+    //
+    // Generally, longer combos should be set before shorter ones. For example, a combo for A+B
+    // should come before a combo for just A. (If the combo for A comes first, it will always
+    // trigger, and the combo for A+B will be ignored even if B is also pressed.)
+    mux_input_combo combo[MUX_INPUT_COMBO_COUNT];
+
+    // Generic handler for combo press/hold/release events. Allows central handling of every combo.
+    //
+    // Most use cases should use the individual handlers instead the mux_input_combo struct instead.
+    //
+    // May be NULL, in which case no combo handler will be invoked.
+    mux_input_catchall_combo_handler combo_handler;
 
     // Handler called after each iteration of the event loop, regardless of whether any input fired.
     //

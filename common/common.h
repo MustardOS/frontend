@@ -3,6 +3,8 @@
 #include "../lvgl/lvgl.h"
 #include "mini/mini.h"
 
+#define BIT(n) (UINT64_C(1) << (n))
+
 #define TS(str) translate_specific(str)
 #define TG(str) translate_generic(str)
 
