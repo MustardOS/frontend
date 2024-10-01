@@ -119,13 +119,13 @@ void create_theme_items() {
             snprintf(filename, sizeof(filename), "%s/%s", theme_dir, tf->d_name);
 
             char *last_dot = strrchr(tf->d_name, '.');
-            if (last_dot != NULL) {
+            if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
                 *last_dot = '\0';
-            }
 
-            file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
-            file_names[file_count] = strdup(tf->d_name);
-            file_count++;
+                file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
+                file_names[file_count] = strdup(tf->d_name);
+                file_count++;
+            }
         }
     }
 
