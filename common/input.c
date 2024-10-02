@@ -276,8 +276,14 @@ static void handle_combos(const mux_input_options *opts, uint32_t tick) {
             dispatch_combo(opts, active_combo, MUX_INPUT_RELEASE);
             active_combo = MUX_INPUT_COMBO_COUNT;
         }
-    } else if (pressed & ~held) {
+    }
+
+    if (active_combo == MUX_INPUT_COMBO_COUNT && (pressed & ~held)) {
         // No active combo, but a new input was pressed. Check if a combo should activate.
+        //
+        // Sometimes, a single evdev event can result in us registering both a release and a press
+        // (e.g., when transitioning from POWER_SHORT to POWER_LONG), so we have to check this even
+        // if a combo was previously active at the start of the function.
         for (int i = 0; i < MUX_INPUT_COMBO_COUNT; ++i) {
             uint64_t mask = opts->combo[i].type_mask;
 
