@@ -1366,6 +1366,10 @@ void update_image(lv_obj_t * ui_imgobj, struct ImageSettings image_settings) {
         }
 
         lv_obj_set_align(ui_imgobj, image_settings.align);
+        lv_obj_set_style_pad_left(ui_imgobj, image_settings.pad_left, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_imgobj, image_settings.pad_right, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_top(ui_imgobj, image_settings.pad_top, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_imgobj, image_settings.pad_bottom, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_img_set_src(ui_imgobj, image_path);
         lv_obj_move_foreground(ui_imgobj);
     } else {
