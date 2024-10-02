@@ -18,6 +18,17 @@ extern char *osd_message;
 extern int progress_onscreen;
 extern struct mux_config config;
 
+struct ImageSettings {
+        char *image_path;
+        int16_t align;
+        int16_t max_width;
+        int16_t max_height;
+        int16_t pad_left;
+        int16_t pad_right;
+        int16_t pad_top;
+        int16_t pad_bottom;
+};
+
 enum count_type {
     FILES_ONLY, DIRECTORIES_ONLY, BOTH
 };
@@ -173,6 +184,8 @@ int should_skip(const char *name);
 void display_testing_message(lv_obj_t *screen);
 
 void adjust_visual_label(char *text, int method, int rep_dash);
+
+void update_image(lv_obj_t * ui_imgobj, struct ImageSettings image_settings);
 
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
                             lv_obj_t *ui_pnlContent);
