@@ -2,7 +2,9 @@
 
 void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title);
 
-void ui_common_handle_volume();
+void ui_common_handle_bright();
+
+void ui_common_handle_vol();
 
 void ui_common_handle_idle();
 

@@ -673,9 +673,25 @@ int main(int argc, char *argv[]) {
             [MUX_INPUT_DPAD_DOWN] = handle_down,
             [MUX_INPUT_DPAD_LEFT] = handle_left,
             [MUX_INPUT_DPAD_RIGHT] = handle_right,
-            [MUX_INPUT_VOL_UP] = ui_common_handle_volume,
-            [MUX_INPUT_VOL_DOWN] = ui_common_handle_volume,
             [MUX_INPUT_MENU_SHORT] = handle_menu,
+        },
+        .combo = {
+            {
+                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                .press_handler = ui_common_handle_bright,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                .press_handler = ui_common_handle_bright,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_VOL_UP),
+                .press_handler = ui_common_handle_vol,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                .press_handler = ui_common_handle_vol,
+            },
         },
         .idle_handler = ui_common_handle_idle,
     };

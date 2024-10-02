@@ -681,37 +681,43 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_disp_load_scr(ui_screen);
 }
 
-void ui_common_handle_volume() {
-    if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) && !config.BOOT.FACTORY_RESET) {
-        if (mux_input_pressed(MUX_INPUT_MENU_LONG)) {
-            progress_onscreen = 1;
-            lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-            lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-        } else {
-            progress_onscreen = 2;
-            lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-            int volume = atoi(read_text_from_file(VOLUME_PERC));
-            switch (volume) {
-                default:
-                case 0:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
-                    break;
-                case 1 ... 46:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF026");
-                    break;
-                case 47 ... 71:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF027");
-                    break;
-                case 72 ... 100:
-                    lv_label_set_text(ui_icoProgressVolume, "\uF028");
-                    break;
-            }
-            lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
-        }
+void ui_common_handle_bright() {
+    if (atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.BOOT.FACTORY_RESET) {
+        return;
     }
+
+    progress_onscreen = 1;
+    lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+    lv_label_set_text(ui_icoProgressBrightness, "\uF185");
+    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+}
+
+void ui_common_handle_vol() {
+    if (atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.BOOT.FACTORY_RESET) {
+        return;
+    }
+
+    progress_onscreen = 2;
+    lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+    int volume = atoi(read_text_from_file(VOLUME_PERC));
+    switch (volume) {
+        default:
+        case 0:
+            lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
+            break;
+        case 1 ... 46:
+            lv_label_set_text(ui_icoProgressVolume, "\uF026");
+            break;
+        case 47 ... 71:
+            lv_label_set_text(ui_icoProgressVolume, "\uF027");
+            break;
+        case 72 ... 100:
+            lv_label_set_text(ui_icoProgressVolume, "\uF028");
+            break;
+    }
+    lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
 }
 
 void ui_common_handle_idle() {
