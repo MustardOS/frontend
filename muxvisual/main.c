@@ -61,6 +61,7 @@ int network_total, network_current;
 int bluetooth_total, bluetooth_current;
 int mux_clock_total, mux_clock_current;
 int boxart_total, boxart_current;
+int boxartalign_total, boxartalign_current;
 int name_total, name_current;
 int dash_total, dash_current;
 int friendlyfolder_total, friendlyfolder_current;
@@ -71,7 +72,7 @@ int menu_counter_folder_total, menu_counter_folder_current;
 int menu_counter_file_total, menu_counter_file_current;
 int background_animation_total, background_animation_current;
 
-#define UI_COUNT 14
+#define UI_COUNT 15
 lv_obj_t *ui_objects[UI_COUNT];
 
 typedef struct {
@@ -79,7 +80,7 @@ typedef struct {
     int *current;
 } Visuals;
 
-Visuals battery, network, bluetooth, mux_clock, boxart, name, dash, friendlyfolder,
+Visuals battery, network, bluetooth, mux_clock, boxart, boxartalign, name, dash, friendlyfolder,
         thetitleformat, titleincluderootdrive, folderitemcount, counterfolder, counterfile, backgroundanimation;
 
 lv_group_t *ui_group;
@@ -99,6 +100,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblBluetooth,           "HELP.BLUETOOTH"},
             {ui_lblClock,               "HELP.CLOCK"},
             {ui_lblBoxArt,              "HELP.BOXART"},
+            {ui_lblBoxArtAlign,    "HELP.BOXARTALIGN"},
             {ui_lblName,                "HELP.NAME"},
             {ui_lblDash,                "HELP.DASH"},
             {ui_lblFriendlyFolder,      "HELP.FRIENDLY.FOLDER"},
@@ -148,6 +150,7 @@ void elements_events_init() {
             ui_droBluetooth,
             ui_droClock,
             ui_droBoxArt,
+            ui_droBoxArtAlign,
             ui_droName,
             ui_droDash,
             ui_droFriendlyFolder,
@@ -168,6 +171,7 @@ void elements_events_init() {
     init_pointers(&bluetooth, &bluetooth_total, &bluetooth_current);
     init_pointers(&mux_clock, &mux_clock_total, &mux_clock_current);
     init_pointers(&boxart, &boxart_total, &boxart_current);
+    init_pointers(&boxartalign, &boxartalign_total, &boxartalign_current);
     init_pointers(&name, &name_total, &name_current);
     init_pointers(&dash, &dash_total, &dash_current);
     init_pointers(&friendlyfolder, &friendlyfolder_total, &friendlyfolder_current);
@@ -186,6 +190,7 @@ void init_dropdown_settings() {
             {bluetooth.total,           bluetooth.current},
             {mux_clock.total,           mux_clock.current},
             {boxart.total,              boxart.current},
+            {boxartalign.total,    boxartalign.current},
             {name.total,                name.current},
             {dash.total,                dash.current},
             {friendlyfolder.total,      friendlyfolder.current},
@@ -203,6 +208,7 @@ void init_dropdown_settings() {
             ui_droBluetooth,
             ui_droClock,
             ui_droBoxArt,
+            ui_droBoxArtAlign,
             ui_droName,
             ui_droDash,
             ui_droFriendlyFolder,
@@ -226,6 +232,7 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droBluetooth, config.VISUAL.BLUETOOTH);
     lv_dropdown_set_selected(ui_droClock, config.VISUAL.CLOCK);
     lv_dropdown_set_selected(ui_droBoxArt, config.VISUAL.BOX_ART);
+    lv_dropdown_set_selected(ui_droBoxArtAlign, config.VISUAL.BOX_ART_ALIGN - 1);
     lv_dropdown_set_selected(ui_droName, config.VISUAL.NAME);
     lv_dropdown_set_selected(ui_droDash, config.VISUAL.DASH);
     lv_dropdown_set_selected(ui_droFriendlyFolder, config.VISUAL.FRIENDLYFOLDER);
@@ -243,6 +250,7 @@ void save_visual_options() {
     int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
     int idx_clock = lv_dropdown_get_selected(ui_droClock);
     int idx_boxart = lv_dropdown_get_selected(ui_droBoxArt);
+    int idx_boxartalign = lv_dropdown_get_selected(ui_droBoxArtAlign) + 1;
     int idx_name = lv_dropdown_get_selected(ui_droName);
     int idx_dash = lv_dropdown_get_selected(ui_droDash);
     int idx_friendlyfolder = lv_dropdown_get_selected(ui_droFriendlyFolder);
@@ -258,6 +266,7 @@ void save_visual_options() {
     write_text_to_file("/run/muos/global/visual/bluetooth", "w", INT, idx_bluetooth);
     write_text_to_file("/run/muos/global/visual/clock", "w", INT, idx_clock);
     write_text_to_file("/run/muos/global/visual/boxart", "w", INT, idx_boxart);
+    write_text_to_file("/run/muos/global/visual/boxartalign", "w", INT, idx_boxartalign);
     write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
     write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
     write_text_to_file("/run/muos/global/visual/friendlyfolder", "w", INT, idx_friendlyfolder);
@@ -276,6 +285,7 @@ void init_navigation_groups() {
             ui_pnlBluetooth,
             ui_pnlClock,
             ui_pnlBoxArt,
+            ui_pnlBoxArtAlign,
             ui_pnlName,
             ui_pnlDash,
             ui_pnlFriendlyFolder,
@@ -292,15 +302,16 @@ void init_navigation_groups() {
     ui_objects[2] = ui_lblBluetooth;
     ui_objects[3] = ui_lblClock;
     ui_objects[4] = ui_lblBoxArt;
-    ui_objects[5] = ui_lblName;
-    ui_objects[6] = ui_lblDash;
-    ui_objects[7] = ui_lblFriendlyFolder;
-    ui_objects[8] = ui_lblTheTitleFormat;
-    ui_objects[9] = ui_lblTitleIncludeRootDrive;
-    ui_objects[10] = ui_lblFolderItemCount;
-    ui_objects[11] = ui_lblMenuCounterFolder;
-    ui_objects[12] = ui_lblMenuCounterFile;
-    ui_objects[13] = ui_lblBackgroundAnimation;
+    ui_objects[5] = ui_lblBoxArtAlign;
+    ui_objects[6] = ui_lblName;
+    ui_objects[7] = ui_lblDash;
+    ui_objects[8] = ui_lblFriendlyFolder;
+    ui_objects[9] = ui_lblTheTitleFormat;
+    ui_objects[10] = ui_lblTitleIncludeRootDrive;
+    ui_objects[11] = ui_lblFolderItemCount;
+    ui_objects[12] = ui_lblMenuCounterFolder;
+    ui_objects[13] = ui_lblMenuCounterFile;
+    ui_objects[14] = ui_lblBackgroundAnimation;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droBattery,
@@ -308,6 +319,7 @@ void init_navigation_groups() {
             ui_droBluetooth,
             ui_droClock,
             ui_droBoxArt,
+            ui_droBoxArtAlign,
             ui_droName,
             ui_droDash,
             ui_droFriendlyFolder,
@@ -325,6 +337,7 @@ void init_navigation_groups() {
             ui_icoBluetooth,
             ui_icoClock,
             ui_icoBoxArt,
+            ui_icoBoxArtAlign,
             ui_icoName,
             ui_icoDash,
             ui_icoFriendlyFolder,
@@ -341,6 +354,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlBluetooth);
     apply_theme_list_panel(&theme, &device, ui_pnlClock);
     apply_theme_list_panel(&theme, &device, ui_pnlBoxArt);
+    apply_theme_list_panel(&theme, &device, ui_pnlBoxArtAlign);
     apply_theme_list_panel(&theme, &device, ui_pnlName);
     apply_theme_list_panel(&theme, &device, ui_pnlDash);
     apply_theme_list_panel(&theme, &device, ui_pnlFriendlyFolder);
@@ -356,6 +370,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblBluetooth, TS("Bluetooth"), false, true);
     apply_theme_list_item(&theme, ui_lblClock, TS("Clock"), false, true);
     apply_theme_list_item(&theme, ui_lblBoxArt, TS("Content Box Art"), false, true);
+    apply_theme_list_item(&theme, ui_lblBoxArtAlign, TS("Content Box Art Alignment"), false, true);
     apply_theme_list_item(&theme, ui_lblName, TS("Content Name Scheme"), false, true);
     apply_theme_list_item(&theme, ui_lblDash, TS("Content Dash Replacement"), false, true);
     apply_theme_list_item(&theme, ui_lblFriendlyFolder, TS("Friendly Folder Names"), false, true);
@@ -371,6 +386,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoBluetooth, mux_prog, "bluetooth");
     apply_theme_list_glyph(&theme, ui_icoClock, mux_prog, "clock");
     apply_theme_list_glyph(&theme, ui_icoBoxArt, mux_prog, "boxart");
+    apply_theme_list_glyph(&theme, ui_icoBoxArtAlign, mux_prog, "boxartalign");
     apply_theme_list_glyph(&theme, ui_icoName, mux_prog, "name");
     apply_theme_list_glyph(&theme, ui_icoDash, mux_prog, "dash");
     apply_theme_list_glyph(&theme, ui_icoFriendlyFolder, mux_prog, "friendlyfolder");
@@ -386,6 +402,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droBluetooth, NULL);
     apply_theme_list_drop_down(&theme, ui_droClock, NULL);
     apply_theme_list_drop_down(&theme, ui_droBoxArt, NULL);
+    apply_theme_list_drop_down(&theme, ui_droBoxArtAlign, NULL);
     apply_theme_list_drop_down(&theme, ui_droName, NULL);
     apply_theme_list_drop_down(&theme, ui_droDash, NULL);
     apply_theme_list_drop_down(&theme, ui_droFriendlyFolder, NULL);
@@ -403,8 +420,11 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droBluetooth, hidden_visible, 2);
     add_drop_down_options(ui_droClock, hidden_visible, 2);
     add_drop_down_options(ui_droBoxArt, (char *[]) {
-            TS("Bottom + Behind"), TS("Bottom + Front"), TS("Middle + Behind"), TS("Middle + Front"),
-            TS("Top + Behind"), TS("Top + Front"), TS("Fullscreen + Behind"), TS("Fullscreen + Front"), TG("Disabled")}, 9);
+            TS("Behind"), TS("Front"), TS("Fullscreen + Behind"), TS("Fullscreen + Front"), TG("Disabled")}, 5);
+    add_drop_down_options(ui_droBoxArtAlign, (char *[]) {
+            TS("Top Left"), TS("Top Middle"), TS("Top Right"), 
+            TS("Bottom Left"), TS("Bottom Middle"), TS("Bottom Right"), 
+            TS("Middle Left"), TS("Middle Right"), TS("Center")}, 9);
     add_drop_down_options(ui_droName,
                           (char *[]) {TS("Full Name"), TS("Remove [ ]"), TS("Remove ( )"), TS("Remove [ ] and ( )")}, 4);
     add_drop_down_options(ui_droDash, disabled_enabled, 2);
@@ -555,6 +575,10 @@ void joystick_task() {
                                         increase_option_value(ui_droBoxArt,
                                                               &boxart_current,
                                                               boxart_total);
+                                    } else if (element_focused == ui_lblBoxArtAlign) {
+                                        increase_option_value(ui_droBoxArtAlign,
+                                                              &boxartalign_current,
+                                                              boxartalign_total);
                                     } else if (element_focused == ui_lblName) {
                                         increase_option_value(ui_droName,
                                                               &name_current,
@@ -683,6 +707,10 @@ void joystick_task() {
                                     decrease_option_value(ui_droBoxArt,
                                                           &boxart_current,
                                                           boxart_total);
+                                } else if (element_focused == ui_lblBoxArtAlign) {
+                                    decrease_option_value(ui_droBoxArtAlign,
+                                                          &boxartalign_current,
+                                                          boxartalign_total);
                                 } else if (element_focused == ui_lblName) {
                                     decrease_option_value(ui_droName,
                                                           &name_current,
@@ -742,6 +770,10 @@ void joystick_task() {
                                     increase_option_value(ui_droBoxArt,
                                                           &boxart_current,
                                                           boxart_total);
+                                } else if (element_focused == ui_lblBoxArtAlign) {
+                                    increase_option_value(ui_droBoxArtAlign,
+                                                          &boxartalign_current,
+                                                          boxartalign_total);
                                 } else if (element_focused == ui_lblName) {
                                     increase_option_value(ui_droName,
                                                           &name_current,
@@ -901,6 +933,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBluetooth, "bluetooth");
     lv_obj_set_user_data(ui_lblClock, "clock");
     lv_obj_set_user_data(ui_lblBoxArt, "boxart");
+    lv_obj_set_user_data(ui_lblBoxArtAlign, "boxartalign");
     lv_obj_set_user_data(ui_lblName, "name");
     lv_obj_set_user_data(ui_lblDash, "dash");
     lv_obj_set_user_data(ui_lblFriendlyFolder, "friendlyfolder");

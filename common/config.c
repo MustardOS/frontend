@@ -71,6 +71,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.BLUETOOTH, "visual/bluetooth", 0)
     CFG_INT_FIELD(config->VISUAL.CLOCK, "visual/clock", 1)
     CFG_INT_FIELD(config->VISUAL.BOX_ART, "visual/boxart", 0)
+    CFG_INT_FIELD(config->VISUAL.BOX_ART_ALIGN, "visual/boxartalign", 0)
     CFG_INT_FIELD(config->VISUAL.NAME, "visual/name", 0)
     CFG_INT_FIELD(config->VISUAL.DASH, "visual/dash", 0)
     CFG_INT_FIELD(config->VISUAL.FRIENDLYFOLDER, "visual/friendlyfolder", 1)

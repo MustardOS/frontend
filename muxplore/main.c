@@ -1682,46 +1682,25 @@ void set_nav_flag(lv_obj_t *nav_keep[], size_t keep_size, lv_obj_t *nav_hide[], 
 }
 
 void init_elements() {
+    lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     switch (config.VISUAL.BOX_ART) {
-        case 0: // Bottom + Behind
-            lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+        case 0: // Behind
             lv_obj_move_background(ui_pnlBox);
             lv_obj_move_background(ui_pnlWall);
             break;
-        case 1: // Bottom + Front
-            lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+        case 1: // Front
             lv_obj_move_foreground(ui_pnlBox);
             break;
-        case 2: // Middle + Behind
-            lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
-            lv_obj_move_background(ui_pnlBox);
-            lv_obj_move_background(ui_pnlWall);
-            break;
-        case 3: // Middle + Front
-            lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
-            lv_obj_move_foreground(ui_pnlBox);
-            break;
-        case 4: // Top + Behind
-            lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
-            lv_obj_move_background(ui_pnlBox);
-            lv_obj_move_background(ui_pnlWall);
-            break;
-        case 5: // Top + Front
-            lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
-            lv_obj_move_foreground(ui_pnlBox);
-            break;
-        case 6: // Fullscreen + Behind
+        case 2: // Fullscreen + Behind
             lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-            lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
             lv_obj_move_background(ui_pnlBox);
             lv_obj_move_background(ui_pnlWall);
             break;
-        case 7: // Fullscreen + Front
+        case 3: // Fullscreen + Front
             lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-            lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
             lv_obj_move_foreground(ui_pnlBox);
             break;
-        case 8: // Disabled
+        case 4: // Disabled
             lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_FLOATING);
             break;
