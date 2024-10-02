@@ -320,22 +320,28 @@ void mux_input_task(const mux_input_options *opts) {
         return;
     }
 
-    // Delay (millis) to wait for an input event before timing out. This determines two things:
+    // Delay (millis) to wait for input before timing out. This determines the rate at which the
+    // hold_handlers and idle_handler are called. To save CPU, we want to wait as long as possible.
     //
-    // 1. The min rate at which hold_handlers are called. (This delay should be no longer than the
-    //    shortly expected "menu acceleration" setting.)
-    // 2. The min rate at which idle_handler is called. (This controls the screen refresh interval.)
+    // If no inputs are held, we only have the idle_handler to worry about, so we wait max_idle_ms
+    // (or forever if unspecified).
     //
-    // When there's an idle handler registered, force a delay of no more than 16ms, roughly 60 FPS.
-    // Otherwise, wait up to the hold delay to reduce CPU usage.
-    int idle_delay = config.SETTINGS.ADVANCED.ACCELERATE;
-    if (opts->idle_handler) {
-        idle_delay = MIN(16, idle_delay);
+    // If at least one input is held, we instead wait either max_idle_ms or the "menu acceleration"
+    // delay (whichever is shorter).
+    int timeout;
+    int timeout_hold;
+    if (opts->max_idle_ms) {
+        timeout = opts->max_idle_ms;
+        timeout_hold = MIN(opts->max_idle_ms, config.SETTINGS.ADVANCED.ACCELERATE);
+    } else {
+        timeout = -1 /* infinite */;
+        timeout_hold = config.SETTINGS.ADVANCED.ACCELERATE;
     }
 
     // Input event loop:
     while (!stop) {
-        int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT, idle_delay);
+        int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT,
+                                    held ? timeout_hold : timeout);
         if (num_events == -1) {
             perror("mux_input_task: epoll_wait");
             continue;

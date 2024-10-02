@@ -660,6 +660,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
         .gamepad_fd = js_fd,
         .system_fd = js_fd_sys,
+        .max_idle_ms = 16 /* ~60 FPS */,
         .swap_btn = config.SETTINGS.ADVANCED.SWAP,
         .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
         .stick_nav = true,

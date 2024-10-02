@@ -199,6 +199,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
         .gamepad_fd = js_fd,
         .system_fd = js_fd_sys,
+        .max_idle_ms = 1000,
         .input_handler = handle_input,
         .combo_handler = handle_combo,
         .idle_handler = handle_idle,

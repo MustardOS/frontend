@@ -93,6 +93,10 @@ typedef struct {
     int gamepad_fd;
     int system_fd;
 
+    // If nonzero, the longest delay allowed without an input before the idle_handler is called.
+    // (The idle_handler may still be called more frequently at times.)
+    int max_idle_ms;
+
     // Whether to swap the A & B buttons.
     bool swap_btn;
 
