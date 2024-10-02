@@ -532,7 +532,10 @@ void image_refresh(char *image_type) {
             printf("LOADING PREVIEW ARTWORK AT: %s\n", image);
 
             if (file_exist(image)) {
-                lv_img_set_src(ui_imgHelpPreviewImage, image_path);
+                struct ImageSettings image_settings = {
+                    image, LV_ALIGN_CENTER, 515, 250, 0, 0, 0, 0
+                };
+                update_image(ui_imgHelpPreviewImage, image_settings);
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
             } else {
                 lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
