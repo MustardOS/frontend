@@ -263,6 +263,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
         .gamepad_fd = js_fd,
         .system_fd = js_fd_sys,
+        .max_idle_ms = 16 /* ~60 FPS */,
         .press_handler = {
             [MUX_INPUT_POWER_SHORT] = handle_power,
         },

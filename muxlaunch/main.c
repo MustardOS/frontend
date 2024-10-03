@@ -663,6 +663,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
         .gamepad_fd = js_fd,
         .system_fd = js_fd_sys,
+        .max_idle_ms = 16 /* ~60 FPS */,
         .swap_btn = config.SETTINGS.ADVANCED.SWAP,
         .swap_axis = (theme.MISC.NAVIGATION_TYPE >= 1 && theme.MISC.NAVIGATION_TYPE <= 5),
         .stick_nav = true,
@@ -673,9 +674,25 @@ int main(int argc, char *argv[]) {
             [MUX_INPUT_DPAD_DOWN] = handle_down,
             [MUX_INPUT_DPAD_LEFT] = handle_left,
             [MUX_INPUT_DPAD_RIGHT] = handle_right,
-            [MUX_INPUT_VOL_UP] = ui_common_handle_volume,
-            [MUX_INPUT_VOL_DOWN] = ui_common_handle_volume,
             [MUX_INPUT_MENU_SHORT] = handle_menu,
+        },
+        .combo = {
+            {
+                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                .press_handler = ui_common_handle_bright,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                .press_handler = ui_common_handle_bright,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_VOL_UP),
+                .press_handler = ui_common_handle_vol,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                .press_handler = ui_common_handle_vol,
+            },
         },
         .idle_handler = ui_common_handle_idle,
     };
