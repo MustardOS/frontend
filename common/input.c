@@ -1,5 +1,6 @@
 #include "input.h"
 
+#include <errno.h>
 #include <linux/input.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -349,7 +350,9 @@ void mux_input_task(const mux_input_options *opts) {
         int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT,
                                     held ? timeout_hold : timeout);
         if (num_events == -1) {
-            perror("mux_input_task: epoll_wait");
+            if (errno != EINTR) {
+                perror("mux_input_task: epoll_wait");
+            }
             continue;
         }
 
