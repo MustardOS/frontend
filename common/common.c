@@ -1346,6 +1346,37 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
     }
 }
 
+void update_image(lv_obj_t * ui_imgobj, struct ImageSettings image_settings) {
+    if (file_exist(image_settings.image_path)) {
+        char image_path[MAX_BUFFER_SIZE];
+        snprintf(image_path, sizeof(image_path), "M:%s", image_settings.image_path);
+        
+        if (image_settings.max_height > 0 && image_settings.max_width > 0) {
+            lv_img_header_t img_header;
+            lv_img_decoder_get_info(image_path, &img_header);
+
+            float width_ratio = (float)image_settings.max_width / img_header.w;
+            float height_ratio = (float)image_settings.max_height / img_header.h;
+            float zoom_ratio = (width_ratio < height_ratio) ? width_ratio : height_ratio;
+
+            int zoom_factor = (int)(zoom_ratio * 256);
+
+            lv_img_set_size_mode(ui_imgobj, LV_IMG_SIZE_MODE_REAL);
+            lv_img_set_zoom(ui_imgobj, zoom_factor);
+        }
+
+        lv_obj_set_align(ui_imgobj, image_settings.align);
+        lv_obj_set_style_pad_left(ui_imgobj, image_settings.pad_left, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_right(ui_imgobj, image_settings.pad_right, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_top(ui_imgobj, image_settings.pad_top, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_pad_bottom(ui_imgobj, image_settings.pad_bottom, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_img_set_src(ui_imgobj, image_path);
+        lv_obj_move_foreground(ui_imgobj);
+    } else {
+        lv_img_set_src(ui_imgobj, &ui_image_Nothing);
+    }
+}
+
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count,
                             int current_item_index, lv_obj_t *ui_pnlContent
 ) {

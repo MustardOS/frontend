@@ -65,6 +65,8 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
+lv_obj_t *ui_viewport_objects[6];
+
 char *sd_dir = NULL;
 
 static char SD1[MAX_BUFFER_SIZE];
@@ -343,6 +345,40 @@ void update_file_counter() {
     }
 }
 
+void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
+    mini_t *artwork_config_ini = mini_try_load(artwork_config);
+    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", device.MUX.WIDTH / 2);
+    int16_t viewport_height = get_ini_int(artwork_config_ini, "viewport", "HEIGHT", 400);
+
+    lv_obj_set_width(ui_viewport_objects[0], viewport_width);
+    lv_obj_set_height(ui_viewport_objects[0], viewport_height);
+
+    for (int index = 1; index < 6; index++)
+    {
+        char section_name[15];
+        snprintf(section_name, sizeof(section_name), "image%d", index);
+
+        char image[MAX_BUFFER_SIZE];
+        snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
+                STORAGE_PATH, catalogue_folder, get_ini_string(artwork_config_ini, section_name, "FOLDER", ""), content_name);
+
+        struct ImageSettings image_settings = {
+            image,
+            get_ini_int(artwork_config_ini, section_name, "ALIGN", 9),
+            get_ini_int(artwork_config_ini, section_name, "MAX_WIDTH", 0),
+            get_ini_int(artwork_config_ini, section_name, "MAX_HEIGHT", 0),
+            get_ini_int(artwork_config_ini, section_name, "PAD_LEFT", 0),
+            get_ini_int(artwork_config_ini, section_name, "PAD_RIGHT", 0),
+            get_ini_int(artwork_config_ini, section_name, "PAD_TOP", 0),
+            get_ini_int(artwork_config_ini, section_name, "PAD_BOTTOM", 0)
+        };
+
+        update_image(ui_viewport_objects[index], image_settings);
+    }
+
+    mini_free(artwork_config_ini);
+}
+
 void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
         printf("BOX ART IS SET TO DISABLED\n");
@@ -351,6 +387,7 @@ void image_refresh(char *image_type) {
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
+    char core_artwork[MAX_BUFFER_SIZE];
 
     char *content_label = items[current_item_index].name;
 
@@ -451,7 +488,6 @@ void image_refresh(char *image_type) {
             } else {
                 char *file_name = strip_ext(items[current_item_index].name);
 
-                char core_artwork[MAX_BUFFER_SIZE];
                 char core_file[MAX_BUFFER_SIZE];
                 snprintf(core_file, sizeof(core_file), "%s/info/core/%s/%s.cfg",
                          STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
@@ -496,7 +532,10 @@ void image_refresh(char *image_type) {
             printf("LOADING PREVIEW ARTWORK AT: %s\n", image);
 
             if (file_exist(image)) {
-                lv_img_set_src(ui_imgHelpPreviewImage, image_path);
+                struct ImageSettings image_settings = {
+                    image, LV_ALIGN_CENTER, 515, 250, 0, 0, 0, 0
+                };
+                update_image(ui_imgHelpPreviewImage, image_settings);
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
             } else {
                 lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
@@ -505,15 +544,35 @@ void image_refresh(char *image_type) {
         }
     } else {
         if (strcasecmp(box_image_previous_path, image) != 0) {
-            printf("LOADING BOX ARTWORK AT: %s\n", image);
+            char *catalogue_folder = items[current_item_index].content_type == FOLDER ? "Folder" : core_artwork;
+            char *content_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(items[current_item_index].name);
+            char artwork_config_path[MAX_BUFFER_SIZE];
+            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/%s.ini",
+                                 STORAGE_PATH, catalogue_folder);
+            if (!file_exist(artwork_config_path)) {
+                snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/default.ini",
+                                 STORAGE_PATH);
+            }
 
-            if (file_exist(image)) {
-                starter_image = 1;
-                lv_img_set_src(ui_imgBox, image_path);
+            if (file_exist(artwork_config_path)) {
+                lv_obj_add_flag(ui_imgBox, LV_OBJ_FLAG_HIDDEN);
+                viewport_refresh(artwork_config_path, catalogue_folder, content_name);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+                lv_obj_clear_flag(ui_viewport_objects[0], LV_OBJ_FLAG_HIDDEN);
             } else {
-                lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-                snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+                lv_obj_add_flag(ui_viewport_objects[0], LV_OBJ_FLAG_HIDDEN);
+                printf("LOADING BOX ARTWORK AT: %s\n", image);
+
+                if (file_exist(image)) {
+                    starter_image = 1;
+                    lv_img_set_src(ui_imgBox, image_path);
+                    snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+
+                } else {
+                    lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+                    snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+                }
+                lv_obj_clear_flag(ui_imgBox, LV_OBJ_FLAG_HIDDEN);
             }
         }
     }
@@ -1683,6 +1742,7 @@ void set_nav_flag(lv_obj_t *nav_keep[], size_t keep_size, lv_obj_t *nav_hide[], 
 
 void init_elements() {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
+    lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
     switch (config.VISUAL.BOX_ART) {
         case 0: // Behind
             lv_obj_move_background(ui_pnlBox);
@@ -2033,6 +2093,13 @@ int main(int argc, char *argv[]) {
 
     ui_common_screen_init(&theme, &device, "");
     ui_init(ui_screen, &theme);
+    ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
+    ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[2] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[3] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[4] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[5] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[6] = lv_img_create(ui_viewport_objects[0]);
 
     if (file_exist("/tmp/manual_launch")) {
         remove("/tmp/manual_launch");
