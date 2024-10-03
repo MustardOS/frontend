@@ -248,58 +248,37 @@ char *load_content_description() {
         }
             break;
         default: {
-            char *card_full;
-            switch (module) {
-                case MMC:
-                    card_full = SD1;
-                    break;
-                case SDCARD:
-                    card_full = SD2;
-                    break;
-                case USB:
-                    card_full = E_USB;
-                    break;
-                default:
-                    return NULL;
-                    break;
+            char *desc_name = strip_ext(items[current_item_index].name);
+
+            char core_desc[MAX_BUFFER_SIZE];
+            char core_file[MAX_BUFFER_SIZE];
+            snprintf(core_file, sizeof(core_file), "%s/info/core/%s/%s.cfg",
+                        STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
+
+            printf("TRYING TO READ CONFIG AT: %s\n", core_file);
+
+            if (!file_exist(core_file)) {
+                snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
+                            STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+                snprintf(core_desc, sizeof(core_desc), "%s",
+                            read_line_from_file(core_file, 2));
+            } else {
+                snprintf(core_desc, sizeof(core_desc), "%s",
+                            read_line_from_file(core_file, 3));
             }
 
-            if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
-                snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Root/text/%s.txt",
-                         STORAGE_PATH, content_label);
+            if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) {
+                printf("CORE IS NOT SET - TEXT NOT LOADED\n");
+                return "No Information Found";
+            }
+            printf("TEXT IS STORED AT: %s\n", core_desc);
+
+            if (items[current_item_index].content_type == FOLDER) {
+                snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Folder/text/%s.txt",
+                            STORAGE_PATH, content_label);
             } else {
-                char *desc_name = strip_ext(items[current_item_index].name);
-
-                char core_desc[MAX_BUFFER_SIZE];
-                char core_file[MAX_BUFFER_SIZE];
-                snprintf(core_file, sizeof(core_file), "%s/info/core/%s/%s.cfg",
-                         STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
-
-                printf("TRYING TO READ CONFIG AT: %s\n", core_file);
-
-                if (!file_exist(core_file)) {
-                    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                             STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
-                    snprintf(core_desc, sizeof(core_desc), "%s",
-                             read_line_from_file(core_file, 2));
-                } else {
-                    snprintf(core_desc, sizeof(core_desc), "%s",
-                             read_line_from_file(core_file, 3));
-                }
-
-                if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) {
-                    printf("CORE IS NOT SET - TEXT NOT LOADED\n");
-                    return "No Information Found";
-                }
-                printf("TEXT IS STORED AT: %s\n", core_desc);
-
-                if (items[current_item_index].content_type == FOLDER) {
-                    snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Folder/text/%s.txt",
-                             STORAGE_PATH, content_label);
-                } else {
-                    snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/%s/text/%s.txt",
-                             STORAGE_PATH, core_desc, desc_name);
-                }
+                snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/%s/text/%s.txt",
+                            STORAGE_PATH, core_desc, desc_name);
             }
         }
             break;
@@ -2175,6 +2154,7 @@ int main(int argc, char *argv[]) {
         prev_dir = read_text_from_file(MUOS_PDI_LOAD);
     }
 
+    bool gen_item_thread_created = false;
     pthread_t gen_item_thread;
 
     switch (module) {
@@ -2209,8 +2189,8 @@ int main(int argc, char *argv[]) {
                 int usb_okay = strncmp(ex_path, strip_dir(E_USB), strlen(strip_dir(E_USB)));
                 if (sd1_okay == 0 || sd2_okay == 0 || usb_okay == 0) {
                     sd_dir = ex_path;
-                    pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
-                                   (void *) &ui_count);
+                    gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
+                                   (void *) &ui_count) == 0);
                 } else {
                     explore_root();
                 }
@@ -2218,18 +2198,18 @@ int main(int argc, char *argv[]) {
                 switch (module) {
                     case MMC:
                         sd_dir = strip_dir(SD1);
-                        pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
-                                       (void *) &ui_count);
+                        gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
+                                       (void *) &ui_count) == 0);
                         break;
                     case SDCARD:
                         sd_dir = strip_dir(SD2);
-                        pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
-                                       (void *) &ui_count);
+                        gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
+                                       (void *) &ui_count) == 0);
                         break;
                     case USB:
                         sd_dir = strip_dir(E_USB);
-                        pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
-                                       (void *) &ui_count);
+                        gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
+                                       (void *) &ui_count) == 0);
                         break;
                     default:
                         explore_root();
@@ -2245,12 +2225,12 @@ int main(int argc, char *argv[]) {
         }
             break;
         case FAVOURITE: {
-            pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "favourite");
+            gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "favourite") == 0);
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "favourite");
         }
             break;
         case HISTORY: {
-            pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "history");
+            gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "history") == 0);
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
         }
             break;
@@ -2277,7 +2257,7 @@ int main(int argc, char *argv[]) {
 
     lv_indev_drv_register(&indev_drv);
 
-    if (module != ROOT) pthread_join(gen_item_thread, NULL);
+    if (gen_item_thread_created) pthread_join(gen_item_thread, NULL);
 
     init_footer_elements();
 
@@ -2293,7 +2273,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    pthread_cancel(gen_item_thread);
+    if (gen_item_thread_created) pthread_cancel(gen_item_thread);
 
     update_file_counter();
 
