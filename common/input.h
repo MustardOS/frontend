@@ -62,7 +62,7 @@ typedef enum {
 } mux_input_action;
 
 // Callback function invoked in response to a single specific input type and action.
-typedef void (*mux_input_handler)();
+typedef void (*mux_input_handler)(void);
 
 // Callback function invoked in response to any arbitrary input type and action.
 typedef void (*mux_input_catchall_handler)(mux_input_type, mux_input_action);
@@ -149,4 +149,4 @@ bool mux_input_pressed(mux_input_type type);
 
 // Causes the input task to exit at the start of the next iteration of the event loop (e.g., after
 // processing currently pressed or held inputs).
-void mux_input_stop();
+void mux_input_stop(void);

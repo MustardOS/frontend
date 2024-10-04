@@ -13,7 +13,7 @@
 #include "config.h"
 #include "device.h"
 
-extern uint32_t mux_tick();
+extern uint32_t mux_tick(void);
 
 // Whether to exit the input task before the next iteration of the event loop.
 static bool stop = false;
@@ -391,6 +391,6 @@ bool mux_input_pressed(mux_input_type type) {
     return pressed & BIT(type);
 }
 
-void mux_input_stop() {
+void mux_input_stop(void) {
     stop = true;
 }
