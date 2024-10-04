@@ -172,7 +172,7 @@ int parse_type(const char *name) {
     return i;
 }
 
-// Parse command-line argument specifying a combo to listen for.
+// Parse command-line argument specifying a combo to listen for. Returns false on error.
 //
 // Combo specs have the format `NAME=INPUT1+INPUT2+...`. For example, `OSF=POWER_SHORT+L1+L2+R1+R2`
 // is a valid combo that triggers when all five of those inputs are active.
@@ -182,19 +182,19 @@ int parse_type(const char *name) {
 //
 // * When Volume Up is pressed on its own, the VOL_UP combo will trigger.
 // * If Menu is held before Volume Up is pressed, then the BRIGHT_UP combo will trigger instead.
-void parse_combo(int combo_num, const char *combo_spec) {
+bool parse_combo(int combo_num, const char *combo_spec) {
     // Duplicate the argument so we can modify it without affecting the process command line.
     char *s = strdup(combo_spec);
     if (!s) {
         fprintf(stderr, "muhotkey: couldn't allocate memory for combo\n");
-        exit(1);
+        return false;
     }
 
     // Parse NAME.
     combo_name[combo_num] = strsep(&s, "=");
     if (!s) {
         fprintf(stderr, "muhotkey: combo must specify at least one input: %s\n", combo_spec);
-        exit(1);
+        return false;
     }
 
     do {
@@ -206,12 +206,13 @@ void parse_combo(int combo_num, const char *combo_spec) {
         if (type == MUX_INPUT_COUNT) {
             fprintf(stderr, "muhotkey: combo specified invalid input name %s: %s\n", input_name,
                     combo_spec);
-            exit(1);
+            return false;
         }
 
         // Update combo config accordingly.
         input_opts.combo[combo_num].type_mask |= BIT(type);
     } while (s);
+    return true;
 }
 
 void usage(FILE *file) {
@@ -232,20 +233,10 @@ void usage(FILE *file) {
 }
 
 int main(int argc, char *argv[]) {
+    int exit_status = 0;
+
     load_device(&device);
     load_config(&config);
-
-    input_opts.gamepad_fd = open(device.INPUT.EV1, O_RDONLY);
-    if (input_opts.gamepad_fd < 0) {
-        perror("muhotkey: couldn't open joystick input device\n");
-        return 1;
-    }
-
-    input_opts.system_fd = open(device.INPUT.EV0, O_RDONLY);
-    if (input_opts.system_fd < 0) {
-        perror("muhotkey: couldn't open system input device");
-        return 1;
-    }
 
     int opt, next_combo = 0;
     while ((opt = getopt(argc, argv, "C:H:vlh")) != -1) {
@@ -255,7 +246,8 @@ int main(int argc, char *argv[]) {
                 if (next_combo >= MUX_INPUT_COMBO_COUNT) {
                     fprintf(stderr, "muhotkey: at most %d combos supported\n",
                             MUX_INPUT_COMBO_COUNT);
-                    return 1;
+                    exit_status = 1;
+                    goto exit;
                 }
 
                 parse_combo(next_combo, optarg);
@@ -271,33 +263,51 @@ int main(int argc, char *argv[]) {
                         printf("%s\n", input_name[i]);
                     }
                 }
-                return 0;
+                goto exit;
             case 'h':
                 usage(stdout);
-                return 0;
+                goto exit;
             default:
                 usage(stderr);
-                return 1;
+                exit_status = 1;
+                goto exit;
         }
     }
     if (optind < argc) {
         usage(stderr);
-        return 1;
+        exit_status = 1;
+        goto exit;
     }
 
-    setlinebuf(stdout);
+    input_opts.gamepad_fd = open(device.INPUT.EV1, O_RDONLY);
+    if (input_opts.gamepad_fd < 0) {
+        perror("muhotkey: couldn't open joystick input device\n");
+        exit_status = 1;
+        goto exit;
+    }
 
+    input_opts.system_fd = open(device.INPUT.EV0, O_RDONLY);
+    if (input_opts.system_fd < 0) {
+        perror("muhotkey: couldn't open system input device");
+        exit_status = 1;
+        goto exit;
+    }
+
+    setlinebuf(stdout); // Flush output to scripts after each event.
     last_input_tick = mux_tick();
     mux_input_task(&input_opts);
 
+exit:
+    if (input_opts.system_fd) {
+        close(input_opts.system_fd);
+    }
+    if (input_opts.gamepad_fd) {
+        close(input_opts.gamepad_fd);
+    }
     for (int i = 0; i < MUX_INPUT_COMBO_COUNT; ++i) {
         free(combo_name[i]);
     }
-
-    close(input_opts.gamepad_fd);
-    close(input_opts.system_fd);
-
-    return 0;
+    return exit_status;
 }
 
 uint32_t mux_tick(void) {
