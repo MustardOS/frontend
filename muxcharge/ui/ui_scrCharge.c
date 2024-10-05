@@ -89,23 +89,6 @@ void ui_scrCharge_screen_init(void) {
     lv_obj_set_style_pad_top(ui_lblVoltage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblVoltage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblHealth = lv_label_create(ui_pnlCharge);
-    lv_obj_set_height(ui_lblHealth, 24);
-    lv_obj_set_width(ui_lblHealth, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblHealth, LV_ALIGN_CENTER);
-    lv_label_set_long_mode(ui_lblHealth, LV_LABEL_LONG_CLIP);
-    lv_label_set_text(ui_lblHealth, "Health:");
-    lv_label_set_recolor(ui_lblHealth, "true");
-    lv_obj_clear_flag(ui_lblHealth, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
-                                    LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
-                                    LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                                    LV_OBJ_FLAG_SCROLL_CHAIN);
-    lv_obj_set_scrollbar_mode(ui_lblHealth, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_set_scroll_dir(ui_lblHealth, LV_DIR_LEFT);
-    lv_obj_set_style_text_color(ui_lblHealth, lv_color_hex(0xF7E318), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHealth, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(ui_lblHealth, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_lblBoot = lv_label_create(ui_pnlCharge);
     lv_obj_set_height(ui_lblBoot, 24);
     lv_obj_set_width(ui_lblBoot, LV_SIZE_CONTENT);

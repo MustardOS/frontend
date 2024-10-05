@@ -8,7 +8,6 @@ lv_obj_t *ui_imgWall;
 lv_obj_t *ui_pnlCharge;
 lv_obj_t *ui_lblCapacity;
 lv_obj_t *ui_lblVoltage;
-lv_obj_t *ui_lblHealth;
 lv_obj_t *ui_lblBoot;
 
 void ui_init(void) {

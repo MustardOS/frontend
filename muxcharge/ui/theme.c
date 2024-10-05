@@ -26,7 +26,6 @@ void apply_theme() {
     struct big default_elements[] = {
             {ui_lblCapacity, theme.CHARGER.TEXT},
             {ui_lblVoltage,  theme.CHARGER.TEXT},
-            {ui_lblHealth,   theme.CHARGER.TEXT},
             {ui_lblBoot,     theme.CHARGER.TEXT}
     };
     for (size_t i = 0; i < sizeof(default_elements) / sizeof(default_elements[0]); ++i) {
@@ -37,7 +36,6 @@ void apply_theme() {
     struct small text_default_alpha_elements[] = {
             {ui_lblCapacity, theme.CHARGER.TEXT_ALPHA},
             {ui_lblVoltage,  theme.CHARGER.TEXT_ALPHA},
-            {ui_lblHealth,   theme.CHARGER.TEXT_ALPHA},
             {ui_lblBoot,     theme.CHARGER.TEXT_ALPHA}
     };
     for (size_t i = 0; i < sizeof(text_default_alpha_elements) / sizeof(text_default_alpha_elements[0]); ++i) {
