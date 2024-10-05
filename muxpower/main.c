@@ -73,10 +73,10 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblShutdown,    "HELP.SHUTDOWN"},
-            {ui_lblBattery,     "HELP.BATTERY"},
-            {ui_lblIdleDisplay, "HELP.IDLE_DISPLAY"},
-            {ui_lblIdleSleep,   "HELP.IDLE_SLEEP"},
+            {ui_lblShutdown,    "Configure how the power button functions on long press (2 seconds)"},
+            {ui_lblBattery,     "Configure when the red LED will display based on the current capacity percentage"},
+            {ui_lblIdleDisplay, "Configure the time the screen will dim when no input is detected"},
+            {ui_lblIdleSleep,   "Configure the time the device will sleep when no input is detected"},
     };
 
     char *message = TG("No Help Information Found");
@@ -151,30 +151,30 @@ void init_dropdown_settings() {
 
 void restore_tweak_options() {
     map_drop_down_to_index(ui_droShutdown, config.SETTINGS.POWER.SHUTDOWN,
-                          (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600}, 11, 0);
+                           (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600}, 11, 0);
 
     map_drop_down_to_index(ui_droBattery, config.SETTINGS.POWER.LOW_BATTERY,
-                          (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 5);
+                           (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 5);
 
     map_drop_down_to_index(ui_droIdleDisplay, config.SETTINGS.POWER.IDLE_DISPLAY,
-                          (int[]) {10, 30, 60, 120, 300, 600, 900, 1800}, 8, 0);
+                           (int[]) {10, 30, 60, 120, 300, 600, 900, 1800}, 8, 0);
 
     map_drop_down_to_index(ui_droIdleSleep, config.SETTINGS.POWER.IDLE_SLEEP,
-                          (int[]) {10, 30, 60, 120, 300, 600, 900, 1800}, 8, 0);
+                           (int[]) {10, 30, 60, 120, 300, 600, 900, 1800}, 8, 0);
 }
 
 void save_tweak_options() {
     int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown),
-                                             (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600}, 11, -2);
+                                              (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600}, 11, -2);
 
     int idx_battery = map_drop_down_to_value(lv_dropdown_get_selected(ui_droBattery),
-                                            (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 25);
+                                             (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 25);
 
     int idx_idle_display = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleDisplay),
-                                                 (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
+                                                  (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
 
     int idx_idle_sleep = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleSleep),
-                                               (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
+                                                (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
 
     write_text_to_file("/run/muos/global/settings/power/shutdown", "w", INT, idx_shutdown);
     write_text_to_file("/run/muos/global/settings/power/low_battery", "w", INT, idx_battery);

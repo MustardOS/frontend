@@ -3,13 +3,10 @@
 #include "../lvgl/drivers/indev/evdev.h"
 #include "ui/ui.h"
 #include <unistd.h>
-#include <sys/epoll.h>
 #include <fcntl.h>
-#include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -82,24 +79,28 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBIOS,       "HELP.BIOS"},
-            {ui_lblConfig,     "HELP.CONFIG"},
-            {ui_lblCatalogue,  "HELP.CATALOGUE"},
-            {ui_lblConman,     "HELP.CONTENT"},
-            {ui_lblMusic,      "HELP.MUSIC"},
-            {ui_lblSave,       "HELP.SAVE"},
-            {ui_lblScreenshot, "HELP.SCREENSHOT"},
-            {ui_lblTheme,      "HELP.THEME"},
-            {ui_lblLanguage,   "HELP.LANGUAGE"},
-            {ui_lblNetwork,    "HELP.NETWORK"},
+            {ui_lblBIOS,       TS("Change where muOS looks for RetroArch BIOS.")},
+            {ui_lblConfig,     TS("Change where muOS looks for RetroArch Configurations.")},
+            {ui_lblCatalogue,  TS("Change where muOS looks for content images and text.")},
+            {ui_lblConman,     TS("Change where muOS looks for favourites, history, and assigned content.")},
+            {ui_lblMusic,      TS("Change where muOS looks for background music.")},
+            {ui_lblSave,       TS("Change where muOS looks for save states and files.")},
+            {ui_lblScreenshot, TS("Change where muOS saves screenshots.")},
+            {ui_lblTheme,      TS("Change where muOS looks for themes.")},
+            {ui_lblLanguage,   TS("Change where muOS looks for Language files.")},
+            {ui_lblNetwork,    TS("Change where muOS looks for Network Profiles.")},
     };
 
     char *message = TG("No Help Information Found");
+    char *auto_stay = TS("Leave on AUTO to look on SD2 first and fall back to SD1.");
+    char auto_message[MAX_BUFFER_SIZE];
+
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
         if (element_focused == help_messages[i].element) {
-            message = help_messages[i].message;
+            snprintf(auto_message, sizeof(auto_message), "%s %s", help_messages[i].message, auto_stay);
+            message = auto_message;
             break;
         }
     }
@@ -107,7 +108,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_pointers(Storage *storage, int *total, int *current) {
@@ -789,52 +790,52 @@ int main(int argc, char *argv[]) {
     refresh_screen();
 
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_option_next,
-            [MUX_INPUT_B] = handle_back,
-            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-            [MUX_INPUT_MENU_SHORT] = handle_help,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_option_next,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

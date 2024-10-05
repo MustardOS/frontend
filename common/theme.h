@@ -295,7 +295,8 @@ struct theme_config {
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name);
 
-void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem, const char *item_text);
+void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
+                         lv_obj_t *ui_lblItem, const char *item_text);
 
 void apply_size_to_content(struct theme_config *c_theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
                            lv_obj_t *ui_lblItemGlyph, const char *item_text);

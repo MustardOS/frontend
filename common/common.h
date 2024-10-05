@@ -5,8 +5,8 @@
 
 #define BIT(n) (UINT64_C(1) << (n))
 
-#define TS(str) translate_specific(str)
 #define TG(str) translate_generic(str)
+#define TS(str) translate_specific(str)
 
 extern int battery_capacity;
 extern int msgbox_active;
@@ -21,14 +21,14 @@ extern int progress_onscreen;
 extern struct mux_config config;
 
 struct ImageSettings {
-        char *image_path;
-        int16_t align;
-        int16_t max_width;
-        int16_t max_height;
-        int16_t pad_left;
-        int16_t pad_right;
-        int16_t pad_top;
-        int16_t pad_bottom;
+    char *image_path;
+    int16_t align;
+    int16_t max_width;
+    int16_t max_height;
+    int16_t pad_left;
+    int16_t pad_right;
+    int16_t pad_top;
+    int16_t pad_bottom;
 };
 
 enum count_type {
@@ -187,16 +187,18 @@ void display_testing_message(lv_obj_t *screen);
 
 void adjust_visual_label(char *text, int method, int rep_dash);
 
-void update_image(lv_obj_t * ui_imgobj, struct ImageSettings image_settings);
+void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings);
 
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
                             lv_obj_t *ui_pnlContent);
 
 void load_language(const char *program);
 
-char *translate_specific(char *key);
-
 char *translate_generic(char *key);
+
+char *translate_help(char *key);
+
+char *translate_specific(char *key);
 
 void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int count);
 

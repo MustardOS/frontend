@@ -6,6 +6,7 @@
 #include "../theme.h"
 
 void list_nav_prev(int steps);
+
 void list_nav_next(int steps);
 
 extern int ui_count;

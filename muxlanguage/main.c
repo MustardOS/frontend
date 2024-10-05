@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -66,7 +65,7 @@ int first_open = 1;
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.LANGUAGE"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("Select your preferred language"));
 }
 
 void populate_languages() {

@@ -3,13 +3,10 @@
 #include "../lvgl/drivers/indev/evdev.h"
 #include "ui/ui.h"
 #include <unistd.h>
-#include <pthread.h>
 #include <fcntl.h>
-#include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -43,44 +40,44 @@ lv_obj_t *msgbox_element = NULL;
 
 void handle_input(mux_input_type type, mux_input_action action) {
     const char *glyph[MUX_INPUT_COUNT] = {
-        // Gamepad buttons:
-        [MUX_INPUT_A] = "↦⇓",
-        [MUX_INPUT_B] = "↧⇒",
-        [MUX_INPUT_X] = "↥⇐",
-        [MUX_INPUT_Y] = "↤⇑",
-        [MUX_INPUT_L1] = "↖",
-        [MUX_INPUT_L2] = "↲",
-        [MUX_INPUT_L3] = "↺",
-        [MUX_INPUT_R1] = "↗",
-        [MUX_INPUT_R2] = "↳",
-        [MUX_INPUT_R3] = "↻",
-        [MUX_INPUT_SELECT] = "⇷",
-        [MUX_INPUT_START] = "⇸",
+            // Gamepad buttons:
+            [MUX_INPUT_A] = "↦⇓",
+            [MUX_INPUT_B] = "↧⇒",
+            [MUX_INPUT_X] = "↥⇐",
+            [MUX_INPUT_Y] = "↤⇑",
+            [MUX_INPUT_L1] = "↖",
+            [MUX_INPUT_L2] = "↲",
+            [MUX_INPUT_L3] = "↺",
+            [MUX_INPUT_R1] = "↗",
+            [MUX_INPUT_R2] = "↳",
+            [MUX_INPUT_R3] = "↻",
+            [MUX_INPUT_SELECT] = "⇷",
+            [MUX_INPUT_START] = "⇸",
 
-        // D-pad:
-        [MUX_INPUT_DPAD_UP] = "↟",
-        [MUX_INPUT_DPAD_DOWN] = "↡",
-        [MUX_INPUT_DPAD_LEFT] = "↞",
-        [MUX_INPUT_DPAD_RIGHT] = "↠",
+            // D-pad:
+            [MUX_INPUT_DPAD_UP] = "↟",
+            [MUX_INPUT_DPAD_DOWN] = "↡",
+            [MUX_INPUT_DPAD_LEFT] = "↞",
+            [MUX_INPUT_DPAD_RIGHT] = "↠",
 
-        // Left stick:
-        [MUX_INPUT_LS_UP] = "↾",
-        [MUX_INPUT_LS_DOWN] = "⇂",
-        [MUX_INPUT_LS_LEFT] = "↼",
-        [MUX_INPUT_LS_RIGHT] = "⇀",
+            // Left stick:
+            [MUX_INPUT_LS_UP] = "↾",
+            [MUX_INPUT_LS_DOWN] = "⇂",
+            [MUX_INPUT_LS_LEFT] = "↼",
+            [MUX_INPUT_LS_RIGHT] = "⇀",
 
-        // Right stick:
-        [MUX_INPUT_RS_UP] = "↿",
-        [MUX_INPUT_RS_DOWN] = "⇃",
-        [MUX_INPUT_RS_LEFT] = "↽",
-        [MUX_INPUT_RS_RIGHT] = "⇁",
+            // Right stick:
+            [MUX_INPUT_RS_UP] = "↿",
+            [MUX_INPUT_RS_DOWN] = "⇃",
+            [MUX_INPUT_RS_LEFT] = "↽",
+            [MUX_INPUT_RS_RIGHT] = "⇁",
 
-        // Volume buttons:
-        [MUX_INPUT_VOL_UP] = "⇾",
-        [MUX_INPUT_VOL_DOWN] = "⇽",
+            // Volume buttons:
+            [MUX_INPUT_VOL_UP] = "⇾",
+            [MUX_INPUT_VOL_DOWN] = "⇽",
 
-        // Function buttons:
-        [MUX_INPUT_MENU_LONG] = "⇹",
+            // Function buttons:
+            [MUX_INPUT_MENU_LONG] = "⇹",
     };
 
     switch (action) {
@@ -186,7 +183,7 @@ int main(int argc, char *argv[]) {
 
     apply_theme();
 
-    char* current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
+    char *current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.RANDOM_BACKGROUND) {
             load_image_random(ui_imgWall, current_wall);
@@ -259,14 +256,14 @@ int main(int argc, char *argv[]) {
     refresh_screen();
 
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .press_handler = {
-            [MUX_INPUT_POWER_SHORT] = handle_power,
-        },
-        .input_handler = handle_input,
-        .idle_handler = ui_common_handle_idle,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .press_handler = {
+                    [MUX_INPUT_POWER_SHORT] = handle_power,
+            },
+            .input_handler = handle_input,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

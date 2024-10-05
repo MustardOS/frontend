@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -83,12 +82,12 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblShell,     "HELP.SHELL"},
-            {ui_lblBrowser,   "HELP.BROWSER"},
-            {ui_lblTerminal,  "HELP.TERMINAL"},
-            {ui_lblSyncthing, "HELP.SYNCTHING"},
-            {ui_lblResilio,   "HELP.RESILIO"},
-            {ui_lblNTP,       "HELP.NTP"},
+            {ui_lblShell,     "Toggle SSH support - Access via port 22"},
+            {ui_lblBrowser,   "Toggle SFTP support - WebUI can be found on port 9090"},
+            {ui_lblTerminal,  "Toggle virtual terminal - WebUI can be found on port 8080"},
+            {ui_lblSyncthing, "Toggle Syncthing - WebUI can be found on port 7070"},
+            {ui_lblResilio,   "Toggle Resilio - WebUI can be found on port 6060"},
+            {ui_lblNTP,       "Toggle network time protocol for active network connections"},
     };
 
     char *message = TG("No Help Information Found");

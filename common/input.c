@@ -107,11 +107,11 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
     // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
     if ((analog && event->value <= -device.INPUT.AXIS + device.INPUT.AXIS / 5) ||
-            (!analog && event->value == -1)) {
+        (!analog && event->value == -1)) {
         // Direction: up/left
         pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
     } else if ((analog && event->value >= device.INPUT.AXIS - device.INPUT.AXIS / 5) ||
-            (!analog && event->value == 1)) {
+               (!analog && event->value == 1)) {
         // Direction: down/right
         pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
     } else {

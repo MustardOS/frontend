@@ -12,71 +12,73 @@
 #include "../common/input.h"
 
 void handle_combo(int num, mux_input_action action);
+
 void handle_input(mux_input_type type, mux_input_action action);
+
 void handle_idle();
 
 struct mux_device device;
 struct mux_config config;
 
 static const char *input_name[MUX_INPUT_COUNT] = {
-    // Gamepad buttons:
-    [MUX_INPUT_A] = "A",
-    [MUX_INPUT_B] = "B",
-    [MUX_INPUT_C] = "C",
-    [MUX_INPUT_X] = "X",
-    [MUX_INPUT_Y] = "Y",
-    [MUX_INPUT_Z] = "Z",
-    [MUX_INPUT_L1] = "L1",
-    [MUX_INPUT_L2] = "L2",
-    [MUX_INPUT_L3] = "L3",
-    [MUX_INPUT_R1] = "R1",
-    [MUX_INPUT_R2] = "R2",
-    [MUX_INPUT_R3] = "R3",
-    [MUX_INPUT_SELECT] = "SELECT",
-    [MUX_INPUT_START] = "START",
+        // Gamepad buttons:
+        [MUX_INPUT_A] = "A",
+        [MUX_INPUT_B] = "B",
+        [MUX_INPUT_C] = "C",
+        [MUX_INPUT_X] = "X",
+        [MUX_INPUT_Y] = "Y",
+        [MUX_INPUT_Z] = "Z",
+        [MUX_INPUT_L1] = "L1",
+        [MUX_INPUT_L2] = "L2",
+        [MUX_INPUT_L3] = "L3",
+        [MUX_INPUT_R1] = "R1",
+        [MUX_INPUT_R2] = "R2",
+        [MUX_INPUT_R3] = "R3",
+        [MUX_INPUT_SELECT] = "SELECT",
+        [MUX_INPUT_START] = "START",
 
-    // D-pad:
-    [MUX_INPUT_DPAD_UP] = "DPAD_UP",
-    [MUX_INPUT_DPAD_DOWN] = "DPAD_DOWN",
-    [MUX_INPUT_DPAD_LEFT] = "DPAD_LEFT",
-    [MUX_INPUT_DPAD_RIGHT] = "DPAD_RIGHT",
+        // D-pad:
+        [MUX_INPUT_DPAD_UP] = "DPAD_UP",
+        [MUX_INPUT_DPAD_DOWN] = "DPAD_DOWN",
+        [MUX_INPUT_DPAD_LEFT] = "DPAD_LEFT",
+        [MUX_INPUT_DPAD_RIGHT] = "DPAD_RIGHT",
 
-    // Left stick:
-    [MUX_INPUT_LS_UP] = "LS_UP",
-    [MUX_INPUT_LS_DOWN] = "LS_DOWN",
-    [MUX_INPUT_LS_LEFT] = "LS_LEFT",
-    [MUX_INPUT_LS_RIGHT] = "LS_RIGHT",
+        // Left stick:
+        [MUX_INPUT_LS_UP] = "LS_UP",
+        [MUX_INPUT_LS_DOWN] = "LS_DOWN",
+        [MUX_INPUT_LS_LEFT] = "LS_LEFT",
+        [MUX_INPUT_LS_RIGHT] = "LS_RIGHT",
 
-    // Right stick:
-    [MUX_INPUT_RS_UP] = "RS_UP",
-    [MUX_INPUT_RS_DOWN] = "RS_DOWN",
-    [MUX_INPUT_RS_LEFT] = "RS_LEFT",
-    [MUX_INPUT_RS_RIGHT] = "RS_RIGHT",
+        // Right stick:
+        [MUX_INPUT_RS_UP] = "RS_UP",
+        [MUX_INPUT_RS_DOWN] = "RS_DOWN",
+        [MUX_INPUT_RS_LEFT] = "RS_LEFT",
+        [MUX_INPUT_RS_RIGHT] = "RS_RIGHT",
 
-    // Volume buttons:
-    [MUX_INPUT_VOL_UP] = "VOL_UP",
-    [MUX_INPUT_VOL_DOWN] = "VOL_DOWN",
+        // Volume buttons:
+        [MUX_INPUT_VOL_UP] = "VOL_UP",
+        [MUX_INPUT_VOL_DOWN] = "VOL_DOWN",
 
-    // Function buttons:
-    [MUX_INPUT_MENU_LONG] = "MENU_LONG",
-    [MUX_INPUT_MENU_SHORT] = "MENU_SHORT",
+        // Function buttons:
+        [MUX_INPUT_MENU_LONG] = "MENU_LONG",
+        [MUX_INPUT_MENU_SHORT] = "MENU_SHORT",
 
-    // System buttons:
-    [MUX_INPUT_POWER_LONG] = "POWER_LONG",
-    [MUX_INPUT_POWER_SHORT] = "POWER_SHORT",
+        // System buttons:
+        [MUX_INPUT_POWER_LONG] = "POWER_LONG",
+        [MUX_INPUT_POWER_SHORT] = "POWER_SHORT",
 };
 
 static const char *action_name[] = {
-    [MUX_INPUT_PRESS] = "PRESS",
-    [MUX_INPUT_HOLD] = "HOLD",
-    [MUX_INPUT_RELEASE] = "RELEASE",
+        [MUX_INPUT_PRESS] = "PRESS",
+        [MUX_INPUT_HOLD] = "HOLD",
+        [MUX_INPUT_RELEASE] = "RELEASE",
 };
 
 static mux_input_options input_opts = {
-    .max_idle_ms = 1000,
-    .input_handler = handle_input,
-    .combo_handler = handle_combo,
-    .idle_handler = handle_idle,
+        .max_idle_ms = 1000,
+        .input_handler = handle_input,
+        .combo_handler = handle_combo,
+        .idle_handler = handle_idle,
 };
 
 static bool verbose = false;
@@ -227,7 +229,7 @@ void usage(FILE *file) {
             "  -h            displays this usage message\n"
             "\n"
             "COMBO_SPEC has format `NAME=INPUT1+INPUT2+...`. Use -l to see valid INPUT values.\n"
-            );
+    );
 }
 
 int main(int argc, char *argv[]) {

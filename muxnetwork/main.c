@@ -112,15 +112,14 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblEnable,     "HELP.ENABLE"},
-            {ui_lblIdentifier, "HELP.IDENTIFIER"},
-            {ui_lblPassword,   "HELP.PASSWORD"},
-            {ui_lblType,       "HELP.TYPE"},
-            {ui_lblAddress,    "HELP.ADDRESS"},
-            {ui_lblSubnet,     "HELP.SUBNET"},
-            {ui_lblGateway,    "HELP.GATEWAY"},
-            {ui_lblStatus,     "HELP.STATUS"},
-            {ui_lblConnect,    "HELP.CONNECT"},
+            {ui_lblEnable,     "Toggle the Wi-Fi network on and off"},
+            {ui_lblIdentifier, "Enter the network identifier (SSID) here"},
+            {ui_lblPassword,   "Enter the network password here"},
+            {ui_lblType,       "Toggle between DHCP and Static network types"},
+            {ui_lblAddress,    "Enter the device IP address here (Static only)"},
+            {ui_lblSubnet,     "Enter the device Subnet (CIDR) number here (Static only)"},
+            {ui_lblGateway,    "Enter the network gateway address here (Static only)"},
+            {ui_lblConnect,    "Connect to the network using options entered above"},
     };
 
     char *message = TG("No Help Information Found");

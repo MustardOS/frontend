@@ -28,8 +28,8 @@
 #include "mini/mini.h"
 
 __thread uint64_t start_ms = 0;
-struct json translation_specific;
 struct json translation_generic;
+struct json translation_specific;
 struct pattern skip_pattern_list = {NULL, 0, 0};
 int battery_capacity = 100;
 lv_anim_t animation;
@@ -1089,17 +1089,17 @@ void unload_image_animation() {
 }
 
 const lv_font_t *get_language_font() {
-        if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Simplified)") == 0) {
-            return &ui_font_NotoSans_SC;
-        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Traditional)") == 0) {
-            return &ui_font_NotoSans_TC;
-        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0) {
-            return &ui_font_NotoSans_JP;
-        } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0) {
-            return &ui_font_NotoSans_KR;
-        } else {
-            return &ui_font_NotoSans;
-        }
+    if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Simplified)") == 0) {
+        return &ui_font_NotoSans_SC;
+    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Traditional)") == 0) {
+        return &ui_font_NotoSans_TC;
+    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0) {
+        return &ui_font_NotoSans_JP;
+    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0) {
+        return &ui_font_NotoSans_KR;
+    } else {
+        return &ui_font_NotoSans;
+    }
 }
 
 void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
@@ -1111,7 +1111,7 @@ void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
 }
 
 void load_font_text(const char *program, lv_obj_t *screen) {
-    const lv_font_t * language_font = get_language_font();
+    const lv_font_t *language_font = get_language_font();
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
         char theme_font_text[MAX_BUFFER_SIZE];
@@ -1126,19 +1126,19 @@ void load_font_text(const char *program, lv_obj_t *screen) {
             load_font_text_from_file(theme_font_text, screen);
         } else if (snprintf(theme_font_text, sizeof(theme_font_text),
                             "%s/theme/active/font/%s.bin", STORAGE_PATH, program) >= 0 && file_exist(theme_font_text)) {
-            load_font_text_from_file(theme_font_text, screen); 
+            load_font_text_from_file(theme_font_text, screen);
         } else if (snprintf(theme_font_text, sizeof(theme_font_text_default),
                             "%s/theme/active/font/default.bin", STORAGE_PATH) >= 0 && file_exist(theme_font_text)) {
-            load_font_text_from_file(theme_font_text, screen); 
+            load_font_text_from_file(theme_font_text, screen);
         } else {
             if (&ui_font_NotoSans != language_font) {
                 printf("Theme does not contain a font and language font exists\n");
-                lv_obj_set_style_text_font(screen, language_font, LV_PART_MAIN | LV_STATE_DEFAULT);            
+                lv_obj_set_style_text_font(screen, language_font, LV_PART_MAIN | LV_STATE_DEFAULT);
             }
         }
     } else {
         lv_obj_set_style_text_font(screen, language_font,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 }
 
@@ -1150,19 +1150,19 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
         if (snprintf(theme_font_section, sizeof(theme_font_section),
                      "%s/theme/active/font/%s/%s/%s.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, section,
                      program) >= 0 && file_exist(theme_font_section)) {
-            load_font_text_from_file(theme_font_section, element); 
+            load_font_text_from_file(theme_font_section, element);
         } else if (snprintf(theme_font_section_default, sizeof(theme_font_section_default),
                             "%s/theme/active/font/%s/%s/default.bin", STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE,
                             section) >= 0 && file_exist(theme_font_section_default)) {
-            load_font_text_from_file(theme_font_section_default, element); 
+            load_font_text_from_file(theme_font_section_default, element);
         } else if (snprintf(theme_font_section, sizeof(theme_font_section),
                             "%s/theme/active/font/%s/%s.bin", STORAGE_PATH, section, program) >= 0 &&
                    file_exist(theme_font_section)) {
-            load_font_text_from_file(theme_font_section, element); 
+            load_font_text_from_file(theme_font_section, element);
         } else if (snprintf(theme_font_section_default, sizeof(theme_font_section_default),
                             "%s/theme/active/font/%s/default.bin", STORAGE_PATH, section) >= 0 &&
                    file_exist(theme_font_section_default)) {
-            load_font_text_from_file(theme_font_section_default, element); 
+            load_font_text_from_file(theme_font_section_default, element);
         }
     }
 }
@@ -1357,20 +1357,20 @@ void adjust_visual_label(char *text, int method, int rep_dash) {
     }
 }
 
-void update_image(lv_obj_t * ui_imgobj, struct ImageSettings image_settings) {
+void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
     if (file_exist(image_settings.image_path)) {
         char image_path[MAX_BUFFER_SIZE];
         snprintf(image_path, sizeof(image_path), "M:%s", image_settings.image_path);
-        
+
         if (image_settings.max_height > 0 && image_settings.max_width > 0) {
             lv_img_header_t img_header;
             lv_img_decoder_get_info(image_path, &img_header);
 
-            float width_ratio = (float)image_settings.max_width / img_header.w;
-            float height_ratio = (float)image_settings.max_height / img_header.h;
+            float width_ratio = (float) image_settings.max_width / img_header.w;
+            float height_ratio = (float) image_settings.max_height / img_header.h;
             float zoom_ratio = (width_ratio < height_ratio) ? width_ratio : height_ratio;
 
-            int zoom_factor = (int)(zoom_ratio * 256);
+            int zoom_factor = (int) (zoom_ratio * 256);
 
             lv_img_set_size_mode(ui_imgobj, LV_IMG_SIZE_MODE_REAL);
             lv_img_set_zoom(ui_imgobj, zoom_factor);
@@ -1421,22 +1421,22 @@ void load_language(const char *program) {
     }
 }
 
-char *translate_specific(char *key) {
-    struct json translation_specific_json = json_object_get(translation_specific, key);
-    if (json_exists(translation_specific_json)) {
+char *translate_generic(char *key) {
+    struct json translation_generic_json = json_object_get(translation_generic, key);
+    if (json_exists(translation_generic_json)) {
         char translation[MAX_BUFFER_SIZE];
-        json_string_copy(translation_specific_json, translation, sizeof(translation));
+        json_string_copy(translation_generic_json, translation, sizeof(translation));
         return strdup(translation);
     }
 
     return key;
 }
 
-char *translate_generic(char *key) {
-    struct json translation_generic_json = json_object_get(translation_generic, key);
-    if (json_exists(translation_generic_json)) {
+char *translate_specific(char *key) {
+    struct json translation_specific_json = json_object_get(translation_specific, key);
+    if (json_exists(translation_specific_json)) {
         char translation[MAX_BUFFER_SIZE];
-        json_string_copy(translation_generic_json, translation, sizeof(translation));
+        json_string_copy(translation_specific_json, translation, sizeof(translation));
         return strdup(translation);
     }
 

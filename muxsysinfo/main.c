@@ -3,13 +3,10 @@
 #include "../lvgl/drivers/indev/evdev.h"
 #include "ui/ui.h"
 #include <unistd.h>
-#include <sys/epoll.h>
 #include <fcntl.h>
-#include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -64,18 +61,18 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblVersion,    "HELP.VERSION"},
-            {ui_lblDevice,     "HELP.DEVICE"},
-            {ui_lblKernel,     "HELP.KERNEL"},
-            {ui_lblUptime,     "HELP.UPTIME"},
-            {ui_lblCPU,        "HELP.CPU"},
-            {ui_lblSpeed,      "HELP.SPEED"},
-            {ui_lblGovernor,   "HELP.GOVERNOR"},
-            {ui_lblMemory,     "HELP.MEMORY"},
-            {ui_lblTemp,       "HELP.TEMP"},
-            {ui_lblService,    "HELP.SERVICE"},
-            {ui_lblBatteryCap, "HELP.BATTERY"},
-            {ui_lblVoltage,    "HELP.VOLTAGE"},
+            {ui_lblVersion,    "The current version of muOS running on the device"},
+            {ui_lblDevice,     "The current device type detected and configured"},
+            {ui_lblKernel,     "The current Linux kernel"},
+            {ui_lblUptime,     "The current running time of the system"},
+            {ui_lblCPU,        "The detected CPU type of the device"},
+            {ui_lblSpeed,      "The current CPU frequency of the device"},
+            {ui_lblGovernor,   "The current running governor of the device"},
+            {ui_lblMemory,     "The current, and total, memory usage of the device"},
+            {ui_lblTemp,       "The current detected temperature of the device"},
+            {ui_lblService,    "The number of processes currently running on the system"},
+            {ui_lblBatteryCap, "The current detected battery capacity"},
+            {ui_lblVoltage,    "The current detected battery voltage"},
     };
 
     char *message = TG("No Help Information Found");
@@ -677,48 +674,48 @@ int main(int argc, char *argv[]) {
     refresh_screen();
 
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_a,
-            [MUX_INPUT_B] = handle_b,
-            [MUX_INPUT_MENU_SHORT] = handle_menu,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_MENU_SHORT] = handle_menu,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

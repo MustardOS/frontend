@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -94,23 +93,27 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblAccelerate,  "HELP.ACCELERATE"},
-            {ui_lblSwap,        "HELP.SWAP"},
-            {ui_lblThermal,     "HELP.THERMAL"},
-            {ui_lblFont,        "HELP.FONT"},
-            {ui_lblVolume,      "HELP.VOLUME"},
-            {ui_lblBrightness,  "HELP.BRIGHTNESS"},
-            {ui_lblOffset,      "HELP.OFFSET"},
-            {ui_lblPasscode,    "HELP.PASSCODE"},
-            {ui_lblLED,         "HELP.LED"},
-            {ui_lblTheme,       "HELP.THEME"},
-            {ui_lblRetroWait,   "HELP.RETROWAIT"},
-            {ui_lblUSBFunction, "HELP.USBFUNCTION"},
-            {ui_lblState,       "HELP.STATE"},
-            {ui_lblVerbose,     "HELP.VERBOSE"},
-            {ui_lblRumble,      "HELP.RUMBLE"},
-            {ui_lblHDMIOutput,  "HELP.HDMI_OUTPUT"},
-            {ui_lblStorage,     "HELP.STORAGE"},
+            {ui_lblAccelerate,  "Adjust the rate of speed when holding navigation keys down"},
+            {ui_lblSwap,        "Change how the device buttons work globally"},
+            {ui_lblThermal,     "Toggle the system ability to automatically shut the device down due high temperature"},
+            {ui_lblFont,        "Change how the font type works in the frontend - 'Theme' will ensure frontend will "
+                                "use fonts within themes with a fallback to language fonts - 'Language' will "
+                                "specifically use language based font"},
+            {ui_lblVolume,      "Change the default audio level that the device will use each time it starts up"},
+            {ui_lblBrightness,  "Change the default brightness level that the device will use each time it starts up"},
+            {ui_lblOffset,      "Change the displayed battery percentage to improve accuracy based on calibration "
+                                "or known deviations in the battery capacity reading"},
+            {ui_lblPasscode,    "Toggle the passcode lock - More information can be found on the muOS website"},
+            {ui_lblLED,         "Toggle the power LED during content launch"},
+            {ui_lblTheme,       "Change the default theme used for the next device launch"},
+            {ui_lblRetroWait,   "Toggle a delayed start of RetroArch until a network connection is established"},
+            {ui_lblUSBFunction, "Toggle between ADB and MTP USB functionality"},
+            {ui_lblState,       "Switch between system sleep suspend states"},
+            {ui_lblVerbose,     "Toggle startup and shutdown verbose messages used for debugging faults"},
+            {ui_lblRumble,      "Toggle vibration for device startup, sleep, and shutdown"},
+            {ui_lblHDMIOutput,  "Switch between device speaker or external monitor audio via HDMI connection"},
+            {ui_lblStorage,     "Change the storage device where muOS looks for user content - Changing these "
+                                "settings can cause critical failures, only change if you know what you are doing!"},
     };
 
     char *message = TG("No Help Information Found");
@@ -233,62 +236,9 @@ void init_dropdown_settings() {
 }
 
 void restore_tweak_options() {
-    switch (config.SETTINGS.ADVANCED.ACCELERATE) {
-        case 32767:
-            lv_dropdown_set_selected(ui_droAccelerate, 0);
-            break;
-        case 16:
-            lv_dropdown_set_selected(ui_droAccelerate, 1);
-            break;
-        case 32:
-            lv_dropdown_set_selected(ui_droAccelerate, 2);
-            break;
-        case 48:
-            lv_dropdown_set_selected(ui_droAccelerate, 3);
-            break;
-        case 64:
-            lv_dropdown_set_selected(ui_droAccelerate, 4);
-            break;
-        case 80:
-            lv_dropdown_set_selected(ui_droAccelerate, 5);
-            break;
-        case 96:
-            lv_dropdown_set_selected(ui_droAccelerate, 6);
-            break;
-        case 112:
-            lv_dropdown_set_selected(ui_droAccelerate, 7);
-            break;
-        case 128:
-            lv_dropdown_set_selected(ui_droAccelerate, 8);
-            break;
-        case 144:
-            lv_dropdown_set_selected(ui_droAccelerate, 9);
-            break;
-        case 160:
-            lv_dropdown_set_selected(ui_droAccelerate, 10);
-            break;
-        case 176:
-            lv_dropdown_set_selected(ui_droAccelerate, 11);
-            break;
-        case 192:
-            lv_dropdown_set_selected(ui_droAccelerate, 12);
-            break;
-        case 208:
-            lv_dropdown_set_selected(ui_droAccelerate, 13);
-            break;
-        case 224:
-            lv_dropdown_set_selected(ui_droAccelerate, 14);
-            break;
-        case 240:
-            lv_dropdown_set_selected(ui_droAccelerate, 15);
-            break;
-        case 256:
-            lv_dropdown_set_selected(ui_droAccelerate, 16);
-            break;
-        default:
-            lv_dropdown_set_selected(ui_droAccelerate, 6);
-            break;
-    }
+    map_drop_down_to_index(ui_droAccelerate, config.SETTINGS.ADVANCED.ACCELERATE,
+                           (int[]) {32767, 16, 32, 48, 64, 80, 96, 112, 128,
+                                    144, 160, 176, 192, 208, 224, 240, 256}, 17, 6);
 
     lv_dropdown_set_selected(ui_droSwap, config.SETTINGS.ADVANCED.SWAP);
     lv_dropdown_set_selected(ui_droThermal, config.SETTINGS.ADVANCED.THERMAL);
@@ -344,63 +294,9 @@ void restore_tweak_options() {
 }
 
 void save_tweak_options() {
-    int idx_accelerate;
-    switch (lv_dropdown_get_selected(ui_droAccelerate)) {
-        case 0:
-            idx_accelerate = 32767;
-            break;
-        case 1:
-            idx_accelerate = 16;
-            break;
-        case 2:
-            idx_accelerate = 32;
-            break;
-        case 3:
-            idx_accelerate = 48;
-            break;
-        case 4:
-            idx_accelerate = 64;
-            break;
-        case 5:
-            idx_accelerate = 80;
-            break;
-        case 6:
-            idx_accelerate = 96;
-            break;
-        case 7:
-            idx_accelerate = 112;
-            break;
-        case 8:
-            idx_accelerate = 128;
-            break;
-        case 9:
-            idx_accelerate = 144;
-            break;
-        case 10:
-            idx_accelerate = 160;
-            break;
-        case 11:
-            idx_accelerate = 176;
-            break;
-        case 12:
-            idx_accelerate = 192;
-            break;
-        case 13:
-            idx_accelerate = 208;
-            break;
-        case 14:
-            idx_accelerate = 224;
-            break;
-        case 15:
-            idx_accelerate = 240;
-            break;
-        case 16:
-            idx_accelerate = 256;
-            break;
-        default:
-            idx_accelerate = 96;
-            break;
-    }
+    int idx_accelerate = map_drop_down_to_value(lv_dropdown_get_selected(ui_droAccelerate),
+                                                (int[]) {32767, 16, 32, 48, 64, 80, 96, 112, 128,
+                                                         144, 160, 176, 192, 208, 224, 240, 256}, 17, 6);
 
     char *idx_volume;
     switch (lv_dropdown_get_selected(ui_droVolume)) {

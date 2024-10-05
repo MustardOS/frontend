@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <fcntl.h>
-#include <dirent.h>
 #include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
@@ -76,7 +75,9 @@ enum gov_gen_type {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.GOVERNOR"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("Configure CPU governors to dynamically adjust the CPU "
+                                                            "frequency and help balance power consumption "
+                                                            "and performance"));
 }
 
 void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_type method) {

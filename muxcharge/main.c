@@ -8,9 +8,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <linux/joystick.h>
-#include <sys/stat.h>
 #include <sys/epoll.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -44,7 +42,6 @@ int blank = 0;
 
 char capacity_info[MAX_BUFFER_SIZE];
 char voltage_info[MAX_BUFFER_SIZE];
-char health_info[MAX_BUFFER_SIZE];
 
 lv_timer_t *battery_timer;
 

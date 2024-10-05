@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <time.h>
 #include "../common/common.h"
 #include "../common/device.h"
 

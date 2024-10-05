@@ -76,7 +76,8 @@ enum core_gen_type {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("HELP.ASSIGN"));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("This is where you can assign a core or "
+                                                            "external emulator to content"));
 }
 
 void create_core_assignment(const char *core, char *sys, char *rom, int cache, enum core_gen_type method) {

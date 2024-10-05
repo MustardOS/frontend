@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -69,8 +68,8 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblCore,     "HELP.CORE"},
-            {ui_lblGovernor, "HELP.GOVERNOR"},
+            {ui_lblCore,     "Set the system core or external emulator for the selected content or directory"},
+            {ui_lblGovernor, "Set the CPU governor for the selected content or directory"},
     };
 
     char *message = TG("No Help Information Found");

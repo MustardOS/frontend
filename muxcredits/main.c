@@ -1,10 +1,8 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "ui/ui.h"
-#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 #include "../common/common.h"
 #include "../common/config.h"
 #include "../common/device.h"

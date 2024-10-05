@@ -9,7 +9,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -93,21 +92,27 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBattery,             "HELP.BATTERY"},
-            {ui_lblNetwork,             "HELP.NETWORK"},
-            {ui_lblBluetooth,           "HELP.BLUETOOTH"},
-            {ui_lblClock,               "HELP.CLOCK"},
-            {ui_lblBoxArt,              "HELP.BOXART"},
-            {ui_lblBoxArtAlign,    "HELP.BOXARTALIGN"},
-            {ui_lblName,                "HELP.NAME"},
-            {ui_lblDash,                "HELP.DASH"},
-            {ui_lblFriendlyFolder,      "HELP.FRIENDLY.FOLDER"},
-            {ui_lblTheTitleFormat,      "HELP.TITLE.FORMAT"},
-            {ui_lblTitleIncludeRootDrive,      "HELP.TITLE.INCLUDEROOT"},
-            {ui_lblFolderItemCount,     "HELP.FOLDER.ITEM"},
-            {ui_lblMenuCounterFolder,   "HELP.COUNTER.FOLDER"},
-            {ui_lblMenuCounterFile,     "HELP.COUNTER.FILE"},
-            {ui_lblBackgroundAnimation, "HELP.BACKGROUND.ANIMATION"},
+            {ui_lblBattery,               "Toggle the visibility of the battery glyph"},
+            {ui_lblNetwork,               "Toggle the visibility of the network glyph"},
+            {ui_lblBluetooth,             "Toggle the visibility of the bluetooth glyph"},
+            {ui_lblClock,                 "Toggle the visibility of the clock"},
+            {ui_lblBoxArt,                "Change the display priority of the content images"},
+            {ui_lblBoxArtAlign,           "Change the screen alignment of the content images"},
+            {ui_lblName,                  "Remove extra information from content labels - This does NOT rename your "
+                                          "files it only changes how it is displayed"},
+            {ui_lblDash,                  "Replaces the dash (-) with a colon (:) for content labels"},
+            {ui_lblFriendlyFolder,        "Replaces the label of shortened content folders to more "
+                                          "appropriately named labels"},
+            {ui_lblTheTitleFormat,        "Rearranges the label of content to move the 'The' label to the front - "
+                                          "For example, 'Batman and Robin, The' to 'The Batman and Robin'"},
+            {ui_lblTitleIncludeRootDrive, "Changes the top title label in Explore Content to show current storage"
+                                          " device along with folder name"},
+            {ui_lblFolderItemCount,       "Toggle the visibility of the item count within folders in Explore Content"},
+            {ui_lblMenuCounterFolder,     "Toggle the visibility of currently selected folder along "
+                                          "with total in Explore Content"},
+            {ui_lblMenuCounterFile,       "Toggle the visibility of currently selected file along "
+                                          "with total in Explore Content"},
+            {ui_lblBackgroundAnimation,   "Toggle the background animation of the current selected theme"},
     };
 
     char *message = TG("No Help Information Found");
@@ -183,21 +188,21 @@ void elements_events_init() {
 
 void init_dropdown_settings() {
     Visuals settings[] = {
-            {battery.total,             battery.current},
-            {network.total,             network.current},
-            {bluetooth.total,           bluetooth.current},
-            {mux_clock.total,           mux_clock.current},
-            {boxart.total,              boxart.current},
-            {boxartalign.total,    boxartalign.current},
-            {name.total,                name.current},
-            {dash.total,                dash.current},
-            {friendlyfolder.total,      friendlyfolder.current},
-            {thetitleformat.total,      thetitleformat.current},
-            {titleincluderootdrive.total,      titleincluderootdrive.current},
-            {folderitemcount.total,     folderitemcount.current},
-            {counterfolder.total,       counterfolder.current},
-            {counterfile.total,         counterfile.current},
-            {backgroundanimation.total, backgroundanimation.current}
+            {battery.total,               battery.current},
+            {network.total,               network.current},
+            {bluetooth.total,             bluetooth.current},
+            {mux_clock.total,             mux_clock.current},
+            {boxart.total,                boxart.current},
+            {boxartalign.total,           boxartalign.current},
+            {name.total,                  name.current},
+            {dash.total,                  dash.current},
+            {friendlyfolder.total,        friendlyfolder.current},
+            {thetitleformat.total,        thetitleformat.current},
+            {titleincluderootdrive.total, titleincluderootdrive.current},
+            {folderitemcount.total,       folderitemcount.current},
+            {counterfolder.total,         counterfolder.current},
+            {counterfile.total,           counterfile.current},
+            {backgroundanimation.total,   backgroundanimation.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -420,11 +425,12 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droBoxArt, (char *[]) {
             TS("Behind"), TS("Front"), TS("Fullscreen + Behind"), TS("Fullscreen + Front"), TG("Disabled")}, 5);
     add_drop_down_options(ui_droBoxArtAlign, (char *[]) {
-            TS("Top Left"), TS("Top Middle"), TS("Top Right"), 
-            TS("Bottom Left"), TS("Bottom Middle"), TS("Bottom Right"), 
+            TS("Top Left"), TS("Top Middle"), TS("Top Right"),
+            TS("Bottom Left"), TS("Bottom Middle"), TS("Bottom Right"),
             TS("Middle Left"), TS("Middle Right"), TS("Center")}, 9);
     add_drop_down_options(ui_droName,
-                          (char *[]) {TS("Full Name"), TS("Remove [ ]"), TS("Remove ( )"), TS("Remove [ ] and ( )")}, 4);
+                          (char *[]) {TS("Full Name"), TS("Remove [ ]"), TS("Remove ( )"), TS("Remove [ ] and ( )")},
+                          4);
     add_drop_down_options(ui_droDash, disabled_enabled, 2);
     add_drop_down_options(ui_droFriendlyFolder, disabled_enabled, 2);
     add_drop_down_options(ui_droTheTitleFormat, disabled_enabled, 2);

@@ -5,8 +5,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <time.h>
 #include <libgen.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"

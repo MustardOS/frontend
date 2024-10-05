@@ -3,13 +3,10 @@
 #include "../lvgl/drivers/indev/evdev.h"
 #include "ui/ui.h"
 #include <unistd.h>
-#include <sys/epoll.h>
 #include <fcntl.h>
-#include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
@@ -79,16 +76,17 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblHidden,     "HELP.HIDDEN"},
-            {ui_lblBGM,        "HELP.BGM"},
-            {ui_lblSound,      "HELP.SOUND"},
-            {ui_lblStartup,    "HELP.STARTUP"},
-            {ui_lblColour,     "HELP.COLOUR"},
-            {ui_lblBrightness, "HELP.BRIGHTNESS"},
-            {ui_lblHDMI,       "HELP.HDMI"},
-            {ui_lblPower,      "HELP.POWER"},
-            {ui_lblInterface,  "HELP.INTERFACE"},
-            {ui_lblAdvanced,   "HELP.ADVANCED"},
+            {ui_lblHidden,     "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character "
+                               "at the start of a file or folder name to hide it"},
+            {ui_lblBGM,        "Toggle the background music of the frontend - This will stop if content is launched"},
+            {ui_lblSound,      "Toggle the navigation sound of the frontend if the current theme supports it"},
+            {ui_lblStartup,    "Change where the device will start up into"},
+            {ui_lblColour,     "Change the colour temperature of the display if the device supports it"},
+            {ui_lblBrightness, "Change the brightness of the device to a specific level"},
+            {ui_lblHDMI,       "Toggle the HDMI output to a specific resolution and frequency"},
+            {ui_lblPower,      "Settings to change the power features of the device"},
+            {ui_lblInterface,  "Settings to change the visual aspects of the frontend"},
+            {ui_lblAdvanced,   "Settings that should only be changed by those who know what they are doing!"},
     };
 
     char *message = TG("No Help Information Found");
@@ -179,47 +177,8 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
     lv_dropdown_set_selected(ui_droBrightness, config.SETTINGS.GENERAL.BRIGHTNESS + 1);
 
-    switch (config.SETTINGS.GENERAL.HDMI) {
-        case -1:
-            lv_dropdown_set_selected(ui_droHDMI, 0);
-            break;
-        case 0:
-            lv_dropdown_set_selected(ui_droHDMI, 1);
-            break;
-        case 1:
-            lv_dropdown_set_selected(ui_droHDMI, 2);
-            break;
-        case 2:
-            lv_dropdown_set_selected(ui_droHDMI, 3);
-            break;
-        case 3:
-            lv_dropdown_set_selected(ui_droHDMI, 4);
-            break;
-        case 4:
-            lv_dropdown_set_selected(ui_droHDMI, 5);
-            break;
-        case 5:
-            lv_dropdown_set_selected(ui_droHDMI, 6);
-            break;
-        case 6:
-            lv_dropdown_set_selected(ui_droHDMI, 7);
-            break;
-        case 7:
-            lv_dropdown_set_selected(ui_droHDMI, 8);
-            break;
-        case 8:
-            lv_dropdown_set_selected(ui_droHDMI, 9);
-            break;
-        case 9:
-            lv_dropdown_set_selected(ui_droHDMI, 10);
-            break;
-        case 10:
-            lv_dropdown_set_selected(ui_droHDMI, 11);
-            break;
-        default:
-            lv_dropdown_set_selected(ui_droHDMI, 0);
-            break;
-    }
+    map_drop_down_to_index(ui_droHDMI, config.SETTINGS.GENERAL.HDMI,
+                           (int[]) {-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 12, 0);
 
     const char *startup_type = config.SETTINGS.GENERAL.STARTUP;
     if (strcasecmp(startup_type, "explore") == 0) {
@@ -236,107 +195,14 @@ void restore_tweak_options() {
         lv_dropdown_set_selected(ui_droStartup, 0);
     }
 
-    switch (config.SETTINGS.GENERAL.COLOUR) {
-        case -256:
-            lv_dropdown_set_selected(ui_droColour, 0);
-            break;
-        case -224:
-            lv_dropdown_set_selected(ui_droColour, 1);
-            break;
-        case -192:
-            lv_dropdown_set_selected(ui_droColour, 2);
-            break;
-        case -160:
-            lv_dropdown_set_selected(ui_droColour, 3);
-            break;
-        case -128:
-            lv_dropdown_set_selected(ui_droColour, 4);
-            break;
-        case -96:
-            lv_dropdown_set_selected(ui_droColour, 5);
-            break;
-        case -64:
-            lv_dropdown_set_selected(ui_droColour, 6);
-            break;
-        case -32:
-            lv_dropdown_set_selected(ui_droColour, 7);
-            break;
-        case 0:
-            lv_dropdown_set_selected(ui_droColour, 8);
-            break;
-        case 32:
-            lv_dropdown_set_selected(ui_droColour, 9);
-            break;
-        case 64:
-            lv_dropdown_set_selected(ui_droColour, 10);
-            break;
-        case 96:
-            lv_dropdown_set_selected(ui_droColour, 11);
-            break;
-        case 128:
-            lv_dropdown_set_selected(ui_droColour, 12);
-            break;
-        case 160:
-            lv_dropdown_set_selected(ui_droColour, 13);
-            break;
-        case 192:
-            lv_dropdown_set_selected(ui_droColour, 14);
-            break;
-        case 224:
-            lv_dropdown_set_selected(ui_droColour, 15);
-            break;
-        case 256:
-            lv_dropdown_set_selected(ui_droColour, 16);
-            break;
-        default:
-            lv_dropdown_set_selected(ui_droColour, 9);
-            break;
-    }
+    map_drop_down_to_index(ui_droColour, config.SETTINGS.GENERAL.COLOUR,
+                           (int[]) {-256, -224, -192, -160, -128, -96, -64, -32, 0,
+                                    32, 64, 96, 128, 160, 192, 224, 256}, 17, 9);
 }
 
 void save_tweak_options() {
-    int idx_hdmi;
-    switch (lv_dropdown_get_selected(ui_droHDMI)) {
-        case 0:
-            idx_hdmi = -1;
-            break;
-        case 1:
-            idx_hdmi = 0;
-            break;
-        case 2:
-            idx_hdmi = 1;
-            break;
-        case 3:
-            idx_hdmi = 2;
-            break;
-        case 4:
-            idx_hdmi = 3;
-            break;
-        case 5:
-            idx_hdmi = 4;
-            break;
-        case 6:
-            idx_hdmi = 5;
-            break;
-        case 7:
-            idx_hdmi = 6;
-            break;
-        case 8:
-            idx_hdmi = 7;
-            break;
-        case 9:
-            idx_hdmi = 8;
-            break;
-        case 10:
-            idx_hdmi = 9;
-            break;
-        case 11:
-            idx_hdmi = 10;
-            break;
-        default:
-            idx_hdmi = -1;
-            break;
-    }
+    int idx_hdmi = map_drop_down_to_value(lv_dropdown_get_selected(ui_droHDMI),
+                                          (int[]) {-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 12, 0);
 
     char *idx_startup;
     switch (lv_dropdown_get_selected(ui_droStartup)) {
@@ -363,63 +229,9 @@ void save_tweak_options() {
             break;
     }
 
-    int idx_colour;
-    switch (lv_dropdown_get_selected(ui_droColour)) {
-        case 0:
-            idx_colour = -256;
-            break;
-        case 1:
-            idx_colour = -224;
-            break;
-        case 2:
-            idx_colour = -192;
-            break;
-        case 3:
-            idx_colour = -160;
-            break;
-        case 4:
-            idx_colour = -128;
-            break;
-        case 5:
-            idx_colour = -96;
-            break;
-        case 6:
-            idx_colour = -64;
-            break;
-        case 7:
-            idx_colour = -32;
-            break;
-        case 8:
-            idx_colour = 0;
-            break;
-        case 9:
-            idx_colour = 32;
-            break;
-        case 10:
-            idx_colour = 64;
-            break;
-        case 11:
-            idx_colour = 96;
-            break;
-        case 12:
-            idx_colour = 128;
-            break;
-        case 13:
-            idx_colour = 160;
-            break;
-        case 14:
-            idx_colour = 192;
-            break;
-        case 15:
-            idx_colour = 224;
-            break;
-        case 16:
-            idx_colour = 256;
-            break;
-        default:
-            idx_colour = 32;
-            break;
-    }
+    int idx_colour = map_drop_down_to_value(lv_dropdown_get_selected(ui_droColour),
+                                            (int[]) {-256, -224, -192, -160, -128, -96, -64, -32, 0,
+                                                     32, 64, 96, 128, 160, 192, 224, 256}, 17, 9);
 
     int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
     int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
@@ -1073,52 +885,52 @@ int main(int argc, char *argv[]) {
     refresh_screen();
 
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_confirm,
-            [MUX_INPUT_B] = handle_back,
-            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-            [MUX_INPUT_MENU_SHORT] = handle_help,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_confirm,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

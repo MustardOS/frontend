@@ -4,15 +4,12 @@
 #include "ui/ui.h"
 #include <unistd.h>
 #include <pthread.h>
-#include <sys/epoll.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <linux/joystick.h>
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../common/img/nothing.h"
@@ -252,18 +249,18 @@ char *load_content_description() {
             char core_desc[MAX_BUFFER_SIZE];
             char core_file[MAX_BUFFER_SIZE];
             snprintf(core_file, sizeof(core_file), "%s/info/core/%s/%s.cfg",
-                        STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
+                     STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
 
             printf("TRYING TO READ CONFIG AT: %s\n", core_file);
 
             if (!file_exist(core_file)) {
                 snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                            STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+                         STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
                 snprintf(core_desc, sizeof(core_desc), "%s",
-                            read_line_from_file(core_file, 2));
+                         read_line_from_file(core_file, 2));
             } else {
                 snprintf(core_desc, sizeof(core_desc), "%s",
-                            read_line_from_file(core_file, 3));
+                         read_line_from_file(core_file, 3));
             }
 
             if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) {
@@ -274,10 +271,10 @@ char *load_content_description() {
 
             if (items[current_item_index].content_type == FOLDER) {
                 snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Folder/text/%s.txt",
-                            STORAGE_PATH, content_label);
+                         STORAGE_PATH, content_label);
             } else {
                 snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/%s/text/%s.txt",
-                            STORAGE_PATH, core_desc, desc_name);
+                         STORAGE_PATH, core_desc, desc_name);
             }
         }
             break;
@@ -331,24 +328,24 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
     lv_obj_set_width(ui_viewport_objects[0], viewport_width);
     lv_obj_set_height(ui_viewport_objects[0], viewport_height);
 
-    for (int index = 1; index < 6; index++)
-    {
+    for (int index = 1; index < 6; index++) {
         char section_name[15];
         snprintf(section_name, sizeof(section_name), "image%d", index);
 
         char image[MAX_BUFFER_SIZE];
         snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                STORAGE_PATH, catalogue_folder, get_ini_string(artwork_config_ini, section_name, "FOLDER", ""), content_name);
+                 STORAGE_PATH, catalogue_folder, get_ini_string(artwork_config_ini, section_name, "FOLDER", ""),
+                 content_name);
 
         struct ImageSettings image_settings = {
-            image,
-            get_ini_int(artwork_config_ini, section_name, "ALIGN", 9),
-            get_ini_int(artwork_config_ini, section_name, "MAX_WIDTH", 0),
-            get_ini_int(artwork_config_ini, section_name, "MAX_HEIGHT", 0),
-            get_ini_int(artwork_config_ini, section_name, "PAD_LEFT", 0),
-            get_ini_int(artwork_config_ini, section_name, "PAD_RIGHT", 0),
-            get_ini_int(artwork_config_ini, section_name, "PAD_TOP", 0),
-            get_ini_int(artwork_config_ini, section_name, "PAD_BOTTOM", 0)
+                image,
+                get_ini_int(artwork_config_ini, section_name, "ALIGN", 9),
+                get_ini_int(artwork_config_ini, section_name, "MAX_WIDTH", 0),
+                get_ini_int(artwork_config_ini, section_name, "MAX_HEIGHT", 0),
+                get_ini_int(artwork_config_ini, section_name, "PAD_LEFT", 0),
+                get_ini_int(artwork_config_ini, section_name, "PAD_RIGHT", 0),
+                get_ini_int(artwork_config_ini, section_name, "PAD_TOP", 0),
+                get_ini_int(artwork_config_ini, section_name, "PAD_BOTTOM", 0)
         };
 
         update_image(ui_viewport_objects[index], image_settings);
@@ -511,7 +508,7 @@ void image_refresh(char *image_type) {
 
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
-                    image, LV_ALIGN_CENTER, 515, 250, 0, 0, 0, 0
+                        image, LV_ALIGN_CENTER, 515, 250, 0, 0, 0, 0
                 };
                 update_image(ui_imgHelpPreviewImage, image_settings);
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);
@@ -523,13 +520,15 @@ void image_refresh(char *image_type) {
     } else {
         if (strcasecmp(box_image_previous_path, image) != 0) {
             char *catalogue_folder = items[current_item_index].content_type == FOLDER ? "Folder" : core_artwork;
-            char *content_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(items[current_item_index].name);
+            char *content_name =
+                    items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
+                            items[current_item_index].name);
             char artwork_config_path[MAX_BUFFER_SIZE];
             snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/%s.ini",
-                                 STORAGE_PATH, catalogue_folder);
+                     STORAGE_PATH, catalogue_folder);
             if (!file_exist(artwork_config_path)) {
                 snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/default.ini",
-                                 STORAGE_PATH);
+                         STORAGE_PATH);
             }
 
             if (file_exist(artwork_config_path)) {
@@ -795,7 +794,7 @@ void gen_item(char **file_names, int file_count) {
 }
 
 char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
-    char *friendly_folder_name = (char *)malloc(MAX_BUFFER_SIZE);
+    char *friendly_folder_name = (char *) malloc(MAX_BUFFER_SIZE);
     strcpy(friendly_folder_name, folder_name);
     if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
     struct json good_name_json = json_object_get(fn_json, folder_name);
@@ -845,7 +844,8 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json) {
     module_path = str_replace(module_path, "/", "");
 
     snprintf(title, sizeof(title), "%s%s",
-             (strcasecmp(folder_path, module_path) == 0 && label != NULL && label[0] != '\0') ? label : display_title, module_type);
+             (strcasecmp(folder_path, module_path) == 0 && label != NULL && label[0] != '\0') ? label : display_title,
+             module_type);
 
     lv_label_set_text(ui_lblTitle, title);
     free(display_title);
@@ -922,7 +922,7 @@ void create_explore_items(void *count) {
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {
             content_item *new_item = NULL;
-            char *friendly_folder_name =  get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
+            char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
             new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, FOLDER);
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
             if (config.VISUAL.FOLDERITEMCOUNT) {
@@ -2096,7 +2096,7 @@ int main(int argc, char *argv[]) {
                 if (sd1_okay == 0 || sd2_okay == 0 || usb_okay == 0) {
                     sd_dir = ex_path;
                     gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
-                                   (void *) &ui_count) == 0);
+                                                              (void *) &ui_count) == 0);
                 } else {
                     explore_root();
                 }
@@ -2105,17 +2105,17 @@ int main(int argc, char *argv[]) {
                     case MMC:
                         sd_dir = strip_dir(SD1);
                         gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
-                                       (void *) &ui_count) == 0);
+                                                                  (void *) &ui_count) == 0);
                         break;
                     case SDCARD:
                         sd_dir = strip_dir(SD2);
                         gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
-                                       (void *) &ui_count) == 0);
+                                                                  (void *) &ui_count) == 0);
                         break;
                     case USB:
                         sd_dir = strip_dir(E_USB);
                         gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_explore_items,
-                                       (void *) &ui_count) == 0);
+                                                                  (void *) &ui_count) == 0);
                         break;
                     default:
                         explore_root();
@@ -2131,12 +2131,14 @@ int main(int argc, char *argv[]) {
         }
             break;
         case FAVOURITE: {
-            gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "favourite") == 0);
+            gen_item_thread_created = (
+                    pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "favourite") == 0);
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "favourite");
         }
             break;
         case HISTORY: {
-            gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "history") == 0);
+            gen_item_thread_created = (pthread_create(&gen_item_thread, NULL, (void *) create_root_items, "history") ==
+                                       0);
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
         }
             break;
@@ -2186,52 +2188,52 @@ int main(int argc, char *argv[]) {
     refresh_screen();
 
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_a,
-            [MUX_INPUT_B] = handle_b,
-            [MUX_INPUT_X] = handle_x,
-            [MUX_INPUT_Y] = handle_y,
-            [MUX_INPUT_SELECT] = handle_select,
-            [MUX_INPUT_START] = handle_start,
-            [MUX_INPUT_MENU_SHORT] = handle_menu,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
+                    [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
+                    [MUX_INPUT_SELECT] = handle_select,
+                    [MUX_INPUT_START] = handle_start,
+                    [MUX_INPUT_MENU_SHORT] = handle_menu,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 
