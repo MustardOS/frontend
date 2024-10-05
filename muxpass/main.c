@@ -20,23 +20,19 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/passcode.h"
+#include "../common/input.h"
 #include "ui/theme.h"
 
 char *mux_prog;
 static int js_fd;
-
-int NAV_DPAD_HOR;
-int NAV_ANLG_HOR;
-int NAV_DPAD_VER;
-int NAV_ANLG_VER;
-int NAV_A;
-int NAV_B;
+static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
 int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
+int exit_status = 2;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
@@ -73,106 +69,55 @@ void init_navigation_groups() {
     }
 }
 
-int joystick_task() {
-    struct input_event ev;
-    int epoll_fd;
-    struct epoll_event event, events[device.DEVICE.EVENT];
+void handle_confirm(void) {
+    char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
+    uint32_t bs = sizeof(b1);
 
-    epoll_fd = epoll_create1(0);
-    if (epoll_fd == -1) {
-        perror("Error creating EPOLL instance");
-        return 2;
+    lv_roller_get_selected_str(ui_rolComboOne, b1, bs);
+    lv_roller_get_selected_str(ui_rolComboTwo, b2, bs);
+    lv_roller_get_selected_str(ui_rolComboThree, b3, bs);
+    lv_roller_get_selected_str(ui_rolComboFour, b4, bs);
+    lv_roller_get_selected_str(ui_rolComboFive, b5, bs);
+    lv_roller_get_selected_str(ui_rolComboSix, b6, bs);
+
+    char try_code[13];
+    sprintf(try_code, "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
+
+    if (strcasecmp(try_code, p_code) == 0) {
+        exit_status = 1;
+        mux_input_stop();
     }
+}
 
-    event.events = EPOLLIN;
-    event.data.fd = js_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
-        perror("Error with EPOLL controller");
-        return 2;
-    }
+void handle_back(void) {
+    exit_status = 2;
+    mux_input_stop();
+}
 
-    while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
-        if (num_events == -1) {
-            perror("Error with EPOLL wait event timer");
-            continue;
-        }
+void handle_up(void) {
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    play_sound("navigate", nav_sound, 0);
+    lv_roller_set_selected(element_focused,
+                           lv_roller_get_selected(element_focused) - 1,
+                           LV_ANIM_ON);
+}
 
-        for (int i = 0; i < num_events; i++) {
-            if (events[i].data.fd == js_fd) {
-                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
-                if (ret == -1) {
-                    perror("Error reading input");
-                    continue;
-                }
+void handle_down(void) {
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    play_sound("navigate", nav_sound, 0);
+    lv_roller_set_selected(element_focused,
+                           lv_roller_get_selected(element_focused) + 1,
+                           LV_ANIM_ON);
+}
 
-                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-                switch (ev.type) {
-                    case EV_KEY:
-                        if (ev.value == 1) {
-                            if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
-                                char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
-                                uint32_t bs = sizeof(b1);
+void handle_left(void) {
+    play_sound("navigate", nav_sound, 0);
+    nav_prev(ui_group, 1);
+}
 
-                                lv_roller_get_selected_str(ui_rolComboOne, b1, bs);
-                                lv_roller_get_selected_str(ui_rolComboTwo, b2, bs);
-                                lv_roller_get_selected_str(ui_rolComboThree, b3, bs);
-                                lv_roller_get_selected_str(ui_rolComboFour, b4, bs);
-                                lv_roller_get_selected_str(ui_rolComboFive, b5, bs);
-                                lv_roller_get_selected_str(ui_rolComboSix, b6, bs);
-
-                                char try_code[13];
-                                sprintf(try_code, "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
-
-                                if (strcasecmp(try_code, p_code) == 0) {
-                                    return 1;
-                                }
-                            } else if (ev.code == NAV_B) {
-                                return 2;
-                            }
-                        }
-                        break;
-                    case EV_ABS:
-                        if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
-                                play_sound("navigate", nav_sound, 0);
-                                nav_prev(ui_group, 1);
-                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
-                                play_sound("navigate", nav_sound, 0);
-                                nav_next(ui_group, 1);
-                            }
-                        }
-                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
-                                play_sound("navigate", nav_sound, 0);
-                                lv_roller_set_selected(element_focused,
-                                                       lv_roller_get_selected(element_focused) - 1,
-                                                       LV_ANIM_ON);
-                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
-                                play_sound("navigate", nav_sound, 0);
-                                lv_roller_set_selected(element_focused,
-                                                       lv_roller_get_selected(element_focused) + 1,
-                                                       LV_ANIM_ON);
-                            }
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        if (file_exist("/tmp/hdmi_do_refresh")) {
-            if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
-                remove("/tmp/hdmi_do_refresh");
-                lv_obj_invalidate(ui_pnlHeader);
-                lv_obj_invalidate(ui_pnlContent);
-                lv_obj_invalidate(ui_pnlFooter);
-            }
-        }
-
-        refresh_screen();
-    }
+void handle_right(void) {
+    play_sound("navigate", nav_sound, 0);
+    nav_next(ui_group, 1);
 }
 
 void init_elements() {
@@ -238,7 +183,6 @@ int main(int argc, char *argv[]) {
     mux_prog = basename(argv[0]);
     load_device(&device);
 
-
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
 
@@ -250,13 +194,13 @@ int main(int argc, char *argv[]) {
                 break;
             default:
                 fprintf(stderr, cmd_help, argv[0]);
-                return 1;
+                return 2;
         }
     }
 
     if (p_type == NULL) {
         fprintf(stderr, cmd_help, argv[0]);
-        return 1;
+        return 2;
     }
 
     load_passcode(&passcode, &device);
@@ -272,7 +216,7 @@ int main(int argc, char *argv[]) {
         p_msg = passcode.MESSAGE.SETTING;
     } else {
         fprintf(stderr, cmd_help, argv[0]);
-        return 1;
+        return 2;
     }
 
     if (strcasecmp(p_code, "000000") == 0) return 1;
@@ -345,22 +289,6 @@ int main(int argc, char *argv[]) {
     nav_sound = init_nav_sound();
     init_navigation_groups();
 
-    NAV_DPAD_HOR = device.RAW_INPUT.DPAD.RIGHT;
-    NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
-    NAV_DPAD_VER = device.RAW_INPUT.DPAD.DOWN;
-    NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.DOWN;
-
-    switch (config.SETTINGS.ADVANCED.SWAP) {
-        case 1:
-            NAV_A = device.RAW_INPUT.BUTTON.B;
-            NAV_B = device.RAW_INPUT.BUTTON.A;
-            break;
-        default:
-            NAV_A = device.RAW_INPUT.BUTTON.A;
-            NAV_B = device.RAW_INPUT.BUTTON.B;
-            break;
-    }
-
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
 
@@ -370,7 +298,13 @@ int main(int argc, char *argv[]) {
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
         perror("Failed to open joystick device");
-        return 1;
+        return 2;
+    }
+
+    js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
+    if (js_fd_sys < 0) {
+        perror("Failed to open joystick device");
+        return 2;
     }
 
     lv_indev_drv_t indev_drv;
@@ -391,9 +325,33 @@ int main(int argc, char *argv[]) {
     lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);
 
-    int safe_quit = joystick_task();
+    mux_input_options input_opts = {
+        .gamepad_fd = js_fd,
+        .system_fd = js_fd_sys,
+        .max_idle_ms = 16 /* ~60 FPS */,
+        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+        .stick_nav = true,
+        .press_handler = {
+            [MUX_INPUT_A] = handle_confirm,
+            [MUX_INPUT_B] = handle_back,
+            [MUX_INPUT_DPAD_UP] = handle_up,
+            [MUX_INPUT_DPAD_DOWN] = handle_down,
+            [MUX_INPUT_DPAD_LEFT] = handle_left,
+            [MUX_INPUT_DPAD_RIGHT] = handle_right,
+        },
+        .hold_handler = {
+            [MUX_INPUT_DPAD_UP] = handle_up,
+            [MUX_INPUT_DPAD_DOWN] = handle_down,
+            [MUX_INPUT_DPAD_LEFT] = handle_left,
+            [MUX_INPUT_DPAD_RIGHT] = handle_right,
+        },
+        .idle_handler = ui_common_handle_idle,
+    };
+    mux_input_task(&input_opts);
 
     close(js_fd);
+    close(js_fd_sys);
 
-    return safe_quit;
+    return exit_status;
 }
