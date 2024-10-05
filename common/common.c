@@ -1649,3 +1649,22 @@ void free_subdirectories(char **dir_names) {
     }
     free(dir_names);
 }
+
+void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index) {
+    for (int i = 0; i < num_options; i++) {
+        if (value == options[i]) {
+            lv_dropdown_set_selected(dropdown, i);
+            return;
+        }
+    }
+
+    lv_dropdown_set_selected(dropdown, def_index);
+}
+
+int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value) {
+    if (selected_index >= 0 && selected_index < num_options) {
+        return options[selected_index];
+    }
+
+    return def_value;
+}

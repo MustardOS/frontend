@@ -8,10 +8,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlColour = lv_obj_create(ui_pnlContent);
     ui_pnlBrightness = lv_obj_create(ui_pnlContent);
     ui_pnlHDMI = lv_obj_create(ui_pnlContent);
-    ui_pnlShutdown = lv_obj_create(ui_pnlContent);
-    ui_pnlBattery = lv_obj_create(ui_pnlContent);
-    ui_pnlIdleDisplay = lv_obj_create(ui_pnlContent);
-    ui_pnlIdleSleep = lv_obj_create(ui_pnlContent);
+    ui_pnlPower = lv_obj_create(ui_pnlContent);
     ui_pnlInterface = lv_obj_create(ui_pnlContent);
     ui_pnlAdvanced = lv_obj_create(ui_pnlContent);
 
@@ -22,10 +19,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblColour = lv_label_create(ui_pnlColour);
     ui_lblBrightness = lv_label_create(ui_pnlBrightness);
     ui_lblHDMI = lv_label_create(ui_pnlHDMI);
-    ui_lblShutdown = lv_label_create(ui_pnlShutdown);
-    ui_lblBattery = lv_label_create(ui_pnlBattery);
-    ui_lblIdleDisplay = lv_label_create(ui_pnlIdleDisplay);
-    ui_lblIdleSleep = lv_label_create(ui_pnlIdleSleep);
+    ui_lblPower = lv_label_create(ui_pnlPower);
     ui_lblInterface = lv_label_create(ui_pnlInterface);
     ui_lblAdvanced = lv_label_create(ui_pnlAdvanced);
 
@@ -36,10 +30,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoColour = lv_img_create(ui_pnlColour);
     ui_icoBrightness = lv_img_create(ui_pnlBrightness);
     ui_icoHDMI = lv_img_create(ui_pnlHDMI);
-    ui_icoShutdown = lv_img_create(ui_pnlShutdown);
-    ui_icoBattery = lv_img_create(ui_pnlBattery);
-    ui_icoIdleDisplay = lv_img_create(ui_pnlIdleDisplay);
-    ui_icoIdleSleep = lv_img_create(ui_pnlIdleSleep);
+    ui_icoPower = lv_img_create(ui_pnlPower);
     ui_icoInterface = lv_img_create(ui_pnlInterface);
     ui_icoAdvanced = lv_img_create(ui_pnlAdvanced);
 
@@ -50,10 +41,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droColour = lv_dropdown_create(ui_pnlColour);
     ui_droBrightness = lv_dropdown_create(ui_pnlBrightness);
     ui_droHDMI = lv_dropdown_create(ui_pnlHDMI);
-    ui_droShutdown = lv_dropdown_create(ui_pnlShutdown);
-    ui_droBattery = lv_dropdown_create(ui_pnlBattery);
-    ui_droIdleDisplay = lv_dropdown_create(ui_pnlIdleDisplay);
-    ui_droIdleSleep = lv_dropdown_create(ui_pnlIdleSleep);
+    ui_droPower = lv_dropdown_create(ui_pnlPower);
     ui_droInterface = lv_dropdown_create(ui_pnlInterface);
     ui_droAdvanced = lv_dropdown_create(ui_pnlAdvanced);
 }

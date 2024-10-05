@@ -56,24 +56,20 @@ int startup_total, startup_current;
 int colour_total, colour_current;
 int brightness_total, brightness_current;
 int hdmi_total, hdmi_current;
-int shutdown_total, shutdown_current;
-int battery_total, battery_current;
-int idle_display_total, idle_display_current;
-int idle_sleep_total, idle_sleep_current;
 
 typedef struct {
     int *total;
     int *current;
 } Tweak;
 
-Tweak hidden, bgm, sound, startup, colour, brightness, hdmi, shutdown, battery, idle_display, idle_sleep;
+Tweak hidden, bgm, sound, startup, colour, brightness, hdmi;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 13
+#define UI_COUNT 10
 lv_obj_t *ui_objects[UI_COUNT];
 
 struct help_msg {
@@ -83,19 +79,16 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblHidden,      "HELP.HIDDEN"},
-            {ui_lblBGM,         "HELP.BGM"},
-            {ui_lblSound,       "HELP.SOUND"},
-            {ui_lblStartup,     "HELP.STARTUP"},
-            {ui_lblColour,      "HELP.COLOUR"},
-            {ui_lblBrightness,  "HELP.BRIGHTNESS"},
-            {ui_lblHDMI,        "HELP.HDMI"},
-            {ui_lblShutdown,    "HELP.SHUTDOWN"},
-            {ui_lblBattery,     "HELP.BATTERY"},
-            {ui_lblIdleDisplay, "HELP.IDLE_DISPLAY"},
-            {ui_lblIdleSleep,   "HELP.IDLE_SLEEP"},
-            {ui_lblInterface,   "HELP.INTERFACE"},
-            {ui_lblAdvanced,    "HELP.ADVANCED"},
+            {ui_lblHidden,     "HELP.HIDDEN"},
+            {ui_lblBGM,        "HELP.BGM"},
+            {ui_lblSound,      "HELP.SOUND"},
+            {ui_lblStartup,    "HELP.STARTUP"},
+            {ui_lblColour,     "HELP.COLOUR"},
+            {ui_lblBrightness, "HELP.BRIGHTNESS"},
+            {ui_lblHDMI,       "HELP.HDMI"},
+            {ui_lblPower,      "HELP.POWER"},
+            {ui_lblInterface,  "HELP.INTERFACE"},
+            {ui_lblAdvanced,   "HELP.ADVANCED"},
     };
 
     char *message = TG("No Help Information Found");
@@ -137,11 +130,7 @@ void elements_events_init() {
             ui_droStartup,
             ui_droColour,
             ui_droBrightness,
-            ui_droHDMI,
-            ui_droShutdown,
-            ui_droBattery,
-            ui_droIdleDisplay,
-            ui_droIdleSleep
+            ui_droHDMI
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -155,25 +144,17 @@ void elements_events_init() {
     init_pointers(&colour, &colour_total, &colour_current);
     init_pointers(&brightness, &brightness_total, &brightness_current);
     init_pointers(&hdmi, &hdmi_total, &hdmi_current);
-    init_pointers(&shutdown, &shutdown_total, &shutdown_current);
-    init_pointers(&battery, &battery_total, &battery_current);
-    init_pointers(&idle_display, &idle_display_total, &idle_display_current);
-    init_pointers(&idle_sleep, &idle_sleep_total, &idle_sleep_current);
 }
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {hidden.total,       hidden.current},
-            {bgm.total,          bgm.current},
-            {sound.total,        sound.current},
-            {startup.total,      startup.current},
-            {colour.total,       colour.current},
-            {brightness.total,   brightness.current},
-            {hdmi.total,         hdmi.current},
-            {shutdown.total,     shutdown.current},
-            {battery.total,      battery.current},
-            {idle_display.total, idle_display.current},
-            {idle_sleep.total,   idle_sleep.current}
+            {hidden.total,     hidden.current},
+            {bgm.total,        bgm.current},
+            {sound.total,      sound.current},
+            {startup.total,    startup.current},
+            {colour.total,     colour.current},
+            {brightness.total, brightness.current},
+            {hdmi.total,       hdmi.current}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -183,11 +164,7 @@ void init_dropdown_settings() {
             ui_droStartup,
             ui_droColour,
             ui_droBrightness,
-            ui_droHDMI,
-            ui_droShutdown,
-            ui_droBattery,
-            ui_droIdleDisplay,
-            ui_droIdleSleep,
+            ui_droHDMI
     };
 
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
@@ -259,84 +236,6 @@ void restore_tweak_options() {
         lv_dropdown_set_selected(ui_droStartup, 0);
     }
 
-    switch (config.SETTINGS.GENERAL.SHUTDOWN) {
-        case -2:
-            lv_dropdown_set_selected(ui_droShutdown, 0);
-            break;
-        case -1:
-            lv_dropdown_set_selected(ui_droShutdown, 1);
-            break;
-        case 2:
-            lv_dropdown_set_selected(ui_droShutdown, 2);
-            break;
-        case 10:
-            lv_dropdown_set_selected(ui_droShutdown, 3);
-            break;
-        case 30:
-            lv_dropdown_set_selected(ui_droShutdown, 4);
-            break;
-        case 60:
-            lv_dropdown_set_selected(ui_droShutdown, 5);
-            break;
-        case 120:
-            lv_dropdown_set_selected(ui_droShutdown, 6);
-            break;
-        case 300:
-            lv_dropdown_set_selected(ui_droShutdown, 7);
-            break;
-        case 600:
-            lv_dropdown_set_selected(ui_droShutdown, 8);
-            break;
-        case 1800:
-            lv_dropdown_set_selected(ui_droShutdown, 9);
-            break;
-        case 3600:
-            lv_dropdown_set_selected(ui_droShutdown, 10);
-            break;
-        default:
-            lv_dropdown_set_selected(ui_droShutdown, 0);
-            break;
-    }
-
-    switch (config.SETTINGS.GENERAL.LOW_BATTERY) {
-        case -255:
-            lv_dropdown_set_selected(ui_droBattery, 0);
-            break;
-        case 5:
-            lv_dropdown_set_selected(ui_droBattery, 1);
-            break;
-        case 10:
-            lv_dropdown_set_selected(ui_droBattery, 2);
-            break;
-        case 15:
-            lv_dropdown_set_selected(ui_droBattery, 3);
-            break;
-        case 20:
-            lv_dropdown_set_selected(ui_droBattery, 4);
-            break;
-        case 25:
-            lv_dropdown_set_selected(ui_droBattery, 5);
-            break;
-        case 30:
-            lv_dropdown_set_selected(ui_droBattery, 6);
-            break;
-        case 35:
-            lv_dropdown_set_selected(ui_droBattery, 7);
-            break;
-        case 40:
-            lv_dropdown_set_selected(ui_droBattery, 8);
-            break;
-        case 45:
-            lv_dropdown_set_selected(ui_droBattery, 9);
-            break;
-        case 50:
-            lv_dropdown_set_selected(ui_droBattery, 10);
-            break;
-        default:
-            lv_dropdown_set_selected(ui_droBattery, 5);
-            break;
-    }
-
     switch (config.SETTINGS.GENERAL.COLOUR) {
         case -256:
             lv_dropdown_set_selected(ui_droColour, 0);
@@ -391,66 +290,6 @@ void restore_tweak_options() {
             break;
         default:
             lv_dropdown_set_selected(ui_droColour, 9);
-            break;
-    }
-
-    switch (config.SETTINGS.GENERAL.IDLE_DISPLAY) {
-        case 10:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 1);
-            break;
-        case 30:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 2);
-            break;
-        case 60:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 3);
-            break;
-        case 120:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 4);
-            break;
-        case 300:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 5);
-            break;
-        case 600:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 6);
-            break;
-        case 900:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 7);
-            break;
-        case 1800:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 8);
-            break;
-        default:
-            lv_dropdown_set_selected(ui_droIdleDisplay, 0);
-            break;
-    }
-
-    switch (config.SETTINGS.GENERAL.IDLE_SLEEP) {
-        case 10:
-            lv_dropdown_set_selected(ui_droIdleSleep, 1);
-            break;
-        case 30:
-            lv_dropdown_set_selected(ui_droIdleSleep, 2);
-            break;
-        case 60:
-            lv_dropdown_set_selected(ui_droIdleSleep, 3);
-            break;
-        case 120:
-            lv_dropdown_set_selected(ui_droIdleSleep, 4);
-            break;
-        case 300:
-            lv_dropdown_set_selected(ui_droIdleSleep, 5);
-            break;
-        case 600:
-            lv_dropdown_set_selected(ui_droIdleSleep, 6);
-            break;
-        case 900:
-            lv_dropdown_set_selected(ui_droIdleSleep, 7);
-            break;
-        case 1800:
-            lv_dropdown_set_selected(ui_droIdleSleep, 8);
-            break;
-        default:
-            lv_dropdown_set_selected(ui_droIdleSleep, 0);
             break;
     }
 }
@@ -524,86 +363,6 @@ void save_tweak_options() {
             break;
     }
 
-    int idx_shutdown;
-    switch (lv_dropdown_get_selected(ui_droShutdown)) {
-        case 0:
-            idx_shutdown = -2;
-            break;
-        case 1:
-            idx_shutdown = -1;
-            break;
-        case 2:
-            idx_shutdown = 2;
-            break;
-        case 3:
-            idx_shutdown = 10;
-            break;
-        case 4:
-            idx_shutdown = 30;
-            break;
-        case 5:
-            idx_shutdown = 60;
-            break;
-        case 6:
-            idx_shutdown = 120;
-            break;
-        case 7:
-            idx_shutdown = 300;
-            break;
-        case 8:
-            idx_shutdown = 600;
-            break;
-        case 9:
-            idx_shutdown = 1800;
-            break;
-        case 10:
-            idx_shutdown = 3600;
-            break;
-        default:
-            idx_shutdown = -2;
-            break;
-    }
-
-    int idx_battery;
-    switch (lv_dropdown_get_selected(ui_droBattery)) {
-        case 0:
-            idx_battery = -255;
-            break;
-        case 1:
-            idx_battery = 5;
-            break;
-        case 2:
-            idx_battery = 10;
-            break;
-        case 3:
-            idx_battery = 15;
-            break;
-        case 4:
-            idx_battery = 20;
-            break;
-        case 5:
-            idx_battery = 25;
-            break;
-        case 6:
-            idx_battery = 30;
-            break;
-        case 7:
-            idx_battery = 35;
-            break;
-        case 8:
-            idx_battery = 40;
-            break;
-        case 9:
-            idx_battery = 45;
-            break;
-        case 10:
-            idx_battery = 50;
-            break;
-        default:
-            idx_battery = 25;
-            break;
-    }
-
     int idx_colour;
     switch (lv_dropdown_get_selected(ui_droColour)) {
         case 0:
@@ -662,74 +421,6 @@ void save_tweak_options() {
             break;
     }
 
-    int idx_idle_display;
-    switch (lv_dropdown_get_selected(ui_droIdleDisplay)) {
-        case 0:
-            idx_idle_display = 0;
-            break;
-        case 1:
-            idx_idle_display = 10;
-            break;
-        case 2:
-            idx_idle_display = 30;
-            break;
-        case 3:
-            idx_idle_display = 60;
-            break;
-        case 4:
-            idx_idle_display = 120;
-            break;
-        case 5:
-            idx_idle_display = 300;
-            break;
-        case 6:
-            idx_idle_display = 600;
-            break;
-        case 7:
-            idx_idle_display = 900;
-            break;
-        case 8:
-            idx_idle_display = 1800;
-            break;
-        default:
-            idx_idle_display = 0;
-            break;
-    }
-
-    int idx_idle_sleep;
-    switch (lv_dropdown_get_selected(ui_droIdleSleep)) {
-        case 0:
-            idx_idle_sleep = 0;
-            break;
-        case 1:
-            idx_idle_sleep = 10;
-            break;
-        case 2:
-            idx_idle_sleep = 30;
-            break;
-        case 3:
-            idx_idle_sleep = 60;
-            break;
-        case 4:
-            idx_idle_sleep = 120;
-            break;
-        case 5:
-            idx_idle_sleep = 300;
-            break;
-        case 6:
-            idx_idle_sleep = 600;
-            break;
-        case 7:
-            idx_idle_sleep = 900;
-            break;
-        case 8:
-            idx_idle_sleep = 1800;
-            break;
-        default:
-            idx_idle_sleep = 0;
-            break;
-    }
-
     int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
     int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
     int idx_sound = lv_dropdown_get_selected(ui_droSound);
@@ -742,10 +433,6 @@ void save_tweak_options() {
     write_text_to_file("/run/muos/global/settings/general/startup", "w", CHAR, idx_startup);
     write_text_to_file("/run/muos/global/settings/general/colour", "w", INT, idx_colour);
     write_text_to_file("/run/muos/global/settings/general/hdmi", "w", INT, idx_hdmi);
-    write_text_to_file("/run/muos/global/settings/general/shutdown", "w", INT, idx_shutdown);
-    write_text_to_file("/run/muos/global/settings/general/low_battery", "w", INT, idx_battery);
-    write_text_to_file("/run/muos/global/settings/general/idle_display", "w", INT, idx_idle_display);
-    write_text_to_file("/run/muos/global/settings/general/idle_sleep", "w", INT, idx_idle_sleep);
 
     char br_num[MAX_BUFFER_SIZE];
     lv_dropdown_get_selected_str(ui_droBrightness, br_num, MAX_BUFFER_SIZE);
@@ -770,10 +457,7 @@ void init_navigation_groups() {
             ui_pnlColour,
             ui_pnlBrightness,
             ui_pnlHDMI,
-            ui_pnlShutdown,
-            ui_pnlBattery,
-            ui_pnlIdleDisplay,
-            ui_pnlIdleSleep,
+            ui_pnlPower,
             ui_pnlInterface,
             ui_pnlAdvanced,
     };
@@ -785,12 +469,9 @@ void init_navigation_groups() {
     ui_objects[4] = ui_lblColour;
     ui_objects[5] = ui_lblBrightness;
     ui_objects[6] = ui_lblHDMI;
-    ui_objects[7] = ui_lblShutdown;
-    ui_objects[8] = ui_lblBattery;
-    ui_objects[9] = ui_lblIdleDisplay;
-    ui_objects[10] = ui_lblIdleSleep;
-    ui_objects[11] = ui_lblInterface;
-    ui_objects[12] = ui_lblAdvanced;
+    ui_objects[7] = ui_lblPower;
+    ui_objects[8] = ui_lblInterface;
+    ui_objects[9] = ui_lblAdvanced;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droHidden,
@@ -800,10 +481,7 @@ void init_navigation_groups() {
             ui_droColour,
             ui_droBrightness,
             ui_droHDMI,
-            ui_droShutdown,
-            ui_droBattery,
-            ui_droIdleDisplay,
-            ui_droIdleSleep,
+            ui_droPower,
             ui_droInterface,
             ui_droAdvanced
     };
@@ -816,10 +494,7 @@ void init_navigation_groups() {
             ui_icoColour,
             ui_icoBrightness,
             ui_icoHDMI,
-            ui_icoShutdown,
-            ui_icoBattery,
-            ui_icoIdleDisplay,
-            ui_icoIdleSleep,
+            ui_icoPower,
             ui_icoInterface,
             ui_icoAdvanced
     };
@@ -831,10 +506,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlColour);
     apply_theme_list_panel(&theme, &device, ui_pnlBrightness);
     apply_theme_list_panel(&theme, &device, ui_pnlHDMI);
-    apply_theme_list_panel(&theme, &device, ui_pnlShutdown);
-    apply_theme_list_panel(&theme, &device, ui_pnlBattery);
-    apply_theme_list_panel(&theme, &device, ui_pnlIdleDisplay);
-    apply_theme_list_panel(&theme, &device, ui_pnlIdleSleep);
+    apply_theme_list_panel(&theme, &device, ui_pnlPower);
     apply_theme_list_panel(&theme, &device, ui_pnlInterface);
     apply_theme_list_panel(&theme, &device, ui_pnlAdvanced);
 
@@ -845,10 +517,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblColour, TS("Colour Temperature"), false, true);
     apply_theme_list_item(&theme, ui_lblBrightness, TS("Brightness"), false, true);
     apply_theme_list_item(&theme, ui_lblHDMI, TS("HDMI Output"), false, true);
-    apply_theme_list_item(&theme, ui_lblShutdown, TS("Sleep Function"), false, true);
-    apply_theme_list_item(&theme, ui_lblBattery, TS("Low Battery Indicator"), false, true);
-    apply_theme_list_item(&theme, ui_lblIdleDisplay, TS("Idle Input Display Timeout"), false, true);
-    apply_theme_list_item(&theme, ui_lblIdleSleep, TS("Idle Input Sleep Timeout"), false, true);
+    apply_theme_list_item(&theme, ui_lblPower, TS("Power Settings"), false, true);
     apply_theme_list_item(&theme, ui_lblInterface, TS("Interface Options"), false, true);
     apply_theme_list_item(&theme, ui_lblAdvanced, TS("Advanced Settings"), false, true);
 
@@ -859,10 +528,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoColour, mux_prog, "colour");
     apply_theme_list_glyph(&theme, ui_icoBrightness, mux_prog, "brightness");
     apply_theme_list_glyph(&theme, ui_icoHDMI, mux_prog, "hdmi");
-    apply_theme_list_glyph(&theme, ui_icoShutdown, mux_prog, "shutdown");
-    apply_theme_list_glyph(&theme, ui_icoBattery, mux_prog, "battery");
-    apply_theme_list_glyph(&theme, ui_icoIdleDisplay, mux_prog, "idle_display");
-    apply_theme_list_glyph(&theme, ui_icoIdleSleep, mux_prog, "idle_sleep");
+    apply_theme_list_glyph(&theme, ui_icoPower, mux_prog, "power");
     apply_theme_list_glyph(&theme, ui_icoInterface, mux_prog, "interface");
     apply_theme_list_glyph(&theme, ui_icoAdvanced, mux_prog, "advanced");
 
@@ -877,14 +543,8 @@ void init_navigation_groups() {
     free(brightness_string);
 
     apply_theme_list_drop_down(&theme, ui_droHDMI, NULL);
-    apply_theme_list_drop_down(&theme, ui_droShutdown, NULL);
 
-    char *battery_string = generate_number_string(5, 50, 5, TG("Disabled"), NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droBattery, battery_string);
-    free(battery_string);
-
-    apply_theme_list_drop_down(&theme, ui_droIdleDisplay, "");
-    apply_theme_list_drop_down(&theme, ui_droIdleSleep, "");
+    apply_theme_list_drop_down(&theme, ui_droPower, "");
     apply_theme_list_drop_down(&theme, ui_droInterface, "");
     apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
 
@@ -904,16 +564,6 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droHDMI, (char *[]) {
             TG("Disabled"), TS("480i"), TS("576i"), TS("480p"), TS("576p"), TS("720p + 50hz"), TS("720p + 60hz"),
             TS("1080i + 50hz"), TS("1080i + 60hz"), TS("1080p + 24hz"), TS("1080p + 50hz"), TS("1080p + 60hz")}, 12);
-    add_drop_down_options(ui_droShutdown, (char *[]) {
-            TG("Disabled"), TS("Sleep Suspend"), TS("Instant Shutdown"),
-            TS("Sleep 10s + Shutdown"), TS("Sleep 30s + Shutdown"),
-            TS("Sleep 60s + Shutdown"), TS("Sleep 2m + Shutdown"),
-            TS("Sleep 5m + Shutdown"), TS("Sleep 10m + Shutdown"),
-            TS("Sleep 30m + Shutdown"), TS("Sleep 60m + Shutdown")}, 11);
-    add_drop_down_options(ui_droIdleDisplay, (char *[]) {
-            TG("Disabled"), TS("10s"), TS("30s"), TS("60s"), TS("2m"), TS("5m"), TS("10m"), TS("15m"), TS("30m")}, 9);
-    add_drop_down_options(ui_droIdleSleep, (char *[]) {
-            TG("Disabled"), TS("10s"), TS("30s"), TS("60s"), TS("2m"), TS("5m"), TS("10m"), TS("15m"), TS("30m")}, 9);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -990,22 +640,6 @@ void handle_option_prev(void) {
         decrease_option_value(ui_droHDMI,
                               &hdmi_current,
                               hdmi_total);
-    } else if (element_focused == ui_lblShutdown) {
-        decrease_option_value(ui_droShutdown,
-                              &shutdown_current,
-                              shutdown_total);
-    } else if (element_focused == ui_lblBattery) {
-        decrease_option_value(ui_droBattery,
-                              &battery_current,
-                              battery_total);
-    } else if (element_focused == ui_lblIdleDisplay) {
-        decrease_option_value(ui_droIdleDisplay,
-                              &idle_display_current,
-                              idle_display_total);
-    } else if (element_focused == ui_lblIdleSleep) {
-        decrease_option_value(ui_droIdleSleep,
-                              &idle_sleep_current,
-                              idle_sleep_total);
     }
 }
 
@@ -1044,22 +678,6 @@ void handle_option_next(void) {
         increase_option_value(ui_droHDMI,
                               &hdmi_current,
                               hdmi_total);
-    } else if (element_focused == ui_lblShutdown) {
-        increase_option_value(ui_droShutdown,
-                              &shutdown_current,
-                              shutdown_total);
-    } else if (element_focused == ui_lblBattery) {
-        increase_option_value(ui_droBattery,
-                              &battery_current,
-                              battery_total);
-    } else if (element_focused == ui_lblIdleDisplay) {
-        increase_option_value(ui_droIdleDisplay,
-                              &idle_display_current,
-                              idle_display_total);
-    } else if (element_focused == ui_lblIdleSleep) {
-        increase_option_value(ui_droIdleSleep,
-                              &idle_sleep_current,
-                              idle_sleep_total);
     }
 }
 
@@ -1069,7 +687,13 @@ void handle_confirm(void) {
     }
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblInterface) {
+    if (element_focused == ui_lblPower) {
+        play_sound("confirm", nav_sound, 1);
+        save_tweak_options();
+
+        load_mux("power");
+        mux_input_stop();
+    } else if (element_focused == ui_lblInterface) {
         play_sound("confirm", nav_sound, 1);
         save_tweak_options();
 
@@ -1172,10 +796,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblColour, "colour");
     lv_obj_set_user_data(ui_lblBrightness, "brightness");
     lv_obj_set_user_data(ui_lblHDMI, "hdmi");
-    lv_obj_set_user_data(ui_lblShutdown, "shutdown");
-    lv_obj_set_user_data(ui_lblBattery, "battery");
-    lv_obj_set_user_data(ui_lblIdleDisplay, "idle_display");
-    lv_obj_set_user_data(ui_lblIdleSleep, "idle_sleep");
+    lv_obj_set_user_data(ui_lblPower, "power");
     lv_obj_set_user_data(ui_lblInterface, "interface");
     lv_obj_set_user_data(ui_lblAdvanced, "advanced");
 

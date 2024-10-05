@@ -212,3 +212,7 @@ int extract_file_from_zip(const char *zip_path, const char *file_name, const cha
 char **get_subdirectories(const char *base_dir);
 
 void free_subdirectories(char **dir_names);
+
+void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index);
+
+int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value);

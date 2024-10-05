@@ -118,13 +118,13 @@ void handle_idle() {
     // Detect idle display and/or sleep timeout.
     uint32_t idle_ms = mux_tick() - last_input_tick;
 
-    uint32_t timeout_display_ms = config.SETTINGS.GENERAL.IDLE_DISPLAY * 1000;
+    uint32_t timeout_display_ms = config.SETTINGS.POWER.IDLE_DISPLAY * 1000;
     if (timeout_display_ms && idle_ms >= timeout_display_ms && !idle_display) {
         printf("IDLE_DISPLAY\n");
         idle_display = true;
     }
 
-    uint32_t timeout_sleep_ms = config.SETTINGS.GENERAL.IDLE_SLEEP * 1000;
+    uint32_t timeout_sleep_ms = config.SETTINGS.POWER.IDLE_SLEEP * 1000;
     if (timeout_sleep_ms && idle_ms >= timeout_sleep_ms && !idle_sleep) {
         printf("IDLE_SLEEP\n");
         idle_sleep = true;

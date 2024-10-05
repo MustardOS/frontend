@@ -28,21 +28,6 @@ struct mux_config {
 
     struct {
         struct {
-            int16_t HIDDEN;
-            int16_t SOUND;
-            int16_t BGM;
-            char STARTUP[MAX_BUFFER_SIZE];
-            int16_t POWER;
-            int16_t LOW_BATTERY;
-            int16_t COLOUR;
-            int16_t BRIGHTNESS;
-            int16_t HDMI;
-            int16_t SHUTDOWN;
-            char LANGUAGE[MAX_BUFFER_SIZE];
-            int16_t IDLE_DISPLAY;
-            int16_t IDLE_SLEEP;
-        } GENERAL;
-        struct {
             int16_t ACCELERATE;
             int16_t SWAP;
             int16_t THERMAL;
@@ -60,6 +45,22 @@ struct mux_config {
             int16_t RUMBLE;
             int16_t HDMIOUTPUT;
         } ADVANCED;
+        struct {
+            int16_t HIDDEN;
+            int16_t SOUND;
+            int16_t BGM;
+            char STARTUP[MAX_BUFFER_SIZE];
+            int16_t COLOUR;
+            int16_t BRIGHTNESS;
+            int16_t HDMI;
+            char LANGUAGE[MAX_BUFFER_SIZE];
+        } GENERAL;
+        struct {
+            int16_t LOW_BATTERY;
+            int16_t SHUTDOWN;
+            int16_t IDLE_DISPLAY;
+            int16_t IDLE_SLEEP;
+        } POWER;
     } SETTINGS;
 
     struct {
