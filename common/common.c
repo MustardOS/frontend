@@ -1668,3 +1668,18 @@ int map_drop_down_to_value(int selected_index, const int *options, int num_optio
 
     return def_value;
 }
+
+int init_nav_sound() {
+    if (config.SETTINGS.GENERAL.SOUND) {
+        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
+            Mix_Init(0);
+            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            printf("SDL init success!\n");
+            return 1;
+        } else {
+            fprintf(stderr, "Failed to init SDL\n");
+        }
+    }
+
+    return 0;
+}

@@ -218,3 +218,5 @@ void free_subdirectories(char **dir_names);
 void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, int num_options, int def_index);
 
 int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value);
+
+int init_nav_sound();

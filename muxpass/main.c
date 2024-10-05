@@ -342,17 +342,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
 
-    if (config.SETTINGS.GENERAL.SOUND) {
-        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            Mix_Init(0);
-            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            printf("SDL init success!\n");
-            nav_sound = 1;
-        } else {
-            fprintf(stderr, "Failed to init SDL\n");
-        }
-    }
-
+    nav_sound = init_nav_sound();
     init_navigation_groups();
 
     NAV_DPAD_HOR = device.RAW_INPUT.DPAD.RIGHT;
@@ -369,40 +359,6 @@ int main(int argc, char *argv[]) {
             NAV_A = device.RAW_INPUT.BUTTON.A;
             NAV_B = device.RAW_INPUT.BUTTON.B;
             break;
-    }
-
-    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
-    if (strlen(current_wall) > 3) {
-        if (theme.MISC.RANDOM_BACKGROUND) {
-            load_image_random(ui_imgWall, current_wall);
-        } else {
-            switch (theme.MISC.ANIMATED_BACKGROUND) {
-                case 1:
-                    lv_gif_set_src(lv_gif_create(ui_pnlWall), current_wall);
-                    break;
-                case 2:
-                    load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
-                    break;
-                default:
-                    lv_img_set_src(ui_imgWall, current_wall);
-                    break;
-            }
-        }
-    } else {
-        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
-    }
-
-    load_font_text(basename(argv[0]), ui_screen);
-
-    if (config.SETTINGS.GENERAL.SOUND) {
-        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            Mix_Init(0);
-            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            printf("SDL init success!\n");
-            nav_sound = 1;
-        } else {
-            fprintf(stderr, "Failed to init SDL\n");
-        }
     }
 
     struct dt_task_param dt_par;

@@ -212,17 +212,7 @@ int main(int argc, char *argv[]) {
 
     if (TEST_IMAGE) display_testing_message(ui_scrCharge);
 
-    if (config.SETTINGS.GENERAL.SOUND) {
-        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            Mix_Init(0);
-            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            printf("SDL init success!\n");
-            nav_sound = 1;
-        } else {
-            fprintf(stderr, "Failed to init SDL\n");
-        }
-    }
-
+    nav_sound = init_nav_sound();
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);
 
     js_fd = open(device.INPUT.EV0, O_RDONLY);

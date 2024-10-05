@@ -753,17 +753,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     }
 
-    if (config.SETTINGS.GENERAL.SOUND) {
-        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            Mix_Init(0);
-            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            printf("SDL init success!\n");
-            nav_sound = 1;
-        } else {
-            fprintf(stderr, "Failed to init SDL\n");
-        }
-    }
-
+    nav_sound = init_nav_sound();
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
 
