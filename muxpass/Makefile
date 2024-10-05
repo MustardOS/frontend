@@ -78,6 +78,7 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/ui_common.c \
 		../common/theme.c \
 		../common/passcode.c \
+		../common/input.c \
 		$(EXTRA); \
 	END=$$(date +%s); \
 	ELAPSED_TIME=$$((END - START)); \

@@ -18,10 +18,12 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/input.h"
 #include "ui/theme.h"
 
 char *mux_prog;
 static int js_fd;
+static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -60,73 +62,35 @@ void set_brightness(int brightness) {
     system(command);
 }
 
-void joystick_task() {
-    struct input_event ev;
-    int epoll_fd;
-    struct epoll_event event, events[device.DEVICE.EVENT];
+void handle_power_short(void) {
+    if (blank < 5) {
+        lv_timer_pause(battery_timer);
 
-    epoll_fd = epoll_create1(0);
-    if (epoll_fd == -1) {
-        perror("Error creating EPOLL instance");
-        return;
-    }
+        lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_HIDDEN);
 
-    event.events = EPOLLIN;
-    event.data.fd = js_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
-        perror("Error with EPOLL controller");
-        return;
-    }
+        lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_FLOATING);
 
-    while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, 64);
-        if (num_events == -1) {
-            perror("Error with EPOLL wait event timer");
-            continue;
-        }
+        lv_label_set_text(ui_lblBoot, TS("Booting System - Please Wait..."));
 
-        for (int i = 0; i < num_events; i++) {
-            if (events[i].data.fd == js_fd) {
-                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
-                if (ret == -1) {
-                    perror("Error reading input");
-                    continue;
-                }
-
-                switch (ev.type) {
-                    case EV_KEY:
-                        if (ev.value == 1) {
-                            if (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT) {
-                                if (blank < 5) {
-                                    lv_timer_pause(battery_timer);
-
-                                    lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_HIDDEN);
-                                    lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_HIDDEN);
-
-                                    lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_FLOATING);
-                                    lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_FLOATING);
-
-                                    lv_label_set_text(ui_lblBoot, TS("Booting System - Please Wait..."));
-
-                                    refresh_screen();
-
-                                    exit_status = 0;
-                                    return;
-                                }
-
-                                blank = 0;
-                                set_brightness(atoi(read_text_from_file("/opt/muos/config/brightness.txt")));
-                            }
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
         refresh_screen();
-        if (exit_status >= 0) return;
+
+        exit_status = 0;
+        return;
     }
+
+    blank = 0;
+    set_brightness(atoi(read_text_from_file("/opt/muos/config/brightness.txt")));
+}
+
+void handle_idle(void) {
+    if (exit_status >= 0) {
+        mux_input_stop();
+        return;
+    }
+
+    refresh_screen();
 }
 
 void battery_task() {
@@ -221,6 +185,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
+    if (js_fd_sys < 0) {
+        perror("Failed to open joystick device");
+        return 1;
+    }
+
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
 
@@ -234,9 +204,20 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(battery_timer);
 
     refresh_screen();
-    joystick_task();
+
+    mux_input_options input_opts = {
+        .gamepad_fd = js_fd,
+        .system_fd = js_fd_sys,
+        .max_idle_ms = 16 /* ~60 FPS */,
+        .press_handler = {
+            [MUX_INPUT_POWER_SHORT] = handle_power_short,
+        },
+        .idle_handler = handle_idle,
+    };
+    mux_input_task(&input_opts);
 
     close(js_fd);
+    close(js_fd_sys);
 
     return exit_status;
 }

@@ -69,8 +69,6 @@ void list_nav_prev(int steps);
 
 void list_nav_next(int steps);
 
-void joystick_task();
-
 void init_elements();
 
 void update_footer_nav_elements();
