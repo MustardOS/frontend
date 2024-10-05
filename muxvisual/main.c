@@ -19,17 +19,12 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/input.h"
+#include "../common/input/list_nav.h"
 
 char *mux_prog;
 static int js_fd;
 static int js_fd_sys;
-
-int NAV_DPAD_HOR;
-int NAV_ANLG_HOR;
-int NAV_DPAD_VER;
-int NAV_ANLG_VER;
-int NAV_A;
-int NAV_B;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -458,13 +453,11 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index > 0) {
-            current_item_index--;
-            nav_prev(ui_group, 1);
-            nav_prev(ui_group_value, 1);
-            nav_prev(ui_group_glyph, 1);
-            nav_prev(ui_group_panel, 1);
-        }
+        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_value, 1);
+        nav_prev(ui_group_glyph, 1);
+        nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
@@ -473,415 +466,185 @@ void list_nav_prev(int steps) {
 void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
-        if (current_item_index < (ui_count - 1)) {
-            current_item_index++;
-            nav_next(ui_group, 1);
-            nav_next(ui_group_value, 1);
-            nav_next(ui_group_glyph, 1);
-            nav_next(ui_group_panel, 1);
-        }
+        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_value, 1);
+        nav_next(ui_group_glyph, 1);
+        nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
-void joystick_task() {
-    struct input_event ev;
-    int epoll_fd;
-    struct epoll_event event, events[device.DEVICE.EVENT];
-
-    int JOYUP_pressed = 0;
-    int JOYDOWN_pressed = 0;
-    int JOYHOTKEY_pressed = 0;
-    int JOYHOTKEY_screenshot = 0;
-
-    uint32_t nav_hold = 0; // Delay (millis) before scrolling again when up/down is held.
-    uint32_t nav_tick = 0; // Clock tick (millis) when the navigation list was last scrolled.
-
-    epoll_fd = epoll_create1(0);
-    if (epoll_fd == -1) {
-        perror("Error creating EPOLL instance");
+void handle_option_prev(void) {
+    if (msgbox_active) {
         return;
     }
 
-    event.events = EPOLLIN;
-    event.data.fd = js_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd, &event) == -1) {
-        perror("Error with EPOLL controller");
+    play_sound("navigate", nav_sound, 0);
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblBattery) {
+        decrease_option_value(ui_droBattery,
+                                &battery_current,
+                                battery_total);
+    } else if (element_focused == ui_lblNetwork) {
+        decrease_option_value(ui_droNetwork,
+                                &network_current,
+                                network_total);
+    } else if (element_focused == ui_lblBluetooth) {
+        decrease_option_value(ui_droBluetooth,
+                                &bluetooth_current,
+                                bluetooth_total);
+    } else if (element_focused == ui_lblClock) {
+        decrease_option_value(ui_droClock,
+                                &mux_clock_current,
+                                mux_clock_total);
+    } else if (element_focused == ui_lblBoxArt) {
+        decrease_option_value(ui_droBoxArt,
+                                &boxart_current,
+                                boxart_total);
+    } else if (element_focused == ui_lblBoxArtAlign) {
+        decrease_option_value(ui_droBoxArtAlign,
+                                &boxartalign_current,
+                                boxartalign_total);
+    } else if (element_focused == ui_lblName) {
+        decrease_option_value(ui_droName,
+                                &name_current,
+                                name_total);
+    } else if (element_focused == ui_lblDash) {
+        decrease_option_value(ui_droDash,
+                                &dash_current,
+                                dash_total);
+    } else if (element_focused == ui_lblFriendlyFolder) {
+        decrease_option_value(ui_droFriendlyFolder,
+                                &friendlyfolder_current,
+                                friendlyfolder_total);
+    } else if (element_focused == ui_lblTheTitleFormat) {
+        decrease_option_value(ui_droTheTitleFormat,
+                                &thetitleformat_current,
+                                thetitleformat_total);
+    } else if (element_focused == ui_lblTitleIncludeRootDrive) {
+        decrease_option_value(ui_droTitleIncludeRootDrive,
+                                &titleincluderootdrive_current,
+                                titleincluderootdrive_total);
+    } else if (element_focused == ui_lblFolderItemCount) {
+        decrease_option_value(ui_droFolderItemCount,
+                                &folderitemcount_current,
+                                folderitemcount_total);
+    } else if (element_focused == ui_lblMenuCounterFolder) {
+        decrease_option_value(ui_droMenuCounterFolder,
+                                &menu_counter_folder_current,
+                                menu_counter_folder_total);
+    } else if (element_focused == ui_lblMenuCounterFile) {
+        decrease_option_value(ui_droMenuCounterFile,
+                                &menu_counter_file_current,
+                                menu_counter_file_total);
+    } else if (element_focused == ui_lblBackgroundAnimation) {
+        decrease_option_value(ui_droBackgroundAnimation,
+                                &background_animation_current,
+                                background_animation_total);
+    }
+}
+
+void handle_option_next(void) {
+    if (msgbox_active) {
         return;
     }
 
-    event.data.fd = js_fd_sys;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, js_fd_sys, &event) == -1) {
-        perror("Error with EPOLL controller");
+    play_sound("navigate", nav_sound, 0);
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblBattery) {
+        increase_option_value(ui_droBattery,
+                                &battery_current,
+                                battery_total);
+    } else if (element_focused == ui_lblNetwork) {
+        increase_option_value(ui_droNetwork,
+                                &network_current,
+                                network_total);
+    } else if (element_focused == ui_lblBluetooth) {
+        increase_option_value(ui_droBluetooth,
+                                &bluetooth_current,
+                                bluetooth_total);
+    } else if (element_focused == ui_lblClock) {
+        increase_option_value(ui_droClock,
+                                &mux_clock_current,
+                                mux_clock_total);
+    } else if (element_focused == ui_lblBoxArt) {
+        increase_option_value(ui_droBoxArt,
+                                &boxart_current,
+                                boxart_total);
+    } else if (element_focused == ui_lblBoxArtAlign) {
+        increase_option_value(ui_droBoxArtAlign,
+                                &boxartalign_current,
+                                boxartalign_total);
+    } else if (element_focused == ui_lblName) {
+        increase_option_value(ui_droName,
+                                &name_current,
+                                name_total);
+    } else if (element_focused == ui_lblDash) {
+        increase_option_value(ui_droDash,
+                                &dash_current,
+                                dash_total);
+    } else if (element_focused == ui_lblTheTitleFormat) {
+        increase_option_value(ui_droTheTitleFormat,
+                                &thetitleformat_current,
+                                thetitleformat_total);
+    } else if (element_focused == ui_lblTitleIncludeRootDrive) {
+        increase_option_value(ui_droTitleIncludeRootDrive,
+                                &titleincluderootdrive_current,
+                                titleincluderootdrive_total);
+    } else if (element_focused == ui_lblFriendlyFolder) {
+        increase_option_value(ui_droFriendlyFolder,
+                                &folderitemcount_current,
+                                friendlyfolder_total);
+    } else if (element_focused == ui_lblFolderItemCount) {
+        increase_option_value(ui_droFolderItemCount,
+                                &folderitemcount_current,
+                                folderitemcount_total);
+    } else if (element_focused == ui_lblMenuCounterFolder) {
+        increase_option_value(ui_droMenuCounterFolder,
+                                &menu_counter_folder_current,
+                                menu_counter_folder_total);
+    } else if (element_focused == ui_lblMenuCounterFile) {
+        increase_option_value(ui_droMenuCounterFile,
+                                &menu_counter_file_current,
+                                menu_counter_file_total);
+    } else if (element_focused == ui_lblBackgroundAnimation) {
+        increase_option_value(ui_droBackgroundAnimation,
+                                &background_animation_current,
+                                background_animation_total);
+    }
+}
+
+void handle_back(void) {
+    if (msgbox_active) {
+        play_sound("confirm", nav_sound, 1);
+        msgbox_active = 0;
+        progress_onscreen = 0;
+        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+    play_sound("back", nav_sound, 1);
+    input_disable = 1;
+
+    osd_message = TG("Saving Changes");
+    lv_label_set_text(ui_lblMessage, osd_message);
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+
+    save_visual_options();
+
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
+    mux_input_stop();
+}
+
+void handle_help(void) {
+    if (msgbox_active) {
         return;
     }
 
-    while (1) {
-        int num_events = epoll_wait(epoll_fd, events, device.DEVICE.EVENT, config.SETTINGS.ADVANCED.ACCELERATE);
-        if (num_events == -1) {
-            perror("Error with EPOLL wait event timer");
-            continue;
-        }
-
-        for (int i = 0; i < num_events; i++) {
-            if (events[i].data.fd == js_fd_sys) {
-                ssize_t ret = read(js_fd_sys, &ev, sizeof(struct input_event));
-                if (ret == -1) {
-                    perror("Error reading input");
-                    continue;
-                }
-                if (JOYHOTKEY_pressed == 1 && ev.type == EV_KEY && ev.value == 1 &&
-                    (ev.code == device.RAW_INPUT.BUTTON.POWER_SHORT || ev.code == device.RAW_INPUT.BUTTON.POWER_LONG)) {
-                    JOYHOTKEY_screenshot = 1;
-                }
-            } else if (events[i].data.fd == js_fd) {
-                ssize_t ret = read(js_fd, &ev, sizeof(struct input_event));
-                if (ret == -1) {
-                    perror("Error reading input");
-                    continue;
-                }
-
-                struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-                switch (ev.type) {
-                    case EV_KEY:
-                        if (ev.value == 1) {
-                            if (msgbox_active) {
-                                if (ev.code == NAV_B) {
-                                    play_sound("confirm", nav_sound, 1);
-                                    msgbox_active = 0;
-                                    progress_onscreen = 0;
-                                    lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-                                }
-                            } else {
-                                if (ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) {
-                                    JOYHOTKEY_pressed = 1;
-                                    JOYHOTKEY_screenshot = 0;
-                                } else if (ev.code == NAV_A || ev.code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
-                                    play_sound("confirm", nav_sound, 1);
-                                    if (element_focused == ui_lblBattery) {
-                                        increase_option_value(ui_droBattery,
-                                                              &battery_current,
-                                                              battery_total);
-                                    } else if (element_focused == ui_lblNetwork) {
-                                        increase_option_value(ui_droNetwork,
-                                                              &network_current,
-                                                              network_total);
-                                    } else if (element_focused == ui_lblBluetooth) {
-                                        increase_option_value(ui_droBluetooth,
-                                                              &bluetooth_current,
-                                                              bluetooth_total);
-                                    } else if (element_focused == ui_lblClock) {
-                                        increase_option_value(ui_droClock,
-                                                              &mux_clock_current,
-                                                              mux_clock_total);
-                                    } else if (element_focused == ui_lblBoxArt) {
-                                        increase_option_value(ui_droBoxArt,
-                                                              &boxart_current,
-                                                              boxart_total);
-                                    } else if (element_focused == ui_lblBoxArtAlign) {
-                                        increase_option_value(ui_droBoxArtAlign,
-                                                              &boxartalign_current,
-                                                              boxartalign_total);
-                                    } else if (element_focused == ui_lblName) {
-                                        increase_option_value(ui_droName,
-                                                              &name_current,
-                                                              name_total);
-                                    } else if (element_focused == ui_lblDash) {
-                                        increase_option_value(ui_droDash,
-                                                              &dash_current,
-                                                              dash_total);
-                                    } else if (element_focused == ui_lblFriendlyFolder) {
-                                        increase_option_value(ui_droFriendlyFolder,
-                                                              &friendlyfolder_current,
-                                                              friendlyfolder_total);
-                                    } else if (element_focused == ui_lblTheTitleFormat) {
-                                        increase_option_value(ui_droTheTitleFormat,
-                                                              &thetitleformat_current,
-                                                              thetitleformat_total);
-                                    } else if (element_focused == ui_lblTitleIncludeRootDrive) {
-                                        increase_option_value(ui_droTitleIncludeRootDrive,
-                                                              &titleincluderootdrive_current,
-                                                              titleincluderootdrive_total);
-                                    } else if (element_focused == ui_lblFolderItemCount) {
-                                        increase_option_value(ui_droFolderItemCount,
-                                                              &folderitemcount_current,
-                                                              folderitemcount_total);
-                                    } else if (element_focused == ui_lblMenuCounterFolder) {
-                                        increase_option_value(ui_droMenuCounterFolder,
-                                                              &menu_counter_folder_current,
-                                                              menu_counter_folder_total);
-                                    } else if (element_focused == ui_lblMenuCounterFile) {
-                                        increase_option_value(ui_droMenuCounterFile,
-                                                              &menu_counter_file_current,
-                                                              menu_counter_file_total);
-                                    } else if (element_focused == ui_lblBackgroundAnimation) {
-                                        increase_option_value(ui_droBackgroundAnimation,
-                                                              &background_animation_current,
-                                                              background_animation_total);
-                                    }
-                                } else if (ev.code == NAV_B) {
-                                    play_sound("back", nav_sound, 1);
-                                    input_disable = 1;
-
-                                    osd_message = TG("Saving Changes");
-                                    lv_label_set_text(ui_lblMessage, osd_message);
-                                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
-                                    save_visual_options();
-
-                                    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
-                                    return;
-                                }
-                            }
-                        } else {
-                            if ((ev.code == device.RAW_INPUT.BUTTON.MENU_SHORT ||
-                                 ev.code == device.RAW_INPUT.BUTTON.MENU_LONG) && !JOYHOTKEY_screenshot) {
-                                JOYHOTKEY_pressed = 0;
-                                if (progress_onscreen == -1) {
-                                    play_sound("confirm", nav_sound, 1);
-                                    show_help(element_focused);
-                                }
-                            }
-                        }
-                        break;
-                    case EV_ABS:
-                        if (msgbox_active) {
-                            break;
-                        }
-                        if (ev.code == NAV_DPAD_VER || ev.code == NAV_ANLG_VER) {
-                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
-                                play_sound("navigate", nav_sound, 0);
-                                if (current_item_index == 0) {
-                                    current_item_index = ui_count - 1;
-                                    nav_prev(ui_group, 1);
-                                    nav_prev(ui_group_value, 1);
-                                    nav_prev(ui_group_glyph, 1);
-                                    nav_prev(ui_group_panel, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
-                                                           ui_count, current_item_index, ui_pnlContent);
-                                    nav_moved = 1;
-                                } else if (current_item_index > 0) {
-                                    list_nav_prev(1);
-                                }
-                                JOYUP_pressed = 1;
-                                nav_hold = 2 * config.SETTINGS.ADVANCED.ACCELERATE;
-                                nav_tick = mux_tick();
-                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
-                                play_sound("navigate", nav_sound, 0);
-                                if (current_item_index == ui_count - 1) {
-                                    current_item_index = 0;
-                                    nav_next(ui_group, 1);
-                                    nav_next(ui_group_value, 1);
-                                    nav_next(ui_group_glyph, 1);
-                                    nav_next(ui_group_panel, 1);
-                                    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
-                                                           ui_count, current_item_index, ui_pnlContent);
-                                    nav_moved = 1;
-                                } else if (current_item_index < ui_count - 1) {
-                                    list_nav_next(1);
-                                }
-                                JOYDOWN_pressed = 1;
-                                nav_hold = 2 * config.SETTINGS.ADVANCED.ACCELERATE;
-                                nav_tick = mux_tick();
-                            } else {
-                                JOYUP_pressed = 0;
-                                JOYDOWN_pressed = 0;
-                            }
-                        } else if (ev.code == NAV_DPAD_HOR || ev.code == NAV_ANLG_HOR) {
-                            if (ev.value == -device.INPUT.AXIS || ev.value == -1) {
-                                play_sound("navigate", nav_sound, 0);
-                                if (element_focused == ui_lblBattery) {
-                                    decrease_option_value(ui_droBattery,
-                                                          &battery_current,
-                                                          battery_total);
-                                } else if (element_focused == ui_lblNetwork) {
-                                    decrease_option_value(ui_droNetwork,
-                                                          &network_current,
-                                                          network_total);
-                                } else if (element_focused == ui_lblBluetooth) {
-                                    decrease_option_value(ui_droBluetooth,
-                                                          &bluetooth_current,
-                                                          bluetooth_total);
-                                } else if (element_focused == ui_lblClock) {
-                                    decrease_option_value(ui_droClock,
-                                                          &mux_clock_current,
-                                                          mux_clock_total);
-                                } else if (element_focused == ui_lblBoxArt) {
-                                    decrease_option_value(ui_droBoxArt,
-                                                          &boxart_current,
-                                                          boxart_total);
-                                } else if (element_focused == ui_lblBoxArtAlign) {
-                                    decrease_option_value(ui_droBoxArtAlign,
-                                                          &boxartalign_current,
-                                                          boxartalign_total);
-                                } else if (element_focused == ui_lblName) {
-                                    decrease_option_value(ui_droName,
-                                                          &name_current,
-                                                          name_total);
-                                } else if (element_focused == ui_lblDash) {
-                                    decrease_option_value(ui_droDash,
-                                                          &dash_current,
-                                                          dash_total);
-                                } else if (element_focused == ui_lblFriendlyFolder) {
-                                    decrease_option_value(ui_droFriendlyFolder,
-                                                          &friendlyfolder_current,
-                                                          friendlyfolder_total);
-                                } else if (element_focused == ui_lblTheTitleFormat) {
-                                    decrease_option_value(ui_droTheTitleFormat,
-                                                          &thetitleformat_current,
-                                                          thetitleformat_total);
-                                } else if (element_focused == ui_lblTitleIncludeRootDrive) {
-                                    decrease_option_value(ui_droTitleIncludeRootDrive,
-                                                          &titleincluderootdrive_current,
-                                                          titleincluderootdrive_total);
-                                } else if (element_focused == ui_lblFolderItemCount) {
-                                    decrease_option_value(ui_droFolderItemCount,
-                                                          &folderitemcount_current,
-                                                          folderitemcount_total);
-                                } else if (element_focused == ui_lblMenuCounterFolder) {
-                                    decrease_option_value(ui_droMenuCounterFolder,
-                                                          &menu_counter_folder_current,
-                                                          menu_counter_folder_total);
-                                } else if (element_focused == ui_lblMenuCounterFile) {
-                                    decrease_option_value(ui_droMenuCounterFile,
-                                                          &menu_counter_file_current,
-                                                          menu_counter_file_total);
-                                } else if (element_focused == ui_lblBackgroundAnimation) {
-                                    decrease_option_value(ui_droBackgroundAnimation,
-                                                          &background_animation_current,
-                                                          background_animation_total);
-                                }
-                            } else if (ev.value == device.INPUT.AXIS || ev.value == 1) {
-                                play_sound("navigate", nav_sound, 0);
-                                if (element_focused == ui_lblBattery) {
-                                    increase_option_value(ui_droBattery,
-                                                          &battery_current,
-                                                          battery_total);
-                                } else if (element_focused == ui_lblNetwork) {
-                                    increase_option_value(ui_droNetwork,
-                                                          &network_current,
-                                                          network_total);
-                                } else if (element_focused == ui_lblBluetooth) {
-                                    increase_option_value(ui_droBluetooth,
-                                                          &bluetooth_current,
-                                                          bluetooth_total);
-                                } else if (element_focused == ui_lblClock) {
-                                    increase_option_value(ui_droClock,
-                                                          &mux_clock_current,
-                                                          mux_clock_total);
-                                } else if (element_focused == ui_lblBoxArt) {
-                                    increase_option_value(ui_droBoxArt,
-                                                          &boxart_current,
-                                                          boxart_total);
-                                } else if (element_focused == ui_lblBoxArtAlign) {
-                                    increase_option_value(ui_droBoxArtAlign,
-                                                          &boxartalign_current,
-                                                          boxartalign_total);
-                                } else if (element_focused == ui_lblName) {
-                                    increase_option_value(ui_droName,
-                                                          &name_current,
-                                                          name_total);
-                                } else if (element_focused == ui_lblDash) {
-                                    increase_option_value(ui_droDash,
-                                                          &dash_current,
-                                                          dash_total);
-                                } else if (element_focused == ui_lblTheTitleFormat) {
-                                    increase_option_value(ui_droTheTitleFormat,
-                                                          &thetitleformat_current,
-                                                          thetitleformat_total);
-                                } else if (element_focused == ui_lblTitleIncludeRootDrive) {
-                                    increase_option_value(ui_droTitleIncludeRootDrive,
-                                                          &titleincluderootdrive_current,
-                                                          titleincluderootdrive_total);
-                                } else if (element_focused == ui_lblFriendlyFolder) {
-                                    increase_option_value(ui_droFriendlyFolder,
-                                                          &folderitemcount_current,
-                                                          friendlyfolder_total);
-                                } else if (element_focused == ui_lblFolderItemCount) {
-                                    increase_option_value(ui_droFolderItemCount,
-                                                          &folderitemcount_current,
-                                                          folderitemcount_total);
-                                } else if (element_focused == ui_lblMenuCounterFolder) {
-                                    increase_option_value(ui_droMenuCounterFolder,
-                                                          &menu_counter_folder_current,
-                                                          menu_counter_folder_total);
-                                } else if (element_focused == ui_lblMenuCounterFile) {
-                                    increase_option_value(ui_droMenuCounterFile,
-                                                          &menu_counter_file_current,
-                                                          menu_counter_file_total);
-                                } else if (element_focused == ui_lblBackgroundAnimation) {
-                                    increase_option_value(ui_droBackgroundAnimation,
-                                                          &background_animation_current,
-                                                          background_animation_total);
-                                }
-                            }
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-            refresh_screen();
-        }
-
-        // Handle menu acceleration.
-        if (mux_tick() - nav_tick >= nav_hold) {
-            if (JOYUP_pressed && current_item_index > 0) {
-                list_nav_prev(1);
-                nav_hold = config.SETTINGS.ADVANCED.ACCELERATE;
-                nav_tick = mux_tick();
-            } else if (JOYDOWN_pressed && current_item_index < ui_count - 1) {
-                list_nav_next(1);
-                nav_hold = config.SETTINGS.ADVANCED.ACCELERATE;
-                nav_tick = mux_tick();
-            }
-        }
-
-        if (!atoi(read_line_from_file("/tmp/hdmi_in_use", 1)) || config.SETTINGS.ADVANCED.HDMIOUTPUT) {
-            if (ev.type == EV_KEY && ev.value == 1 &&
-                (ev.code == device.RAW_INPUT.BUTTON.VOLUME_DOWN || ev.code == device.RAW_INPUT.BUTTON.VOLUME_UP)) {
-                if (JOYHOTKEY_pressed) {
-                    progress_onscreen = 1;
-                    lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-                    lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-                    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
-                } else {
-                    progress_onscreen = 2;
-                    lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-                    lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-                    int volume = atoi(read_text_from_file(VOLUME_PERC));
-                    switch (volume) {
-                        default:
-                        case 0:
-                            lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
-                            break;
-                        case 1 ... 46:
-                            lv_label_set_text(ui_icoProgressVolume, "\uF026");
-                            break;
-                        case 47 ... 71:
-                            lv_label_set_text(ui_icoProgressVolume, "\uF027");
-                            break;
-                        case 72 ... 100:
-                            lv_label_set_text(ui_icoProgressVolume, "\uF028");
-                            break;
-                    }
-                    lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
-                }
-            }
-        }
-
-        if (file_exist("/tmp/hdmi_do_refresh")) {
-            if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
-                remove("/tmp/hdmi_do_refresh");
-                lv_obj_invalidate(ui_pnlHeader);
-                lv_obj_invalidate(ui_pnlContent);
-                lv_obj_invalidate(ui_pnlFooter);
-            }
-        }
-
-        refresh_screen();
+    if (progress_onscreen == -1) {
+        play_sound("confirm", nav_sound, 1);
+        show_help(lv_group_get_focused(ui_group));
     }
 }
 
@@ -1111,31 +874,6 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    switch (theme.MISC.NAVIGATION_TYPE) {
-        case 1:
-            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.DOWN;
-            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.DOWN;
-            NAV_DPAD_VER = device.RAW_INPUT.DPAD.RIGHT;
-            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
-            break;
-        default:
-            NAV_DPAD_HOR = device.RAW_INPUT.DPAD.RIGHT;
-            NAV_ANLG_HOR = device.RAW_INPUT.ANALOG.LEFT.RIGHT;
-            NAV_DPAD_VER = device.RAW_INPUT.DPAD.DOWN;
-            NAV_ANLG_VER = device.RAW_INPUT.ANALOG.LEFT.DOWN;
-    }
-
-    switch (config.SETTINGS.ADVANCED.SWAP) {
-        case 1:
-            NAV_A = device.RAW_INPUT.BUTTON.B;
-            NAV_B = device.RAW_INPUT.BUTTON.A;
-            break;
-        default:
-            NAV_A = device.RAW_INPUT.BUTTON.A;
-            NAV_B = device.RAW_INPUT.BUTTON.B;
-            break;
-    }
-
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
     if (strlen(current_wall) > 3) {
         if (theme.MISC.RANDOM_BACKGROUND) {
@@ -1217,7 +955,56 @@ int main(int argc, char *argv[]) {
 
     init_elements();
     refresh_screen();
-    joystick_task();
+    mux_input_options input_opts = {
+        .gamepad_fd = js_fd,
+        .system_fd = js_fd_sys,
+        .max_idle_ms = 16 /* ~60 FPS */,
+        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+        .stick_nav = true,
+        .press_handler = {
+            [MUX_INPUT_A] = handle_option_next,
+            [MUX_INPUT_L3] = handle_option_next,
+            [MUX_INPUT_B] = handle_back,
+            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+            [MUX_INPUT_MENU_SHORT] = handle_help,
+            // List navigation:
+            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+            [MUX_INPUT_L1] = handle_list_nav_page_up,
+            [MUX_INPUT_R1] = handle_list_nav_page_down,
+        },
+        .hold_handler = {
+            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+            // List navigation:
+            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+            [MUX_INPUT_L1] = handle_list_nav_page_up,
+            [MUX_INPUT_R1] = handle_list_nav_page_down,
+        },
+        .combo = {
+            {
+                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                .press_handler = ui_common_handle_bright,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                .press_handler = ui_common_handle_bright,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_VOL_UP),
+                .press_handler = ui_common_handle_vol,
+            },
+            {
+                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                .press_handler = ui_common_handle_vol,
+            },
+        },
+        .idle_handler = ui_common_handle_idle,
+    };
+    mux_input_task(&input_opts);
 
     close(js_fd);
     close(js_fd_sys);
