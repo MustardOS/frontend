@@ -651,7 +651,7 @@ void handle_option_next(void) {
     play_sound("navigate", nav_sound, 0);
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblHidden) {
-        decrease_option_value(ui_droHidden,
+        increase_option_value(ui_droHidden,
                               &hidden_current,
                               hidden_total);
     } else if (element_focused == ui_lblBGM) {
