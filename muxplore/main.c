@@ -23,6 +23,7 @@
 #include "../common/collection.h"
 #include "../common/json/json.h"
 #include "../common/input.h"
+#include "../common/input/list_nav.h"
 
 char *mux_prog;
 struct theme_config theme;
@@ -1188,12 +1189,10 @@ void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
         reset_label_long_mode();
-        if (current_item_index > 0) {
-            current_item_index--;
-            nav_prev(ui_group, 1);
-            nav_prev(ui_group_glyph, 1);
-            nav_prev(ui_group_panel, 1);
-        }
+        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_glyph, 1);
+        nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
                            current_item_index, ui_pnlContent);
@@ -1210,12 +1209,10 @@ void list_nav_next(int steps) {
     }
     for (int step = 0; step < steps; ++step) {
         reset_label_long_mode();
-        if (current_item_index < (ui_count - 1)) {
-            current_item_index++;
-            nav_next(ui_group, 1);
-            nav_next(ui_group_glyph, 1);
-            nav_next(ui_group_panel, 1);
-        }
+        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_glyph, 1);
+        nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
                            current_item_index, ui_pnlContent);
@@ -1587,26 +1584,6 @@ void handle_select() {
     }
 }
 
-void handle_l1() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
-
-    if (current_item_index != 0 && current_item_index < ui_count) {
-        list_nav_prev(theme.MUX.ITEM.COUNT);
-    }
-}
-
-void handle_r1() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
-
-    if (current_item_index >= 0 && current_item_index != ui_count - 1) {
-        list_nav_next(theme.MUX.ITEM.COUNT);
-    }
-}
-
 void handle_menu() {
     if (msgbox_active || progress_onscreen != -1 || ui_count == 0) {
         return;
@@ -1632,70 +1609,6 @@ void handle_menu() {
                   ui_lblHelpContent,
                   items[current_item_index].display_name,
                   load_content_description());
-}
-
-void handle_up() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
-
-    if (current_item_index == 0) {
-        reset_label_long_mode();
-        current_item_index = ui_count - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
-        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                               current_item_index, ui_pnlContent);
-        nav_moved = 1;
-        image_refresh("box");
-        set_label_long_mode();
-        update_file_counter();
-    } else if (current_item_index > 0) {
-        list_nav_prev(1);
-    }
-}
-
-void handle_up_hold() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
-
-    if (current_item_index > 0) {
-        list_nav_prev(1);
-    }
-}
-
-void handle_down() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
-
-    if (current_item_index == ui_count - 1) {
-        reset_label_long_mode();
-        current_item_index = 0;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                               current_item_index, ui_pnlContent);
-        nav_moved = 1;
-        image_refresh("box");
-        set_label_long_mode();
-        update_file_counter();
-    } else if (current_item_index < ui_count - 1) {
-        list_nav_next(1);
-    }
-}
-
-void handle_down_hold() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
-
-    if (current_item_index < ui_count - 1) {
-        list_nav_next(1);
-    }
 }
 
 void set_nav_text(const char *nav_a, const char *nav_b, const char *nav_x, const char *nav_y, const char *nav_menu) {
@@ -2289,19 +2202,21 @@ int main(int argc, char *argv[]) {
             [MUX_INPUT_B] = handle_b,
             [MUX_INPUT_X] = handle_x,
             [MUX_INPUT_Y] = handle_y,
-            [MUX_INPUT_L1] = handle_l1,
-            [MUX_INPUT_R1] = handle_r1,
             [MUX_INPUT_SELECT] = handle_select,
             [MUX_INPUT_START] = handle_start,
-            [MUX_INPUT_DPAD_UP] = handle_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_down,
             [MUX_INPUT_MENU_SHORT] = handle_menu,
+            // List navigation:
+            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+            [MUX_INPUT_L1] = handle_list_nav_page_up,
+            [MUX_INPUT_R1] = handle_list_nav_page_down,
         },
         .hold_handler = {
-            [MUX_INPUT_L1] = handle_l1,
-            [MUX_INPUT_R1] = handle_r1,
-            [MUX_INPUT_DPAD_UP] = handle_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+            // List navigation:
+            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+            [MUX_INPUT_L1] = handle_list_nav_page_up,
+            [MUX_INPUT_R1] = handle_list_nav_page_down,
         },
         .combo = {
             {
