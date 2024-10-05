@@ -27,6 +27,7 @@
 #include "device.h"
 #include "mini/mini.h"
 
+__thread uint64_t start_ms = 0;
 struct json translation_specific;
 struct json translation_generic;
 struct pattern skip_pattern_list = {NULL, 0, 0};
@@ -35,6 +36,16 @@ lv_anim_t animation;
 lv_obj_t *img_obj;
 const char **img_paths = NULL;
 int img_paths_count = 0;
+
+uint32_t mux_tick(void) {
+    struct timespec tv_now;
+    clock_gettime(CLOCK_MONOTONIC, &tv_now);
+
+    uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
+    start_ms = start_ms || now_ms;
+
+    return (uint32_t) (now_ms - start_ms);
+}
 
 void refresh_screen() {
     lv_task_handler();

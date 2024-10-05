@@ -22,8 +22,6 @@
 #include "../common/device.h"
 #include "../common/input.h"
 
-__thread uint64_t start_ms = 0;
-
 char *mux_prog;
 static int js_fd;
 static int js_fd_sys;
@@ -705,14 +703,4 @@ int main(int argc, char *argv[]) {
     close(js_fd_sys);
 
     return 0;
-}
-
-uint32_t mux_tick(void) {
-    struct timespec tv_now;
-    clock_gettime(CLOCK_REALTIME, &tv_now);
-
-    uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
-    start_ms = start_ms || now_ms;
-
-    return (uint32_t) (now_ms - start_ms);
 }
