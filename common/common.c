@@ -42,7 +42,9 @@ uint32_t mux_tick(void) {
     clock_gettime(CLOCK_MONOTONIC, &tv_now);
 
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
-    start_ms = start_ms || now_ms;
+    if (!start_ms) {
+        start_ms = now_ms;
+    }
 
     return (uint32_t) (now_ms - start_ms);
 }
