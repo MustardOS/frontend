@@ -533,24 +533,19 @@ void image_refresh(char *image_type) {
             }
 
             if (file_exist(artwork_config_path)) {
-                lv_obj_add_flag(ui_imgBox, LV_OBJ_FLAG_HIDDEN);
                 viewport_refresh(artwork_config_path, catalogue_folder, content_name);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-                lv_obj_clear_flag(ui_viewport_objects[0], LV_OBJ_FLAG_HIDDEN);
             } else {
-                lv_obj_add_flag(ui_viewport_objects[0], LV_OBJ_FLAG_HIDDEN);
                 printf("LOADING BOX ARTWORK AT: %s\n", image);
 
                 if (file_exist(image)) {
                     starter_image = 1;
                     lv_img_set_src(ui_imgBox, image_path);
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
-
                 } else {
                     lv_img_set_src(ui_imgBox, &ui_image_Nothing);
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
                 }
-                lv_obj_clear_flag(ui_imgBox, LV_OBJ_FLAG_HIDDEN);
             }
         }
     }
