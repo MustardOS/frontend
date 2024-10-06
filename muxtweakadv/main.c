@@ -743,6 +743,23 @@ void handle_option_next(void) {
     }
 }
 
+void handle_confirm(void) {
+    if (msgbox_active) {
+        return;
+    }
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblStorage) {
+        play_sound("confirm", nav_sound, 1);
+        save_tweak_options();
+
+        load_mux("storage");
+        mux_input_stop();
+    } else {
+        handle_option_next();
+    }
+}
+
 void handle_back(void) {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 1);
@@ -1115,8 +1132,7 @@ int main(int argc, char *argv[]) {
         .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
         .stick_nav = true,
         .press_handler = {
-            [MUX_INPUT_A] = handle_option_next,
-            [MUX_INPUT_L3] = handle_option_next,
+            [MUX_INPUT_A] = handle_confirm,
             [MUX_INPUT_B] = handle_back,
             [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
             [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
