@@ -48,8 +48,6 @@ int key_show = 0;
 int key_curr = 0;
 int key_map = 0;
 
-char *lblCurrentValue;
-
 char *type_dhcp;
 char *type_static;
 char *enabled_true;
@@ -731,7 +729,8 @@ void handle_confirm(void) {
             if (element_focused == ui_lblPassword) {
                 lv_textarea_set_text(ui_txtEntry, "");
             } else {
-                lv_textarea_set_text(ui_txtEntry, lblCurrentValue);
+                lv_textarea_set_text(ui_txtEntry,
+                                     lv_label_get_text(lv_group_get_focused(ui_group_value)));
             }
         } else {
             lv_label_set_text(ui_lblMessage, TS("Cannot modify while connected!"));
