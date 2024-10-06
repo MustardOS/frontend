@@ -3,16 +3,11 @@
 #include "../lvgl/drivers/indev/evdev.h"
 #include "ui/ui.h"
 #include <unistd.h>
-#include <sys/epoll.h>
 #include <fcntl.h>
-#include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <libgen.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"

@@ -2,16 +2,12 @@
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
 #include <unistd.h>
-#include <sys/epoll.h>
 #include <fcntl.h>
-#include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
 #include "../common/img/nothing.h"
 #include "../common/log.h"
 #include "../common/common.h"
@@ -690,16 +686,7 @@ int main(int argc, char *argv[]) {
     load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    if (config.SETTINGS.GENERAL.SOUND) {
-        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            Mix_Init(0);
-            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            LOG_INFO(mux_prog, "SDL Init Success");
-            nav_sound = 1;
-        } else {
-            LOG_ERROR(mux_prog, "SDL Failed To Init");
-        }
-    }
+    nav_sound = init_nav_sound();
 
     lv_label_set_text(ui_lblScreenMessage, TS("No Governors Found..."));
 

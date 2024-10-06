@@ -3,15 +3,11 @@
 #include "../lvgl/drivers/indev/evdev.h"
 #include "ui/ui.h"
 #include <unistd.h>
-#include <sys/epoll.h>
 #include <fcntl.h>
-#include <linux/joystick.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
@@ -481,7 +477,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlStorage);
 
     apply_theme_list_item(&theme, ui_lblAccelerate, TS("Menu Acceleration"), false, true);
-    apply_theme_list_item(&theme, ui_lblSwap, TS("A+B Button Swap"), false, true);
+    apply_theme_list_item(&theme, ui_lblSwap, TS("Button Swap"), false, true);
     apply_theme_list_item(&theme, ui_lblThermal, TS("Thermal Zone Control"), false, true);
     apply_theme_list_item(&theme, ui_lblFont, TS("Interface Font Type"), false, true);
     apply_theme_list_item(&theme, ui_lblVolume, TS("Volume On Boot"), false, true);
@@ -542,7 +538,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droStorage, "");
 
     char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
-    add_drop_down_options(ui_droSwap, disabled_enabled, 2);
+    add_drop_down_options(ui_droSwap, (char *[]) {TS("Retro"), TS("Modern")}, 2);
     add_drop_down_options(ui_droThermal, disabled_enabled, 2);
     add_drop_down_options(ui_droFont, (char *[]) {TS("Language"), TS("Theme")}, 2);
     add_drop_down_options(ui_droVolume, (char *[]) {TG("Previous"), TS("Quiet"), TS("Loud")}, 3);

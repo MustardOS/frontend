@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
