@@ -80,6 +80,7 @@ int current_item_index = 0;
 int first_open = 1;
 int nav_moved = 1;
 int counter_fade = 0;
+int message_fade = 0;
 int fade_timeout = 3;
 int starter_image = 0;
 
@@ -638,6 +639,26 @@ void gen_label(char *item_glyph, char *item_text) {
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
 }
 
+char *get_glyph_name(int index) {
+    char fav_dir[PATH_MAX];
+    snprintf(fav_dir, sizeof(fav_dir), "%s/info/favourite/%s.cfg",
+                STORAGE_PATH, strip_ext(items[index].name));
+
+    char hist_dir[PATH_MAX];
+    snprintf(hist_dir, sizeof(hist_dir), "%s/info/history/%s.cfg",
+                STORAGE_PATH, strip_ext(items[index].name));
+
+    char *glyph_icon;
+    if (file_exist(fav_dir)) {
+        glyph_icon = "favourite";
+    } else if (file_exist(hist_dir)) {
+        glyph_icon = "history";
+    } else {
+        glyph_icon = "rom";
+    }
+    return glyph_icon;
+}
+
 void gen_item(char **file_names, int file_count) {
     char init_cache_file[MAX_BUFFER_SIZE];
     char init_meta_dir[MAX_BUFFER_SIZE];
@@ -770,23 +791,7 @@ void gen_item(char **file_names, int file_count) {
     puts("START GEN");
     for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ROM) {
-            char fav_dir[PATH_MAX];
-            snprintf(fav_dir, sizeof(fav_dir), "%s/info/favourite/%s.cfg",
-                     STORAGE_PATH, strip_ext(items[i].name));
-
-            char hist_dir[PATH_MAX];
-            snprintf(hist_dir, sizeof(hist_dir), "%s/info/history/%s.cfg",
-                     STORAGE_PATH, strip_ext(items[i].name));
-
-            char *glyph_icon;
-            if (file_exist(fav_dir)) {
-                glyph_icon = "favourite";
-            } else if (file_exist(hist_dir)) {
-                glyph_icon = "history";
-            } else {
-                glyph_icon = "rom";
-            }
-
+            char *glyph_icon = get_glyph_name(i);
             gen_label(glyph_icon, items[i].display_name);
         }
     }
@@ -1022,6 +1027,24 @@ void explore_root() {
  * }
  *
 */
+void add_to_favourites(char *filename, const char *pointer) {
+    if (file_exist(filename)) {
+        remove(filename);
+        lv_label_set_text(ui_lblMessage, TS("Removed from Favourites"));
+    } else {
+        write_text_to_file(filename, "w", CHAR, pointer);
+
+        if (file_exist(filename)) {
+            lv_label_set_text(ui_lblMessage, TS("Added to Favourites"));
+        } else {
+            lv_label_set_text(ui_lblMessage, TS("Error adding to Favourites"));
+        }
+    }
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    message_fade = 355;
+    char *glyph_icon = get_glyph_name(current_item_index);
+    apply_theme_list_glyph(&theme, lv_group_get_focused(ui_group_glyph), mux_prog, glyph_icon);
+}
 
 int load_content(int add_favourite) {
     char *assigned_core = load_content_core(0, 1);
@@ -1090,19 +1113,7 @@ int load_content(int add_favourite) {
                  STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
 
         if (add_favourite) {
-            write_text_to_file(add_to_hf, "w", CHAR, pointer);
-
-            char *hf_msg;
-            if (file_exist(add_to_hf)) {
-                hf_msg = "Added to favourites!";
-            } else {
-                hf_msg = "Could not add to favourites!";
-            }
-
-            lv_label_set_text(ui_lblMessage, hf_msg);
-            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
-            return 1;
+            add_to_favourites(add_to_hf, pointer);
         } else {
             printf("TRYING TO LOAD CONTENT...\n");
 /*
@@ -1144,9 +1155,7 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
         if (add_favourite) {
             snprintf(add_to_hf, sizeof(add_to_hf), "%s/info/favourite/%s",
                      STORAGE_PATH, content_name);
-
-            write_text_to_file(add_to_hf, "w", CHAR, read_text_from_file(pointer_file));
-
+            add_to_favourites(add_to_hf, pointer_file);
             return 1;
         } else {
             char *assigned_core = read_line_from_file(cache_file, 2);
@@ -1496,26 +1505,14 @@ void handle_y() {
                                   TS("Directories cannot be added to Favourites"));
                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
             } else {
-                if (load_content(1)) {
-                    lv_label_set_text(ui_lblMessage, TS("Added to Favourites"));
-                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                } else {
-                    lv_label_set_text(ui_lblMessage, TS("Error adding to Favourites"));
-                    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                }
+                load_content(1);
                 if (file_exist(MUOS_ROM_LOAD)) {
                     remove(MUOS_ROM_LOAD);
                 }
             }
             break;
         case HISTORY:
-            if (load_cached_content(f_content, "history", 1)) {
-                lv_label_set_text(ui_lblMessage, TS("Added to Favourites"));
-                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-            } else {
-                lv_label_set_text(ui_lblMessage, TS("Error adding to Favourites"));
-                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-            }
+            load_cached_content(f_content, "history", 1);
             if (file_exist(MUOS_ROM_LOAD)) {
                 remove(MUOS_ROM_LOAD);
             }
@@ -1657,6 +1654,7 @@ void init_elements() {
     lv_obj_move_foreground(ui_pnlHelp);
     lv_obj_move_foreground(ui_pnlProgressBrightness);
     lv_obj_move_foreground(ui_pnlProgressVolume);
+    lv_obj_move_foreground(ui_pnlMessage);
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1801,6 +1799,14 @@ void ui_refresh_task() {
         }
     } else {
         fade_timeout--;
+    }
+
+    if (message_fade > 0) {
+        lv_obj_set_style_opa(ui_pnlMessage, LV_MIN(message_fade,255), LV_PART_MAIN | LV_STATE_DEFAULT);
+        message_fade-=10;
+    } else {
+        lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_style_opa(ui_pnlMessage, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     if (nav_moved) {
