@@ -45,7 +45,7 @@ lv_timer_t *battery_timer;
 
 void check_for_cable() {
     if (file_exist(device.BATTERY.CHARGER)) {
-        if (atoi(read_line_from_file(device.BATTERY.CHARGER, 1)) == 0) {
+        if (read_int_from_file(device.BATTERY.CHARGER) == 0) {
             exit_status = 1;
         }
     }

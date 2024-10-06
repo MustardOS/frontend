@@ -504,7 +504,7 @@ int main(int argc, char *argv[]) {
 
     int tin_index = 0;
     if (file_exist(MUOS_TIN_LOAD)) {
-        tin_index = atoi(read_line_from_file(MUOS_TIN_LOAD, 1));
+        tin_index = read_int_from_file(MUOS_TIN_LOAD);
         printf("loading TIN at: %d\n", tin_index);
         remove(MUOS_TIN_LOAD);
     }

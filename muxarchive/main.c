@@ -506,7 +506,7 @@ int main(int argc, char *argv[]) {
 
     int sys_index = 0;
     if (file_exist(MUOS_IDX_LOAD)) {
-        sys_index = atoi(read_line_from_file(MUOS_IDX_LOAD, 1));
+        sys_index = read_int_from_file(MUOS_IDX_LOAD);
         remove(MUOS_IDX_LOAD);
     }
 
