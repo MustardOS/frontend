@@ -148,9 +148,6 @@ static void dispatch_input(const mux_input_options *opts,
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->stick_nav) {
         switch (type) {
-            case MUX_INPUT_L3:
-                type = MUX_INPUT_A;
-                break;
             case MUX_INPUT_LS_UP:
                 type = MUX_INPUT_DPAD_UP;
                 break;

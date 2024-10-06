@@ -783,7 +783,6 @@ int main(int argc, char *argv[]) {
         .stick_nav = true,
         .press_handler = {
             [MUX_INPUT_A] = handle_confirm,
-            [MUX_INPUT_L3] = handle_confirm,
             [MUX_INPUT_B] = handle_back,
             [MUX_INPUT_X] = handle_x,
             [MUX_INPUT_Y] = handle_y,

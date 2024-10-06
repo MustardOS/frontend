@@ -960,7 +960,6 @@ int main(int argc, char *argv[]) {
         .stick_nav = true,
         .press_handler = {
             [MUX_INPUT_A] = handle_option_next,
-            [MUX_INPUT_L3] = handle_option_next,
             [MUX_INPUT_B] = handle_back,
             [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
             [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
