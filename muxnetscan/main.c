@@ -76,7 +76,7 @@ void create_network_items() {
         return;
     }
 
-    if (strcmp(read_line_from_file(scan_file, 1), "0") == 0) {
+    if (read_int_from_file(scan_file) == 0) {
         lv_label_set_text(ui_lblScreenMessage, TS("No Wi-Fi Networks Found"));
         return;
     } else {

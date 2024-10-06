@@ -490,7 +490,7 @@ int main(int argc, char *argv[]) {
 
     int ain_index = 0;
     if (file_exist(MUOS_AIN_LOAD)) {
-        ain_index = atoi(read_line_from_file(MUOS_AIN_LOAD, 1));
+        ain_index = read_int_from_file(MUOS_AIN_LOAD);
         printf("loading AIN at: %d\n", ain_index);
         remove(MUOS_AIN_LOAD);
     }
