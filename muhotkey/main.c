@@ -11,11 +11,9 @@
 #include "../common/device.h"
 #include "../common/input.h"
 
-void handle_combo(int num, mux_input_action action);
-
-void handle_input(mux_input_type type, mux_input_action action);
-
-void handle_idle();
+static void handle_combo(int num, mux_input_action action);
+static void handle_input(mux_input_type type, mux_input_action action);
+static void handle_idle(void);
 
 struct mux_device device;
 struct mux_config config;
@@ -86,12 +84,13 @@ static bool verbose = false;
 static char *combo_name[MUX_INPUT_COMBO_COUNT] = {};
 static bool combo_holdable[MUX_INPUT_COMBO_COUNT] = {};
 
+static bool handled_input = false;
 static uint32_t last_input_tick;
 
 static bool idle_display = false;
 static bool idle_sleep = false;
 
-void idle_active() {
+static void idle_active(void) {
     // Reset idle timer in response to activity.
     if (idle_display || idle_sleep) {
         printf("IDLE_ACTIVE\n");
@@ -102,17 +101,26 @@ void idle_active() {
     idle_sleep = false;
 }
 
-void handle_input(mux_input_type type, mux_input_action action) {
+static void handle_input(mux_input_type type, mux_input_action action) {
     if (verbose) {
         printf("[%s %s]\n", input_name[type], action_name[action]);
     }
+    handled_input = true;
     idle_active();
 }
 
-void handle_idle() {
+static void handle_idle(void) {
+    // If we handled input on this iteration of the event loop, we're already in the active state
+    // and don't need to read the idle_inhibit file. That helps performance since the idle handler
+    // is effectively called in a tight loop for continuous input (e.g., spinning a control stick).
+    if (handled_input) {
+        handled_input = false;
+        return;
+    }
+
     // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
     // conditions here, but it's more flexible to leave that externally controllable.)
-    if (file_exist("/run/muos/system/idle_inhibit")) {
+    if (read_int_from_file("/run/muos/system/idle_inhibit")) {
         idle_active();
         return;
     }
@@ -133,7 +141,7 @@ void handle_idle() {
     }
 }
 
-void handle_combo(int num, mux_input_action action) {
+static void handle_combo(int num, mux_input_action action) {
     if (input_opts.combo[num].type_mask == BIT(MUX_INPUT_POWER_SHORT)) {
         // The power button behaves differently from every other button (including the menu button).
         // We receive these events on a short press:

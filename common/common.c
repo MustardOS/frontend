@@ -447,6 +447,19 @@ char *read_line_from_file(const char *filename, size_t line_number) {
     return line;
 }
 
+int read_int_from_file(const char *filename) {
+    char buf[32] = {};
+
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        return 0;
+    }
+    fgets(buf, sizeof(buf), file);
+    fclose(file);
+
+    return atoi(buf);
+}
+
 const char *get_random_hex() {
     int red = rand() % UINT8_MAX;
     int green = rand() % UINT8_MAX;
