@@ -68,11 +68,12 @@ int main() {
 
     animFade_Animation(ui_conStart, -1000);
     animScroll_Animation(ui_conScroll, 12000);
-    animFade_Animation(ui_conKofi, 55000);
+    animFade_Animation(ui_conSpecial, 65000);
+    animFade_Animation(ui_conKofi, 75000);
 
     if (!config.BOOT.FACTORY_RESET) write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
 
-    lv_timer_create(timeout_task, 70000, NULL);
+    lv_timer_create(timeout_task, 90000, NULL);
 
     int js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
