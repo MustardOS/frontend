@@ -155,10 +155,10 @@ void restore_tweak_options() {
                            (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 5);
 
     map_drop_down_to_index(ui_droIdleDisplay, config.SETTINGS.POWER.IDLE_DISPLAY,
-                           (int[]) {10, 30, 60, 120, 300, 600, 900, 1800}, 8, 0);
+                           (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
 
     map_drop_down_to_index(ui_droIdleSleep, config.SETTINGS.POWER.IDLE_SLEEP,
-                           (int[]) {10, 30, 60, 120, 300, 600, 900, 1800}, 8, 0);
+                           (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
 }
 
 void save_tweak_options() {
