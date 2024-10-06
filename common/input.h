@@ -71,7 +71,7 @@ typedef void (*mux_input_catchall_handler)(mux_input_type, mux_input_action);
 typedef void (*mux_input_catchall_combo_handler)(int, mux_input_action);
 
 // Maximum number of combos allowed per input task.
-#define MUX_INPUT_COMBO_COUNT 16
+#define MUX_INPUT_COMBO_COUNT 32
 
 // Configuration for a multi-input combo.
 typedef struct {
