@@ -445,7 +445,8 @@ void ui_scrCredits_screen_init(void) {
                       "littleMel\n"
                       "Timmernator\n"
                       "Roksta(Phil)\n"
-                      "Cerebellium"
+                      "Cerebellium\n"
+                      "mach"
     );
     lv_obj_set_scroll_dir(ui_lblHeroLeft, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroLeft, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -521,7 +522,7 @@ void ui_scrCredits_screen_init(void) {
                       "BigFootHenders\n"
                       "TheManiacKY\n"
                       "Scy0n\n"
-                      "메르스\n"
+                      "mers_0000\n"
                       "LuckyPhil\n"
                       "Nack\n"
                       "DanOzGod\n"
