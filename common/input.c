@@ -13,7 +13,7 @@
 #include "config.h"
 #include "device.h"
 
-extern uint32_t mux_tick();
+extern uint32_t mux_tick(void);
 
 // Whether to exit the input task before the next iteration of the event loop.
 static bool stop = false;
@@ -34,9 +34,9 @@ static void process_key(const mux_input_options *opts, const struct input_event 
     } else if (event->code == device.RAW_INPUT.BUTTON.C) {
         type = MUX_INPUT_C;
     } else if (event->code == device.RAW_INPUT.BUTTON.X) {
-        type = MUX_INPUT_X;
+        type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
     } else if (event->code == device.RAW_INPUT.BUTTON.Y) {
-        type = MUX_INPUT_Y;
+        type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
     } else if (event->code == device.RAW_INPUT.BUTTON.Z) {
         type = MUX_INPUT_Z;
     } else if (event->code == device.RAW_INPUT.BUTTON.L1) {
@@ -391,6 +391,6 @@ bool mux_input_pressed(mux_input_type type) {
     return pressed & BIT(type);
 }
 
-void mux_input_stop() {
+void mux_input_stop(void) {
     stop = true;
 }
