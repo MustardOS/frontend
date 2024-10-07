@@ -76,11 +76,11 @@ void create_network_items() {
         return;
     }
 
-    if (read_int_from_file(scan_file, 1) == 0) {
+    if (strlen(read_line_from_file(scan_file, 1)) > 0) {
+        lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+    } else {
         lv_label_set_text(ui_lblScreenMessage, TS("No Wi-Fi Networks Found"));
         return;
-    } else {
-        lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     char ssid[40];
