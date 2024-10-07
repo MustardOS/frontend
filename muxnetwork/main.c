@@ -606,8 +606,10 @@ bool handle_navigate(void) {
             lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+            if (!is_network_connected()) {
+                lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+            }
             lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
@@ -930,6 +932,20 @@ void handle_right(void) {
     }
 
     handle_navigate();
+}
+
+void handle_left_hold(void) {
+    if (key_show) {
+        handle_keyboard_left();
+        return;
+    }
+}
+
+void handle_right_hold(void) {
+    if (key_show) {
+        handle_keyboard_right();
+        return;
+    }
 }
 
 void handle_l1(void) {
@@ -1494,8 +1510,8 @@ int main(int argc, char *argv[]) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
-                    [MUX_INPUT_DPAD_LEFT] = handle_left,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
                     [MUX_INPUT_R1] = handle_r1,
             },
