@@ -59,7 +59,7 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-lv_obj_t *ui_viewport_objects[6];
+lv_obj_t *ui_viewport_objects[7];
 
 char *sd_dir = NULL;
 
@@ -321,7 +321,10 @@ void update_file_counter() {
 
 void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);
-    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", device.MUX.WIDTH / 2);
+
+    int device_width = device.MUX.WIDTH / 2;
+
+    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) device_width);
     int16_t viewport_height = get_ini_int(artwork_config_ini, "viewport", "HEIGHT", 400);
 
     lv_obj_set_width(ui_viewport_objects[0], viewport_width);
@@ -640,11 +643,11 @@ void gen_label(char *item_glyph, char *item_text) {
 char *get_glyph_name(int index) {
     char fav_dir[PATH_MAX];
     snprintf(fav_dir, sizeof(fav_dir), "%s/info/favourite/%s.cfg",
-                STORAGE_PATH, strip_ext(items[index].name));
+             STORAGE_PATH, strip_ext(items[index].name));
 
     char hist_dir[PATH_MAX];
     snprintf(hist_dir, sizeof(hist_dir), "%s/info/history/%s.cfg",
-                STORAGE_PATH, strip_ext(items[index].name));
+             STORAGE_PATH, strip_ext(items[index].name));
 
     char *glyph_icon;
     if (file_exist(fav_dir)) {
@@ -907,7 +910,7 @@ void create_explore_items(void *count) {
     add_directory_and_file_names(item_curr_dir, &dir_names, &dir_count, &file_names, &file_count);
 
     int fn_valid = 0;
-    struct json fn_json;
+    struct json fn_json = {0};
 
     if (config.VISUAL.FRIENDLYFOLDER) {
         char folder_name_file[MAX_BUFFER_SIZE];
@@ -1802,8 +1805,8 @@ void ui_refresh_task() {
     }
 
     if (message_fade > 0) {
-        lv_obj_set_style_opa(ui_pnlMessage, LV_MIN(message_fade,255), LV_PART_MAIN | LV_STATE_DEFAULT);
-        message_fade-=10;
+        lv_obj_set_style_opa(ui_pnlMessage, LV_MIN(message_fade, 255), LV_PART_MAIN | LV_STATE_DEFAULT);
+        message_fade -= 10;
     } else {
         lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         lv_obj_set_style_opa(ui_pnlMessage, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
