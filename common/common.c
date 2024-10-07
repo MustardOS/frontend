@@ -454,7 +454,7 @@ int read_int_from_file(const char *filename, size_t line_number) {
     FILE *file = fopen(filename, "r");
     if (!file) return 0;
 
-    for (size_t i = 0; i <= line_number && fgets(line, sizeof(line), file); i++) {
+    for (size_t i = 1; i <= line_number && fgets(line, sizeof(line), file); i++) {
         if (i == line_number) {
             line[strcspn(line, "\n")] = '\0';
             errno = 0;
@@ -1701,7 +1701,7 @@ int init_nav_sound(const char *mux_module) {
             Mix_Init(0);
             Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
             LOG_INFO(mux_module, "SDL Init Success")
-            nav_sound = 1;
+            return 1;
         } else {
             LOG_ERROR(mux_module, "SDL Failed To Init")
         }

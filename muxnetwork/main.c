@@ -580,10 +580,10 @@ void handle_keyboard_right(void) {
     }
 }
 
-void handle_confirm(void) {
-    play_sound("confirm", nav_sound, 1);
+bool handle_navigate(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblEnable) {
+        play_sound("navigate", nav_sound, 1);
         if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
             lv_label_set_text(ui_lblEnableValue, enabled_false);
             lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
@@ -617,7 +617,9 @@ void handle_confirm(void) {
                 lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
             }
         }
+        return true;
     } else if (element_focused == ui_lblType) {
+        play_sound("navigate", nav_sound, 1);
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                 lv_label_set_text(ui_lblTypeValue, type_dhcp);
@@ -646,7 +648,17 @@ void handle_confirm(void) {
             lv_label_set_text(ui_lblMessage, TS("Cannot modify while connected!"));
             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         }
-    } else if (element_focused == ui_lblConnect) {
+        return true;
+    } 
+    return false;
+}
+
+void handle_confirm(void) {
+    if (handle_navigate())  return;
+
+    play_sound("confirm", nav_sound, 1);
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblConnect) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
             system("/opt/muos/script/system/network.sh");
@@ -907,6 +919,8 @@ void handle_left(void) {
         handle_keyboard_left();
         return;
     }
+
+    handle_navigate();
 }
 
 void handle_right(void) {
@@ -914,6 +928,8 @@ void handle_right(void) {
         handle_keyboard_right();
         return;
     }
+
+    handle_navigate();
 }
 
 void handle_l1(void) {
@@ -1487,18 +1503,22 @@ int main(int argc, char *argv[]) {
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
                             .press_handler = ui_common_handle_bright,
+                            .hold_handler = ui_common_handle_bright,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
                             .press_handler = ui_common_handle_bright,
+                            .hold_handler = ui_common_handle_bright,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_VOL_UP),
                             .press_handler = ui_common_handle_vol,
+                            .hold_handler = ui_common_handle_vol,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_VOL_DOWN),
                             .press_handler = ui_common_handle_vol,
+                            .hold_handler = ui_common_handle_vol,
                     },
             },
             .idle_handler = ui_common_handle_idle,

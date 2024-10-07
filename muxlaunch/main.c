@@ -283,6 +283,36 @@ void handle_down() {
     }
 }
 
+void handle_up_hold(void) {//prev
+    if (msgbox_active) {
+        return;
+    }
+
+    // Don't wrap around when scrolling on hold.
+    if ((theme.MISC.NAVIGATION_TYPE == 4 && current_item_index > 0 && current_item_index <= 3) || 
+            (theme.MISC.NAVIGATION_TYPE == 4 && current_item_index > 4) || 
+            (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index > 0 && current_item_index <= 2) || 
+            (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index > 3) || 
+            (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index > 0)) {
+        handle_up();
+    }
+}
+
+void handle_down_hold(void) {//next
+    if (msgbox_active) {
+        return;
+    }
+
+    // Don't wrap around when scrolling on hold.
+    if ((theme.MISC.NAVIGATION_TYPE == 4 && current_item_index < UI_COUNT - 1 && current_item_index > 3) || 
+            (theme.MISC.NAVIGATION_TYPE == 4 && current_item_index < 3) || 
+            (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index < UI_COUNT - 1 && current_item_index > 2) || 
+            (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index < 2) || 
+            (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index < UI_COUNT - 1)) {
+        handle_down();
+    }
+}
+
 void handle_left() {
     if (msgbox_active) {
         return;
@@ -659,22 +689,31 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
             },
+            .hold_handler = {
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+            },
             .combo = {
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
                             .press_handler = ui_common_handle_bright,
+                            .hold_handler = ui_common_handle_bright,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
                             .press_handler = ui_common_handle_bright,
+                            .hold_handler = ui_common_handle_bright,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_VOL_UP),
                             .press_handler = ui_common_handle_vol,
+                            .hold_handler = ui_common_handle_vol,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_VOL_DOWN),
                             .press_handler = ui_common_handle_vol,
+                            .hold_handler = ui_common_handle_vol,
                     },
             },
             .idle_handler = ui_common_handle_idle,
