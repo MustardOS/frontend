@@ -9,8 +9,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
 #include "../common/img/nothing.h"
 #include "../common/log.h"
 #include "../common/common.h"
@@ -23,7 +21,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -94,10 +92,10 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
                 return;
             }
 
-            LOG_INFO(mux_prog, "Single Assign Content:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s",
+            LOG_INFO(mux_module, "Single Assign Content:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s",
                      strip_ext(rom), core, str_trim(sys), cache,
                      str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
-                     get_last_subdir(rom_dir, '/', 4), rom);
+                     get_last_subdir(rom_dir, '/', 4), rom)
             fprintf(rom_file, "%s\n%s\n%s\n%d\n%s\n%s\n%s\n",
                     strip_ext(rom), core, str_trim(sys), cache,
                     str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
@@ -264,7 +262,7 @@ void create_system_items() {
             apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, false, false);
 
             lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
-            apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_prog, "system");
+            apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, "system");
 
             lv_group_add_obj(ui_group, ui_lblCoreItem);
             lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
@@ -318,11 +316,11 @@ void create_core_items(const char *target) {
         }
 
         if (skip) {
-            LOG_INFO(mux_prog, "Skipping Non-Assignable Core: %s", core_headers[i]);
+            LOG_INFO(mux_module, "Skipping Non-Assignable Core: %s", core_headers[i])
             continue;
         }
 
-        LOG_SUCCESS(mux_prog, "Generating Item For Core: %s", core_headers[i]);
+        LOG_SUCCESS(mux_module, "Generating Item For Core: %s", core_headers[i])
 
         ui_count++;
 
@@ -335,7 +333,7 @@ void create_core_items(const char *target) {
         lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
 
         char *glyph = (strcasecmp(core_headers[i], assign_default) == 0) ? "default" : "core";
-        apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_prog, glyph);
+        apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
@@ -388,14 +386,14 @@ void handle_confirm() {
     if (strcasecmp(rom_system, "none") == 0) {
         load_assign(rom_name, rom_dir, str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), 0);
     } else {
-        LOG_INFO(mux_prog, "Single Core Assignment Triggered");
+        LOG_INFO(mux_module, "Single Core Assignment Triggered")
 
         play_sound("confirm", nav_sound, 1);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                    "%s/MUOS/info/assign/%s.ini",
-                    device.STORAGE.ROM.MOUNT, rom_system);
+                 "%s/MUOS/info/assign/%s.ini",
+                 device.STORAGE.ROM.MOUNT, rom_system);
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -407,10 +405,10 @@ void handle_confirm() {
 
         static char core_catalogue[MAX_BUFFER_SIZE];
         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
-                                                "catalogue", rom_system));
+                                              "catalogue", rom_system));
 
         create_core_assignment(raw_core, core_catalogue, rom_name,
-                                name_cache, SINGLE);
+                               name_cache, SINGLE);
 
         mini_free(chosen_core);
     }
@@ -424,14 +422,14 @@ void handle_x() {
     }
 
     if (strcasecmp(rom_system, "none") != 0) {
-        LOG_INFO(mux_prog, "Directory Core Assignment Triggered");
+        LOG_INFO(mux_module, "Directory Core Assignment Triggered")
 
         play_sound("confirm", nav_sound, 1);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                    "%s/MUOS/info/assign/%s.ini",
-                    device.STORAGE.ROM.MOUNT, rom_system);
+                 "%s/MUOS/info/assign/%s.ini",
+                 device.STORAGE.ROM.MOUNT, rom_system);
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -443,10 +441,10 @@ void handle_x() {
 
         static char core_catalogue[MAX_BUFFER_SIZE];
         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
-                                                "catalogue", rom_system));
+                                              "catalogue", rom_system));
 
         create_core_assignment(raw_core, core_catalogue, rom_name,
-                                name_cache, DIRECTORY);
+                               name_cache, DIRECTORY);
 
         mini_free(chosen_core);
 
@@ -460,14 +458,14 @@ void handle_y() {
     }
 
     if (strcasecmp(rom_system, "none") != 0) {
-        LOG_INFO(mux_prog, "Parent Core Assignment Triggered");
+        LOG_INFO(mux_module, "Parent Core Assignment Triggered")
 
         play_sound("confirm", nav_sound, 1);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                    "%s/MUOS/info/assign/%s.ini",
-                    device.STORAGE.ROM.MOUNT, rom_system);
+                 "%s/MUOS/info/assign/%s.ini",
+                 device.STORAGE.ROM.MOUNT, rom_system);
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -479,10 +477,10 @@ void handle_y() {
 
         static char core_catalogue[MAX_BUFFER_SIZE];
         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
-                                                "catalogue", rom_system));
+                                              "catalogue", rom_system));
 
         create_core_assignment(raw_core, core_catalogue, rom_name,
-                                name_cache, PARENT);
+                               name_cache, PARENT);
 
         mini_free(chosen_core);
 
@@ -700,7 +698,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -738,12 +736,12 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
 
-    LOG_INFO(mux_prog, "Assign Core ROM_NAME: \"%s\"", rom_name);
-    LOG_INFO(mux_prog, "Assign Core ROM_DIR: \"%s\"", rom_dir);
-    LOG_INFO(mux_prog, "Assign Core ROM_SYS: \"%s\"", rom_system);
+    LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name)
+    LOG_INFO(mux_module, "Assign Core ROM_DIR: \"%s\"", rom_dir)
+    LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system)
 
     if (atoi(auto_assign) && !file_exist(MUOS_SAA_LOAD)) {
-        LOG_INFO(mux_prog, "Automatic Assign Core Initiated");
+        LOG_INFO(mux_module, "Automatic Assign Core Initiated")
 
         char core_file[MAX_BUFFER_SIZE];
         snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
@@ -773,26 +771,26 @@ int main(int argc, char *argv[]) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_prog, "<Automatic Core Assign> Core Assigned: %s", ass_config);
+                LOG_INFO(mux_module, "<Automatic Core Assign> Core Assigned: %s", ass_config)
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
                 snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/MUOS/info/assign/%s",
                          device.STORAGE.ROM.MOUNT, ass_config);
 
-                LOG_INFO(mux_prog, "<Automatic Core Assign> Obtaining Core INI: %s", assigned_core_ini);
+                LOG_INFO(mux_module, "<Automatic Core Assign> Obtaining Core INI: %s", assigned_core_ini)
 
                 mini_t *core_config_ini = mini_load(assigned_core_ini);
 
                 static char def_core[MAX_BUFFER_SIZE];
                 strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
 
-                LOG_INFO(mux_prog, "<Automatic Core Assign> Default Core: %s", def_core);
+                LOG_INFO(mux_module, "<Automatic Core Assign> Default Core: %s", def_core)
 
                 if (strcmp(def_core, "none") != 0) {
                     static char auto_core[MAX_BUFFER_SIZE];
                     strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
 
-                    LOG_INFO(mux_prog, "<Automatic Core Assign> Assigned Core To: %s", auto_core);
+                    LOG_INFO(mux_module, "<Automatic Core Assign> Assigned Core To: %s", auto_core)
 
                     if (strcmp(def_core, "invalid") != 0) {
                         static char core_catalogue[MAX_BUFFER_SIZE];
@@ -800,13 +798,13 @@ int main(int argc, char *argv[]) {
 
                         int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
 
-                        LOG_INFO(mux_prog, "<Automatic Core Assign> Core Cache: %d", name_cache);
-                        LOG_INFO(mux_prog, "<Automatic Core Assign> Core Catalogue: %s", core_catalogue);
+                        LOG_INFO(mux_module, "<Automatic Core Assign> Core Cache: %d", name_cache)
+                        LOG_INFO(mux_module, "<Automatic Core Assign> Core Catalogue: %s", core_catalogue)
 
                         create_core_assignment(auto_core, core_catalogue, rom_name, name_cache, DIRECTORY_NO_WIPE);
 
                         auto_assign_good = 1;
-                        LOG_SUCCESS(mux_prog, "<Automatic Core Assign> Successful");
+                        LOG_SUCCESS(mux_module, "<Automatic Core Assign> Successful")
                     }
                 }
 
@@ -844,7 +842,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, "");
     init_elements();
@@ -876,19 +874,10 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    if (config.SETTINGS.GENERAL.SOUND) {
-        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            Mix_Init(0);
-            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            LOG_INFO(mux_prog, "SDL Init Success");
-            nav_sound = 1;
-        } else {
-            LOG_ERROR(mux_prog, "SDL Failed To Init");
-        }
-    }
+    nav_sound = init_nav_sound(mux_module);
 
     lv_label_set_text(ui_lblScreenMessage, TS("No Cores Found..."));
 
@@ -910,7 +899,7 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        LOG_ERROR(mux_prog, "Failed to open joystick device!");
+        LOG_ERROR(mux_module, "Failed to open joystick device!")
         return 1;
     }
 
@@ -946,71 +935,71 @@ int main(int argc, char *argv[]) {
 
     if (ui_count > 0) {
         if (strcasecmp(rom_system, "none") == 0) {
-            LOG_SUCCESS(mux_prog, "%d System%s Detected", ui_count, ui_count == 1 ? "" : "s");
+            LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count, ui_count == 1 ? "" : "s")
         } else {
-            LOG_SUCCESS(mux_prog, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s");
+            LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s")
         }
         char title[MAX_BUFFER_SIZE];
         snprintf(title, sizeof(title), "%s - %s", TS("ASSIGN"), get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
     } else {
-        LOG_ERROR(mux_prog, "No Cores Detected - Check Directory!");
+        LOG_ERROR(mux_module, "No Cores Detected - Check Directory!")
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     refresh_screen();
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_confirm,
-            [MUX_INPUT_B] = handle_back,
-            [MUX_INPUT_X] = handle_x,
-            [MUX_INPUT_Y] = handle_y,
-            [MUX_INPUT_MENU_SHORT] = handle_help,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_confirm,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 
     close(js_fd);
     close(js_fd_sys);
 
-    LOG_SUCCESS(mux_prog, "Safe Quit!");
+    LOG_SUCCESS(mux_module, "Safe Quit!")
 
     return 0;
 }

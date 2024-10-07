@@ -18,7 +18,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -239,12 +239,12 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblResilio, TS("Resilio"), false, true);
     apply_theme_list_item(&theme, ui_lblNTP, TS("Network Time Sync"), false, true);
 
-    apply_theme_list_glyph(&theme, ui_icoShell, mux_prog, "shell");
-    apply_theme_list_glyph(&theme, ui_icoBrowser, mux_prog, "browser");
-    apply_theme_list_glyph(&theme, ui_icoTerminal, mux_prog, "terminal");
-    apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_prog, "sync");
-    apply_theme_list_glyph(&theme, ui_icoResilio, mux_prog, "resilio");
-    apply_theme_list_glyph(&theme, ui_icoNTP, mux_prog, "ntp");
+    apply_theme_list_glyph(&theme, ui_icoShell, mux_module, "shell");
+    apply_theme_list_glyph(&theme, ui_icoBrowser, mux_module, "browser");
+    apply_theme_list_glyph(&theme, ui_icoTerminal, mux_module, "terminal");
+    apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_module, "sync");
+    apply_theme_list_glyph(&theme, ui_icoResilio, mux_module, "resilio");
+    apply_theme_list_glyph(&theme, ui_icoNTP, mux_module, "ntp");
 
     char options[MAX_BUFFER_SIZE];
     snprintf(options, sizeof(options), "%s\n%s", TG("Disabled"), TG("Enabled"));
@@ -304,28 +304,28 @@ void handle_option_prev(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblShell) {
         decrease_option_value(ui_droShell,
-                                &shell_current,
-                                shell_total);
+                              &shell_current,
+                              shell_total);
     } else if (element_focused == ui_lblBrowser) {
         decrease_option_value(ui_droBrowser,
-                                &browser_current,
-                                browser_total);
+                              &browser_current,
+                              browser_total);
     } else if (element_focused == ui_lblTerminal) {
         decrease_option_value(ui_droTerminal,
-                                &terminal_current,
-                                terminal_total);
+                              &terminal_current,
+                              terminal_total);
     } else if (element_focused == ui_lblSyncthing) {
         decrease_option_value(ui_droSyncthing,
-                                &syncthing_current,
-                                syncthing_total);
+                              &syncthing_current,
+                              syncthing_total);
     } else if (element_focused == ui_lblResilio) {
         decrease_option_value(ui_droResilio,
-                                &resilio_current,
-                                resilio_total);
+                              &resilio_current,
+                              resilio_total);
     } else if (element_focused == ui_lblNTP) {
         decrease_option_value(ui_droNTP,
-                                &ntp_current,
-                                ntp_total);
+                              &ntp_current,
+                              ntp_total);
     }
 }
 
@@ -338,28 +338,28 @@ void handle_option_next(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblShell) {
         increase_option_value(ui_droShell,
-                                &shell_current,
-                                shell_total);
+                              &shell_current,
+                              shell_total);
     } else if (element_focused == ui_lblBrowser) {
         increase_option_value(ui_droBrowser,
-                                &browser_current,
-                                browser_total);
+                              &browser_current,
+                              browser_total);
     } else if (element_focused == ui_lblTerminal) {
         increase_option_value(ui_droTerminal,
-                                &terminal_current,
-                                terminal_total);
+                              &terminal_current,
+                              terminal_total);
     } else if (element_focused == ui_lblSyncthing) {
         increase_option_value(ui_droSyncthing,
-                                &syncthing_current,
-                                syncthing_total);
+                              &syncthing_current,
+                              syncthing_total);
     } else if (element_focused == ui_lblResilio) {
         increase_option_value(ui_droResilio,
-                                &resilio_current,
-                                resilio_total);
+                              &resilio_current,
+                              resilio_total);
     } else if (element_focused == ui_lblNTP) {
         increase_option_value(ui_droNTP,
-                                &ntp_current,
-                                ntp_total);
+                              &ntp_current,
+                              ntp_total);
     }
 }
 
@@ -562,7 +562,7 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -591,7 +591,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("WEB SERVICES"));
     ui_init(ui_pnlContent);
@@ -624,10 +624,10 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
     elements_events_init();
 
@@ -682,52 +682,52 @@ int main(int argc, char *argv[]) {
 
     refresh_screen();
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_option_next,
-            [MUX_INPUT_B] = handle_back,
-            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-            [MUX_INPUT_MENU_SHORT] = handle_help,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_option_next,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

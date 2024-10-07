@@ -17,7 +17,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -264,13 +264,13 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblNotation, TS("Time Notation"), false, false);
     apply_theme_list_item(&theme, ui_lblTimezone, TS("Set Timezone"), false, false);
 
-    apply_theme_list_glyph(&theme, ui_icoYear, mux_prog, "year");
-    apply_theme_list_glyph(&theme, ui_icoMonth, mux_prog, "month");
-    apply_theme_list_glyph(&theme, ui_icoDay, mux_prog, "day");
-    apply_theme_list_glyph(&theme, ui_icoHour, mux_prog, "hour");
-    apply_theme_list_glyph(&theme, ui_icoMinute, mux_prog, "minute");
-    apply_theme_list_glyph(&theme, ui_icoNotation, mux_prog, "notation");
-    apply_theme_list_glyph(&theme, ui_icoTimezone, mux_prog, "timezone");
+    apply_theme_list_glyph(&theme, ui_icoYear, mux_module, "year");
+    apply_theme_list_glyph(&theme, ui_icoMonth, mux_module, "month");
+    apply_theme_list_glyph(&theme, ui_icoDay, mux_module, "day");
+    apply_theme_list_glyph(&theme, ui_icoHour, mux_module, "hour");
+    apply_theme_list_glyph(&theme, ui_icoMinute, mux_module, "minute");
+    apply_theme_list_glyph(&theme, ui_icoNotation, mux_module, "notation");
+    apply_theme_list_glyph(&theme, ui_icoTimezone, mux_module, "timezone");
 
     apply_theme_list_value(&theme, ui_lblYearValue, "");
     apply_theme_list_value(&theme, ui_lblMonthValue, "");
@@ -758,7 +758,7 @@ void direct_to_previous() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -787,7 +787,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("DATE AND TIME"));
     ui_init(ui_pnlContent);
@@ -820,10 +820,10 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     notation[0] = TS("12 Hour");
     notation[1] = TS("24 Hour");
 

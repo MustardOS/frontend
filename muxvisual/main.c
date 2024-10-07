@@ -18,7 +18,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -375,21 +375,21 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblMenuCounterFile, TS("Menu Counter File"), false, true);
     apply_theme_list_item(&theme, ui_lblBackgroundAnimation, TS("Background Animation"), false, true);
 
-    apply_theme_list_glyph(&theme, ui_icoBattery, mux_prog, "battery");
-    apply_theme_list_glyph(&theme, ui_icoNetwork, mux_prog, "network");
-    apply_theme_list_glyph(&theme, ui_icoBluetooth, mux_prog, "bluetooth");
-    apply_theme_list_glyph(&theme, ui_icoClock, mux_prog, "clock");
-    apply_theme_list_glyph(&theme, ui_icoBoxArt, mux_prog, "boxart");
-    apply_theme_list_glyph(&theme, ui_icoBoxArtAlign, mux_prog, "boxartalign");
-    apply_theme_list_glyph(&theme, ui_icoName, mux_prog, "name");
-    apply_theme_list_glyph(&theme, ui_icoDash, mux_prog, "dash");
-    apply_theme_list_glyph(&theme, ui_icoFriendlyFolder, mux_prog, "friendlyfolder");
-    apply_theme_list_glyph(&theme, ui_icoTheTitleFormat, mux_prog, "thetitleformat");
-    apply_theme_list_glyph(&theme, ui_icoTitleIncludeRootDrive, mux_prog, "titleincluderootdrive");
-    apply_theme_list_glyph(&theme, ui_icoFolderItemCount, mux_prog, "folderitemcount");
-    apply_theme_list_glyph(&theme, ui_icoMenuCounterFolder, mux_prog, "counterfolder");
-    apply_theme_list_glyph(&theme, ui_icoMenuCounterFile, mux_prog, "counterfile");
-    apply_theme_list_glyph(&theme, ui_icoBackgroundAnimation, mux_prog, "backgroundanimation");
+    apply_theme_list_glyph(&theme, ui_icoBattery, mux_module, "battery");
+    apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
+    apply_theme_list_glyph(&theme, ui_icoBluetooth, mux_module, "bluetooth");
+    apply_theme_list_glyph(&theme, ui_icoClock, mux_module, "clock");
+    apply_theme_list_glyph(&theme, ui_icoBoxArt, mux_module, "boxart");
+    apply_theme_list_glyph(&theme, ui_icoBoxArtAlign, mux_module, "boxartalign");
+    apply_theme_list_glyph(&theme, ui_icoName, mux_module, "name");
+    apply_theme_list_glyph(&theme, ui_icoDash, mux_module, "dash");
+    apply_theme_list_glyph(&theme, ui_icoFriendlyFolder, mux_module, "friendlyfolder");
+    apply_theme_list_glyph(&theme, ui_icoTheTitleFormat, mux_module, "thetitleformat");
+    apply_theme_list_glyph(&theme, ui_icoTitleIncludeRootDrive, mux_module, "titleincluderootdrive");
+    apply_theme_list_glyph(&theme, ui_icoFolderItemCount, mux_module, "folderitemcount");
+    apply_theme_list_glyph(&theme, ui_icoMenuCounterFolder, mux_module, "counterfolder");
+    apply_theme_list_glyph(&theme, ui_icoMenuCounterFile, mux_module, "counterfile");
+    apply_theme_list_glyph(&theme, ui_icoBackgroundAnimation, mux_module, "backgroundanimation");
 
     apply_theme_list_drop_down(&theme, ui_droBattery, NULL);
     apply_theme_list_drop_down(&theme, ui_droNetwork, NULL);
@@ -481,64 +481,64 @@ void handle_option_prev(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBattery) {
         decrease_option_value(ui_droBattery,
-                                &battery_current,
-                                battery_total);
+                              &battery_current,
+                              battery_total);
     } else if (element_focused == ui_lblNetwork) {
         decrease_option_value(ui_droNetwork,
-                                &network_current,
-                                network_total);
+                              &network_current,
+                              network_total);
     } else if (element_focused == ui_lblBluetooth) {
         decrease_option_value(ui_droBluetooth,
-                                &bluetooth_current,
-                                bluetooth_total);
+                              &bluetooth_current,
+                              bluetooth_total);
     } else if (element_focused == ui_lblClock) {
         decrease_option_value(ui_droClock,
-                                &mux_clock_current,
-                                mux_clock_total);
+                              &mux_clock_current,
+                              mux_clock_total);
     } else if (element_focused == ui_lblBoxArt) {
         decrease_option_value(ui_droBoxArt,
-                                &boxart_current,
-                                boxart_total);
+                              &boxart_current,
+                              boxart_total);
     } else if (element_focused == ui_lblBoxArtAlign) {
         decrease_option_value(ui_droBoxArtAlign,
-                                &boxartalign_current,
-                                boxartalign_total);
+                              &boxartalign_current,
+                              boxartalign_total);
     } else if (element_focused == ui_lblName) {
         decrease_option_value(ui_droName,
-                                &name_current,
-                                name_total);
+                              &name_current,
+                              name_total);
     } else if (element_focused == ui_lblDash) {
         decrease_option_value(ui_droDash,
-                                &dash_current,
-                                dash_total);
+                              &dash_current,
+                              dash_total);
     } else if (element_focused == ui_lblFriendlyFolder) {
         decrease_option_value(ui_droFriendlyFolder,
-                                &friendlyfolder_current,
-                                friendlyfolder_total);
+                              &friendlyfolder_current,
+                              friendlyfolder_total);
     } else if (element_focused == ui_lblTheTitleFormat) {
         decrease_option_value(ui_droTheTitleFormat,
-                                &thetitleformat_current,
-                                thetitleformat_total);
+                              &thetitleformat_current,
+                              thetitleformat_total);
     } else if (element_focused == ui_lblTitleIncludeRootDrive) {
         decrease_option_value(ui_droTitleIncludeRootDrive,
-                                &titleincluderootdrive_current,
-                                titleincluderootdrive_total);
+                              &titleincluderootdrive_current,
+                              titleincluderootdrive_total);
     } else if (element_focused == ui_lblFolderItemCount) {
         decrease_option_value(ui_droFolderItemCount,
-                                &folderitemcount_current,
-                                folderitemcount_total);
+                              &folderitemcount_current,
+                              folderitemcount_total);
     } else if (element_focused == ui_lblMenuCounterFolder) {
         decrease_option_value(ui_droMenuCounterFolder,
-                                &menu_counter_folder_current,
-                                menu_counter_folder_total);
+                              &menu_counter_folder_current,
+                              menu_counter_folder_total);
     } else if (element_focused == ui_lblMenuCounterFile) {
         decrease_option_value(ui_droMenuCounterFile,
-                                &menu_counter_file_current,
-                                menu_counter_file_total);
+                              &menu_counter_file_current,
+                              menu_counter_file_total);
     } else if (element_focused == ui_lblBackgroundAnimation) {
         decrease_option_value(ui_droBackgroundAnimation,
-                                &background_animation_current,
-                                background_animation_total);
+                              &background_animation_current,
+                              background_animation_total);
     }
 }
 
@@ -551,64 +551,64 @@ void handle_option_next(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBattery) {
         increase_option_value(ui_droBattery,
-                                &battery_current,
-                                battery_total);
+                              &battery_current,
+                              battery_total);
     } else if (element_focused == ui_lblNetwork) {
         increase_option_value(ui_droNetwork,
-                                &network_current,
-                                network_total);
+                              &network_current,
+                              network_total);
     } else if (element_focused == ui_lblBluetooth) {
         increase_option_value(ui_droBluetooth,
-                                &bluetooth_current,
-                                bluetooth_total);
+                              &bluetooth_current,
+                              bluetooth_total);
     } else if (element_focused == ui_lblClock) {
         increase_option_value(ui_droClock,
-                                &mux_clock_current,
-                                mux_clock_total);
+                              &mux_clock_current,
+                              mux_clock_total);
     } else if (element_focused == ui_lblBoxArt) {
         increase_option_value(ui_droBoxArt,
-                                &boxart_current,
-                                boxart_total);
+                              &boxart_current,
+                              boxart_total);
     } else if (element_focused == ui_lblBoxArtAlign) {
         increase_option_value(ui_droBoxArtAlign,
-                                &boxartalign_current,
-                                boxartalign_total);
+                              &boxartalign_current,
+                              boxartalign_total);
     } else if (element_focused == ui_lblName) {
         increase_option_value(ui_droName,
-                                &name_current,
-                                name_total);
+                              &name_current,
+                              name_total);
     } else if (element_focused == ui_lblDash) {
         increase_option_value(ui_droDash,
-                                &dash_current,
-                                dash_total);
+                              &dash_current,
+                              dash_total);
     } else if (element_focused == ui_lblTheTitleFormat) {
         increase_option_value(ui_droTheTitleFormat,
-                                &thetitleformat_current,
-                                thetitleformat_total);
+                              &thetitleformat_current,
+                              thetitleformat_total);
     } else if (element_focused == ui_lblTitleIncludeRootDrive) {
         increase_option_value(ui_droTitleIncludeRootDrive,
-                                &titleincluderootdrive_current,
-                                titleincluderootdrive_total);
+                              &titleincluderootdrive_current,
+                              titleincluderootdrive_total);
     } else if (element_focused == ui_lblFriendlyFolder) {
         increase_option_value(ui_droFriendlyFolder,
-                                &folderitemcount_current,
-                                friendlyfolder_total);
+                              &folderitemcount_current,
+                              friendlyfolder_total);
     } else if (element_focused == ui_lblFolderItemCount) {
         increase_option_value(ui_droFolderItemCount,
-                                &folderitemcount_current,
-                                folderitemcount_total);
+                              &folderitemcount_current,
+                              folderitemcount_total);
     } else if (element_focused == ui_lblMenuCounterFolder) {
         increase_option_value(ui_droMenuCounterFolder,
-                                &menu_counter_folder_current,
-                                menu_counter_folder_total);
+                              &menu_counter_folder_current,
+                              menu_counter_folder_total);
     } else if (element_focused == ui_lblMenuCounterFile) {
         increase_option_value(ui_droMenuCounterFile,
-                                &menu_counter_file_current,
-                                menu_counter_file_total);
+                              &menu_counter_file_current,
+                              menu_counter_file_total);
     } else if (element_focused == ui_lblBackgroundAnimation) {
         increase_option_value(ui_droBackgroundAnimation,
-                                &background_animation_current,
-                                background_animation_total);
+                              &background_animation_current,
+                              background_animation_total);
     }
 }
 
@@ -832,7 +832,7 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -861,7 +861,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("INTERFACE OPTIONS"));
     ui_init(ui_pnlContent);
@@ -893,10 +893,10 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
     elements_events_init();
 
@@ -952,52 +952,52 @@ int main(int argc, char *argv[]) {
     init_elements();
     refresh_screen();
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_option_next,
-            [MUX_INPUT_B] = handle_back,
-            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-            [MUX_INPUT_MENU_SHORT] = handle_help,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-            [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_option_next,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

@@ -19,7 +19,7 @@
 #include "../common/input.h"
 #include "ui/theme.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -176,7 +176,7 @@ void glyph_task() {
 }
 
 int main(int argc, char *argv[]) {
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("PASSCODE"));
     ui_init(ui_pnlContent);
@@ -282,7 +282,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
 
     struct dt_task_param dt_par;
@@ -322,27 +322,27 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(glyph_timer);
 
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_confirm,
-            [MUX_INPUT_B] = handle_back,
-            [MUX_INPUT_DPAD_UP] = handle_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_down,
-            [MUX_INPUT_DPAD_LEFT] = handle_left,
-            [MUX_INPUT_DPAD_RIGHT] = handle_right,
-        },
-        .hold_handler = {
-            [MUX_INPUT_DPAD_UP] = handle_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_down,
-            [MUX_INPUT_DPAD_LEFT] = handle_left,
-            [MUX_INPUT_DPAD_RIGHT] = handle_right,
-        },
-        .idle_handler = ui_common_handle_idle,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_confirm,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_DPAD_UP] = handle_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
+            },
+            .hold_handler = {
+                    [MUX_INPUT_DPAD_UP] = handle_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
+            },
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

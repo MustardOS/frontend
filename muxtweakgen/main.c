@@ -18,7 +18,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -331,16 +331,16 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblInterface, TS("Interface Options"), false, true);
     apply_theme_list_item(&theme, ui_lblAdvanced, TS("Advanced Settings"), false, true);
 
-    apply_theme_list_glyph(&theme, ui_icoHidden, mux_prog, "hidden");
-    apply_theme_list_glyph(&theme, ui_icoBGM, mux_prog, "bgm");
-    apply_theme_list_glyph(&theme, ui_icoSound, mux_prog, "sound");
-    apply_theme_list_glyph(&theme, ui_icoStartup, mux_prog, "startup");
-    apply_theme_list_glyph(&theme, ui_icoColour, mux_prog, "colour");
-    apply_theme_list_glyph(&theme, ui_icoBrightness, mux_prog, "brightness");
-    apply_theme_list_glyph(&theme, ui_icoHDMI, mux_prog, "hdmi");
-    apply_theme_list_glyph(&theme, ui_icoPower, mux_prog, "power");
-    apply_theme_list_glyph(&theme, ui_icoInterface, mux_prog, "interface");
-    apply_theme_list_glyph(&theme, ui_icoAdvanced, mux_prog, "advanced");
+    apply_theme_list_glyph(&theme, ui_icoHidden, mux_module, "hidden");
+    apply_theme_list_glyph(&theme, ui_icoBGM, mux_module, "bgm");
+    apply_theme_list_glyph(&theme, ui_icoSound, mux_module, "sound");
+    apply_theme_list_glyph(&theme, ui_icoStartup, mux_module, "startup");
+    apply_theme_list_glyph(&theme, ui_icoColour, mux_module, "colour");
+    apply_theme_list_glyph(&theme, ui_icoBrightness, mux_module, "brightness");
+    apply_theme_list_glyph(&theme, ui_icoHDMI, mux_module, "hdmi");
+    apply_theme_list_glyph(&theme, ui_icoPower, mux_module, "power");
+    apply_theme_list_glyph(&theme, ui_icoInterface, mux_module, "interface");
+    apply_theme_list_glyph(&theme, ui_icoAdvanced, mux_module, "advanced");
 
     apply_theme_list_drop_down(&theme, ui_droHidden, NULL);
     apply_theme_list_drop_down(&theme, ui_droBGM, NULL);
@@ -750,7 +750,7 @@ void direct_to_previous() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -779,7 +779,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("GENERAL SETTINGS"));
     ui_init(ui_pnlContent);
@@ -812,10 +812,10 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
     elements_events_init();
 

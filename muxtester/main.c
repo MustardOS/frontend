@@ -18,7 +18,7 @@
 #include "../common/input.h"
 #include "ui/theme.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -140,7 +140,7 @@ void init_elements() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("INPUT TESTER"));
     ui_init(ui_pnlContent);
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
 

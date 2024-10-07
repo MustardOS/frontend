@@ -17,7 +17,7 @@
 #include "../common/input.h"
 #include "ui/theme.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -45,7 +45,7 @@ lv_timer_t *battery_timer;
 
 void check_for_cable() {
     if (file_exist(device.BATTERY.CHARGER)) {
-        if (read_int_from_file(device.BATTERY.CHARGER) == 0) {
+        if (read_int_from_file(device.BATTERY.CHARGER, 1) == 0) {
             exit_status = 1;
         }
     }
@@ -77,7 +77,7 @@ void handle_power_short(void) {
     }
 
     blank = 0;
-    set_brightness(atoi(read_text_from_file("/opt/muos/config/brightness.txt")));
+    set_brightness(read_int_from_file("/opt/muos/config/brightness.txt", 1));
 }
 
 void handle_idle(void) {
@@ -108,7 +108,7 @@ void battery_task() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -136,10 +136,10 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_init();
-    set_brightness(atoi(read_text_from_file("/opt/muos/config/brightness.txt")));
+    set_brightness(read_int_from_file("/opt/muos/config/brightness.txt", 1));
 
     load_theme(&theme, &config, &device, basename(argv[0]));
     apply_theme();
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 
     if (TEST_IMAGE) display_testing_message(ui_scrCharge);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);
 
     js_fd = open(device.INPUT.EV0, O_RDONLY);
@@ -202,13 +202,13 @@ int main(int argc, char *argv[]) {
     refresh_screen();
 
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .press_handler = {
-            [MUX_INPUT_POWER_SHORT] = handle_power_short,
-        },
-        .idle_handler = handle_idle,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .press_handler = {
+                    [MUX_INPUT_POWER_SHORT] = handle_power_short,
+            },
+            .idle_handler = handle_idle,
     };
     mux_input_task(&input_opts);
 

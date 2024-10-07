@@ -12,7 +12,9 @@
 #include "../common/input.h"
 
 static void handle_combo(int num, mux_input_action action);
+
 static void handle_input(mux_input_type type, mux_input_action action);
+
 static void handle_idle(void);
 
 struct mux_device device;
@@ -120,7 +122,7 @@ static void handle_idle(void) {
 
     // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
     // conditions here, but it's more flexible to leave that externally controllable.)
-    if (read_int_from_file("/run/muos/system/idle_inhibit")) {
+    if (read_int_from_file("/run/muos/system/idle_inhibit", 1)) {
         idle_active();
         return;
     }

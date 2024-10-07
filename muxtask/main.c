@@ -19,7 +19,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -174,7 +174,7 @@ void create_task_items() {
                     item_glyph = "task";
                 }
 
-                apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_prog, item_glyph);
+                apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module, item_glyph);
             }
 
             lv_group_add_obj(ui_group, ui_lblTaskItem);
@@ -229,11 +229,11 @@ void handle_confirm() {
 
     char task_path[MAX_BUFFER_SIZE];
     snprintf(task_path, sizeof(task_path),
-                "%s/MUOS/task", device.STORAGE.ROM.MOUNT);
+             "%s/MUOS/task", device.STORAGE.ROM.MOUNT);
 
     static char command[MAX_BUFFER_SIZE];
     snprintf(command, sizeof(command), "/opt/muos/bin/fbpad \"%s/%s.sh\"",
-                task_path, items[current_item_index].name);
+             task_path, items[current_item_index].name);
     setenv("TERM", "xterm-256color", 1);
     printf("RUNNING: %s\n", command);
     system(command);
@@ -456,7 +456,7 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -485,7 +485,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("TASK TOOLKIT"));
     init_elements();
@@ -496,15 +496,15 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
     create_task_items();
     update_footer_nav_elements();
 
     int tin_index = 0;
     if (file_exist(MUOS_TIN_LOAD)) {
-        tin_index = read_int_from_file(MUOS_TIN_LOAD);
+        tin_index = read_int_from_file(MUOS_TIN_LOAD, 1);
         printf("loading TIN at: %d\n", tin_index);
         remove(MUOS_TIN_LOAD);
     }
@@ -541,7 +541,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     }
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
 
@@ -583,48 +583,48 @@ int main(int argc, char *argv[]) {
 
     refresh_screen();
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_confirm,
-            [MUX_INPUT_B] = handle_back,
-            [MUX_INPUT_MENU_SHORT] = handle_help,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_confirm,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

@@ -224,7 +224,7 @@ void ui_scrCredits_screen_init(void) {
                       "bgelmini\n"
                       "Casey\n"
                       "Duncanyoyo1\n"
-                      "Raven"
+                      "Raven (RavensToRoses)"
     );
     lv_obj_set_scroll_dir(ui_lblEnforcerPeople, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblEnforcerPeople, lv_color_hex(0xFF4500), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -694,7 +694,8 @@ void ui_scrCredits_screen_init(void) {
                       "TheTomothy\n"
                       "mamamiamoto\n"
                       "Nuke\n"
-                      "Colorbl1nd"
+                      "Colorbl1nd\n"
+                      "maddler"
     );
     lv_obj_set_scroll_dir(ui_lblKnightRight, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKnightRight, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);

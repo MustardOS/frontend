@@ -20,7 +20,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -92,7 +92,7 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
                 return;
             }
 
-            LOG_INFO(mux_prog, "Single Governor Content: %s", gov);
+            LOG_INFO(mux_module, "Single Governor Content: %s", gov)
             fprintf(rom_file, "%s", gov);
             fclose(rom_file);
         }
@@ -232,7 +232,7 @@ void create_gov_items(const char *target) {
     ui_group_panel = lv_group_create();
 
     for (int i = 0; i < governor_count; ++i) {
-        LOG_SUCCESS(mux_prog, "Generating Item For Governor: %s", governors[i]);
+        LOG_SUCCESS(mux_module, "Generating Item For Governor: %s", governors[i])
 
         ui_count++;
 
@@ -245,7 +245,7 @@ void create_gov_items(const char *target) {
         lv_obj_t *ui_lblGovItemGlyph = lv_img_create(ui_pnlGov);
 
         char *glyph = (strcasecmp(governors[i], assign_default) == 0) ? "default" : "governor";
-        apply_theme_list_glyph(&theme, ui_lblGovItemGlyph, mux_prog, glyph);
+        apply_theme_list_glyph(&theme, ui_lblGovItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblGovItem);
         lv_group_add_obj(ui_group_glyph, ui_lblGovItemGlyph);
@@ -295,11 +295,11 @@ void handle_confirm() {
         return;
     }
 
-    LOG_INFO(mux_prog, "Single Governor Assignment Triggered");
+    LOG_INFO(mux_module, "Single Governor Assignment Triggered")
     play_sound("confirm", nav_sound, 1);
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
-                            rom_system, rom_name, SINGLE);
+                          rom_system, rom_name, SINGLE);
 
     mux_input_stop();
 }
@@ -309,11 +309,11 @@ void handle_x() {
         return;
     }
 
-    LOG_INFO(mux_prog, "Directory Governor Assignment Triggered");
+    LOG_INFO(mux_module, "Directory Governor Assignment Triggered")
     play_sound("confirm", nav_sound, 1);
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
-                            rom_system, rom_name, DIRECTORY);
+                          rom_system, rom_name, DIRECTORY);
 
     mux_input_stop();
 }
@@ -323,11 +323,11 @@ void handle_y() {
         return;
     }
 
-    LOG_INFO(mux_prog, "Parent Governor Assignment Triggered");
+    LOG_INFO(mux_module, "Parent Governor Assignment Triggered")
     play_sound("confirm", nav_sound, 1);
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
-                            rom_system, rom_name, PARENT);
+                          rom_system, rom_name, PARENT);
 
     mux_input_stop();
 }
@@ -517,7 +517,7 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -555,12 +555,12 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
 
-    LOG_INFO(mux_prog, "Assign Governor ROM_NAME: \"%s\"", rom_name);
-    LOG_INFO(mux_prog, "Assign Governor ROM_DIR: \"%s\"", rom_dir);
-    LOG_INFO(mux_prog, "Assign Governor ROM_SYS: \"%s\"", rom_system);
+    LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)
+    LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir)
+    LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system)
 
     if (atoi(auto_assign) && !file_exist(MUOS_SAG_LOAD)) {
-        LOG_INFO(mux_prog, "Automatic Assign Governor Initiated");
+        LOG_INFO(mux_module, "Automatic Assign Governor Initiated")
 
         char core_file[MAX_BUFFER_SIZE];
         snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.gov",
@@ -588,38 +588,38 @@ int main(int argc, char *argv[]) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_prog, "<Automatic Governor Assign> Core Assigned: %s", ass_config);
+                LOG_INFO(mux_module, "<Automatic Governor Assign> Core Assigned: %s", ass_config)
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
                 snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/MUOS/info/assign/%s",
                          device.STORAGE.ROM.MOUNT, ass_config);
 
-                LOG_INFO(mux_prog, "<Automatic Governor Assign> Obtaining Core INI: %s", assigned_core_ini);
+                LOG_INFO(mux_module, "<Automatic Governor Assign> Obtaining Core INI: %s", assigned_core_ini)
 
                 mini_t *core_config_ini = mini_load(assigned_core_ini);
 
                 static char def_gov[MAX_BUFFER_SIZE];
                 strcpy(def_gov, get_ini_string(core_config_ini, "global", "governor", "none"));
 
-                LOG_INFO(mux_prog, "<Automatic Governor Assign> Default Governor: %s", def_gov);
+                LOG_INFO(mux_module, "<Automatic Governor Assign> Default Governor: %s", def_gov)
 
                 if (strcmp(def_gov, "none") != 0) {
                     static char auto_gov[MAX_BUFFER_SIZE];
                     strcpy(auto_gov, get_ini_string(core_config_ini, "global", "governor", device.CPU.DEFAULT));
 
-                    LOG_INFO(mux_prog, "<Automatic Governor Assign> Assigned Governor To: %s", auto_gov);
+                    LOG_INFO(mux_module, "<Automatic Governor Assign> Assigned Governor To: %s", auto_gov)
                     create_gov_assignment(auto_gov, rom_system, rom_name, DIRECTORY_NO_WIPE);
 
-                    LOG_SUCCESS(mux_prog, "<Automatic Governor Assign> Successful");
+                    LOG_SUCCESS(mux_module, "<Automatic Governor Assign> Successful")
                 } else {
-                    LOG_INFO(mux_prog, "Assigned Governor To Default: %s", device.CPU.DEFAULT);
+                    LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
                     create_gov_assignment(device.CPU.DEFAULT, rom_system, rom_name, DIRECTORY_NO_WIPE);
                 }
 
                 mini_free(core_config_ini);
                 return 0;
             } else {
-                LOG_INFO(mux_prog, "Assigned Governor To Default: %s", device.CPU.DEFAULT);
+                LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
                 create_gov_assignment(device.CPU.DEFAULT, rom_system, rom_name, DIRECTORY_NO_WIPE);
                 return 0;
             }
@@ -651,7 +651,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, "");
     init_elements();
@@ -683,10 +683,10 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
 
     lv_label_set_text(ui_lblScreenMessage, TS("No Governors Found..."));
 
@@ -709,7 +709,7 @@ int main(int argc, char *argv[]) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_prog, "<Obtaining System> Core Assigned: %s", ass_config);
+                LOG_INFO(mux_module, "<Obtaining System> Core Assigned: %s", ass_config)
                 rom_system = strip_ext(ass_config);
             }
         }
@@ -729,7 +729,7 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        LOG_ERROR(mux_prog, "Failed to open joystick device!");
+        LOG_ERROR(mux_module, "Failed to open joystick device!")
         return 1;
     }
 
@@ -764,68 +764,68 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     if (ui_count > 0) {
-        LOG_SUCCESS(mux_prog, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s");
+        LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s")
         char title[MAX_BUFFER_SIZE];
         snprintf(title, sizeof(title), "%s - %s", TS("GOVERNOR"), get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
     } else {
-        LOG_ERROR(mux_prog, "No Governors Detected!");
+        LOG_ERROR(mux_module, "No Governors Detected!")
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     refresh_screen();
     mux_input_options input_opts = {
-        .gamepad_fd = js_fd,
-        .system_fd = js_fd_sys,
-        .max_idle_ms = 16 /* ~60 FPS */,
-        .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-        .stick_nav = true,
-        .press_handler = {
-            [MUX_INPUT_A] = handle_confirm,
-            [MUX_INPUT_B] = handle_back,
-            [MUX_INPUT_X] = handle_x,
-            [MUX_INPUT_Y] = handle_y,
-            [MUX_INPUT_MENU_SHORT] = handle_help,
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .hold_handler = {
-            // List navigation:
-            [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-            [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-            [MUX_INPUT_L1] = handle_list_nav_page_up,
-            [MUX_INPUT_R1] = handle_list_nav_page_down,
-        },
-        .combo = {
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
+            .gamepad_fd = js_fd,
+            .system_fd = js_fd_sys,
+            .max_idle_ms = 16 /* ~60 FPS */,
+            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .stick_nav = true,
+            .press_handler = {
+                    [MUX_INPUT_A] = handle_confirm,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
+            .hold_handler = {
+                    // List navigation:
+                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
+                    [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                    },
             },
-            {
-                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-            },
-        },
-        .idle_handler = ui_common_handle_idle,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 
     close(js_fd);
     close(js_fd_sys);
 
-    LOG_SUCCESS(mux_prog, "Safe Quit!");
+    LOG_SUCCESS(mux_module, "Safe Quit!")
 
     return 0;
 }

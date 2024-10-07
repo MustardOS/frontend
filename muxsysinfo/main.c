@@ -18,7 +18,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -263,18 +263,18 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblBatteryCap, TS("Battery Capacity"), false, true);
     apply_theme_list_item(&theme, ui_lblVoltage, TS("Battery Voltage"), false, true);
 
-    apply_theme_list_glyph(&theme, ui_icoVersion, mux_prog, "version");
-    apply_theme_list_glyph(&theme, ui_icoDevice, mux_prog, "device");
-    apply_theme_list_glyph(&theme, ui_icoKernel, mux_prog, "kernel");
-    apply_theme_list_glyph(&theme, ui_icoUptime, mux_prog, "uptime");
-    apply_theme_list_glyph(&theme, ui_icoCPU, mux_prog, "cpu");
-    apply_theme_list_glyph(&theme, ui_icoSpeed, mux_prog, "speed");
-    apply_theme_list_glyph(&theme, ui_icoGovernor, mux_prog, "governor");
-    apply_theme_list_glyph(&theme, ui_icoMemory, mux_prog, "memory");
-    apply_theme_list_glyph(&theme, ui_icoTemp, mux_prog, "temp");
-    apply_theme_list_glyph(&theme, ui_icoService, mux_prog, "service");
-    apply_theme_list_glyph(&theme, ui_icoBatteryCap, mux_prog, "capacity");
-    apply_theme_list_glyph(&theme, ui_icoVoltage, mux_prog, "voltage");
+    apply_theme_list_glyph(&theme, ui_icoVersion, mux_module, "version");
+    apply_theme_list_glyph(&theme, ui_icoDevice, mux_module, "device");
+    apply_theme_list_glyph(&theme, ui_icoKernel, mux_module, "kernel");
+    apply_theme_list_glyph(&theme, ui_icoUptime, mux_module, "uptime");
+    apply_theme_list_glyph(&theme, ui_icoCPU, mux_module, "cpu");
+    apply_theme_list_glyph(&theme, ui_icoSpeed, mux_module, "speed");
+    apply_theme_list_glyph(&theme, ui_icoGovernor, mux_module, "governor");
+    apply_theme_list_glyph(&theme, ui_icoMemory, mux_module, "memory");
+    apply_theme_list_glyph(&theme, ui_icoTemp, mux_module, "temp");
+    apply_theme_list_glyph(&theme, ui_icoService, mux_module, "service");
+    apply_theme_list_glyph(&theme, ui_icoBatteryCap, mux_module, "capacity");
+    apply_theme_list_glyph(&theme, ui_icoVoltage, mux_module, "voltage");
 
     apply_theme_list_value(&theme, ui_lblVersionValue, "");
     apply_theme_list_value(&theme, ui_lblDeviceValue, "");
@@ -540,7 +540,7 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
 
@@ -569,7 +569,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("SYSTEM DETAILS"));
     ui_init(ui_pnlContent);
@@ -602,10 +602,10 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
 
     update_system_info();

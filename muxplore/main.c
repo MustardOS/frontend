@@ -20,7 +20,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_prog;
+char *mux_module;
 struct theme_config theme;
 
 static int js_fd;
@@ -630,7 +630,7 @@ void gen_label(char *item_glyph, char *item_text) {
     apply_theme_list_item(&theme, ui_lblExploreItem, item_text, true, false);
 
     lv_obj_t *ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
-    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_prog, item_glyph);
+    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_module, item_glyph);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
@@ -640,7 +640,7 @@ void gen_label(char *item_glyph, char *item_text) {
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
 }
 
-char *get_glyph_name(int index) {
+char *get_glyph_name(size_t index) {
     char fav_dir[PATH_MAX];
     snprintf(fav_dir, sizeof(fav_dir), "%s/info/favourite/%s.cfg",
              STORAGE_PATH, strip_ext(items[index].name));
@@ -714,13 +714,7 @@ void gen_item(char **file_names, int file_count) {
     char local_name_cache[MAX_BUFFER_SIZE];
     snprintf(local_name_cache, sizeof(local_name_cache), "%score.cfg", init_meta_dir);
 
-    int require_local_name_cache = atoi(read_line_from_file(local_name_cache, 3));
-
-    int is_cache = 0;
-    if (file_exist(init_cache_file)) {
-        is_cache = 1;
-    }
-
+    int is_cache = file_exist(init_cache_file);
     int fn_valid = 0;
     struct json fn_json;
 
@@ -754,7 +748,7 @@ void gen_item(char **file_names, int file_count) {
         char cache_fn_name[MAX_BUFFER_SIZE];
 
         snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
-        if (require_local_name_cache || module == FAVOURITE || module == HISTORY) {
+        if (read_int_from_file(local_name_cache, 3) || module == FAVOURITE || module == HISTORY) {
             if (is_cache) {
                 snprintf(fn_name, sizeof(fn_name), "%s", read_line_from_file(init_cache_file, i + 1));
             } else {
@@ -1044,7 +1038,7 @@ void add_to_favourites(char *filename, const char *pointer) {
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
     message_fade = 355;
     char *glyph_icon = get_glyph_name(current_item_index);
-    apply_theme_list_glyph(&theme, lv_group_get_focused(ui_group_glyph), mux_prog, glyph_icon);
+    apply_theme_list_glyph(&theme, lv_group_get_focused(ui_group_glyph), mux_module, glyph_icon);
 }
 
 int load_content(int add_favourite) {
@@ -1759,10 +1753,10 @@ void init_footer_elements() {
 }
 
 void init_fonts() {
-    load_font_text(mux_prog, ui_screen);
-    load_font_section(mux_prog, FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_text(mux_module, ui_screen);
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 }
 
 void glyph_task() {
@@ -1920,27 +1914,27 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 if (strcasecmp(optarg, "root") == 0) {
-                    mux_prog = "muxplore";
+                    mux_module = "muxplore";
                     module = ROOT;
                     break;
                 } else if (strcasecmp(optarg, "mmc") == 0) {
-                    mux_prog = "muxplore";
+                    mux_module = "muxplore";
                     module = MMC;
                     break;
                 } else if (strcasecmp(optarg, "sdcard") == 0) {
-                    mux_prog = "muxplore";
+                    mux_module = "muxplore";
                     module = SDCARD;
                     break;
                 } else if (strcasecmp(optarg, "usb") == 0) {
-                    mux_prog = "muxplore";
+                    mux_module = "muxplore";
                     module = USB;
                     break;
                 } else if (strcasecmp(optarg, "favourite") == 0) {
-                    mux_prog = "muxfavourite";
+                    mux_module = "muxfavourite";
                     module = FAVOURITE;
                     break;
                 } else if (strcasecmp(optarg, "history") == 0) {
-                    mux_prog = "muxhistory";
+                    mux_module = "muxhistory";
                     module = HISTORY;
                     break;
                 } else {
@@ -1982,7 +1976,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
-    load_theme(&theme, &config, &device, mux_prog);
+    load_theme(&theme, &config, &device, mux_module);
     load_language("muxplore");
 
     ui_common_screen_init(&theme, &device, "");
@@ -2003,7 +1997,7 @@ int main(int argc, char *argv[]) {
     snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
     snprintf(E_USB, sizeof(E_USB), "%s/ROMS/", device.STORAGE.USB.MOUNT);
 
-    lv_obj_set_user_data(ui_screen, mux_prog);
+    lv_obj_set_user_data(ui_screen, mux_module);
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
@@ -2050,7 +2044,7 @@ int main(int argc, char *argv[]) {
         lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     }
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();

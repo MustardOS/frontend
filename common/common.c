@@ -7,21 +7,23 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <time.h>
+#include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <sys/stat.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
-#include "../common/miniz/miniz.h"
-#include "../common/font/notosans.h"
-#include "../common/font/notosans_jp.h"
-#include "../common/font/notosans_kr.h"
-#include "../common/font/notosans_sc.h"
-#include "../common/font/notosans_tc.h"
+#include "miniz/miniz.h"
+#include "font/notosans.h"
+#include "font/notosans_jp.h"
+#include "font/notosans_kr.h"
+#include "font/notosans_sc.h"
+#include "font/notosans_tc.h"
 #include "img/nothing.h"
 #include "json/json.h"
 #include "common.h"
+#include "log.h"
 #include "options.h"
 #include "config.h"
 #include "device.h"
@@ -447,17 +449,23 @@ char *read_line_from_file(const char *filename, size_t line_number) {
     return line;
 }
 
-int read_int_from_file(const char *filename) {
-    char buf[32] = {};
-
+int read_int_from_file(const char *filename, size_t line_number) {
+    char line[MAX_BUFFER_SIZE];
     FILE *file = fopen(filename, "r");
-    if (!file) {
-        return 0;
-    }
-    fgets(buf, sizeof(buf), file);
-    fclose(file);
+    if (!file) return 0;
 
-    return atoi(buf);
+    for (size_t i = 0; i <= line_number && fgets(line, sizeof(line), file); i++) {
+        if (i == line_number) {
+            line[strcspn(line, "\n")] = '\0';
+            errno = 0;
+            long value = strtol(line, NULL, 10);
+            fclose(file);
+            return (errno == ERANGE) ? 0 : (int) value;
+        }
+    }
+
+    fclose(file);
+    return 0;
 }
 
 const char *get_random_hex() {
@@ -707,7 +715,7 @@ void datetime_task(lv_timer_t *timer) {
 }
 
 char *get_capacity() {
-    char *battery_glyph_name = (atoi(read_text_from_file(device.BATTERY.CHARGER))) ? "capacity_charging_" : "capacity_";
+    char *battery_glyph_name = read_int_from_file(device.BATTERY.CHARGER, 1) ? "capacity_charging_" : "capacity_";
 
     static char capacity_str[MAX_BUFFER_SIZE];
     switch (battery_capacity) {
@@ -744,12 +752,15 @@ char *get_capacity() {
         case 91 ... 255:
             snprintf(capacity_str, sizeof(capacity_str), "%s100", battery_glyph_name);
             break;
+        default:
+            snprintf(capacity_str, sizeof(capacity_str), "%s0", battery_glyph_name);
+            break;
     }
 
     return capacity_str;
 }
 
-void capacity_task(lv_timer_t *timer) {
+void capacity_task() {
     battery_capacity = read_battery_capacity();
 }
 
@@ -1546,8 +1557,8 @@ char *get_script_value(const char *filename, const char *key) {
 }
 
 void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar) {
-    lv_bar_set_value(bright_bar, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_ON);
-    lv_bar_set_value(volume_bar, atoi(read_text_from_file(VOLUME_PERC)), LV_ANIM_ON);
+    lv_bar_set_value(bright_bar, read_int_from_file(BRIGHT_PERC, 1), LV_ANIM_ON);
+    lv_bar_set_value(volume_bar, read_int_from_file(VOLUME_PERC, 1), LV_ANIM_ON);
 }
 
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path) {
@@ -1684,15 +1695,15 @@ int map_drop_down_to_value(int selected_index, const int *options, int num_optio
     return def_value;
 }
 
-int init_nav_sound() {
+int init_nav_sound(const char *mux_module) {
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
             Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            printf("SDL init success!\n");
-            return 1;
+            LOG_INFO(mux_module, "SDL Init Success")
+            nav_sound = 1;
         } else {
-            fprintf(stderr, "Failed to init SDL\n");
+            LOG_ERROR(mux_module, "SDL Failed To Init")
         }
     }
 

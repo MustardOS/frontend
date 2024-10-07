@@ -17,7 +17,7 @@
 #include "../common/device.h"
 #include "../common/input.h"
 
-char *mux_prog;
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -132,14 +132,14 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblReboot, TS("Reboot"), false, false);
     apply_theme_list_item(&theme, ui_lblShutdown, TS("Shutdown"), false, false);
 
-    apply_theme_list_glyph(&theme, ui_icoContent, mux_prog, "explore");
-    apply_theme_list_glyph(&theme, ui_icoFavourites, mux_prog, "favourite");
-    apply_theme_list_glyph(&theme, ui_icoHistory, mux_prog, "history");
-    apply_theme_list_glyph(&theme, ui_icoApps, mux_prog, "apps");
-    apply_theme_list_glyph(&theme, ui_icoInfo, mux_prog, "info");
-    apply_theme_list_glyph(&theme, ui_icoConfig, mux_prog, "config");
-    apply_theme_list_glyph(&theme, ui_icoReboot, mux_prog, "reboot");
-    apply_theme_list_glyph(&theme, ui_icoShutdown, mux_prog, "shutdown");
+    apply_theme_list_glyph(&theme, ui_icoContent, mux_module, "explore");
+    apply_theme_list_glyph(&theme, ui_icoFavourites, mux_module, "favourite");
+    apply_theme_list_glyph(&theme, ui_icoHistory, mux_module, "history");
+    apply_theme_list_glyph(&theme, ui_icoApps, mux_module, "apps");
+    apply_theme_list_glyph(&theme, ui_icoInfo, mux_module, "info");
+    apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
+    apply_theme_list_glyph(&theme, ui_icoReboot, mux_module, "reboot");
+    apply_theme_list_glyph(&theme, ui_icoShutdown, mux_module, "shutdown");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -525,7 +525,7 @@ void direct_to_previous() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_prog = basename(argv[0]);
+    mux_module = basename(argv[0]);
     load_device(&device);
 
     lv_init();
@@ -553,7 +553,7 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_prog);
+    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, TS("MAIN MENU"));
     ui_init(ui_pnlContent);
@@ -586,10 +586,10 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_prog, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_prog, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
-    nav_sound = init_nav_sound();
+    nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
 
     struct dt_task_param dt_par;

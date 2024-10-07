@@ -30,7 +30,7 @@ struct mux_device device;
 
 lv_obj_t *msgbox_element = NULL;
 
-void timeout_task(lv_timer_t *timer) {
+void timeout_task() {
     mux_input_stop();
 }
 

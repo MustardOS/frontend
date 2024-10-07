@@ -105,7 +105,7 @@ char *read_text_from_file(char *filename);
 
 char *read_line_from_file(const char *filename, size_t line_number);
 
-int read_int_from_file(const char *filename);
+int read_int_from_file(const char *filename, size_t line_number);
 
 const char *get_random_hex();
 
@@ -141,7 +141,7 @@ void datetime_task(lv_timer_t *timer);
 
 char *get_capacity();
 
-void capacity_task(lv_timer_t *timer);
+void capacity_task();
 
 void osd_task(lv_timer_t *timer);
 
@@ -221,4 +221,4 @@ void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, i
 
 int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value);
 
-int init_nav_sound();
+int init_nav_sound(const char *mux_module);

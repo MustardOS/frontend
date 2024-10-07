@@ -682,7 +682,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 }
 
 void ui_common_handle_bright() {
-    if (read_int_from_file("/tmp/hdmi_in_use") || config.BOOT.FACTORY_RESET) {
+    if (read_int_from_file("/tmp/hdmi_in_use", 1) || config.BOOT.FACTORY_RESET) {
         return;
     }
 
@@ -694,7 +694,7 @@ void ui_common_handle_bright() {
 }
 
 void ui_common_handle_vol() {
-    if (read_int_from_file("/tmp/hdmi_in_use") || config.BOOT.FACTORY_RESET) {
+    if (read_int_from_file("/tmp/hdmi_in_use", 1) || config.BOOT.FACTORY_RESET) {
         return;
     }
 
