@@ -105,7 +105,7 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
             if (subdirs != NULL) {
                 for (int i = 0; subdirs[i] != NULL; i++) {
                     char subdir_file[MAX_BUFFER_SIZE];
-                    snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.gov", core_dir, get_last_dir(subdirs[i]));
+                    snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.gov", core_dir, subdirs[i]);
 
                     create_directories(strip_dir(subdir_file));
 
