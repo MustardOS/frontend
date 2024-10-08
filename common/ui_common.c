@@ -268,25 +268,19 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     }
     lv_obj_set_style_flex_main_place(ui_pnlFooter, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    if (config.SETTINGS.ADVANCED.SWAP) {
-        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.A);
-        ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
-        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.B);
-    } else {
-        ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, "a", theme->NAV.A);
-        ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
-        ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, "b", theme->NAV.B);
-    }
+    ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a", theme->NAV.A);
+    ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
 
+    ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b", theme->NAV.B);
     ui_lblNavB = create_footer_text(ui_pnlFooter, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA);
 
     ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C);
     ui_lblNavC = create_footer_text(ui_pnlFooter, theme, theme->NAV.C.TEXT, theme->NAV.C.TEXT_ALPHA);
 
-    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, "x", theme->NAV.X);
+    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "y" : "x", theme->NAV.X);
     ui_lblNavX = create_footer_text(ui_pnlFooter, theme, theme->NAV.X.TEXT, theme->NAV.X.TEXT_ALPHA);
 
-    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, "y", theme->NAV.Y);
+    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP)? "x" : "y", theme->NAV.Y);
     ui_lblNavY = create_footer_text(ui_pnlFooter, theme, theme->NAV.Y.TEXT, theme->NAV.Y.TEXT_ALPHA);
 
     ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z);
