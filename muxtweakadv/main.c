@@ -1156,18 +1156,22 @@ int main(int argc, char *argv[]) {
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
                             .press_handler = ui_common_handle_bright,
+                            .hold_handler = ui_common_handle_bright,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
                             .press_handler = ui_common_handle_bright,
+                            .hold_handler = ui_common_handle_bright,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_VOL_UP),
                             .press_handler = ui_common_handle_vol,
+                            .hold_handler = ui_common_handle_vol,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_VOL_DOWN),
                             .press_handler = ui_common_handle_vol,
+                            .hold_handler = ui_common_handle_vol,
                     },
             },
             .idle_handler = ui_common_handle_idle,
