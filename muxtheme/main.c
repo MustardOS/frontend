@@ -221,6 +221,7 @@ void handle_back() {
     }
 
     play_sound("back", nav_sound, 1);
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "theme");
     mux_input_stop();
 }
 

@@ -111,7 +111,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
             if (subdirs != NULL) {
                 for (int i = 0; subdirs[i] != NULL; i++) {
                     char subdir_file[MAX_BUFFER_SIZE];
-                    snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.cfg", core_dir, get_last_dir(subdirs[i]));
+                    snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.cfg", core_dir, subdirs[i]);
 
                     create_directories(strip_dir(subdir_file));
 

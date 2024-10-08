@@ -1587,15 +1587,24 @@ int extract_file_from_zip(const char *zip_path, const char *file_name, const cha
     return 0;
 }
 
-char **get_subdirectories(const char *base_dir) {
+void add_directory_to_list(char ***list, int *size, int *count, const char *dir) {
+    if (*count >= *size) {
+        *size += 10;
+        *list = realloc(*list, *size * sizeof(char *));
+    }
+
+    (*list)[*count] = strdup(dir);
+    (*count)++;
+}
+
+void collect_subdirectories(const char *base_dir, char ***list, int *size, int *count, int trim_start_count) {
+    char subdir_path[PATH_MAX];
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
-    char **dir_names = NULL;
-    int dir_count = 0;
 
     if (!dir) {
         perror("opendir");
-        return NULL;
+        return;
     }
 
     load_skip_patterns();
@@ -1604,68 +1613,29 @@ char **get_subdirectories(const char *base_dir) {
         if (!should_skip(entry->d_name)) {
             if (entry->d_type == DT_DIR) {
                 if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-                    char subdir_path[PATH_MAX];
                     snprintf(subdir_path, sizeof(subdir_path), "%s/%s", base_dir, entry->d_name);
-
-                    char *subdir_name = strdup(subdir_path);
-                    if (!subdir_name) {
-                        perror("strdup");
-                        closedir(dir);
-                        free(dir_names);
-                        return NULL;
-                    }
-
-                    char **temp = realloc(dir_names, (dir_count + 1) * sizeof(char *));
-                    if (!temp) {
-                        perror("realloc");
-                        closedir(dir);
-                        free(subdir_name);
-                        free(dir_names);
-                        return NULL;
-                    }
-                    dir_names = temp;
-
-                    dir_names[dir_count] = get_last_subdir(subdir_name, '/', 5);
-                    dir_count++;
-
-                    char **sub_subdirs = get_subdirectories(subdir_path);
-                    if (sub_subdirs) {
-                        for (int i = 0; sub_subdirs[i] != NULL; i++) {
-                            temp = realloc(dir_names, (dir_count + 1) * sizeof(char *));
-                            if (!temp) {
-                                perror("realloc");
-                                closedir(dir);
-                                free(sub_subdirs);
-                                free(dir_names);
-                                return NULL;
-                            }
-                            dir_names = temp;
-
-                            dir_names[dir_count] = get_last_subdir(sub_subdirs[i], '/', 5);
-                            dir_count++;
-                        }
-
-                        free(sub_subdirs);
-                    }
+                    const char *trimmed_path = subdir_path + trim_start_count;
+                    add_directory_to_list(list, size, count, trimmed_path);
+                    collect_subdirectories(subdir_path, list, size, count, trim_start_count);
                 }
             }
         }
     }
-
-    char **temp = realloc(dir_names, (dir_count + 1) * sizeof(char *));
-    if (!temp) {
-        perror("realloc");
-        closedir(dir);
-        free(dir_names);
-        return NULL;
-    }
-
-    dir_names = temp;
-    dir_names[dir_count] = NULL;
-
     closedir(dir);
-    return dir_names;
 }
+
+char **get_subdirectories(const char *base_dir) {
+    int trim_start_count = strlen(base_dir) + 1;
+    int list_size = 10;
+    int count = 0;
+
+    char **subdir_list = malloc(list_size * PATH_MAX);
+    collect_subdirectories(base_dir, &subdir_list, &list_size, &count, trim_start_count);
+    subdir_list[count] = NULL;
+
+    return subdir_list;
+}
+
 
 void free_subdirectories(char **dir_names) {
     if (dir_names == NULL) return;
