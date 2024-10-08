@@ -82,7 +82,7 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	ELAPSED_TIME=$$((END - START)); \
 	printf "DONE (%ds)\n" "$${ELAPSED_TIME}"
 
-move:
+move: compile
 	@mkdir -p ../bin
 	@mv $(TARGET) ../bin/
 	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET) .start

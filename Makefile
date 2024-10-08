@@ -24,7 +24,8 @@ clean:
 
 $(MODULES):
 	@if [ -f "$@/Makefile" ]; then \
-		$(MAKE) -C $@ DEVICE=$(DEVICE) && \
+		MAKE_JOBS=$$(nproc); \
+		$(MAKE) -j$$MAKE_JOBS -C $@ DEVICE=$(DEVICE) && \
 		BUILD_COUNT=$$(cat $(BUILD_FILE) 2>/dev/null || echo 0); \
 		echo $$((BUILD_COUNT + 1)) > $(BUILD_FILE); \
 	fi
