@@ -44,26 +44,27 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int accelerate_total, accelerate_current;
-int swap_total, swap_current;
-int thermal_total, thermal_current;
-int font_total, font_current;
-int volume_total, volume_current;
-int brightness_total, brightness_current;
-int offset_total, offset_current;
-int lockdown_total, lockdown_current;
-int led_total, led_current;
-int random_theme_total, random_theme_current;
-int retrowait_total, retrowait_current;
-int usbfunction_total, usbfunction_current;
-int state_total, state_current;
-int verbose_total, verbose_current;
-int rumble_total, rumble_current;
-int hdmi_output_total, hdmi_output_current;
+int accelerate_total, accelerate_current, accelerate_original;
+int swap_total, swap_current, swap_original;
+int thermal_total, thermal_current, thermal_original;
+int font_total, font_current, font_original;
+int volume_total, volume_current, volume_original;
+int brightness_total, brightness_current, brightness_original;
+int offset_total, offset_current, offset_original;
+int lockdown_total, lockdown_current, lockdown_original;
+int led_total, led_current, led_original;
+int random_theme_total, random_theme_current, random_theme_original;
+int retrowait_total, retrowait_current, retrowait_original;
+int usbfunction_total, usbfunction_current, usbfunction_original;
+int state_total, state_current, state_original;
+int verbose_total, verbose_current, verbose_original;
+int rumble_total, rumble_current, rumble_original;
+int hdmi_output_total, hdmi_output_current, hdmi_output_original;
 
 typedef struct {
     int *total;
     int *current;
+    int *original;
 } Tweak;
 
 Tweak accelerate, swap, thermal, font, volume, brightness, offset, lockdown, led,
@@ -123,9 +124,10 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), TS(message));
 }
 
-void init_pointers(Tweak *tweak, int *total, int *current) {
+void init_pointers(Tweak *tweak, int *total, int *current, int *original) {
     tweak->total = total;
     tweak->current = current;
+    tweak->original = original;
 }
 
 static void dropdown_event_handler(lv_event_t *e) {
@@ -163,42 +165,42 @@ void elements_events_init() {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
 
-    init_pointers(&accelerate, &accelerate_total, &accelerate_current);
-    init_pointers(&swap, &swap_total, &swap_current);
-    init_pointers(&thermal, &thermal_total, &thermal_current);
-    init_pointers(&font, &font_total, &font_current);
-    init_pointers(&volume, &volume_total, &volume_current);
-    init_pointers(&brightness, &brightness_total, &brightness_current);
-    init_pointers(&offset, &offset_total, &offset_current);
-    init_pointers(&lockdown, &lockdown_total, &lockdown_current);
-    init_pointers(&led, &led_total, &led_current);
-    init_pointers(&random_theme, &random_theme_total, &random_theme_current);
-    init_pointers(&retrowait, &retrowait_total, &retrowait_current);
-    init_pointers(&usbfunction, &usbfunction_total, &usbfunction_current);
-    init_pointers(&state, &state_total, &state_current);
-    init_pointers(&verbose, &verbose_total, &verbose_current);
-    init_pointers(&rumble, &rumble_total, &rumble_current);
-    init_pointers(&hdmi_output, &hdmi_output_total, &hdmi_output_current);
+    init_pointers(&accelerate, &accelerate_total, &accelerate_current, &accelerate_original);
+    init_pointers(&swap, &swap_total, &swap_current, &swap_original);
+    init_pointers(&thermal, &thermal_total, &thermal_current, &thermal_original);
+    init_pointers(&font, &font_total, &font_current, &font_original);
+    init_pointers(&volume, &volume_total, &volume_current, &volume_original);
+    init_pointers(&brightness, &brightness_total, &brightness_current, &brightness_original);
+    init_pointers(&offset, &offset_total, &offset_current, &offset_original);
+    init_pointers(&lockdown, &lockdown_total, &lockdown_current, &lockdown_original);
+    init_pointers(&led, &led_total, &led_current, &led_original);
+    init_pointers(&random_theme, &random_theme_total, &random_theme_current, &random_theme_original);
+    init_pointers(&retrowait, &retrowait_total, &retrowait_current, &retrowait_original);
+    init_pointers(&usbfunction, &usbfunction_total, &usbfunction_current, &usbfunction_original);
+    init_pointers(&state, &state_total, &state_current, &state_original);
+    init_pointers(&verbose, &verbose_total, &verbose_current, &verbose_original);
+    init_pointers(&rumble, &rumble_total, &rumble_current, &rumble_original);
+    init_pointers(&hdmi_output, &hdmi_output_total, &hdmi_output_current, &hdmi_output_original);
 }
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {accelerate.total,   accelerate.current},
-            {swap.total,         swap.current},
-            {thermal.total,      thermal.current},
-            {font.total,         font.current},
-            {volume.total,       volume.current},
-            {brightness.total,   brightness.current},
-            {offset.total,       offset.current},
-            {lockdown.total,     lockdown.current},
-            {led.total,          led.current},
-            {random_theme.total, random_theme.current},
-            {retrowait.total,    retrowait.current},
-            {usbfunction.total,  usbfunction.current},
-            {state.total,        state.current},
-            {verbose.total,      verbose.current},
-            {rumble.total,       rumble.current},
-            {hdmi_output.total,  hdmi_output.current},
+            {accelerate.total,   accelerate.current,   accelerate.original},
+            {swap.total,         swap.current,         swap.original},
+            {thermal.total,      thermal.current,      thermal.original},
+            {font.total,         font.current,         font.original},
+            {volume.total,       volume.current,       volume.original},
+            {brightness.total,   brightness.current,   brightness.original},
+            {offset.total,       offset.current,       offset.original},
+            {lockdown.total,     lockdown.current,     lockdown.original},
+            {led.total,          led.current,          led.original},
+            {random_theme.total, random_theme.current, random_theme.original},
+            {retrowait.total,    retrowait.current,    retrowait.original},
+            {usbfunction.total,  usbfunction.current,  usbfunction.original},
+            {state.total,        state.current,        state.original},
+            {verbose.total,      verbose.current,      verbose.original},
+            {rumble.total,       rumble.current,       rumble.original},
+            {hdmi_output.total,  hdmi_output.current,  hdmi_output.original},
     };
 
     lv_obj_t *dropdowns[] = {
@@ -223,6 +225,7 @@ void init_dropdown_settings() {
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
         *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
         *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
+        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
     }
 }
 
@@ -356,27 +359,94 @@ void save_tweak_options() {
     int idx_rumble = lv_dropdown_get_selected(ui_droRumble);
     int idx_hdmi_output = lv_dropdown_get_selected(ui_droHDMIOutput);
 
-    write_text_to_file("/run/muos/global/settings/advanced/accelerate", "w", INT, idx_accelerate);
-    write_text_to_file("/run/muos/global/settings/advanced/swap", "w", INT, idx_swap);
-    write_text_to_file("/run/muos/global/settings/advanced/thermal", "w", INT, idx_thermal);
-    write_text_to_file("/run/muos/global/settings/advanced/font", "w", INT, idx_font);
-    write_text_to_file("/run/muos/global/settings/advanced/volume", "w", CHAR, idx_volume);
-    write_text_to_file("/run/muos/global/settings/advanced/brightness", "w", CHAR, idx_brightness);
-    write_text_to_file("/run/muos/global/settings/advanced/offset", "w", INT, idx_offset);
-    write_text_to_file("/run/muos/global/settings/advanced/lock", "w", INT, idx_lockdown);
-    write_text_to_file("/run/muos/global/settings/advanced/led", "w", INT, idx_led);
-    write_text_to_file("/run/muos/global/settings/advanced/random_theme", "w", INT, idx_random_theme);
-    write_text_to_file("/run/muos/global/settings/advanced/retrowait", "w", INT, idx_retrowait);
-    write_text_to_file("/run/muos/global/settings/advanced/usb_function", "w", CHAR, idx_usbfunction);
-    write_text_to_file("/run/muos/global/settings/advanced/state", "w", CHAR, idx_state);
-    write_text_to_file("/run/muos/global/settings/advanced/verbose", "w", INT, idx_verbose);
-    write_text_to_file("/run/muos/global/settings/advanced/rumble", "w", INT, idx_rumble);
-    write_text_to_file("/run/muos/global/settings/advanced/hdmi_output", "w", INT, idx_hdmi_output);
+    int is_modified = 0;
 
-    static char tweak_script[MAX_BUFFER_SIZE];
-    snprintf(tweak_script, sizeof(tweak_script),
-             "%s/script/mux/tweak.sh", INTERNAL_PATH);
-    system(tweak_script);
+    if (accelerate_current != accelerate_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/accelerate", "w", INT, idx_accelerate);
+    }
+
+    if (swap_current != swap_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/swap", "w", INT, idx_swap);
+    }
+
+    if (thermal_current != thermal_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/thermal", "w", INT, idx_thermal);
+    }
+
+    if (font_current != font_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/font", "w", INT, idx_font);
+    }
+
+    if (volume_current != volume_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/volume", "w", CHAR, idx_volume);
+    }
+
+    if (brightness_current != brightness_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/brightness", "w", CHAR, idx_brightness);
+    }
+
+    if (offset_current != offset_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/offset", "w", INT, idx_offset);
+    }
+
+    if (lockdown_current != lockdown_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/lock", "w", INT, idx_lockdown);
+    }
+
+    if (led_current != led_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/led", "w", INT, idx_led);
+    }
+
+    if (random_theme_current != random_theme_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/random_theme", "w", INT, idx_random_theme);
+    }
+
+    if (retrowait_current != retrowait_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/retrowait", "w", INT, idx_retrowait);
+    }
+
+    if (usbfunction_current != usbfunction_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/usb_function", "w", CHAR, idx_usbfunction);
+    }
+
+    if (state_current != state_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/state", "w", CHAR, idx_state);
+    }
+
+    if (verbose_current != verbose_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/verbose", "w", INT, idx_verbose);
+    }
+
+    if (rumble_current != rumble_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/rumble", "w", INT, idx_rumble);
+    }
+
+    if (hdmi_output_current != hdmi_output_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/hdmi_output", "w", INT, idx_hdmi_output);
+    }
+
+    if (is_modified > 0) {
+        static char tweak_script[MAX_BUFFER_SIZE];
+        snprintf(tweak_script, sizeof(tweak_script),
+                 "%s/script/mux/tweak.sh", INTERNAL_PATH);
+        system(tweak_script);
+    }
 }
 
 void init_navigation_groups() {

@@ -44,17 +44,18 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int hidden_total, hidden_current;
-int bgm_total, bgm_current;
-int sound_total, sound_current;
-int startup_total, startup_current;
-int colour_total, colour_current;
-int brightness_total, brightness_current;
-int hdmi_total, hdmi_current;
+int hidden_total, hidden_current, hidden_original;
+int bgm_total, bgm_current, bgm_original;
+int sound_total, sound_current, sound_original;
+int startup_total, startup_current, startup_original;
+int colour_total, colour_current, colour_original;
+int brightness_total, brightness_current, brightness_original;
+int hdmi_total, hdmi_current, hdmi_original;
 
 typedef struct {
     int *total;
     int *current;
+    int *original;
 } Tweak;
 
 Tweak hidden, bgm, sound, startup, colour, brightness, hdmi;
@@ -103,9 +104,10 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), TS(message));
 }
 
-void init_pointers(Tweak *tweak, int *total, int *current) {
+void init_pointers(Tweak *tweak, int *total, int *current, int *original) {
     tweak->total = total;
     tweak->current = current;
+    tweak->original = original;
 }
 
 static void dropdown_event_handler(lv_event_t *e) {
@@ -133,24 +135,24 @@ void elements_events_init() {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
 
-    init_pointers(&hidden, &hidden_total, &hidden_current);
-    init_pointers(&bgm, &bgm_total, &bgm_current);
-    init_pointers(&sound, &sound_total, &sound_current);
-    init_pointers(&startup, &startup_total, &startup_current);
-    init_pointers(&colour, &colour_total, &colour_current);
-    init_pointers(&brightness, &brightness_total, &brightness_current);
-    init_pointers(&hdmi, &hdmi_total, &hdmi_current);
+    init_pointers(&hidden, &hidden_total, &hidden_current, &hidden_original);
+    init_pointers(&bgm, &bgm_total, &bgm_current, &bgm_original);
+    init_pointers(&sound, &sound_total, &sound_current, &sound_original);
+    init_pointers(&startup, &startup_total, &startup_current, &startup_original);
+    init_pointers(&colour, &colour_total, &colour_current, &colour_original);
+    init_pointers(&brightness, &brightness_total, &brightness_current, &brightness_original);
+    init_pointers(&hdmi, &hdmi_total, &hdmi_current, &hdmi_original);
 }
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {hidden.total,     hidden.current},
-            {bgm.total,        bgm.current},
-            {sound.total,      sound.current},
-            {startup.total,    startup.current},
-            {colour.total,     colour.current},
-            {brightness.total, brightness.current},
-            {hdmi.total,       hdmi.current}
+            {hidden.total,     hidden.current,     hidden.original},
+            {bgm.total,        bgm.current,        bgm.original},
+            {sound.total,      sound.current,      sound.original},
+            {startup.total,    startup.current,    startup.original},
+            {colour.total,     colour.current,     colour.original},
+            {brightness.total, brightness.current, brightness.original},
+            {hdmi.total,       hdmi.current,       hdmi.original}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -166,6 +168,7 @@ void init_dropdown_settings() {
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
         *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
         *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
+        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
     }
 }
 
@@ -236,26 +239,53 @@ void save_tweak_options() {
     int idx_sound = lv_dropdown_get_selected(ui_droSound);
     int idx_brightness = lv_dropdown_get_selected(ui_droBrightness);
 
-    write_text_to_file("/run/muos/global/settings/general/hidden", "w", INT, idx_hidden);
-    write_text_to_file("/run/muos/global/settings/general/bgm", "w", INT, idx_bgm);
-    write_text_to_file("/run/muos/global/settings/general/sound", "w", INT, idx_sound);
-    write_text_to_file("/run/muos/global/settings/general/brightness", "w", INT, idx_brightness);
-    write_text_to_file("/run/muos/global/settings/general/startup", "w", CHAR, idx_startup);
-    write_text_to_file("/run/muos/global/settings/general/colour", "w", INT, idx_colour);
-    write_text_to_file("/run/muos/global/settings/general/hdmi", "w", INT, idx_hdmi);
+    int is_modified = 0;
 
-    char br_num[MAX_BUFFER_SIZE];
-    lv_dropdown_get_selected_str(ui_droBrightness, br_num, MAX_BUFFER_SIZE);
+    if (hdmi_current != hdmi_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/general/hdmi", "w", INT, idx_hdmi);
+    }
 
-    char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
-             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), atoi(br_num));
-    system(command);
+    if (hidden_current != hidden_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/general/hidden", "w", INT, idx_hidden);
+    }
 
-    static char tweak_script[MAX_BUFFER_SIZE];
-    snprintf(tweak_script, sizeof(tweak_script),
-             "%s/script/mux/tweak.sh", INTERNAL_PATH);
-    system(tweak_script);
+    if (bgm_current != bgm_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/general/bgm", "w", INT, idx_bgm);
+    }
+
+    if (sound_current != sound_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/general/sound", "w", INT, idx_sound);
+    }
+
+    if (startup_current != startup_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/general/startup", "w", CHAR, idx_startup);
+    }
+
+    if (colour_current != colour_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/general/colour", "w", INT, idx_colour);
+    }
+
+    if (brightness_current != brightness_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/general/brightness", "w", INT, idx_brightness);
+        char command[MAX_BUFFER_SIZE];
+        snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
+                 INTERNAL_PATH, str_tolower(device.DEVICE.NAME), idx_brightness + 1);
+        system(command);
+    }
+
+    if (is_modified > 0) {
+        static char tweak_script[MAX_BUFFER_SIZE];
+        snprintf(tweak_script, sizeof(tweak_script),
+                 "%s/script/mux/tweak.sh", INTERNAL_PATH);
+        system(tweak_script);
+    }
 }
 
 void init_navigation_groups() {

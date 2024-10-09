@@ -44,16 +44,17 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int shell_total, shell_current;
-int browser_total, browser_current;
-int terminal_total, terminal_current;
-int syncthing_total, syncthing_current;
-int resilio_total, resilio_current;
-int ntp_total, ntp_current;
+int shell_total, shell_current, shell_original;
+int browser_total, browser_current, browser_original;
+int terminal_total, terminal_current, terminal_original;
+int syncthing_total, syncthing_current, syncthing_original;
+int resilio_total, resilio_current, resilio_original;
+int ntp_total, ntp_current, ntp_original;
 
 typedef struct {
     int *total;
     int *current;
+    int *original;
 } WebServices;
 
 WebServices shell, browser, terminal, syncthing, resilio, ntp;
@@ -97,9 +98,10 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), TS(message));
 }
 
-void init_pointers(WebServices *web, int *total, int *current) {
+void init_pointers(WebServices *web, int *total, int *current, int *original) {
     web->total = total;
     web->current = current;
+    web->original = original;
 }
 
 static void dropdown_event_handler(lv_event_t *e) {
@@ -126,22 +128,22 @@ void elements_events_init() {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
 
-    init_pointers(&shell, &shell_total, &shell_current);
-    init_pointers(&browser, &browser_total, &browser_current);
-    init_pointers(&terminal, &terminal_total, &terminal_current);
-    init_pointers(&syncthing, &syncthing_total, &syncthing_current);
-    init_pointers(&resilio, &resilio_total, &resilio_current);
-    init_pointers(&ntp, &ntp_total, &ntp_current);
+    init_pointers(&shell, &shell_total, &shell_current, &shell_original);
+    init_pointers(&browser, &browser_total, &browser_current, &browser_original);
+    init_pointers(&terminal, &terminal_total, &terminal_current, &terminal_original);
+    init_pointers(&syncthing, &syncthing_total, &syncthing_current, &syncthing_original);
+    init_pointers(&resilio, &resilio_total, &resilio_current, &resilio_original);
+    init_pointers(&ntp, &ntp_total, &ntp_current, &ntp_original);
 }
 
 void init_dropdown_settings() {
     WebServices settings[] = {
-            {shell.total,     shell.current},
-            {browser.total,   browser.current},
-            {terminal.total,  terminal.current},
-            {syncthing.total, syncthing.current},
-            {resilio.total,   resilio.current},
-            {ntp.total,       ntp.current}
+            {shell.total,     shell.current,     shell.original},
+            {browser.total,   browser.current,   browser.original},
+            {terminal.total,  terminal.current,  terminal.original},
+            {syncthing.total, syncthing.current, syncthing.original},
+            {resilio.total,   resilio.current,   resilio.original},
+            {ntp.total,       ntp.current,       ntp.original}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -156,6 +158,7 @@ void init_dropdown_settings() {
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
         *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
         *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
+        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
     }
 }
 
@@ -176,18 +179,44 @@ void save_web_options() {
     int idx_resilio = lv_dropdown_get_selected(ui_droResilio);
     int idx_ntp = lv_dropdown_get_selected(ui_droNTP);
 
-    write_text_to_file("/run/muos/global/web/shell", "w", INT, idx_shell);
-    write_text_to_file("/run/muos/global/web/browser", "w", INT, idx_browser);
-    write_text_to_file("/run/muos/global/web/terminal", "w", INT, idx_terminal);
-    write_text_to_file("/run/muos/global/web/syncthing", "w", INT, idx_syncthing);
-    write_text_to_file("/run/muos/global/web/resilio", "w", INT, idx_resilio);
-    write_text_to_file("/run/muos/global/web/ntp", "w", INT, idx_ntp);
+    int is_modified = 0;
 
-    static char service_script[MAX_BUFFER_SIZE];
-    snprintf(service_script, sizeof(service_script),
-             "%s/script/web/service.sh", INTERNAL_PATH);
+    if (shell_current != shell_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/web/shell", "w", INT, idx_shell);
+    }
 
-    system(service_script);
+    if (browser_current != browser_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/web/browser", "w", INT, idx_browser);
+    }
+
+    if (terminal_current != terminal_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/web/terminal", "w", INT, idx_terminal);
+    }
+
+    if (syncthing_current != syncthing_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/web/syncthing", "w", INT, idx_syncthing);
+    }
+
+    if (resilio_current != resilio_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/web/resilio", "w", INT, idx_resilio);
+    }
+
+    if (ntp_current != ntp_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/web/ntp", "w", INT, idx_ntp);
+    }
+
+    if (is_modified > 0) {
+        static char service_script[MAX_BUFFER_SIZE];
+        snprintf(service_script, sizeof(service_script),
+                 "%s/script/web/service.sh", INTERNAL_PATH);
+        system(service_script);
+    }
 }
 
 void init_navigation_groups() {

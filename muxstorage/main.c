@@ -44,16 +44,16 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int bios_total, bios_current;
-int raconfig_total, raconfig_current;
-int catalogue_total, catalogue_current;
-int content_total, content_current;
-int music_total, music_current;
-int save_total, save_current;
-int screenshot_total, screenshot_current;
-int look_total, look_current;
-int language_total, language_current;
-int network_total, network_current;
+int bios_total, bios_current, bios_original;
+int raconfig_total, raconfig_current, raconfig_original;
+int catalogue_total, catalogue_current, catalogue_original;
+int content_total, content_current, content_original;
+int music_total, music_current, music_original;
+int save_total, save_current, save_original;
+int screenshot_total, screenshot_current, screenshot_original;
+int look_total, look_current, look_original;
+int language_total, language_current, language_original;
+int network_total, network_current, network_original;
 
 #define UI_COUNT 10
 lv_obj_t *ui_objects[UI_COUNT];
@@ -61,6 +61,7 @@ lv_obj_t *ui_objects[UI_COUNT];
 typedef struct {
     int *total;
     int *current;
+    int *original;
 } Storage;
 
 Storage bios, raconfig, catalogue, content, music, save, screenshot, look, language, network;
@@ -109,9 +110,10 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_pointers(Storage *storage, int *total, int *current) {
+void init_pointers(Storage *storage, int *total, int *current, int *original) {
     storage->total = total;
     storage->current = current;
+    storage->original = original;
 }
 
 static void dropdown_event_handler(lv_event_t *e) {
@@ -142,30 +144,30 @@ void elements_events_init() {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
 
-    init_pointers(&bios, &bios_total, &bios_current);
-    init_pointers(&raconfig, &raconfig_total, &raconfig_current);
-    init_pointers(&catalogue, &catalogue_total, &catalogue_current);
-    init_pointers(&content, &content_total, &content_current);
-    init_pointers(&music, &music_total, &music_current);
-    init_pointers(&save, &save_total, &save_current);
-    init_pointers(&screenshot, &screenshot_total, &screenshot_current);
-    init_pointers(&look, &look_total, &look_current);
-    init_pointers(&language, &language_total, &language_current);
-    init_pointers(&network, &network_total, &network_current);
+    init_pointers(&bios, &bios_total, &bios_current, &bios_original);
+    init_pointers(&raconfig, &raconfig_total, &raconfig_current, &raconfig_original);
+    init_pointers(&catalogue, &catalogue_total, &catalogue_current, &catalogue_original);
+    init_pointers(&content, &content_total, &content_current, &content_original);
+    init_pointers(&music, &music_total, &music_current, &music_original);
+    init_pointers(&save, &save_total, &save_current, &save_original);
+    init_pointers(&screenshot, &screenshot_total, &screenshot_current, &screenshot_original);
+    init_pointers(&look, &look_total, &look_current, &look_original);
+    init_pointers(&language, &language_total, &language_current, &language_original);
+    init_pointers(&network, &network_total, &network_current, &network_original);
 }
 
 void init_dropdown_settings() {
     Storage settings[] = {
-            {bios.total,       bios.current},
-            {raconfig.total,   raconfig.current},
-            {catalogue.total,  catalogue.current},
-            {content.total,    content.current},
-            {music.total,      music.current},
-            {save.total,       save.current},
-            {screenshot.total, screenshot.current},
-            {look.total,       look.current},
-            {language.total,   language.current},
-            {network.total,    network.current},
+            {bios.total,       bios.current,       bios.original},
+            {raconfig.total,   raconfig.current,   raconfig.original},
+            {catalogue.total,  catalogue.current,  catalogue.original},
+            {content.total,    content.current,    content.original},
+            {music.total,      music.current,      music.original},
+            {save.total,       save.current,       save.original},
+            {screenshot.total, screenshot.current, screenshot.original},
+            {look.total,       look.current,       look.original},
+            {language.total,   language.current,   language.original},
+            {network.total,    network.current,    network.original},
     };
 
     lv_obj_t *dropdowns[] = {
@@ -184,6 +186,7 @@ void init_dropdown_settings() {
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
         *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
         *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
+        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
     }
 }
 
@@ -212,16 +215,45 @@ void save_storage_options() {
     int idx_language = lv_dropdown_get_selected(ui_droLanguage);
     int idx_network = lv_dropdown_get_selected(ui_droNetwork);
 
-    write_text_to_file("/run/muos/global/storage/bios", "w", INT, idx_bios);
-    write_text_to_file("/run/muos/global/storage/config", "w", INT, idx_config);
-    write_text_to_file("/run/muos/global/storage/catalogue", "w", INT, idx_catalogue);
-    write_text_to_file("/run/muos/global/storage/content", "w", INT, idx_content);
-    write_text_to_file("/run/muos/global/storage/music", "w", INT, idx_music);
-    write_text_to_file("/run/muos/global/storage/save", "w", INT, idx_save);
-    write_text_to_file("/run/muos/global/storage/screenshot", "w", INT, idx_screenshot);
-    write_text_to_file("/run/muos/global/storage/theme", "w", INT, idx_theme);
-    write_text_to_file("/run/muos/global/storage/language", "w", INT, idx_language);
-    write_text_to_file("/run/muos/global/storage/network", "w", INT, idx_network);
+    if (bios_current != bios_original) {
+        write_text_to_file("/run/muos/global/storage/bios", "w", INT, idx_bios);
+    }
+
+    if (raconfig_current != raconfig_original) {
+        write_text_to_file("/run/muos/global/storage/config", "w", INT, idx_config);
+    }
+
+    if (catalogue_current != catalogue_original) {
+        write_text_to_file("/run/muos/global/storage/catalogue", "w", INT, idx_catalogue);
+    }
+
+    if (content_current != content_original) {
+        write_text_to_file("/run/muos/global/storage/content", "w", INT, idx_content);
+    }
+
+    if (music_current != music_original) {
+        write_text_to_file("/run/muos/global/storage/music", "w", INT, idx_music);
+    }
+
+    if (save_current != save_original) {
+        write_text_to_file("/run/muos/global/storage/save", "w", INT, idx_save);
+    }
+
+    if (screenshot_current != screenshot_original) {
+        write_text_to_file("/run/muos/global/storage/screenshot", "w", INT, idx_screenshot);
+    }
+
+    if (look_current != look_original) {
+        write_text_to_file("/run/muos/global/storage/theme", "w", INT, idx_theme);
+    }
+
+    if (language_current != language_original) {
+        write_text_to_file("/run/muos/global/storage/language", "w", INT, idx_language);
+    }
+
+    if (network_current != network_original) {
+        write_text_to_file("/run/muos/global/storage/network", "w", INT, idx_network);
+    }
 }
 
 void init_navigation_groups() {

@@ -44,21 +44,21 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int battery_total, battery_current;
-int network_total, network_current;
-int bluetooth_total, bluetooth_current;
-int mux_clock_total, mux_clock_current;
-int boxart_total, boxart_current;
-int boxartalign_total, boxartalign_current;
-int name_total, name_current;
-int dash_total, dash_current;
-int friendlyfolder_total, friendlyfolder_current;
-int thetitleformat_total, thetitleformat_current;
-int titleincluderootdrive_total, titleincluderootdrive_current;
-int folderitemcount_total, folderitemcount_current;
-int menu_counter_folder_total, menu_counter_folder_current;
-int menu_counter_file_total, menu_counter_file_current;
-int background_animation_total, background_animation_current;
+int battery_total, battery_current, battery_original;
+int network_total, network_current, network_original;
+int bluetooth_total, bluetooth_current, bluetooth_original;
+int mux_clock_total, mux_clock_current, mux_clock_original;
+int boxart_total, boxart_current, boxart_original;
+int boxartalign_total, boxartalign_current, boxartalign_original;
+int name_total, name_current, name_original;
+int dash_total, dash_current, dash_original;
+int friendlyfolder_total, friendlyfolder_current, friendlyfolder_original;
+int thetitleformat_total, thetitleformat_current, thetitleformat_original;
+int titleincluderootdrive_total, titleincluderootdrive_current, titleincluderootdrive_original;
+int folderitemcount_total, folderitemcount_current, folderitemcount_original;
+int menu_counter_folder_total, menu_counter_folder_current, menu_counter_folder_original;
+int menu_counter_file_total, menu_counter_file_current, menu_counter_file_original;
+int background_animation_total, background_animation_current, background_animation_original;
 
 #define UI_COUNT 15
 lv_obj_t *ui_objects[UI_COUNT];
@@ -66,6 +66,7 @@ lv_obj_t *ui_objects[UI_COUNT];
 typedef struct {
     int *total;
     int *current;
+    int *original;
 } Visuals;
 
 Visuals battery, network, bluetooth, mux_clock, boxart, boxartalign, name, dash, friendlyfolder,
@@ -122,9 +123,10 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), TS(message));
 }
 
-void init_pointers(Visuals *visuals, int *total, int *current) {
+void init_pointers(Visuals *visuals, int *total, int *current, int *original) {
     visuals->total = total;
     visuals->current = current;
+    visuals->original = original;
 }
 
 static void dropdown_event_handler(lv_event_t *e) {
@@ -160,40 +162,43 @@ void elements_events_init() {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
 
-    init_pointers(&battery, &battery_total, &battery_current);
-    init_pointers(&network, &network_total, &network_current);
-    init_pointers(&bluetooth, &bluetooth_total, &bluetooth_current);
-    init_pointers(&mux_clock, &mux_clock_total, &mux_clock_current);
-    init_pointers(&boxart, &boxart_total, &boxart_current);
-    init_pointers(&boxartalign, &boxartalign_total, &boxartalign_current);
-    init_pointers(&name, &name_total, &name_current);
-    init_pointers(&dash, &dash_total, &dash_current);
-    init_pointers(&friendlyfolder, &friendlyfolder_total, &friendlyfolder_current);
-    init_pointers(&thetitleformat, &thetitleformat_total, &thetitleformat_current);
-    init_pointers(&titleincluderootdrive, &titleincluderootdrive_total, &titleincluderootdrive_current);
-    init_pointers(&folderitemcount, &folderitemcount_total, &folderitemcount_current);
-    init_pointers(&counterfolder, &menu_counter_folder_total, &menu_counter_folder_current);
-    init_pointers(&counterfile, &menu_counter_file_total, &menu_counter_file_current);
-    init_pointers(&backgroundanimation, &background_animation_total, &background_animation_current);
+    init_pointers(&battery, &battery_total, &battery_current, &battery_original);
+    init_pointers(&network, &network_total, &network_current, &network_original);
+    init_pointers(&bluetooth, &bluetooth_total, &bluetooth_current, &bluetooth_original);
+    init_pointers(&mux_clock, &mux_clock_total, &mux_clock_current, &mux_clock_original);
+    init_pointers(&boxart, &boxart_total, &boxart_current, &boxart_original);
+    init_pointers(&boxartalign, &boxartalign_total, &boxartalign_current, &boxartalign_original);
+    init_pointers(&name, &name_total, &name_current, &name_original);
+    init_pointers(&dash, &dash_total, &dash_current, &dash_original);
+    init_pointers(&friendlyfolder, &friendlyfolder_total, &friendlyfolder_current, &friendlyfolder_original);
+    init_pointers(&thetitleformat, &thetitleformat_total, &thetitleformat_current, &thetitleformat_original);
+    init_pointers(&titleincluderootdrive, &titleincluderootdrive_total, &titleincluderootdrive_current,
+                  &titleincluderootdrive_original);
+    init_pointers(&folderitemcount, &folderitemcount_total, &folderitemcount_current, &folderitemcount_original);
+    init_pointers(&counterfolder, &menu_counter_folder_total, &menu_counter_folder_current,
+                  &menu_counter_folder_original);
+    init_pointers(&counterfile, &menu_counter_file_total, &menu_counter_file_current, &menu_counter_file_original);
+    init_pointers(&backgroundanimation, &background_animation_total, &background_animation_current,
+                  &background_animation_original);
 }
 
 void init_dropdown_settings() {
     Visuals settings[] = {
-            {battery.total,               battery.current},
-            {network.total,               network.current},
-            {bluetooth.total,             bluetooth.current},
-            {mux_clock.total,             mux_clock.current},
-            {boxart.total,                boxart.current},
-            {boxartalign.total,           boxartalign.current},
-            {name.total,                  name.current},
-            {dash.total,                  dash.current},
-            {friendlyfolder.total,        friendlyfolder.current},
-            {thetitleformat.total,        thetitleformat.current},
-            {titleincluderootdrive.total, titleincluderootdrive.current},
-            {folderitemcount.total,       folderitemcount.current},
-            {counterfolder.total,         counterfolder.current},
-            {counterfile.total,           counterfile.current},
-            {backgroundanimation.total,   backgroundanimation.current}
+            {battery.total,               battery.current,               battery.original},
+            {network.total,               network.current,               network.original},
+            {bluetooth.total,             bluetooth.current,             bluetooth.original},
+            {mux_clock.total,             mux_clock.current,             mux_clock.original},
+            {boxart.total,                boxart.current,                boxart.original},
+            {boxartalign.total,           boxartalign.current,           boxartalign.original},
+            {name.total,                  name.current,                  name.original},
+            {dash.total,                  dash.current,                  dash.original},
+            {friendlyfolder.total,        friendlyfolder.current,        friendlyfolder.original},
+            {thetitleformat.total,        thetitleformat.current,        thetitleformat.original},
+            {titleincluderootdrive.total, titleincluderootdrive.current, titleincluderootdrive.original},
+            {folderitemcount.total,       folderitemcount.current,       folderitemcount.original},
+            {counterfolder.total,         counterfolder.current,         counterfolder.original},
+            {counterfile.total,           counterfile.current,           counterfile.original},
+            {backgroundanimation.total,   backgroundanimation.current,   backgroundanimation.original}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -217,6 +222,7 @@ void init_dropdown_settings() {
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
         *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
         *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
+        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
     }
 }
 
@@ -255,21 +261,65 @@ void save_visual_options() {
     int idx_counterfile = lv_dropdown_get_selected(ui_droMenuCounterFile);
     int idx_backgroundanimation = lv_dropdown_get_selected(ui_droBackgroundAnimation);
 
-    write_text_to_file("/run/muos/global/visual/battery", "w", INT, idx_battery);
-    write_text_to_file("/run/muos/global/visual/network", "w", INT, idx_network);
-    write_text_to_file("/run/muos/global/visual/bluetooth", "w", INT, idx_bluetooth);
-    write_text_to_file("/run/muos/global/visual/clock", "w", INT, idx_clock);
-    write_text_to_file("/run/muos/global/visual/boxart", "w", INT, idx_boxart);
-    write_text_to_file("/run/muos/global/visual/boxartalign", "w", INT, idx_boxartalign);
-    write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
-    write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
-    write_text_to_file("/run/muos/global/visual/friendlyfolder", "w", INT, idx_friendlyfolder);
-    write_text_to_file("/run/muos/global/visual/thetitleformat", "w", INT, idx_thetitleformat);
-    write_text_to_file("/run/muos/global/visual/titleincluderootdrive", "w", INT, idx_titleincluderootdrive);
-    write_text_to_file("/run/muos/global/visual/folderitemcount", "w", INT, idx_folderitemcount);
-    write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_counterfolder);
-    write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_counterfile);
-    write_text_to_file("/run/muos/global/visual/backgroundanimation", "w", INT, idx_backgroundanimation);
+    if (battery_current != battery_original) {
+        write_text_to_file("/run/muos/global/visual/battery", "w", INT, idx_battery);
+    }
+
+    if (network_current != network_original) {
+        write_text_to_file("/run/muos/global/visual/network", "w", INT, idx_network);
+    }
+
+    if (bluetooth_current != bluetooth_original) {
+        write_text_to_file("/run/muos/global/visual/bluetooth", "w", INT, idx_bluetooth);
+    }
+
+    if (mux_clock_current != mux_clock_original) {
+        write_text_to_file("/run/muos/global/visual/clock", "w", INT, idx_clock);
+    }
+
+    if (boxart_current != boxart_original) {
+        write_text_to_file("/run/muos/global/visual/boxart", "w", INT, idx_boxart);
+    }
+
+    if (boxartalign_current != boxartalign_original) {
+        write_text_to_file("/run/muos/global/visual/boxartalign", "w", INT, idx_boxartalign);
+    }
+
+    if (name_current != name_original) {
+        write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
+    }
+
+    if (dash_current != dash_original) {
+        write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
+    }
+
+    if (friendlyfolder_current != friendlyfolder_original) {
+        write_text_to_file("/run/muos/global/visual/friendlyfolder", "w", INT, idx_friendlyfolder);
+    }
+
+    if (thetitleformat_current != thetitleformat_original) {
+        write_text_to_file("/run/muos/global/visual/thetitleformat", "w", INT, idx_thetitleformat);
+    }
+
+    if (titleincluderootdrive_current != titleincluderootdrive_original) {
+        write_text_to_file("/run/muos/global/visual/titleincluderootdrive", "w", INT, idx_titleincluderootdrive);
+    }
+
+    if (folderitemcount_current != folderitemcount_original) {
+        write_text_to_file("/run/muos/global/visual/folderitemcount", "w", INT, idx_folderitemcount);
+    }
+
+    if (menu_counter_folder_current != menu_counter_folder_original) {
+        write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_counterfolder);
+    }
+
+    if (menu_counter_file_current != menu_counter_file_original) {
+        write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_counterfile);
+    }
+
+    if (background_animation_current != background_animation_original) {
+        write_text_to_file("/run/muos/global/visual/backgroundanimation", "w", INT, idx_backgroundanimation);
+    }
 }
 
 void init_navigation_groups() {

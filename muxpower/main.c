@@ -44,14 +44,15 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int shutdown_total, shutdown_current;
-int battery_total, battery_current;
-int idle_display_total, idle_display_current;
-int idle_sleep_total, idle_sleep_current;
+int shutdown_total, shutdown_current, shutdown_original;
+int battery_total, battery_current, battery_original;
+int idle_display_total, idle_display_current, idle_display_original;
+int idle_sleep_total, idle_sleep_current, idle_sleep_original;
 
 typedef struct {
     int *total;
     int *current;
+    int *original;
 } Tweak;
 
 Tweak shutdown, battery, idle_display, idle_sleep;
@@ -93,9 +94,10 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), TS(message));
 }
 
-void init_pointers(Tweak *tweak, int *total, int *current) {
+void init_pointers(Tweak *tweak, int *total, int *current, int *original) {
     tweak->total = total;
     tweak->current = current;
+    tweak->original = original;
 }
 
 static void dropdown_event_handler(lv_event_t *e) {
@@ -120,18 +122,18 @@ void elements_events_init() {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
 
-    init_pointers(&shutdown, &shutdown_total, &shutdown_current);
-    init_pointers(&battery, &battery_total, &battery_current);
-    init_pointers(&idle_display, &idle_display_total, &idle_display_current);
-    init_pointers(&idle_sleep, &idle_sleep_total, &idle_sleep_current);
+    init_pointers(&shutdown, &shutdown_total, &shutdown_current, &shutdown_original);
+    init_pointers(&battery, &battery_total, &battery_current, &battery_original);
+    init_pointers(&idle_display, &idle_display_total, &idle_display_current, &idle_display_original);
+    init_pointers(&idle_sleep, &idle_sleep_total, &idle_sleep_current, &idle_sleep_original);
 }
 
 void init_dropdown_settings() {
     Tweak settings[] = {
-            {shutdown.total,     shutdown.current},
-            {battery.total,      battery.current},
-            {idle_display.total, idle_display.current},
-            {idle_sleep.total,   idle_sleep.current}
+            {shutdown.total,     shutdown.current,     shutdown.original},
+            {battery.total,      battery.current,      battery.original},
+            {idle_display.total, idle_display.current, idle_display.original},
+            {idle_sleep.total,   idle_sleep.current,   idle_sleep.original}
     };
 
     lv_obj_t *dropdowns[] = {
@@ -144,6 +146,7 @@ void init_dropdown_settings() {
     for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
         *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
         *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
+        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
     }
 }
 
@@ -174,15 +177,34 @@ void save_tweak_options() {
     int idx_idle_sleep = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleSleep),
                                                 (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
 
-    write_text_to_file("/run/muos/global/settings/power/shutdown", "w", INT, idx_shutdown);
-    write_text_to_file("/run/muos/global/settings/power/low_battery", "w", INT, idx_battery);
-    write_text_to_file("/run/muos/global/settings/power/idle_display", "w", INT, idx_idle_display);
-    write_text_to_file("/run/muos/global/settings/power/idle_sleep", "w", INT, idx_idle_sleep);
+    int is_modified = 0;
 
-    static char tweak_script[MAX_BUFFER_SIZE];
-    snprintf(tweak_script, sizeof(tweak_script),
-             "%s/script/mux/tweak.sh", INTERNAL_PATH);
-    system(tweak_script);
+    if (shutdown_current != shutdown_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/power/shutdown", "w", INT, idx_shutdown);
+    }
+
+    if (battery_current != battery_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/power/low_battery", "w", INT, idx_battery);
+    }
+
+    if (idle_display_current != idle_display_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/power/idle_display", "w", INT, idx_idle_display);
+    }
+
+    if (idle_sleep_current != idle_sleep_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/power/idle_sleep", "w", INT, idx_idle_sleep);
+    }
+
+    if (is_modified > 0) {
+        static char tweak_script[MAX_BUFFER_SIZE];
+        snprintf(tweak_script, sizeof(tweak_script),
+                 "%s/script/mux/tweak.sh", INTERNAL_PATH);
+        system(tweak_script);
+    }
 }
 
 void init_navigation_groups() {
