@@ -879,3 +879,12 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) 
 
     if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
 }
+
+void toast_message(const char * msg, uint32_t delay, uint32_t fade_duration) {
+    lv_label_set_text(ui_lblMessage, msg);
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_opa(ui_pnlMessage, LV_OPA_COVER, 0);
+
+    if (delay <= 0 || fade_duration <= 0) return;
+    lv_obj_fade_out(ui_pnlMessage, fade_duration, delay);
+}

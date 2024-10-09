@@ -78,7 +78,6 @@ int current_item_index = 0;
 int first_open = 1;
 int nav_moved = 1;
 int counter_fade = 0;
-int message_fade = 0;
 int fade_timeout = 3;
 int starter_image = 0;
 
@@ -1025,18 +1024,16 @@ void explore_root() {
 void add_to_favourites(char *filename, const char *pointer) {
     if (file_exist(filename)) {
         remove(filename);
-        lv_label_set_text(ui_lblMessage, TS("Removed from Favourites"));
+        toast_message(TS("Removed to Favourites"), 1000, 1000);
     } else {
         write_text_to_file(filename, "w", CHAR, pointer);
 
         if (file_exist(filename)) {
-            lv_label_set_text(ui_lblMessage, TS("Added to Favourites"));
+            toast_message(TS("Added to Favourites"), 1000, 1000);
         } else {
-            lv_label_set_text(ui_lblMessage, TS("Error adding to Favourites"));
+            toast_message(TS("Error adding to Favourites"), 1000, 1000);
         }
     }
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-    message_fade = 355;
     char *glyph_icon = get_glyph_name(current_item_index);
     apply_theme_list_glyph(&theme, lv_group_get_focused(ui_group_glyph), mux_module, glyph_icon);
 }
@@ -1129,8 +1126,7 @@ int load_content(int add_favourite) {
         return 1;
     }
 
-    lv_label_set_text(ui_lblMessage, TS("Could not load content - No core is associated"));
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    toast_message(TS("Could not load content - No core is associated"), 0, 0);
 
     return 0;
 }
@@ -1178,8 +1174,7 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
         }
     }
 
-    lv_label_set_text(ui_lblMessage, TS("Could not load content!"));
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    toast_message(TS("Could not load content!"), 0, 0);
 
     return 0;
 }
@@ -1348,8 +1343,7 @@ void handle_a() {
             break;
     }
 
-    lv_label_set_text(ui_lblMessage, TS("Loading..."));
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    toast_message(TS("Loading..."), 0, 0);
     lv_obj_move_foreground(ui_pnlMessage);
 
     // Refresh and add a small delay to actually display the message!
@@ -1496,9 +1490,7 @@ void handle_y() {
         case SDCARD:
         case USB:
             if (items[current_item_index].content_type == FOLDER) {
-                lv_label_set_text(ui_lblMessage,
-                                  TS("Directories cannot be added to Favourites"));
-                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                toast_message(TS("Directories cannot be added to Favourites"), 1000, 1000);
             } else {
                 load_content(1);
                 if (file_exist(MUOS_ROM_LOAD)) {
@@ -1796,14 +1788,6 @@ void ui_refresh_task() {
         }
     } else {
         fade_timeout--;
-    }
-
-    if (message_fade > 0) {
-        lv_obj_set_style_opa(ui_pnlMessage, LV_MIN(message_fade, 255), LV_PART_MAIN | LV_STATE_DEFAULT);
-        message_fade -= 10;
-    } else {
-        lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_set_style_opa(ui_pnlMessage, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
     if (nav_moved) {

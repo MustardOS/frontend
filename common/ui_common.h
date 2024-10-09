@@ -21,6 +21,8 @@ void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *the
 
 void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme);
 
+void toast_message(const char * msg, uint32_t delay, uint32_t fade_duration);
+
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;
 extern lv_obj_t *ui_imgWall;

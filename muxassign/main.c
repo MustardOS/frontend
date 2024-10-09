@@ -71,6 +71,95 @@ void show_help() {
                                                             "external emulator to content"));
 }
 
+void free_lines(char *lines[], int line_count) {
+    for (int i = 0; i < line_count; i++) {
+        free(lines[i]);
+    }
+}
+
+void modify_cfg_file(const char *filename, const char *core, const char *sys, const char *cache) {
+    printf("Updating file: %s\n", filename);
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Failed to open file");
+        return;
+    }
+
+    int max_lines = 10;
+    char *lines[max_lines];
+    int line_count = 0;
+
+    char line[MAX_BUFFER_SIZE];
+    while (fgets(line, sizeof(line), file)) {
+        if (line_count >= max_lines) {
+            fprintf(stderr, "File too large, exceeding max lines limit\n");
+            fclose(file);
+            return;
+        }
+        size_t len = strlen(line);
+        if (len > 0 && line[len - 1] == '\n') line[len - 1] = '\0'; 
+        lines[line_count] = strdup(line); 
+        line_count++;
+    }
+    fclose(file);
+
+    if (line_count >= 2) {
+        free(lines[1]);
+        lines[1] = strdup(core);
+    }
+    if (line_count >= 3) {
+        free(lines[2]);
+        lines[2] = strdup(sys);
+    }
+    if (line_count >= 4) {
+        free(lines[3]);
+        lines[3] = strdup(cache);
+    }
+
+    if (remove(filename) != 0) {
+        perror("Failed to delete original file");
+        free_lines(lines, line_count);
+        return;
+    }
+
+    FILE *new_file = fopen(filename, "w");
+    if (new_file == NULL) {
+        perror("Failed to create new file");
+        free_lines(lines, line_count);
+        return;
+    }
+
+    for (int i = 0; i < line_count; i++) {
+        fprintf(new_file, "%s\n", lines[i]);
+    }
+    free_lines(lines, line_count);
+
+    fclose(new_file);
+}
+
+// Function to scan the directory and find .cfg files
+void update_cfg_files(const char *dirpath, const char *core, const char *sys, const int cache) {
+    char cache_char[MAX_BUFFER_SIZE];
+    snprintf(cache_char, sizeof(cache_char), "%d", cache);
+
+    DIR *dir = opendir(dirpath);
+    if (dir == NULL) {
+        perror("Failed to open directory");
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strstr(entry->d_name, ".cfg") && strcmp(entry->d_name, "core.cfg") != 0) {
+            char filepath[PATH_MAX];
+            snprintf(filepath, sizeof(filepath), "%s/%s", dirpath, entry->d_name);
+            modify_cfg_file(filepath, core, sys, cache_char);
+        }
+    }
+
+    closedir(dir);
+}
+
 void create_core_assignment(const char *core, char *sys, char *rom, int cache, enum core_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/info/core/%s/",
@@ -104,7 +193,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
             break;
         }
         case PARENT: {
-            delete_files_of_type(core_dir, "cfg", NULL, 1);
+            delete_files_of_type(core_dir, "/core.cfg", NULL, 1);
             create_core_assignment(core, sys, rom, cache, DIRECTORY);
 
             char **subdirs = get_subdirectories(rom_dir);
@@ -123,13 +212,18 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
 
                     fprintf(subdir_file_handle, "%s\n%s\n%d\n", core, str_trim(sys), cache);
                     fclose(subdir_file_handle);
+
+                    char core_dir_path[MAX_BUFFER_SIZE];
+                    snprintf(core_dir_path, sizeof(core_dir_path), "%s%s", core_dir, subdirs[i]);
+                    update_cfg_files(core_dir_path, core, str_trim(sys), cache);
                 }
                 free_subdirectories(subdirs);
             }
         }
             break;
         case DIRECTORY: {
-            delete_files_of_type(core_dir, "cfg", NULL, 0);
+            delete_files_of_type(core_dir, "/core.cfg", NULL, 0);
+            update_cfg_files(core_dir, core, str_trim(sys), cache);
 
             char core_file[MAX_BUFFER_SIZE];
             snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
