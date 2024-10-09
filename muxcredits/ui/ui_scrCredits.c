@@ -526,7 +526,8 @@ void ui_scrCredits_screen_init(void) {
                       "LuckyPhil\n"
                       "Nack\n"
                       "DanOzGod\n"
-                      "Danny"
+                      "Danny\n"
+                      "kenzenzy"
     );
     lv_obj_set_scroll_dir(ui_lblHeroRight, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroRight, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -626,7 +627,10 @@ void ui_scrCredits_screen_init(void) {
                       "EmptyWalletCrumbs\n"
                       "VJ425\n"
                       "Sole\n"
-                      "thedreadpirates"
+                      "thedreadpirates\n"
+                      "Noransan\n"
+                      "Rubenius\n"
+                      "Ban"
     );
     lv_obj_set_scroll_dir(ui_lblKnightLeft, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKnightLeft, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -695,7 +699,9 @@ void ui_scrCredits_screen_init(void) {
                       "mamamiamoto\n"
                       "Nuke\n"
                       "Colorbl1nd\n"
-                      "maddler"
+                      "maddler\n"
+                      "Cyan_Cupcake\n"
+                      "SanelessOne"
     );
     lv_obj_set_scroll_dir(ui_lblKnightRight, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKnightRight, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
