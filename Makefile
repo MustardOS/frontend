@@ -20,7 +20,7 @@ info:
 	$(info Modules: $(MODULES))
 
 clean:
-	@rm -rf bin/mux*
+	@rm -rf bin/mux* .build_count
 
 $(MODULES):
 	@if [ -f "$@/Makefile" ]; then \
