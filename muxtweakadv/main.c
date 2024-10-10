@@ -85,27 +85,27 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblAccelerate,  "Adjust the rate of speed when holding navigation keys down"},
-            {ui_lblSwap,        "Change how the device buttons work globally"},
-            {ui_lblThermal,     "Toggle the system ability to automatically shut the device down due high temperature"},
-            {ui_lblFont,        "Change how the font type works in the frontend - 'Theme' will ensure frontend will "
+            {ui_lblAccelerate,  TS("Adjust the rate of speed when holding navigation keys down")},
+            {ui_lblSwap,        TS("Change how the device buttons work globally")},
+            {ui_lblThermal,     TS("Toggle the system ability to automatically shut the device down due high temperature")},
+            {ui_lblFont,        TS("Change how the font type works in the frontend - 'Theme' will ensure frontend will "
                                 "use fonts within themes with a fallback to language fonts - 'Language' will "
-                                "specifically use language based font"},
-            {ui_lblVolume,      "Change the default audio level that the device will use each time it starts up"},
-            {ui_lblBrightness,  "Change the default brightness level that the device will use each time it starts up"},
-            {ui_lblOffset,      "Change the displayed battery percentage to improve accuracy based on calibration "
-                                "or known deviations in the battery capacity reading"},
-            {ui_lblPasscode,    "Toggle the passcode lock - More information can be found on the muOS website"},
-            {ui_lblLED,         "Toggle the power LED during content launch"},
-            {ui_lblTheme,       "Change the default theme used for the next device launch"},
-            {ui_lblRetroWait,   "Toggle a delayed start of RetroArch until a network connection is established"},
-            {ui_lblUSBFunction, "Toggle between ADB and MTP USB functionality"},
-            {ui_lblState,       "Switch between system sleep suspend states"},
-            {ui_lblVerbose,     "Toggle startup and shutdown verbose messages used for debugging faults"},
-            {ui_lblRumble,      "Toggle vibration for device startup, sleep, and shutdown"},
-            {ui_lblHDMIOutput,  "Switch between device speaker or external monitor audio via HDMI connection"},
-            {ui_lblStorage,     "Change the storage device where muOS looks for user content - Changing these "
-                                "settings can cause critical failures, only change if you know what you are doing!"},
+                                "specifically use language based font")},
+            {ui_lblVolume,      TS("Change the default audio level that the device will use each time it starts up")},
+            {ui_lblBrightness,  TS("Change the default brightness level that the device will use each time it starts up")},
+            {ui_lblOffset,      TS("Change the displayed battery percentage to improve accuracy based on calibration "
+                                "or known deviations in the battery capacity reading")},
+            {ui_lblPasscode,    TS("Toggle the passcode lock - More information can be found on the muOS website")},
+            {ui_lblLED,         TS("Toggle the power LED during content launch")},
+            {ui_lblTheme,       TS("Change the default theme used for the next device launch")},
+            {ui_lblRetroWait,   TS("Toggle a delayed start of RetroArch until a network connection is established")},
+            {ui_lblUSBFunction, TS("Toggle between ADB and MTP USB functionality")},
+            {ui_lblState,       TS("Switch between system sleep suspend states")},
+            {ui_lblVerbose,     TS("Toggle startup and shutdown verbose messages used for debugging faults")},
+            {ui_lblRumble,      TS("Toggle vibration for device startup, sleep, and shutdown")},
+            {ui_lblHDMIOutput,  TS("Switch between device speaker or external monitor audio via HDMI connection")},
+            {ui_lblStorage,     TS("Change the storage device where muOS looks for user content - Changing these "
+                                "settings can cause critical failures, only change if you know what you are doing!")},
     };
 
     char *message = TG("No Help Information Found");
@@ -121,7 +121,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_pointers(Tweak *tweak, int *total, int *current, int *original) {

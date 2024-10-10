@@ -59,12 +59,12 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblTweakGeneral, "Device specific and muOS frontend settings can be found here"},
-            {ui_lblTheme,        "Select a muOS supported theme"},
-            {ui_lblNetwork,      "Connect to a Wi-Fi network manually or via a saved profile"},
-            {ui_lblServices,     "Toggle a range of configurable services you can access via an active network"},
-            {ui_lblRTC,          "Change your current date, time, and timezone"},
-            {ui_lblLanguage,     "Select your preferred language"},
+            {ui_lblTweakGeneral, TS("Device specific and muOS frontend settings can be found here")},
+            {ui_lblTheme,        TS("Select a muOS supported theme")},
+            {ui_lblNetwork,      TS("Connect to a Wi-Fi network manually or via a saved profile")},
+            {ui_lblServices,     TS("Toggle a range of configurable services you can access via an active network")},
+            {ui_lblRTC,          TS("Change your current date, time, and timezone")},
+            {ui_lblLanguage,     TS("Select your preferred language")},
     };
 
     char *message = TG("No Help Information Found");
@@ -80,7 +80,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_navigation_groups() {

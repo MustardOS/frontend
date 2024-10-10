@@ -59,10 +59,10 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblTracker, "Access statistics of played content and other activity"},
-            {ui_lblTester,  "Test the controls of the device"},
-            {ui_lblSystem,  "Access version information and system details"},
-            {ui_lblCredits, "View all of the current muOS supporters"},
+            {ui_lblTracker, TS("Access statistics of played content and other activity")},
+            {ui_lblTester,  TS("Test the controls of the device")},
+            {ui_lblSystem,  TS("Access version information and system details")},
+            {ui_lblCredits, TS("View all of the current muOS supporters")},
     };
 
     char *message = TG("No Help Information Found");
@@ -78,7 +78,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_navigation_groups() {

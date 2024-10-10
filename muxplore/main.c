@@ -1024,7 +1024,7 @@ void explore_root() {
 void add_to_favourites(char *filename, const char *pointer) {
     if (file_exist(filename)) {
         remove(filename);
-        toast_message(TS("Removed to Favourites"), 1000, 1000);
+        toast_message(TS("Removed from Favourites"), 1000, 1000);
     } else {
         write_text_to_file(filename, "w", CHAR, pointer);
 

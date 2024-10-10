@@ -58,14 +58,14 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblContent,    "Content on storage devices (SD1/SD2/USB) can be found and launched here"},
-            {ui_lblFavourites, "Content marked as favourite can be found and launched here"},
-            {ui_lblHistory,    "Content previously launched can be found and launched here"},
-            {ui_lblApps,       "Various applications can be found and launched here"},
-            {ui_lblInfo,       "Various information can be found and launched here"},
-            {ui_lblConfig,     "Various configurations can be changed here"},
-            {ui_lblReboot,     "Reboot your device safely"},
-            {ui_lblShutdown,   "Shut down your device safely"},
+            {ui_lblContent,    TS("Content on storage devices (SD1/SD2/USB) can be found and launched here")},
+            {ui_lblFavourites, TS("Content marked as favourite can be found and launched here")},
+            {ui_lblHistory,    TS("Content previously launched can be found and launched here")},
+            {ui_lblApps,       TS("Various applications can be found and launched here")},
+            {ui_lblInfo,       TS("Various information can be found and launched here")},
+            {ui_lblConfig,     TS("Various configurations can be changed here")},
+            {ui_lblReboot,     TS("Reboot your device safely")},
+            {ui_lblShutdown,   TS("Shut down your device safely")},
     };
 
     char *message = TG("No Help Information Found");
@@ -81,7 +81,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_navigation_groups() {

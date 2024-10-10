@@ -74,12 +74,12 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblShell,     "Toggle SSH support - Access via port 22"},
-            {ui_lblBrowser,   "Toggle SFTP support - WebUI can be found on port 9090"},
-            {ui_lblTerminal,  "Toggle virtual terminal - WebUI can be found on port 8080"},
-            {ui_lblSyncthing, "Toggle Syncthing - WebUI can be found on port 7070"},
-            {ui_lblResilio,   "Toggle Resilio - WebUI can be found on port 6060"},
-            {ui_lblNTP,       "Toggle network time protocol for active network connections"},
+            {ui_lblShell,     TS("Toggle SSH support - Access via port 22")},
+            {ui_lblBrowser,   TS("Toggle SFTP support - WebUI can be found on port 9090")},
+            {ui_lblTerminal,  TS("Toggle virtual terminal - WebUI can be found on port 8080")},
+            {ui_lblSyncthing, TS("Toggle Syncthing - WebUI can be found on port 7070")},
+            {ui_lblResilio,   TS("Toggle Resilio - WebUI can be found on port 6060")},
+            {ui_lblNTP,       TS("Toggle network time protocol for active network connections")},
     };
 
     char *message = TG("No Help Information Found");
@@ -95,7 +95,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_pointers(WebServices *web, int *total, int *current, int *original) {
