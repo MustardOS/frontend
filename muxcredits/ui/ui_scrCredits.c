@@ -98,7 +98,7 @@ void ui_scrCredits_screen_init(void) {
     lv_obj_remove_style_all(ui_conScroll);
     lv_obj_set_height(ui_conScroll, LV_SIZE_CONTENT);
     lv_obj_set_width(ui_conScroll, lv_pct(100));
-    lv_obj_set_y(ui_conScroll, 2450);
+    lv_obj_set_y(ui_conScroll, 2475);
     lv_obj_set_x(ui_conScroll, lv_pct(0));
     lv_obj_set_align(ui_conScroll, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_conScroll, LV_FLEX_FLOW_ROW_WRAP);
@@ -292,7 +292,7 @@ void ui_scrCredits_screen_init(void) {
                       "siliconexarch\n"
                       "johnnyonflame\n"
                       "Cebion\n"
-                      "Rosie\n"
+                      "Rose22\n"
                       "vq37vhrgang\n"
                       "Ajmandourah\n"
                       "birdie"

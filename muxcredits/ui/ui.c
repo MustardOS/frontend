@@ -65,7 +65,7 @@ void animScroll_Animation(lv_obj_t *TargetObject, int delay) {
     lv_anim_set_time(&PropertyAnimation_0, 60000);
     lv_anim_set_user_data(&PropertyAnimation_0, PropertyAnimation_0_user_data);
     lv_anim_set_custom_exec_cb(&PropertyAnimation_0, ui_anim_callback_set_y);
-    lv_anim_set_values(&PropertyAnimation_0, 2450, -2850);
+    lv_anim_set_values(&PropertyAnimation_0, 2475, -2875);
     lv_anim_set_path_cb(&PropertyAnimation_0, lv_anim_path_linear);
     lv_anim_set_delay(&PropertyAnimation_0, delay + 0);
     lv_anim_set_deleted_cb(&PropertyAnimation_0, ui_anim_callback_free_user_data);

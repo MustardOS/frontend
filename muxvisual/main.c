@@ -641,7 +641,7 @@ void handle_option_next(void) {
                               titleincluderootdrive_total);
     } else if (element_focused == ui_lblFriendlyFolder) {
         increase_option_value(ui_droFriendlyFolder,
-                              &folderitemcount_current,
+                              &friendlyfolder_current,
                               friendlyfolder_total);
     } else if (element_focused == ui_lblFolderItemCount) {
         increase_option_value(ui_droFolderItemCount,
