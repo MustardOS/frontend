@@ -1,3 +1,5 @@
+START_TIME := $(shell date +%s)
+
 ifeq ($(DEVICE), RG35XX)
 	ARCH = -march=armv7-a \
 		-mtune=cortex-a9 \
@@ -50,20 +52,17 @@ MAINOBJ = $(MAINSRC:.c=$(OBJEXT))
 SRCS = $(ASRCS) $(CSRCS) $(SSRCS) $(MAINSRC)
 OBJS = $(AOBJS) $(COBJS) $(SOBJS)
 
-all: clean start compile move
+all: clean compile move
 
 %.o: %.c
 	@$(CC) -D$(DEVICE) $(CFLAGS) -c $< -o $@ $(EXTRA)
 
 clean:
-	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET) .start
-
-start:
-	@date +%s > .start
+	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
 
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@printf "Building: %s... " "$(TARGET)"
-	@START=$$(cat .start); \
+	@START=$(START_TIME); \
 	$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
 		../common/img/kofi.c \
 		../common/img/nothing.c \
@@ -82,4 +81,4 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 move: compile
 	@mkdir -p ../bin
 	@mv $(TARGET) ../bin/
-	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET) .start
+	@rm -f $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) $(TARGET)
