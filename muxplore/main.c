@@ -332,11 +332,16 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
     for (int index = 1; index < 6; index++) {
         char section_name[15];
         snprintf(section_name, sizeof(section_name), "image%d", index);
+        char *folder_name = get_ini_string(artwork_config_ini, section_name, "FOLDER", "");
 
         char image[MAX_BUFFER_SIZE];
         snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                 STORAGE_PATH, catalogue_folder, get_ini_string(artwork_config_ini, section_name, "FOLDER", ""),
-                 content_name);
+                 STORAGE_PATH, catalogue_folder, folder_name, content_name);
+
+        if (!file_exist(image)) {
+            snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/default.png",
+                    STORAGE_PATH, catalogue_folder, folder_name);
+        }
 
         struct ImageSettings image_settings = {
                 image,
@@ -412,6 +417,7 @@ void image_refresh(char *image_type) {
                 snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
                          STORAGE_PATH, f_core_artwork, image_type, f_file_name);
             }
+            snprintf(core_artwork, sizeof(core_artwork), "%s", f_core_artwork);
         }
             break;
         case HISTORY: {
@@ -438,6 +444,7 @@ void image_refresh(char *image_type) {
                 snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
                          STORAGE_PATH, h_core_artwork, image_type, h_file_name);
             }
+            snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
         }
             break;
         default: {
