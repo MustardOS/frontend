@@ -59,18 +59,18 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblVersion,    "The current version of muOS running on the device"},
-            {ui_lblDevice,     "The current device type detected and configured"},
-            {ui_lblKernel,     "The current Linux kernel"},
-            {ui_lblUptime,     "The current running time of the system"},
-            {ui_lblCPU,        "The detected CPU type of the device"},
-            {ui_lblSpeed,      "The current CPU frequency of the device"},
-            {ui_lblGovernor,   "The current running governor of the device"},
-            {ui_lblMemory,     "The current, and total, memory usage of the device"},
-            {ui_lblTemp,       "The current detected temperature of the device"},
-            {ui_lblService,    "The number of processes currently running on the system"},
-            {ui_lblBatteryCap, "The current detected battery capacity"},
-            {ui_lblVoltage,    "The current detected battery voltage"},
+            {ui_lblVersion,    TS("The current version of muOS running on the device")},
+            {ui_lblDevice,     TS("The current device type detected and configured")},
+            {ui_lblKernel,     TS("The current Linux kernel")},
+            {ui_lblUptime,     TS("The current running time of the system")},
+            {ui_lblCPU,        TS("The detected CPU type of the device")},
+            {ui_lblSpeed,      TS("The current CPU frequency of the device")},
+            {ui_lblGovernor,   TS("The current running governor of the device")},
+            {ui_lblMemory,     TS("The current, and total, memory usage of the device")},
+            {ui_lblTemp,       TS("The current detected temperature of the device")},
+            {ui_lblService,    TS("The number of processes currently running on the system")},
+            {ui_lblBatteryCap, TS("The current detected battery capacity")},
+            {ui_lblVoltage,    TS("The current detected battery voltage")},
     };
 
     char *message = TG("No Help Information Found");
@@ -86,7 +86,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 char *remove_comma(const char *str) {

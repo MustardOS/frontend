@@ -84,27 +84,27 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBattery,               "Toggle the visibility of the battery glyph"},
-            {ui_lblNetwork,               "Toggle the visibility of the network glyph"},
-            {ui_lblBluetooth,             "Toggle the visibility of the bluetooth glyph"},
-            {ui_lblClock,                 "Toggle the visibility of the clock"},
-            {ui_lblBoxArt,                "Change the display priority of the content images"},
-            {ui_lblBoxArtAlign,           "Change the screen alignment of the content images"},
-            {ui_lblName,                  "Remove extra information from content labels - This does NOT rename your "
-                                          "files it only changes how it is displayed"},
-            {ui_lblDash,                  "Replaces the dash (-) with a colon (:) for content labels"},
-            {ui_lblFriendlyFolder,        "Replaces the label of shortened content folders to more "
-                                          "appropriately named labels"},
-            {ui_lblTheTitleFormat,        "Rearranges the label of content to move the 'The' label to the front - "
-                                          "For example, 'Batman and Robin, The' to 'The Batman and Robin'"},
-            {ui_lblTitleIncludeRootDrive, "Changes the top title label in Explore Content to show current storage"
-                                          " device along with folder name"},
-            {ui_lblFolderItemCount,       "Toggle the visibility of the item count within folders in Explore Content"},
-            {ui_lblMenuCounterFolder,     "Toggle the visibility of currently selected folder along "
-                                          "with total in Explore Content"},
-            {ui_lblMenuCounterFile,       "Toggle the visibility of currently selected file along "
-                                          "with total in Explore Content"},
-            {ui_lblBackgroundAnimation,   "Toggle the background animation of the current selected theme"},
+            {ui_lblBattery,               TS("Toggle the visibility of the battery glyph")},
+            {ui_lblNetwork,               TS("Toggle the visibility of the network glyph")},
+            {ui_lblBluetooth,             TS("Toggle the visibility of the bluetooth glyph")},
+            {ui_lblClock,                 TS("Toggle the visibility of the clock")},
+            {ui_lblBoxArt,                TS("Change the display priority of the content images")},
+            {ui_lblBoxArtAlign,           TS("Change the screen alignment of the content images")},
+            {ui_lblName,                  TS("Remove extra information from content labels - This does NOT rename your "
+                                          "files it only changes how it is displayed")},
+            {ui_lblDash,                  TS("Replaces the dash (-) with a colon (:) for content labels")},
+            {ui_lblFriendlyFolder,        TS("Replaces the label of shortened content folders to more "
+                                          "appropriately named labels")},
+            {ui_lblTheTitleFormat,        TS("Rearranges the label of content to move the 'The' label to the front - "
+                                          "For example, 'Batman and Robin, The' to 'The Batman and Robin'")},
+            {ui_lblTitleIncludeRootDrive, TS("Changes the top title label in Explore Content to show current storage"
+                                          " device along with folder name")},
+            {ui_lblFolderItemCount,       TS("Toggle the visibility of the item count within folders in Explore Content")},
+            {ui_lblMenuCounterFolder,     TS("Toggle the visibility of currently selected folder along "
+                                          "with total in Explore Content")},
+            {ui_lblMenuCounterFile,       TS("Toggle the visibility of currently selected file along "
+                                          "with total in Explore Content")},
+            {ui_lblBackgroundAnimation,   TS("Toggle the background animation of the current selected theme")},
     };
 
     char *message = TG("No Help Information Found");
@@ -120,7 +120,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_pointers(Visuals *visuals, int *total, int *current, int *original) {

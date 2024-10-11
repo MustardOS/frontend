@@ -72,10 +72,10 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblShutdown,    "Configure how the power button functions on long press (2 seconds)"},
-            {ui_lblBattery,     "Configure when the red LED will display based on the current capacity percentage"},
-            {ui_lblIdleDisplay, "Configure the time the screen will dim when no input is detected"},
-            {ui_lblIdleSleep,   "Configure the time the device will sleep when no input is detected"},
+            {ui_lblShutdown,    TS("Configure how the power button functions on long press (2 seconds)")},
+            {ui_lblBattery,     TS("Configure when the red LED will display based on the current capacity percentage")},
+            {ui_lblIdleDisplay, TS("Configure the time the screen will dim when no input is detected")},
+            {ui_lblIdleSleep,   TS("Configure the time the device will sleep when no input is detected")},
     };
 
     char *message = TG("No Help Information Found");
@@ -91,7 +91,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_pointers(Tweak *tweak, int *total, int *current, int *original) {

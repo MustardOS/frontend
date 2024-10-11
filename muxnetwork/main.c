@@ -100,14 +100,14 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblEnable,     "Toggle the Wi-Fi network on and off"},
-            {ui_lblIdentifier, "Enter the network identifier (SSID) here"},
-            {ui_lblPassword,   "Enter the network password here"},
-            {ui_lblType,       "Toggle between DHCP and Static network types"},
-            {ui_lblAddress,    "Enter the device IP address here (Static only)"},
-            {ui_lblSubnet,     "Enter the device Subnet (CIDR) number here (Static only)"},
-            {ui_lblGateway,    "Enter the network gateway address here (Static only)"},
-            {ui_lblConnect,    "Connect to the network using options entered above"},
+            {ui_lblEnable,     TS("Toggle the Wi-Fi network on and off")},
+            {ui_lblIdentifier, TS("Enter the network identifier (SSID) here")},
+            {ui_lblPassword,   TS("Enter the network password here")},
+            {ui_lblType,       TS("Toggle between DHCP and Static network types")},
+            {ui_lblAddress,    TS("Enter the device IP address here (Static only)")},
+            {ui_lblSubnet,     TS("Enter the device Subnet (CIDR) number here (Static only)")},
+            {ui_lblGateway,    TS("Enter the network gateway address here (Static only)")},
+            {ui_lblConnect,    TS("Connect to the network using options entered above")},
     };
 
     char *message = TG("No Help Information Found");
@@ -123,7 +123,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void can_scan_check() {

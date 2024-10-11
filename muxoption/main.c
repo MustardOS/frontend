@@ -59,8 +59,8 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblCore,     "Set the system core or external emulator for the selected content or directory"},
-            {ui_lblGovernor, "Set the CPU governor for the selected content or directory"},
+            {ui_lblCore,     TS("Set the system core or external emulator for the selected content or directory")},
+            {ui_lblGovernor, TS("Set the CPU governor for the selected content or directory")},
     };
 
     char *message = TG("No Help Information Found");
@@ -76,7 +76,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_navigation_groups() {

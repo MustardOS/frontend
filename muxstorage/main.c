@@ -78,16 +78,16 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBIOS,       TS("Change where muOS looks for RetroArch BIOS.")},
-            {ui_lblConfig,     TS("Change where muOS looks for RetroArch Configurations.")},
-            {ui_lblCatalogue,  TS("Change where muOS looks for content images and text.")},
-            {ui_lblConman,     TS("Change where muOS looks for favourites, history, and assigned content.")},
-            {ui_lblMusic,      TS("Change where muOS looks for background music.")},
-            {ui_lblSave,       TS("Change where muOS looks for save states and files.")},
-            {ui_lblScreenshot, TS("Change where muOS saves screenshots.")},
-            {ui_lblTheme,      TS("Change where muOS looks for themes.")},
-            {ui_lblLanguage,   TS("Change where muOS looks for Language files.")},
-            {ui_lblNetwork,    TS("Change where muOS looks for Network Profiles.")},
+            {ui_lblBIOS,       TS("Change where muOS looks for RetroArch BIOS")},
+            {ui_lblConfig,     TS("Change where muOS looks for RetroArch Configurations")},
+            {ui_lblCatalogue,  TS("Change where muOS looks for content images and text")},
+            {ui_lblConman,     TS("Change where muOS looks for favourites, history, and assigned content")},
+            {ui_lblMusic,      TS("Change where muOS looks for background music")},
+            {ui_lblSave,       TS("Change where muOS looks for save states and files")},
+            {ui_lblScreenshot, TS("Change where muOS saves screenshots")},
+            {ui_lblTheme,      TS("Change where muOS looks for themes")},
+            {ui_lblLanguage,   TS("Change where muOS looks for Language files")},
+            {ui_lblNetwork,    TS("Change where muOS looks for Network Profiles")},
     };
 
     char *message = TG("No Help Information Found");

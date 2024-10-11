@@ -75,17 +75,17 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblHidden,     "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character "
-                               "at the start of a file or folder name to hide it"},
-            {ui_lblBGM,        "Toggle the background music of the frontend - This will stop if content is launched"},
-            {ui_lblSound,      "Toggle the navigation sound of the frontend if the current theme supports it"},
-            {ui_lblStartup,    "Change where the device will start up into"},
-            {ui_lblColour,     "Change the colour temperature of the display if the device supports it"},
-            {ui_lblBrightness, "Change the brightness of the device to a specific level"},
-            {ui_lblHDMI,       "Toggle the HDMI output to a specific resolution and frequency"},
-            {ui_lblPower,      "Settings to change the power features of the device"},
-            {ui_lblInterface,  "Settings to change the visual aspects of the frontend"},
-            {ui_lblAdvanced,   "Settings that should only be changed by those who know what they are doing!"},
+            {ui_lblHidden,     TS("Toggle hidden content displayed in Explore Content - Place a '.' or '_' character "
+                               "at the start of a file or folder name to hide it")},
+            {ui_lblBGM,        TS("Toggle the background music of the frontend - This will stop if content is launched")},
+            {ui_lblSound,      TS("Toggle the navigation sound of the frontend if the current theme supports it")},
+            {ui_lblStartup,    TS("Change where the device will start up into")},
+            {ui_lblColour,     TS("Change the colour temperature of the display if the device supports it")},
+            {ui_lblBrightness, TS("Change the brightness of the device to a specific level")},
+            {ui_lblHDMI,       TS("Toggle the HDMI output to a specific resolution and frequency")},
+            {ui_lblPower,      TS("Settings to change the power features of the device")},
+            {ui_lblInterface,  TS("Settings to change the visual aspects of the frontend")},
+            {ui_lblAdvanced,   TS("Settings that should only be changed by those who know what they are doing!")},
     };
 
     char *message = TG("No Help Information Found");
@@ -101,7 +101,7 @@ void show_help(lv_obj_t *element_focused) {
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), TS(message));
+                     TS(lv_label_get_text(element_focused)), message);
 }
 
 void init_pointers(Tweak *tweak, int *total, int *current, int *original) {
