@@ -1012,7 +1012,18 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
         const char *element = lv_obj_get_user_data(element_focused);
 
-        if (snprintf(static_image_path, sizeof(static_image_path), "%s/theme/active/image/static/%s.png",
+        if (snprintf(static_image_path, sizeof(static_image_path), "%s/theme/active/image/%s/static/%s.png",
+                     STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program) >= 0 && file_exist(static_image_path)) {
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/theme/active/image/%s/static/%s.png",
+                     STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program);
+            return static_image_embed;
+        } else if (snprintf(static_image_path, sizeof(static_image_path), "%s/theme/active/image/%s/static/%s/%s.png",
+                            STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program, element) >= 0 &&
+                   file_exist(static_image_path)) {
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/theme/active/image/%s/static/%s/%s.png",
+                     STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE, program, element);
+            return static_image_embed;
+        } else if (snprintf(static_image_path, sizeof(static_image_path), "%s/theme/active/image/static/%s.png",
                      STORAGE_PATH, program) >= 0 && file_exist(static_image_path)) {
             snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/theme/active/image/static/%s.png",
                      STORAGE_PATH, program);
