@@ -287,7 +287,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", 0);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", 0);
 
-    if (theme->MISC.CONTENT.HEIGHT < 100) theme->MISC.CONTENT.HEIGHT = 100;
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
     if (theme->MUX.ITEM.COUNT > 13) theme->MUX.ITEM.COUNT = 13;
