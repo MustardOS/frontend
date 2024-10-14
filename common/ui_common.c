@@ -293,7 +293,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_lblScreenMessage, device->MUX.WIDTH);
     lv_obj_set_height(ui_lblScreenMessage, 28);
     lv_obj_set_align(ui_lblScreenMessage, LV_ALIGN_LEFT_MID);
-    lv_label_set_text(ui_lblScreenMessage, "No Content Found...");
+    lv_label_set_text(ui_lblScreenMessage, TG("No Content Found..."));
     lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     lv_obj_set_scroll_dir(ui_lblScreenMessage, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(theme->LIST_DEFAULT.TEXT),
@@ -447,7 +447,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_lblPreviewHeader, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblPreviewHeader, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblPreviewHeader, LV_LABEL_LONG_CLIP);
-    lv_label_set_text(ui_lblPreviewHeader, "Switch to Preview Image");
+    lv_label_set_text(ui_lblPreviewHeader, TG("Switch to Preview Image"));
     lv_obj_set_style_text_color(ui_lblPreviewHeader, lv_color_hex(theme->NAV.A.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblPreviewHeader, theme->NAV.A.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(ui_lblPreviewHeader, theme->FONT.FOOTER_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -552,7 +552,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_height(ui_lblHelpPreviewInfoMessage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpPreviewInfoMessage, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpPreviewInfoMessage, LV_LABEL_LONG_CLIP);
-    lv_label_set_text(ui_lblHelpPreviewInfoMessage, "Switch to Information");
+    lv_label_set_text(ui_lblHelpPreviewInfoMessage, TG("Switch to Information"));
     lv_obj_set_style_text_color(ui_lblHelpPreviewInfoMessage, lv_color_hex(theme->NAV.A.TEXT),
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHelpPreviewInfoMessage, theme->NAV.A.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);

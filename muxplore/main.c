@@ -1679,7 +1679,7 @@ void init_elements() {
 void init_footer_elements() {
     switch (module) {
         case ROOT: {
-            set_nav_text("Open", "Back", NULL, NULL, "Info");
+            set_nav_text(TG("Open"), TG("Back"), NULL, NULL, TG("Info"));
             lv_obj_t *nav_keep[] = {
                     ui_lblNavAGlyph, ui_lblNavA,
                     ui_lblNavBGlyph, ui_lblNavB,

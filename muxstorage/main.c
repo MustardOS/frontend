@@ -91,7 +91,7 @@ void show_help(lv_obj_t *element_focused) {
     };
 
     char *message = TG("No Help Information Found");
-    char *auto_stay = TS("Leave on AUTO to look on SD2 first and fall back to SD1.");
+    char *auto_stay = TS("Leave on AUTO to look on SD2 first and fall back to SD1");
     char auto_message[MAX_BUFFER_SIZE];
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
