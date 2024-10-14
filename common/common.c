@@ -1040,7 +1040,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
     return "";
 }
 
-char *load_overlay_image() {
+void load_overlay_image(lv_obj_t *ui_screen, int16_t image_overlay_enabled) {
     static char static_image_path[MAX_BUFFER_SIZE];
     static char static_image_embed[MAX_BUFFER_SIZE];
 
@@ -1049,10 +1049,13 @@ char *load_overlay_image() {
         file_exist(static_image_path)) {
         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s/theme/active/image/overlay.png",
                  STORAGE_PATH);
-        return static_image_embed;
-    }
 
-    return "";
+        if (image_overlay_enabled) {
+            lv_obj_t *overlay_img = lv_img_create(ui_screen);
+            lv_img_set_src(overlay_img, static_image_embed);
+            lv_obj_move_foreground(overlay_img);
+        }
+    }
 }
 
 static void image_anim_cb(void *var, int32_t img_idx) {

@@ -769,13 +769,6 @@ void init_elements() {
         ui_count -= 1;
     }
 
-    char *overlay = load_overlay_image();
-    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t *overlay_img = lv_img_create(ui_screen);
-        lv_img_set_src(overlay_img, overlay);
-        lv_obj_move_foreground(overlay_img);
-    }
-
     if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
@@ -1000,6 +993,7 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     init_elements();
+    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
     refresh_screen();
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

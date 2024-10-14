@@ -1059,13 +1059,6 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblStatus, "status");
     lv_obj_set_user_data(ui_lblConnect, "connect");
 
-    char *overlay = load_overlay_image();
-    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t *overlay_img = lv_img_create(ui_screen);
-        lv_img_set_src(overlay_img, overlay);
-        lv_obj_move_foreground(overlay_img);
-    }
-
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
         lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
@@ -1398,6 +1391,7 @@ int main(int argc, char *argv[]) {
     ui_common_screen_init(&theme, &device, TS("WI-FI NETWORK"));
     ui_init(ui_screen, ui_pnlContent, &theme);
     init_elements();
+    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 

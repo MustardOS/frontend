@@ -165,7 +165,7 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, in
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
 
-char *load_overlay_image();
+void load_overlay_image(lv_obj_t *ui_screen, int16_t image_overlay_enabled);
 
 void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
 

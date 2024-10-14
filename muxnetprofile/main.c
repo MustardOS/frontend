@@ -427,13 +427,6 @@ void init_elements() {
         lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
     }
 
-    char *overlay = load_overlay_image();
-    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t *overlay_img = lv_img_create(ui_screen);
-        lv_img_set_src(overlay_img, overlay);
-        lv_obj_move_foreground(overlay_img);
-    }
-
     if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
@@ -574,6 +567,7 @@ int main(int argc, char *argv[]) {
 
     ui_common_screen_init(&theme, &device, TS("NETWORK PROFILE"));
     init_elements();
+    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
     lv_label_set_text(ui_lblScreenMessage, TS("Loading Network Profiles..."));
     lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
 
