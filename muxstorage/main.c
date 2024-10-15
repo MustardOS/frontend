@@ -44,27 +44,8 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int bios_total, bios_current, bios_original;
-int raconfig_total, raconfig_current, raconfig_original;
-int catalogue_total, catalogue_current, catalogue_original;
-int content_total, content_current, content_original;
-int music_total, music_current, music_original;
-int save_total, save_current, save_original;
-int screenshot_total, screenshot_current, screenshot_original;
-int look_total, look_current, look_original;
-int language_total, language_current, language_original;
-int network_total, network_current, network_original;
-
-#define UI_COUNT 10
+#define UI_COUNT 15
 lv_obj_t *ui_objects[UI_COUNT];
-
-typedef struct {
-    int *total;
-    int *current;
-    int *original;
-} Storage;
-
-Storage bios, raconfig, catalogue, content, music, save, screenshot, look, language, network;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -78,28 +59,29 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBIOS,       TS("Change where muOS looks for RetroArch BIOS")},
-            {ui_lblConfig,     TS("Change where muOS looks for RetroArch Configurations")},
-            {ui_lblCatalogue,  TS("Change where muOS looks for content images and text")},
-            {ui_lblConman,     TS("Change where muOS looks for favourites, history, and assigned content")},
-            {ui_lblMusic,      TS("Change where muOS looks for background music")},
-            {ui_lblSave,       TS("Change where muOS looks for save states and files")},
-            {ui_lblScreenshot, TS("Change where muOS saves screenshots")},
-            {ui_lblTheme,      TS("Change where muOS looks for themes")},
-            {ui_lblLanguage,   TS("Change where muOS looks for Language files")},
-            {ui_lblNetwork,    TS("Change where muOS looks for Network Profiles")},
+            {ui_lblBIOS,       TS("Location of system BIOS files")},
+            {ui_lblCatalogue,  TS("Location of content images and text")},
+            {ui_lblName,       TS("Location of friendly name configurations")},
+            {ui_lblRetroArch,  TS("Location of the RetroArch emulator")},
+            {ui_lblConfig,     TS("Location of RetroArch configurations")},
+            {ui_lblCore,       TS("Location of assigned core and governor configurations")},
+            {ui_lblFavourite,  TS("Location of favourites")},
+            {ui_lblHistory,    TS("Location of history")},
+            {ui_lblMusic,      TS("Location of background music")},
+            {ui_lblSave,       TS("Location of save states and files")},
+            {ui_lblScreenshot, TS("Location of screenshots")},
+            {ui_lblTheme,      TS("Location of themes")},
+            {ui_lblLanguage,   TS("Location of Language files")},
+            {ui_lblNetwork,    TS("Location of Network Profiles")},
+            {ui_lblSyncthing,  TS("Location of Syncthing configurations")},
     };
 
     char *message = TG("No Help Information Found");
-    char *auto_stay = TS("Leave on AUTO to look on SD2 first and fall back to SD1");
-    char auto_message[MAX_BUFFER_SIZE];
-
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
         if (element_focused == help_messages[i].element) {
-            snprintf(auto_message, sizeof(auto_message), "%s %s", help_messages[i].message, auto_stay);
-            message = auto_message;
+            message = help_messages[i].message;
             break;
         }
     }
@@ -110,248 +92,173 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_pointers(Storage *storage, int *total, int *current, int *original) {
-    storage->total = total;
-    storage->current = current;
-    storage->original = original;
-}
-
-static void dropdown_event_handler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-
-    if (code == LV_EVENT_VALUE_CHANGED) {
-        char buf[MAX_BUFFER_SIZE];
-        lv_dropdown_get_selected_str(obj, buf, sizeof(buf));
-    }
-}
-
-void elements_events_init() {
-    lv_obj_t *dropdowns[] = {
-            ui_droBIOS,
-            ui_droConfig,
-            ui_droCatalogue,
-            ui_droConman,
-            ui_droMusic,
-            ui_droSave,
-            ui_droScreenshot,
-            ui_droTheme,
-            ui_droLanguage,
-            ui_droNetwork
+void update_storage_info() {
+    /*
+     * Check for SD2 pathing, otherwise it should be on SD1.
+     * If it's not on SD1 then you have bigger problems!
+    */
+    struct {
+        const char *path_suffix;
+        lv_obj_t *ui_label;
+    } storage[] = {
+            {"MUOS/bios", ui_lblBIOSValue},
+            {"MUOS/info/catalogue", ui_lblCatalogueValue},
+            {"MUOS/info/name", ui_lblNameValue},
+            {"MUOS/retroarch", ui_lblRetroArchValue},
+            {"MUOS/info/config", ui_lblConfigValue},
+            {"MUOS/info/core", ui_lblCoreValue},
+            {"MUOS/info/favourite", ui_lblFavouriteValue},
+            {"MUOS/info/history", ui_lblHistoryValue},
+            {"MUOS/music", ui_lblMusicValue},
+            {"MUOS/save", ui_lblSaveValue},
+            {"MUOS/screenshot", ui_lblScreenshotValue},
+            {"MUOS/theme", ui_lblThemeValue},
+            {"MUOS/language", ui_lblLanguageValue},
+            {"MUOS/network", ui_lblNetworkValue},
+            {"MUOS/syncthing", ui_lblSyncthingValue}
     };
 
-    for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
-        lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
-    }
-
-    init_pointers(&bios, &bios_total, &bios_current, &bios_original);
-    init_pointers(&raconfig, &raconfig_total, &raconfig_current, &raconfig_original);
-    init_pointers(&catalogue, &catalogue_total, &catalogue_current, &catalogue_original);
-    init_pointers(&content, &content_total, &content_current, &content_original);
-    init_pointers(&music, &music_total, &music_current, &music_original);
-    init_pointers(&save, &save_total, &save_current, &save_original);
-    init_pointers(&screenshot, &screenshot_total, &screenshot_current, &screenshot_original);
-    init_pointers(&look, &look_total, &look_current, &look_original);
-    init_pointers(&language, &language_total, &language_current, &language_original);
-    init_pointers(&network, &network_total, &network_current, &network_original);
-}
-
-void init_dropdown_settings() {
-    Storage settings[] = {
-            {bios.total,       bios.current,       bios.original},
-            {raconfig.total,   raconfig.current,   raconfig.original},
-            {catalogue.total,  catalogue.current,  catalogue.original},
-            {content.total,    content.current,    content.original},
-            {music.total,      music.current,      music.original},
-            {save.total,       save.current,       save.original},
-            {screenshot.total, screenshot.current, screenshot.original},
-            {look.total,       look.current,       look.original},
-            {language.total,   language.current,   language.original},
-            {network.total,    network.current,    network.original},
-    };
-
-    lv_obj_t *dropdowns[] = {
-            ui_droBIOS,
-            ui_droConfig,
-            ui_droCatalogue,
-            ui_droConman,
-            ui_droMusic,
-            ui_droSave,
-            ui_droScreenshot,
-            ui_droTheme,
-            ui_droLanguage,
-            ui_droNetwork
-    };
-
-    for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
-        *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
-        *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
-        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
-    }
-}
-
-void restore_storage_options() {
-    lv_dropdown_set_selected(ui_droBIOS, config.STORAGE.BIOS);
-    lv_dropdown_set_selected(ui_droConfig, config.STORAGE.CONFIG);
-    lv_dropdown_set_selected(ui_droCatalogue, config.STORAGE.CATALOGUE);
-    lv_dropdown_set_selected(ui_droConman, config.STORAGE.CONTENT);
-    lv_dropdown_set_selected(ui_droMusic, config.STORAGE.MUSIC);
-    lv_dropdown_set_selected(ui_droSave, config.STORAGE.SAVE);
-    lv_dropdown_set_selected(ui_droScreenshot, config.STORAGE.SCREENSHOT);
-    lv_dropdown_set_selected(ui_droTheme, config.STORAGE.THEME);
-    lv_dropdown_set_selected(ui_droLanguage, config.STORAGE.LANGUAGE);
-    lv_dropdown_set_selected(ui_droNetwork, config.STORAGE.NETWORK);
-}
-
-void save_storage_options() {
-    int idx_bios = lv_dropdown_get_selected(ui_droBIOS);
-    int idx_config = lv_dropdown_get_selected(ui_droConfig);
-    int idx_catalogue = lv_dropdown_get_selected(ui_droCatalogue);
-    int idx_content = lv_dropdown_get_selected(ui_droConman);
-    int idx_music = lv_dropdown_get_selected(ui_droMusic);
-    int idx_save = lv_dropdown_get_selected(ui_droSave);
-    int idx_screenshot = lv_dropdown_get_selected(ui_droScreenshot);
-    int idx_theme = lv_dropdown_get_selected(ui_droTheme);
-    int idx_language = lv_dropdown_get_selected(ui_droLanguage);
-    int idx_network = lv_dropdown_get_selected(ui_droNetwork);
-
-    if (bios_current != bios_original) {
-        write_text_to_file("/run/muos/global/storage/bios", "w", INT, idx_bios);
-    }
-
-    if (raconfig_current != raconfig_original) {
-        write_text_to_file("/run/muos/global/storage/config", "w", INT, idx_config);
-    }
-
-    if (catalogue_current != catalogue_original) {
-        write_text_to_file("/run/muos/global/storage/catalogue", "w", INT, idx_catalogue);
-    }
-
-    if (content_current != content_original) {
-        write_text_to_file("/run/muos/global/storage/content", "w", INT, idx_content);
-    }
-
-    if (music_current != music_original) {
-        write_text_to_file("/run/muos/global/storage/music", "w", INT, idx_music);
-    }
-
-    if (save_current != save_original) {
-        write_text_to_file("/run/muos/global/storage/save", "w", INT, idx_save);
-    }
-
-    if (screenshot_current != screenshot_original) {
-        write_text_to_file("/run/muos/global/storage/screenshot", "w", INT, idx_screenshot);
-    }
-
-    if (look_current != look_original) {
-        write_text_to_file("/run/muos/global/storage/theme", "w", INT, idx_theme);
-    }
-
-    if (language_current != language_original) {
-        write_text_to_file("/run/muos/global/storage/language", "w", INT, idx_language);
-    }
-
-    if (network_current != network_original) {
-        write_text_to_file("/run/muos/global/storage/network", "w", INT, idx_network);
+    char dir[FILENAME_MAX];
+    for (int i = 0; i < sizeof(storage) / sizeof(storage[0]); i++) {
+        snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage[i].path_suffix);
+        lv_label_set_text(storage[i].ui_label, directory_exist(dir) ? "SD2" : "SD1");
     }
 }
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlBIOS,
-            ui_pnlConfig,
             ui_pnlCatalogue,
-            ui_pnlConman,
+            ui_pnlName,
+            ui_pnlRetroArch,
+            ui_pnlConfig,
+            ui_pnlCore,
+            ui_pnlFavourite,
+            ui_pnlHistory,
             ui_pnlMusic,
             ui_pnlSave,
             ui_pnlScreenshot,
             ui_pnlTheme,
             ui_pnlLanguage,
             ui_pnlNetwork,
+            ui_pnlSyncthing
     };
 
     ui_objects[0] = ui_lblBIOS;
-    ui_objects[1] = ui_lblConfig;
-    ui_objects[2] = ui_lblCatalogue;
-    ui_objects[3] = ui_lblConman;
-    ui_objects[4] = ui_lblMusic;
-    ui_objects[5] = ui_lblSave;
-    ui_objects[6] = ui_lblScreenshot;
-    ui_objects[7] = ui_lblTheme;
-    ui_objects[8] = ui_lblLanguage;
-    ui_objects[9] = ui_lblNetwork;
+    ui_objects[1] = ui_lblCatalogue;
+    ui_objects[2] = ui_lblName;
+    ui_objects[3] = ui_lblRetroArch;
+    ui_objects[4] = ui_lblConfig;
+    ui_objects[5] = ui_lblCore;
+    ui_objects[6] = ui_lblFavourite;
+    ui_objects[7] = ui_lblHistory;
+    ui_objects[8] = ui_lblMusic;
+    ui_objects[9] = ui_lblSave;
+    ui_objects[10] = ui_lblScreenshot;
+    ui_objects[11] = ui_lblTheme;
+    ui_objects[12] = ui_lblLanguage;
+    ui_objects[13] = ui_lblNetwork;
+    ui_objects[14] = ui_lblSyncthing;
 
     lv_obj_t *ui_objects_value[] = {
-            ui_droBIOS,
-            ui_droConfig,
-            ui_droCatalogue,
-            ui_droConman,
-            ui_droMusic,
-            ui_droSave,
-            ui_droScreenshot,
-            ui_droTheme,
-            ui_droLanguage,
-            ui_droNetwork
+            ui_lblBIOSValue,
+            ui_lblCatalogueValue,
+            ui_lblNameValue,
+            ui_lblRetroArchValue,
+            ui_lblConfigValue,
+            ui_lblCoreValue,
+            ui_lblFavouriteValue,
+            ui_lblHistoryValue,
+            ui_lblMusicValue,
+            ui_lblSaveValue,
+            ui_lblScreenshotValue,
+            ui_lblThemeValue,
+            ui_lblLanguageValue,
+            ui_lblNetworkValue,
+            ui_lblSyncthingValue
     };
 
     lv_obj_t *ui_objects_glyph[] = {
             ui_icoBIOS,
-            ui_icoConfig,
             ui_icoCatalogue,
-            ui_icoConman,
+            ui_icoName,
+            ui_icoRetroArch,
+            ui_icoConfig,
+            ui_icoCore,
+            ui_icoFavourite,
+            ui_icoHistory,
             ui_icoMusic,
             ui_icoSave,
             ui_icoScreenshot,
             ui_icoTheme,
             ui_icoLanguage,
-            ui_icoNetwork
+            ui_icoNetwork,
+            ui_icoSyncthing
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlBIOS);
-    apply_theme_list_panel(&theme, &device, ui_pnlConfig);
     apply_theme_list_panel(&theme, &device, ui_pnlCatalogue);
-    apply_theme_list_panel(&theme, &device, ui_pnlConman);
+    apply_theme_list_panel(&theme, &device, ui_pnlName);
+    apply_theme_list_panel(&theme, &device, ui_pnlRetroArch);
+    apply_theme_list_panel(&theme, &device, ui_pnlConfig);
+    apply_theme_list_panel(&theme, &device, ui_pnlCore);
+    apply_theme_list_panel(&theme, &device, ui_pnlFavourite);
+    apply_theme_list_panel(&theme, &device, ui_pnlHistory);
     apply_theme_list_panel(&theme, &device, ui_pnlMusic);
     apply_theme_list_panel(&theme, &device, ui_pnlSave);
     apply_theme_list_panel(&theme, &device, ui_pnlScreenshot);
     apply_theme_list_panel(&theme, &device, ui_pnlTheme);
     apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
     apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
+    apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
 
-    apply_theme_list_item(&theme, ui_lblBIOS, TS("RetroArch BIOS"), false, true);
-    apply_theme_list_item(&theme, ui_lblConfig, TS("RetroArch Configs"), false, true);
+    apply_theme_list_item(&theme, ui_lblBIOS, TS("System BIOS"), false, true);
     apply_theme_list_item(&theme, ui_lblCatalogue, TS("Metadata Catalogue"), false, true);
-    apply_theme_list_item(&theme, ui_lblConman, TS("Content Management"), false, true);
+    apply_theme_list_item(&theme, ui_lblName, TS("Friendly Name System"), false, true);
+    apply_theme_list_item(&theme, ui_lblRetroArch, TS("RetroArch System"), false, true);
+    apply_theme_list_item(&theme, ui_lblConfig, TS("RetroArch Configs"), false, true);
+    apply_theme_list_item(&theme, ui_lblCore, TS("Assigned Core/Governor System"), false, true);
+    apply_theme_list_item(&theme, ui_lblFavourite, TS("Favourites"), false, true);
+    apply_theme_list_item(&theme, ui_lblHistory, TS("History"), false, true);
     apply_theme_list_item(&theme, ui_lblMusic, TS("Background Music"), false, true);
     apply_theme_list_item(&theme, ui_lblSave, TS("Save Games + Save States"), false, true);
     apply_theme_list_item(&theme, ui_lblScreenshot, TS("Screenshots"), false, true);
     apply_theme_list_item(&theme, ui_lblTheme, TS("Themes"), false, true);
     apply_theme_list_item(&theme, ui_lblLanguage, TS("Languages"), false, true);
     apply_theme_list_item(&theme, ui_lblNetwork, TS("Network Profiles"), false, true);
+    apply_theme_list_item(&theme, ui_lblSyncthing, TS("Syncthing Configs"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBIOS, mux_module, "bios");
-    apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
     apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_module, "catalogue");
-    apply_theme_list_glyph(&theme, ui_icoConman, mux_module, "content");
+    apply_theme_list_glyph(&theme, ui_icoName, mux_module, "name");
+    apply_theme_list_glyph(&theme, ui_icoRetroArch, mux_module, "retroarch");
+    apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
+    apply_theme_list_glyph(&theme, ui_icoCore, mux_module, "core");
+    apply_theme_list_glyph(&theme, ui_icoFavourite, mux_module, "favourite");
+    apply_theme_list_glyph(&theme, ui_icoHistory, mux_module, "history");
     apply_theme_list_glyph(&theme, ui_icoMusic, mux_module, "music");
     apply_theme_list_glyph(&theme, ui_icoSave, mux_module, "save");
     apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_module, "screenshot");
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_module, "theme");
     apply_theme_list_glyph(&theme, ui_icoLanguage, mux_module, "language");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
+    apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_module, "syncthing");
 
-    char options[MAX_BUFFER_SIZE];
-    snprintf(options, sizeof(options), "%s\n%s\n%s", TS("SD1"), TS("SD2"), TS("AUTO"));
-    apply_theme_list_drop_down(&theme, ui_droBIOS, options);
-    apply_theme_list_drop_down(&theme, ui_droConfig, options);
-    apply_theme_list_drop_down(&theme, ui_droCatalogue, options);
-    apply_theme_list_drop_down(&theme, ui_droConman, options);
-    apply_theme_list_drop_down(&theme, ui_droMusic, options);
-    apply_theme_list_drop_down(&theme, ui_droSave, options);
-    apply_theme_list_drop_down(&theme, ui_droScreenshot, options);
-    apply_theme_list_drop_down(&theme, ui_droTheme, options);
-    apply_theme_list_drop_down(&theme, ui_droLanguage, options);
-    apply_theme_list_drop_down(&theme, ui_droNetwork, options);
+    apply_theme_list_value(&theme, ui_lblBIOSValue, "");
+    apply_theme_list_value(&theme, ui_lblCatalogueValue, "");
+    apply_theme_list_value(&theme, ui_lblNameValue, "");
+    apply_theme_list_value(&theme, ui_lblRetroArchValue, "");
+    apply_theme_list_value(&theme, ui_lblConfigValue, "");
+    apply_theme_list_value(&theme, ui_lblCoreValue, "");
+    apply_theme_list_value(&theme, ui_lblFavouriteValue, "");
+    apply_theme_list_value(&theme, ui_lblHistoryValue, "");
+    apply_theme_list_value(&theme, ui_lblMusicValue, "");
+    apply_theme_list_value(&theme, ui_lblSaveValue, "");
+    apply_theme_list_value(&theme, ui_lblScreenshotValue, "");
+    apply_theme_list_value(&theme, ui_lblThemeValue, "");
+    apply_theme_list_value(&theme, ui_lblLanguageValue, "");
+    apply_theme_list_value(&theme, ui_lblNetworkValue, "");
+    apply_theme_list_value(&theme, ui_lblSyncthingValue, "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -393,98 +300,6 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_option_prev(void) {
-    play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblBIOS) {
-        decrease_option_value(ui_droBIOS,
-                              &bios_current,
-                              bios_total);
-    } else if (element_focused == ui_lblConfig) {
-        decrease_option_value(ui_droConfig,
-                              &raconfig_current,
-                              raconfig_total);
-    } else if (element_focused == ui_lblCatalogue) {
-        decrease_option_value(ui_droCatalogue,
-                              &catalogue_current,
-                              catalogue_total);
-    } else if (element_focused == ui_lblConman) {
-        decrease_option_value(ui_droConman,
-                              &content_current,
-                              content_total);
-    } else if (element_focused == ui_lblMusic) {
-        decrease_option_value(ui_droMusic,
-                              &music_current,
-                              music_total);
-    } else if (element_focused == ui_lblSave) {
-        decrease_option_value(ui_droSave,
-                              &save_current,
-                              save_total);
-    } else if (element_focused == ui_lblScreenshot) {
-        decrease_option_value(ui_droScreenshot,
-                              &screenshot_current,
-                              screenshot_total);
-    } else if (element_focused == ui_lblTheme) {
-        decrease_option_value(ui_droTheme,
-                              &look_current,
-                              look_total);
-    } else if (element_focused == ui_lblLanguage) {
-        decrease_option_value(ui_droLanguage,
-                              &language_current,
-                              language_total);
-    } else if (element_focused == ui_lblNetwork) {
-        decrease_option_value(ui_droNetwork,
-                              &network_current,
-                              network_total);
-    }
-}
-
-void handle_option_next(void) {
-    play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblBIOS) {
-        increase_option_value(ui_droBIOS,
-                              &bios_current,
-                              bios_total);
-    } else if (element_focused == ui_lblConfig) {
-        increase_option_value(ui_droConfig,
-                              &raconfig_current,
-                              raconfig_total);
-    } else if (element_focused == ui_lblCatalogue) {
-        increase_option_value(ui_droCatalogue,
-                              &catalogue_current,
-                              catalogue_total);
-    } else if (element_focused == ui_lblConman) {
-        increase_option_value(ui_droConman,
-                              &content_current,
-                              content_total);
-    } else if (element_focused == ui_lblMusic) {
-        increase_option_value(ui_droMusic,
-                              &music_current,
-                              music_total);
-    } else if (element_focused == ui_lblSave) {
-        increase_option_value(ui_droSave,
-                              &save_current,
-                              save_total);
-    } else if (element_focused == ui_lblScreenshot) {
-        increase_option_value(ui_droScreenshot,
-                              &screenshot_current,
-                              screenshot_total);
-    } else if (element_focused == ui_lblTheme) {
-        increase_option_value(ui_droTheme,
-                              &look_current,
-                              look_total);
-    } else if (element_focused == ui_lblLanguage) {
-        increase_option_value(ui_droLanguage,
-                              &language_current,
-                              language_total);
-    } else if (element_focused == ui_lblNetwork) {
-        increase_option_value(ui_droNetwork,
-                              &network_current,
-                              network_total);
-    }
-}
-
 void handle_back(void) {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 1);
@@ -497,14 +312,24 @@ void handle_back(void) {
     play_sound("back", nav_sound, 1);
     input_disable = 1;
 
-    osd_message = TG("Saving Changes");
-    lv_label_set_text(ui_lblMessage, osd_message);
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
-    save_storage_options();
-
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "storage");
     mux_input_stop();
+}
+
+void handle_migrate(void) {
+    if (msgbox_active) {
+        return;
+    }
+
+    play_sound("confirm", nav_sound, 1);
+    input_disable = 1;
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
+    if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
+        toast_message(TS("This storage element is already on SD2"), 1000, 1000);
+    } else {
+        toast_message(TS("Doing the migrate stuff yay! - not really..."), 1000, 1000);
+    }
 }
 
 void handle_help(void) {
@@ -543,15 +368,14 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Save"));
+    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavX, TG("Migrate to SD2"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
             ui_lblNavA,
             ui_lblNavCGlyph,
             ui_lblNavC,
-            ui_lblNavXGlyph,
-            ui_lblNavX,
             ui_lblNavYGlyph,
             ui_lblNavY,
             ui_lblNavZGlyph,
@@ -566,15 +390,20 @@ void init_elements() {
     }
 
     lv_obj_set_user_data(ui_lblBIOS, "bios");
-    lv_obj_set_user_data(ui_lblConfig, "config");
     lv_obj_set_user_data(ui_lblCatalogue, "catalogue");
-    lv_obj_set_user_data(ui_lblConman, "content");
+    lv_obj_set_user_data(ui_lblName, "name");
+    lv_obj_set_user_data(ui_lblRetroArch, "retroarch");
+    lv_obj_set_user_data(ui_lblConfig, "config");
+    lv_obj_set_user_data(ui_lblCore, "core");
+    lv_obj_set_user_data(ui_lblFavourite, "favourite");
+    lv_obj_set_user_data(ui_lblHistory, "history");
     lv_obj_set_user_data(ui_lblMusic, "music");
     lv_obj_set_user_data(ui_lblSave, "save");
     lv_obj_set_user_data(ui_lblScreenshot, "screenshot");
     lv_obj_set_user_data(ui_lblTheme, "theme");
     lv_obj_set_user_data(ui_lblLanguage, "language");
     lv_obj_set_user_data(ui_lblNetwork, "network");
+    lv_obj_set_user_data(ui_lblSyncthing, "syncthing");
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
 }
@@ -750,10 +579,7 @@ int main(int argc, char *argv[]) {
 
     nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
-    elements_events_init();
-
-    restore_storage_options();
-    init_dropdown_settings();
+    update_storage_info();
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
@@ -811,10 +637,8 @@ int main(int argc, char *argv[]) {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,
             .press_handler = {
-                    [MUX_INPUT_A] = handle_option_next,
                     [MUX_INPUT_B] = handle_back,
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
+                    [MUX_INPUT_X] = handle_migrate,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
@@ -823,8 +647,6 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .hold_handler = {
-                    [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
-                    [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,

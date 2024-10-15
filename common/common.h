@@ -67,6 +67,8 @@ void refresh_screen();
 
 int file_exist(char *filename);
 
+int directory_exist(char *dirname);
+
 unsigned long long total_file_size(const char *path);
 
 int str_compare(const void *a, const void *b);
