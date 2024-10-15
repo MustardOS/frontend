@@ -1666,13 +1666,6 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    char *overlay = load_overlay_image();
-    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t *overlay_img = lv_img_create(ui_screen);
-        lv_img_set_src(overlay_img, overlay);
-        lv_obj_move_foreground(overlay_img);
-    }
-
     if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
@@ -2014,6 +2007,7 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     init_elements();
+    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
     current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
     if (strlen(current_wall) > 3) {

@@ -244,13 +244,6 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblSystem, "system");
     lv_obj_set_user_data(ui_lblCredits, "credit");
 
-    char *overlay = load_overlay_image();
-    if (strlen(overlay) > 0 && theme.MISC.IMAGE_OVERLAY) {
-        lv_obj_t *overlay_img = lv_img_create(ui_screen);
-        lv_img_set_src(overlay_img, overlay);
-        lv_obj_move_foreground(overlay_img);
-    }
-
     if (TEST_IMAGE) display_testing_message(ui_screen);
 }
 
@@ -411,6 +404,7 @@ int main(int argc, char *argv[]) {
     ui_common_screen_init(&theme, &device, TS("INFORMATION"));
     ui_init(ui_pnlContent);
     init_elements();
+    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
