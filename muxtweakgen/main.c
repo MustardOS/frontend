@@ -44,21 +44,7 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int hidden_total, hidden_current, hidden_original;
-int bgm_total, bgm_current, bgm_original;
-int sound_total, sound_current, sound_original;
-int startup_total, startup_current, startup_original;
-int colour_total, colour_current, colour_original;
-int brightness_total, brightness_current, brightness_original;
-int hdmi_total, hdmi_current, hdmi_original;
-
-typedef struct {
-    int *total;
-    int *current;
-    int *original;
-} Tweak;
-
-Tweak hidden, bgm, sound, startup, colour, brightness, hdmi;
+int hidden_original, bgm_original, sound_original, startup_original, colour_original, brightness_original, hdmi_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -104,12 +90,6 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_pointers(Tweak *tweak, int *total, int *current, int *original) {
-    tweak->total = total;
-    tweak->current = current;
-    tweak->original = original;
-}
-
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
@@ -134,42 +114,16 @@ void elements_events_init() {
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
-
-    init_pointers(&hidden, &hidden_total, &hidden_current, &hidden_original);
-    init_pointers(&bgm, &bgm_total, &bgm_current, &bgm_original);
-    init_pointers(&sound, &sound_total, &sound_current, &sound_original);
-    init_pointers(&startup, &startup_total, &startup_current, &startup_original);
-    init_pointers(&colour, &colour_total, &colour_current, &colour_original);
-    init_pointers(&brightness, &brightness_total, &brightness_current, &brightness_original);
-    init_pointers(&hdmi, &hdmi_total, &hdmi_current, &hdmi_original);
 }
 
 void init_dropdown_settings() {
-    Tweak settings[] = {
-            {hidden.total,     hidden.current,     hidden.original},
-            {bgm.total,        bgm.current,        bgm.original},
-            {sound.total,      sound.current,      sound.original},
-            {startup.total,    startup.current,    startup.original},
-            {colour.total,     colour.current,     colour.original},
-            {brightness.total, brightness.current, brightness.original},
-            {hdmi.total,       hdmi.current,       hdmi.original}
-    };
-
-    lv_obj_t *dropdowns[] = {
-            ui_droHidden,
-            ui_droBGM,
-            ui_droSound,
-            ui_droStartup,
-            ui_droColour,
-            ui_droBrightness,
-            ui_droHDMI
-    };
-
-    for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
-        *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
-        *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
-        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
-    }
+    hidden_original = lv_dropdown_get_selected(ui_droHidden);
+    bgm_original = lv_dropdown_get_selected(ui_droBGM);
+    sound_original = lv_dropdown_get_selected(ui_droSound);
+    startup_original = lv_dropdown_get_selected(ui_droStartup);
+    colour_original = lv_dropdown_get_selected(ui_droColour);
+    brightness_original = lv_dropdown_get_selected(ui_droBrightness);
+    hdmi_original = lv_dropdown_get_selected(ui_droHDMI);
 }
 
 void restore_tweak_options() {
@@ -241,37 +195,37 @@ void save_tweak_options() {
 
     int is_modified = 0;
 
-    if (hdmi_current != hdmi_original) {
+    if (lv_dropdown_get_selected(ui_droHDMI) != hdmi_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/hdmi", "w", INT, idx_hdmi);
     }
 
-    if (hidden_current != hidden_original) {
+    if (lv_dropdown_get_selected(ui_droHidden) != hidden_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/hidden", "w", INT, idx_hidden);
     }
 
-    if (bgm_current != bgm_original) {
+    if (lv_dropdown_get_selected(ui_droBGM) != bgm_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/bgm", "w", INT, idx_bgm);
     }
 
-    if (sound_current != sound_original) {
+    if (lv_dropdown_get_selected(ui_droSound) != sound_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/sound", "w", INT, idx_sound);
     }
 
-    if (startup_current != startup_original) {
+    if (lv_dropdown_get_selected(ui_droStartup) != startup_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/startup", "w", CHAR, idx_startup);
     }
 
-    if (colour_current != colour_original) {
+    if (lv_dropdown_get_selected(ui_droColour) != colour_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/colour", "w", INT, idx_colour);
     }
 
-    if (brightness_current != brightness_original) {
+    if (lv_dropdown_get_selected(ui_droBrightness) != brightness_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/brightness", "w", INT, idx_brightness);
         char command[MAX_BUFFER_SIZE];
@@ -451,36 +405,7 @@ void handle_option_prev(void) {
     }
 
     play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblHidden) {
-        decrease_option_value(ui_droHidden,
-                              &hidden_current,
-                              hidden_total);
-    } else if (element_focused == ui_lblBGM) {
-        decrease_option_value(ui_droBGM,
-                              &bgm_current,
-                              bgm_total);
-    } else if (element_focused == ui_lblSound) {
-        decrease_option_value(ui_droSound,
-                              &sound_current,
-                              sound_total);
-    } else if (element_focused == ui_lblStartup) {
-        decrease_option_value(ui_droStartup,
-                              &startup_current,
-                              startup_total);
-    } else if (element_focused == ui_lblColour) {
-        decrease_option_value(ui_droColour,
-                              &colour_current,
-                              colour_total);
-    } else if (element_focused == ui_lblBrightness) {
-        decrease_option_value(ui_droBrightness,
-                              &brightness_current,
-                              brightness_total);
-    } else if (element_focused == ui_lblHDMI) {
-        decrease_option_value(ui_droHDMI,
-                              &hdmi_current,
-                              hdmi_total);
-    }
+    decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_option_next(void) {
@@ -489,36 +414,7 @@ void handle_option_next(void) {
     }
 
     play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblHidden) {
-        increase_option_value(ui_droHidden,
-                              &hidden_current,
-                              hidden_total);
-    } else if (element_focused == ui_lblBGM) {
-        increase_option_value(ui_droBGM,
-                              &bgm_current,
-                              bgm_total);
-    } else if (element_focused == ui_lblSound) {
-        increase_option_value(ui_droSound,
-                              &sound_current,
-                              sound_total);
-    } else if (element_focused == ui_lblStartup) {
-        increase_option_value(ui_droStartup,
-                              &startup_current,
-                              startup_total);
-    } else if (element_focused == ui_lblColour) {
-        increase_option_value(ui_droColour,
-                              &colour_current,
-                              colour_total);
-    } else if (element_focused == ui_lblBrightness) {
-        increase_option_value(ui_droBrightness,
-                              &brightness_current,
-                              brightness_total);
-    } else if (element_focused == ui_lblHDMI) {
-        increase_option_value(ui_droHDMI,
-                              &hdmi_current,
-                              hdmi_total);
-    }
+    increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_confirm(void) {

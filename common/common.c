@@ -780,23 +780,31 @@ void osd_task(lv_timer_t *timer) {
     }
 }
 
-void increase_option_value(lv_obj_t *element, int *current, int total) {
-    if (*current < (total - 1)) {
-        (*current)++;
-        lv_dropdown_set_selected(element, *current);
+void increase_option_value(lv_obj_t *element) {
+    uint16_t total = lv_dropdown_get_option_cnt(element);
+    if (total <= 1) return;
+    uint16_t current = lv_dropdown_get_selected(element);
+
+    if (current < (total - 1)) {
+        current++;
+        lv_dropdown_set_selected(element, current);
     } else {
-        (*current) = 0;
-        lv_dropdown_set_selected(element, *current);
+        current = 0;
+        lv_dropdown_set_selected(element, current);
     }
 }
 
-void decrease_option_value(lv_obj_t *element, int *current, int total) {
-    if (*current > 0) {
-        (*current)--;
-        lv_dropdown_set_selected(element, *current);
+void decrease_option_value(lv_obj_t *element) {
+    uint16_t total = lv_dropdown_get_option_cnt(element);
+    if (total <= 1) return;
+    uint16_t current = lv_dropdown_get_selected(element);
+
+    if (current > 0) {
+        current--;
+        lv_dropdown_set_selected(element, current);
     } else {
-        (*current) = (total - 1);
-        lv_dropdown_set_selected(element, *current);
+        current = (total - 1);
+        lv_dropdown_set_selected(element, current);
     }
 }
 
