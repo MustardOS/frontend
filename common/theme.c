@@ -306,11 +306,13 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         int16_t list_default_radius = get_ini_int(muos_theme_overrides, "list", "LIST_DEFAULT_RADIUS", -1);
         int16_t content_width = get_ini_int(muos_theme_overrides, "misc", "CONTENT_WIDTH", -1);
         int16_t size_to_content = get_ini_int(muos_theme_overrides, "misc", "CONTENT_SIZE_TO_CONTENT", -1);
+        int16_t content_left_padding = get_ini_int(muos_theme_overrides, "misc", "CONTENT_PADDING_LEFT", -1);
 
         if (pad_right > -1) theme->FONT.LIST_PAD_RIGHT = pad_right;
         if (list_default_radius > -1) theme->LIST_DEFAULT.RADIUS = list_default_radius;
         if (content_width > -1) theme->MISC.CONTENT.WIDTH = content_width;
         if (size_to_content > -1) theme->MISC.CONTENT.SIZE_TO_CONTENT = size_to_content;
+        if (content_left_padding > -1) theme->MISC.CONTENT.PADDING_LEFT = content_left_padding;
 
         mini_free(muos_theme_overrides);
     }
