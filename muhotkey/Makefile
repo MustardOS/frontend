@@ -17,8 +17,7 @@ TARGET = ${shell basename $$(pwd)}
 CC = ccache $(CROSS_COMPILE)gcc -O3
 
 CFLAGS  = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
-	-flto -finline-functions -Wall -Wno-format-zero-length \
-	-Wno-implicit-function-declaration
+	-flto -finline-functions -Wall -Wno-format-zero-length
 
 LDFLAGS = $(CFLAGS) -Wl,--gc-sections -s
 
