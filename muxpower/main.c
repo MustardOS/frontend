@@ -44,18 +44,7 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int shutdown_total, shutdown_current, shutdown_original;
-int battery_total, battery_current, battery_original;
-int idle_display_total, idle_display_current, idle_display_original;
-int idle_sleep_total, idle_sleep_current, idle_sleep_original;
-
-typedef struct {
-    int *total;
-    int *current;
-    int *original;
-} Tweak;
-
-Tweak shutdown, battery, idle_display, idle_sleep;
+int shutdown_original, battery_original, idle_display_original, idle_sleep_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -94,12 +83,6 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_pointers(Tweak *tweak, int *total, int *current, int *original) {
-    tweak->total = total;
-    tweak->current = current;
-    tweak->original = original;
-}
-
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
@@ -121,33 +104,13 @@ void elements_events_init() {
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
-
-    init_pointers(&shutdown, &shutdown_total, &shutdown_current, &shutdown_original);
-    init_pointers(&battery, &battery_total, &battery_current, &battery_original);
-    init_pointers(&idle_display, &idle_display_total, &idle_display_current, &idle_display_original);
-    init_pointers(&idle_sleep, &idle_sleep_total, &idle_sleep_current, &idle_sleep_original);
 }
 
 void init_dropdown_settings() {
-    Tweak settings[] = {
-            {shutdown.total,     shutdown.current,     shutdown.original},
-            {battery.total,      battery.current,      battery.original},
-            {idle_display.total, idle_display.current, idle_display.original},
-            {idle_sleep.total,   idle_sleep.current,   idle_sleep.original}
-    };
-
-    lv_obj_t *dropdowns[] = {
-            ui_droShutdown,
-            ui_droBattery,
-            ui_droIdleDisplay,
-            ui_droIdleSleep
-    };
-
-    for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
-        *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
-        *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
-        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
-    }
+    shutdown_original = lv_dropdown_get_selected(ui_droShutdown);
+    battery_original = lv_dropdown_get_selected(ui_droBattery);
+    idle_display_original = lv_dropdown_get_selected(ui_droIdleDisplay);
+    idle_sleep_original = lv_dropdown_get_selected(ui_droIdleSleep);
 }
 
 void restore_tweak_options() {
@@ -179,22 +142,22 @@ void save_tweak_options() {
 
     int is_modified = 0;
 
-    if (shutdown_current != shutdown_original) {
+    if (lv_dropdown_get_selected(ui_droShutdown) != shutdown_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/power/shutdown", "w", INT, idx_shutdown);
     }
 
-    if (battery_current != battery_original) {
+    if (lv_dropdown_get_selected(ui_droBattery) != battery_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/power/low_battery", "w", INT, idx_battery);
     }
 
-    if (idle_display_current != idle_display_original) {
+    if (lv_dropdown_get_selected(ui_droIdleDisplay) != idle_display_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/power/idle_display", "w", INT, idx_idle_display);
     }
 
-    if (idle_sleep_current != idle_sleep_original) {
+    if (lv_dropdown_get_selected(ui_droIdleSleep) != idle_sleep_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/power/idle_sleep", "w", INT, idx_idle_sleep);
     }
@@ -315,24 +278,7 @@ void handle_option_prev(void) {
     }
 
     play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblShutdown) {
-        decrease_option_value(ui_droShutdown,
-                              &shutdown_current,
-                              shutdown_total);
-    } else if (element_focused == ui_lblBattery) {
-        decrease_option_value(ui_droBattery,
-                              &battery_current,
-                              battery_total);
-    } else if (element_focused == ui_lblIdleDisplay) {
-        decrease_option_value(ui_droIdleDisplay,
-                              &idle_display_current,
-                              idle_display_total);
-    } else if (element_focused == ui_lblIdleSleep) {
-        decrease_option_value(ui_droIdleSleep,
-                              &idle_sleep_current,
-                              idle_sleep_total);
-    }
+    decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_option_next(void) {
@@ -341,24 +287,7 @@ void handle_option_next(void) {
     }
 
     play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblShutdown) {
-        increase_option_value(ui_droShutdown,
-                              &shutdown_current,
-                              shutdown_total);
-    } else if (element_focused == ui_lblBattery) {
-        increase_option_value(ui_droBattery,
-                              &battery_current,
-                              battery_total);
-    } else if (element_focused == ui_lblIdleDisplay) {
-        increase_option_value(ui_droIdleDisplay,
-                              &idle_display_current,
-                              idle_display_total);
-    } else if (element_focused == ui_lblIdleSleep) {
-        increase_option_value(ui_droIdleSleep,
-                              &idle_sleep_current,
-                              idle_sleep_total);
-    }
+    increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_confirm(void) {

@@ -44,31 +44,9 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int accelerate_total, accelerate_current, accelerate_original;
-int swap_total, swap_current, swap_original;
-int thermal_total, thermal_current, thermal_original;
-int font_total, font_current, font_original;
-int volume_total, volume_current, volume_original;
-int brightness_total, brightness_current, brightness_original;
-int offset_total, offset_current, offset_original;
-int lockdown_total, lockdown_current, lockdown_original;
-int led_total, led_current, led_original;
-int random_theme_total, random_theme_current, random_theme_original;
-int retrowait_total, retrowait_current, retrowait_original;
-int usbfunction_total, usbfunction_current, usbfunction_original;
-int state_total, state_current, state_original;
-int verbose_total, verbose_current, verbose_original;
-int rumble_total, rumble_current, rumble_original;
-int hdmi_output_total, hdmi_output_current, hdmi_output_original;
-
-typedef struct {
-    int *total;
-    int *current;
-    int *original;
-} Tweak;
-
-Tweak accelerate, swap, thermal, font, volume, brightness, offset, lockdown, led,
-        random_theme, retrowait, usbfunction, state, verbose, rumble, hdmi_output;
+int accelerate_original, swap_original, thermal_original, font_original, volume_original, brightness_original;
+int offset_original, lockdown_original, led_original, random_theme_original, retrowait_original;
+int usbfunction_original, state_original, verbose_original, rumble_original, hdmi_output_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -124,12 +102,6 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_pointers(Tweak *tweak, int *total, int *current, int *original) {
-    tweak->total = total;
-    tweak->current = current;
-    tweak->original = original;
-}
-
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
@@ -164,69 +136,25 @@ void elements_events_init() {
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
-
-    init_pointers(&accelerate, &accelerate_total, &accelerate_current, &accelerate_original);
-    init_pointers(&swap, &swap_total, &swap_current, &swap_original);
-    init_pointers(&thermal, &thermal_total, &thermal_current, &thermal_original);
-    init_pointers(&font, &font_total, &font_current, &font_original);
-    init_pointers(&volume, &volume_total, &volume_current, &volume_original);
-    init_pointers(&brightness, &brightness_total, &brightness_current, &brightness_original);
-    init_pointers(&offset, &offset_total, &offset_current, &offset_original);
-    init_pointers(&lockdown, &lockdown_total, &lockdown_current, &lockdown_original);
-    init_pointers(&led, &led_total, &led_current, &led_original);
-    init_pointers(&random_theme, &random_theme_total, &random_theme_current, &random_theme_original);
-    init_pointers(&retrowait, &retrowait_total, &retrowait_current, &retrowait_original);
-    init_pointers(&usbfunction, &usbfunction_total, &usbfunction_current, &usbfunction_original);
-    init_pointers(&state, &state_total, &state_current, &state_original);
-    init_pointers(&verbose, &verbose_total, &verbose_current, &verbose_original);
-    init_pointers(&rumble, &rumble_total, &rumble_current, &rumble_original);
-    init_pointers(&hdmi_output, &hdmi_output_total, &hdmi_output_current, &hdmi_output_original);
 }
 
 void init_dropdown_settings() {
-    Tweak settings[] = {
-            {accelerate.total,   accelerate.current,   accelerate.original},
-            {swap.total,         swap.current,         swap.original},
-            {thermal.total,      thermal.current,      thermal.original},
-            {font.total,         font.current,         font.original},
-            {volume.total,       volume.current,       volume.original},
-            {brightness.total,   brightness.current,   brightness.original},
-            {offset.total,       offset.current,       offset.original},
-            {lockdown.total,     lockdown.current,     lockdown.original},
-            {led.total,          led.current,          led.original},
-            {random_theme.total, random_theme.current, random_theme.original},
-            {retrowait.total,    retrowait.current,    retrowait.original},
-            {usbfunction.total,  usbfunction.current,  usbfunction.original},
-            {state.total,        state.current,        state.original},
-            {verbose.total,      verbose.current,      verbose.original},
-            {rumble.total,       rumble.current,       rumble.original},
-            {hdmi_output.total,  hdmi_output.current,  hdmi_output.original},
-    };
-
-    lv_obj_t *dropdowns[] = {
-            ui_droAccelerate,
-            ui_droSwap,
-            ui_droThermal,
-            ui_droFont,
-            ui_droVolume,
-            ui_droBrightness,
-            ui_droOffset,
-            ui_droPasscode,
-            ui_droLED,
-            ui_droTheme,
-            ui_droRetroWait,
-            ui_droUSBFunction,
-            ui_droState,
-            ui_droVerbose,
-            ui_droRumble,
-            ui_droHDMIOutput
-    };
-
-    for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
-        *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
-        *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
-        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
-    }
+    accelerate_original = lv_dropdown_get_selected(ui_droAccelerate);
+    swap_original = lv_dropdown_get_selected(ui_droSwap);
+    thermal_original = lv_dropdown_get_selected(ui_droThermal);
+    font_original = lv_dropdown_get_selected(ui_droFont);
+    volume_original = lv_dropdown_get_selected(ui_droVolume);
+    brightness_original = lv_dropdown_get_selected(ui_droBrightness);
+    offset_original = lv_dropdown_get_selected(ui_droOffset);
+    lockdown_original = lv_dropdown_get_selected(ui_droPasscode);
+    led_original = lv_dropdown_get_selected(ui_droLED);
+    random_theme_original = lv_dropdown_get_selected(ui_droTheme);
+    retrowait_original = lv_dropdown_get_selected(ui_droRetroWait);
+    usbfunction_original = lv_dropdown_get_selected(ui_droUSBFunction);
+    state_original = lv_dropdown_get_selected(ui_droState);
+    verbose_original = lv_dropdown_get_selected(ui_droVerbose);
+    rumble_original = lv_dropdown_get_selected(ui_droRumble);
+    hdmi_output_original = lv_dropdown_get_selected(ui_droHDMIOutput);
 }
 
 void restore_tweak_options() {
@@ -361,82 +289,82 @@ void save_tweak_options() {
 
     int is_modified = 0;
 
-    if (accelerate_current != accelerate_original) {
+    if (lv_dropdown_get_selected(ui_droAccelerate) != accelerate_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/accelerate", "w", INT, idx_accelerate);
     }
 
-    if (swap_current != swap_original) {
+    if (lv_dropdown_get_selected(ui_droSwap) != swap_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/swap", "w", INT, idx_swap);
     }
 
-    if (thermal_current != thermal_original) {
+    if (lv_dropdown_get_selected(ui_droThermal) != thermal_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/thermal", "w", INT, idx_thermal);
     }
 
-    if (font_current != font_original) {
+    if (lv_dropdown_get_selected(ui_droFont) != font_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/font", "w", INT, idx_font);
     }
 
-    if (volume_current != volume_original) {
+    if (lv_dropdown_get_selected(ui_droVolume) != volume_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/volume", "w", CHAR, idx_volume);
     }
 
-    if (brightness_current != brightness_original) {
+    if (lv_dropdown_get_selected(ui_droBrightness) != brightness_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/brightness", "w", CHAR, idx_brightness);
     }
 
-    if (offset_current != offset_original) {
+    if (lv_dropdown_get_selected(ui_droOffset) != offset_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/offset", "w", INT, idx_offset);
     }
 
-    if (lockdown_current != lockdown_original) {
+    if (lv_dropdown_get_selected(ui_droPasscode) != lockdown_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/lock", "w", INT, idx_lockdown);
     }
 
-    if (led_current != led_original) {
+    if (lv_dropdown_get_selected(ui_droLED) != led_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/led", "w", INT, idx_led);
     }
 
-    if (random_theme_current != random_theme_original) {
+    if (lv_dropdown_get_selected(ui_droTheme) != random_theme_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/random_theme", "w", INT, idx_random_theme);
     }
 
-    if (retrowait_current != retrowait_original) {
+    if (lv_dropdown_get_selected(ui_droRetroWait) != retrowait_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/retrowait", "w", INT, idx_retrowait);
     }
 
-    if (usbfunction_current != usbfunction_original) {
+    if (lv_dropdown_get_selected(ui_droUSBFunction) != usbfunction_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/usb_function", "w", CHAR, idx_usbfunction);
     }
 
-    if (state_current != state_original) {
+    if (lv_dropdown_get_selected(ui_droState) != state_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/state", "w", CHAR, idx_state);
     }
 
-    if (verbose_current != verbose_original) {
+    if (lv_dropdown_get_selected(ui_droVerbose) != verbose_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/verbose", "w", INT, idx_verbose);
     }
 
-    if (rumble_current != rumble_original) {
+    if (lv_dropdown_get_selected(ui_droRumble) != rumble_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/rumble", "w", INT, idx_rumble);
     }
 
-    if (hdmi_output_current != hdmi_output_original) {
+    if (lv_dropdown_get_selected(ui_droHDMIOutput) != hdmi_output_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/advanced/hdmi_output", "w", INT, idx_hdmi_output);
     }
@@ -671,72 +599,7 @@ void handle_option_prev(void) {
     }
 
     play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblAccelerate) {
-        decrease_option_value(ui_droAccelerate,
-                              &accelerate_current,
-                              accelerate_total);
-    } else if (element_focused == ui_lblSwap) {
-        decrease_option_value(ui_droSwap,
-                              &swap_current,
-                              swap_total);
-    } else if (element_focused == ui_lblThermal) {
-        decrease_option_value(ui_droThermal,
-                              &thermal_current,
-                              thermal_total);
-    } else if (element_focused == ui_lblFont) {
-        decrease_option_value(ui_droFont,
-                              &font_current,
-                              font_total);
-    } else if (element_focused == ui_lblVolume) {
-        decrease_option_value(ui_droVolume,
-                              &volume_current,
-                              volume_total);
-    } else if (element_focused == ui_lblBrightness) {
-        decrease_option_value(ui_droBrightness,
-                              &brightness_current,
-                              brightness_total);
-    } else if (element_focused == ui_lblOffset) {
-        decrease_option_value(ui_droOffset,
-                              &offset_current,
-                              offset_total);
-    } else if (element_focused == ui_lblPasscode) {
-        decrease_option_value(ui_droPasscode,
-                              &lockdown_current,
-                              lockdown_total);
-    } else if (element_focused == ui_lblLED) {
-        decrease_option_value(ui_droLED,
-                              &led_current,
-                              led_total);
-    } else if (element_focused == ui_lblTheme) {
-        decrease_option_value(ui_droTheme,
-                              &random_theme_current,
-                              random_theme_total);
-    } else if (element_focused == ui_lblRetroWait) {
-        decrease_option_value(ui_droRetroWait,
-                              &retrowait_current,
-                              retrowait_total);
-    } else if (element_focused == ui_lblUSBFunction) {
-        decrease_option_value(ui_droUSBFunction,
-                              &usbfunction_current,
-                              usbfunction_total);
-    } else if (element_focused == ui_lblState) {
-        decrease_option_value(ui_droState,
-                              &state_current,
-                              state_total);
-    } else if (element_focused == ui_lblVerbose) {
-        decrease_option_value(ui_droVerbose,
-                              &verbose_current,
-                              verbose_total);
-    } else if (element_focused == ui_lblRumble) {
-        decrease_option_value(ui_droRumble,
-                              &rumble_current,
-                              rumble_total);
-    } else if (element_focused == ui_lblHDMIOutput) {
-        decrease_option_value(ui_droHDMIOutput,
-                              &hdmi_output_current,
-                              hdmi_output_total);
-    }
+    decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_option_next(void) {
@@ -745,72 +608,7 @@ void handle_option_next(void) {
     }
 
     play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblAccelerate) {
-        increase_option_value(ui_droAccelerate,
-                              &accelerate_current,
-                              accelerate_total);
-    } else if (element_focused == ui_lblSwap) {
-        increase_option_value(ui_droSwap,
-                              &swap_current,
-                              swap_total);
-    } else if (element_focused == ui_lblThermal) {
-        increase_option_value(ui_droThermal,
-                              &thermal_current,
-                              thermal_total);
-    } else if (element_focused == ui_lblFont) {
-        increase_option_value(ui_droFont,
-                              &font_current,
-                              font_total);
-    } else if (element_focused == ui_lblVolume) {
-        increase_option_value(ui_droVolume,
-                              &volume_current,
-                              volume_total);
-    } else if (element_focused == ui_lblBrightness) {
-        increase_option_value(ui_droBrightness,
-                              &brightness_current,
-                              brightness_total);
-    } else if (element_focused == ui_lblOffset) {
-        increase_option_value(ui_droOffset,
-                              &offset_current,
-                              offset_total);
-    } else if (element_focused == ui_lblPasscode) {
-        increase_option_value(ui_droPasscode,
-                              &lockdown_current,
-                              lockdown_total);
-    } else if (element_focused == ui_lblLED) {
-        increase_option_value(ui_droLED,
-                              &led_current,
-                              led_total);
-    } else if (element_focused == ui_lblTheme) {
-        increase_option_value(ui_droTheme,
-                              &random_theme_current,
-                              random_theme_total);
-    } else if (element_focused == ui_lblRetroWait) {
-        increase_option_value(ui_droRetroWait,
-                              &retrowait_current,
-                              retrowait_total);
-    } else if (element_focused == ui_lblUSBFunction) {
-        increase_option_value(ui_droUSBFunction,
-                              &usbfunction_current,
-                              usbfunction_total);
-    } else if (element_focused == ui_lblState) {
-        increase_option_value(ui_droState,
-                              &state_current,
-                              state_total);
-    } else if (element_focused == ui_lblVerbose) {
-        increase_option_value(ui_droVerbose,
-                              &verbose_current,
-                              verbose_total);
-    } else if (element_focused == ui_lblRumble) {
-        increase_option_value(ui_droRumble,
-                              &rumble_current,
-                              rumble_total);
-    } else if (element_focused == ui_lblHDMIOutput) {
-        increase_option_value(ui_droHDMIOutput,
-                              &hdmi_output_current,
-                              hdmi_output_total);
-    }
+    increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_confirm(void) {
