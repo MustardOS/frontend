@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "../common/common.h"
 #include "../common/config.h"
 #include "../common/device.h"
