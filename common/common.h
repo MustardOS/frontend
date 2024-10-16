@@ -145,9 +145,9 @@ void capacity_task();
 
 void osd_task(lv_timer_t *timer);
 
-void increase_option_value(lv_obj_t *element, int *current, int total);
+void increase_option_value(lv_obj_t *element);
 
-void decrease_option_value(lv_obj_t *element, int *current, int total);
+void decrease_option_value(lv_obj_t *element);
 
 void load_assign(const char *rom, const char *dir, const char *sys, int forced);
 

@@ -44,20 +44,7 @@ lv_obj_t *msgbox_element = NULL;
 
 int progress_onscreen = -1;
 
-int shell_total, shell_current, shell_original;
-int browser_total, browser_current, browser_original;
-int terminal_total, terminal_current, terminal_original;
-int syncthing_total, syncthing_current, syncthing_original;
-int resilio_total, resilio_current, resilio_original;
-int ntp_total, ntp_current, ntp_original;
-
-typedef struct {
-    int *total;
-    int *current;
-    int *original;
-} WebServices;
-
-WebServices shell, browser, terminal, syncthing, resilio, ntp;
+int shell_original, browser_original, terminal_original, syncthing_original, resilio_original, ntp_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -98,12 +85,6 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_pointers(WebServices *web, int *total, int *current, int *original) {
-    web->total = total;
-    web->current = current;
-    web->original = original;
-}
-
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
@@ -127,39 +108,15 @@ void elements_events_init() {
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
         lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
     }
-
-    init_pointers(&shell, &shell_total, &shell_current, &shell_original);
-    init_pointers(&browser, &browser_total, &browser_current, &browser_original);
-    init_pointers(&terminal, &terminal_total, &terminal_current, &terminal_original);
-    init_pointers(&syncthing, &syncthing_total, &syncthing_current, &syncthing_original);
-    init_pointers(&resilio, &resilio_total, &resilio_current, &resilio_original);
-    init_pointers(&ntp, &ntp_total, &ntp_current, &ntp_original);
 }
 
 void init_dropdown_settings() {
-    WebServices settings[] = {
-            {shell.total,     shell.current,     shell.original},
-            {browser.total,   browser.current,   browser.original},
-            {terminal.total,  terminal.current,  terminal.original},
-            {syncthing.total, syncthing.current, syncthing.original},
-            {resilio.total,   resilio.current,   resilio.original},
-            {ntp.total,       ntp.current,       ntp.original}
-    };
-
-    lv_obj_t *dropdowns[] = {
-            ui_droShell,
-            ui_droBrowser,
-            ui_droTerminal,
-            ui_droSyncthing,
-            ui_droResilio,
-            ui_droNTP
-    };
-
-    for (unsigned int i = 0; i < sizeof(settings) / sizeof(settings[0]); i++) {
-        *(settings[i].total) = lv_dropdown_get_option_cnt(dropdowns[i]);
-        *(settings[i].current) = lv_dropdown_get_selected(dropdowns[i]);
-        *(settings[i].original) = lv_dropdown_get_selected(dropdowns[i]);
-    }
+    shell_original = lv_dropdown_get_selected(ui_droShell);
+    browser_original = lv_dropdown_get_selected(ui_droBrowser);
+    terminal_original = lv_dropdown_get_selected(ui_droTerminal);
+    syncthing_original = lv_dropdown_get_selected(ui_droSyncthing);
+    resilio_original = lv_dropdown_get_selected(ui_droResilio);
+    ntp_original = lv_dropdown_get_selected(ui_droNTP);
 }
 
 void restore_web_options() {
@@ -181,32 +138,32 @@ void save_web_options() {
 
     int is_modified = 0;
 
-    if (shell_current != shell_original) {
+    if (lv_dropdown_get_selected(ui_droShell) != shell_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/web/shell", "w", INT, idx_shell);
     }
 
-    if (browser_current != browser_original) {
+    if (lv_dropdown_get_selected(ui_droBrowser) != browser_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/web/browser", "w", INT, idx_browser);
     }
 
-    if (terminal_current != terminal_original) {
+    if (lv_dropdown_get_selected(ui_droTerminal) != terminal_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/web/terminal", "w", INT, idx_terminal);
     }
 
-    if (syncthing_current != syncthing_original) {
+    if (lv_dropdown_get_selected(ui_droSyncthing) != syncthing_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/web/syncthing", "w", INT, idx_syncthing);
     }
 
-    if (resilio_current != resilio_original) {
+    if (lv_dropdown_get_selected(ui_droResilio) != resilio_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/web/resilio", "w", INT, idx_resilio);
     }
 
-    if (ntp_current != ntp_original) {
+    if (lv_dropdown_get_selected(ui_droNTP) != ntp_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/web/ntp", "w", INT, idx_ntp);
     }
@@ -330,32 +287,7 @@ void handle_option_prev(void) {
     }
 
     play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblShell) {
-        decrease_option_value(ui_droShell,
-                              &shell_current,
-                              shell_total);
-    } else if (element_focused == ui_lblBrowser) {
-        decrease_option_value(ui_droBrowser,
-                              &browser_current,
-                              browser_total);
-    } else if (element_focused == ui_lblTerminal) {
-        decrease_option_value(ui_droTerminal,
-                              &terminal_current,
-                              terminal_total);
-    } else if (element_focused == ui_lblSyncthing) {
-        decrease_option_value(ui_droSyncthing,
-                              &syncthing_current,
-                              syncthing_total);
-    } else if (element_focused == ui_lblResilio) {
-        decrease_option_value(ui_droResilio,
-                              &resilio_current,
-                              resilio_total);
-    } else if (element_focused == ui_lblNTP) {
-        decrease_option_value(ui_droNTP,
-                              &ntp_current,
-                              ntp_total);
-    }
+    decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_option_next(void) {
@@ -364,32 +296,7 @@ void handle_option_next(void) {
     }
 
     play_sound("navigate", nav_sound, 0);
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblShell) {
-        increase_option_value(ui_droShell,
-                              &shell_current,
-                              shell_total);
-    } else if (element_focused == ui_lblBrowser) {
-        increase_option_value(ui_droBrowser,
-                              &browser_current,
-                              browser_total);
-    } else if (element_focused == ui_lblTerminal) {
-        increase_option_value(ui_droTerminal,
-                              &terminal_current,
-                              terminal_total);
-    } else if (element_focused == ui_lblSyncthing) {
-        increase_option_value(ui_droSyncthing,
-                              &syncthing_current,
-                              syncthing_total);
-    } else if (element_focused == ui_lblResilio) {
-        increase_option_value(ui_droResilio,
-                              &resilio_current,
-                              resilio_total);
-    } else if (element_focused == ui_lblNTP) {
-        increase_option_value(ui_droNTP,
-                              &ntp_current,
-                              ntp_total);
-    }
+    increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_back(void) {
