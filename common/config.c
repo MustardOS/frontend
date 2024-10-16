@@ -89,17 +89,6 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->WEB.RESILIO, "web/resilio", 0)
     CFG_INT_FIELD(config->WEB.NTP, "web/ntp", 1)
 
-    CFG_INT_FIELD(config->STORAGE.BIOS, "storage/bios", 2)
-    CFG_INT_FIELD(config->STORAGE.CONFIG, "storage/config", 2)
-    CFG_INT_FIELD(config->STORAGE.CATALOGUE, "storage/catalogue", 2)
-    CFG_INT_FIELD(config->STORAGE.CONTENT, "storage/content", 2)
-    CFG_INT_FIELD(config->STORAGE.MUSIC, "storage/music", 2)
-    CFG_INT_FIELD(config->STORAGE.SAVE, "storage/save", 2)
-    CFG_INT_FIELD(config->STORAGE.SCREENSHOT, "storage/screenshot", 2)
-    CFG_INT_FIELD(config->STORAGE.THEME, "storage/theme", 2)
-    CFG_INT_FIELD(config->STORAGE.LANGUAGE, "storage/language", 2)
-    CFG_INT_FIELD(config->STORAGE.NETWORK, "storage/network", 2)
-
 #undef CFG_INT_FIELD
 #undef CFG_STR_FIELD
 }

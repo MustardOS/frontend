@@ -60,6 +60,11 @@ int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
 }
 
+int directory_exist(char *dirname) {
+    struct stat stats;
+    return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);
+}
+
 unsigned long long total_file_size(const char *path) {
     long long total_size = 0;
     struct dirent *entry;
