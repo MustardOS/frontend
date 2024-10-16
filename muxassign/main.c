@@ -354,6 +354,7 @@ void create_system_items() {
 
             lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
             apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, false, false);
+            lv_obj_set_user_data(ui_lblCoreItem, strdup(base_filename));
 
             lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
             apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, "system");
@@ -368,7 +369,48 @@ void create_system_items() {
     }
 }
 
+char *get_raw_core(const char *group) {
+    char chosen_core_ini[FILENAME_MAX];
+    snprintf(chosen_core_ini, sizeof(chosen_core_ini),
+                "%s/MUOS/info/assign/%s.ini",
+                device.STORAGE.ROM.MOUNT, rom_system);
+
+    mini_t *chosen_core = mini_load(chosen_core_ini);
+
+    const char *raw_core = strdup(mini_get_string(
+            chosen_core, group,
+            "core", "none"));
+    char *raw_core_copy = NULL;
+    raw_core_copy = malloc(strlen(raw_core) + 1);
+    if (raw_core_copy) strcpy(raw_core_copy, raw_core);
+
+    mini_free(chosen_core);
+    return raw_core_copy;
+}
+
+char *get_directory_core() {
+    char content_core[MAX_BUFFER_SIZE];
+    snprintf(content_core, sizeof(content_core), "%s/info/core/%s/core.cfg",
+                STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+    if (file_exist(content_core)) {
+        return read_line_from_file(content_core, 1);
+    }
+    return "";
+}
+
+char *get_file_core() {
+    char content_core[MAX_BUFFER_SIZE];
+    snprintf(content_core, sizeof(content_core), "%s/info/core/%s/%s.cfg",
+                STORAGE_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
+    if (file_exist(content_core)) {
+        return read_line_from_file(content_core, 2);
+    } 
+    return "";
+}
+
 void create_core_items(const char *target) {
+    char *directory_core = get_directory_core();
+    char *file_core = get_file_core();
     char filename[FILENAME_MAX];
     snprintf(filename, sizeof(filename), "%s/MUOS/info/assign/%s.ini",
              device.STORAGE.ROM.MOUNT, target);
@@ -418,11 +460,22 @@ void create_core_items(const char *target) {
 
         ui_count++;
 
+        char *rawcore = get_raw_core(core_headers[i]);
+        char display_name[MAX_BUFFER_SIZE];
+        if (strcasecmp(file_core, directory_core) != 0 && strcasecmp(file_core, rawcore) == 0) {
+            snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], TS("Assigned to file"));
+        } else if (strcasecmp(directory_core, rawcore) == 0) {
+            snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], TS("Assigned to directory"));
+        } else {
+            snprintf(display_name, sizeof(display_name), "%s", core_headers[i]);
+        }
+
         lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlCore);
 
         lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
-        apply_theme_list_item(&theme, ui_lblCoreItem, core_headers[i], false, false);
+        apply_theme_list_item(&theme, ui_lblCoreItem, display_name, false, false);
+        lv_obj_set_user_data(ui_lblCoreItem, strdup(core_headers[i]));
 
         lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
 
@@ -477,8 +530,9 @@ void handle_confirm() {
         return;
     }
 
+    const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
     if (strcasecmp(rom_system, "none") == 0) {
-        load_assign(rom_name, rom_dir, str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), 0);
+        load_assign(rom_name, rom_dir, u_data, 0);
     } else {
         LOG_INFO(mux_module, "Single Core Assignment Triggered")
 
@@ -488,11 +542,10 @@ void handle_confirm() {
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
                  "%s/MUOS/info/assign/%s.ini",
                  device.STORAGE.ROM.MOUNT, rom_system);
-
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
         const char *raw_core = mini_get_string(
-                chosen_core, str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
+                chosen_core, u_data,
                 "core", "none");
 
         int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
@@ -527,8 +580,9 @@ void handle_x() {
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
+        const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
         const char *raw_core = mini_get_string(
-                chosen_core, str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
+                chosen_core, u_data,
                 "core", "none");
 
         int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
@@ -563,8 +617,9 @@ void handle_y() {
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
+        const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
         const char *raw_core = mini_get_string(
-                chosen_core, str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
+                chosen_core, u_data,
                 "core", "none");
 
         int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
