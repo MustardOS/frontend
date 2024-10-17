@@ -36,7 +36,6 @@ struct mux_device device;
 struct theme_config theme;
 
 int nav_moved = 1;
-char *current_wall = "";
 int current_item_index = 0;
 int ui_count = 0;
 
@@ -435,35 +434,8 @@ void ui_refresh_task() {
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
-            static char old_wall[MAX_BUFFER_SIZE];
-            static char new_wall[MAX_BUFFER_SIZE];
-
-            snprintf(old_wall, sizeof(old_wall), "%s", current_wall);
-            snprintf(new_wall, sizeof(new_wall), "%s", load_wallpaper(
-                    ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND));
-
-            if (strcasecmp(new_wall, old_wall) != 0) {
-                strcpy(current_wall, new_wall);
-                if (strlen(new_wall) > 3) {
-                    if (theme.MISC.RANDOM_BACKGROUND) {
-                        load_image_random(ui_imgWall, new_wall);
-                    } else {
-                        switch (theme.MISC.ANIMATED_BACKGROUND) {
-                            case 1:
-                                lv_gif_set_src(lv_gif_create(ui_pnlWall), new_wall);
-                                break;
-                            case 2:
-                                load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, new_wall);
-                                break;
-                            default:
-                                lv_img_set_src(ui_imgWall, new_wall);
-                                break;
-                        }
-                    }
-                } else {
-                    lv_img_set_src(ui_imgWall, &ui_image_Nothing);
-                }
-            }
+            load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
+                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
             static char static_image[MAX_BUFFER_SIZE];
             snprintf(static_image, sizeof(static_image), "%s",
@@ -551,26 +523,8 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    current_wall = load_wallpaper(ui_screen, NULL, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND);
-    if (strlen(current_wall) > 3) {
-        if (theme.MISC.RANDOM_BACKGROUND) {
-            load_image_random(ui_imgWall, current_wall);
-        } else {
-            switch (theme.MISC.ANIMATED_BACKGROUND) {
-                case 1:
-                    lv_gif_set_src(lv_gif_create(ui_pnlWall), current_wall);
-                    break;
-                case 2:
-                    load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
-                    break;
-                default:
-                    lv_img_set_src(ui_imgWall, current_wall);
-                    break;
-            }
-        }
-    } else {
-        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
-    }
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
+            theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);

@@ -146,27 +146,8 @@ int main(int argc, char *argv[]) {
 
     lv_obj_set_user_data(ui_scrCharge, "muxcharge");
 
-    char *current_wall = load_wallpaper(ui_scrCharge, NULL, theme.MISC.ANIMATED_BACKGROUND,
-                                        theme.MISC.RANDOM_BACKGROUND);
-    if (strlen(current_wall) > 3) {
-        if (theme.MISC.RANDOM_BACKGROUND) {
-            load_image_random(ui_imgWall, current_wall);
-        } else {
-            switch (theme.MISC.ANIMATED_BACKGROUND) {
-                case 1:
-                    lv_gif_set_src(lv_gif_create(ui_pnlWall), current_wall);
-                    break;
-                case 2:
-                    load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, current_wall);
-                    break;
-                default:
-                    lv_img_set_src(ui_imgWall, current_wall);
-                    break;
-            }
-        }
-    } else {
-        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
-    }
+    load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
+            theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
     load_font_text(basename(argv[0]), ui_scrCharge);
 

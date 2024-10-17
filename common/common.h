@@ -163,7 +163,8 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
 void delete_files_of_name(const char *dir_path, const char *filename);
 
-char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random);
+void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall, lv_obj_t *ui_imgWall, 
+            int animated, int animation_delay, int random);
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
 
