@@ -39,6 +39,7 @@ lv_obj_t *img_obj;
 const char **img_paths = NULL;
 int img_paths_count = 0;
 char current_wall[MAX_BUFFER_SIZE];
+lv_obj_t *wall_img = NULL;
 
 uint32_t mux_tick(void) {
     struct timespec tv_now;
@@ -1031,7 +1032,8 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
             } else {
                 switch (animated) {
                     case 1:
-                        lv_gif_set_src(lv_gif_create(ui_pnlWall), new_wall);
+                        wall_img = lv_gif_create(ui_pnlWall);
+                        lv_gif_set_src(wall_img, new_wall);
                         break;
                     case 2:
                         load_image_animation(ui_imgWall, animation_delay, new_wall);
@@ -1171,6 +1173,7 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *base_i
 }
 
 void unload_image_animation() {
+    if (lv_obj_is_valid(wall_img)) lv_obj_del(wall_img);
     if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 

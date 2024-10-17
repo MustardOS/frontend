@@ -37,7 +37,6 @@ struct theme_config theme;
 
 int nav_moved = 1;
 lv_obj_t *msgbox_element = NULL;
-lv_obj_t *wall_img = NULL;
 
 int progress_onscreen = -1;
 
@@ -192,9 +191,7 @@ void handle_confirm() {
 
     refresh_screen();
 
-    if (theme.MISC.ANIMATED_BACKGROUND == 1 && lv_obj_is_valid(wall_img))
-        lv_obj_del(wall_img);
-    if (theme.MISC.ANIMATED_BACKGROUND == 2) unload_image_animation();
+    unload_image_animation();
 
     static char theme_script[MAX_BUFFER_SIZE];
     snprintf(theme_script, sizeof(theme_script),
