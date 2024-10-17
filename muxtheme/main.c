@@ -422,6 +422,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
+    config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
     ui_common_screen_init(&theme, &device, TS("THEME PICKER"));
     init_elements();
     load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
