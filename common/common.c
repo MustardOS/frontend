@@ -38,6 +38,7 @@ lv_anim_t animation;
 lv_obj_t *img_obj;
 const char **img_paths = NULL;
 int img_paths_count = 0;
+char current_wall[MAX_BUFFER_SIZE];
 
 uint32_t mux_tick(void) {
     struct timespec tv_now;
@@ -943,7 +944,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
     }
 }
 
-char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random) {
+char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random) {
     const char *program = lv_obj_get_user_data(ui_screen);
 
     static char wall_image_path[MAX_BUFFER_SIZE];
@@ -1013,6 +1014,38 @@ char *load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, in
     }
 
     return "";
+}
+
+void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall, lv_obj_t *ui_imgWall, 
+            int animated, int animation_delay, int random) {
+
+    static char new_wall[MAX_BUFFER_SIZE];
+    snprintf(new_wall, sizeof(new_wall), "%s", get_wallpaper_path(
+            ui_screen, ui_group, animated, random));
+
+    if (strcasecmp(new_wall, current_wall) != 0) {
+        snprintf(current_wall, sizeof(current_wall), "%s", new_wall);
+        if (strlen(new_wall) > 3) {
+            if (random) {
+                load_image_random(ui_imgWall, new_wall);
+            } else {
+                switch (animated) {
+                    case 1:
+                        lv_gif_set_src(lv_gif_create(ui_pnlWall), new_wall);
+                        break;
+                    case 2:
+                        load_image_animation(ui_imgWall, animation_delay, new_wall);
+                        break;
+                    default:
+                        lv_img_set_src(ui_imgWall, new_wall);
+                        break;
+                }
+            }
+        } else {
+            unload_image_animation();
+            lv_img_set_src(ui_imgWall, &ui_image_Nothing);
+        }
+    }
 }
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
