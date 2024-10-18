@@ -27,8 +27,6 @@ char *osd_message;
 struct mux_config config;
 struct mux_device device;
 
-char *current_wall = "";
-
 lv_obj_t *msgbox_element = NULL;
 
 void setup_background_process() {
@@ -88,15 +86,9 @@ int main(int argc, char *argv[]) {
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
         snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/muxstart.png", INTERNAL_PATH);
-        current_wall = strdup(init_wall);
+        lv_img_set_src(ui_imgWall, strdup(init_wall));
     } else {
-        current_wall = load_wallpaper(ui_scrStart, NULL, 0, 0);
-    }
-
-    if (strlen(current_wall) > 3) {
-        lv_img_set_src(ui_imgWall, current_wall);
-    } else {
-        lv_img_set_src(ui_imgWall, &ui_image_Nothing);
+        load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, 0, 0, 0);
     }
 
     load_font_text(basename(argv[0]), ui_scrStart);
