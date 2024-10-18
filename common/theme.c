@@ -289,7 +289,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
-    if (theme->MUX.ITEM.COUNT > 13) theme->MUX.ITEM.COUNT = 13;
     theme->MUX.ITEM.PANEL = theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.COUNT;
     theme->MUX.ITEM.HEIGHT = theme->MUX.ITEM.PANEL - 2;
     // Adjusts height if user picks a height that is not evenly divisible by item count.
