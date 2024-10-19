@@ -61,6 +61,8 @@ lv_group_t *ui_group_panel;
 
 lv_obj_t *ui_viewport_objects[7];
 
+lv_obj_t *ui_mux_panels[5];
+
 char *sd_dir = NULL;
 
 static char SD1[MAX_BUFFER_SIZE];
@@ -338,7 +340,7 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
 
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/default.png",
-                    STORAGE_PATH, catalogue_folder, folder_name);
+                     STORAGE_PATH, catalogue_folder, folder_name);
         }
 
         struct ImageSettings image_settings = {
@@ -1619,7 +1621,7 @@ void init_elements() {
 
     lv_obj_move_foreground(ui_pnlFooter);
     lv_obj_move_foreground(ui_pnlHeader);
-    
+
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
     switch (config.VISUAL.BOX_ART) {
@@ -1645,11 +1647,13 @@ void init_elements() {
             break;
     }
 
-    lv_obj_move_foreground(ui_lblCounter);
-    lv_obj_move_foreground(ui_pnlHelp);
-    lv_obj_move_foreground(ui_pnlProgressBrightness);
-    lv_obj_move_foreground(ui_pnlProgressVolume);
-    lv_obj_move_foreground(ui_pnlMessage);
+    ui_mux_panels[0] = ui_lblCounter;
+    ui_mux_panels[1] = ui_pnlHelp;
+    ui_mux_panels[2] = ui_pnlProgressBrightness;
+    ui_mux_panels[3] = ui_pnlProgressVolume;
+    ui_mux_panels[4] = ui_pnlMessage;
+
+    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1790,51 +1794,8 @@ void ui_refresh_task() {
     }
 
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) {
-            load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
-
-            static char static_image[MAX_BUFFER_SIZE];
-            snprintf(static_image, sizeof(static_image), "%s",
-                     load_static_image(ui_screen, ui_group));
-
-            if (strlen(static_image) > 0) {
-                printf("LOADING STATIC IMAGE: %s\n", static_image);
-
-                switch (theme.MISC.STATIC_ALIGNMENT) {
-                    case 0: // Bottom + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 1: // Middle + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 2: // Top + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 3: // Fullscreen + Behind
-                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_background(ui_pnlBox);
-                        lv_obj_move_background(ui_pnlWall);
-                        break;
-                    case 4: // Fullscreen + Front
-                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                }
-
-                lv_img_set_src(ui_imgBox, static_image);
-            } else {
-                if (!starter_image) {
-                    lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-                    starter_image = 0; // Reset back for static image loading
-                }
-            }
-        }
+        starter_image = adjust_wallpaper_element(ui_group, starter_image);
+        adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
         const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         snprintf(current_content_label, sizeof(current_content_label), "%s", content_label);
@@ -1980,8 +1941,8 @@ int main(int argc, char *argv[]) {
     init_elements();
     load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-            theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
     nav_sound = init_nav_sound(mux_module);
     ui_group = lv_group_create();

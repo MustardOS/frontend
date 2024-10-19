@@ -48,6 +48,8 @@ lv_group_t *ui_group;
 #define UI_COUNT 6
 lv_obj_t *ui_objects[UI_COUNT];
 
+lv_obj_t *ui_mux_panels[2];
+
 void init_navigation_groups() {
     ui_objects[0] = ui_rolComboOne;
     ui_objects[1] = ui_rolComboTwo;
@@ -115,8 +117,10 @@ void handle_right(void) {
 }
 
 void init_elements() {
-    lv_obj_move_foreground(ui_pnlFooter);
-    lv_obj_move_foreground(ui_pnlHeader);
+    ui_mux_panels[0] = ui_pnlFooter;
+    ui_mux_panels[1] = ui_pnlHeader;
+
+    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -251,8 +255,8 @@ int main(int argc, char *argv[]) {
 
     apply_theme();
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-            theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
     load_font_text(basename(argv[0]), ui_screen);
 

@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
-#include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
@@ -55,6 +54,8 @@ lv_group_t *ui_group_panel;
 #define UI_COUNT 17
 lv_obj_t *ui_objects[UI_COUNT];
 
+lv_obj_t *ui_mux_panels[5];
+
 struct help_msg {
     lv_obj_t *element;
     char *message;
@@ -66,12 +67,12 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblSwap,        TS("Change how the device buttons work globally")},
             {ui_lblThermal,     TS("Toggle the system ability to automatically shut the device down due high temperature")},
             {ui_lblFont,        TS("Change how the font type works in the frontend - 'Theme' will ensure frontend will "
-                                "use fonts within themes with a fallback to language fonts - 'Language' will "
-                                "specifically use language based font")},
+                                   "use fonts within themes with a fallback to language fonts - 'Language' will "
+                                   "specifically use language based font")},
             {ui_lblVolume,      TS("Change the default audio level that the device will use each time it starts up")},
             {ui_lblBrightness,  TS("Change the default brightness level that the device will use each time it starts up")},
             {ui_lblOffset,      TS("Change the displayed battery percentage to improve accuracy based on calibration "
-                                "or known deviations in the battery capacity reading")},
+                                   "or known deviations in the battery capacity reading")},
             {ui_lblPasscode,    TS("Toggle the passcode lock - More information can be found on the muOS website")},
             {ui_lblLED,         TS("Toggle the power LED during content launch")},
             {ui_lblTheme,       TS("Change the default theme used for the next device launch")},
@@ -82,7 +83,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblRumble,      TS("Toggle vibration for device startup, sleep, and shutdown")},
             {ui_lblHDMIOutput,  TS("Switch between device speaker or external monitor audio via HDMI connection")},
             {ui_lblStorage,     TS("Change the storage device where muOS looks for user content - Changing these "
-                                "settings can cause critical failures, only change if you know what you are doing!")},
+                                   "settings can cause critical failures, only change if you know what you are doing!")},
     };
 
     char *message = TG("No Help Information Found");
@@ -660,11 +661,13 @@ void handle_help(void) {
 }
 
 void init_elements() {
-    lv_obj_move_foreground(ui_pnlFooter);
-    lv_obj_move_foreground(ui_pnlHeader);
-    lv_obj_move_foreground(ui_pnlHelp);
-    lv_obj_move_foreground(ui_pnlProgressBrightness);
-    lv_obj_move_foreground(ui_pnlProgressVolume);
+    ui_mux_panels[0] = ui_pnlFooter;
+    ui_mux_panels[1] = ui_pnlHeader;
+    ui_mux_panels[2] = ui_pnlHelp;
+    ui_mux_panels[3] = ui_pnlProgressBrightness;
+    ui_mux_panels[4] = ui_pnlProgressVolume;
+
+    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -765,48 +768,9 @@ void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume);
 
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) {
-            load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0);
+        adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-            static char static_image[MAX_BUFFER_SIZE];
-            snprintf(static_image, sizeof(static_image), "%s",
-                     load_static_image(ui_screen, ui_group));
-
-            if (strlen(static_image) > 0) {
-                printf("LOADING STATIC IMAGE: %s\n", static_image);
-
-                switch (theme.MISC.STATIC_ALIGNMENT) {
-                    case 0: // Bottom + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 1: // Middle + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 2: // Top + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 3: // Fullscreen + Behind
-                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_background(ui_pnlBox);
-                        lv_obj_move_background(ui_pnlWall);
-                        break;
-                    case 4: // Fullscreen + Front
-                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                }
-
-                lv_img_set_src(ui_imgBox, static_image);
-            } else {
-                lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-            }
-        }
         lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;
     }
@@ -876,8 +840,8 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-            theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);

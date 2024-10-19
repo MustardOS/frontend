@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
-#include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -65,6 +64,8 @@ lv_obj_t *ui_panels[UI_COUNT];
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_values[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
+
+lv_obj_t *ui_mux_panels[7];
 
 static const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
                                       "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
@@ -650,12 +651,12 @@ bool handle_navigate(void) {
             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         }
         return true;
-    } 
+    }
     return false;
 }
 
 void handle_confirm(void) {
-    if (handle_navigate())  return;
+    if (handle_navigate()) return;
 
     play_sound("confirm", nav_sound, 1);
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -1003,13 +1004,15 @@ void init_elements() {
     enabled_false = TG("False");
     enabled_true = TG("True");
 
-    lv_obj_move_foreground(ui_pnlFooter);
-    lv_obj_move_foreground(ui_pnlHeader);
-    lv_obj_move_foreground(ui_pnlHelp);
-    lv_obj_move_foreground(ui_pnlEntry);
-    lv_obj_move_foreground(ui_pnlProgressBrightness);
-    lv_obj_move_foreground(ui_pnlProgressVolume);
-    lv_obj_move_foreground(ui_pnlMessage);
+    ui_mux_panels[0] = ui_pnlFooter;
+    ui_mux_panels[1] = ui_pnlHeader;
+    ui_mux_panels[2] = ui_pnlHelp;
+    ui_mux_panels[3] = ui_pnlEntry;
+    ui_mux_panels[4] = ui_pnlProgressBrightness;
+    ui_mux_panels[5] = ui_pnlProgressVolume;
+    ui_mux_panels[6] = ui_pnlMessage;
+
+    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
     if (bar_footer) {
         lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1248,53 +1251,9 @@ void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume);
 
     if (nav_moved) {
-        if (!lv_obj_has_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN)) {
-            lv_label_set_text(ui_lblMessage, "");
-            lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-        }
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0);
+        adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-        if (lv_group_get_obj_count(ui_group) > 0) {
-            load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
-
-            static char static_image[MAX_BUFFER_SIZE];
-            snprintf(static_image, sizeof(static_image), "%s",
-                     load_static_image(ui_screen, ui_group));
-
-            if (strlen(static_image) > 0) {
-                printf("LOADING STATIC IMAGE: %s\n", static_image);
-
-                switch (theme.MISC.STATIC_ALIGNMENT) {
-                    case 0: // Bottom + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 1: // Middle + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 2: // Top + Front
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                    case 3: // Fullscreen + Behind
-                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_background(ui_pnlBox);
-                        lv_obj_move_background(ui_pnlWall);
-                        break;
-                    case 4: // Fullscreen + Front
-                        lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-                        lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
-                        lv_obj_move_foreground(ui_pnlBox);
-                        break;
-                }
-
-                lv_img_set_src(ui_imgBox, static_image);
-            } else {
-                lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-            }
-        }
         lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;
     }
@@ -1369,8 +1328,8 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-            theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);

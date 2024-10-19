@@ -274,19 +274,23 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     }
     lv_obj_set_style_flex_main_place(ui_pnlFooter, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a", theme->NAV.A);
+    ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
+                                          theme->NAV.A);
     ui_lblNavA = create_footer_text(ui_pnlFooter, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
 
-    ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b", theme->NAV.B);
+    ui_lblNavBGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "a" : "b",
+                                          theme->NAV.B);
     ui_lblNavB = create_footer_text(ui_pnlFooter, theme, theme->NAV.B.TEXT, theme->NAV.B.TEXT_ALPHA);
 
     ui_lblNavCGlyph = create_footer_glyph(ui_pnlFooter, theme, "c", theme->NAV.C);
     ui_lblNavC = create_footer_text(ui_pnlFooter, theme, theme->NAV.C.TEXT, theme->NAV.C.TEXT_ALPHA);
 
-    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "y" : "x", theme->NAV.X);
+    ui_lblNavXGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "y" : "x",
+                                          theme->NAV.X);
     ui_lblNavX = create_footer_text(ui_pnlFooter, theme, theme->NAV.X.TEXT, theme->NAV.X.TEXT_ALPHA);
 
-    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP)? "x" : "y", theme->NAV.Y);
+    ui_lblNavYGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "x" : "y",
+                                          theme->NAV.Y);
     ui_lblNavY = create_footer_text(ui_pnlFooter, theme, theme->NAV.Y.TEXT, theme->NAV.Y.TEXT_ALPHA);
 
     ui_lblNavZGlyph = create_footer_glyph(ui_pnlFooter, theme, "z", theme->NAV.Z);
@@ -886,11 +890,71 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) 
     if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
 }
 
-void toast_message(const char * msg, uint32_t delay, uint32_t fade_duration) {
+void toast_message(const char *msg, uint32_t delay, uint32_t fade_duration) {
     lv_label_set_text(ui_lblMessage, msg);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_opa(ui_pnlMessage, LV_OPA_COVER, 0);
 
     if (delay <= 0 || fade_duration <= 0) return;
     lv_obj_fade_out(ui_pnlMessage, fade_duration, delay);
+}
+
+void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels) {
+    for (size_t i = 0; i < num_panels; i++) {
+        lv_obj_move_foreground(panels[i]);
+    }
+}
+
+int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
+    if (config.BOOT.FACTORY_RESET) {
+        char init_wall[MAX_BUFFER_SIZE];
+        snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/default.png", INTERNAL_PATH);
+        lv_img_set_src(ui_imgWall, init_wall);
+    } else {
+        load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                       theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+    }
+
+    static char static_image[MAX_BUFFER_SIZE];
+    snprintf(static_image, sizeof(static_image), "%s",
+             load_static_image(ui_screen, ui_group));
+
+    if (strlen(static_image) > 0) {
+        printf("LOADING STATIC IMAGE: %s\n", static_image);
+
+        switch (theme.MISC.STATIC_ALIGNMENT) {
+            case 0: // Bottom + Front
+                lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+                lv_obj_move_foreground(ui_pnlBox);
+                break;
+            case 1: // Middle + Front
+                lv_obj_set_align(ui_imgBox, LV_ALIGN_RIGHT_MID);
+                lv_obj_move_foreground(ui_pnlBox);
+                break;
+            case 2: // Top + Front
+                lv_obj_set_align(ui_imgBox, LV_ALIGN_TOP_RIGHT);
+                lv_obj_move_foreground(ui_pnlBox);
+                break;
+            case 3: // Fullscreen + Behind
+                lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
+                lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+                lv_obj_move_background(ui_pnlBox);
+                lv_obj_move_background(ui_pnlWall);
+                break;
+            case 4: // Fullscreen + Front
+                lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
+                lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+                lv_obj_move_foreground(ui_pnlBox);
+                break;
+        }
+
+        lv_img_set_src(ui_imgBox, static_image);
+    } else {
+        if (!starter_image) {
+            lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+            return 0; // Reset back for static image loading
+        }
+    }
+
+    return 1;
 }
