@@ -69,7 +69,68 @@ void show_help() {
                                                             "and performance"));
 }
 
-void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_type method) {
+void assign_gov_single(char *core_dir, const char *gov, char *rom) {
+    char rom_path[MAX_BUFFER_SIZE];
+    snprintf(rom_path, sizeof(rom_path), "%s/%s.gov",
+             core_dir, strip_ext(rom));
+
+    if (file_exist(rom_path)) remove(rom_path);
+
+    FILE *rom_file = fopen(rom_path, "w");
+    if (rom_file == NULL) {
+        perror("Error opening file rom_path file");
+        return;
+    }
+
+    LOG_INFO(mux_module, "Single Governor Content: %s", gov)
+    fprintf(rom_file, "%s", gov);
+    fclose(rom_file);
+}
+
+void assign_gov_directory(char *core_dir, const char *gov, int purge) {
+    if (purge) {
+        delete_files_of_type(core_dir, "gov", NULL, 0);
+    }
+
+    char core_file[MAX_BUFFER_SIZE];
+    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.gov",
+             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+
+    FILE *file = fopen(core_file, "w");
+    if (file == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    fprintf(file, "%s", gov);
+    fclose(file);
+}
+
+void assign_gov_parent(char *core_dir, const char *gov) {
+    assign_gov_directory(core_dir, gov, 1);
+
+    char **subdirs = get_subdirectories(rom_dir);
+    if (subdirs != NULL) {
+        for (int i = 0; subdirs[i] != NULL; i++) {
+            char subdir_file[MAX_BUFFER_SIZE];
+            snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.gov", core_dir, subdirs[i]);
+
+            create_directories(strip_dir(subdir_file));
+
+            FILE *subdir_file_handle = fopen(subdir_file, "w");
+            if (subdir_file_handle == NULL) {
+                perror("Error opening file");
+                continue;
+            }
+
+            fprintf(subdir_file_handle, "%s", gov);
+            fclose(subdir_file_handle);
+        }
+        free_subdirectories(subdirs);
+    }
+}
+
+void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/info/core/%s/",
              STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
@@ -77,81 +138,18 @@ void create_gov_assignment(const char *gov, char *sys, char *rom, enum gov_gen_t
     create_directories(core_dir);
 
     switch (method) {
-        case SINGLE: {
-            char rom_path[MAX_BUFFER_SIZE];
-            snprintf(rom_path, sizeof(rom_path), "%s/%s.gov",
-                     core_dir, strip_ext(rom));
-
-            if (file_exist(rom_path)) remove(rom_path);
-
-            FILE *rom_file = fopen(rom_path, "w");
-            if (rom_file == NULL) {
-                perror("Error opening file rom_path file");
-                return;
-            }
-
-            LOG_INFO(mux_module, "Single Governor Content: %s", gov)
-            fprintf(rom_file, "%s", gov);
-            fclose(rom_file);
-        }
+        case SINGLE:
+            assign_gov_single(core_dir, gov, rom);
             break;
-        case PARENT: {
-            delete_files_of_type(core_dir, "gov", NULL, 1);
-            create_gov_assignment(gov, sys, rom, DIRECTORY);
-
-            char **subdirs = get_subdirectories(rom_dir);
-            if (subdirs != NULL) {
-                for (int i = 0; subdirs[i] != NULL; i++) {
-                    char subdir_file[MAX_BUFFER_SIZE];
-                    snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.gov", core_dir, subdirs[i]);
-
-                    create_directories(strip_dir(subdir_file));
-
-                    FILE *subdir_file_handle = fopen(subdir_file, "w");
-                    if (subdir_file_handle == NULL) {
-                        perror("Error opening file");
-                        continue;
-                    }
-
-                    fprintf(subdir_file_handle, "%s", gov);
-                    fclose(subdir_file_handle);
-                }
-                free_subdirectories(subdirs);
-            }
-        }
+        case PARENT:
+            assign_gov_parent(core_dir, gov);
             break;
-        case DIRECTORY: {
-            delete_files_of_type(core_dir, "gov", NULL, 0);
-
-            char core_file[MAX_BUFFER_SIZE];
-            snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.gov",
-                     STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
-
-            FILE *file = fopen(core_file, "w");
-            if (file == NULL) {
-                perror("Error opening file");
-                return;
-            }
-
-            fprintf(file, "%s", gov);
-            fclose(file);
-        }
+        case DIRECTORY:
+            assign_gov_directory(core_dir, gov, 1);
             break;
         case DIRECTORY_NO_WIPE:
-        default: {
-            char core_file[MAX_BUFFER_SIZE];
-            snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.gov",
-                     STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
-
-            FILE *file = fopen(core_file, "w");
-            if (file == NULL) {
-                perror("Error opening file");
-                return;
-            }
-
-            fprintf(file, "%s", gov);
-            fclose(file);
-        }
+        default:
+            assign_gov_directory(core_dir, gov, 0);
             break;
     }
 
@@ -296,8 +294,7 @@ void handle_confirm() {
     LOG_INFO(mux_module, "Single Governor Assignment Triggered")
     play_sound("confirm", nav_sound, 1);
 
-    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
-                          rom_system, rom_name, SINGLE);
+    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, SINGLE);
 
     mux_input_stop();
 }
@@ -310,8 +307,7 @@ void handle_x() {
     LOG_INFO(mux_module, "Directory Governor Assignment Triggered")
     play_sound("confirm", nav_sound, 1);
 
-    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
-                          rom_system, rom_name, DIRECTORY);
+    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, DIRECTORY);
 
     mux_input_stop();
 }
@@ -324,8 +320,7 @@ void handle_y() {
     LOG_INFO(mux_module, "Parent Governor Assignment Triggered")
     play_sound("confirm", nav_sound, 1);
 
-    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))),
-                          rom_system, rom_name, PARENT);
+    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, PARENT);
 
     mux_input_stop();
 }
@@ -571,19 +566,19 @@ int main(int argc, char *argv[]) {
                     strcpy(auto_gov, get_ini_string(core_config_ini, "global", "governor", device.CPU.DEFAULT));
 
                     LOG_INFO(mux_module, "<Automatic Governor Assign> Assigned Governor To: %s", auto_gov)
-                    create_gov_assignment(auto_gov, rom_system, rom_name, DIRECTORY_NO_WIPE);
+                    create_gov_assignment(auto_gov, rom_name, DIRECTORY_NO_WIPE);
 
                     LOG_SUCCESS(mux_module, "<Automatic Governor Assign> Successful")
                 } else {
                     LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
-                    create_gov_assignment(device.CPU.DEFAULT, rom_system, rom_name, DIRECTORY_NO_WIPE);
+                    create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
                 }
 
                 mini_free(core_config_ini);
                 return 0;
             } else {
                 LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
-                create_gov_assignment(device.CPU.DEFAULT, rom_system, rom_name, DIRECTORY_NO_WIPE);
+                create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
                 return 0;
             }
         }

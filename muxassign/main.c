@@ -95,8 +95,8 @@ void modify_cfg_file(const char *filename, const char *core, const char *sys, co
             return;
         }
         size_t len = strlen(line);
-        if (len > 0 && line[len - 1] == '\n') line[len - 1] = '\0'; 
-        lines[line_count] = strdup(line); 
+        if (len > 0 && line[len - 1] == '\n') line[len - 1] = '\0';
+        lines[line_count] = strdup(line);
         line_count++;
     }
     fclose(file);
@@ -158,6 +158,78 @@ void update_cfg_files(const char *dirpath, const char *core, const char *sys, co
     closedir(dir);
 }
 
+void assign_core_single(char *core_dir, const char *core, char *sys, char *rom, int cache) {
+    char rom_path[MAX_BUFFER_SIZE];
+    snprintf(rom_path, sizeof(rom_path), "%s/%s.cfg",
+             core_dir, strip_ext(rom));
+
+    if (file_exist(rom_path)) remove(rom_path);
+
+    FILE *rom_file = fopen(rom_path, "w");
+    if (rom_file == NULL) {
+        perror("Error opening file rom_path file");
+        return;
+    }
+
+    LOG_INFO(mux_module, "Single Assign Content:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s",
+             strip_ext(rom), core, str_trim(sys), cache,
+             str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
+             get_last_subdir(rom_dir, '/', 4), rom)
+    fprintf(rom_file, "%s\n%s\n%s\n%d\n%s\n%s\n%s\n",
+            strip_ext(rom), core, str_trim(sys), cache,
+            str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
+            get_last_subdir(rom_dir, '/', 4), rom);
+    fclose(rom_file);
+}
+
+void assign_core_directory(char *core_dir, const char *core, char *sys, int cache, int purge) {
+    if (purge) {
+        delete_files_of_type(core_dir, "cfg", NULL, 0);
+        update_cfg_files(core_dir, core, str_trim(sys), cache);
+    }
+
+    char core_file[MAX_BUFFER_SIZE];
+    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
+             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+
+    FILE *file = fopen(core_file, "w");
+    if (file == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
+    fclose(file);
+}
+
+void assign_core_parent(char *core_dir, const char *core, char *sys, int cache) {
+    assign_core_directory(core_dir, core, sys, cache, 1);
+
+    char **subdirs = get_subdirectories(rom_dir);
+    if (subdirs != NULL) {
+        for (int i = 0; subdirs[i] != NULL; i++) {
+            char subdir_file[MAX_BUFFER_SIZE];
+            snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.cfg", core_dir, subdirs[i]);
+
+            create_directories(strip_dir(subdir_file));
+
+            FILE *subdir_file_handle = fopen(subdir_file, "w");
+            if (subdir_file_handle == NULL) {
+                perror("Error opening file");
+                continue;
+            }
+
+            fprintf(subdir_file_handle, "%s\n%s\n%d\n", core, str_trim(sys), cache);
+            fclose(subdir_file_handle);
+
+            char core_dir_path[MAX_BUFFER_SIZE];
+            snprintf(core_dir_path, sizeof(core_dir_path), "%s%s", core_dir, subdirs[i]);
+            update_cfg_files(core_dir_path, core, str_trim(sys), cache);
+        }
+        free_subdirectories(subdirs);
+    }
+}
+
 void create_core_assignment(const char *core, char *sys, char *rom, int cache, enum core_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/info/core/%s/",
@@ -166,92 +238,18 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
     create_directories(core_dir);
 
     switch (method) {
-        case SINGLE: {
-            char rom_path[MAX_BUFFER_SIZE];
-            snprintf(rom_path, sizeof(rom_path), "%s/%s.cfg",
-                     core_dir, strip_ext(rom));
-
-            if (file_exist(rom_path)) remove(rom_path);
-
-            FILE *rom_file = fopen(rom_path, "w");
-            if (rom_file == NULL) {
-                perror("Error opening file rom_path file");
-                return;
-            }
-
-            LOG_INFO(mux_module, "Single Assign Content:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s",
-                     strip_ext(rom), core, str_trim(sys), cache,
-                     str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
-                     get_last_subdir(rom_dir, '/', 4), rom)
-            fprintf(rom_file, "%s\n%s\n%s\n%d\n%s\n%s\n%s\n",
-                    strip_ext(rom), core, str_trim(sys), cache,
-                    str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
-                    get_last_subdir(rom_dir, '/', 4), rom);
-            fclose(rom_file);
+        case SINGLE:
+            assign_core_single(core_dir, core, sys, rom, cache);
             break;
-        }
-        case PARENT: {
-            delete_files_of_type(core_dir, "/core.cfg", NULL, 1);
-            create_core_assignment(core, sys, rom, cache, DIRECTORY);
-
-            char **subdirs = get_subdirectories(rom_dir);
-            if (subdirs != NULL) {
-                for (int i = 0; subdirs[i] != NULL; i++) {
-                    char subdir_file[MAX_BUFFER_SIZE];
-                    snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.cfg", core_dir, subdirs[i]);
-
-                    create_directories(strip_dir(subdir_file));
-
-                    FILE *subdir_file_handle = fopen(subdir_file, "w");
-                    if (subdir_file_handle == NULL) {
-                        perror("Error opening file");
-                        continue;
-                    }
-
-                    fprintf(subdir_file_handle, "%s\n%s\n%d\n", core, str_trim(sys), cache);
-                    fclose(subdir_file_handle);
-
-                    char core_dir_path[MAX_BUFFER_SIZE];
-                    snprintf(core_dir_path, sizeof(core_dir_path), "%s%s", core_dir, subdirs[i]);
-                    update_cfg_files(core_dir_path, core, str_trim(sys), cache);
-                }
-                free_subdirectories(subdirs);
-            }
-        }
+        case PARENT:
+            assign_core_parent(core_dir, core, sys, cache);
             break;
-        case DIRECTORY: {
-            delete_files_of_type(core_dir, "/core.cfg", NULL, 0);
-            update_cfg_files(core_dir, core, str_trim(sys), cache);
-
-            char core_file[MAX_BUFFER_SIZE];
-            snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                     STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
-
-            FILE *file = fopen(core_file, "w");
-            if (file == NULL) {
-                perror("Error opening file");
-                return;
-            }
-
-            fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
-            fclose(file);
-        }
+        case DIRECTORY:
+            assign_core_directory(core_dir, core, sys, cache, 1);
             break;
         case DIRECTORY_NO_WIPE:
-        default: {
-            char core_file[MAX_BUFFER_SIZE];
-            snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                     STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
-
-            FILE *file = fopen(core_file, "w");
-            if (file == NULL) {
-                perror("Error opening file");
-                return;
-            }
-
-            fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
-            fclose(file);
-        }
+        default:
+            assign_core_directory(core_dir, core, sys, cache, 0);
             break;
     }
 
@@ -370,8 +368,8 @@ void create_system_items() {
 char *get_raw_core(const char *group) {
     char chosen_core_ini[FILENAME_MAX];
     snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                "%s/MUOS/info/assign/%s.ini",
-                device.STORAGE.ROM.MOUNT, rom_system);
+             "%s/MUOS/info/assign/%s.ini",
+             device.STORAGE.ROM.MOUNT, rom_system);
 
     mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -389,7 +387,7 @@ char *get_raw_core(const char *group) {
 char *get_directory_core() {
     char content_core[MAX_BUFFER_SIZE];
     snprintf(content_core, sizeof(content_core), "%s/info/core/%s/core.cfg",
-                STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
     if (file_exist(content_core)) {
         return read_line_from_file(content_core, 1);
     }
@@ -399,10 +397,10 @@ char *get_directory_core() {
 char *get_file_core() {
     char content_core[MAX_BUFFER_SIZE];
     snprintf(content_core, sizeof(content_core), "%s/info/core/%s/%s.cfg",
-                STORAGE_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
+             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
     if (file_exist(content_core)) {
         return read_line_from_file(content_core, 2);
-    } 
+    }
     return "";
 }
 
@@ -767,8 +765,8 @@ void ui_refresh_task() {
 
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
-            load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+            load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                           theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
             static char static_image[MAX_BUFFER_SIZE];
             snprintf(static_image, sizeof(static_image), "%s",
@@ -965,8 +963,8 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-            theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);

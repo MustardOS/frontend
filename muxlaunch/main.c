@@ -190,7 +190,7 @@ void handle_a() {
 
     if (element_focused == ui_lblContent) {
         play_sound("confirm", nav_sound, 1);
-        load_mux("explore");
+        load_mux("explore_alt");
     } else if (element_focused == ui_lblFavourites) {
         play_sound("confirm", nav_sound, 1);
         load_mux("favourite");

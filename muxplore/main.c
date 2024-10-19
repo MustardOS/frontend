@@ -1383,12 +1383,12 @@ void handle_b() {
                     if (strcasecmp(str_tolower(b_dir), "/roms") == 0) {
                         if (file_exist("/tmp/single_card")) {
                             write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
-                            write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
+                            remove("/tmp/explore_dir");
                             remove("/tmp/single_card");
                             load_mux("launcher");
                         } else {
                             write_text_to_file("/tmp/explore_card", "w", CHAR, "root");
-                            write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
+                            remove("/tmp/explore_dir");
                             load_mux("explore");
                         }
                     } else {
