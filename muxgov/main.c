@@ -89,7 +89,7 @@ void assign_gov_single(char *core_dir, const char *gov, char *rom) {
 
 void assign_gov_directory(char *core_dir, const char *gov, int purge) {
     if (purge) {
-        delete_files_of_type(core_dir, "gov", NULL, 0);
+        delete_files_of_type(core_dir, "/core.gov", NULL, 0);
     }
 
     char core_file[MAX_BUFFER_SIZE];

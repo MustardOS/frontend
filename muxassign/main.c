@@ -184,7 +184,7 @@ void assign_core_single(char *core_dir, const char *core, char *sys, char *rom, 
 
 void assign_core_directory(char *core_dir, const char *core, char *sys, int cache, int purge) {
     if (purge) {
-        delete_files_of_type(core_dir, "cfg", NULL, 0);
+        delete_files_of_type(core_dir, "/core.cfg", NULL, 0);
         update_cfg_files(core_dir, core, str_trim(sys), cache);
     }
 
