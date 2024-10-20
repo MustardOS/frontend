@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "../lvgl/lvgl.h"
 #include "../lvgl/drivers/display/fbdev.h"
 #include "../lvgl/drivers/indev/evdev.h"
