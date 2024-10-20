@@ -313,7 +313,6 @@ void ui_refresh_task() {
     if (nav_moved) {
         image_refresh();
 
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
         lv_obj_invalidate(ui_pnlBox);
