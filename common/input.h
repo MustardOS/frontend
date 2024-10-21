@@ -145,6 +145,10 @@ typedef struct {
 // Starts the main input event loop, which runs until terminated by calling mux_input_stop.
 void mux_input_task(const mux_input_options *opts);
 
+// Returns the system clock tick at the start of this iteration of the event loop. Provides a common
+// reference point for computing hold duration, activity timestamps, etc.
+uint32_t mux_input_tick(void);
+
 // Returns whether or not the specified input is currently pressed.
 bool mux_input_pressed(mux_input_type type);
 

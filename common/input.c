@@ -18,6 +18,9 @@ extern uint32_t mux_tick(void);
 // Whether to exit the input task before the next iteration of the event loop.
 static bool stop = false;
 
+// System clock tick at the start of this iteration of the event loop.
+static uint32_t tick = 0;
+
 // Bitmask of input types that are currently active.
 static uint64_t pressed = 0;
 
@@ -215,7 +218,7 @@ static void dispatch_combo(const mux_input_options *opts, int num, mux_input_act
     }
 }
 
-static void handle_inputs(const mux_input_options *opts, uint32_t tick) {
+static void handle_inputs(const mux_input_options *opts) {
     // Delay (millis) before invoking hold handler again.
     static uint32_t hold_delay[MUX_INPUT_COUNT] = {};
     // Tick (millis) of last press or hold.
@@ -245,7 +248,7 @@ static void handle_inputs(const mux_input_options *opts, uint32_t tick) {
     }
 }
 
-static void handle_combos(const mux_input_options *opts, uint32_t tick) {
+static void handle_combos(const mux_input_options *opts) {
     // Delay (millis) before invoking hold handler again.
     static uint32_t hold_delay = 0;
     // Tick (millis) of last press or hold.
@@ -370,9 +373,9 @@ void mux_input_task(const mux_input_options *opts) {
         }
 
         // Identify and invoke handlers for inputs whose state changed.
-        uint32_t tick = mux_tick();
-        handle_inputs(opts, tick);
-        handle_combos(opts, tick);
+        tick = mux_tick();
+        handle_inputs(opts);
+        handle_combos(opts);
 
         // Invoke "idle" handler to run extra logic every iteration of the event loop.
         if (opts->idle_handler) {
@@ -382,6 +385,10 @@ void mux_input_task(const mux_input_options *opts) {
         // Inputs pressed at the end of one iteration are held at the start of the next.
         held = pressed;
     }
+}
+
+uint32_t mux_input_tick(void) {
+    return tick;
 }
 
 bool mux_input_pressed(mux_input_type type) {

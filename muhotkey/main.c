@@ -20,6 +20,20 @@ static void handle_idle(void);
 struct mux_device device;
 struct mux_config config;
 
+typedef enum {
+    IDLE_INHIBIT_NONE  = 0, // No idle inhibit.
+    IDLE_INHIBIT_BOTH = 1, // Inhibit idle sleep and display.
+    IDLE_INHIBIT_SLEEP = 2, // Inhibit idle sleep only.
+} idle_inhibit_state;
+
+typedef struct {
+    bool idle;
+    uint32_t tick;
+
+    const char *idle_name;
+    const char *active_name;
+} idle_timer;
+
 static const char *input_name[MUX_INPUT_COUNT] = {
         // Gamepad buttons:
         [MUX_INPUT_A] = "A",
@@ -86,60 +100,65 @@ static bool verbose = false;
 static char *combo_name[MUX_INPUT_COMBO_COUNT] = {};
 static bool combo_holdable[MUX_INPUT_COMBO_COUNT] = {};
 
-static bool handled_input = false;
-static uint32_t last_input_tick;
+static idle_timer idle_display = {
+        .idle_name = "IDLE_DISPLAY",
+        .active_name = "IDLE_ACTIVE",
+};
 
-static bool idle_display = false;
-static bool idle_sleep = false;
+static idle_timer idle_sleep = {
+        .idle_name = "IDLE_SLEEP",
+};
 
-static void idle_active(void) {
-    // Reset idle timer in response to activity.
-    if (idle_display || idle_sleep) {
-        printf("IDLE_ACTIVE\n");
+static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
+    uint32_t idle_ms = mux_input_tick() - timer->tick;
+    if (idle_ms >= timeout_ms && !timer->idle) {
+        if (timer->idle_name) {
+            printf("%s\n", timer->idle_name);
+        }
+        timer->idle = true;
+    } else if (idle_ms < timeout_ms && timer->idle) {
+        if (timer->active_name) {
+            printf("%s\n", timer->active_name);
+        }
+        timer->idle = false;
     }
-
-    last_input_tick = mux_tick();
-    idle_display = false;
-    idle_sleep = false;
 }
 
 static void handle_input(mux_input_type type, mux_input_action action) {
     if (verbose) {
         printf("[%s %s]\n", input_name[type], action_name[action]);
     }
-    handled_input = true;
-    idle_active();
+
+    idle_display.tick = mux_input_tick();
+    idle_sleep.tick = mux_input_tick();
 }
 
 static void handle_idle(void) {
     // If we handled input on this iteration of the event loop, we're already in the active state
     // and don't need to read the idle_inhibit file. That helps performance since the idle handler
     // is effectively called in a tight loop for continuous input (e.g., spinning a control stick).
-    if (handled_input) {
-        handled_input = false;
-        return;
+    if (idle_display.tick != mux_input_tick()) {
+        // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
+        // conditions here, but it's more flexible to leave that externally controllable.)
+        switch (read_int_from_file("/run/muos/system/idle_inhibit", 1)) {
+            case IDLE_INHIBIT_BOTH:
+                idle_display.tick = mux_input_tick();
+                // fallthrough
+            case IDLE_INHIBIT_SLEEP:
+                idle_sleep.tick = mux_input_tick();
+                break;
+        }
     }
 
-    // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
-    // conditions here, but it's more flexible to leave that externally controllable.)
-    if (read_int_from_file("/run/muos/system/idle_inhibit", 1)) {
-        idle_active();
-        return;
+    // Handle idle timeout/activity.
+    uint32_t display_timeout_ms = config.SETTINGS.POWER.IDLE_DISPLAY * 1000;
+    if (display_timeout_ms) {
+        check_idle(&idle_display, display_timeout_ms);
     }
 
-    // Detect idle display and/or sleep timeout.
-    uint32_t idle_ms = mux_tick() - last_input_tick;
-
-    uint32_t timeout_display_ms = config.SETTINGS.POWER.IDLE_DISPLAY * 1000;
-    if (timeout_display_ms && idle_ms >= timeout_display_ms && !idle_display) {
-        printf("IDLE_DISPLAY\n");
-        idle_display = true;
-    }
-
-    uint32_t timeout_sleep_ms = config.SETTINGS.POWER.IDLE_SLEEP * 1000;
-    if (timeout_sleep_ms && idle_ms >= timeout_sleep_ms && !idle_sleep) {
-        printf("IDLE_SLEEP\n");
-        idle_sleep = true;
+    uint32_t sleep_timeout_ms = config.SETTINGS.POWER.IDLE_SLEEP * 1000;
+    if (sleep_timeout_ms) {
+        check_idle(&idle_sleep, sleep_timeout_ms);
     }
 }
 
@@ -298,7 +317,10 @@ int main(int argc, char *argv[]) {
 
     setlinebuf(stdout);
 
-    last_input_tick = mux_tick();
+    uint32_t tick = mux_tick();
+    idle_display.tick = tick;
+    idle_sleep.tick = tick;
+
     mux_input_task(&input_opts);
 
     for (int i = 0; i < MUX_INPUT_COMBO_COUNT; ++i) {
