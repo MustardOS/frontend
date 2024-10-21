@@ -212,7 +212,7 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
 
 char *get_script_value(const char *filename, const char *key);
 
-void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar);
+void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar, lv_obj_t *volume_icon);
 
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path);
 
