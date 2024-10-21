@@ -693,6 +693,7 @@ void ui_common_handle_bright() {
     progress_onscreen = 1;
     lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 }
 
 void ui_common_handle_vol() {
@@ -703,6 +704,7 @@ void ui_common_handle_vol() {
     progress_onscreen = 2;
     lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 }
 
 void ui_common_handle_idle() {
