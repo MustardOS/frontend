@@ -1620,7 +1620,12 @@ char *get_script_value(const char *filename, const char *key) {
 }
 
 void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar, lv_obj_t *volume_icon) {
+    if (!progress_onscreen) {
+        return;
+    }
+
     lv_bar_set_value(bright_bar, read_int_from_file(BRIGHT_PERC, 1), LV_ANIM_ON);
+
     int volume = read_int_from_file(VOLUME_PERC, 1);
     lv_bar_set_value(volume_bar, volume, LV_ANIM_ON);
     switch (volume) {
