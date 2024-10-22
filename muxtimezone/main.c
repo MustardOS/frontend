@@ -51,7 +51,7 @@ lv_obj_t *ui_mux_panels[5];
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("Select your preferred timezone."));
+                     TS(lv_label_get_text(ui_lblTitle)), TS("Select your preferred timezone"));
 }
 
 void create_timezone_items() {

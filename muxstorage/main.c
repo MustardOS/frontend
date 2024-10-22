@@ -328,7 +328,7 @@ void handle_migrate(void) {
     if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
         toast_message(TS("This storage element is already on SD2"), 1000, 1000);
     } else {
-        toast_message(TS("Doing the migrate stuff yay! - not really..."), 1000, 1000);
+        toast_message(TS("Migrating to SD2..."), 1000, 1000);
     }
 }
 
@@ -478,7 +478,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("STORAGE PREFERENCE"));
+    ui_common_screen_init(&theme, &device, TS("STORAGE"));
     ui_init(ui_pnlContent);
     init_elements();
     load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
