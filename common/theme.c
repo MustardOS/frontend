@@ -11,7 +11,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     char scheme[MAX_BUFFER_SIZE];
 
     if (config->BOOT.FACTORY_RESET) {
-        snprintf(scheme, sizeof(scheme), "%s/theme/scheme/default.txt", INTERNAL_PATH);
+        snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
     } else {
         snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/%s.txt",
                  STORAGE_PATH, mux_name);
@@ -19,7 +19,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
             snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/default.txt",
                      STORAGE_PATH);
             if (!file_exist(scheme)) {
-                snprintf(scheme, sizeof(scheme), "%s/theme/scheme/default.txt", INTERNAL_PATH);
+                snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
                 // TODO: Is there a better way to do fallback?
             }
         }
@@ -523,11 +523,11 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
                  STORAGE_PATH, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) {
         snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/theme/active/glyph/%s/%s.png",
                  STORAGE_PATH, screen_name, item_glyph);
-    } else if (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/glyph/%s/%s.png",
-                        INTERNAL_PATH, screen_name, item_glyph) >= 0 &&
+    } else if (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
+                        INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
                file_exist(glyph_image_path)) {
-        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/theme/glyph/%s/%s.png",
-                 INTERNAL_PATH, screen_name, item_glyph);
+        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/glyph/%s/%s.png",
+                 INTERNAL_THEME, screen_name, item_glyph);
     }
 
     if (!file_exist(glyph_image_path)) return;

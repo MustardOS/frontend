@@ -743,11 +743,11 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
                  STORAGE_PATH, glyph_name) >= 0 && file_exist(footer_image_path)) {
         snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s/theme/active/glyph/footer/%s.png",
                  STORAGE_PATH, glyph_name);
-    } else if (snprintf(footer_image_path, sizeof(footer_image_path), "%s/theme/glyph/footer/%s.png",
-                        INTERNAL_PATH, glyph_name) >= 0 &&
+    } else if (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
+                        INTERNAL_THEME, glyph_name) >= 0 &&
                file_exist(footer_image_path)) {
-        snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s/theme/glyph/footer/%s.png",
-                 INTERNAL_PATH, glyph_name);
+        snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s/glyph/footer/%s.png",
+                 INTERNAL_THEME, glyph_name);
     }
 
     ui_glyph = lv_img_create(parent);
@@ -814,11 +814,11 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
                  STORAGE_PATH, battery_glyph_name) >= 0 && file_exist(image_path)) {
         snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/%s.png",
                  STORAGE_PATH, battery_glyph_name);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/%s.png",
-                        INTERNAL_PATH, battery_glyph_name) >= 0 &&
+    } else if (snprintf(image_path, sizeof(image_path), "%s/glyph/header/%s.png",
+                        INTERNAL_THEME, battery_glyph_name) >= 0 &&
                file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/%s.png",
-                 INTERNAL_PATH, battery_glyph_name);
+        snprintf(image_embed, sizeof(image_embed), "M:%s/glyph/header/%s.png",
+                 INTERNAL_THEME, battery_glyph_name);
     }
 
     if (file_exist(image_path)) lv_img_set_src(ui_staCapacity, image_embed);
@@ -831,11 +831,11 @@ void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *the
                  STORAGE_PATH) >= 0 && file_exist(image_path)) {
         snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/bluetooth.png",
                  STORAGE_PATH);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/bluetooth.png",
-                        INTERNAL_PATH) >= 0 &&
+    } else if (snprintf(image_path, sizeof(image_path), "%s/glyph/header/bluetooth.png",
+                        INTERNAL_THEME) >= 0 &&
                file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/bluetooth.png",
-                 INTERNAL_PATH);
+        snprintf(image_embed, sizeof(image_embed), "M:%s/glyph/header/bluetooth.png",
+                 INTERNAL_THEME);
     }
 
     if (file_exist(image_path)) lv_img_set_src(ui_staBluetooth, image_embed);
@@ -863,11 +863,11 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) 
                  STORAGE_PATH, network_status) >= 0 && file_exist(image_path)) {
         snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/network_%s.png",
                  STORAGE_PATH, network_status);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/theme/glyph/header/network_%s.png",
-                        INTERNAL_PATH, network_status) >= 0 &&
+    } else if (snprintf(image_path, sizeof(image_path), "%s/glyph/header/network_%s.png",
+                        INTERNAL_THEME, network_status) >= 0 &&
                file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/glyph/header/network_%s.png",
-                 INTERNAL_PATH, network_status);
+        snprintf(image_embed, sizeof(image_embed), "M:%s/glyph/header/network_%s.png",
+                 INTERNAL_THEME, network_status);
     }
 
     if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
@@ -893,7 +893,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
     lv_obj_set_align(ui_pnlBox, LV_ALIGN_CENTER);
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/default.png", INTERNAL_PATH);
+        snprintf(init_wall, sizeof(init_wall), "M:%s/image/wall/default.png", INTERNAL_THEME);
         lv_img_set_src(ui_imgWall, init_wall);
     } else {
         load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,

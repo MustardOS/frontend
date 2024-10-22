@@ -10,9 +10,11 @@
 #define TIME_STRING_12 "%I:%M %p"
 #define TIME_STRING_24 "%H:%M"
 
-#define INTERNAL_PATH "/opt/muos"
-#define STORAGE_PATH  "/run/muos/storage"
-#define ACTIVE_THEME  "/run/muos/storage/theme/active"
+#define INTERNAL_PATH  "/opt/muos"
+#define INTERNAL_THEME "/opt/muos/default/MUOS/theme"
+
+#define STORAGE_PATH   "/run/muos/storage"
+#define ACTIVE_THEME   "/run/muos/storage/theme/active"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index

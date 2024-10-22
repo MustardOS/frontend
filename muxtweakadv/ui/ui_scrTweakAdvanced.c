@@ -17,7 +17,6 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlVerbose = lv_obj_create(ui_pnlContent);
     ui_pnlRumble = lv_obj_create(ui_pnlContent);
     ui_pnlHDMIOutput = lv_obj_create(ui_pnlContent);
-    ui_pnlStorage = lv_obj_create(ui_pnlContent);
 
     ui_lblAccelerate = lv_label_create(ui_pnlAccelerate);
     ui_lblSwap = lv_label_create(ui_pnlSwap);
@@ -35,7 +34,6 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblVerbose = lv_label_create(ui_pnlVerbose);
     ui_lblRumble = lv_label_create(ui_pnlRumble);
     ui_lblHDMIOutput = lv_label_create(ui_pnlHDMIOutput);
-    ui_lblStorage = lv_label_create(ui_pnlStorage);
 
     ui_icoAccelerate = lv_img_create(ui_pnlAccelerate);
     ui_icoSwap = lv_img_create(ui_pnlSwap);
@@ -53,7 +51,6 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoVerbose = lv_img_create(ui_pnlVerbose);
     ui_icoRumble = lv_img_create(ui_pnlRumble);
     ui_icoHDMIOutput = lv_img_create(ui_pnlHDMIOutput);
-    ui_icoStorage = lv_img_create(ui_pnlStorage);
 
     ui_droAccelerate = lv_dropdown_create(ui_pnlAccelerate);
     ui_droSwap = lv_dropdown_create(ui_pnlSwap);
@@ -71,5 +68,4 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droVerbose = lv_dropdown_create(ui_pnlVerbose);
     ui_droRumble = lv_dropdown_create(ui_pnlRumble);
     ui_droHDMIOutput = lv_dropdown_create(ui_pnlHDMIOutput);
-    ui_droStorage = lv_dropdown_create(ui_pnlStorage);
 }

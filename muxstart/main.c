@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "M:%s/theme/image/wall/muxstart.png", INTERNAL_PATH);
+        snprintf(init_wall, sizeof(init_wall), "M:%s/image/wall/muxstart.png", INTERNAL_THEME);
         lv_img_set_src(ui_imgWall, strdup(init_wall));
     } else {
         load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, 0, 0, 0);

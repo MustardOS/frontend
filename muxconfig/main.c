@@ -46,7 +46,7 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 6
+#define UI_COUNT 7
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
 
@@ -65,6 +65,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblServices,     TS("Toggle a range of configurable services you can access via an active network")},
             {ui_lblRTC,          TS("Change your current date, time, and timezone")},
             {ui_lblLanguage,     TS("Select your preferred language")},
+            {ui_lblStorage,      TS("Find out what storage device core settings and configurations are mounted")},
     };
 
     char *message = TG("No Help Information Found");
@@ -90,7 +91,8 @@ void init_navigation_groups() {
             ui_pnlNetwork,
             ui_pnlServices,
             ui_pnlRTC,
-            ui_pnlLanguage
+            ui_pnlLanguage,
+            ui_pnlStorage
     };
 
     ui_objects[0] = ui_lblTweakGeneral;
@@ -99,6 +101,7 @@ void init_navigation_groups() {
     ui_objects[3] = ui_lblServices;
     ui_objects[4] = ui_lblRTC;
     ui_objects[5] = ui_lblLanguage;
+    ui_objects[6] = ui_lblStorage;
 
     ui_icons[0] = ui_icoTweakGeneral;
     ui_icons[1] = ui_icoTheme;
@@ -106,6 +109,7 @@ void init_navigation_groups() {
     ui_icons[3] = ui_icoServices;
     ui_icons[4] = ui_icoRTC;
     ui_icons[5] = ui_icoLanguage;
+    ui_icons[6] = ui_icoStorage;
 
     apply_theme_list_panel(&theme, &device, ui_pnlTweakGeneral);
     apply_theme_list_panel(&theme, &device, ui_pnlTheme);
@@ -113,6 +117,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlServices);
     apply_theme_list_panel(&theme, &device, ui_pnlRTC);
     apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
+    apply_theme_list_panel(&theme, &device, ui_pnlStorage);
 
     apply_theme_list_item(&theme, ui_lblTweakGeneral, TS("General Settings"), false, false);
     apply_theme_list_item(&theme, ui_lblTheme, TS("Theme Picker"), false, false);
@@ -120,6 +125,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblServices, TS("Web Services"), false, false);
     apply_theme_list_item(&theme, ui_lblRTC, TS("Date and Time"), false, false);
     apply_theme_list_item(&theme, ui_lblLanguage, TS("Language"), false, false);
+    apply_theme_list_item(&theme, ui_lblStorage, TS("Storage"), false, false);
 
     apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_module, "general");
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_module, "theme");
@@ -127,6 +133,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoServices, mux_module, "service");
     apply_theme_list_glyph(&theme, ui_icoRTC, mux_module, "clock");
     apply_theme_list_glyph(&theme, ui_icoLanguage, mux_module, "language");
+    apply_theme_list_glyph(&theme, ui_icoStorage, mux_module, "storage");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -186,6 +193,8 @@ void handle_a() {
         load_mux("rtc");
     } else if (element_focused == ui_lblLanguage) {
         load_mux("language");
+    } else if (element_focused == ui_lblStorage) {
+        load_mux("storage");
     }
     mux_input_stop();
 }
@@ -269,6 +278,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblServices, "service");
     lv_obj_set_user_data(ui_lblRTC, "clock");
     lv_obj_set_user_data(ui_lblLanguage, "language");
+    lv_obj_set_user_data(ui_lblStorage, "storage");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);

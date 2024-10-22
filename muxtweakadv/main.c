@@ -51,7 +51,7 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 17
+#define UI_COUNT 16
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -82,8 +82,6 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblVerbose,     TS("Toggle startup and shutdown verbose messages used for debugging faults")},
             {ui_lblRumble,      TS("Toggle vibration for device startup, sleep, and shutdown")},
             {ui_lblHDMIOutput,  TS("Switch between device speaker or external monitor audio via HDMI connection")},
-            {ui_lblStorage,     TS("Change the storage device where muOS looks for user content - Changing these "
-                                   "settings can cause critical failures, only change if you know what you are doing!")},
     };
 
     char *message = TG("No Help Information Found");
@@ -129,8 +127,7 @@ void elements_events_init() {
             ui_droState,
             ui_droVerbose,
             ui_droRumble,
-            ui_droHDMIOutput,
-            ui_droStorage
+            ui_droHDMIOutput
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -394,8 +391,7 @@ void init_navigation_groups() {
             ui_pnlState,
             ui_pnlVerbose,
             ui_pnlRumble,
-            ui_pnlHDMIOutput,
-            ui_pnlStorage
+            ui_pnlHDMIOutput
     };
 
     ui_objects[0] = ui_lblAccelerate;
@@ -414,7 +410,6 @@ void init_navigation_groups() {
     ui_objects[13] = ui_lblVerbose;
     ui_objects[14] = ui_lblRumble;
     ui_objects[15] = ui_lblHDMIOutput;
-    ui_objects[16] = ui_lblStorage;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droAccelerate,
@@ -432,8 +427,7 @@ void init_navigation_groups() {
             ui_droState,
             ui_droVerbose,
             ui_droRumble,
-            ui_droHDMIOutput,
-            ui_droStorage
+            ui_droHDMIOutput
     };
 
     lv_obj_t *ui_objects_glyph[] = {
@@ -452,8 +446,7 @@ void init_navigation_groups() {
             ui_icoState,
             ui_icoVerbose,
             ui_icoRumble,
-            ui_icoHDMIOutput,
-            ui_icoStorage
+            ui_icoHDMIOutput
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlAccelerate);
@@ -472,7 +465,6 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlVerbose);
     apply_theme_list_panel(&theme, &device, ui_pnlRumble);
     apply_theme_list_panel(&theme, &device, ui_pnlHDMIOutput);
-    apply_theme_list_panel(&theme, &device, ui_pnlStorage);
 
     apply_theme_list_item(&theme, ui_lblAccelerate, TS("Menu Acceleration"), false, true);
     apply_theme_list_item(&theme, ui_lblSwap, TS("Button Swap"), false, true);
@@ -490,7 +482,6 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblVerbose, TS("Verbose Messages"), false, true);
     apply_theme_list_item(&theme, ui_lblRumble, TS("Device Rumble"), false, true);
     apply_theme_list_item(&theme, ui_lblHDMIOutput, TS("HDMI Audio Output"), false, true);
-    apply_theme_list_item(&theme, ui_lblStorage, TS("Storage Preference"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoAccelerate, mux_module, "accelerate");
     apply_theme_list_glyph(&theme, ui_icoSwap, mux_module, "swap");
@@ -508,7 +499,6 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoVerbose, mux_module, "verbose");
     apply_theme_list_glyph(&theme, ui_icoRumble, mux_module, "rumble");
     apply_theme_list_glyph(&theme, ui_icoHDMIOutput, mux_module, "hdmi");
-    apply_theme_list_glyph(&theme, ui_icoStorage, mux_module, "storage");
 
     char *accelerate_string = generate_number_string(16, 256, 16, TG("Disabled"), NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate, accelerate_string);
@@ -533,7 +523,6 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droVerbose, NULL);
     apply_theme_list_drop_down(&theme, ui_droRumble, NULL);
     apply_theme_list_drop_down(&theme, ui_droHDMIOutput, NULL);
-    apply_theme_list_drop_down(&theme, ui_droStorage, "");
 
     char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
     add_drop_down_options(ui_droSwap, (char *[]) {TS("Retro"), TS("Modern")}, 2);
@@ -616,16 +605,7 @@ void handle_confirm(void) {
         return;
     }
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblStorage) {
-        play_sound("confirm", nav_sound, 1);
-        save_tweak_options();
-
-        load_mux("storage");
-        mux_input_stop();
-    } else {
-        handle_option_next();
-    }
+    handle_option_next();
 }
 
 void handle_back(void) {
@@ -725,7 +705,6 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblVerbose, "verbose");
     lv_obj_set_user_data(ui_lblRumble, "rumble");
     lv_obj_set_user_data(ui_lblHDMIOutput, "hdmi");
-    lv_obj_set_user_data(ui_lblStorage, "storage");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_HIDDEN);
