@@ -276,6 +276,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     theme->MISC.STATIC_ALIGNMENT = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", 255);
     theme->MUX.ITEM.COUNT = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_COUNT", 11);
+    theme->MUX.ITEM.HEIGHT = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_HEIGHT", 0);
     theme->MISC.CONTENT.SIZE_TO_CONTENT = get_ini_int(muos_theme, "misc", "CONTENT_SIZE_TO_CONTENT", 0);
     theme->MISC.CONTENT.ALIGNMENT = get_ini_int(muos_theme, "misc", "CONTENT_ALIGNMENT", 0);
     theme->MISC.CONTENT.PADDING_LEFT = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_LEFT", 0);
@@ -290,8 +291,13 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
-    theme->MUX.ITEM.PANEL = theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.COUNT;
-    theme->MUX.ITEM.HEIGHT = theme->MUX.ITEM.PANEL - 2;
+    if (theme->MUX.ITEM.HEIGHT > 0) {
+        theme->MUX.ITEM.PANEL = theme->MUX.ITEM.HEIGHT + 2;
+        theme->MUX.ITEM.COUNT = theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.PANEL;
+    } else {
+        theme->MUX.ITEM.PANEL = theme->MISC.CONTENT.HEIGHT / theme->MUX.ITEM.COUNT;
+        theme->MUX.ITEM.HEIGHT = theme->MUX.ITEM.PANEL - 2;
+    }
     // Adjusts height if user picks a height that is not evenly divisible by item count.
     // Prevents seeing a few pixels of the next game.
     theme->MISC.CONTENT.HEIGHT = theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT;
