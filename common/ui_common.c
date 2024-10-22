@@ -599,7 +599,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_x(ui_icoProgressBrightness, -220);
     lv_obj_set_y(ui_icoProgressBrightness, -205);
     lv_obj_set_align(ui_icoProgressBrightness, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_icoProgressBrightness, "");
+    lv_label_set_text(ui_icoProgressBrightness, "\uF185");
     lv_label_set_recolor(ui_icoProgressBrightness, "true");
     lv_obj_set_style_text_color(ui_icoProgressBrightness, lv_color_hex(theme->BAR.ICON),
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -693,8 +693,7 @@ void ui_common_handle_bright() {
     progress_onscreen = 1;
     lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-    lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-    lv_bar_set_value(ui_barProgressBrightness, atoi(read_text_from_file(BRIGHT_PERC)), LV_ANIM_OFF);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 }
 
 void ui_common_handle_vol() {
@@ -705,23 +704,7 @@ void ui_common_handle_vol() {
     progress_onscreen = 2;
     lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-    int volume = atoi(read_text_from_file(VOLUME_PERC));
-    switch (volume) {
-        default:
-        case 0:
-            lv_label_set_text(ui_icoProgressVolume, "\uF6A9");
-            break;
-        case 1 ... 46:
-            lv_label_set_text(ui_icoProgressVolume, "\uF026");
-            break;
-        case 47 ... 71:
-            lv_label_set_text(ui_icoProgressVolume, "\uF027");
-            break;
-        case 72 ... 100:
-            lv_label_set_text(ui_icoProgressVolume, "\uF028");
-            break;
-    }
-    lv_bar_set_value(ui_barProgressVolume, volume, LV_ANIM_OFF);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 }
 
 void ui_common_handle_idle() {

@@ -1777,7 +1777,7 @@ void glyph_task() {
 }
 
 void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume);
+    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (!nav_moved & !fade_timeout) {
         if (counter_fade > 0) {

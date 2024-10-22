@@ -1619,9 +1619,30 @@ char *get_script_value(const char *filename, const char *key) {
     return value;
 }
 
-void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar) {
+void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar, lv_obj_t *volume_icon) {
+    if (!progress_onscreen) {
+        return;
+    }
+
     lv_bar_set_value(bright_bar, read_int_from_file(BRIGHT_PERC, 1), LV_ANIM_ON);
-    lv_bar_set_value(volume_bar, read_int_from_file(VOLUME_PERC, 1), LV_ANIM_ON);
+
+    int volume = read_int_from_file(VOLUME_PERC, 1);
+    lv_bar_set_value(volume_bar, volume, LV_ANIM_ON);
+    switch (volume) {
+        default:
+        case 0:
+            lv_label_set_text(volume_icon, "\uF6A9");
+            break;
+        case 1 ... 46:
+            lv_label_set_text(volume_icon, "\uF026");
+            break;
+        case 47 ... 71:
+            lv_label_set_text(volume_icon, "\uF027");
+            break;
+        case 72 ... 100:
+            lv_label_set_text(volume_icon, "\uF028");
+            break;
+    }
 }
 
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path) {
