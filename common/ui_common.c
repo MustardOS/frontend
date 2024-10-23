@@ -133,9 +133,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_pnlBox, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlBox, device->MUX.HEIGHT - theme->HEADER.HEIGHT - theme->FOOTER.HEIGHT - 4);
     lv_obj_set_x(ui_pnlBox, 0);
-    if (config.VISUAL.BOX_ART <= 1) {
-        lv_obj_set_y(ui_pnlBox, theme->HEADER.HEIGHT + 2);
-    }
+    lv_obj_set_y(ui_pnlBox, theme->HEADER.HEIGHT + 2);
     lv_obj_set_align(ui_pnlBox, LV_ALIGN_TOP_MID);
     lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
                                  LV_OBJ_FLAG_SCROLL_CHAIN);
@@ -889,8 +887,6 @@ void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels) {
 }
 
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
-    lv_obj_set_y(ui_pnlBox, 0);
-    lv_obj_set_align(ui_pnlBox, LV_ALIGN_CENTER);
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
         snprintf(init_wall, sizeof(init_wall), "M:%s/image/wall/default.png", INTERNAL_THEME);
@@ -921,14 +917,16 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
                 lv_obj_move_foreground(ui_pnlBox);
                 break;
             case 3: // Fullscreen + Behind
+                lv_obj_set_y(ui_pnlBox, 0);
                 lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-                lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+                lv_obj_set_align(ui_imgBox, LV_ALIGN_CENTER);
                 lv_obj_move_background(ui_pnlBox);
                 lv_obj_move_background(ui_pnlWall);
                 break;
             case 4: // Fullscreen + Front
+                lv_obj_set_y(ui_pnlBox, 0);
                 lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-                lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
+                lv_obj_set_align(ui_imgBox, LV_ALIGN_CENTER);
                 lv_obj_move_foreground(ui_pnlBox);
                 break;
         }

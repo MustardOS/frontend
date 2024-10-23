@@ -1633,11 +1633,13 @@ void init_elements() {
             lv_obj_move_foreground(ui_pnlBox);
             break;
         case 2: // Fullscreen + Behind
+            lv_obj_set_y(ui_pnlBox, 0);
             lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
             lv_obj_move_background(ui_pnlBox);
             lv_obj_move_background(ui_pnlWall);
             break;
         case 3: // Fullscreen + Front
+            lv_obj_set_y(ui_pnlBox, 0);
             lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
             lv_obj_move_foreground(ui_pnlBox);
             break;
