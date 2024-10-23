@@ -13,15 +13,24 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (config->BOOT.FACTORY_RESET) {
         snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
     } else {
-        snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/%s.txt",
-                 STORAGE_PATH, mux_name);
-        if (!file_exist(scheme)) {
-            snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/default.txt",
-                     STORAGE_PATH);
-            if (!file_exist(scheme)) {
-                snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
-                // TODO: Is there a better way to do fallback?
-            }
+        char device_path[15];
+        get_device_path(device_path, sizeof(device_path));
+        if ((snprintf(scheme, sizeof(scheme), "%s/theme/active/%sscheme/%s.txt",
+                 STORAGE_PATH, device_path, mux_name) && file_exist(scheme)) ||
+
+            (snprintf(scheme, sizeof(scheme), "%s/theme/active/%sscheme/default.txt",
+                    STORAGE_PATH, device_path) && file_exist(scheme)) ||
+
+            (snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/%s.txt",
+                    STORAGE_PATH, mux_name) && file_exist(scheme)) ||
+
+            (snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/default.txt",
+                     STORAGE_PATH) && file_exist(scheme))) {
+            
+            printf("Loading Theme Scheme: %s\n", scheme);
+        } else {
+            snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
+            printf("Loading Default Theme Scheme: %s\n", scheme);
         }
     }
 
