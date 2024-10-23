@@ -133,9 +133,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_pnlBox, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlBox, device->MUX.HEIGHT - theme->HEADER.HEIGHT - theme->FOOTER.HEIGHT - 4);
     lv_obj_set_x(ui_pnlBox, 0);
-    if (config.VISUAL.BOX_ART <= 1) {
-        lv_obj_set_y(ui_pnlBox, theme->HEADER.HEIGHT + 2);
-    }
+    lv_obj_set_y(ui_pnlBox, theme->HEADER.HEIGHT + 2);
     lv_obj_set_align(ui_pnlBox, LV_ALIGN_TOP_MID);
     lv_obj_clear_flag(ui_pnlBox, LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM |
                                  LV_OBJ_FLAG_SCROLL_CHAIN);
