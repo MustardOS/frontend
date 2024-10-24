@@ -331,19 +331,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
         mini_free(muos_theme_overrides);
     }
-
-    //Size to content should not be used with config screens.  It will break the padding.
-    if (strcasecmp(mux_name, "muxnetwork") == 0 || 
-        strcasecmp(mux_name, "muxpower") == 0 || 
-        strcasecmp(mux_name, "muxrtc") == 0 || 
-        strcasecmp(mux_name, "muxstorage") == 0 || 
-        strcasecmp(mux_name, "muxsysinfo") == 0 || 
-        strcasecmp(mux_name, "muxtweakadv") == 0 || 
-        strcasecmp(mux_name, "muxtweakgen") == 0 || 
-        strcasecmp(mux_name, "muxvisual") == 0 || 
-        strcasecmp(mux_name, "muxwebserv") == 0) {
-        theme->MISC.CONTENT.SIZE_TO_CONTENT = 0;
-    }
 }
 
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
@@ -377,12 +364,16 @@ void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
 void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
                            lv_obj_t *ui_lblItemGlyph, const char *item_text) {
     if (theme->MISC.CONTENT.SIZE_TO_CONTENT) {
+        lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblItem);
+        lv_obj_set_width(ui_pnlItem, LV_SIZE_CONTENT);
+        lv_obj_get_style_max_width(ui_pnlItem, theme->MISC.CONTENT.WIDTH);
+
         const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
         lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
                                                       LV_TEXT_FLAG_EXPAND);
         int item_width = LV_MIN(theme->FONT.LIST_PAD_LEFT + act_line_length + theme->FONT.LIST_PAD_RIGHT,
-                                theme->MISC.CONTENT.WIDTH);
+                                theme->MISC.CONTENT.WIDTH - 10); //-10: compensate for 5 pixel border
         // When using size to content right padding needs to be zero to prevent text from wrapping.
         // The overall width of the control will include the right padding
         lv_obj_set_style_pad_right(ui_lblItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -393,12 +384,7 @@ void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, 
 }
 
 void apply_theme_list_panel(struct theme_config *theme, struct mux_device *device, lv_obj_t *ui_pnlList) {
-    if (theme->MISC.CONTENT.SIZE_TO_CONTENT) {
-        lv_obj_set_width(ui_pnlList, LV_SIZE_CONTENT);
-        lv_obj_get_style_max_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
-    } else {
-        lv_obj_set_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
-    }
+    lv_obj_set_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
     lv_obj_set_height(ui_pnlList, theme->MUX.ITEM.HEIGHT);
     lv_obj_set_scrollbar_mode(ui_pnlList, LV_SCROLLBAR_MODE_OFF);
 
