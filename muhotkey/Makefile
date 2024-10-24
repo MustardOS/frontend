@@ -50,6 +50,7 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@printf "Building: %s... " "$(TARGET)"
 	@START=$(START_TIME); \
 	$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
+		../common/json/json.c \
 		../common/config.c \
 		../common/device.c \
 		../common/common.c \
