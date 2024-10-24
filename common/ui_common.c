@@ -737,15 +737,19 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 
     char footer_image_path[MAX_BUFFER_SIZE];
     char footer_image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(footer_image_path, sizeof(footer_image_path), "%s/theme/active/glyph/footer/%s.png",
-                 STORAGE_PATH, glyph_name) >= 0 && file_exist(footer_image_path)) {
-        snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s/theme/active/glyph/footer/%s.png",
-                 STORAGE_PATH, glyph_name);
-    } else if (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
-                        INTERNAL_THEME, glyph_name) >= 0 &&
-               file_exist(footer_image_path)) {
-        snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s/glyph/footer/%s.png",
-                 INTERNAL_THEME, glyph_name);
+    char device_path[15];
+    get_device_path(device_path, sizeof(device_path));
+    if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/theme/active/%sglyph/footer/%s.png",
+                STORAGE_PATH, device_path, glyph_name) >= 0 && file_exist(footer_image_path)) ||
+        
+        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/theme/active/glyph/footer/%s.png",
+                STORAGE_PATH, glyph_name) >= 0 && file_exist(footer_image_path)) ||
+
+        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
+                INTERNAL_THEME, glyph_name) >= 0 &&
+                file_exist(footer_image_path))) {
+
+        snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s", footer_image_path);
     }
 
     ui_glyph = lv_img_create(parent);
@@ -808,15 +812,19 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/%s.png",
-                 STORAGE_PATH, battery_glyph_name) >= 0 && file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/%s.png",
-                 STORAGE_PATH, battery_glyph_name);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/glyph/header/%s.png",
-                        INTERNAL_THEME, battery_glyph_name) >= 0 &&
-               file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/glyph/header/%s.png",
-                 INTERNAL_THEME, battery_glyph_name);
+    char device_path[15];
+    get_device_path(device_path, sizeof(device_path));
+    if ((snprintf(image_path, sizeof(image_path), "%s/theme/active/%sglyph/header/%s.png",
+                STORAGE_PATH, device_path, battery_glyph_name) >= 0 && file_exist(image_path)) ||
+
+        (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/%s.png",
+                STORAGE_PATH, battery_glyph_name) >= 0 && file_exist(image_path)) ||
+    
+        (snprintf(image_path, sizeof(image_path), "%s/glyph/header/%s.png",
+                INTERNAL_THEME, battery_glyph_name) >= 0 &&
+                file_exist(image_path))) {
+        
+        snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
     if (file_exist(image_path)) lv_img_set_src(ui_staCapacity, image_embed);
@@ -825,15 +833,19 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/bluetooth.png",
-                 STORAGE_PATH) >= 0 && file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/bluetooth.png",
-                 STORAGE_PATH);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/glyph/header/bluetooth.png",
-                        INTERNAL_THEME) >= 0 &&
-               file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/glyph/header/bluetooth.png",
-                 INTERNAL_THEME);
+    char device_path[15];
+    get_device_path(device_path, sizeof(device_path));
+    if ((snprintf(image_path, sizeof(image_path), "%s/theme/active/%sglyph/header/bluetooth.png",
+                STORAGE_PATH, device_path) >= 0 && file_exist(image_path)) ||
+
+        (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/bluetooth.png",
+                STORAGE_PATH) >= 0 && file_exist(image_path)) ||
+        
+        (snprintf(image_path, sizeof(image_path), "%s/glyph/header/bluetooth.png",
+                INTERNAL_THEME) >= 0 &&
+                file_exist(image_path))) {
+        
+        snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
     if (file_exist(image_path)) lv_img_set_src(ui_staBluetooth, image_embed);
@@ -857,15 +869,19 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) 
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/network_%s.png",
-                 STORAGE_PATH, network_status) >= 0 && file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/theme/active/glyph/header/network_%s.png",
-                 STORAGE_PATH, network_status);
-    } else if (snprintf(image_path, sizeof(image_path), "%s/glyph/header/network_%s.png",
-                        INTERNAL_THEME, network_status) >= 0 &&
-               file_exist(image_path)) {
-        snprintf(image_embed, sizeof(image_embed), "M:%s/glyph/header/network_%s.png",
-                 INTERNAL_THEME, network_status);
+    char device_path[15];
+    get_device_path(device_path, sizeof(device_path));
+    if ((snprintf(image_path, sizeof(image_path), "%s/theme/active/%sglyph/header/network_%s.png",
+                STORAGE_PATH, device_path, network_status) >= 0 && file_exist(image_path)) ||
+        
+        (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/network_%s.png",
+                STORAGE_PATH, network_status) >= 0 && file_exist(image_path)) ||
+
+        (snprintf(image_path, sizeof(image_path), "%s/glyph/header/network_%s.png",
+                INTERNAL_THEME, network_status) >= 0 &&
+                file_exist(image_path))) {
+        
+        snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
     if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);

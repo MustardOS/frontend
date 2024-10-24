@@ -534,15 +534,19 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
 
     char glyph_image_path[MAX_BUFFER_SIZE];
     char glyph_image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/glyph/%s/%s.png",
-                 STORAGE_PATH, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) {
-        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/theme/active/glyph/%s/%s.png",
-                 STORAGE_PATH, screen_name, item_glyph);
-    } else if (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                        INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
-               file_exist(glyph_image_path)) {
-        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/glyph/%s/%s.png",
-                 INTERNAL_THEME, screen_name, item_glyph);
+    char device_path[15];
+    get_device_path(device_path, sizeof(device_path));
+    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/%sglyph/%s/%s.png",
+                STORAGE_PATH, device_path, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+        
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/glyph/%s/%s.png",
+                STORAGE_PATH, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
+                INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
+                file_exist(glyph_image_path))) {
+
+        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
     }
 
     if (!file_exist(glyph_image_path)) return;
