@@ -331,6 +331,19 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
         mini_free(muos_theme_overrides);
     }
+
+    //Size to content should not be used with config screens.  It will break the padding.
+    if (strcasecmp(mux_name, "muxnetwork") == 0 || 
+        strcasecmp(mux_name, "muxpower") == 0 || 
+        strcasecmp(mux_name, "muxrtc") == 0 || 
+        strcasecmp(mux_name, "muxstorage") == 0 || 
+        strcasecmp(mux_name, "muxsysinfo") == 0 || 
+        strcasecmp(mux_name, "muxtweakadv") == 0 || 
+        strcasecmp(mux_name, "muxtweakgen") == 0 || 
+        strcasecmp(mux_name, "muxvisual") == 0 || 
+        strcasecmp(mux_name, "muxwebserv") == 0) {
+        theme->MISC.CONTENT.SIZE_TO_CONTENT = 0;
+    }
 }
 
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
@@ -553,8 +566,7 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
 
     lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
 
-    lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (theme->MISC.CONTENT.WIDTH / 2) -
-                                5); // - 5 at end to compensate for border width
+    lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (theme->MISC.CONTENT.WIDTH / 2));
     lv_obj_set_align(ui_lblItemGlyph, LV_ALIGN_CENTER);
 
     lv_obj_set_style_img_opa(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
