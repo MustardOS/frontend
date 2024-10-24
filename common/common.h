@@ -103,7 +103,7 @@ char *read_battery_health();
 
 char *read_battery_voltage();
 
-char *read_text_from_file(char *filename);
+char *read_text_from_file(const char *filename);
 
 char *read_line_from_file(const char *filename, size_t line_number);
 

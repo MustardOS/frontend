@@ -393,7 +393,7 @@ char *read_battery_voltage() {
     return form_voltage;
 }
 
-char *read_text_from_file(char *filename) {
+char *read_text_from_file(const char *filename) {
     char *text = NULL;
     FILE *file = fopen(filename, "r");
 

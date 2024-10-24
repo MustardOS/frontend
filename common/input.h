@@ -75,8 +75,9 @@ typedef void (*mux_input_catchall_combo_handler)(int, mux_input_action);
 
 // Configuration for a multi-input combo.
 typedef struct {
-    // Bitmask of input types included in the combo. Every input in this mask must be pressed for
-    // the combo to activate.
+    // Bitmask of input types. Every input in this mask must be pressed for the combo to activate.
+    // (The combo can activate even when inputs _not_ in the mask are _also_ pressed. This allows
+    // hotkeys to function in cases like pressing volume while holding the D-pad in a game.)
     uint64_t type_mask;
 
     // Callback functions for combo. Fired in sequence: one press, zero or more holds, one release.
