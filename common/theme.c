@@ -13,15 +13,24 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (config->BOOT.FACTORY_RESET) {
         snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
     } else {
-        snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/%s.txt",
-                 STORAGE_PATH, mux_name);
-        if (!file_exist(scheme)) {
-            snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/default.txt",
-                     STORAGE_PATH);
-            if (!file_exist(scheme)) {
-                snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
-                // TODO: Is there a better way to do fallback?
-            }
+        char device_path[15];
+        get_device_path(device_path, sizeof(device_path));
+        if ((snprintf(scheme, sizeof(scheme), "%s/theme/active/%sscheme/%s.txt",
+                 STORAGE_PATH, device_path, mux_name) && file_exist(scheme)) ||
+
+            (snprintf(scheme, sizeof(scheme), "%s/theme/active/%sscheme/default.txt",
+                    STORAGE_PATH, device_path) && file_exist(scheme)) ||
+
+            (snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/%s.txt",
+                    STORAGE_PATH, mux_name) && file_exist(scheme)) ||
+
+            (snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/default.txt",
+                     STORAGE_PATH) && file_exist(scheme))) {
+            
+            printf("Loading Theme Scheme: %s\n", scheme);
+        } else {
+            snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
+            printf("Loading Default Theme Scheme: %s\n", scheme);
         }
     }
 
@@ -355,12 +364,16 @@ void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
 void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
                            lv_obj_t *ui_lblItemGlyph, const char *item_text) {
     if (theme->MISC.CONTENT.SIZE_TO_CONTENT) {
+        lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblItem);
+        lv_obj_set_width(ui_pnlItem, LV_SIZE_CONTENT);
+        lv_obj_get_style_max_width(ui_pnlItem, theme->MISC.CONTENT.WIDTH);
+
         const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
         const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
         lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
                                                       LV_TEXT_FLAG_EXPAND);
         int item_width = LV_MIN(theme->FONT.LIST_PAD_LEFT + act_line_length + theme->FONT.LIST_PAD_RIGHT,
-                                theme->MISC.CONTENT.WIDTH);
+                                theme->MISC.CONTENT.WIDTH - 10); //-10: compensate for 5 pixel border
         // When using size to content right padding needs to be zero to prevent text from wrapping.
         // The overall width of the control will include the right padding
         lv_obj_set_style_pad_right(ui_lblItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -371,12 +384,7 @@ void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, 
 }
 
 void apply_theme_list_panel(struct theme_config *theme, struct mux_device *device, lv_obj_t *ui_pnlList) {
-    if (theme->MISC.CONTENT.SIZE_TO_CONTENT) {
-        lv_obj_set_width(ui_pnlList, LV_SIZE_CONTENT);
-        lv_obj_get_style_max_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
-    } else {
-        lv_obj_set_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
-    }
+    lv_obj_set_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
     lv_obj_set_height(ui_pnlList, theme->MUX.ITEM.HEIGHT);
     lv_obj_set_scrollbar_mode(ui_pnlList, LV_SCROLLBAR_MODE_OFF);
 
@@ -525,23 +533,26 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
 
     char glyph_image_path[MAX_BUFFER_SIZE];
     char glyph_image_embed[MAX_BUFFER_SIZE];
-    if (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/glyph/%s/%s.png",
-                 STORAGE_PATH, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) {
-        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/theme/active/glyph/%s/%s.png",
-                 STORAGE_PATH, screen_name, item_glyph);
-    } else if (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                        INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
-               file_exist(glyph_image_path)) {
-        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s/glyph/%s/%s.png",
-                 INTERNAL_THEME, screen_name, item_glyph);
+    char device_path[15];
+    get_device_path(device_path, sizeof(device_path));
+    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/%sglyph/%s/%s.png",
+                STORAGE_PATH, device_path, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+        
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/glyph/%s/%s.png",
+                STORAGE_PATH, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
+                INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
+                file_exist(glyph_image_path))) {
+
+        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
     }
 
     if (!file_exist(glyph_image_path)) return;
 
     lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
 
-    lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (theme->MISC.CONTENT.WIDTH / 2) -
-                                5); // - 5 at end to compensate for border width
+    lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (theme->MISC.CONTENT.WIDTH / 2));
     lv_obj_set_align(ui_lblItemGlyph, LV_ALIGN_CENTER);
 
     lv_obj_set_style_img_opa(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
