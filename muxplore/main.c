@@ -526,6 +526,10 @@ void image_refresh(char *image_type) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
             printf("LOADING PREVIEW ARTWORK AT: %s\n", image);
 
+            if (!file_exist(image)) {
+                snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
+            }
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
                         image, LV_ALIGN_CENTER, 515, 250, 0, 0, 0, 0
@@ -557,6 +561,10 @@ void image_refresh(char *image_type) {
             } else {
                 printf("LOADING BOX ARTWORK AT: %s\n", image);
 
+                if (!file_exist(image)) {
+                    snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
+                    snprintf(image_path, sizeof(image_path), "M:%s", image);
+                }
                 if (file_exist(image)) {
                     starter_image = 1;
                     lv_img_set_src(ui_imgBox, image_path);
