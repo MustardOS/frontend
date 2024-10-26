@@ -366,6 +366,9 @@ void image_refresh(char *image_type) {
         return;
     }
 
+    char device_path[15];
+    get_device_path(device_path, sizeof(device_path));
+
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
     char core_artwork[MAX_BUFFER_SIZE];
@@ -405,10 +408,13 @@ void image_refresh(char *image_type) {
             char *f_core_artwork = read_line_from_file(f_pointer, 3);
 
             if (strlen(f_core_artwork) <= 1) {
-                snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
+                         ACTIVE_THEME, device_path, image_type);                
+                if (!file_exist(image)) {
+                    snprintf(image, sizeof(image), "%s/image/none_%s.png",
                          ACTIVE_THEME, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/image/none_%s.png",
-                         ACTIVE_THEME, image_type);
+                }
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
                 char *f_file_name = strip_ext(read_line_from_file(f_pointer, 7));
 
@@ -432,10 +438,13 @@ void image_refresh(char *image_type) {
 
             char *h_core_artwork = read_line_from_file(h_pointer, 3);
             if (strlen(h_core_artwork) <= 1) {
-                snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
+                         ACTIVE_THEME, device_path, image_type);                
+                if (!file_exist(image)) {
+                    snprintf(image, sizeof(image), "%s/image/none_%s.png",
                          ACTIVE_THEME, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/image/none_%s.png",
-                         ACTIVE_THEME, image_type);
+                }
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
                 char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
 
@@ -488,10 +497,13 @@ void image_refresh(char *image_type) {
                 }
 
                 if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
-                    snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                             ACTIVE_THEME, image_type);
-                    snprintf(image_path, sizeof(image_path), "M:%s/image/none_%s.png",
-                             ACTIVE_THEME, image_type);
+                    snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
+                            ACTIVE_THEME, device_path, image_type);                
+                    if (!file_exist(image)) {
+                        snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                            ACTIVE_THEME, image_type);
+                    }
+                    snprintf(image_path, sizeof(image_path), "M:%s", image);
                 } else {
                     if (items[current_item_index].content_type == FOLDER) {
                         snprintf(image, sizeof(image), "%s/info/catalogue/Folder/%s/%s.png",
@@ -514,6 +526,10 @@ void image_refresh(char *image_type) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
             printf("LOADING PREVIEW ARTWORK AT: %s\n", image);
 
+            if (!file_exist(image)) {
+                snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
+            }
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
                         image, LV_ALIGN_CENTER, 515, 250, 0, 0, 0, 0
@@ -545,6 +561,10 @@ void image_refresh(char *image_type) {
             } else {
                 printf("LOADING BOX ARTWORK AT: %s\n", image);
 
+                if (!file_exist(image)) {
+                    snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
+                    snprintf(image_path, sizeof(image_path), "M:%s", image);
+                }
                 if (file_exist(image)) {
                     starter_image = 1;
                     lv_img_set_src(ui_imgBox, image_path);
