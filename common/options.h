@@ -11,7 +11,7 @@
 #define TIME_STRING_24 "%H:%M"
 
 #define INTERNAL_PATH  "/opt/muos"
-#define INTERNAL_THEME "/opt/muos/default/MUOS/theme"
+#define INTERNAL_THEME "/opt/muos/default/MUOS/theme/active"
 
 #define STORAGE_PATH   "/run/muos/storage"
 #define ACTIVE_THEME   "/run/muos/storage/theme/active"
