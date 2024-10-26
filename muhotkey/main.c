@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,11 +11,10 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
+#include "../common/json/json.h"
 
 static void handle_combo(int num, mux_input_action action);
-
 static void handle_input(mux_input_type type, mux_input_action action);
-
 static void handle_idle(void);
 
 struct mux_device device;
@@ -29,10 +29,15 @@ typedef enum {
 typedef struct {
     bool idle;
     uint32_t tick;
-
     const char *idle_name;
     const char *active_name;
 } idle_timer;
+
+typedef struct {
+    char *name;
+    bool handle_hold;
+    uint64_t type_mask;
+} combo_config;
 
 static const char *input_name[MUX_INPUT_COUNT] = {
         // Gamepad buttons:
@@ -95,19 +100,12 @@ static mux_input_options input_opts = {
         .idle_handler = handle_idle,
 };
 
+static combo_config combo[MUX_INPUT_COMBO_COUNT] = {};
+static int combo_count = 0;
 static bool verbose = false;
 
-static char *combo_name[MUX_INPUT_COMBO_COUNT] = {};
-static bool combo_holdable[MUX_INPUT_COMBO_COUNT] = {};
-
-static idle_timer idle_display = {
-        .idle_name = "IDLE_DISPLAY",
-        .active_name = "IDLE_ACTIVE",
-};
-
-static idle_timer idle_sleep = {
-        .idle_name = "IDLE_SLEEP",
-};
+static idle_timer idle_display = {.idle_name = "IDLE_DISPLAY", .active_name = "IDLE_ACTIVE"};
+static idle_timer idle_sleep = {.idle_name = "IDLE_SLEEP"};
 
 static void check_idle(idle_timer *timer, uint32_t timeout_ms) {
     uint32_t idle_ms = mux_input_tick() - timer->tick;
@@ -179,89 +177,144 @@ static void handle_combo(int num, mux_input_action action) {
         // To support separate hotkeys for these two cases, we delay triggering of a POWER_SHORT
         // combo till release (2) so we can tell if the short press turned into a long press or not.
         if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_POWER_LONG)) {
-            printf("%s\n", combo_name[num]);
+            printf("%s\n", combo[num].name);
         }
         return;
     }
 
-    if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && combo_holdable[num])) {
-        printf("%s\n", combo_name[num]);
+    if (action == MUX_INPUT_PRESS || (action == MUX_INPUT_HOLD && combo[num].handle_hold)) {
+        printf("%s\n", combo[num].name);
     }
 }
 
-// Parse an input type specified by name on the command line.
-//
-// Returns MUX_INPUT_COUNT if the name is not valid.
-int parse_type(const char *name) {
+// Parses input type specified by name. Returns MUX_INPUT_COUNT if name is not valid.
+static int parse_type(struct json input) {
     int i;
     for (i = 0; i < MUX_INPUT_COUNT; ++i) {
-        if (input_name[i] && strcmp(input_name[i], name) == 0) {
+        if (input_name[i] && json_string_compare(input, input_name[i]) == 0) {
             break;
         }
     }
     return i;
 }
 
-// Parse command-line argument specifying a combo to listen for.
+// Parses JSON file mapping hotkey names to configuration. File has the following format:
 //
-// Combo specs have the format `NAME=INPUT1+INPUT2+...`. For example, `OSF=POWER_SHORT+L1+L2+R1+R2`
-// is a valid combo that triggers when all five of those inputs are active.
-//
-// Combos are allowed to overlap, in which case the first combo that matches will trigger. For
-// example, consider combos `BRIGHT_UP=MENU_LONG+VOL_UP` and `VOL_UP=`VOL_UP`:
-//
-// * When Volume Up is pressed on its own, the VOL_UP combo will trigger.
-// * If Menu is held before Volume Up is pressed, then the BRIGHT_UP combo will trigger instead.
-void parse_combo(int combo_num, const char *combo_spec) {
-    // Duplicate the argument so we can modify it without affecting the process command line.
-    char *s = strdup(combo_spec);
-    if (!s) {
-        fprintf(stderr, "muhotkey: couldn't allocate memory for combo\n");
+// {
+//   "NAME1": {"handle_hold": false, "inputs": ["INPUT1", "INPUT2"]},
+//   "NAME2": {"handle_hold": true, "inputs": ["INPUT3"]}
+// }
+static void parse_combos(const char *filename) {
+    char *json_str = read_text_from_file(filename);
+    if (!json_valid(json_str)) {
+        fprintf(stderr, "muhotkey: JSON error: file not valid\n");
         exit(1);
     }
 
-    // Parse NAME.
-    combo_name[combo_num] = strsep(&s, "=");
-    if (!s) {
-        fprintf(stderr, "muhotkey: combo must specify at least one input: %s\n", combo_spec);
+    struct json json = json_parse(json_str);
+    if (json_type(json) != JSON_OBJECT) {
+        fprintf(stderr, "muhotkey: JSON error: root must be an object\n");
         exit(1);
     }
 
-    do {
-        // Parse INPUT.
-        const char *input_name = strsep(&s, "+");
-
-        // Look up input type by name.
-        int type = parse_type(input_name);
-        if (type == MUX_INPUT_COUNT) {
-            fprintf(stderr, "muhotkey: combo specified invalid input name %s: %s\n", input_name,
-                    combo_spec);
+    // Iterate over root object (NAME1, CONFIG1, NAME2, CONFIG2, ...).
+    for (json = json_first(json); json_exists(json); json = json_next(json)) {
+        if (combo_count == MUX_INPUT_COMBO_COUNT) {
+            fprintf(stderr, "muhotkey: at most %d hotkeys supported\n", MUX_INPUT_COMBO_COUNT);
             exit(1);
         }
 
-        // Update combo config accordingly.
-        input_opts.combo[combo_num].type_mask |= BIT(type);
-    } while (s);
+        combo_config *c = &combo[combo_count++];
+
+        // Parse hotkey name (e.g., "NAME1").
+        size_t name_length = json_string_length(json) + 1;
+        c->name = malloc(name_length);
+        json_string_copy(json, c->name, name_length);
+
+        if (c->name[0] == '\0') {
+            fprintf(stderr, "muhotkey: JSON error: hotkey name must not be empty\n");
+            exit(1);
+        }
+
+        // Parse hotkey config (e.g., {"handle_hold": false, "inputs": ["INPUT1", "INPUT2"]}).
+        json = json_next(json);
+
+        if (json_type(json) != JSON_OBJECT) {
+            fprintf(stderr, "muhotkey: JSON error: hotkey config must be an object\n");
+            exit(1);
+        }
+
+        c->handle_hold = json_bool(json_object_get(json, "handle_hold"));
+
+        // Parse hotkey inputs (e.g., ["INPUT1", "INPUT2"]).
+        for (struct json input = json_first(json_object_get(json, "inputs"));
+             json_exists(input);
+             input = json_next(input)) {
+            int type = parse_type(input);
+            if (type == MUX_INPUT_COUNT) {
+                fprintf(stderr, "muhotkey: JSON error: invalid input name\n");
+                exit(1);
+            }
+            c->type_mask |= BIT(type);
+        }
+    }
+
+    free(json_str);
 }
 
-void usage(FILE *file) {
+// Orders combos from longest to shortest (by number of keys), then alphabetically.
+//
+// This ensures that when overlapping combos like VOL_UP and VOL_UP+MENU_LONG are specified, the
+// longer combo (e.g., VOL_UP+MENU_LONG) is checked first. (If the shorter combo were checked first,
+// it would always match when VOL_UP was pressed, and the longer combo would never trigger.)
+static int cmp_combo(const void *p1, const void *p2) {
+    const combo_config *combo1 = (const combo_config *)p1;
+    const combo_config *combo2 = (const combo_config *)p2;
+
+    int length1 = __builtin_popcountll(combo1->type_mask);
+    int length2 = __builtin_popcountll(combo2->type_mask);
+
+    return (length1 != length2) ? length2 - length1 : strcmp(combo1->name, combo2->name);
+}
+
+// Prints a combo config for debugging. Format is similar to "[NAME=INPUT1+INPUT2]".
+static void print_combo_config(const combo_config *c) {
+    printf("[%s=", c->name);
+    for (int i = 0; i < MUX_INPUT_COUNT; ++i) {
+        if (c->type_mask & BIT(i)) {
+            printf("%s", input_name[i]);
+            if (c->type_mask >> (i + 1)) {
+                printf(",");
+            }
+        }
+    }
+    printf("]\n");
+}
+
+static void usage(FILE *file) {
     fprintf(file,
-            "Usage: muhotkey [-v] [-C|-H COMBO_SPEC]...\n"
+            "Usage: muhotkey [-v] FILE\n"
             "Usage: muhotkey -l\n"
             "\n"
-            "Monitor input for a list of hotkey combos.\n"
+            "Monitor input for activity and hotkey combos.\n"
             "\n"
-            "  -C COMBO_SPEC combo that will receive events on press\n"
-            "  -H COMBO_SPEC combo that will receive events on press and hold\n"
-            "  -v            prints every input received (verbose mode)\n"
-            "  -l            lists valid input names for COMBO_SPEC\n"
-            "  -h            displays this usage message\n"
+            "  -v prints every input received (verbose mode)\n"
+            "  -l lists valid input names\n"
+            "  -h displays this usage message\n"
             "\n"
-            "COMBO_SPEC has format `NAME=INPUT1+INPUT2+...`. Use -l to see valid INPUT values.\n"
+            "FILE should specify a JSON file having the following format:\n"
+            "\n"
+            "{\n"
+            "  \"NAME1\": {\"handle_hold\": false, \"inputs\": [\"INPUT1\", \"INPUT2\"]},\n"
+            "  \"NAME2\": {\"handle_hold\": true, \"inputs\": [\"INPUT3\"]}\n"
+            "}\n"
+            "\n"
+            "Hotkey names are arbitrary strings. Use -l to see valid values for inputs.\n"
     );
 }
 
 int main(int argc, char *argv[]) {
+    // Read config and open input devices.
     load_device(&device);
     load_config(&config);
 
@@ -277,21 +330,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int opt, next_combo = 0;
-    while ((opt = getopt(argc, argv, "C:H:vlh")) != -1) {
+    // Parse command line arguments.
+    for (int opt; (opt = getopt(argc, argv, "vlh")) != -1;) {
         switch (opt) {
-            case 'C':
-            case 'H':
-                if (next_combo >= MUX_INPUT_COMBO_COUNT) {
-                    fprintf(stderr, "muhotkey: at most %d combos supported\n",
-                            MUX_INPUT_COMBO_COUNT);
-                    return 1;
-                }
-
-                parse_combo(next_combo, optarg);
-                combo_holdable[next_combo] = (opt == 'H');
-                ++next_combo;
-                break;
             case 'v':
                 verbose = true;
                 break;
@@ -310,25 +351,40 @@ int main(int argc, char *argv[]) {
                 return 1;
         }
     }
-    if (optind < argc) {
+    if (argc - optind != 1) {
         usage(stderr);
         return 1;
     }
 
+    // Parse combos, and then sort them from longest to shortest, ensuring longer combos (e.g.,
+    // VOL_UP+MENU_LONG) can still trigger when they overlap with shorter ones (e.g, VOL_UP).
+    parse_combos(argv[optind]);
+    qsort(combo, combo_count, sizeof(*combo), cmp_combo);
+    for (int i = 0; i < combo_count; ++i) {
+        input_opts.combo[i].type_mask = combo[i].type_mask;
+        if (verbose) {
+            print_combo_config(&combo[i]);
+        }
+    }
+
+    // Flush triggered combo names to stdout immediately.
     setlinebuf(stdout);
 
+    // Start idle timers.
     uint32_t tick = mux_tick();
     idle_display.tick = tick;
     idle_sleep.tick = tick;
 
+    // Process input and respond to combos indefinitely.
     mux_input_task(&input_opts);
 
-    for (int i = 0; i < MUX_INPUT_COMBO_COUNT; ++i) {
-        free(combo_name[i]);
+    // Clean up.
+    for (int i = 0; i < combo_count; ++i) {
+        free(combo[i].name);
     }
 
-    close(input_opts.gamepad_fd);
     close(input_opts.system_fd);
+    close(input_opts.gamepad_fd);
 
     return 0;
 }
