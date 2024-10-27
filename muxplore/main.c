@@ -366,8 +366,8 @@ void image_refresh(char *image_type) {
         return;
     }
 
-    char device_path[15];
-    get_device_path(device_path, sizeof(device_path));
+    char device_dimension[15];
+    get_device_dimension(device_dimension, sizeof(device_dimension));
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
@@ -408,11 +408,11 @@ void image_refresh(char *image_type) {
             char *f_core_artwork = read_line_from_file(f_pointer, 3);
 
             if (strlen(f_core_artwork) <= 1) {
-                snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                         ACTIVE_THEME, device_path, image_type);                
+                snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                         STORAGE_THEME, image_type);
                 if (!file_exist(image)) {
                     snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         ACTIVE_THEME, image_type);
+                             INTERNAL_THEME, image_type);
                 }
                 snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
@@ -438,12 +438,8 @@ void image_refresh(char *image_type) {
 
             char *h_core_artwork = read_line_from_file(h_pointer, 3);
             if (strlen(h_core_artwork) <= 1) {
-                snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                         ACTIVE_THEME, device_path, image_type);                
-                if (!file_exist(image)) {
-                    snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         ACTIVE_THEME, image_type);
-                }
+                snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                         STORAGE_THEME, image_type);
                 snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
                 char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
@@ -497,12 +493,8 @@ void image_refresh(char *image_type) {
                 }
 
                 if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
-                    snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                            ACTIVE_THEME, device_path, image_type);                
-                    if (!file_exist(image)) {
-                        snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                            ACTIVE_THEME, image_type);
-                    }
+                    snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                             STORAGE_THEME, image_type);
                     snprintf(image_path, sizeof(image_path), "M:%s", image);
                 } else {
                     if (items[current_item_index].content_type == FOLDER) {

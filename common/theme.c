@@ -7,31 +7,27 @@
 #include "device.h"
 #include "mini/mini.h"
 
+int load_scheme(const char *theme_base, const char *device_dimension,
+                const char *mux_name, char *scheme, size_t scheme_size) {
+    return (snprintf(scheme, scheme_size, "%s/scheme/%s/%s.txt", theme_base, device_dimension, mux_name)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/scheme/%s/default.txt", theme_base, device_dimension)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/scheme/%s.txt", theme_base, mux_name)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/scheme/default.txt", theme_base)
+            && file_exist(scheme));
+}
+
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name) {
     char scheme[MAX_BUFFER_SIZE];
+    char device_dimension[15];
+    get_device_dimension(device_dimension, sizeof(device_dimension));
 
-    if (config->BOOT.FACTORY_RESET) {
-        snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
-    } else {
-        char device_path[15];
-        get_device_path(device_path, sizeof(device_path));
-        if ((snprintf(scheme, sizeof(scheme), "%s/theme/active/%sscheme/%s.txt",
-                 STORAGE_PATH, device_path, mux_name) && file_exist(scheme)) ||
-
-            (snprintf(scheme, sizeof(scheme), "%s/theme/active/%sscheme/default.txt",
-                    STORAGE_PATH, device_path) && file_exist(scheme)) ||
-
-            (snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/%s.txt",
-                    STORAGE_PATH, mux_name) && file_exist(scheme)) ||
-
-            (snprintf(scheme, sizeof(scheme), "%s/theme/active/scheme/default.txt",
-                     STORAGE_PATH) && file_exist(scheme))) {
-            
-            printf("Loading Theme Scheme: %s\n", scheme);
-        } else {
-            snprintf(scheme, sizeof(scheme), "%s/scheme/default.txt", INTERNAL_THEME);
-            printf("Loading Default Theme Scheme: %s\n", scheme);
-        }
+    if (load_scheme(STORAGE_THEME, device_dimension, mux_name, scheme, sizeof(scheme))) {
+        printf("Loading STORAGE Theme Scheme: %s\n", scheme);
+    } else if (load_scheme(INTERNAL_THEME, device_dimension, mux_name, scheme, sizeof(scheme))) {
+        printf("Loading DEFAULT Theme Scheme: %s\n", scheme);
     }
 
     mini_t *muos_theme = mini_try_load(scheme);
@@ -533,17 +529,17 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
 
     char glyph_image_path[MAX_BUFFER_SIZE];
     char glyph_image_embed[MAX_BUFFER_SIZE];
-    char device_path[15];
-    get_device_path(device_path, sizeof(device_path));
-    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/%sglyph/%s/%s.png",
-                STORAGE_PATH, device_path, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
-        
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/theme/active/glyph/%s/%s.png",
-                STORAGE_PATH, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
-
+    char device_dimension[15];
+    get_device_dimension(device_dimension, sizeof(device_dimension));
+    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s/%s.png",
+                  STORAGE_THEME, device_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
-                file_exist(glyph_image_path))) {
+                  STORAGE_THEME, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s/%s.png",
+                  INTERNAL_THEME, device_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
+                  INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
+         file_exist(glyph_image_path))) {
 
         snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
     }

@@ -737,17 +737,17 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 
     char footer_image_path[MAX_BUFFER_SIZE];
     char footer_image_embed[MAX_BUFFER_SIZE];
-    char device_path[15];
-    get_device_path(device_path, sizeof(device_path));
-    if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/theme/active/%sglyph/footer/%s.png",
-                STORAGE_PATH, device_path, glyph_name) >= 0 && file_exist(footer_image_path)) ||
-        
-        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/theme/active/glyph/footer/%s.png",
-                STORAGE_PATH, glyph_name) >= 0 && file_exist(footer_image_path)) ||
-
+    char device_dimension[15];
+    get_device_dimension(device_dimension, sizeof(device_dimension));
+    if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/%s/footer/%s.png",
+                  STORAGE_THEME, device_dimension, glyph_name) >= 0 && file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
-                INTERNAL_THEME, glyph_name) >= 0 &&
-                file_exist(footer_image_path))) {
+                  STORAGE_THEME, glyph_name) >= 0 && file_exist(footer_image_path)) ||
+        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/%s/footer/%s.png",
+                  INTERNAL_THEME, device_dimension, glyph_name) >= 0 && file_exist(footer_image_path)) ||
+        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
+                  INTERNAL_THEME, glyph_name) >= 0 &&
+         file_exist(footer_image_path))) {
 
         snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s", footer_image_path);
     }
@@ -790,6 +790,14 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     return ui_lblNavText;
 }
 
+int load_header_glyph(const char *theme_base, const char *device_dimension, const char *glyph_name,
+                      char *image_path, size_t image_size) {
+    return (snprintf(image_path, image_size, "%s/glyph/%s/header/%s.png", theme_base, device_dimension, glyph_name) >= 0 &&
+            file_exist(image_path)) ||
+           (snprintf(image_path, image_size, "%s/glyph/header/%s.png", theme_base, glyph_name) >= 0 &&
+            file_exist(image_path));
+}
+
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme) {
     char *battery_glyph_name = get_capacity();
 
@@ -812,18 +820,12 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char device_path[15];
-    get_device_path(device_path, sizeof(device_path));
-    if ((snprintf(image_path, sizeof(image_path), "%s/theme/active/%sglyph/header/%s.png",
-                STORAGE_PATH, device_path, battery_glyph_name) >= 0 && file_exist(image_path)) ||
+    char device_dimension[15];
 
-        (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/%s.png",
-                STORAGE_PATH, battery_glyph_name) >= 0 && file_exist(image_path)) ||
-    
-        (snprintf(image_path, sizeof(image_path), "%s/glyph/header/%s.png",
-                INTERNAL_THEME, battery_glyph_name) >= 0 &&
-                file_exist(image_path))) {
-        
+    get_device_dimension(device_dimension, sizeof(device_dimension));
+
+    if (load_header_glyph(STORAGE_THEME, device_dimension, battery_glyph_name, image_path, sizeof(image_path)) ||
+        load_header_glyph(INTERNAL_THEME, device_dimension, battery_glyph_name, image_path, sizeof(image_path))) {
         snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
@@ -833,18 +835,12 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char device_path[15];
-    get_device_path(device_path, sizeof(device_path));
-    if ((snprintf(image_path, sizeof(image_path), "%s/theme/active/%sglyph/header/bluetooth.png",
-                STORAGE_PATH, device_path) >= 0 && file_exist(image_path)) ||
+    char device_dimension[15];
 
-        (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/bluetooth.png",
-                STORAGE_PATH) >= 0 && file_exist(image_path)) ||
-        
-        (snprintf(image_path, sizeof(image_path), "%s/glyph/header/bluetooth.png",
-                INTERNAL_THEME) >= 0 &&
-                file_exist(image_path))) {
-        
+    get_device_dimension(device_dimension, sizeof(device_dimension));
+
+    if (load_header_glyph(STORAGE_THEME, device_dimension, "bluetooth", image_path, sizeof(image_path)) ||
+        load_header_glyph(INTERNAL_THEME, device_dimension, "bluetooth", image_path, sizeof(image_path))) {
         snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
@@ -869,18 +865,14 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) 
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char device_path[15];
-    get_device_path(device_path, sizeof(device_path));
-    if ((snprintf(image_path, sizeof(image_path), "%s/theme/active/%sglyph/header/network_%s.png",
-                STORAGE_PATH, device_path, network_status) >= 0 && file_exist(image_path)) ||
-        
-        (snprintf(image_path, sizeof(image_path), "%s/theme/active/glyph/header/network_%s.png",
-                STORAGE_PATH, network_status) >= 0 && file_exist(image_path)) ||
+    char device_dimension[15];
+    char network_status_filename[15];
 
-        (snprintf(image_path, sizeof(image_path), "%s/glyph/header/network_%s.png",
-                INTERNAL_THEME, network_status) >= 0 &&
-                file_exist(image_path))) {
-        
+    get_device_dimension(device_dimension, sizeof(device_dimension));
+    snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", network_status);
+
+    if (load_header_glyph(STORAGE_THEME, device_dimension, network_status_filename, image_path, sizeof(image_path)) ||
+        load_header_glyph(INTERNAL_THEME, device_dimension, network_status_filename, image_path, sizeof(image_path))) {
         snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
@@ -904,8 +896,10 @@ void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels) {
 
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
     if (config.BOOT.FACTORY_RESET) {
+        char device_dimension[15];
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "M:%s/image/wall/default.png", INTERNAL_THEME);
+        get_device_dimension(device_dimension, sizeof(device_dimension));
+        snprintf(init_wall, sizeof(init_wall), "M:%s/image/%s/wall/default.png", INTERNAL_THEME, device_dimension);
         lv_img_set_src(ui_imgWall, init_wall);
     } else {
         load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,

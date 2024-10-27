@@ -8,14 +8,12 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <libgen.h>
-#include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
-#include "ui/theme.h"
 
 char *mux_module;
 static int js_fd;
@@ -33,6 +31,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct theme_config theme;
 
 lv_obj_t *msgbox_element = NULL;
 
@@ -137,17 +136,15 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_language(mux_module);
+    load_theme(&theme, &config, &device, basename(argv[0]));
 
     ui_init();
     set_brightness(read_int_from_file("/opt/muos/config/brightness.txt", 1));
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
-    apply_theme();
-
     lv_obj_set_user_data(ui_scrCharge, "muxcharge");
 
-    load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND, 
-            theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+    load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
 
     load_font_text(basename(argv[0]), ui_scrCharge);
 

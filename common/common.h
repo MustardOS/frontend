@@ -176,7 +176,7 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *curren
 
 void unload_image_animation();
 
-void get_device_path(char* device_path, size_t size);
+void get_device_dimension(char* device_dimension, size_t size);
 
 void load_font_text(const char *program, lv_obj_t *screen);
 
