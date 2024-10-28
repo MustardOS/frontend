@@ -143,14 +143,14 @@ void can_scan_check() {
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
 
-            lv_label_set_text(ui_lblStatusValue, TS("Not Connected"));
+            lv_label_set_text(ui_lblConnectValue, TS("Not Connected"));
         }
     }
 }
 
 void get_current_ip() {
     if (!config.NETWORK.ENABLED) {
-        lv_label_set_text(ui_lblStatusValue, TS("Network Disabled"));
+        lv_label_set_text(ui_lblConnectValue, TS("Network Disabled"));
         return;
     }
 
@@ -166,7 +166,7 @@ void get_current_ip() {
             can_scan_check();
         } else {
             snprintf(net_message, sizeof(net_message), "%s - %s", TS("Connected"), curr_ip);
-            lv_label_set_text(ui_lblStatusValue, net_message);
+            lv_label_set_text(ui_lblConnectValue, net_message);
             lv_label_set_text(ui_lblConnect, TS("Disconnect"));
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
@@ -276,7 +276,6 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlGateway);
     apply_theme_list_panel(&theme, &device, ui_pnlDNS);
     apply_theme_list_panel(&theme, &device, ui_pnlConnect);
-    apply_theme_list_panel(&theme, &device, ui_pnlStatus);
 
     apply_theme_list_item(&theme, ui_lblEnable, TG("Enabled"), false, true);
     apply_theme_list_item(&theme, ui_lblIdentifier, TS("Identifier"), false, true);
@@ -288,8 +287,6 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblDNS, TS("DNS Server"), false, true);
     apply_theme_list_item(&theme, ui_lblConnect, TS("Connect"), false, true);
 
-    apply_theme_list_item(&theme, ui_lblStatus, TS("Status"), false, false);
-
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_module, "enable");
     apply_theme_list_glyph(&theme, ui_icoIdentifier, mux_module, "identifier");
     apply_theme_list_glyph(&theme, ui_icoPassword, mux_module, "password");
@@ -299,8 +296,6 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoGateway, mux_module, "gateway");
     apply_theme_list_glyph(&theme, ui_icoDNS, mux_module, "dns");
     apply_theme_list_glyph(&theme, ui_icoConnect, mux_module, "connect");
-
-    apply_theme_list_glyph(&theme, ui_icoStatus, mux_module, "status");
 
     apply_theme_list_value(&theme, ui_lblEnableValue, "");
     apply_theme_list_value(&theme, ui_lblIdentifierValue, "");
@@ -312,7 +307,7 @@ void init_navigation_groups() {
     apply_theme_list_value(&theme, ui_lblDNSValue, "");
     apply_theme_list_value(&theme, ui_lblConnectValue, "");
 
-    apply_theme_list_value(&theme, ui_lblStatusValue, "");
+    apply_theme_list_value(&theme, ui_lblConnectValue, "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -593,7 +588,6 @@ bool handle_navigate(void) {
             lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -604,7 +598,6 @@ bool handle_navigate(void) {
             lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
             if (!is_network_connected()) {
                 lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
@@ -693,14 +686,14 @@ void handle_confirm(void) {
 
                 if (config.NETWORK.ENABLED) {
                     if (strcasecmp(cv_pass, PASS_ENCODE) != 0) {
-                        lv_label_set_text(ui_lblStatusValue,
+                        lv_label_set_text(ui_lblConnectValue,
                                           TS("Encrypting Password..."));
                         lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
                         refresh_screen();
                         usleep(256);
                     }
 
-                    lv_label_set_text(ui_lblStatusValue, TS("Trying to Connect..."));
+                    lv_label_set_text(ui_lblConnectValue, TS("Trying to Connect..."));
                     refresh_screen();
                     usleep(256);
                     system("/opt/muos/script/web/password.sh");
@@ -709,7 +702,7 @@ void handle_confirm(void) {
 
                     get_current_ip();
                 } else {
-                    lv_label_set_text(ui_lblStatusValue, TS("Network Disabled"));
+                    lv_label_set_text(ui_lblConnectValue, TS("Network Disabled"));
                     refresh_screen();
                 }
             } else {
@@ -1058,7 +1051,6 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblSubnet, "subnet");
     lv_obj_set_user_data(ui_lblGateway, "gateway");
     lv_obj_set_user_data(ui_lblDNS, "dns");
-    lv_obj_set_user_data(ui_lblStatus, "status");
     lv_obj_set_user_data(ui_lblConnect, "connect");
 
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
@@ -1069,7 +1061,6 @@ void init_elements() {
         lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -1079,7 +1070,6 @@ void init_elements() {
         lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnlStatus, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -1120,10 +1110,10 @@ void init_osk() {
     key_entry = lv_btnmatrix_create(ui_pnlEntry);
     num_entry = lv_btnmatrix_create(ui_pnlEntry);
 
-    lv_obj_set_width(key_entry, 550);
-    lv_obj_set_height(key_entry, 320);
-    lv_obj_set_width(num_entry, 375);
-    lv_obj_set_height(num_entry, 320);
+    lv_obj_set_width(key_entry, device.MUX.WIDTH * 5 / 6);
+    lv_obj_set_height(key_entry, device.MUX.HEIGHT * 5 / 9);
+    lv_obj_set_width(num_entry, device.MUX.WIDTH * 5 / 6);
+    lv_obj_set_height(num_entry, device.MUX.HEIGHT * 5 / 9);
 
     lv_btnmatrix_set_one_checked(key_entry, 1);
     lv_btnmatrix_set_one_checked(num_entry, 1);
@@ -1291,7 +1281,6 @@ int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
 
-
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
 
@@ -1333,7 +1322,6 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlStatus);
     load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
