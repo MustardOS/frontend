@@ -412,7 +412,7 @@ void image_refresh(char *image_type) {
                          STORAGE_THEME, device_dimension, image_type);
                 if (!file_exist(image)) {
                     snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                             INTERNAL_THEME, image_type);
+                             STORAGE_THEME, image_type);
                 }
                 snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
@@ -442,7 +442,7 @@ void image_refresh(char *image_type) {
                          STORAGE_THEME, device_dimension, image_type);
                 if (!file_exist(image)) {
                     snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                             INTERNAL_THEME, image_type);
+                             STORAGE_THEME, image_type);
                 }
                 snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
@@ -501,7 +501,7 @@ void image_refresh(char *image_type) {
                              STORAGE_THEME, device_dimension, image_type);
                     if (!file_exist(image)) {
                         snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                                 INTERNAL_THEME, image_type);
+                                 STORAGE_THEME, image_type);
                     }
                     snprintf(image_path, sizeof(image_path), "M:%s", image);
                 } else {
