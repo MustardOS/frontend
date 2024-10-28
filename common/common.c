@@ -1084,7 +1084,7 @@ void load_overlay_image(lv_obj_t *ui_screen, int16_t image_overlay_enabled) {
 
     if (load_image_specifics(STORAGE_THEME, device_dimension, program, "overlay", "png",
                              static_image_path, sizeof(static_image_path)) || 
-        load_image_specifics(STORAGE_THEME, device_dimension, program, "overlay", "png",
+        load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
                              static_image_path, sizeof(static_image_path))) {
 
         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
