@@ -275,7 +275,6 @@ int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
 
-
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
 
