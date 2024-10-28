@@ -47,7 +47,7 @@ void ui_scrStart_screen_init(void) {
 
     ui_lblMessage = lv_label_create(ui_pnlMessage);
     lv_obj_set_width(ui_lblMessage, device.MUX.WIDTH - 25);
-    lv_obj_set_height(ui_lblMessage, device.MUX.HEIGHT / 3);
+    lv_obj_set_height(ui_lblMessage, device.MUX.HEIGHT / 4);
     lv_obj_set_align(ui_lblMessage, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblMessage, "");
     lv_obj_clear_flag(ui_lblMessage, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |

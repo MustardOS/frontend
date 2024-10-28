@@ -33,7 +33,7 @@ void ui_scrCharge_screen_init(void) {
 
     ui_pnlCharge = lv_obj_create(ui_scrCharge);
     lv_obj_set_width(ui_pnlCharge, device.MUX.WIDTH);
-    lv_obj_set_height(ui_pnlCharge, device.MUX.HEIGHT / 3);
+    lv_obj_set_height(ui_pnlCharge, device.MUX.HEIGHT / 4);
     lv_obj_set_x(ui_pnlCharge, 0);
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);
     lv_obj_set_align(ui_pnlCharge, LV_ALIGN_CENTER);

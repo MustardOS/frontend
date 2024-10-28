@@ -739,11 +739,11 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
     char footer_image_embed[MAX_BUFFER_SIZE];
     char device_dimension[15];
     get_device_dimension(device_dimension, sizeof(device_dimension));
-    if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/%s/footer/%s.png",
+    if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
                   STORAGE_THEME, device_dimension, glyph_name) >= 0 && file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
                   STORAGE_THEME, glyph_name) >= 0 && file_exist(footer_image_path)) ||
-        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/%s/footer/%s.png",
+        (snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
                   INTERNAL_THEME, device_dimension, glyph_name) >= 0 && file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
                   INTERNAL_THEME, glyph_name) >= 0 &&
@@ -792,9 +792,11 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
 
 int load_header_glyph(const char *theme_base, const char *device_dimension, const char *glyph_name,
                       char *image_path, size_t image_size) {
-    return (snprintf(image_path, image_size, "%s/glyph/%s/header/%s.png", theme_base, device_dimension, glyph_name) >= 0 &&
+    return (snprintf(image_path, image_size, "%s/glyph/%s/header/%s.png", theme_base,
+                     device_dimension, glyph_name) >= 0 &&
             file_exist(image_path)) ||
-           (snprintf(image_path, image_size, "%s/glyph/header/%s.png", theme_base, glyph_name) >= 0 &&
+           (snprintf(image_path, image_size, "%s/glyph/header/%s.png", theme_base,
+                     glyph_name) >= 0 &&
             file_exist(image_path));
 }
 
@@ -899,7 +901,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
         char device_dimension[15];
         char init_wall[MAX_BUFFER_SIZE];
         get_device_dimension(device_dimension, sizeof(device_dimension));
-        snprintf(init_wall, sizeof(init_wall), "M:%s/image/%s/wall/default.png", INTERNAL_THEME, device_dimension);
+        snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", INTERNAL_THEME, device_dimension);
         lv_img_set_src(ui_imgWall, init_wall);
     } else {
         load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,

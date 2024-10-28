@@ -440,6 +440,10 @@ void image_refresh(char *image_type) {
             if (strlen(h_core_artwork) <= 1) {
                 snprintf(image, sizeof(image), "%s/image/none_%s.png",
                          STORAGE_THEME, image_type);
+                if (!file_exist(image)) {
+                    snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                             INTERNAL_THEME, image_type);
+                }
                 snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
                 char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
@@ -495,6 +499,10 @@ void image_refresh(char *image_type) {
                 if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
                     snprintf(image, sizeof(image), "%s/image/none_%s.png",
                              STORAGE_THEME, image_type);
+                    if (!file_exist(image)) {
+                        snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                                 INTERNAL_THEME, image_type);
+                    }
                     snprintf(image_path, sizeof(image_path), "M:%s", image);
                 } else {
                     if (items[current_item_index].content_type == FOLDER) {

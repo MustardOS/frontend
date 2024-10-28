@@ -945,6 +945,37 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
     }
 }
 
+int load_element_image_specifics(const char *theme_base, const char *device_dimension, const char *program,
+                                 const char *image_type, const char *element, const char *image_extension,
+                                 char *image_path, size_t path_size) {
+    return
+            (snprintf(image_path, path_size, "%s/%simage/%s/%s/%s/%s.%s", theme_base, device_dimension,
+                      config.SETTINGS.GENERAL.LANGUAGE, image_type, program, element, image_extension) >= 0 &&
+             file_exist(image_path)) ||
+            (snprintf(image_path, path_size, "%s/%simage/%s/%s/%s.%s", theme_base, device_dimension,
+                      image_type, program, element, image_extension) >= 0 && file_exist(image_path));
+}
+
+int load_image_specifics(const char *theme_base, const char *device_dimension, const char *program,
+                         const char *image_type, const char *image_extension, char *image_path, size_t path_size) {
+    return
+            (snprintf(image_path, path_size, "%s/%simage/%s.%s", theme_base, device_dimension,
+                      image_type, image_extension) >= 0 &&
+             file_exist(image_path)) ||
+            (snprintf(image_path, path_size, "%s/%simage/%s/%s/%s.%s", theme_base, device_dimension,
+                      config.SETTINGS.GENERAL.LANGUAGE, image_type, program, image_extension) >= 0 &&
+             file_exist(image_path)) ||
+            (snprintf(image_path, path_size, "%s/%simage/%s/%s.%s", theme_base, device_dimension, image_type,
+                      program, image_extension) >= 0 &&
+             file_exist(image_path)) ||
+            (snprintf(image_path, path_size, "%s/%simage/%s/%s/default.%s", theme_base, device_dimension,
+                      config.SETTINGS.GENERAL.LANGUAGE, image_type, image_extension) >= 0 &&
+             file_exist(image_path)) ||
+            (snprintf(image_path, path_size, "%s/%simage/%s/default.%s", theme_base, device_dimension,
+                      image_type, image_extension) >= 0 &&
+             file_exist(image_path));
+}
+
 char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random) {
     char device_dimension[15];
     get_device_dimension(device_dimension, sizeof(device_dimension));
@@ -955,58 +986,28 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     static char wall_image_path[MAX_BUFFER_SIZE];
     static char wall_image_embed[MAX_BUFFER_SIZE];
 
-    const char *wall_extension;
-    if (random) {
-        wall_extension = "0.png";
-    } else {
-        switch (animated) {
-            case 1:
-                wall_extension = "gif";
-                break;
-            case 2:
-                wall_extension = "0.png";
-                break;
-            default:
-                wall_extension = "png";
-        }
-    }
+    const char *wall_extension = random ? "0.png" : (animated == 1 ? "gif" : (animated == 2 ? "0.png" : "png"));
 
-    if (ui_group != NULL) {
-        if (lv_group_get_obj_count(ui_group) > 0) {
-            struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-            const char *element = lv_obj_get_user_data(element_focused);
-            for (int i = 0; i < 2; i++) {
-                if ((snprintf(wall_image_path, sizeof(wall_image_path), "%s/image/%s/%s/wall/%s/%s.%s",
-                              STORAGE_THEME, device_dimensions[i], config.SETTINGS.GENERAL.LANGUAGE, program, element,
-                              wall_extension) >= 0 && file_exist(wall_image_path)) ||
+    if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
+        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+        const char *element = lv_obj_get_user_data(element_focused);
+        for (int i = 0; i < 2; i++) {
+            if (load_element_image_specifics(STORAGE_THEME, device_dimensions[i], program, "wall",
+                                             element, wall_extension, wall_image_path, sizeof(wall_image_path)) ||
+                load_element_image_specifics(INTERNAL_THEME, device_dimensions[i], program, "wall",
+                                             element, wall_extension, wall_image_path, sizeof(wall_image_path))) {
 
-                    (snprintf(wall_image_path, sizeof(wall_image_path), "%s/image/%s/wall/%s/%s.%s",
-                              STORAGE_THEME, device_dimensions[i], program, element,
-                              wall_extension) >= 0 && file_exist(wall_image_path))) {
-
-                    snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-                    return wall_image_embed;
-                }
+                snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                return wall_image_embed;
             }
         }
     }
 
     for (int i = 0; i < 2; i++) {
-        if ((snprintf(wall_image_path, sizeof(wall_image_path), "%s/image/%s/%s/wall/%s.%s",
-                      STORAGE_THEME, device_dimensions[i], config.SETTINGS.GENERAL.LANGUAGE, program, wall_extension) >= 0 &&
-             file_exist(wall_image_path)) ||
-
-            (snprintf(wall_image_path, sizeof(wall_image_path), "%s/image/%s/wall/%s.%s",
-                      STORAGE_THEME, device_dimensions[i], program, wall_extension) >= 0 &&
-             file_exist(wall_image_path)) ||
-
-            (snprintf(wall_image_path, sizeof(wall_image_path), "%s/image/%s/%s/wall/default.%s",
-                      STORAGE_THEME, device_dimensions[i], config.SETTINGS.GENERAL.LANGUAGE, wall_extension) >= 0 &&
-             file_exist(wall_image_path)) ||
-
-            (snprintf(wall_image_path, sizeof(wall_image_path), "%s/image/%s/wall/default.%s",
-                      STORAGE_THEME, device_dimensions[i], wall_extension) >= 0 &&
-             file_exist(wall_image_path))) {
+        if (load_image_specifics(STORAGE_THEME, device_dimensions[i], program, "wall",
+                                 wall_extension, wall_image_path, sizeof(wall_image_path)) ||
+            load_image_specifics(INTERNAL_THEME, device_dimensions[i], program, "wall",
+                                 wall_extension, wall_image_path, sizeof(wall_image_path))) {
 
             snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
             return wall_image_embed;
@@ -1064,21 +1065,10 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
         const char *element = lv_obj_get_user_data(element_focused);
 
         for (int i = 0; i < 2; i++) {
-            if ((snprintf(static_image_path, sizeof(static_image_path), "%s/image/%s/%s/static/%s.png",
-                          STORAGE_THEME, device_dimensions[i], config.SETTINGS.GENERAL.LANGUAGE, program) >= 0 &&
-                 file_exist(static_image_path)) ||
-
-                (snprintf(static_image_path, sizeof(static_image_path), "%s/image/%s/%s/static/%s/%s.png",
-                          STORAGE_THEME, device_dimensions[i], config.SETTINGS.GENERAL.LANGUAGE, program, element) >= 0 &&
-                 file_exist(static_image_path)) ||
-
-                (snprintf(static_image_path, sizeof(static_image_path), "%s/image/%s/static/%s.png",
-                          STORAGE_THEME, device_dimensions[i], program) >= 0 &&
-                 file_exist(static_image_path)) ||
-
-                (snprintf(static_image_path, sizeof(static_image_path), "%s/image/%s/static/%s/%s.png",
-                          STORAGE_THEME, device_dimensions[i], program, element) >= 0 &&
-                 file_exist(static_image_path))) {
+            if (load_element_image_specifics(STORAGE_THEME, device_dimensions[i], program, "static",
+                                             element, "png", static_image_path, sizeof(static_image_path)) ||
+                load_element_image_specifics(INTERNAL_THEME, device_dimensions[i], program, "static",
+                                             element, "png", static_image_path, sizeof(static_image_path))) {
 
                 snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
                 return static_image_embed;
@@ -1090,18 +1080,18 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
 }
 
 void load_overlay_image(lv_obj_t *ui_screen, int16_t image_overlay_enabled) {
+    const char *program = lv_obj_get_user_data(ui_screen);
+
     char device_dimension[15];
     get_device_dimension(device_dimension, sizeof(device_dimension));
 
     static char static_image_path[MAX_BUFFER_SIZE];
     static char static_image_embed[MAX_BUFFER_SIZE];
 
-    if ((snprintf(static_image_path, sizeof(static_image_path), "%s/image/%s/overlay.png",
-                  STORAGE_THEME, device_dimension) >= 0 &&
-         file_exist(static_image_path)) ||
-        (snprintf(static_image_path, sizeof(static_image_path), "%s/image/overlay.png",
-                  STORAGE_THEME) >= 0 &&
-         file_exist(static_image_path))) {
+    if (load_image_specifics(STORAGE_THEME, device_dimension, program, "overlay", "png",
+                             static_image_path, sizeof(static_image_path)) ||
+        load_image_specifics(INTERNAL_THEME, device_dimension, program, "overlay", "png",
+                             static_image_path, sizeof(static_image_path))) {
 
         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
 
@@ -1207,7 +1197,7 @@ void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
 }
 
 void get_device_dimension(char *device_dimension, size_t size) {
-    snprintf(device_dimension, size, "%dx%d", device.MUX.WIDTH, device.MUX.HEIGHT);
+    snprintf(device_dimension, size, "%dx%d/", device.MUX.WIDTH, device.MUX.HEIGHT);
 }
 
 void load_font_text(const char *program, lv_obj_t *screen) {
@@ -1221,21 +1211,21 @@ void load_font_text(const char *program, lv_obj_t *screen) {
         char *device_dimensions[15] = {device_dimension, ""};
         for (int i = 0; i < 2; i++) {
             if ((snprintf(theme_font_text, sizeof(theme_font_text),
-                          "%s/font/%s/%s/%s.bin", STORAGE_THEME, device_dimensions[i],
+                          "%s/%sfont/%s/%s.bin", STORAGE_THEME, device_dimensions[i],
                           config.SETTINGS.GENERAL.LANGUAGE, program) >= 0 &&
                  file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                          "%s/font/%s/%s/default.bin", STORAGE_THEME, device_dimensions[i],
+                          "%s/%sfont/%s/default.bin", STORAGE_THEME, device_dimensions[i],
                           config.SETTINGS.GENERAL.LANGUAGE) >=
                  0 && file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text),
-                          "%s/font/%s/%s.bin", STORAGE_THEME, device_dimensions[i], program) >= 0 &&
+                          "%s/%sfont/%s.bin", STORAGE_THEME, device_dimensions[i], program) >= 0 &&
                  file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                          "%s/font/%s/default.bin", STORAGE_THEME, device_dimensions[i]) >= 0 &&
+                          "%s/%sfont/default.bin", STORAGE_THEME, device_dimensions[i]) >= 0 &&
                  file_exist(theme_font_text))) {
 
                 printf("Loading Main Theme Font: %s\n", theme_font_text);
@@ -1257,21 +1247,21 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
         char *device_dimensions[15] = {device_dimension, ""};
         for (int i = 0; i < 2; i++) {
             if ((snprintf(theme_font_section, sizeof(theme_font_section),
-                          "%s/font/%s/%s/%s/%s.bin", STORAGE_THEME, device_dimensions[i],
+                          "%s/%sfont/%s/%s/%s.bin", STORAGE_THEME, device_dimensions[i],
                           config.SETTINGS.GENERAL.LANGUAGE, section,
                           program) >= 0 && file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),
-                          "%s/font/%s/%s/%s/default.bin", STORAGE_THEME, device_dimensions[i],
+                          "%s/%sfont/%s/%s/default.bin", STORAGE_THEME, device_dimensions[i],
                           config.SETTINGS.GENERAL.LANGUAGE,
                           section) >= 0 && file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),
-                          "%s/font/%s/%s/%s.bin", STORAGE_THEME, device_dimensions[i], section, program) >= 0 &&
+                          "%s/%sfont/%s/%s.bin", STORAGE_THEME, device_dimensions[i], section, program) >= 0 &&
                  file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),
-                          "%s/font/%s/%s/default.bin", STORAGE_THEME, device_dimensions[i], section) >= 0 &&
+                          "%s/%sfont/%s/default.bin", STORAGE_THEME, device_dimensions[i], section) >= 0 &&
                  file_exist(theme_font_section))) {
 
                 printf("Loading Section '%s' Font: %s\n", section, theme_font_section);
@@ -1504,8 +1494,7 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
 }
 
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count,
-                            int current_item_index, lv_obj_t *ui_pnlContent
-) {
+                            int current_item_index, lv_obj_t *ui_pnlContent) {
     // how many items should be above the currently selected item when scrolling
     double item_distribution = (mux_item_count - 1) / (double) 2;
     // how many items are off screen
