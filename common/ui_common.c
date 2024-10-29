@@ -792,7 +792,7 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
 
 int load_header_glyph(const char *theme_base, const char *device_dimension, const char *glyph_name,
                       char *image_path, size_t image_size) {
-    return (snprintf(image_path, image_size, "%s/glyph/%s/header/%s.png", theme_base,
+    return (snprintf(image_path, image_size, "%s/%sglyph/header/%s.png", theme_base,
                      device_dimension, glyph_name) >= 0 &&
             file_exist(image_path)) ||
            (snprintf(image_path, image_size, "%s/glyph/header/%s.png", theme_base,

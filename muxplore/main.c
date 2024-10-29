@@ -408,11 +408,11 @@ void image_refresh(char *image_type) {
             char *f_core_artwork = read_line_from_file(f_pointer, 3);
 
             if (strlen(f_core_artwork) <= 1) {
-                snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         STORAGE_THEME, image_type);
+                snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
+                         STORAGE_THEME, device_dimension, image_type);
                 if (!file_exist(image)) {
                     snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                             INTERNAL_THEME, image_type);
+                             STORAGE_THEME, image_type);
                 }
                 snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
@@ -438,11 +438,11 @@ void image_refresh(char *image_type) {
 
             char *h_core_artwork = read_line_from_file(h_pointer, 3);
             if (strlen(h_core_artwork) <= 1) {
-                snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         STORAGE_THEME, image_type);
+                snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
+                         STORAGE_THEME, device_dimension, image_type);
                 if (!file_exist(image)) {
                     snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                             INTERNAL_THEME, image_type);
+                             STORAGE_THEME, image_type);
                 }
                 snprintf(image_path, sizeof(image_path), "M:%s", image);
             } else {
@@ -497,11 +497,11 @@ void image_refresh(char *image_type) {
                 }
 
                 if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
-                    snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                             STORAGE_THEME, image_type);
+                    snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
+                             STORAGE_THEME, device_dimension, image_type);
                     if (!file_exist(image)) {
                         snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                                 INTERNAL_THEME, image_type);
+                                 STORAGE_THEME, image_type);
                     }
                     snprintf(image_path, sizeof(image_path), "M:%s", image);
                 } else {

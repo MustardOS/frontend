@@ -993,8 +993,6 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
         const char *element = lv_obj_get_user_data(element_focused);
         for (int i = 0; i < 2; i++) {
             if (load_element_image_specifics(STORAGE_THEME, device_dimensions[i], program, "wall",
-                                             element, wall_extension, wall_image_path, sizeof(wall_image_path)) ||
-                load_element_image_specifics(INTERNAL_THEME, device_dimensions[i], program, "wall",
                                              element, wall_extension, wall_image_path, sizeof(wall_image_path))) {
 
                 snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1005,8 +1003,6 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
 
     for (int i = 0; i < 2; i++) {
         if (load_image_specifics(STORAGE_THEME, device_dimensions[i], program, "wall",
-                                 wall_extension, wall_image_path, sizeof(wall_image_path)) ||
-            load_image_specifics(INTERNAL_THEME, device_dimensions[i], program, "wall",
                                  wall_extension, wall_image_path, sizeof(wall_image_path))) {
 
             snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1066,8 +1062,6 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
 
         for (int i = 0; i < 2; i++) {
             if (load_element_image_specifics(STORAGE_THEME, device_dimensions[i], program, "static",
-                                             element, "png", static_image_path, sizeof(static_image_path)) ||
-                load_element_image_specifics(INTERNAL_THEME, device_dimensions[i], program, "static",
                                              element, "png", static_image_path, sizeof(static_image_path))) {
 
                 snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
@@ -1089,8 +1083,8 @@ void load_overlay_image(lv_obj_t *ui_screen, int16_t image_overlay_enabled) {
     static char static_image_embed[MAX_BUFFER_SIZE];
 
     if (load_image_specifics(STORAGE_THEME, device_dimension, program, "overlay", "png",
-                             static_image_path, sizeof(static_image_path)) ||
-        load_image_specifics(INTERNAL_THEME, device_dimension, program, "overlay", "png",
+                             static_image_path, sizeof(static_image_path)) || 
+        load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
                              static_image_path, sizeof(static_image_path))) {
 
         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
