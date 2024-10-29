@@ -626,12 +626,16 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
             snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
             if (entry->d_type == DT_DIR) {
                 if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-                    char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
-                    snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
+                    int item_dir_count = get_directory_item_count(base_dir, entry->d_name);
 
-                    *dir_names = (char **) realloc(*dir_names, (*dir_count + 1) * sizeof(char *));
-                    (*dir_names)[*dir_count] = subdir_path;
-                    (*dir_count)++;
+                    if (config.VISUAL.FOLDEREMPTY || item_dir_count != 0) {
+                        char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
+                        snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
+
+                        *dir_names = (char **) realloc(*dir_names, (*dir_count + 1) * sizeof(char *));
+                        (*dir_names)[*dir_count] = subdir_path;
+                        (*dir_count)++;
+                    }
                 }
             } else if (entry->d_type == DT_REG) {
                 char *file_path = (char *) malloc(strlen(entry->d_name) + 2);

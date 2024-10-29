@@ -14,6 +14,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlTheTitleFormat = lv_obj_create(ui_pnlContent);
     ui_pnlTitleIncludeRootDrive = lv_obj_create(ui_pnlContent);
     ui_pnlFolderItemCount = lv_obj_create(ui_pnlContent);
+    ui_pnlDisplayEmptyFolder = lv_obj_create(ui_pnlContent);
     ui_pnlMenuCounterFolder = lv_obj_create(ui_pnlContent);
     ui_pnlMenuCounterFile = lv_obj_create(ui_pnlContent);
     ui_pnlBackgroundAnimation = lv_obj_create(ui_pnlContent);
@@ -30,6 +31,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblTheTitleFormat = lv_label_create(ui_pnlTheTitleFormat);
     ui_lblTitleIncludeRootDrive = lv_label_create(ui_pnlTitleIncludeRootDrive);
     ui_lblFolderItemCount = lv_label_create(ui_pnlFolderItemCount);
+    ui_lblDisplayEmptyFolder = lv_label_create(ui_pnlDisplayEmptyFolder);
     ui_lblMenuCounterFolder = lv_label_create(ui_pnlMenuCounterFolder);
     ui_lblMenuCounterFile = lv_label_create(ui_pnlMenuCounterFile);
     ui_lblBackgroundAnimation = lv_label_create(ui_pnlBackgroundAnimation);
@@ -46,6 +48,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoTheTitleFormat = lv_img_create(ui_pnlTheTitleFormat);
     ui_icoTitleIncludeRootDrive = lv_img_create(ui_pnlTitleIncludeRootDrive);
     ui_icoFolderItemCount = lv_img_create(ui_pnlFolderItemCount);
+    ui_icoDisplayEmptyFolder = lv_img_create(ui_pnlDisplayEmptyFolder);
     ui_icoMenuCounterFolder = lv_img_create(ui_pnlMenuCounterFolder);
     ui_icoMenuCounterFile = lv_img_create(ui_pnlMenuCounterFile);
     ui_icoBackgroundAnimation = lv_img_create(ui_pnlBackgroundAnimation);
@@ -62,6 +65,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droTheTitleFormat = lv_dropdown_create(ui_pnlTheTitleFormat);
     ui_droTitleIncludeRootDrive = lv_dropdown_create(ui_pnlTitleIncludeRootDrive);
     ui_droFolderItemCount = lv_dropdown_create(ui_pnlFolderItemCount);
+    ui_droDisplayEmptyFolder = lv_dropdown_create(ui_pnlDisplayEmptyFolder);
     ui_droMenuCounterFolder = lv_dropdown_create(ui_pnlMenuCounterFolder);
     ui_droMenuCounterFile = lv_dropdown_create(ui_pnlMenuCounterFile);
     ui_droBackgroundAnimation = lv_dropdown_create(ui_pnlBackgroundAnimation);

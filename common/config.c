@@ -78,6 +78,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.THETITLEFORMAT, "visual/thetitleformat", 0)
     CFG_INT_FIELD(config->VISUAL.TITLEINCLUDEROOTDRIVE, "visual/titleincluderootdrive", 0)
     CFG_INT_FIELD(config->VISUAL.FOLDERITEMCOUNT, "visual/folderitemcount", 0)
+    CFG_INT_FIELD(config->VISUAL.FOLDEREMPTY, "visual/folderempty", 0)
     CFG_INT_FIELD(config->VISUAL.COUNTERFOLDER, "visual/counterfolder", 1)
     CFG_INT_FIELD(config->VISUAL.COUNTERFILE, "visual/counterfile", 1)
     CFG_INT_FIELD(config->VISUAL.BACKGROUNDANIMATION, "visual/backgroundanimation", 0)

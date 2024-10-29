@@ -76,6 +76,7 @@ struct mux_config {
         int16_t THETITLEFORMAT;
         int16_t TITLEINCLUDEROOTDRIVE;
         int16_t FOLDERITEMCOUNT;
+        int16_t FOLDEREMPTY;
         int16_t COUNTERFOLDER;
         int16_t COUNTERFILE;
         int16_t BACKGROUNDANIMATION;
