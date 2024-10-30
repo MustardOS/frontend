@@ -42,9 +42,8 @@ void setup_background_process() {
 int main(int argc, char *argv[]) {
     load_device(&device);
 
-
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <message>\n", argv[0]);
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <progress> <message>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -87,7 +86,9 @@ int main(int argc, char *argv[]) {
 
     if (TEST_IMAGE) display_testing_message(ui_scrStart);
 
-    lv_label_set_text(ui_lblMessage, argv[1]);
+    lv_bar_set_value(ui_barProgress, atoi(argv[1]), LV_ANIM_OFF);
+    lv_label_set_text(ui_lblMessage, argv[2]);
+
     refresh_screen();
 
     return 0;

@@ -7,6 +7,7 @@ lv_obj_t *ui_pnlWall;
 lv_obj_t *ui_imgWall;
 lv_obj_t *ui_pnlMessage;
 lv_obj_t *ui_lblMessage;
+lv_obj_t *ui_barProgress;
 
 void ui_init(void) {
     ui_scrStart_screen_init();
