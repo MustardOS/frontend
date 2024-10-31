@@ -57,7 +57,19 @@ int main(int argc, char *argv[]) {
     ui_init();
 
     char init_wall[MAX_BUFFER_SIZE];
-    snprintf(init_wall, sizeof(init_wall), "M:%s", argv[1]);
+    char image_path[MAX_BUFFER_SIZE];
+    char device_dimension[15];
+    get_device_dimension(device_dimension, sizeof(device_dimension));
+
+    snprintf(image_path, sizeof(image_path), "%s/%simage/%s", 
+                STORAGE_THEME, device_dimension, argv[1]);
+
+    if (!file_exist(image_path)) {
+        snprintf(image_path, sizeof(image_path), "%s/image/%s", 
+                STORAGE_THEME, argv[1]);
+    }
+
+    snprintf(init_wall, sizeof(init_wall), "M:%s", image_path);
 
     lv_obj_t *img = lv_img_create(ui_scrSplash);
     lv_img_set_src(img, init_wall);
