@@ -202,7 +202,12 @@ void handle_confirm() {
         setenv("TERM", "xterm-256color", 1);
         printf("RUNNING: %s\n", command);
 
-        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
+        if (config.VISUAL.BLACKFADE) {
+            fade_to_black(ui_screen);
+        } else {
+            unload_image_animation();
+        }
+
         system(command);
 
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
