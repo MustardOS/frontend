@@ -14,14 +14,16 @@
 #include "../common/json/json.h"
 
 static void handle_combo(int num, mux_input_action action);
+
 static void handle_input(mux_input_type type, mux_input_action action);
+
 static void handle_idle(void);
 
 struct mux_device device;
 struct mux_config config;
 
 typedef enum {
-    IDLE_INHIBIT_NONE  = 0, // No idle inhibit.
+    IDLE_INHIBIT_NONE = 0, // No idle inhibit.
     IDLE_INHIBIT_BOTH = 1, // Inhibit idle sleep and display.
     IDLE_INHIBIT_SLEEP = 2, // Inhibit idle sleep only.
 } idle_inhibit_state;
@@ -268,8 +270,8 @@ static void parse_combos(const char *filename) {
 // longer combo (e.g., VOL_UP+MENU_LONG) is checked first. (If the shorter combo were checked first,
 // it would always match when VOL_UP was pressed, and the longer combo would never trigger.)
 static int cmp_combo(const void *p1, const void *p2) {
-    const combo_config *combo1 = (const combo_config *)p1;
-    const combo_config *combo2 = (const combo_config *)p2;
+    const combo_config *combo1 = (const combo_config *) p1;
+    const combo_config *combo2 = (const combo_config *) p2;
 
     int length1 = __builtin_popcountll(combo1->type_mask);
     int length2 = __builtin_popcountll(combo2->type_mask);
