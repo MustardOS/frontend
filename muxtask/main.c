@@ -236,6 +236,8 @@ void handle_confirm() {
              task_path, items[current_item_index].name);
     setenv("TERM", "xterm-256color", 1);
     printf("RUNNING: %s\n", command);
+
+    if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
     system(command);
 
     write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
@@ -499,7 +501,7 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,

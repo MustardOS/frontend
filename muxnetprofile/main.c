@@ -118,7 +118,7 @@ int save_profile() {
     if (!p_ssid || strlen(p_ssid) == 0) {
         lv_label_set_text(ui_lblMessage, TS("Invalid SSID"));
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-        refresh_screen();
+        refresh_screen(device.SCREEN.WAIT);
         return 0;
     }
 
@@ -127,7 +127,7 @@ int save_profile() {
             lv_label_set_text(ui_lblMessage, TS("Password must be 8..63 characters!")); // From wpa_passphrase!
             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-            refresh_screen();
+            refresh_screen(device.SCREEN.WAIT);
             return 0;
         }
     }
@@ -140,7 +140,7 @@ int save_profile() {
             !p_dns || strlen(p_dns) == 0) {
             lv_label_set_text(ui_lblMessage, TS("Invalid Network Settings"));
             lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-            refresh_screen();
+            refresh_screen(device.SCREEN.WAIT);
             return 0;
         }
     } else {
@@ -571,7 +571,7 @@ int main(int argc, char *argv[]) {
 
     create_profile_items();
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

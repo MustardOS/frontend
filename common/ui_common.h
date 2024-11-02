@@ -30,6 +30,10 @@ void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels);
 
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image);
 
+void fade_to_black(lv_obj_t *ui_screen);
+
+void fade_from_black(lv_obj_t *ui_black);
+
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;
 extern lv_obj_t *ui_imgWall;

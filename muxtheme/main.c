@@ -38,6 +38,7 @@ struct theme_config theme;
 int nav_moved = 1;
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
+lv_obj_t *ui_black;
 
 int progress_onscreen = -1;
 
@@ -187,25 +188,28 @@ void handle_confirm() {
         return;
     }
 
-    play_sound("confirm", nav_sound, 1);
-    char *chosen_theme = lv_label_get_text(lv_group_get_focused(ui_group));
-    lv_label_set_text(ui_lblMessage, TS("Loading Theme"));
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    if (ui_count > 0) {
+        play_sound("confirm", nav_sound, 1);
+        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-    refresh_screen();
+        static char theme_script[MAX_BUFFER_SIZE];
+        snprintf(theme_script, sizeof(theme_script),
+                 "%s/script/mux/theme.sh", INTERNAL_PATH);
 
-    unload_image_animation();
+        static char command[MAX_BUFFER_SIZE];
+        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad %s \"%s\"",
+                 theme_script, lv_label_get_text(lv_group_get_focused(ui_group)));
+        setenv("TERM", "xterm-256color", 1);
+        printf("RUNNING: %s\n", command);
 
-    static char theme_script[MAX_BUFFER_SIZE];
-    snprintf(theme_script, sizeof(theme_script),
-             "%s/script/mux/theme.sh \"%s\"", INTERNAL_PATH, chosen_theme);
+        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
+        system(command);
 
-    system(theme_script);
-    load_mux("theme");
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
-
-    mux_input_stop();
+        load_mux("theme");
+        mux_input_stop();
+    }
 }
 
 void handle_back() {
@@ -431,7 +435,8 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
+
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,

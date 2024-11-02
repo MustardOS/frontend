@@ -53,9 +53,9 @@ uint32_t mux_tick(void) {
     return (uint32_t) (now_ms - start_ms);
 }
 
-void refresh_screen() {
+void refresh_screen(int wait) {
     lv_task_handler();
-    usleep(device.SCREEN.WAIT);
+    usleep(wait);
 }
 
 int file_exist(char *filename) {

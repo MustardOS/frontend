@@ -10,13 +10,6 @@
 #include "../common/device.h"
 #include "../common/input.h"
 
-int NAV_DPAD_HOR;
-int NAV_ANLG_HOR;
-int NAV_DPAD_VER;
-int NAV_ANLG_VER;
-int NAV_A;
-int NAV_B;
-
 int turbo_mode = 0;
 int msgbox_active = 0;
 int input_disable = 0;
@@ -38,6 +31,10 @@ void timeout_task() {
 
 void handle_quit(void) {
     mux_input_stop();
+}
+
+void refresh(void) {
+    refresh_screen(device.SCREEN.WAIT);
 }
 
 int main() {
@@ -99,7 +96,7 @@ int main() {
                             .press_handler = handle_quit,
                     },
             },
-            .idle_handler = refresh_screen,
+            .idle_handler = refresh,
     };
     mux_input_task(&input_opts);
 

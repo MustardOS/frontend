@@ -82,6 +82,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.COUNTERFOLDER, "visual/counterfolder", 1)
     CFG_INT_FIELD(config->VISUAL.COUNTERFILE, "visual/counterfile", 1)
     CFG_INT_FIELD(config->VISUAL.BACKGROUNDANIMATION, "visual/backgroundanimation", 0)
+    CFG_INT_FIELD(config->VISUAL.LAUNCHSPLASH, "visual/launchsplash", 0)
+    CFG_INT_FIELD(config->VISUAL.BLACKFADE, "visual/blackfade", 1)
 
     CFG_INT_FIELD(config->WEB.SHELL, "web/shell", 1)
     CFG_INT_FIELD(config->WEB.BROWSER, "web/browser", 0)

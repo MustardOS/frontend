@@ -60,8 +60,9 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-lv_obj_t *ui_viewport_objects[7];
+lv_obj_t *ui_imgSplash;
 
+lv_obj_t *ui_viewport_objects[7];
 lv_obj_t *ui_mux_panels[5];
 
 char *sd_dir = NULL;
@@ -81,11 +82,13 @@ int nav_moved = 1;
 int counter_fade = 0;
 int fade_timeout = 3;
 int starter_image = 0;
+int splash_valid = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 static char box_image_previous_path[MAX_BUFFER_SIZE];
 static char preview_image_previous_path[MAX_BUFFER_SIZE];
+static char splash_image_previous_path[MAX_BUFFER_SIZE];
 
 lv_timer_t *datetime_timer;
 lv_timer_t *capacity_timer;
@@ -540,6 +543,24 @@ void image_refresh(char *image_type) {
             } else {
                 lv_img_set_src(ui_imgHelpPreviewImage, &ui_image_Nothing);
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
+            }
+        }
+    } else if (strcasecmp(image_type, "splash") == 0) {
+        if (strcasecmp(splash_image_previous_path, image) != 0) {
+            printf("LOADING SPLASH ARTWORK AT: %s\n", image);
+
+            if (!file_exist(image)) {
+                snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
+            }
+            if (file_exist(image)) {
+                splash_valid = 1;
+                lv_img_set_src(ui_imgSplash, image_path);
+                snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "%s", image);
+            } else {
+                splash_valid = 0;
+                lv_img_set_src(ui_imgSplash, &ui_image_Nothing);
+                snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), " ");
             }
         }
     } else {
@@ -1295,6 +1316,8 @@ void handle_a() {
     char *content_label = items[current_item_index].name;
     char f_content[MAX_BUFFER_SIZE];
 
+    int load_message = 1;
+
     switch (module) {
         case ROOT:
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
@@ -1340,13 +1363,29 @@ void handle_a() {
                     } else {
                         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
+                        load_message = 0;
+
+                        if (config.VISUAL.LAUNCHSPLASH) {
+                            image_refresh("splash");
+                            if (splash_valid) {
+
+                                lv_obj_center(ui_imgSplash);
+                                lv_obj_move_foreground(ui_imgSplash);
+                                lv_obj_move_foreground(overlay_image);
+
+                                for (unsigned int i = 0; i <= 255; i += 15) {
+                                    lv_obj_set_style_img_opa(ui_imgSplash, i, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    refresh_screen(device.SCREEN.WAIT / 2);
+                                }
+
+                                sleep(1);
+                            }
+                        }
+
+                        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
+
                         if (load_content(0)) {
-                            static char launch_script[MAX_BUFFER_SIZE];
-                            snprintf(launch_script, sizeof(launch_script),
-                                     "%s/script/mux/launch.sh", INTERNAL_PATH);
-
                             write_text_to_file("/tmp/manual_launch", "w", INT, 1);
-
                             load_mux("explore");
                         }
                     }
@@ -1375,12 +1414,14 @@ void handle_a() {
             break;
     }
 
-    toast_message(TS("Loading..."), 0, 0);
-    lv_obj_move_foreground(ui_pnlMessage);
+    if (load_message) {
+        toast_message(TS("Loading..."), 0, 0);
+        lv_obj_move_foreground(ui_pnlMessage);
 
-    // Refresh and add a small delay to actually display the message!
-    refresh_screen();
-    usleep(256);
+        // Refresh and add a small delay to actually display the message!
+        refresh_screen(device.SCREEN.WAIT);
+        usleep(256);
+    }
 
     mux_input_stop();
 }
@@ -1936,9 +1977,10 @@ int main(int argc, char *argv[]) {
     ui_viewport_objects[5] = lv_img_create(ui_viewport_objects[0]);
     ui_viewport_objects[6] = lv_img_create(ui_viewport_objects[0]);
 
-    if (file_exist("/tmp/manual_launch")) {
-        remove("/tmp/manual_launch");
-    }
+    ui_imgSplash = lv_img_create(ui_screen);
+    lv_obj_set_style_img_opa(ui_imgSplash, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    if (file_exist("/tmp/manual_launch")) remove("/tmp/manual_launch");
 
     snprintf(SD1, sizeof(SD1), "%s/ROMS/", device.STORAGE.ROM.MOUNT);
     snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
@@ -2107,7 +2149,7 @@ int main(int argc, char *argv[]) {
 
     update_file_counter();
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

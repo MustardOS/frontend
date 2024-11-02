@@ -617,7 +617,7 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

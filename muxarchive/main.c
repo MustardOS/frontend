@@ -235,6 +235,8 @@ void handle_a() {
                  extract_script, lv_label_get_text(lv_group_get_focused(ui_group_data)));
         setenv("TERM", "xterm-256color", 1);
         printf("RUNNING: %s\n", command);
+
+        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
         system(command);
 
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
@@ -474,7 +476,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

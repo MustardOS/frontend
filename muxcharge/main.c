@@ -70,7 +70,7 @@ void handle_power_short(void) {
 
         lv_label_set_text(ui_lblBoot, TS("Booting System - Please Wait..."));
 
-        refresh_screen();
+        refresh_screen(device.SCREEN.WAIT);
 
         exit_status = 0;
         return;
@@ -86,7 +86,7 @@ void handle_idle(void) {
         return;
     }
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 }
 
 void battery_task() {
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
     battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
     lv_timer_ready(battery_timer);
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

@@ -715,7 +715,7 @@ void ui_common_handle_idle() {
         }
     }
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 }
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
@@ -952,4 +952,33 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
     }
 
     return 1;
+}
+
+void fade_to_black(lv_obj_t *ui_screen) {
+    lv_obj_t *black = lv_obj_create(ui_screen);
+
+    lv_obj_set_width(black, device.MUX.WIDTH);
+    lv_obj_set_height(black, device.MUX.HEIGHT);
+
+    lv_obj_set_style_bg_color(black, lv_color_hex(0x000000), 0);
+    lv_obj_set_style_bg_opa(black, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_center(black);
+    lv_obj_move_foreground(black);
+
+    unload_image_animation();
+
+    for (unsigned int i = 0; i <= 255; i += 25) {
+        lv_obj_set_style_bg_opa(black, i, LV_PART_MAIN | LV_STATE_DEFAULT);
+        refresh_screen(device.SCREEN.WAIT / 2);
+    }
+}
+
+void fade_from_black(lv_obj_t *ui_black) {
+    for (unsigned int i = 255; i >= 1; i -= 25) {
+        lv_obj_set_style_bg_opa(ui_black, i, LV_PART_MAIN | LV_STATE_DEFAULT);
+        refresh_screen(device.SCREEN.WAIT / 2);
+    }
+
+    lv_obj_del_async(ui_black);
 }

@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     overlay_image = lv_img_create(ui_scrSplash);
     load_overlay_image(ui_scrSplash, overlay_image, theme.MISC.IMAGE_OVERLAY);
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     return 0;
 }

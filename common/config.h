@@ -80,6 +80,8 @@ struct mux_config {
         int16_t COUNTERFOLDER;
         int16_t COUNTERFILE;
         int16_t BACKGROUNDANIMATION;
+        int16_t LAUNCHSPLASH;
+        int16_t BLACKFADE;
     } VISUAL;
 
     struct {

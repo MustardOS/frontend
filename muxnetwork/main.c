@@ -690,12 +690,12 @@ void handle_confirm(void) {
                         lv_label_set_text(ui_lblConnectValue,
                                           TS("Encrypting Password..."));
                         lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
-                        refresh_screen();
+                        refresh_screen(device.SCREEN.WAIT);
                         usleep(256);
                     }
 
                     lv_label_set_text(ui_lblConnectValue, TS("Trying to Connect..."));
-                    refresh_screen();
+                    refresh_screen(device.SCREEN.WAIT);
                     usleep(256);
                     system("/opt/muos/script/web/password.sh");
                     usleep(256);
@@ -704,12 +704,12 @@ void handle_confirm(void) {
                     get_current_ip();
                 } else {
                     lv_label_set_text(ui_lblConnectValue, TS("Network Disabled"));
-                    refresh_screen();
+                    refresh_screen(device.SCREEN.WAIT);
                 }
             } else {
                 lv_label_set_text(ui_lblMessage, TS("Please check network settings"));
                 lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-                refresh_screen();
+                refresh_screen(device.SCREEN.WAIT);
             }
         }
     } else {
@@ -1384,7 +1384,7 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
     can_scan_check();
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

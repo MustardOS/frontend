@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
     lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
     lv_timer_ready(glyph_timer);
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

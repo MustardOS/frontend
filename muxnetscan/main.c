@@ -375,12 +375,12 @@ int main(int argc, char *argv[]) {
 
     pthread_create(&scan_networks_thread, NULL, scan_networks, NULL);
     while (pthread_tryjoin_np(scan_networks_thread, NULL) != 0) {
-        refresh_screen();
+        refresh_screen(device.SCREEN.WAIT);
     }
 
     create_network_items();
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

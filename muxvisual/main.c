@@ -47,8 +47,9 @@ int battery_original, network_original, bluetooth_original, mux_clock_original, 
 int boxartalign_original, name_original, dash_original, friendlyfolder_original, thetitleformat_original;
 int titleincluderootdrive_original, folderitemcount_original, menu_counter_folder_original;
 int display_empty_folder_original, menu_counter_file_original, background_animation_original;
+int launch_splash_original, black_fade_original;
 
-#define UI_COUNT 16
+#define UI_COUNT 18
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -87,6 +88,8 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblMenuCounterFile,       TS("Toggle the visibility of currently selected file along "
                                              "with total in Explore Content")},
             {ui_lblBackgroundAnimation,   TS("Toggle the background animation of the current selected theme")},
+            {ui_lblLaunchSplash,          TS("Toggle the splash image on content launching")},
+            {ui_lblBlackFade,             TS("Toggle the fade to black animation on content launching")},
     };
 
     char *message = TG("No Help Information Found");
@@ -133,6 +136,8 @@ void elements_events_init() {
             ui_droMenuCounterFolder,
             ui_droMenuCounterFile,
             ui_droBackgroundAnimation,
+            ui_droLaunchSplash,
+            ui_droBlackFade,
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -157,6 +162,8 @@ void init_dropdown_settings() {
     menu_counter_folder_original = lv_dropdown_get_selected(ui_droMenuCounterFolder);
     menu_counter_file_original = lv_dropdown_get_selected(ui_droMenuCounterFile);
     background_animation_original = lv_dropdown_get_selected(ui_droBackgroundAnimation);
+    launch_splash_original = lv_dropdown_get_selected(ui_droLaunchSplash);
+    black_fade_original = lv_dropdown_get_selected(ui_droBlackFade);
 }
 
 void restore_visual_options() {
@@ -176,6 +183,8 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droMenuCounterFolder, config.VISUAL.COUNTERFOLDER);
     lv_dropdown_set_selected(ui_droMenuCounterFile, config.VISUAL.COUNTERFILE);
     lv_dropdown_set_selected(ui_droBackgroundAnimation, config.VISUAL.BACKGROUNDANIMATION);
+    lv_dropdown_set_selected(ui_droLaunchSplash, config.VISUAL.LAUNCHSPLASH);
+    lv_dropdown_set_selected(ui_droBlackFade, config.VISUAL.BLACKFADE);
 }
 
 void save_visual_options() {
@@ -195,6 +204,8 @@ void save_visual_options() {
     int idx_counterfolder = lv_dropdown_get_selected(ui_droMenuCounterFolder);
     int idx_counterfile = lv_dropdown_get_selected(ui_droMenuCounterFile);
     int idx_backgroundanimation = lv_dropdown_get_selected(ui_droBackgroundAnimation);
+    int idx_launchsplash = lv_dropdown_get_selected(ui_droLaunchSplash);
+    int idx_blackfade = lv_dropdown_get_selected(ui_droBlackFade);
 
     if (lv_dropdown_get_selected(ui_droBattery) != battery_original) {
         write_text_to_file("/run/muos/global/visual/battery", "w", INT, idx_battery);
@@ -259,6 +270,14 @@ void save_visual_options() {
     if (lv_dropdown_get_selected(ui_droBackgroundAnimation) != background_animation_original) {
         write_text_to_file("/run/muos/global/visual/backgroundanimation", "w", INT, idx_backgroundanimation);
     }
+
+    if (lv_dropdown_get_selected(ui_droLaunchSplash) != launch_splash_original) {
+        write_text_to_file("/run/muos/global/visual/launchsplash", "w", INT, idx_launchsplash);
+    }
+
+    if (lv_dropdown_get_selected(ui_droBlackFade) != black_fade_original) {
+        write_text_to_file("/run/muos/global/visual/blackfade", "w", INT, idx_blackfade);
+    }
 }
 
 void init_navigation_groups() {
@@ -278,7 +297,9 @@ void init_navigation_groups() {
             ui_pnlDisplayEmptyFolder,
             ui_pnlMenuCounterFolder,
             ui_pnlMenuCounterFile,
-            ui_pnlBackgroundAnimation
+            ui_pnlBackgroundAnimation,
+            ui_pnlLaunchSplash,
+            ui_pnlBlackFade
     };
 
     ui_objects[0] = ui_lblBattery;
@@ -297,6 +318,8 @@ void init_navigation_groups() {
     ui_objects[13] = ui_lblMenuCounterFolder;
     ui_objects[14] = ui_lblMenuCounterFile;
     ui_objects[15] = ui_lblBackgroundAnimation;
+    ui_objects[16] = ui_lblLaunchSplash;
+    ui_objects[17] = ui_lblBlackFade;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droBattery,
@@ -314,7 +337,9 @@ void init_navigation_groups() {
             ui_droDisplayEmptyFolder,
             ui_droMenuCounterFolder,
             ui_droMenuCounterFile,
-            ui_droBackgroundAnimation
+            ui_droBackgroundAnimation,
+            ui_droLaunchSplash,
+            ui_droBlackFade
     };
 
     lv_obj_t *ui_objects_glyph[] = {
@@ -333,7 +358,9 @@ void init_navigation_groups() {
             ui_icoDisplayEmptyFolder,
             ui_icoMenuCounterFolder,
             ui_icoMenuCounterFile,
-            ui_icoBackgroundAnimation
+            ui_icoBackgroundAnimation,
+            ui_icoLaunchSplash,
+            ui_icoBlackFade
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlBattery);
@@ -352,6 +379,8 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFolder);
     apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFile);
     apply_theme_list_panel(&theme, &device, ui_pnlBackgroundAnimation);
+    apply_theme_list_panel(&theme, &device, ui_pnlLaunchSplash);
+    apply_theme_list_panel(&theme, &device, ui_pnlBlackFade);
 
     apply_theme_list_item(&theme, ui_lblBattery, TS("Battery"), false, true);
     apply_theme_list_item(&theme, ui_lblNetwork, TS("Network"), false, true);
@@ -369,6 +398,8 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblMenuCounterFolder, TS("Menu Counter Folder"), false, true);
     apply_theme_list_item(&theme, ui_lblMenuCounterFile, TS("Menu Counter File"), false, true);
     apply_theme_list_item(&theme, ui_lblBackgroundAnimation, TS("Background Animation"), false, true);
+    apply_theme_list_item(&theme, ui_lblLaunchSplash, TS("Content Launch Splash"), false, true);
+    apply_theme_list_item(&theme, ui_lblBlackFade, TS("Black Fade Animation"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_module, "battery");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
@@ -386,6 +417,8 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFolder, mux_module, "counterfolder");
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFile, mux_module, "counterfile");
     apply_theme_list_glyph(&theme, ui_icoBackgroundAnimation, mux_module, "backgroundanimation");
+    apply_theme_list_glyph(&theme, ui_icoLaunchSplash, mux_module, "launchsplash");
+    apply_theme_list_glyph(&theme, ui_icoBlackFade, mux_module, "blackfade");
 
     apply_theme_list_drop_down(&theme, ui_droBattery, NULL);
     apply_theme_list_drop_down(&theme, ui_droNetwork, NULL);
@@ -403,6 +436,8 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFolder, NULL);
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, NULL);
     apply_theme_list_drop_down(&theme, ui_droBackgroundAnimation, NULL);
+    apply_theme_list_drop_down(&theme, ui_droLaunchSplash, NULL);
+    apply_theme_list_drop_down(&theme, ui_droBlackFade, NULL);
 
     char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
     add_drop_down_options(ui_droBattery, disabled_enabled, 2);
@@ -428,6 +463,8 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droMenuCounterFolder, disabled_enabled, 2);
     add_drop_down_options(ui_droMenuCounterFile, disabled_enabled, 2);
     add_drop_down_options(ui_droBackgroundAnimation, disabled_enabled, 2);
+    add_drop_down_options(ui_droLaunchSplash, disabled_enabled, 2);
+    add_drop_down_options(ui_droBlackFade, disabled_enabled, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -585,6 +622,8 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblMenuCounterFolder, "counterfolder");
     lv_obj_set_user_data(ui_lblMenuCounterFile, "counterfile");
     lv_obj_set_user_data(ui_lblBackgroundAnimation, "backgroundanimation");
+    lv_obj_set_user_data(ui_lblLaunchSplash, "launchsplash");
+    lv_obj_set_user_data(ui_lblBlackFade, "blackfade");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
@@ -742,7 +781,7 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

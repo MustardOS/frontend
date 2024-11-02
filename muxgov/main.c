@@ -686,7 +686,7 @@ int main(int argc, char *argv[]) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
-    refresh_screen();
+    refresh_screen(device.SCREEN.WAIT);
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,

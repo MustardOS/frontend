@@ -63,7 +63,7 @@ struct pattern {
     size_t capacity;
 };
 
-void refresh_screen();
+void refresh_screen(int wait);
 
 int file_exist(char *filename);
 
