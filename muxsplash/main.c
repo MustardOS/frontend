@@ -6,8 +6,12 @@
 #include <stdlib.h>
 #include "../common/common.h"
 #include "../common/device.h"
+#include "../common/theme.h"
 
 struct mux_device device;
+struct theme_config theme;
+
+lv_obj_t *overlay_image = NULL;
 
 void setup_background_process() {
     pid_t pid = fork();
@@ -60,6 +64,11 @@ int main(int argc, char *argv[]) {
 
     lv_obj_t *img = lv_img_create(ui_scrSplash);
     lv_img_set_src(img, init_wall);
+
+    if (TEST_IMAGE) display_testing_message(ui_scrSplash);
+
+    overlay_image = lv_img_create(ui_scrSplash);
+    load_overlay_image(ui_scrSplash, overlay_image, theme.MISC.IMAGE_OVERLAY);
 
     refresh_screen();
 

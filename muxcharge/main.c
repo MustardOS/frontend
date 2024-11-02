@@ -34,6 +34,7 @@ struct mux_device device;
 struct theme_config theme;
 
 lv_obj_t *msgbox_element = NULL;
+lv_obj_t *overlay_image = NULL;
 
 int blank = 0;
 
@@ -148,6 +149,9 @@ int main(int argc, char *argv[]) {
     load_font_text(basename(argv[0]), ui_scrCharge);
 
     if (TEST_IMAGE) display_testing_message(ui_scrCharge);
+
+    overlay_image = lv_img_create(ui_scrCharge);
+    load_overlay_image(ui_scrCharge, overlay_image, theme.MISC.IMAGE_OVERLAY);
 
     nav_sound = init_nav_sound(mux_module);
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);

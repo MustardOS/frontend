@@ -30,6 +30,7 @@ struct mux_config config;
 struct mux_device device;
 
 lv_obj_t *msgbox_element = NULL;
+lv_obj_t *overlay_image = NULL;
 
 void timeout_task() {
     mux_input_stop();

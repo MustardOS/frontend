@@ -42,6 +42,7 @@ char *p_code;
 char *p_msg;
 
 lv_obj_t *msgbox_element = NULL;
+lv_obj_t *overlay_image = NULL;
 
 lv_group_t *ui_group;
 
@@ -160,6 +161,9 @@ void init_elements() {
     }
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
+
+    overlay_image = lv_img_create(ui_screen);
+    load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
 void glyph_task() {
@@ -242,7 +246,6 @@ int main(int argc, char *argv[]) {
     ui_common_screen_init(&theme, &device, TS("PASSCODE"));
     ui_init(ui_pnlContent);
     init_elements();
-    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
     if (strlen(p_msg) > 1) {
         lv_label_set_text(ui_lblMessage, p_msg);

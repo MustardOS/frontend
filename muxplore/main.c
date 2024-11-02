@@ -40,6 +40,7 @@ struct mux_config config;
 struct mux_device device;
 
 lv_obj_t *msgbox_element = NULL;
+lv_obj_t *overlay_image = NULL;
 
 int progress_onscreen = -1;
 
@@ -1695,6 +1696,9 @@ void init_elements() {
     process_visual_element(BATTERY, ui_staCapacity);
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
+
+    overlay_image = lv_img_create(ui_screen);
+    load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
 void init_footer_elements() {
@@ -1965,7 +1969,6 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     init_elements();
-    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);

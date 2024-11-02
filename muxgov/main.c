@@ -38,6 +38,7 @@ struct theme_config theme;
 
 int nav_moved = 1;
 lv_obj_t *msgbox_element = NULL;
+lv_obj_t *overlay_image = NULL;
 
 int progress_onscreen = -1;
 
@@ -405,6 +406,9 @@ void init_elements() {
     lv_obj_move_foreground(ui_lblNavY);
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
+
+    overlay_image = lv_img_create(ui_screen);
+    load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
 void glyph_task() {
@@ -435,6 +439,8 @@ void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+
+        lv_obj_move_foreground(overlay_image);
 
         lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;
@@ -580,7 +586,6 @@ int main(int argc, char *argv[]) {
 
     ui_common_screen_init(&theme, &device, "");
     init_elements();
-    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 

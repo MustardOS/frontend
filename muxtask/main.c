@@ -37,6 +37,7 @@ struct theme_config theme;
 
 int nav_moved = 1;
 lv_obj_t *msgbox_element = NULL;
+lv_obj_t *overlay_image = NULL;
 
 int progress_onscreen = -1;
 
@@ -329,6 +330,9 @@ void init_elements() {
     }
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
+
+    overlay_image = lv_img_create(ui_screen);
+    load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
 void update_footer_nav_elements() {
@@ -379,6 +383,8 @@ void ui_refresh_task() {
         }
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
+        lv_obj_move_foreground(overlay_image);
+
         lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;
     }
@@ -419,7 +425,6 @@ int main(int argc, char *argv[]) {
 
     ui_common_screen_init(&theme, &device, TS("TASK TOOLKIT"));
     init_elements();
-    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 

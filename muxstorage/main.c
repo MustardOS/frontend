@@ -39,6 +39,7 @@ int current_item_index = 0;
 int ui_count = 0;
 
 lv_obj_t *msgbox_element = NULL;
+lv_obj_t *overlay_image = NULL;
 
 int progress_onscreen = -1;
 
@@ -458,6 +459,9 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblSyncthing, "syncthing");
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
+
+    overlay_image = lv_img_create(ui_screen);
+    load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
 void glyph_task() {
@@ -537,7 +541,6 @@ int main(int argc, char *argv[]) {
     ui_common_screen_init(&theme, &device, TS("STORAGE"));
     ui_init(ui_pnlContent);
     init_elements();
-    load_overlay_image(ui_screen, theme.MISC.IMAGE_OVERLAY);
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 

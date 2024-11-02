@@ -1073,26 +1073,25 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
     return "";
 }
 
-void load_overlay_image(lv_obj_t *ui_screen, int16_t image_overlay_enabled) {
-    const char *program = lv_obj_get_user_data(ui_screen);
+void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t overlay_enabled) {
+    if (overlay_enabled) {
+        const char *program = lv_obj_get_user_data(ui_screen);
 
-    char device_dimension[15];
-    get_device_dimension(device_dimension, sizeof(device_dimension));
+        char device_dimension[15];
+        get_device_dimension(device_dimension, sizeof(device_dimension));
 
-    static char static_image_path[MAX_BUFFER_SIZE];
-    static char static_image_embed[MAX_BUFFER_SIZE];
+        static char static_image_path[MAX_BUFFER_SIZE];
+        static char static_image_embed[MAX_BUFFER_SIZE];
 
-    if (load_image_specifics(STORAGE_THEME, device_dimension, program, "overlay", "png",
-                             static_image_path, sizeof(static_image_path)) ||
-        load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
-                             static_image_path, sizeof(static_image_path))) {
+        if (load_image_specifics(STORAGE_THEME, device_dimension, program, "overlay", "png",
+                                 static_image_path, sizeof(static_image_path)) ||
+            load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
+                                 static_image_path, sizeof(static_image_path))) {
 
-        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
 
-        if (image_overlay_enabled) {
-            lv_obj_t *overlay_img = lv_img_create(ui_screen);
-            lv_img_set_src(overlay_img, static_image_embed);
-            lv_obj_move_foreground(overlay_img);
+            lv_img_set_src(overlay_image, static_image_embed);
+            lv_obj_move_foreground(overlay_image);
         }
     }
 }
