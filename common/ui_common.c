@@ -707,7 +707,7 @@ void ui_common_handle_vol() {
 
 void ui_common_handle_idle() {
     if (file_exist("/tmp/hdmi_do_refresh")) {
-        if (atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
+        if (safe_atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
             remove("/tmp/hdmi_do_refresh");
             lv_obj_invalidate(ui_pnlHeader);
             lv_obj_invalidate(ui_pnlContent);

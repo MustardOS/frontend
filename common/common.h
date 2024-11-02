@@ -163,8 +163,8 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
 void delete_files_of_name(const char *dir_path, const char *filename);
 
-void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall, lv_obj_t *ui_imgWall, 
-            int animated, int animation_delay, int random);
+void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall, lv_obj_t *ui_imgWall,
+                    int animated, int animation_delay, int random);
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
 
@@ -176,7 +176,7 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *curren
 
 void unload_image_animation();
 
-void get_device_dimension(char* device_dimension, size_t size);
+void get_device_dimension(char *device_dimension, size_t size);
 
 void load_font_text(const char *program, lv_obj_t *screen);
 
@@ -227,3 +227,5 @@ void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, i
 int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value);
 
 int init_nav_sound(const char *mux_module);
+
+int safe_atoi(const char *str);

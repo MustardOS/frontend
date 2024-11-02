@@ -818,7 +818,7 @@ int main(int argc, char *argv[]) {
     LOG_INFO(mux_module, "Assign Core ROM_DIR: \"%s\"", rom_dir)
     LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system)
 
-    if (atoi(auto_assign) && !file_exist(MUOS_SAA_LOAD)) {
+    if (safe_atoi(auto_assign) && !file_exist(MUOS_SAA_LOAD)) {
         LOG_INFO(mux_module, "Automatic Assign Core Initiated")
 
         char core_file[MAX_BUFFER_SIZE];

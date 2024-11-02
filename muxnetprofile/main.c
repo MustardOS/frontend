@@ -131,7 +131,7 @@ int save_profile() {
         }
     }
 
-    int type = atoi(p_type);
+    int type = safe_atoi(p_type);
     if (type) {
         if (!p_address || strlen(p_address) == 0 ||
             !p_subnet || strlen(p_subnet) == 0 ||

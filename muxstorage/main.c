@@ -57,6 +57,13 @@ struct help_msg {
     char *message;
 };
 
+struct storage {
+    const char *path_suffix;
+    lv_obj_t *ui_label;
+};
+
+struct storage storage_path[UI_COUNT];
+
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblBIOS,       TS("Location of system BIOS files")},
@@ -97,31 +104,61 @@ void update_storage_info() {
      * Check for SD2 pathing, otherwise it should be on SD1.
      * If it's not on SD1 then you have bigger problems!
     */
-    struct {
-        const char *path_suffix;
-        lv_obj_t *ui_label;
-    } storage[] = {
-            {"MUOS/bios",           ui_lblBIOSValue},
-            {"MUOS/info/catalogue", ui_lblCatalogueValue},
-            {"MUOS/info/name",      ui_lblNameValue},
-            {"MUOS/retroarch",      ui_lblRetroArchValue},
-            {"MUOS/info/config",    ui_lblConfigValue},
-            {"MUOS/info/core",      ui_lblCoreValue},
-            {"MUOS/info/favourite", ui_lblFavouriteValue},
-            {"MUOS/info/history",   ui_lblHistoryValue},
-            {"MUOS/music",          ui_lblMusicValue},
-            {"MUOS/save",           ui_lblSaveValue},
-            {"MUOS/screenshot",     ui_lblScreenshotValue},
-            {"MUOS/theme",          ui_lblThemeValue},
-            {"MUOS/language",       ui_lblLanguageValue},
-            {"MUOS/network",        ui_lblNetworkValue},
-            {"MUOS/syncthing",      ui_lblSyncthingValue}
-    };
+    storage_path[0].path_suffix = "MUOS/bios";
+    storage_path[0].ui_label = ui_lblBIOSValue;
+
+    storage_path[1].path_suffix = "MUOS/info/catalogue";
+    storage_path[1].ui_label = ui_lblCatalogueValue;
+
+    storage_path[2].path_suffix = "MUOS/info/name";
+    storage_path[2].ui_label = ui_lblNameValue;
+
+    storage_path[3].path_suffix = "MUOS/retroarch";
+    storage_path[3].ui_label = ui_lblRetroArchValue;
+
+    storage_path[4].path_suffix = "MUOS/info/config";
+    storage_path[4].ui_label = ui_lblConfigValue;
+
+    storage_path[5].path_suffix = "MUOS/info/core";
+    storage_path[5].ui_label = ui_lblCoreValue;
+
+    storage_path[6].path_suffix = "MUOS/info/favourite";
+    storage_path[6].ui_label = ui_lblFavouriteValue;
+
+    storage_path[7].path_suffix = "MUOS/info/history";
+    storage_path[7].ui_label = ui_lblHistoryValue;
+
+    storage_path[8].path_suffix = "MUOS/music";
+    storage_path[8].ui_label = ui_lblMusicValue;
+
+    storage_path[9].path_suffix = "MUOS/save";
+    storage_path[9].ui_label = ui_lblSaveValue;
+
+    storage_path[10].path_suffix = "MUOS/screenshot";
+    storage_path[10].ui_label = ui_lblScreenshotValue;
+
+    storage_path[11].path_suffix = "MUOS/theme";
+    storage_path[11].ui_label = ui_lblThemeValue;
+
+    storage_path[12].path_suffix = "MUOS/language";
+    storage_path[12].ui_label = ui_lblLanguageValue;
+
+    storage_path[13].path_suffix = "MUOS/network";
+    storage_path[13].ui_label = ui_lblNetworkValue;
+
+    storage_path[14].path_suffix = "MUOS/syncthing";
+    storage_path[14].ui_label = ui_lblSyncthingValue;
 
     char dir[FILENAME_MAX];
-    for (int i = 0; i < sizeof(storage) / sizeof(storage[0]); i++) {
-        snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage[i].path_suffix);
-        lv_label_set_text(storage[i].ui_label, directory_exist(dir) ? "SD2" : "SD1");
+    for (int i = 0; i < sizeof(storage_path) / sizeof(storage_path[0]); i++) {
+        snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage_path[i].path_suffix);
+        if (directory_exist(dir)) {
+            lv_label_set_text(storage_path[i].ui_label, "SD2");
+            lv_label_set_text(ui_lblNavX, TG("Sync to SD1"));
+        } else {
+            lv_label_set_text(storage_path[i].ui_label, "SD1");
+            lv_label_set_text(ui_lblNavX, TG("Migrate to SD2"));
+        }
     }
 }
 
@@ -316,7 +353,7 @@ void handle_back(void) {
     mux_input_stop();
 }
 
-void handle_migrate(void) {
+void handle_confirm(void) {
     if (msgbox_active) {
         return;
     }
@@ -325,11 +362,25 @@ void handle_migrate(void) {
     input_disable = 1;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
+    static char command[MAX_BUFFER_SIZE];
+
     if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
-        toast_message(TS("This storage element is already on SD2"), 1000, 1000);
+        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad \"%s/script/mux/sync.sh\" \"%s\"",
+                 INTERNAL_PATH, storage_path[current_item_index].path_suffix);
     } else {
-        toast_message(TS("Migrating to SD2..."), 1000, 1000);
+        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad \"%s/script/mux/migrate.sh\" \"%s\"",
+                 INTERNAL_PATH, storage_path[current_item_index].path_suffix);
     }
+
+    setenv("TERM", "xterm-256color", 1);
+    printf("RUNNING: %s\n", command);
+    system(command);
+
+    write_text_to_file(MUOS_SIN_LOAD, "w", INT, current_item_index);
+
+    load_mux("storage");
+
+    mux_input_stop();
 }
 
 void handle_help(void) {
@@ -371,7 +422,6 @@ void init_elements() {
     lv_label_set_text(ui_lblMessage, osd_message);
 
     lv_label_set_text(ui_lblNavB, TG("Back"));
-    lv_label_set_text(ui_lblNavX, TG("Migrate to SD2"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -439,6 +489,13 @@ void ui_refresh_task() {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
+        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
+        if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
+            lv_label_set_text(ui_lblNavX, TG("Sync to SD1"));
+        } else {
+            lv_label_set_text(ui_lblNavX, TG("Migrate to SD2"));
+        }
+
         lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;
     }
@@ -494,9 +551,22 @@ int main(int argc, char *argv[]) {
     load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
+    int sin_index = 0;
+    if (file_exist(MUOS_SIN_LOAD)) {
+        sin_index = read_int_from_file(MUOS_SIN_LOAD, 1);
+        printf("loading SIN at: %d\n", sin_index);
+        remove(MUOS_SIN_LOAD);
+    }
+
     nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
     update_storage_info();
+
+    if (ui_count > 0) {
+        if (sin_index > -1 && sin_index <= ui_count && current_item_index < ui_count) {
+            list_nav_next(sin_index);
+        }
+    }
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
@@ -555,7 +625,7 @@ int main(int argc, char *argv[]) {
             .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_B] = handle_back,
-                    [MUX_INPUT_X] = handle_migrate,
+                    [MUX_INPUT_X] = handle_confirm,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,

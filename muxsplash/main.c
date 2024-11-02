@@ -23,7 +23,6 @@ void setup_background_process() {
 int main(int argc, char *argv[]) {
     load_device(&device);
 
-
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <full path to PNG image>\n", argv[0]);
         exit(EXIT_FAILURE);

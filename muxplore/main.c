@@ -1853,7 +1853,7 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt(argc, argv, "i:m:")) != -1) {
         switch (opt) {
             case 'i':
-                sys_index = atoi(optarg);
+                sys_index = safe_atoi(optarg);
                 break;
             case 'm':
                 if (strcasecmp(optarg, "root") == 0) {

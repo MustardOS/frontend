@@ -80,8 +80,12 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_scrStart, "muxstart");
 
     if (config.BOOT.FACTORY_RESET) {
+        char device_dimension[15];
+        get_device_dimension(device_dimension, sizeof(device_dimension));
+
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "M:%s/image/wall/muxstart.png", INTERNAL_THEME);
+        snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/muxstart.png",
+                 device_dimension, INTERNAL_THEME);
         lv_img_set_src(ui_imgWall, strdup(init_wall));
     } else {
         load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
@@ -92,7 +96,7 @@ int main(int argc, char *argv[]) {
 
     if (TEST_IMAGE) display_testing_message(ui_scrStart);
 
-    lv_bar_set_value(ui_barProgress, atoi(argv[1]), LV_ANIM_OFF);
+    lv_bar_set_value(ui_barProgress, safe_atoi(argv[1]), LV_ANIM_OFF);
     lv_label_set_text(ui_lblMessage, argv[2]);
 
     refresh_screen();

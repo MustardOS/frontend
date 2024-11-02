@@ -1083,7 +1083,7 @@ void load_overlay_image(lv_obj_t *ui_screen, int16_t image_overlay_enabled) {
     static char static_image_embed[MAX_BUFFER_SIZE];
 
     if (load_image_specifics(STORAGE_THEME, device_dimension, program, "overlay", "png",
-                             static_image_path, sizeof(static_image_path)) || 
+                             static_image_path, sizeof(static_image_path)) ||
         load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
                              static_image_path, sizeof(static_image_path))) {
 
@@ -1771,4 +1771,18 @@ int init_nav_sound(const char *mux_module) {
     }
 
     return 0;
+}
+
+int safe_atoi(const char *str) {
+    if (str == NULL) return 0;
+
+    errno = 0;
+    char *str_ptr;
+    long val = strtol(str, &str_ptr, 10);
+
+    if (str_ptr == str) return 0;
+    if (*str_ptr != '\0') return 0;
+    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) || (val > INT_MAX || val < INT_MIN)) return 0;
+
+    return (int) val;
 }
