@@ -78,7 +78,13 @@ void image_refresh() {
 
     snprintf(theme_archive, sizeof(theme_archive), "%s/theme/%s.zip", STORAGE_PATH, theme_name);
 
-    if (extract_file_from_zip(theme_archive, "preview.png", "/tmp/preview.png")) {
+    char device_dimension[15];
+    get_device_dimension(device_dimension, sizeof(device_dimension));
+    char device_preview[PATH_MAX];
+    snprintf(device_preview, sizeof(device_preview), "%spreview.png", device_dimension);
+
+    if (extract_file_from_zip(theme_archive, device_preview, "/tmp/preview.png") &&
+            extract_file_from_zip(theme_archive, "preview.png", "/tmp/preview.png")) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         return;
     }
