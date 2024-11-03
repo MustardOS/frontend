@@ -329,9 +329,15 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
 
     int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) device_width);
     int16_t viewport_height = get_ini_int(artwork_config_ini, "viewport", "HEIGHT", 400);
+    int16_t column_mode = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE", 0);
+    int16_t column_mode_alignment = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE_ALIGNMENT", 2);
 
-    lv_obj_set_width(ui_viewport_objects[0], viewport_width);
-    lv_obj_set_height(ui_viewport_objects[0], viewport_height);
+    lv_obj_set_width(ui_viewport_objects[0], viewport_width == 0 ? LV_SIZE_CONTENT : viewport_width);
+    lv_obj_set_height(ui_viewport_objects[0], viewport_height == 0 ? LV_SIZE_CONTENT : viewport_height);
+    if (column_mode) {
+        lv_obj_set_flex_flow(ui_viewport_objects[0], LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(ui_viewport_objects[0], LV_FLEX_ALIGN_CENTER, column_mode_alignment, LV_FLEX_ALIGN_CENTER);
+    }
 
     for (int index = 1; index < 6; index++) {
         char section_name[15];
