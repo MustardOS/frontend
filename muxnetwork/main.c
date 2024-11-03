@@ -1054,7 +1054,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblDNS, "dns");
     lv_obj_set_user_data(ui_lblConnect, "connect");
 
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
+    if (!config.NETWORK.ENABLED) {
         lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
@@ -1076,7 +1076,7 @@ void init_elements() {
         lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
-        if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+        if (!config.NETWORK.TYPE) {
             lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
@@ -1084,7 +1084,7 @@ void init_elements() {
         }
     }
 
-    if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_dhcp) == 0) {
+    if (!config.NETWORK.TYPE) {
         lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
