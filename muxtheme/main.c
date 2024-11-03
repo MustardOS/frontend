@@ -13,6 +13,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
+#include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
@@ -42,6 +43,9 @@ lv_obj_t *ui_black;
 
 int progress_onscreen = -1;
 
+size_t item_count = 0;
+content_item *items = NULL;
+
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
@@ -67,6 +71,22 @@ void show_help() {
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits));
+}
+
+void reset_label_long_mode() {
+    apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+}
+
+void set_label_long_mode() {
+    char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
+
+    size_t len = strlen(content_label);
+    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
+
+    if (strcasecmp(items[current_item_index].display_name, content_label) != 0 && ends_with_ellipse) {
+        lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
+        lv_label_set_text(lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    }
 }
 
 void image_refresh() {
@@ -105,9 +125,6 @@ void create_theme_items() {
         return;
     }
 
-    char **file_names = NULL;
-    size_t file_count = 0;
-
     while ((tf = readdir(td))) {
         if (tf->d_type == DT_REG) {
             char filename[FILENAME_MAX];
@@ -117,51 +134,44 @@ void create_theme_items() {
             if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
                 *last_dot = '\0';
 
-                file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
-                file_names[file_count] = strdup(tf->d_name);
-                file_count++;
+                add_item(&items, &item_count, tf->d_name, tf->d_name, ROM);
             }
         }
     }
 
     closedir(td);
-    qsort(file_names, file_count, sizeof(char *), str_compare);
+    sort_items(items, item_count);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    if (file_count > 0) {
-        for (size_t i = 0; i < file_count; i++) {
-            char *base_filename = file_names[i];
+    for (size_t i = 0; i < item_count; i++) {
+        ui_count++;
 
-            ui_count++;
+        lv_obj_t *ui_pnlTheme = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(&theme, &device, ui_pnlTheme);
 
-            lv_obj_t *ui_pnlTheme = lv_obj_create(ui_pnlContent);
-            apply_theme_list_panel(&theme, &device, ui_pnlTheme);
+        lv_obj_t *ui_lblThemeItem = lv_label_create(ui_pnlTheme);
+        apply_theme_list_item(&theme, ui_lblThemeItem, items[i].display_name, true, false);
 
-            lv_obj_t *ui_lblThemeItem = lv_label_create(ui_pnlTheme);
-            apply_theme_list_item(&theme, ui_lblThemeItem, base_filename, false, false);
+        lv_obj_t *ui_lblThemeItemGlyph = lv_img_create(ui_pnlTheme);
+        apply_theme_list_glyph(&theme, ui_lblThemeItemGlyph, mux_module, "theme");
 
-            lv_obj_t *ui_lblThemeItemGlyph = lv_img_create(ui_pnlTheme);
-            apply_theme_list_glyph(&theme, ui_lblThemeItemGlyph, mux_module, "theme");
+        lv_group_add_obj(ui_group, ui_lblThemeItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblThemeItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlTheme);
 
-            lv_group_add_obj(ui_group, ui_lblThemeItem);
-            lv_group_add_obj(ui_group_glyph, ui_lblThemeItemGlyph);
-            lv_group_add_obj(ui_group_panel, ui_pnlTheme);
-
-            apply_size_to_content(&theme, ui_pnlContent, ui_lblThemeItem, ui_lblThemeItemGlyph, base_filename);
-
-            free(base_filename);
-        }
-        if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
-        free(file_names);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblThemeItem, ui_lblThemeItemGlyph, items[i].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblThemeItem, items[i].display_name);
     }
+    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
 
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0);
     for (int step = 0; step < steps; ++step) {
+        reset_label_long_mode();
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
@@ -169,6 +179,7 @@ void list_nav_prev(int steps) {
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     image_refresh();
+    set_label_long_mode();
     nav_moved = 1;
 }
 
@@ -179,6 +190,7 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0);
     }
     for (int step = 0; step < steps; ++step) {
+        reset_label_long_mode();
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
@@ -186,6 +198,7 @@ void list_nav_next(int steps) {
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     image_refresh();
+    set_label_long_mode();
     nav_moved = 1;
 }
 
@@ -498,6 +511,7 @@ int main(int argc, char *argv[]) {
     };
     mux_input_task(&input_opts);
 
+    free_items(items, item_count);
     close(js_fd);
     close(js_fd_sys);
 
