@@ -3,8 +3,7 @@
  * Bpp: 4
  * Opts: --bpp 4 --size 20 --font NotoSans-Medium.ttf -r 0x0000-0x2029,0x202F-0x2065,0x2069-0xA92D,0xFF00-0xFFFF --format lvgl --no-compress --no-prefilter -o notosans.c
  ******************************************************************************/
-#include
-"notosans.h"
+#include "notosans.h"
 
 /*-----------------
  *    BITMAPS
@@ -44080,8 +44079,7 @@ static const lv_font_fmt_txt_kern_pair_t kern_pairs =
  *  ALL CUSTOM DATA
  *--------------------*/
 
-#if
-LV_VERSION_CHECK(8, 0, 0)
+#if LV_VERSION_CHECK(8, 0, 0)
 /*Store all the custom data of the font*/
 static lv_font_fmt_txt_glyph_cache_t cache;
 static const lv_font_fmt_txt_dsc_t font_dsc = {
@@ -44097,8 +44095,7 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
 .bpp = 4,
 .kern_classes = 0,
 .bitmap_format = 0,
-#if
-LV_VERSION_CHECK(8, 0, 0)
+#if LV_VERSION_CHECK(8, 0, 0)
 .cache = &cache
 #endif
 };
@@ -44109,8 +44106,7 @@ LV_VERSION_CHECK(8, 0, 0)
  *----------------*/
 
 /*Initialize a public general font descriptor*/
-#if
-LV_VERSION_CHECK(8, 0, 0)
+#if LV_VERSION_CHECK(8, 0, 0)
 const lv_font_t ui_font_NotoSans = {
 #else
 lv_font_t ui_font_NotoSans = {
@@ -44119,12 +44115,10 @@ lv_font_t ui_font_NotoSans = {
 .get_glyph_bitmap = lv_font_get_bitmap_fmt_txt,    /*Function pointer to get glyph's bitmap*/
 .line_height = 31,          /*The maximum line height required by the font*/
 .base_line = 9,             /*Baseline measured from the bottom of the line*/
-#if
-!(LVGL_VERSION_MAJOR == 6 && LVGL_VERSION_MINOR == 0)
+#if !(LVGL_VERSION_MAJOR == 6 && LVGL_VERSION_MINOR == 0)
 .subpx = LV_FONT_SUBPX_NONE,
 #endif
-#if
-LV_VERSION_CHECK(7, 4, 0) || LVGL_VERSION_MAJOR >= 8
+#if LV_VERSION_CHECK(7, 4, 0) || LVGL_VERSION_MAJOR >= 8
 .underline_position = -2,
 .underline_thickness = 1,
 #endif
