@@ -267,7 +267,7 @@ char *load_content_description() {
 
             if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) {
                 printf("CORE IS NOT SET - TEXT NOT LOADED\n");
-                return "No Information Found";
+                return TS("No Information Found");
             }
             printf("TEXT IS STORED AT: %s\n", core_desc);
 
@@ -288,7 +288,7 @@ char *load_content_description() {
     }
 
     snprintf(current_meta_text, sizeof(current_meta_text), " ");
-    return "No Information Found";
+    return TS("No Information Found");
 }
 
 void reset_label_long_mode() {
