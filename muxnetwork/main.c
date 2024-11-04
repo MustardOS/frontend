@@ -166,8 +166,13 @@ void get_current_ip() {
         if (strcasecmp(curr_ip, "0.0.0.0") == 0) {
             can_scan_check();
         } else {
-            snprintf(net_message, sizeof(net_message), "%s - %s", TS("Connected"), curr_ip);
-            lv_label_set_text(ui_lblConnectValue, net_message);
+            if (config.NETWORK.TYPE) {
+                snprintf(net_message, sizeof(net_message), "%s", TS("Connected"));
+                lv_label_set_text(ui_lblConnectValue, net_message);
+            } else {
+                snprintf(net_message, sizeof(net_message), "%s", curr_ip);
+                lv_label_set_text(ui_lblConnectValue, net_message);
+            }
             lv_label_set_text(ui_lblConnect, TS("Disconnect"));
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
@@ -278,7 +283,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlDNS);
     apply_theme_list_panel(&theme, &device, ui_pnlConnect);
 
-    apply_theme_list_item(&theme, ui_lblEnable, TG("Enabled"), false, true);
+    apply_theme_list_item(&theme, ui_lblEnable, TS("Network Active"), false, true);
     apply_theme_list_item(&theme, ui_lblIdentifier, TS("Identifier"), false, true);
     apply_theme_list_item(&theme, ui_lblPassword, TS("Password"), false, true);
     apply_theme_list_item(&theme, ui_lblType, TS("Network Type"), false, true);
@@ -737,12 +742,10 @@ void handle_confirm(void) {
             if (element_focused == ui_lblPassword) {
                 lv_textarea_set_text(ui_txtEntry, "");
             } else {
-                lv_textarea_set_text(ui_txtEntry,
-                                     lv_label_get_text(lv_group_get_focused(ui_group_value)));
+                lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
             }
         } else {
-            lv_label_set_text(ui_lblMessage, TS("Cannot modify while connected!"));
-            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+            toast_message(TS("Cannot modify while connected!"), 1000, 1000);
         }
     }
 }
@@ -995,8 +998,8 @@ static void num_handler(lv_event_t *e) {
 void init_elements() {
     type_dhcp = TS("DHCP");
     type_static = TS("Static");
-    enabled_false = TG("False");
-    enabled_true = TG("True");
+    enabled_false = TG("Disabled");
+    enabled_true = TG("Enabled");
 
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
