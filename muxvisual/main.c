@@ -479,6 +479,17 @@ void init_navigation_groups() {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
+    if (!device.DEVICE.HAS_NETWORK) {
+        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_FLOATING);
+        ui_count -= 1;
+    }
+
+    if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
+        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_FLOATING);
+        ui_count -= 1;
+    }
 }
 
 void list_nav_prev(int steps) {
@@ -624,18 +635,6 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblBackgroundAnimation, "backgroundanimation");
     lv_obj_set_user_data(ui_lblLaunchSplash, "launchsplash");
     lv_obj_set_user_data(ui_lblBlackFade, "blackfade");
-
-    if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_FLOATING);
-        ui_count -= 1;
-    }
-
-    if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
-        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_FLOATING);
-        ui_count -= 1;
-    }
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
 
