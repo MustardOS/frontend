@@ -234,11 +234,16 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MESSAGE.TEXT = get_ini_hex(muos_theme, "notification", "MSG_TEXT");
     theme->MESSAGE.TEXT_ALPHA = get_ini_int(muos_theme, "notification", "MSG_TEXT_ALPHA", 255);
 
+    theme->BAR.PANEL_WIDTH = get_ini_int(muos_theme, "bar", "BAR_WIDTH", (int16_t) (device->MUX.WIDTH - 25));
+    theme->BAR.PANEL_HEIGHT = get_ini_int(muos_theme, "bar", "BAR_HEIGHT", 42);
     theme->BAR.PANEL_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_BACKGROUND");
     theme->BAR.PANEL_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_BACKGROUND_ALPHA", 255);
     theme->BAR.PANEL_BORDER = get_ini_hex(muos_theme, "bar", "BAR_BORDER");
     theme->BAR.PANEL_BORDER_ALPHA = get_ini_int(muos_theme, "bar", "BAR_BORDER_ALPHA", 255);
     theme->BAR.PANEL_BORDER_RADIUS = get_ini_int(muos_theme, "bar", "BAR_RADIUS", 3);
+    theme->BAR.PROGRESS_WIDTH = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_WIDTH",
+                                            (int16_t) (device->MUX.WIDTH - 90));
+    theme->BAR.PROGRESS_HEIGHT = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_HEIGHT", 16);
     theme->BAR.PROGRESS_MAIN_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND");
     theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND_ALPHA", 255);
     theme->BAR.PROGRESS_ACTIVE_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND");
@@ -247,6 +252,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->BAR.PROGRESS_RADIUS = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_RADIUS", 3);
     theme->BAR.ICON = get_ini_hex(muos_theme, "bar", "BAR_ICON");
     theme->BAR.ICON_ALPHA = get_ini_int(muos_theme, "bar", "BAR_ICON_ALPHA", 255);
+    theme->BAR.Y_POS = get_ini_int(muos_theme, "bar", "BAR_Y_POS", (int16_t) (device->MUX.HEIGHT - 96));
 
     theme->ROLL.TEXT = get_ini_hex(muos_theme, "roll", "ROLL_TEXT");
     theme->ROLL.TEXT_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_TEXT_ALPHA", 255);

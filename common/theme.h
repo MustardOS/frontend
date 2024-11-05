@@ -228,11 +228,15 @@ struct theme_config {
     } MESSAGE;
 
     struct {
+        int16_t PANEL_WIDTH;
+        int16_t PANEL_HEIGHT;
         uint32_t PANEL_BACKGROUND;
         int16_t PANEL_BACKGROUND_ALPHA;
         uint32_t PANEL_BORDER;
         int16_t PANEL_BORDER_ALPHA;
         int16_t PANEL_BORDER_RADIUS;
+        int16_t PROGRESS_WIDTH;
+        int16_t PROGRESS_HEIGHT;
         uint32_t PROGRESS_MAIN_BACKGROUND;
         int16_t PROGRESS_MAIN_BACKGROUND_ALPHA;
         uint32_t PROGRESS_ACTIVE_BACKGROUND;
@@ -240,6 +244,7 @@ struct theme_config {
         int16_t PROGRESS_RADIUS;
         uint32_t ICON;
         int16_t ICON_ALPHA;
+        int16_t Y_POS;
     } BAR;
 
     struct {

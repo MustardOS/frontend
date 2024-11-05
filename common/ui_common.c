@@ -569,11 +569,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlProgressBrightness = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlProgressBrightness, 615);
-    lv_obj_set_height(ui_pnlProgressBrightness, 42);
+    lv_obj_set_width(ui_pnlProgressBrightness, theme->BAR.PANEL_WIDTH);
+    lv_obj_set_height(ui_pnlProgressBrightness, theme->BAR.PANEL_HEIGHT);
     lv_obj_set_x(ui_pnlProgressBrightness, 0);
-    lv_obj_set_y(ui_pnlProgressBrightness, -47);
-    lv_obj_set_align(ui_pnlProgressBrightness, LV_ALIGN_BOTTOM_MID);
+    lv_obj_set_y(ui_pnlProgressBrightness, theme->BAR.Y_POS);
+    lv_obj_set_align(ui_pnlProgressBrightness, LV_ALIGN_TOP_MID);
     lv_obj_set_flex_flow(ui_pnlProgressBrightness, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlProgressBrightness, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER,
                           LV_FLEX_ALIGN_CENTER);
@@ -591,6 +591,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_pnlProgressBrightness, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlProgressBrightness, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    // TODO: Swap out this for a proper image glyph at some stage - reduces the requirement for an additional font!
     ui_icoProgressBrightness = lv_label_create(ui_pnlProgressBrightness);
     lv_obj_set_width(ui_icoProgressBrightness, 18);
     lv_obj_set_height(ui_icoProgressBrightness, 28);
@@ -609,17 +610,16 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_icoProgressBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_barProgressBrightness = lv_bar_create(ui_pnlProgressBrightness);
-    lv_bar_set_value(ui_barProgressBrightness, 50, LV_ANIM_OFF);
-    lv_bar_set_start_value(ui_barProgressBrightness, 0, LV_ANIM_OFF);
-    lv_obj_set_width(ui_barProgressBrightness, 550);
-    lv_obj_set_height(ui_barProgressBrightness, 16);
+    lv_bar_set_value(ui_barProgressBrightness, 0, LV_ANIM_ON);
+    lv_bar_set_start_value(ui_barProgressBrightness, 0, LV_ANIM_ON);
+    lv_obj_set_width(ui_barProgressBrightness, theme->BAR.PROGRESS_WIDTH);
+    lv_obj_set_height(ui_barProgressBrightness, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressBrightness, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_barProgressBrightness, theme->BAR.PROGRESS_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
                               LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_barProgressBrightness, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA,
                             LV_PART_MAIN | LV_STATE_DEFAULT);
-
     lv_obj_set_style_radius(ui_barProgressBrightness, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgressBrightness, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
                               LV_PART_INDICATOR | LV_STATE_DEFAULT);
@@ -627,11 +627,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
                             LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     ui_pnlProgressVolume = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlProgressVolume, 615);
-    lv_obj_set_height(ui_pnlProgressVolume, 42);
+    lv_obj_set_width(ui_pnlProgressVolume, theme->BAR.PANEL_WIDTH);
+    lv_obj_set_height(ui_pnlProgressVolume, theme->BAR.PANEL_HEIGHT);
     lv_obj_set_x(ui_pnlProgressVolume, 0);
-    lv_obj_set_y(ui_pnlProgressVolume, -47);
-    lv_obj_set_align(ui_pnlProgressVolume, LV_ALIGN_BOTTOM_MID);
+    lv_obj_set_y(ui_pnlProgressVolume, theme->BAR.Y_POS);
+    lv_obj_set_align(ui_pnlProgressVolume, LV_ALIGN_TOP_MID);
     lv_obj_set_flex_flow(ui_pnlProgressVolume, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_pnlProgressVolume, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
@@ -646,6 +646,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_pnlProgressVolume, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlProgressVolume, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    // TODO: Swap out this for a proper image glyph at some stage - reduces the requirement for an additional font!
     ui_icoProgressVolume = lv_label_create(ui_pnlProgressVolume);
     lv_obj_set_width(ui_icoProgressVolume, 18);
     lv_obj_set_height(ui_icoProgressVolume, 28);
@@ -663,17 +664,16 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_icoProgressVolume, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_barProgressVolume = lv_bar_create(ui_pnlProgressVolume);
-    lv_bar_set_value(ui_barProgressVolume, 50, LV_ANIM_OFF);
-    lv_bar_set_start_value(ui_barProgressVolume, 0, LV_ANIM_OFF);
-    lv_obj_set_width(ui_barProgressVolume, 550);
-    lv_obj_set_height(ui_barProgressVolume, 16);
+    lv_bar_set_value(ui_barProgressVolume, 0, LV_ANIM_ON);
+    lv_bar_set_start_value(ui_barProgressVolume, 0, LV_ANIM_ON);
+    lv_obj_set_width(ui_barProgressVolume, theme->BAR.PROGRESS_WIDTH);
+    lv_obj_set_height(ui_barProgressVolume, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressVolume, LV_ALIGN_CENTER);
     lv_obj_set_style_radius(ui_barProgressVolume, theme->BAR.PROGRESS_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_MAIN_BACKGROUND),
                               LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA,
                             LV_PART_MAIN | LV_STATE_DEFAULT);
-
     lv_obj_set_style_radius(ui_barProgressVolume, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgressVolume, lv_color_hex(theme->BAR.PROGRESS_ACTIVE_BACKGROUND),
                               LV_PART_INDICATOR | LV_STATE_DEFAULT);
