@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_scrCharge, "muxcharge");
 
     load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     load_font_text(basename(argv[0]), ui_scrCharge);
 

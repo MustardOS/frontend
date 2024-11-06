@@ -279,7 +279,7 @@ void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0);
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
@@ -351,7 +351,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);

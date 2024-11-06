@@ -31,6 +31,10 @@ struct ImageSettings {
     int16_t pad_bottom;
 };
 
+enum wall_type {
+    APPLICATION, ARCHIVE, GENERAL, TASK
+};
+
 enum count_type {
     FILES_ONLY, DIRECTORIES_ONLY, BOTH
 };
@@ -164,9 +168,9 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 void delete_files_of_name(const char *dir_path, const char *filename);
 
 void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall, lv_obj_t *ui_imgWall,
-                    int animated, int animation_delay, int random);
+                    int animated, int animation_delay, int random, int wall_type);
 
-char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group);
+char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type);
 
 void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t overlay_enabled);
 

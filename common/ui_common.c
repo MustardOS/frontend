@@ -896,7 +896,7 @@ void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels) {
     }
 }
 
-int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
+int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_type) {
     if (config.BOOT.FACTORY_RESET) {
         char device_dimension[15];
         char init_wall[MAX_BUFFER_SIZE];
@@ -905,12 +905,12 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image) {
         lv_img_set_src(ui_imgWall, init_wall);
     } else {
         load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                       theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+                       theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, wall_type);
     }
 
     static char static_image[MAX_BUFFER_SIZE];
     snprintf(static_image, sizeof(static_image), "%s",
-             load_static_image(ui_screen, ui_group));
+             load_static_image(ui_screen, ui_group, wall_type));
 
     if (strlen(static_image) > 0) {
         printf("LOADING STATIC IMAGE: %s\n", static_image);

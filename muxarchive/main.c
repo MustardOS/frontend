@@ -12,6 +12,7 @@
 #include "../common/options.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
+#include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
@@ -40,12 +41,14 @@ lv_obj_t *overlay_image = NULL;
 
 int progress_onscreen = -1;
 
+size_t item_count = 0;
+content_item *items = NULL;
+
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
 lv_group_t *ui_group_installed;
-lv_group_t *ui_group_data;
 
 int ui_count = 0;
 int current_item_index = 0;
@@ -115,7 +118,6 @@ void create_archive_items() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
     ui_group_installed = lv_group_create();
-    ui_group_data = lv_group_create();
 
     for (size_t i = 0; i < file_count; i++) {
         char *base_filename = file_names[i];
@@ -154,6 +156,8 @@ void create_archive_items() {
 
         ui_count++;
 
+        add_item(&items, &item_count, base_filename, archive_store, ROM);
+
         lv_obj_t *ui_pnlArchive = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlArchive);
 
@@ -162,12 +166,6 @@ void create_archive_items() {
 
         lv_obj_t *ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
         apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? TS("INSTALLED") : "");
-
-        lv_obj_t *ui_lblArchiveItemData = lv_label_create(ui_pnlArchive);
-        lv_label_set_text(ui_lblArchiveItemData, base_filename);
-        lv_obj_set_y(ui_lblArchiveItemData, device.SCREEN.HEIGHT + 1);
-        lv_obj_set_width(ui_lblArchiveItemData, 1);
-        lv_obj_set_height(ui_lblArchiveItemData, 1);
 
         lv_obj_t *ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         char item_glyph[MAX_BUFFER_SIZE];
@@ -178,7 +176,6 @@ void create_archive_items() {
         lv_group_add_obj(ui_group_glyph, ui_lblArchiveItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlArchive);
         lv_group_add_obj(ui_group_installed, ui_lblArchiveItemInstalled);
-        lv_group_add_obj(ui_group_data, ui_lblArchiveItemData);
 
         free(base_filename);
     }
@@ -194,7 +191,6 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
         nav_prev(ui_group_installed, 1);
-        nav_prev(ui_group_data, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
@@ -212,7 +208,6 @@ void list_nav_next(int steps) {
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
         nav_next(ui_group_installed, 1);
-        nav_next(ui_group_data, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
@@ -232,7 +227,7 @@ void handle_a() {
 
         static char command[MAX_BUFFER_SIZE];
         snprintf(command, sizeof(command), "/opt/muos/bin/fbpad %s \"%s\"",
-                 extract_script, lv_label_get_text(lv_group_get_focused(ui_group_data)));
+                 extract_script, items[current_item_index].name);
         setenv("TERM", "xterm-256color", 1);
         printf("RUNNING: %s\n", command);
 
@@ -361,7 +356,12 @@ void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0);
+        if (lv_group_get_obj_count(ui_group) > 0) {
+            struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+            lv_obj_set_user_data(element_focused, get_last_subdir(strip_ext(items[current_item_index].name), '/', 4));
+
+            adjust_wallpaper_element(ui_group, 0, ARCHIVE);
+        }
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
@@ -412,7 +412,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, ARCHIVE);
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);

@@ -1871,7 +1871,7 @@ void ui_refresh_task() {
     }
 
     if (nav_moved) {
-        starter_image = adjust_wallpaper_element(ui_group, starter_image);
+        starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
         const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
@@ -2019,7 +2019,7 @@ int main(int argc, char *argv[]) {
     init_elements();
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     nav_sound = init_nav_sound(mux_module);
     ui_group = lv_group_create();

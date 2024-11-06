@@ -16,6 +16,8 @@
 #define STORAGE_PATH   "/run/muos/storage"
 #define STORAGE_THEME  "/run/muos/storage/theme/active"
 
+#define CATALOGUE_PATH "/run/muos/storage/info/catalogue"
+
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
