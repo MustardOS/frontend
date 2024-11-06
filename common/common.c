@@ -976,7 +976,14 @@ int load_image_specifics(const char *theme_base, const char *device_dimension, c
              file_exist(image_path));
 }
 
-char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random) {
+int load_image_catalogue(const char *catalogue_name, const char *program, const char *device_dimension,
+                         const char *image_type, char *image_path, size_t path_size) {
+    return (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", CATALOGUE_PATH, catalogue_name,
+                     image_type, device_dimension, program) >= 0 &&
+            file_exist(image_path));
+}
+
+char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random, int wall_type) {
     char device_dimension[15];
     get_device_dimension(device_dimension, sizeof(device_dimension));
     char *device_dimensions[15] = {device_dimension, ""};
@@ -992,9 +999,34 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
         const char *element = lv_obj_get_user_data(element_focused);
         for (int i = 0; i < 2; i++) {
-            if (load_element_image_specifics(STORAGE_THEME, device_dimensions[i], program, "wall",
-                                             element, wall_extension, wall_image_path, sizeof(wall_image_path))) {
-
+            switch (wall_type) {
+                case APPLICATION:
+                    if (load_image_catalogue("Application", element, device_dimensions[i], "wall",
+                                             wall_image_path, sizeof(wall_image_path))) {
+                        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        return wall_image_embed;
+                    }
+                    break;
+                case ARCHIVE:
+                    if (load_image_catalogue("Archive", element, device_dimensions[i], "wall",
+                                             wall_image_path, sizeof(wall_image_path))) {
+                        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        return wall_image_embed;
+                    }
+                    break;
+                case TASK:
+                    if (load_image_catalogue("Task", element, device_dimensions[i], "wall",
+                                             wall_image_path, sizeof(wall_image_path))) {
+                        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        return wall_image_embed;
+                    }
+                    break;
+                case GENERAL:
+                default:
+                    break;
+            }
+            if (load_element_image_specifics(STORAGE_THEME, device_dimensions[i], program, "wall", element,
+                                             wall_extension, wall_image_path, sizeof(wall_image_path))) {
                 snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
                 return wall_image_embed;
             }
@@ -1004,7 +1036,6 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     for (int i = 0; i < 2; i++) {
         if (load_image_specifics(STORAGE_THEME, device_dimensions[i], program, "wall",
                                  wall_extension, wall_image_path, sizeof(wall_image_path))) {
-
             snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
             return wall_image_embed;
         }
@@ -1014,11 +1045,10 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
 }
 
 void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall, lv_obj_t *ui_imgWall,
-                    int animated, int animation_delay, int random) {
-
+                    int animated, int animation_delay, int random, int wall_type) {
     static char new_wall[MAX_BUFFER_SIZE];
     snprintf(new_wall, sizeof(new_wall), "%s", get_wallpaper_path(
-            ui_screen, ui_group, animated, random));
+            ui_screen, ui_group, animated, random, wall_type));
 
     if (strcasecmp(new_wall, current_wall) != 0) {
         snprintf(current_wall, sizeof(current_wall), "%s", new_wall);
@@ -1046,7 +1076,7 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
     }
 }
 
-char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
+char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type) {
     char device_dimension[15];
     get_device_dimension(device_dimension, sizeof(device_dimension));
     char *device_dimensions[15] = {device_dimension, ""};
@@ -1061,11 +1091,36 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group) {
         const char *element = lv_obj_get_user_data(element_focused);
 
         for (int i = 0; i < 2; i++) {
-            if (load_element_image_specifics(STORAGE_THEME, device_dimensions[i], program, "static",
-                                             element, "png", static_image_path, sizeof(static_image_path))) {
+            switch (wall_type) {
+                case APPLICATION:
+                    if (load_image_catalogue("Application", element, device_dimensions[i], "box",
+                                             static_image_path, sizeof(static_image_path))) {
+                        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                        return static_image_embed;
+                    }
+                    break;
+                case ARCHIVE:
+                    if (load_image_catalogue("Archive", element, device_dimensions[i], "box",
+                                             static_image_path, sizeof(static_image_path))) {
+                        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                        return static_image_embed;
+                    }
+                    break;
+                case TASK:
+                    if (load_image_catalogue("Task", element, device_dimensions[i], "box",
+                                             static_image_path, sizeof(static_image_path))) {
+                        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                        return static_image_embed;
+                    }
+                    break;
+                case GENERAL:
+                default:
+                    if (load_element_image_specifics(STORAGE_THEME, device_dimensions[i], program, "static",
+                                                     element, "png", static_image_path, sizeof(static_image_path))) {
 
-                snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
-                return static_image_embed;
+                        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                        return static_image_embed;
+                    }
             }
         }
     }

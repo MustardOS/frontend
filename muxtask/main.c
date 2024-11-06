@@ -381,7 +381,7 @@ void ui_refresh_task() {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
             lv_obj_set_user_data(element_focused, items[current_item_index].name);
 
-            adjust_wallpaper_element(ui_group, 0);
+            adjust_wallpaper_element(ui_group, 0, TASK);
         }
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
@@ -459,7 +459,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND);
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, TASK);
 
     nav_sound = init_nav_sound(mux_module);
     struct dt_task_param dt_par;
