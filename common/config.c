@@ -51,6 +51,7 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, "settings/advanced/brightness", "previous")
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.STATE, "settings/advanced/state", "mem")
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.HDMIOUTPUT, "settings/advanced/hdmi_output", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.USERINIT, "settings/advanced/user_init", 0)
 
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HIDDEN, "settings/general/hidden", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUND, "settings/general/sound", 0)

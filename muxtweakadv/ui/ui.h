@@ -20,6 +20,8 @@ extern lv_obj_t *ui_pnlState;
 extern lv_obj_t *ui_pnlVerbose;
 extern lv_obj_t *ui_pnlRumble;
 extern lv_obj_t *ui_pnlHDMIOutput;
+extern lv_obj_t *ui_pnlUserInit;
+
 extern lv_obj_t *ui_lblAccelerate;
 extern lv_obj_t *ui_lblSwap;
 extern lv_obj_t *ui_lblThermal;
@@ -36,6 +38,8 @@ extern lv_obj_t *ui_lblState;
 extern lv_obj_t *ui_lblVerbose;
 extern lv_obj_t *ui_lblRumble;
 extern lv_obj_t *ui_lblHDMIOutput;
+extern lv_obj_t *ui_lblUserInit;
+
 extern lv_obj_t *ui_icoAccelerate;
 extern lv_obj_t *ui_icoSwap;
 extern lv_obj_t *ui_icoThermal;
@@ -52,6 +56,8 @@ extern lv_obj_t *ui_icoState;
 extern lv_obj_t *ui_icoVerbose;
 extern lv_obj_t *ui_icoRumble;
 extern lv_obj_t *ui_icoHDMIOutput;
+extern lv_obj_t *ui_icoUserInit;
+
 extern lv_obj_t *ui_droAccelerate;
 extern lv_obj_t *ui_droSwap;
 extern lv_obj_t *ui_droThermal;
@@ -68,5 +74,6 @@ extern lv_obj_t *ui_droState;
 extern lv_obj_t *ui_droVerbose;
 extern lv_obj_t *ui_droRumble;
 extern lv_obj_t *ui_droHDMIOutput;
+extern lv_obj_t *ui_droUserInit;
 
 void ui_init(lv_obj_t *ui_pnlContent);

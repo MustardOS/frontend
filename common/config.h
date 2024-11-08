@@ -44,6 +44,7 @@ struct mux_config {
             int16_t VERBOSE;
             int16_t RUMBLE;
             int16_t HDMIOUTPUT;
+            int16_t USERINIT;
         } ADVANCED;
         struct {
             int16_t HIDDEN;
