@@ -1188,7 +1188,7 @@ void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path) {
     img_obj = ui_imgWall;
 
     if (img_paths_count > 0) {
-        lv_img_set_src(ui_imgWall, img_paths[arc4random() % (img_paths_count - 1)]);
+        lv_img_set_src(ui_imgWall, img_paths[arc4random() % img_paths_count]);
     } else {
         lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     }
