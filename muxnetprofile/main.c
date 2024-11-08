@@ -122,13 +122,14 @@ int save_profile() {
         return 0;
     }
 
-    if (!p_pass || strlen(p_pass) < 8 || strlen(p_pass) > 63) {
+    if (strlen(p_pass) < 8 || strlen(p_pass) > 63 ) {
         if (strlen(p_pass) != 64) { // If it's 64 characters then it must be encoded... let's assume!
-            lv_label_set_text(ui_lblMessage, TS("Password must be 8..63 characters!")); // From wpa_passphrase!
-            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
-            refresh_screen(device.SCREEN.WAIT);
-            return 0;
+            if (strlen(p_pass) != 0) { // Support unset wifi passwords
+                lv_label_set_text(ui_lblMessage, TS("Password must be unset or 8..63 characters!")); // From wpa_passphrase!
+                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                refresh_screen(device.SCREEN.WAIT);
+                return 0;
+            }
         }
     }
 

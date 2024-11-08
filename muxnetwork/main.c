@@ -103,7 +103,7 @@ void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblEnable,     TS("Toggle the Wi-Fi network on and off")},
             {ui_lblIdentifier, TS("Enter the network identifier (SSID) here")},
-            {ui_lblPassword,   TS("Enter the network password here")},
+            {ui_lblPassword,   TS("Enter the network password here (optional)")},
             {ui_lblType,       TS("Toggle between DHCP and Static network types")},
             {ui_lblAddress,    TS("Enter the device IP address here (Static only)")},
             {ui_lblSubnet,     TS("Enter the device Subnet (CIDR) number here (Static only)")},
@@ -223,7 +223,9 @@ void save_network_config() {
     write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue));
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue), PASS_ENCODE) != 0) {
-        write_text_to_file("/run/muos/global/network/pass", "w", CHAR, lv_label_get_text(ui_lblPasswordValue));
+        if (strcasecmp(lv_label_get_text(ui_lblPasswordValue), "") == 0) {
+            write_text_to_file("/run/muos/global/network/pass", "w", CHAR, lv_label_get_text(ui_lblPasswordValue));
+        }
     }
 
     write_text_to_file("/run/muos/global/network/address", "w", CHAR, lv_label_get_text(ui_lblAddressValue));
@@ -670,19 +672,29 @@ void handle_confirm(void) {
             const char *cv_ssid = lv_label_get_text(ui_lblIdentifierValue);
             const char *cv_pass = lv_label_get_text(ui_lblPasswordValue);
 
+            int cv_pass_ok = 0;
+
+            // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes
+            if (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63) {
+                cv_pass_ok = 1;
+            }
+            if (strcasecmp(cv_pass, "") == 0) {
+                cv_pass_ok = 1;
+            }
+
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                 const char *cv_address = lv_label_get_text(ui_lblAddressValue);
                 const char *cv_subnet = lv_label_get_text(ui_lblSubnetValue);
                 const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue);
                 const char *cv_dns = lv_label_get_text(ui_lblDNSValue);
 
-                if (strlen(cv_ssid) > 0 && strlen(cv_pass) >= 8 &&
+                if (strlen(cv_ssid) > 0 && cv_pass_ok == 1 &&
                     strlen(cv_address) > 0 && strlen(cv_subnet) > 0 &&
                     strlen(cv_gateway) > 0 && strlen(cv_dns) > 0) {
                     valid_info = 1;
                 }
             } else {
-                if (strlen(cv_ssid) > 0 && strlen(cv_pass) >= 8) {
+                if (strlen(cv_ssid) > 0 && cv_pass_ok == 1) {
                     valid_info = 1;
                 }
             }
@@ -691,7 +703,7 @@ void handle_confirm(void) {
                 save_network_config();
 
                 if (config.NETWORK.ENABLED) {
-                    if (strcasecmp(cv_pass, PASS_ENCODE) != 0) {
+                    if (strcasecmp(cv_pass, PASS_ENCODE) != 0 && strcasecmp(cv_pass, "") != 0) {
                         lv_label_set_text(ui_lblConnectValue,
                                           TS("Encrypting Password..."));
                         lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
