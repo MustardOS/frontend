@@ -48,7 +48,7 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 15
+#define UI_COUNT 16
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -82,6 +82,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblLanguage,   TS("Location of Language files")},
             {ui_lblNetwork,    TS("Location of Network Profiles")},
             {ui_lblSyncthing,  TS("Location of Syncthing configurations")},
+            {ui_lblUserInit,   TS("Location of User Initialisation scripts")},
     };
 
     char *message = TG("No Help Information Found");
@@ -150,6 +151,9 @@ void update_storage_info() {
     storage_path[14].path_suffix = "MUOS/syncthing";
     storage_path[14].ui_label = ui_lblSyncthingValue;
 
+    storage_path[14].path_suffix = "MUOS/init";
+    storage_path[14].ui_label = ui_lblUserInitValue;
+
     char dir[FILENAME_MAX];
     for (int i = 0; i < sizeof(storage_path) / sizeof(storage_path[0]); i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage_path[i].path_suffix);
@@ -179,7 +183,8 @@ void init_navigation_groups() {
             ui_pnlTheme,
             ui_pnlLanguage,
             ui_pnlNetwork,
-            ui_pnlSyncthing
+            ui_pnlSyncthing,
+            ui_pnlUserInit
     };
 
     ui_objects[0] = ui_lblBIOS;
@@ -197,6 +202,7 @@ void init_navigation_groups() {
     ui_objects[12] = ui_lblLanguage;
     ui_objects[13] = ui_lblNetwork;
     ui_objects[14] = ui_lblSyncthing;
+    ui_objects[15] = ui_lblUserInit;
 
     lv_obj_t *ui_objects_value[] = {
             ui_lblBIOSValue,
@@ -213,7 +219,8 @@ void init_navigation_groups() {
             ui_lblThemeValue,
             ui_lblLanguageValue,
             ui_lblNetworkValue,
-            ui_lblSyncthingValue
+            ui_lblSyncthingValue,
+            ui_lblUserInitValue,
     };
 
     lv_obj_t *ui_objects_glyph[] = {
@@ -231,7 +238,8 @@ void init_navigation_groups() {
             ui_icoTheme,
             ui_icoLanguage,
             ui_icoNetwork,
-            ui_icoSyncthing
+            ui_icoSyncthing,
+            ui_icoUserInit
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlBIOS);
@@ -249,6 +257,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
     apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
     apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
+    apply_theme_list_panel(&theme, &device, ui_pnlUserInit);
 
     apply_theme_list_item(&theme, ui_lblBIOS, TS("System BIOS"), false, true);
     apply_theme_list_item(&theme, ui_lblCatalogue, TS("Metadata Catalogue"), false, true);
@@ -265,6 +274,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblLanguage, TS("Languages"), false, true);
     apply_theme_list_item(&theme, ui_lblNetwork, TS("Network Profiles"), false, true);
     apply_theme_list_item(&theme, ui_lblSyncthing, TS("Syncthing Configs"), false, true);
+    apply_theme_list_item(&theme, ui_lblUserInit, TS("User Init Scripts"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBIOS, mux_module, "bios");
     apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_module, "catalogue");
@@ -281,6 +291,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoLanguage, mux_module, "language");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
     apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_module, "syncthing");
+    apply_theme_list_glyph(&theme, ui_icoUserInit, mux_module, "userinit");
 
     apply_theme_list_value(&theme, ui_lblBIOSValue, "");
     apply_theme_list_value(&theme, ui_lblCatalogueValue, "");
@@ -297,6 +308,7 @@ void init_navigation_groups() {
     apply_theme_list_value(&theme, ui_lblLanguageValue, "");
     apply_theme_list_value(&theme, ui_lblNetworkValue, "");
     apply_theme_list_value(&theme, ui_lblSyncthingValue, "");
+    apply_theme_list_value(&theme, ui_lblUserInitValue, "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -459,6 +471,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblLanguage, "language");
     lv_obj_set_user_data(ui_lblNetwork, "network");
     lv_obj_set_user_data(ui_lblSyncthing, "syncthing");
+    lv_obj_set_user_data(ui_lblUserInit, "userinit");
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
 

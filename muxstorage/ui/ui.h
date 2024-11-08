@@ -19,6 +19,7 @@ extern lv_obj_t *ui_pnlTheme;
 extern lv_obj_t *ui_pnlLanguage;
 extern lv_obj_t *ui_pnlNetwork;
 extern lv_obj_t *ui_pnlSyncthing;
+extern lv_obj_t *ui_pnlUserInit;
 
 extern lv_obj_t *ui_lblBIOS;
 extern lv_obj_t *ui_lblCatalogue;
@@ -35,6 +36,7 @@ extern lv_obj_t *ui_lblTheme;
 extern lv_obj_t *ui_lblLanguage;
 extern lv_obj_t *ui_lblNetwork;
 extern lv_obj_t *ui_lblSyncthing;
+extern lv_obj_t *ui_lblUserInit;
 
 extern lv_obj_t *ui_icoBIOS;
 extern lv_obj_t *ui_icoCatalogue;
@@ -51,6 +53,7 @@ extern lv_obj_t *ui_icoTheme;
 extern lv_obj_t *ui_icoLanguage;
 extern lv_obj_t *ui_icoNetwork;
 extern lv_obj_t *ui_icoSyncthing;
+extern lv_obj_t *ui_icoUserInit;
 
 extern lv_obj_t *ui_lblBIOSValue;
 extern lv_obj_t *ui_lblCatalogueValue;
@@ -67,5 +70,6 @@ extern lv_obj_t *ui_lblThemeValue;
 extern lv_obj_t *ui_lblLanguageValue;
 extern lv_obj_t *ui_lblNetworkValue;
 extern lv_obj_t *ui_lblSyncthingValue;
+extern lv_obj_t *ui_lblUserInitValue;
 
 void ui_init(lv_obj_t *ui_pnlContent);
