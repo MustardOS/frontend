@@ -648,8 +648,7 @@ bool handle_navigate(void) {
                 lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
             }
         } else {
-            lv_label_set_text(ui_lblMessage, TS("Cannot modify while connected!"));
-            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+            toast_message(TS("Cannot modify while connected!"), 1000, 1000);
         }
         return true;
     }
@@ -672,15 +671,8 @@ void handle_confirm(void) {
             const char *cv_ssid = lv_label_get_text(ui_lblIdentifierValue);
             const char *cv_pass = lv_label_get_text(ui_lblPasswordValue);
 
-            int cv_pass_ok = 0;
-
-            // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes
-            if (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63) {
-                cv_pass_ok = 1;
-            }
-            if (strcasecmp(cv_pass, "") == 0) {
-                cv_pass_ok = 1;
-            }
+            // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password
+            int cv_pass_ok = (strlen(cv_pass) == 0 || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
 
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                 const char *cv_address = lv_label_get_text(ui_lblAddressValue);
@@ -688,13 +680,13 @@ void handle_confirm(void) {
                 const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue);
                 const char *cv_dns = lv_label_get_text(ui_lblDNSValue);
 
-                if (strlen(cv_ssid) > 0 && cv_pass_ok == 1 &&
+                if (strlen(cv_ssid) > 0 && cv_pass_ok &&
                     strlen(cv_address) > 0 && strlen(cv_subnet) > 0 &&
                     strlen(cv_gateway) > 0 && strlen(cv_dns) > 0) {
                     valid_info = 1;
                 }
             } else {
-                if (strlen(cv_ssid) > 0 && cv_pass_ok == 1) {
+                if (strlen(cv_ssid) > 0 && cv_pass_ok) {
                     valid_info = 1;
                 }
             }
@@ -724,8 +716,7 @@ void handle_confirm(void) {
                     refresh_screen(device.SCREEN.WAIT);
                 }
             } else {
-                lv_label_set_text(ui_lblMessage, TS("Please check network settings"));
-                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                toast_message(TS("Please check network settings"), 1000, 1000);
                 refresh_screen(device.SCREEN.WAIT);
             }
         }
@@ -784,8 +775,7 @@ void handle_back(void) {
         system("/opt/muos/script/system/network.sh");
     }
 
-    lv_label_set_text(ui_lblMessage, TS("Changes Saved"));
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    toast_message(TS("Changes Saved"), 1000, 1000);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
     mux_input_stop();

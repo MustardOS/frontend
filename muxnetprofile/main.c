@@ -116,7 +116,7 @@ int save_profile() {
     const char *p_dns = read_text_from_file("/run/muos/global/network/dns");
 
     if (!p_ssid || strlen(p_ssid) == 0) {
-        lv_label_set_text(ui_lblMessage, TS("Invalid SSID"));
+        toast_message(TS("Invalid SSID"), 1000, 1000);
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         refresh_screen(device.SCREEN.WAIT);
         return 0;
@@ -125,8 +125,7 @@ int save_profile() {
     if (strlen(p_pass) < 8 || strlen(p_pass) > 63 ) {
         if (strlen(p_pass) != 64) { // If it's 64 characters then it must be encoded... let's assume!
             if (strlen(p_pass) != 0) { // Support unset wifi passwords
-                lv_label_set_text(ui_lblMessage, TS("Password must be unset or 8..63 characters!")); // From wpa_passphrase!
-                lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+                toast_message(TS("Password must be unset or 8..63 characters!"), 1000, 1000);
                 refresh_screen(device.SCREEN.WAIT);
                 return 0;
             }
@@ -139,8 +138,7 @@ int save_profile() {
             !p_subnet || strlen(p_subnet) == 0 ||
             !p_gateway || strlen(p_gateway) == 0 ||
             !p_dns || strlen(p_dns) == 0) {
-            lv_label_set_text(ui_lblMessage, TS("Invalid Network Settings"));
-            lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+            toast_message(TS("Invalid Network Settings"), 1000, 1000);
             refresh_screen(device.SCREEN.WAIT);
             return 0;
         }

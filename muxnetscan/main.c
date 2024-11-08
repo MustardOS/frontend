@@ -211,8 +211,6 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblMessage, osd_message);
-
     lv_label_set_text(ui_lblNavA, TG("Use"));
     lv_label_set_text(ui_lblNavB, TG("Back"));
     lv_label_set_text(ui_lblNavX, TG("Rescan"));
