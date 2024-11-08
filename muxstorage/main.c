@@ -151,8 +151,8 @@ void update_storage_info() {
     storage_path[14].path_suffix = "MUOS/syncthing";
     storage_path[14].ui_label = ui_lblSyncthingValue;
 
-    storage_path[14].path_suffix = "MUOS/init";
-    storage_path[14].ui_label = ui_lblUserInitValue;
+    storage_path[15].path_suffix = "MUOS/init";
+    storage_path[15].ui_label = ui_lblUserInitValue;
 
     char dir[FILENAME_MAX];
     for (int i = 0; i < sizeof(storage_path) / sizeof(storage_path[0]); i++) {
