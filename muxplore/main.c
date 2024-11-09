@@ -96,6 +96,10 @@ lv_timer_t *osd_timer;
 lv_timer_t *glyph_timer;
 lv_timer_t *ui_refresh_timer;
 
+bool is_grid_enabled() {
+    return theme.GRID.ENABLED && module != ROOT && ui_count > 0 && ui_file_count == 0;
+}
+
 char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_cache) {
     char *b_core = malloc(MAX_BUFFER_SIZE);
     if (b_core) {
@@ -947,6 +951,35 @@ void create_root_items(char *dir_name) {
     }
 }
 
+void init_navigation_groups_grid() {
+    init_grid_info(item_count, theme.GRID.COLUMN_COUNT);
+    create_grid_panel(&theme, item_count);
+
+    for (size_t i = 0; i < item_count; i++) {
+        if (strcasecmp(items[i].name, prev_dir) == 0) {
+            sys_index = i;
+        }
+
+        uint8_t col = i % theme.GRID.COLUMN_COUNT;
+        uint8_t row = i / theme.GRID.COLUMN_COUNT;
+
+        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t *cell_image = lv_img_create(cell_panel);
+        lv_obj_t *cell_label = lv_label_create(cell_panel);
+
+        char grid_image[MAX_BUFFER_SIZE];
+        snprintf(grid_image, sizeof(grid_image), "%s/info/catalogue/Folder/grid/%s.png",
+                    STORAGE_PATH, strip_ext(items[i].name));
+
+        create_grid_item(&theme,  cell_panel, cell_label, cell_image, col, row,
+            grid_image, items[i].display_name);
+    
+        lv_group_add_obj(ui_group, cell_label);
+        lv_group_add_obj(ui_group_glyph, cell_image);
+        lv_group_add_obj(ui_group_panel, cell_panel);
+    }
+}
+
 void create_explore_items(void *count) {
     int *ui_count_ptr = (int *) count;
 
@@ -994,12 +1027,17 @@ void create_explore_items(void *count) {
             free(dir_names[i]);
         }
         sort_items(items, item_count);
-        for (int i = 0; i < dir_count; i++) {
-            gen_label("folder", items[i].display_name);
-            if (strcasecmp(items[i].name, prev_dir) == 0) {
-                sys_index = i;
+        if (theme.GRID.ENABLED && dir_count > 0 && file_count == 0) {
+            init_navigation_groups_grid();
+            (*ui_count_ptr) += dir_count;
+        } else {
+            for (int i = 0; i < dir_count; i++) {
+                gen_label("folder", items[i].display_name);
+                if (strcasecmp(items[i].name, prev_dir) == 0) {
+                    sys_index = i;
+                }
+                (*ui_count_ptr)++;
             }
-            (*ui_count_ptr)++;
         }
 
         free(dir_names);
@@ -1247,8 +1285,11 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                           current_item_index, ui_pnlContent);
+    if (is_grid_enabled()) {
+        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT, current_item_index, ui_pnlGrid);
+    } else {
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    }
     image_refresh("box");
     set_label_long_mode();
     nav_moved = 1;
@@ -1267,8 +1308,11 @@ void list_nav_next(int steps) {
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                           current_item_index, ui_pnlContent);
+    if (is_grid_enabled()) {
+        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT, current_item_index, ui_pnlGrid);
+    } else {
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    }
     image_refresh("box");
     set_label_long_mode();
     nav_moved = 1;
@@ -1667,6 +1711,162 @@ void handle_menu() {
                   ui_lblHelpContent,
                   items[current_item_index].display_name,
                   load_content_description());
+}
+
+void handle_up() {
+    if (msgbox_active) {
+        return;
+    }
+
+    // Grid mode.  Wrap on Row.
+    if (is_grid_enabled() && 
+                theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) == 0) {
+        list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ? 
+                grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
+    // Regular Navigation
+    } else {
+        list_nav_prev(1);
+    }
+}
+
+void handle_down() {
+    if (msgbox_active) {
+        return;
+    }
+
+    // Grid Navigation.  Wrap on Row.
+    if (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && 
+                get_grid_column_index(current_item_index) == get_grid_row_item_count(current_item_index) - 1 ) {
+        list_nav_prev(get_grid_row_item_count(current_item_index) - 1);
+    // Regular Navigation
+    } else {
+        list_nav_next(1);
+    }
+}
+
+void handle_up_hold(void) {//prev
+    if (msgbox_active) {
+        return;
+    }
+
+    // Don't wrap around when scrolling on hold.
+    if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
+        (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index > 0) ||
+        ((!theme.GRID.ENABLED || ui_file_count > 0) && current_item_index > 0)) {
+        handle_up();
+    }
+}
+
+void handle_down_hold(void) {//next
+    if (msgbox_active) {
+        return;
+    }
+
+    // Don't wrap around when scrolling on hold.
+    if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) < get_grid_row_item_count(current_item_index) - 1) ||
+        (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index < ui_count - 1) ||
+        ((!theme.GRID.ENABLED || ui_file_count > 0) && current_item_index < ui_count - 1)) {
+        handle_down();
+    }
+}
+
+void handle_left() {
+    if (msgbox_active) {
+        return;
+    }
+
+    // Horizontal Navigation with 2 rows of 4 items
+    if (is_grid_enabled() &&
+                (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
+        int column_index = current_item_index % grid_info.column_count;
+
+        if (current_item_index < grid_info.column_count) {
+            list_nav_prev(LV_MAX(column_index + 1, grid_info.last_row_item_count));
+        } else {
+            list_nav_prev(grid_info.column_count);   
+        }
+    }
+}
+
+void handle_right() {
+    if (msgbox_active) {
+        return;
+    }
+
+    // Horizontal Navigation with 2 rows of 4 items
+    if (is_grid_enabled() &&
+            (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
+        uint8_t row_index = current_item_index / grid_info.column_count;
+
+        //when on 2nd to last row do not go past last item
+        if (row_index == grid_info.last_row_index - 1) {
+            int new_item_index = LV_MIN(current_item_index + grid_info.column_count, ui_count - 1);
+            list_nav_next(new_item_index - current_item_index);
+        //when on the last row only move based on amount of items in that row
+        } else if (row_index == grid_info.last_row_index) {
+            list_nav_next(grid_info.last_row_item_count);
+        } else {
+            list_nav_next(grid_info.column_count);
+        }
+    }
+}
+
+void handle_left_hold(void) {
+    if (msgbox_active) {
+        return;
+    }
+
+    // Don't wrap around when scrolling on hold.
+    if (is_grid_enabled() && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+                get_grid_row_index(current_item_index) > 0) {
+        handle_left();
+    }
+}
+
+void handle_right_hold(void) {
+    if (msgbox_active) {
+        return;
+    }
+
+    // Don't wrap around when scrolling on hold.
+    if (is_grid_enabled() && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) && 
+                get_grid_row_index(current_item_index) < grid_info.last_row_index) {
+        handle_right();
+    }
+}
+
+void handle_page_up(void) {
+    if (msgbox_active || !ui_count) {
+        return;
+    }
+
+    // Don't wrap around when scrolling by page.
+    int steps = 0;
+    if (is_grid_enabled()) {
+        steps = LV_MIN(theme.GRID.ROW_COUNT * theme.GRID.COLUMN_COUNT, current_item_index);
+    } else {
+        steps = LV_MIN(theme.MUX.ITEM.COUNT, current_item_index);
+    }
+    if (steps > 0) {
+        list_nav_prev(steps);
+    }
+}
+
+void handle_page_down(void) {
+    if (msgbox_active || !ui_count) {
+        return;
+    }
+
+    // Don't wrap around when scrolling by page.
+    int steps = 0;
+    if (is_grid_enabled()) {
+        steps = LV_MIN(theme.GRID.ROW_COUNT * theme.GRID.COLUMN_COUNT, ui_count - current_item_index - 1);
+    } else {
+        steps = LV_MIN(theme.MUX.ITEM.COUNT, ui_count - current_item_index - 1);
+    }
+    if (steps > 0) {
+        list_nav_next(steps);
+    }
 }
 
 void set_nav_text(const char *nav_a, const char *nav_b, const char *nav_x, const char *nav_y, const char *nav_menu) {
@@ -2162,7 +2362,8 @@ int main(int argc, char *argv[]) {
             .system_fd = js_fd_sys,
             .max_idle_ms = 16 /* ~60 FPS */,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 || 
+                    (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
             .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
@@ -2173,17 +2374,21 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_START] = handle_start,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
                     // List navigation:
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+                    [MUX_INPUT_DPAD_UP] = handle_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
+                    [MUX_INPUT_L1] = handle_page_up,
+                    [MUX_INPUT_R1] = handle_page_down,
             },
             .hold_handler = {
                     // List navigation:
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+                    [MUX_INPUT_DPAD_UP] = handle_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
+                    [MUX_INPUT_L1] = handle_page_up,
+                    [MUX_INPUT_R1] = handle_page_down,
             },
             .combo = {
                     {

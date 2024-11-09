@@ -568,7 +568,7 @@ extern uint32_t mux_tick(void);
 #define LV_USE_FLEX 1
 
 /*A layout similar to Grid in CSS.*/
-#define LV_USE_GRID 0
+#define LV_USE_GRID 1
 
 /*---------------------
  * 3rd party libraries

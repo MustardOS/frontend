@@ -150,6 +150,52 @@ struct theme_config {
     } LIST_DISABLED;
 
     struct {
+        int16_t NAVIGATION_TYPE;
+        bool ENABLED;
+        int16_t PANEL_WIDTH;
+        uint32_t BACKGROUND;
+        int16_t BACKGROUND_ALPHA;
+        int16_t LOCATION_X;
+        int16_t LOCATION_Y;
+        int16_t COLUMN_COUNT;
+        int16_t COLUMN_WIDTH;
+        int16_t ROW_COUNT;
+        int16_t ROW_HEIGHT;
+        struct {
+            int16_t WIDTH;
+            int16_t HEIGHT;
+            int16_t RADIUS;
+            int16_t BORDER_WIDTH;
+            int16_t IMAGE_PADDING_TOP;
+            int16_t TEXT_PADDING_SIDE;
+            int16_t TEXT_PADDING_BOTTOM;
+            int16_t TEXT_LINE_SPACING;
+        } CELL;
+        struct {
+            uint32_t BACKGROUND;
+            int16_t BACKGROUND_ALPHA;
+            uint32_t BORDER;
+            int16_t BORDER_ALPHA;
+            uint32_t TEXT;
+            int16_t TEXT_ALPHA;
+            int16_t IMAGE_ALPHA;
+            uint32_t IMAGE_RECOLOUR;
+            int16_t IMAGE_RECOLOUR_ALPHA;
+        } CELL_DEFAULT;
+        struct {
+            uint32_t BACKGROUND;
+            int16_t BACKGROUND_ALPHA;
+            uint32_t BORDER;
+            int16_t BORDER_ALPHA;
+            uint32_t TEXT;
+            int16_t TEXT_ALPHA;
+            int16_t IMAGE_ALPHA;
+            uint32_t IMAGE_RECOLOUR;
+            int16_t IMAGE_RECOLOUR_ALPHA;
+        } CELL_FOCUS;
+    } GRID;
+
+    struct {
         uint32_t BACKGROUND;
         uint32_t BACKGROUND_GRADIENT;
         int16_t BACKGROUND_ALPHA;

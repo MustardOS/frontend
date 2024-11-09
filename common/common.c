@@ -40,6 +40,7 @@ const char **img_paths = NULL;
 int img_paths_count = 0;
 char current_wall[MAX_BUFFER_SIZE];
 lv_obj_t *wall_img = NULL;
+struct grid_info grid_info;
 
 uint32_t mux_tick(void) {
     struct timespec tv_now;
@@ -1541,6 +1542,38 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
     }
 }
 
+void update_grid_scroll_position(int col_count, int row_count, int row_height,
+                            int current_item_index, lv_obj_t *ui_pnlGrid) {
+    uint8_t cell_row_index = get_grid_row_index(current_item_index);
+    lv_coord_t scroll_y = lv_obj_get_scroll_y(ui_pnlGrid);
+    int first_visible_row = scroll_y / row_height;
+    int last_visible_row = first_visible_row + row_count - 1;
+
+    // Check if the current cell is within the visible range
+    if (cell_row_index >= first_visible_row && cell_row_index <= last_visible_row) {
+        // The cell is already within the visible range; no scroll needed
+        return;
+    }
+    
+    int y_offset = 0;
+
+    // If the cell is below the visible range, scroll to bring it into view at the bottom
+    if (cell_row_index > last_visible_row) {
+        y_offset = (cell_row_index - row_count + 1) * row_height;
+    }
+
+    // If the cell is above the visible range, scroll to bring it into view at the top
+    if (cell_row_index < first_visible_row) {
+        y_offset = cell_row_index * row_height;
+    }
+
+    lv_coord_t diff = -y_offset + scroll_y;
+
+    if (diff != 0) {
+        lv_obj_scroll_by(ui_pnlGrid, 0, diff, LV_ANIM_OFF);
+    }
+}
+
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count,
                             int current_item_index, lv_obj_t *ui_pnlContent) {
     // how many items should be above the currently selected item when scrolling
@@ -1840,3 +1873,38 @@ int safe_atoi(const char *str) {
 
     return (int) val;
 }
+
+void init_grid_info(int item_count, int column_count) {
+    grid_info.item_count = item_count;
+    grid_info.column_count = column_count;
+    
+    // Calculate items in the last row
+    int last_row_item_count = item_count % column_count;
+    if (last_row_item_count == 0 && item_count != 0) {
+        last_row_item_count = column_count;  // Full last row if remainder is 0
+    }
+    grid_info.last_row_item_count = last_row_item_count;
+
+    // Calculate the last row index
+    grid_info.last_row_index = (item_count - 1) / column_count;
+}
+
+int get_grid_row_index(int current_item_index) {
+    return current_item_index / grid_info.column_count;
+}
+
+int get_grid_column_index(int current_item_index) {
+    return current_item_index % grid_info.column_count;
+}
+
+int get_grid_row_item_count(int current_item_index) {
+    uint8_t row_index = current_item_index / grid_info.column_count;
+    
+    if (row_index == grid_info.last_row_index) {
+        return grid_info.last_row_item_count;
+    } else {
+        return grid_info.column_count;
+    }
+}
+
+
