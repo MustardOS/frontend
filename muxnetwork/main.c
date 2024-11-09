@@ -223,9 +223,7 @@ void save_network_config() {
     write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue));
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue), PASS_ENCODE) != 0) {
-        if (strcasecmp(lv_label_get_text(ui_lblPasswordValue), "") == 0) {
-            write_text_to_file("/run/muos/global/network/pass", "w", CHAR, lv_label_get_text(ui_lblPasswordValue));
-        }
+        write_text_to_file("/run/muos/global/network/pass", "w", CHAR, lv_label_get_text(ui_lblPasswordValue));
     }
 
     write_text_to_file("/run/muos/global/network/address", "w", CHAR, lv_label_get_text(ui_lblAddressValue));
