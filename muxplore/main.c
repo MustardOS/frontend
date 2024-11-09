@@ -97,7 +97,7 @@ lv_timer_t *glyph_timer;
 lv_timer_t *ui_refresh_timer;
 
 bool is_grid_enabled() {
-    return theme.GRID.ENABLED && ui_count > 0 && ui_file_count == 0;
+    return theme.GRID.ENABLED && module != ROOT && ui_count > 0 && ui_file_count == 0;
 }
 
 char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_cache) {
