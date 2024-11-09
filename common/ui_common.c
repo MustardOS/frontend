@@ -15,6 +15,7 @@ lv_obj_t *ui_screen;
 lv_obj_t *ui_pnlWall;
 lv_obj_t *ui_imgWall;
 lv_obj_t *ui_pnlContent;
+lv_obj_t *ui_pnlGrid;
 lv_obj_t *ui_pnlBox;
 lv_obj_t *ui_imgBox;
 lv_obj_t *ui_pnlHeader;
@@ -981,4 +982,94 @@ void fade_from_black(lv_obj_t *ui_black) {
     }
 
     lv_obj_del_async(ui_black);
+}
+
+void create_grid_panel(struct theme_config *theme, int item_count) {
+    int row_count = item_count / theme->GRID.COLUMN_COUNT + 1;
+    lv_coord_t *col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
+    lv_coord_t *row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
+
+    for (int i = 0; i < theme->GRID.COLUMN_COUNT; i++) {
+        col_dsc[i] = theme->GRID.COLUMN_WIDTH;
+    }
+    col_dsc[theme->GRID.COLUMN_COUNT] = LV_GRID_TEMPLATE_LAST;
+
+    for (int i = 0; i < row_count; i++) {
+        row_dsc[i] = theme->GRID.ROW_HEIGHT;
+    }
+    row_dsc[row_count] = LV_GRID_TEMPLATE_LAST;
+
+    ui_pnlGrid = lv_obj_create(ui_screen);
+    lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, col_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_size(ui_pnlGrid, theme->GRID.PANEL_WIDTH, theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
+    lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
+    lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
+    lv_obj_set_layout(ui_pnlGrid, LV_LAYOUT_GRID);
+    lv_obj_set_style_bg_color(ui_pnlGrid, lv_color_hex(theme->GRID.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlGrid, theme->GRID.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_scroll_dir(ui_pnlGrid, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(ui_pnlGrid, LV_SCROLLBAR_MODE_ON);
+    lv_obj_set_scroll_snap_y(ui_pnlGrid, LV_SCROLL_SNAP_NONE);
+}
+
+void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image, int16_t col, int16_t row,
+            char *item_image_path, char *item_text) {
+
+    lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH);
+    lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT);
+    lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    
+    lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_DEFAULT.TEXT),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(cell_label, theme->GRID.CELL.TEXT_LINE_SPACING, LV_PART_MAIN | LV_STATE_DEFAULT);
+    
+    
+    lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BORDER), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_FOCUS.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+    
+    lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_FOCUS.TEXT),
+                                LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+    
+    
+    lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR),
+                                LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_FOCUSED);
+    
+    lv_obj_set_grid_cell(cell_pnl, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
+
+    char grid_image[MAX_BUFFER_SIZE];
+    if (file_exist(item_image_path)) {
+        snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
+        lv_img_set_src(cell_image, grid_image);
+        lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+    }
+
+    lv_obj_set_width(cell_label, theme->GRID.CELL.WIDTH - (theme->GRID.CELL.TEXT_PADDING_SIDE * 2));
+    lv_obj_set_height(cell_label, LV_SIZE_CONTENT);
+    lv_label_set_text(cell_label, item_text);
+    lv_label_set_long_mode(cell_label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_align(cell_label, LV_ALIGN_BOTTOM_MID, 0, -theme->GRID.CELL.TEXT_PADDING_BOTTOM);
 }

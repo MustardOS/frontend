@@ -31,6 +31,15 @@ struct ImageSettings {
     int16_t pad_bottom;
 };
 
+struct grid_info {
+    int item_count;
+    int last_row_item_count;
+    int column_count;
+    int last_row_index;
+};
+
+extern struct grid_info grid_info;
+
 enum wall_type {
     APPLICATION, ARCHIVE, GENERAL, TASK
 };
@@ -174,6 +183,9 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
 
 void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t overlay_enabled);
 
+int load_image_specifics(const char *theme_base, const char *device_dimension, const char *program,
+                         const char *image_type, const char *image_extension, char *image_path, size_t path_size);
+
 void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
 
 void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *current_wall);
@@ -199,6 +211,9 @@ void display_testing_message(lv_obj_t *screen);
 void adjust_visual_label(char *text, int method, int rep_dash);
 
 void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings);
+
+void update_grid_scroll_position(int col_count, int row_count, int row_height,
+                            int current_item_index, lv_obj_t *ui_pnlGrid);
 
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
                             lv_obj_t *ui_pnlContent);
@@ -233,3 +248,11 @@ int map_drop_down_to_value(int selected_index, const int *options, int num_optio
 int init_nav_sound(const char *mux_module);
 
 int safe_atoi(const char *str);
+
+void init_grid_info(int item_count, int column_count);
+
+int get_grid_row_index(int current_item_index);
+
+int get_grid_column_index(int current_item_index);
+
+int get_grid_row_item_count(int current_item_index);

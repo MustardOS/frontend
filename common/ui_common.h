@@ -34,10 +34,16 @@ void fade_to_black(lv_obj_t *ui_screen);
 
 void fade_from_black(lv_obj_t *ui_black);
 
+void create_grid_panel(struct theme_config *theme, int item_count);
+
+void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image, int16_t col, int16_t row,
+            char *item_image_path, char *item_text) ;
+
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;
 extern lv_obj_t *ui_imgWall;
 extern lv_obj_t *ui_pnlContent;
+extern lv_obj_t *ui_pnlGrid;
 extern lv_obj_t *ui_pnlBox;
 extern lv_obj_t *ui_imgBox;
 extern lv_obj_t *ui_pnlHeader;

@@ -47,37 +47,27 @@ lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
 #define UI_COUNT 8
+lv_obj_t *ui_objects_panel[UI_COUNT];
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
 
-struct help_msg {
-    lv_obj_t *element;
-    char *message;
-};
-
 void show_help(lv_obj_t *element_focused) {
-    struct help_msg help_messages[] = {
-            {ui_lblContent,    TS("Content on storage devices (SD1/SD2/USB) can be found and launched here")},
-            {ui_lblFavourites, TS("Content marked as favourite can be found and launched here")},
-            {ui_lblHistory,    TS("Content previously launched can be found and launched here")},
-            {ui_lblApps,       TS("Various applications can be found and launched here")},
-            {ui_lblInfo,       TS("Various information can be found and launched here")},
-            {ui_lblConfig,     TS("Various configurations can be changed here")},
-            {ui_lblReboot,     TS("Reboot your device safely")},
-            {ui_lblShutdown,   TS("Shut down your device safely")},
+    char *help_messages[UI_COUNT] = {
+            TS("Content on storage devices (SD1/SD2/USB) can be found and launched here"),
+            TS("Content marked as favourite can be found and launched here"),
+            TS("Content previously launched can be found and launched here"),
+            TS("Various applications can be found and launched here"),
+            TS("Various information can be found and launched here"),
+            TS("Various configurations can be changed here"),
+            TS("Reboot your device safely"),
+            TS("Shut down your device safely")
     };
 
     char *message = TG("No Help Information Found");
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-
-    for (int i = 0; i < num_messages; i++) {
-        if (element_focused == help_messages[i].element) {
-            message = help_messages[i].message;
-            break;
-        }
-    }
+    if (current_item_index < num_messages) message = help_messages[current_item_index];
 
     if (strlen(message) <= 1) message = TG("No Help Information Found");
 
@@ -85,73 +75,90 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
+void init_navigation_groups_grid(char* item_labels[], char* glyph_names[]) {
+    init_grid_info(UI_COUNT, theme.GRID.COLUMN_COUNT);
+    create_grid_panel(&theme, UI_COUNT);
+    for (int i = 0; i < UI_COUNT; i++) {
+        uint8_t col = i % theme.GRID.COLUMN_COUNT;
+        uint8_t row = i / theme.GRID.COLUMN_COUNT;
+
+        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t *cell_image = lv_img_create(cell_panel);
+        lv_obj_t *cell_label = lv_label_create(cell_panel);
+        lv_obj_set_user_data(cell_label, glyph_names[i]);
+        ui_objects[i] = cell_label;
+
+        char device_dimension[15];
+        get_device_dimension(device_dimension, sizeof(device_dimension));
+        char grid_image[MAX_BUFFER_SIZE];
+        if (!load_image_specifics(STORAGE_THEME, device_dimension, glyph_names[i], "grid", "png",
+                                 grid_image, sizeof(grid_image))) {
+            
+            load_image_specifics(STORAGE_THEME, "", glyph_names[i], "grid", "png",
+                                 grid_image, sizeof(grid_image));
+        }
+
+        create_grid_item(&theme,  cell_panel, cell_label, cell_image, col, row,
+            grid_image, item_labels[i]);
+    
+        lv_group_add_obj(ui_group, cell_label);
+        lv_group_add_obj(ui_group_glyph, cell_image);
+        lv_group_add_obj(ui_group_panel, cell_panel);
+    }
+}
+
 void init_navigation_groups() {
-    lv_obj_t *ui_objects_panel[] = {
-            ui_pnlExplore,
-            ui_pnlFavourites,
-            ui_pnlHistory,
-            ui_pnlApps,
-            ui_pnlInfo,
-            ui_pnlConfig,
-            ui_pnlReboot,
-            ui_pnlShutdown,
-    };
-
-    ui_objects[0] = ui_lblContent;
-    ui_objects[1] = ui_lblFavourites;
-    ui_objects[2] = ui_lblHistory;
-    ui_objects[3] = ui_lblApps;
-    ui_objects[4] = ui_lblInfo;
-    ui_objects[5] = ui_lblConfig;
-    ui_objects[6] = ui_lblReboot;
-    ui_objects[7] = ui_lblShutdown;
-
-    ui_icons[0] = ui_icoContent;
-    ui_icons[1] = ui_icoFavourites;
-    ui_icons[2] = ui_icoHistory;
-    ui_icons[3] = ui_icoApps;
-    ui_icons[4] = ui_icoInfo;
-    ui_icons[5] = ui_icoConfig;
-    ui_icons[6] = ui_icoReboot;
-    ui_icons[7] = ui_icoShutdown;
-
-    apply_theme_list_panel(&theme, &device, ui_pnlExplore);
-    apply_theme_list_panel(&theme, &device, ui_pnlFavourites);
-    apply_theme_list_panel(&theme, &device, ui_pnlHistory);
-    apply_theme_list_panel(&theme, &device, ui_pnlApps);
-    apply_theme_list_panel(&theme, &device, ui_pnlInfo);
-    apply_theme_list_panel(&theme, &device, ui_pnlConfig);
-    apply_theme_list_panel(&theme, &device, ui_pnlReboot);
-    apply_theme_list_panel(&theme, &device, ui_pnlShutdown);
-
-    apply_theme_list_item(&theme, ui_lblContent, TS("Explore Content"), false, false);
-    apply_theme_list_item(&theme, ui_lblFavourites, TS("Favourites"), false, false);
-    apply_theme_list_item(&theme, ui_lblHistory, TS("History"), false, false);
-    apply_theme_list_item(&theme, ui_lblApps, TS("Applications"), false, false);
-    apply_theme_list_item(&theme, ui_lblInfo, TS("Information"), false, false);
-    apply_theme_list_item(&theme, ui_lblConfig, TS("Configuration"), false, false);
-    apply_theme_list_item(&theme, ui_lblReboot, TS("Reboot"), false, false);
-    apply_theme_list_item(&theme, ui_lblShutdown, TS("Shutdown"), false, false);
-
-    apply_theme_list_glyph(&theme, ui_icoContent, mux_module, "explore");
-    apply_theme_list_glyph(&theme, ui_icoFavourites, mux_module, "favourite");
-    apply_theme_list_glyph(&theme, ui_icoHistory, mux_module, "history");
-    apply_theme_list_glyph(&theme, ui_icoApps, mux_module, "apps");
-    apply_theme_list_glyph(&theme, ui_icoInfo, mux_module, "info");
-    apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
-    apply_theme_list_glyph(&theme, ui_icoReboot, mux_module, "reboot");
-    apply_theme_list_glyph(&theme, ui_icoShutdown, mux_module, "shutdown");
-
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
+    char* item_labels[] = {TS("Explore Content"), TS("Favourites"), TS("History"), TS("Applications"), 
+            TS("Information"), TS("Configuration"), TS("Reboot"), TS("Shutdown")};
+    char* glyph_names[] = {"explore", "favourite", "history", "apps", "info", "config","reboot", "shutdown"};
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
+    if (theme.GRID.ENABLED) {
+        init_navigation_groups_grid(item_labels, glyph_names);
+    } else {
+        lv_obj_t *ui_objects_panel[] = {
+                ui_pnlExplore,
+                ui_pnlFavourites,
+                ui_pnlHistory,
+                ui_pnlApps,
+                ui_pnlInfo,
+                ui_pnlConfig,
+                ui_pnlReboot,
+                ui_pnlShutdown,
+        };
+
+        ui_objects[0] = ui_lblContent;
+        ui_objects[1] = ui_lblFavourites;
+        ui_objects[2] = ui_lblHistory;
+        ui_objects[3] = ui_lblApps;
+        ui_objects[4] = ui_lblInfo;
+        ui_objects[5] = ui_lblConfig;
+        ui_objects[6] = ui_lblReboot;
+        ui_objects[7] = ui_lblShutdown;
+
+        ui_icons[0] = ui_icoContent;
+        ui_icons[1] = ui_icoFavourites;
+        ui_icons[2] = ui_icoHistory;
+        ui_icons[3] = ui_icoApps;
+        ui_icons[4] = ui_icoInfo;
+        ui_icons[5] = ui_icoConfig;
+        ui_icons[6] = ui_icoReboot;
+        ui_icons[7] = ui_icoShutdown;
+
+        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+            apply_theme_list_panel(&theme, &device, ui_objects_panel[i]);
+            apply_theme_list_item(&theme, ui_objects[i], item_labels[i], false, false);
+            apply_theme_list_glyph(&theme, ui_icons[i], mux_module, glyph_names[i]);
+        
+            lv_group_add_obj(ui_group, ui_objects[i]);
+            lv_group_add_obj(ui_group_glyph, ui_icons[i]);
+            lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
+
+            apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], item_labels[i]);
+        }
     }
 }
 
@@ -163,7 +170,11 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    if (theme.GRID.ENABLED) {
+        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT, current_item_index, ui_pnlGrid);
+    } else {
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    }
     nav_moved = 1;
 }
 
@@ -179,7 +190,11 @@ void list_nav_next(int steps) {
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    if (theme.GRID.ENABLED) {
+        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT, current_item_index, ui_pnlGrid);
+    } else {
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    }
     nav_moved = 1;
 }
 
@@ -188,31 +203,29 @@ void handle_a() {
         return;
     }
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-
-    if (element_focused == ui_lblContent) {
+    if (current_item_index == 0) {
         play_sound("confirm", nav_sound, 1);
         load_mux("explore_alt");
-    } else if (element_focused == ui_lblFavourites) {
+    } else if (current_item_index == 1) {
         play_sound("confirm", nav_sound, 1);
         load_mux("favourite");
-    } else if (element_focused == ui_lblHistory) {
+    } else if (current_item_index == 2) {
         play_sound("confirm", nav_sound, 1);
         load_mux("history");
-    } else if (element_focused == ui_lblApps) {
+    } else if (current_item_index == 3) {
         play_sound("confirm", nav_sound, 1);
         load_mux("app");
-    } else if (element_focused == ui_lblInfo) {
+    } else if (current_item_index == 4) {
         play_sound("confirm", nav_sound, 1);
         load_mux("info");
-    } else if (element_focused == ui_lblConfig) {
+    } else if (current_item_index == 5) {
         play_sound("confirm", nav_sound, 1);
         load_mux("config");
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
-    } else if (element_focused == ui_lblReboot) {
+    } else if (current_item_index == 6) {
         play_sound("reboot", nav_sound, 1);
         load_mux("reboot");
-    } else if (element_focused == ui_lblShutdown) {
+    } else if (current_item_index == 7) {
         play_sound("shutdown", nav_sound, 1);
         load_mux("shutdown");
     }
@@ -249,11 +262,17 @@ void handle_up() {
         return;
     }
 
+    int column_count = theme.GRID.ENABLED ? theme.GRID.COLUMN_COUNT : 4;
+    int column_index = current_item_index % column_count;
+    // Grid mode.  Wrap on Row.
+    if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && column_index == 0) {
+        list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ? 
+                grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
     // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
-    if (theme.MISC.NAVIGATION_TYPE == 4 &&
+    } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 &&
         (current_item_index == 0 || current_item_index == 4)) {
         list_nav_next(3);
-        // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
+    // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
     } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 0) {
         list_nav_next(2);
     } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 3) {
@@ -269,8 +288,12 @@ void handle_down() {
         return;
     }
 
+    // Grid Navigation.  Wrap on Row.
+    if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && 
+                get_grid_column_index(current_item_index) == get_grid_row_item_count(current_item_index) - 1 ) {
+        list_nav_prev(get_grid_row_item_count(current_item_index) - 1);
     // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
-    if (theme.MISC.NAVIGATION_TYPE == 4 &&
+    } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 &&
         (current_item_index == 3 || current_item_index == 7)) {
         list_nav_prev(3);
         // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
@@ -290,8 +313,10 @@ void handle_up_hold(void) {//prev
     }
 
     // Don't wrap around when scrolling on hold.
-    if ((theme.MISC.NAVIGATION_TYPE == 4 && current_item_index > 0 && current_item_index <= 3) ||
-        (theme.MISC.NAVIGATION_TYPE == 4 && current_item_index > 4) ||
+    if ((theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
+        (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index > 0) ||
+        (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && current_item_index > 0 && current_item_index <= 3) ||
+        (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && current_item_index > 4) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index > 0 && current_item_index <= 2) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index > 3) ||
         (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index > 0)) {
@@ -305,8 +330,10 @@ void handle_down_hold(void) {//next
     }
 
     // Don't wrap around when scrolling on hold.
-    if ((theme.MISC.NAVIGATION_TYPE == 4 && current_item_index < UI_COUNT - 1 && current_item_index > 3) ||
-        (theme.MISC.NAVIGATION_TYPE == 4 && current_item_index < 3) ||
+    if ((theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) < get_grid_row_item_count(current_item_index) - 1) ||
+        (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index < UI_COUNT - 1) ||
+        (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && current_item_index < UI_COUNT - 1 && current_item_index > 3) ||
+        (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 && current_item_index < 3) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index < UI_COUNT - 1 && current_item_index > 2) ||
         (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index < 2) ||
         (theme.MISC.NAVIGATION_TYPE < 4 && current_item_index < UI_COUNT - 1)) {
@@ -320,7 +347,15 @@ void handle_left() {
     }
 
     // Horizontal Navigation with 2 rows of 4 items
-    if (theme.MISC.NAVIGATION_TYPE == 2 || theme.MISC.NAVIGATION_TYPE == 4) {
+    if (theme.GRID.ENABLED && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
+        int column_index = current_item_index % grid_info.column_count;
+
+        if (current_item_index < grid_info.column_count) {
+            list_nav_prev(LV_MAX(column_index + 1, grid_info.last_row_item_count));
+        } else {
+            list_nav_prev(grid_info.column_count);   
+        }
+    } else if (!theme.GRID.ENABLED && (theme.MISC.NAVIGATION_TYPE == 2 || theme.MISC.NAVIGATION_TYPE == 4)) {
         list_nav_prev(4);
     }
     // Horizontal Navigation with 3 item first row, 5 item second row
@@ -347,7 +382,20 @@ void handle_right() {
     }
 
     // Horizontal Navigation with 2 rows of 4 items
-    if (theme.MISC.NAVIGATION_TYPE == 2 || theme.MISC.NAVIGATION_TYPE == 4) {
+    if (theme.GRID.ENABLED && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
+        uint8_t row_index = current_item_index / grid_info.column_count;
+
+        //when on 2nd to last row do not go past last item
+        if (row_index == grid_info.last_row_index - 1) {
+            int new_item_index = LV_MIN(current_item_index + grid_info.column_count, UI_COUNT - 1);
+            list_nav_next(new_item_index - current_item_index);
+        //when on the last row only move based on amount of items in that row
+        } else if (row_index == grid_info.last_row_index) {
+            list_nav_next(grid_info.last_row_item_count);
+        } else {
+            list_nav_next(grid_info.column_count);
+        }
+    } else if (!theme.GRID.ENABLED && (theme.MISC.NAVIGATION_TYPE == 2 || theme.MISC.NAVIGATION_TYPE == 4)) {
         list_nav_next(4);
     }
     // Horizontal Navigation with 3 item first row, 5 item second row
@@ -533,6 +581,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
