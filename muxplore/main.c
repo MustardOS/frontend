@@ -2027,6 +2027,7 @@ void init_footer_elements() {
 void init_fonts() {
     load_font_text(mux_module, ui_screen);
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 }
