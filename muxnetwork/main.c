@@ -695,20 +695,25 @@ void handle_confirm(void) {
                 save_network_config();
 
                 if (config.NETWORK.ENABLED) {
-                    if (strcasecmp(cv_pass, PASS_ENCODE) != 0 && strcasecmp(cv_pass, "") != 0) {
-                        lv_label_set_text(ui_lblConnectValue,
-                                          TS("Encrypting Password..."));
-                        lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
-                        refresh_screen(device.SCREEN.WAIT);
-                        usleep(256);
+                    if (strlen(cv_pass) > 0) {
+                        if (strcasecmp(cv_pass, PASS_ENCODE) != 0 && strcasecmp(cv_pass, "") != 0) {
+                            lv_label_set_text(ui_lblConnectValue, TS("Encrypting Password..."));
+                        }
+                    } else {
+                        lv_label_set_text(ui_lblConnectValue, TS("No Password Detected..."));
                     }
 
+                    int sec = 1024;
+
+                    lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
                     lv_label_set_text(ui_lblConnectValue, TS("Trying to Connect..."));
-                    refresh_screen(device.SCREEN.WAIT);
-                    usleep(256);
+                    refresh_screen(sec);
+
                     system("/opt/muos/script/web/password.sh");
-                    usleep(256);
+                    refresh_screen(sec);
+
                     system("/opt/muos/script/system/network.sh");
+                    refresh_screen(sec);
 
                     get_current_ip();
                 } else {
@@ -717,7 +722,6 @@ void handle_confirm(void) {
                 }
             } else {
                 toast_message(TS("Please check network settings"), 1000, 1000);
-                refresh_screen(device.SCREEN.WAIT);
             }
         }
     } else {
@@ -760,16 +764,13 @@ void handle_back(void) {
 
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
         write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
-        write_text_to_file("/run/muos/global/network/interface", "w", CHAR,
-                           device.NETWORK.INTERFACE);
+        write_text_to_file("/run/muos/global/network/interface", "w", CHAR, device.NETWORK.INTERFACE);
         write_text_to_file("/run/muos/global/network/type", "w", INT, 0);
         write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, "");
         write_text_to_file("/run/muos/global/network/pass", "w", CHAR, "");
-        write_text_to_file("/run/muos/global/network/address", "w", CHAR,
-                           "192.168.0.123");
+        write_text_to_file("/run/muos/global/network/address", "w", CHAR, "192.168.0.123");
         write_text_to_file("/run/muos/global/network/subnet", "w", INT, 24);
-        write_text_to_file("/run/muos/global/network/gateway", "w", CHAR,
-                           "192.168.0.1");
+        write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, "192.168.0.1");
         write_text_to_file("/run/muos/global/network/dns", "w", CHAR, "1.1.1.1");
 
         system("/opt/muos/script/system/network.sh");

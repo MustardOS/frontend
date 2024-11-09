@@ -86,10 +86,8 @@ void load_profile(char *name) {
     write_text_to_file("/run/muos/global/network/ssid", "w", CHAR,
                        mini_get_string(net_profile, "network", "ssid", ""));
 
-    const char *p_pass = mini_get_string(net_profile, "network", "pass", "");
     write_text_to_file("/run/muos/global/network/pass", "w", CHAR,
-                       (strlen(p_pass) == 64) ? p_pass : "");
-    write_text_to_file("/tmp/net_pass", "w", CHAR, p_pass);
+                       mini_get_string(net_profile, "network", "pass", ""));
 
     write_text_to_file("/run/muos/global/network/address", "w", CHAR,
                        mini_get_string(net_profile, "network", "address", ""));
@@ -117,19 +115,7 @@ int save_profile() {
 
     if (!p_ssid || strlen(p_ssid) == 0) {
         toast_message(TS("Invalid SSID"), 1000, 1000);
-        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-        refresh_screen(device.SCREEN.WAIT);
         return 0;
-    }
-
-    if (strlen(p_pass) < 8 || strlen(p_pass) > 63 ) {
-        if (strlen(p_pass) != 64) { // If it's 64 characters then it must be encoded... let's assume!
-            if (strlen(p_pass) != 0) { // Support unset wifi passwords
-                toast_message(TS("Password must be unset or 8..63 characters!"), 1000, 1000);
-                refresh_screen(device.SCREEN.WAIT);
-                return 0;
-            }
-        }
     }
 
     int type = safe_atoi(p_type);
