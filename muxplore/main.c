@@ -83,6 +83,7 @@ int counter_fade = 0;
 int fade_timeout = 3;
 int starter_image = 0;
 int splash_valid = 0;
+bool nogrid_file_exists;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
@@ -97,7 +98,13 @@ lv_timer_t *glyph_timer;
 lv_timer_t *ui_refresh_timer;
 
 bool is_grid_enabled() {
-    return theme.GRID.ENABLED && module != ROOT && ui_count > 0 && ui_file_count == 0;
+    return !nogrid_file_exists && theme.GRID.ENABLED && module != ROOT && ui_count > 0 && ui_file_count == 0;
+}
+
+void check_for_disable_grid_file(char *item_curr_dir) {
+    char no_grid_path[PATH_MAX];
+    snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
+    nogrid_file_exists = file_exist(no_grid_path);
 }
 
 char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_cache) {
@@ -1027,7 +1034,8 @@ void create_explore_items(void *count) {
             free(dir_names[i]);
         }
         sort_items(items, item_count);
-        if (theme.GRID.ENABLED && dir_count > 0 && file_count == 0) {
+        check_for_disable_grid_file(item_curr_dir);
+        if (!nogrid_file_exists && theme.GRID.ENABLED && dir_count > 0 && file_count == 0) {
             init_navigation_groups_grid();
             (*ui_count_ptr) += dir_count;
         } else {
@@ -1752,7 +1760,7 @@ void handle_up_hold(void) {//prev
     // Don't wrap around when scrolling on hold.
     if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
         (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index > 0) ||
-        ((!theme.GRID.ENABLED || ui_file_count > 0) && current_item_index > 0)) {
+        ((!is_grid_enabled()) && current_item_index > 0)) {
         handle_up();
     }
 }
@@ -1765,7 +1773,7 @@ void handle_down_hold(void) {//next
     // Don't wrap around when scrolling on hold.
     if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) < get_grid_row_item_count(current_item_index) - 1) ||
         (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index < ui_count - 1) ||
-        ((!theme.GRID.ENABLED || ui_file_count > 0) && current_item_index < ui_count - 1)) {
+        ((!is_grid_enabled()) && current_item_index < ui_count - 1)) {
         handle_down();
     }
 }
@@ -2027,6 +2035,7 @@ void init_footer_elements() {
 void init_fonts() {
     load_font_text(mux_module, ui_screen);
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 }

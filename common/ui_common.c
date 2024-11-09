@@ -1002,7 +1002,7 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     ui_pnlGrid = lv_obj_create(ui_screen);
     lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, col_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_size(ui_pnlGrid, theme->GRID.PANEL_WIDTH, theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
+    lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH, theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
     lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
     lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
     lv_obj_set_layout(ui_pnlGrid, LV_LAYOUT_GRID);
