@@ -262,10 +262,8 @@ void handle_up() {
         return;
     }
 
-    int column_count = theme.GRID.ENABLED ? theme.GRID.COLUMN_COUNT : 4;
-    int column_index = current_item_index % column_count;
     // Grid mode.  Wrap on Row.
-    if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && column_index == 0) {
+    if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) == 0) {
         list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ? 
                 grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
     // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.

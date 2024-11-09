@@ -1062,7 +1062,11 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     if (file_exist(item_image_path)) {
         snprintf(grid_image, sizeof(grid_image), "M:%s", item_image_path);
         lv_img_set_src(cell_image, grid_image);
-        lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+        if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
+            lv_obj_align(cell_image, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+        } else {
+            lv_obj_align(cell_image, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
+        }
     }
 
     lv_obj_set_width(cell_label, theme->GRID.CELL.WIDTH - (theme->GRID.CELL.TEXT_PADDING_SIDE * 2));
