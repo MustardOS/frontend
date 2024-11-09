@@ -86,11 +86,11 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.LAUNCHSPLASH, "visual/launchsplash", 0)
     CFG_INT_FIELD(config->VISUAL.BLACKFADE, "visual/blackfade", 1)
 
-    CFG_INT_FIELD(config->WEB.SHELL, "web/shell", 1)
-    CFG_INT_FIELD(config->WEB.BROWSER, "web/browser", 0)
-    CFG_INT_FIELD(config->WEB.TERMINAL, "web/terminal", 0)
+    CFG_INT_FIELD(config->WEB.SHELL, "web/sshd", 1)
+    CFG_INT_FIELD(config->WEB.BROWSER, "web/sftpgo", 0)
+    CFG_INT_FIELD(config->WEB.TERMINAL, "web/gotty", 0)
     CFG_INT_FIELD(config->WEB.SYNCTHING, "web/syncthing", 0)
-    CFG_INT_FIELD(config->WEB.RESILIO, "web/resilio", 0)
+    CFG_INT_FIELD(config->WEB.RESILIO, "web/rslsync", 0)
     CFG_INT_FIELD(config->WEB.NTP, "web/ntp", 1)
 
 #undef CFG_INT_FIELD
