@@ -151,6 +151,48 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->NAV.MENU.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_MENU_TEXT");
     theme->NAV.MENU.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_TEXT_ALPHA", 255);
 
+    theme->GRID.NAVIGATION_TYPE = get_ini_int(muos_theme, "grid", "NAVIGATION_TYPE", 2);
+    theme->GRID.BACKGROUND = get_ini_hex(muos_theme, "grid", "BACKGROUND");
+    theme->GRID.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "BACKGROUND_ALPHA", 0);
+    theme->GRID.LOCATION_X = get_ini_int(muos_theme, "grid", "LOCATION_X", 0);
+    theme->GRID.LOCATION_Y = get_ini_int(muos_theme, "grid", "LOCATION_Y", 0);
+    theme->GRID.PANEL_WIDTH = get_ini_int(muos_theme, "grid", "PANEL_WIDTH", 0);
+    theme->GRID.COLUMN_COUNT = get_ini_int(muos_theme, "grid", "COLUMN_COUNT", 0);
+    theme->GRID.ROW_COUNT = get_ini_int(muos_theme, "grid", "ROW_COUNT", 0);
+    theme->GRID.ENABLED = (theme->GRID.COLUMN_COUNT > 0 && theme->GRID.ROW_COUNT > 0);
+
+    theme->GRID.ROW_HEIGHT = get_ini_int(muos_theme, "grid", "ROW_HEIGHT", 0);
+    theme->GRID.COLUMN_WIDTH = get_ini_int(muos_theme, "grid", "COLUMN_WIDTH", 0);
+
+    theme->GRID.CELL.WIDTH = get_ini_int(muos_theme, "grid", "CELL_WIDTH", 200);
+    theme->GRID.CELL.HEIGHT = get_ini_int(muos_theme, "grid", "CELL_HEIGHT", 200);
+    theme->GRID.CELL.RADIUS = get_ini_int(muos_theme, "grid", "CELL_RADIUS", 10);
+    theme->GRID.CELL.BORDER_WIDTH = get_ini_int(muos_theme, "grid", "CELL_BORDER_WIDTH", 5);
+    theme->GRID.CELL.IMAGE_PADDING_TOP = get_ini_int(muos_theme, "grid", "CELL_IMAGE_PADDING_TOP", 5);
+    theme->GRID.CELL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_BOTTOM ", 5);
+    theme->GRID.CELL.TEXT_PADDING_SIDE = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_SIDE", 5);
+    theme->GRID.CELL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid", "CELL_TEXT_LINE_SPACING", 0);
+
+    theme->GRID.CELL_DEFAULT.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND");
+    theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_ALPHA", 255);
+    theme->GRID.CELL_DEFAULT.BORDER = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BORDER");
+    theme->GRID.CELL_DEFAULT.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BORDER_ALPHA", 255);
+    theme->GRID.CELL_DEFAULT.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_ALPHA", 255);
+    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR");
+    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", 0);
+    theme->GRID.CELL_DEFAULT.TEXT = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_TEXT");
+    theme->GRID.CELL_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_TEXT_ALPHA", 255);
+    
+    theme->GRID.CELL_FOCUS.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BACKGROUND");
+    theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_ALPHA", 255);
+    theme->GRID.CELL_FOCUS.BORDER = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BORDER");
+    theme->GRID.CELL_FOCUS.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BORDER_ALPHA", 255);
+    theme->GRID.CELL_FOCUS.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_ALPHA", 255);
+    theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_IMAGE_RECOLOUR");
+    theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_RECOLOUR_ALPHA", 0);
+    theme->GRID.CELL_FOCUS.TEXT = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_TEXT");
+    theme->GRID.CELL_FOCUS.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_TEXT_ALPHA", 255);
+
     theme->LIST_DEFAULT.RADIUS = get_ini_int(muos_theme, "list", "LIST_DEFAULT_RADIUS", 0);
     theme->LIST_DEFAULT.BACKGROUND = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_BACKGROUND");
     theme->LIST_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BACKGROUND_ALPHA", 255);
