@@ -257,10 +257,13 @@ void create_profile_items() {
 
         lv_label_set_text(ui_lblScreenMessage, "");
 
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+        if (!is_network_connected()) {
+            lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
+            lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+        }
+
         lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -299,15 +302,13 @@ void list_nav_next(int steps) {
 }
 
 void handle_confirm(void) {
-    if (msgbox_active) {
+    if (msgbox_active || is_network_connected() || ui_count <= 0) {
         return;
     }
 
-    if (ui_count > 0) {
-        play_sound("confirm", nav_sound, 1);
-        load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
-        mux_input_stop();
-    }
+    play_sound("confirm", nav_sound, 1);
+    load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
+    mux_input_stop();
 }
 
 void handle_back(void) {
@@ -336,15 +337,13 @@ void handle_save(void) {
 }
 
 void handle_remove(void) {
-    if (msgbox_active) {
+    if (msgbox_active || ui_count <= 0) {
         return;
     }
 
-    if (ui_count > 0) {
-        if (remove_profile(lv_label_get_text(lv_group_get_focused(ui_group)))) {
-            load_mux("net_profile");
-            mux_input_stop();
-        }
+    if (remove_profile(lv_label_get_text(lv_group_get_focused(ui_group)))) {
+        load_mux("net_profile");
+        mux_input_stop();
     }
 }
 
