@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 
         char init_wall[MAX_BUFFER_SIZE];
         snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/muxstart.png",
-                 device_dimension, INTERNAL_THEME);
+                 INTERNAL_THEME, device_dimension);
         lv_img_set_src(ui_imgWall, strdup(init_wall));
     } else {
         load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
