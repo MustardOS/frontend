@@ -1760,7 +1760,7 @@ void handle_up_hold(void) {//prev
     // Don't wrap around when scrolling on hold.
     if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
         (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index > 0) ||
-        ((!theme.GRID.ENABLED || ui_file_count > 0) && current_item_index > 0)) {
+        ((!is_grid_enabled()) && current_item_index > 0)) {
         handle_up();
     }
 }
@@ -1773,7 +1773,7 @@ void handle_down_hold(void) {//next
     // Don't wrap around when scrolling on hold.
     if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) < get_grid_row_item_count(current_item_index) - 1) ||
         (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index < ui_count - 1) ||
-        ((!theme.GRID.ENABLED || ui_file_count > 0) && current_item_index < ui_count - 1)) {
+        ((!is_grid_enabled()) && current_item_index < ui_count - 1)) {
         handle_down();
     }
 }
