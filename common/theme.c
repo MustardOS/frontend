@@ -156,7 +156,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->GRID.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "BACKGROUND_ALPHA", 0);
     theme->GRID.LOCATION_X = get_ini_int(muos_theme, "grid", "LOCATION_X", 0);
     theme->GRID.LOCATION_Y = get_ini_int(muos_theme, "grid", "LOCATION_Y", 0);
-    theme->GRID.PANEL_WIDTH = get_ini_int(muos_theme, "grid", "PANEL_WIDTH", 0);
     theme->GRID.COLUMN_COUNT = get_ini_int(muos_theme, "grid", "COLUMN_COUNT", 0);
     theme->GRID.ROW_COUNT = get_ini_int(muos_theme, "grid", "ROW_COUNT", 0);
     theme->GRID.ENABLED = (theme->GRID.COLUMN_COUNT > 0 && theme->GRID.ROW_COUNT > 0);

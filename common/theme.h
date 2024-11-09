@@ -152,7 +152,6 @@ struct theme_config {
     struct {
         int16_t NAVIGATION_TYPE;
         bool ENABLED;
-        int16_t PANEL_WIDTH;
         uint32_t BACKGROUND;
         int16_t BACKGROUND_ALPHA;
         int16_t LOCATION_X;
