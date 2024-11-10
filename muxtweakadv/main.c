@@ -46,14 +46,14 @@ int progress_onscreen = -1;
 int accelerate_original, swap_original, thermal_original, font_original, volume_original, brightness_original;
 int offset_original, lockdown_original, led_original, random_theme_original, retrowait_original;
 int usbfunction_original, state_original, verbose_original, rumble_original, hdmi_output_original;
-int user_init_original;
+int user_init_original, dpad_swap_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 17
+#define UI_COUNT 18
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -85,6 +85,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblRumble,      TS("Toggle vibration for device startup, sleep, and shutdown")},
             {ui_lblHDMIOutput,  TS("Switch between device speaker or external monitor audio via HDMI connection")},
             {ui_lblUserInit,    TS("Toggle the functionality of the user initialisation scripts on device startup")},
+            {ui_lblDPADSwap,    TS("Toggle the functionality of the power button to switch DPAD mode")},
     };
 
     char *message = TG("No Help Information Found");
@@ -131,7 +132,8 @@ void elements_events_init() {
             ui_droVerbose,
             ui_droRumble,
             ui_droHDMIOutput,
-            ui_droUserInit
+            ui_droUserInit,
+            ui_droDPADSwap
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -157,6 +159,7 @@ void init_dropdown_settings() {
     rumble_original = lv_dropdown_get_selected(ui_droRumble);
     hdmi_output_original = lv_dropdown_get_selected(ui_droHDMIOutput);
     user_init_original = lv_dropdown_get_selected(ui_droUserInit);
+    dpad_swap_original = lv_dropdown_get_selected(ui_droDPADSwap);
 }
 
 void restore_tweak_options() {
@@ -216,6 +219,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droRumble, config.SETTINGS.ADVANCED.RUMBLE);
     lv_dropdown_set_selected(ui_droHDMIOutput, config.SETTINGS.ADVANCED.HDMIOUTPUT);
     lv_dropdown_set_selected(ui_droUserInit, config.SETTINGS.ADVANCED.USERINIT);
+    lv_dropdown_set_selected(ui_droDPADSwap, config.SETTINGS.ADVANCED.DPADSWAP);
 }
 
 void save_tweak_options() {
@@ -290,6 +294,7 @@ void save_tweak_options() {
     int idx_rumble = lv_dropdown_get_selected(ui_droRumble);
     int idx_hdmi_output = lv_dropdown_get_selected(ui_droHDMIOutput);
     int idx_user_init = lv_dropdown_get_selected(ui_droUserInit);
+    int idx_dpad_swap = lv_dropdown_get_selected(ui_droDPADSwap);
 
     int is_modified = 0;
 
@@ -378,6 +383,11 @@ void save_tweak_options() {
         write_text_to_file("/run/muos/global/settings/advanced/user_init", "w", INT, idx_user_init);
     }
 
+    if (lv_dropdown_get_selected(ui_droDPADSwap) != dpad_swap_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/settings/advanced/dpad_swap", "w", INT, idx_dpad_swap);
+    }
+
     if (is_modified > 0) {
         static char tweak_script[MAX_BUFFER_SIZE];
         snprintf(tweak_script, sizeof(tweak_script),
@@ -404,7 +414,8 @@ void init_navigation_groups() {
             ui_pnlVerbose,
             ui_pnlRumble,
             ui_pnlHDMIOutput,
-            ui_pnlUserInit
+            ui_pnlUserInit,
+            ui_pnlDPADSwap
     };
 
     ui_objects[0] = ui_lblAccelerate;
@@ -424,6 +435,7 @@ void init_navigation_groups() {
     ui_objects[14] = ui_lblRumble;
     ui_objects[15] = ui_lblHDMIOutput;
     ui_objects[16] = ui_lblUserInit;
+    ui_objects[17] = ui_lblDPADSwap;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droAccelerate,
@@ -442,7 +454,8 @@ void init_navigation_groups() {
             ui_droVerbose,
             ui_droRumble,
             ui_droHDMIOutput,
-            ui_droUserInit
+            ui_droUserInit,
+            ui_droDPADSwap
     };
 
     lv_obj_t *ui_objects_glyph[] = {
@@ -462,7 +475,8 @@ void init_navigation_groups() {
             ui_icoVerbose,
             ui_icoRumble,
             ui_icoHDMIOutput,
-            ui_icoUserInit
+            ui_icoUserInit,
+            ui_icoDPADSwap
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlAccelerate);
@@ -482,6 +496,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlRumble);
     apply_theme_list_panel(&theme, &device, ui_pnlHDMIOutput);
     apply_theme_list_panel(&theme, &device, ui_pnlUserInit);
+    apply_theme_list_panel(&theme, &device, ui_pnlDPADSwap);
 
     apply_theme_list_item(&theme, ui_lblAccelerate, TS("Menu Acceleration"), false, true);
     apply_theme_list_item(&theme, ui_lblSwap, TS("Button Swap"), false, true);
@@ -500,6 +515,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblRumble, TS("Device Rumble"), false, true);
     apply_theme_list_item(&theme, ui_lblHDMIOutput, TS("HDMI Audio Output"), false, true);
     apply_theme_list_item(&theme, ui_lblUserInit, TS("User Init Scripts"), false, true);
+    apply_theme_list_item(&theme, ui_lblDPADSwap, TS("DPAD Swap Function"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoAccelerate, mux_module, "accelerate");
     apply_theme_list_glyph(&theme, ui_icoSwap, mux_module, "swap");
@@ -518,6 +534,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoRumble, mux_module, "rumble");
     apply_theme_list_glyph(&theme, ui_icoHDMIOutput, mux_module, "hdmi");
     apply_theme_list_glyph(&theme, ui_icoUserInit, mux_module, "userinit");
+    apply_theme_list_glyph(&theme, ui_icoDPADSwap, mux_module, "dpadswap");
 
     char *accelerate_string = generate_number_string(16, 256, 16, TG("Disabled"), NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate, accelerate_string);
@@ -543,6 +560,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droRumble, NULL);
     apply_theme_list_drop_down(&theme, ui_droHDMIOutput, NULL);
     apply_theme_list_drop_down(&theme, ui_droUserInit, NULL);
+    apply_theme_list_drop_down(&theme, ui_droDPADSwap, NULL);
 
     char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
     add_drop_down_options(ui_droSwap, (char *[]) {TS("Retro"), TS("Modern")}, 2);
@@ -562,6 +580,7 @@ void init_navigation_groups() {
                                                     TS("Shutdown + Sleep")}, 7);
     add_drop_down_options(ui_droHDMIOutput, (char *[]) {TG("External"), TG("Internal")}, 2);
     add_drop_down_options(ui_droUserInit, disabled_enabled, 2);
+    add_drop_down_options(ui_droDPADSwap, disabled_enabled, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -727,6 +746,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblRumble, "rumble");
     lv_obj_set_user_data(ui_lblHDMIOutput, "hdmi");
     lv_obj_set_user_data(ui_lblUserInit, "userinit");
+    lv_obj_set_user_data(ui_lblDPADSwap, "dpadswap");
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_HIDDEN);
