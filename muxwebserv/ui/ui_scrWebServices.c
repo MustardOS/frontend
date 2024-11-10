@@ -1,31 +1,31 @@
 #include "ui.h"
 
 void ui_screen_init(lv_obj_t *ui_pnlContent) {
-    ui_pnlShell = lv_obj_create(ui_pnlContent);
-    ui_pnlBrowser = lv_obj_create(ui_pnlContent);
-    ui_pnlTerminal = lv_obj_create(ui_pnlContent);
+    ui_pnlSSHD = lv_obj_create(ui_pnlContent);
+    ui_pnlSFTPGo = lv_obj_create(ui_pnlContent);
+    ui_pnlTTYD = lv_obj_create(ui_pnlContent);
     ui_pnlSyncthing = lv_obj_create(ui_pnlContent);
-    ui_pnlResilio = lv_obj_create(ui_pnlContent);
+    ui_pnlRSLSync = lv_obj_create(ui_pnlContent);
     ui_pnlNTP = lv_obj_create(ui_pnlContent);
 
-    ui_lblShell = lv_label_create(ui_pnlShell);
-    ui_lblBrowser = lv_label_create(ui_pnlBrowser);
-    ui_lblTerminal = lv_label_create(ui_pnlTerminal);
+    ui_lblSSHD = lv_label_create(ui_pnlSSHD);
+    ui_lblSFTPGo = lv_label_create(ui_pnlSFTPGo);
+    ui_lblTTYD = lv_label_create(ui_pnlTTYD);
     ui_lblSyncthing = lv_label_create(ui_pnlSyncthing);
-    ui_lblResilio = lv_label_create(ui_pnlResilio);
+    ui_lblRSLSync = lv_label_create(ui_pnlRSLSync);
     ui_lblNTP = lv_label_create(ui_pnlNTP);
 
-    ui_icoShell = lv_img_create(ui_pnlShell);
-    ui_icoBrowser = lv_img_create(ui_pnlBrowser);
-    ui_icoTerminal = lv_img_create(ui_pnlTerminal);
+    ui_icoSSHD = lv_img_create(ui_pnlSSHD);
+    ui_icoSFTPGo = lv_img_create(ui_pnlSFTPGo);
+    ui_icoTTYD = lv_img_create(ui_pnlTTYD);
     ui_icoSyncthing = lv_img_create(ui_pnlSyncthing);
-    ui_icoResilio = lv_img_create(ui_pnlResilio);
+    ui_icoRSLSync = lv_img_create(ui_pnlRSLSync);
     ui_icoNTP = lv_img_create(ui_pnlNTP);
 
-    ui_droShell = lv_dropdown_create(ui_pnlShell);
-    ui_droBrowser = lv_dropdown_create(ui_pnlBrowser);
-    ui_droTerminal = lv_dropdown_create(ui_pnlTerminal);
+    ui_droSSHD = lv_dropdown_create(ui_pnlSSHD);
+    ui_droSFTPGo = lv_dropdown_create(ui_pnlSFTPGo);
+    ui_droTTYD = lv_dropdown_create(ui_pnlTTYD);
     ui_droSyncthing = lv_dropdown_create(ui_pnlSyncthing);
-    ui_droResilio = lv_dropdown_create(ui_pnlResilio);
+    ui_droRSLSync = lv_dropdown_create(ui_pnlRSLSync);
     ui_droNTP = lv_dropdown_create(ui_pnlNTP);
 }

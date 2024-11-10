@@ -2,29 +2,29 @@
 
 void ui_screen_init(lv_obj_t *ui_pnlContent);
 
-lv_obj_t *ui_pnlShell;
-lv_obj_t *ui_pnlBrowser;
-lv_obj_t *ui_pnlTerminal;
+lv_obj_t *ui_pnlSSHD;
+lv_obj_t *ui_pnlSFTPGo;
+lv_obj_t *ui_pnlTTYD;
 lv_obj_t *ui_pnlSyncthing;
-lv_obj_t *ui_pnlResilio;
+lv_obj_t *ui_pnlRSLSync;
 lv_obj_t *ui_pnlNTP;
-lv_obj_t *ui_lblShell;
-lv_obj_t *ui_lblBrowser;
-lv_obj_t *ui_lblTerminal;
+lv_obj_t *ui_lblSSHD;
+lv_obj_t *ui_lblSFTPGo;
+lv_obj_t *ui_lblTTYD;
 lv_obj_t *ui_lblSyncthing;
-lv_obj_t *ui_lblResilio;
+lv_obj_t *ui_lblRSLSync;
 lv_obj_t *ui_lblNTP;
-lv_obj_t *ui_icoShell;
-lv_obj_t *ui_icoBrowser;
-lv_obj_t *ui_icoTerminal;
+lv_obj_t *ui_icoSSHD;
+lv_obj_t *ui_icoSFTPGo;
+lv_obj_t *ui_icoTTYD;
 lv_obj_t *ui_icoSyncthing;
-lv_obj_t *ui_icoResilio;
+lv_obj_t *ui_icoRSLSync;
 lv_obj_t *ui_icoNTP;
-lv_obj_t *ui_droShell;
-lv_obj_t *ui_droBrowser;
-lv_obj_t *ui_droTerminal;
+lv_obj_t *ui_droSSHD;
+lv_obj_t *ui_droSFTPGo;
+lv_obj_t *ui_droTTYD;
 lv_obj_t *ui_droSyncthing;
-lv_obj_t *ui_droResilio;
+lv_obj_t *ui_droRSLSync;
 lv_obj_t *ui_droNTP;
 
 void ui_init(lv_obj_t *ui_pnlContent) {

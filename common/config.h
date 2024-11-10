@@ -86,11 +86,11 @@ struct mux_config {
     } VISUAL;
 
     struct {
-        int16_t SHELL;
-        int16_t BROWSER;
-        int16_t TERMINAL;
+        int16_t SSHD;
+        int16_t SFTPGO;
+        int16_t TTYD;
         int16_t SYNCTHING;
-        int16_t RESILIO;
+        int16_t RSLSYNC;
         int16_t NTP;
     } WEB;
 };

@@ -43,7 +43,7 @@ lv_obj_t *overlay_image = NULL;
 
 int progress_onscreen = -1;
 
-int shell_original, browser_original, terminal_original, syncthing_original, resilio_original, ntp_original;
+int sshd_original, sftpgo_original, ttyd_original, syncthing_original, rslsync_original, ntp_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -62,11 +62,11 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblShell,     TS("Toggle SSH support - Access via port 22")},
-            {ui_lblBrowser,   TS("Toggle SFTP support - WebUI can be found on port 9090")},
-            {ui_lblTerminal,  TS("Toggle virtual terminal - WebUI can be found on port 8080")},
+            {ui_lblSSHD,      TS("Toggle SSH support - Access via port 22")},
+            {ui_lblSFTPGo,    TS("Toggle SFTP support - WebUI can be found on port 9090")},
+            {ui_lblTTYD,      TS("Toggle virtual terminal - WebUI can be found on port 8080")},
             {ui_lblSyncthing, TS("Toggle Syncthing - WebUI can be found on port 7070")},
-            {ui_lblResilio,   TS("Toggle Resilio - WebUI can be found on port 6060")},
+            {ui_lblRSLSync,   TS("Toggle RSLSync - WebUI can be found on port 6060")},
             {ui_lblNTP,       TS("Toggle network time protocol for active network connections")},
     };
 
@@ -98,11 +98,11 @@ static void dropdown_event_handler(lv_event_t *e) {
 
 void elements_events_init() {
     lv_obj_t *dropdowns[] = {
-            ui_droShell,
-            ui_droBrowser,
-            ui_droTerminal,
+            ui_droSSHD,
+            ui_droSFTPGo,
+            ui_droTTYD,
             ui_droSyncthing,
-            ui_droResilio,
+            ui_droRSLSync,
             ui_droNTP
     };
 
@@ -112,46 +112,46 @@ void elements_events_init() {
 }
 
 void init_dropdown_settings() {
-    shell_original = lv_dropdown_get_selected(ui_droShell);
-    browser_original = lv_dropdown_get_selected(ui_droBrowser);
-    terminal_original = lv_dropdown_get_selected(ui_droTerminal);
+    sshd_original = lv_dropdown_get_selected(ui_droSSHD);
+    sftpgo_original = lv_dropdown_get_selected(ui_droSFTPGo);
+    ttyd_original = lv_dropdown_get_selected(ui_droTTYD);
     syncthing_original = lv_dropdown_get_selected(ui_droSyncthing);
-    resilio_original = lv_dropdown_get_selected(ui_droResilio);
+    rslsync_original = lv_dropdown_get_selected(ui_droRSLSync);
     ntp_original = lv_dropdown_get_selected(ui_droNTP);
 }
 
 void restore_web_options() {
-    lv_dropdown_set_selected(ui_droShell, config.WEB.SHELL);
-    lv_dropdown_set_selected(ui_droBrowser, config.WEB.BROWSER);
-    lv_dropdown_set_selected(ui_droTerminal, config.WEB.TERMINAL);
+    lv_dropdown_set_selected(ui_droSSHD, config.WEB.SSHD);
+    lv_dropdown_set_selected(ui_droSFTPGo, config.WEB.SFTPGO);
+    lv_dropdown_set_selected(ui_droTTYD, config.WEB.TTYD);
     lv_dropdown_set_selected(ui_droSyncthing, config.WEB.SYNCTHING);
-    lv_dropdown_set_selected(ui_droResilio, config.WEB.RESILIO);
+    lv_dropdown_set_selected(ui_droRSLSync, config.WEB.RSLSYNC);
     lv_dropdown_set_selected(ui_droNTP, config.WEB.NTP);
 }
 
 void save_web_options() {
-    int idx_shell = lv_dropdown_get_selected(ui_droShell);
-    int idx_browser = lv_dropdown_get_selected(ui_droBrowser);
-    int idx_terminal = lv_dropdown_get_selected(ui_droTerminal);
+    int idx_sshd = lv_dropdown_get_selected(ui_droSSHD);
+    int idx_sftpgo = lv_dropdown_get_selected(ui_droSFTPGo);
+    int idx_ttyd = lv_dropdown_get_selected(ui_droTTYD);
     int idx_syncthing = lv_dropdown_get_selected(ui_droSyncthing);
-    int idx_resilio = lv_dropdown_get_selected(ui_droResilio);
+    int idx_rslsync = lv_dropdown_get_selected(ui_droRSLSync);
     int idx_ntp = lv_dropdown_get_selected(ui_droNTP);
 
     int is_modified = 0;
 
-    if (lv_dropdown_get_selected(ui_droShell) != shell_original) {
+    if (lv_dropdown_get_selected(ui_droSSHD) != sshd_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/web/shell", "w", INT, idx_shell);
+        write_text_to_file("/run/muos/global/web/sshd", "w", INT, idx_sshd);
     }
 
-    if (lv_dropdown_get_selected(ui_droBrowser) != browser_original) {
+    if (lv_dropdown_get_selected(ui_droSFTPGo) != sftpgo_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/web/browser", "w", INT, idx_browser);
+        write_text_to_file("/run/muos/global/web/sftpgo", "w", INT, idx_sftpgo);
     }
 
-    if (lv_dropdown_get_selected(ui_droTerminal) != terminal_original) {
+    if (lv_dropdown_get_selected(ui_droTTYD) != ttyd_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/web/terminal", "w", INT, idx_terminal);
+        write_text_to_file("/run/muos/global/web/ttyd", "w", INT, idx_ttyd);
     }
 
     if (lv_dropdown_get_selected(ui_droSyncthing) != syncthing_original) {
@@ -159,9 +159,9 @@ void save_web_options() {
         write_text_to_file("/run/muos/global/web/syncthing", "w", INT, idx_syncthing);
     }
 
-    if (lv_dropdown_get_selected(ui_droResilio) != resilio_original) {
+    if (lv_dropdown_get_selected(ui_droRSLSync) != rslsync_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/web/resilio", "w", INT, idx_resilio);
+        write_text_to_file("/run/muos/global/web/rslsync", "w", INT, idx_rslsync);
     }
 
     if (lv_dropdown_get_selected(ui_droNTP) != ntp_original) {
@@ -179,67 +179,67 @@ void save_web_options() {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlShell,
-            ui_pnlBrowser,
-            ui_pnlTerminal,
+            ui_pnlSSHD,
+            ui_pnlSFTPGo,
+            ui_pnlTTYD,
             ui_pnlSyncthing,
-            ui_pnlResilio,
+            ui_pnlRSLSync,
             ui_pnlNTP,
     };
 
-    ui_objects[0] = ui_lblShell;
-    ui_objects[1] = ui_lblBrowser;
-    ui_objects[2] = ui_lblTerminal;
+    ui_objects[0] = ui_lblSSHD;
+    ui_objects[1] = ui_lblSFTPGo;
+    ui_objects[2] = ui_lblTTYD;
     ui_objects[3] = ui_lblSyncthing;
-    ui_objects[4] = ui_lblResilio;
+    ui_objects[4] = ui_lblRSLSync;
     ui_objects[5] = ui_lblNTP;
 
     lv_obj_t *ui_objects_value[] = {
-            ui_droShell,
-            ui_droBrowser,
-            ui_droTerminal,
+            ui_droSSHD,
+            ui_droSFTPGo,
+            ui_droTTYD,
             ui_droSyncthing,
-            ui_droResilio,
+            ui_droRSLSync,
             ui_droNTP
     };
 
     lv_obj_t *ui_objects_glyph[] = {
-            ui_icoShell,
-            ui_icoBrowser,
-            ui_icoTerminal,
+            ui_icoSSHD,
+            ui_icoSFTPGo,
+            ui_icoTTYD,
             ui_icoSyncthing,
-            ui_icoResilio,
+            ui_icoRSLSync,
             ui_icoNTP
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlShell);
-    apply_theme_list_panel(&theme, &device, ui_pnlBrowser);
-    apply_theme_list_panel(&theme, &device, ui_pnlTerminal);
+    apply_theme_list_panel(&theme, &device, ui_pnlSSHD);
+    apply_theme_list_panel(&theme, &device, ui_pnlSFTPGo);
+    apply_theme_list_panel(&theme, &device, ui_pnlTTYD);
     apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
-    apply_theme_list_panel(&theme, &device, ui_pnlResilio);
+    apply_theme_list_panel(&theme, &device, ui_pnlRSLSync);
     apply_theme_list_panel(&theme, &device, ui_pnlNTP);
 
-    apply_theme_list_item(&theme, ui_lblShell, TS("Secure Shell"), false, true);
-    apply_theme_list_item(&theme, ui_lblBrowser, TS("SFTP + Filebrowser"), false, true);
-    apply_theme_list_item(&theme, ui_lblTerminal, TS("Virtual Terminal"), false, true);
+    apply_theme_list_item(&theme, ui_lblSSHD, TS("Secure Shell"), false, true);
+    apply_theme_list_item(&theme, ui_lblSFTPGo, TS("SFTP + Filebrowser"), false, true);
+    apply_theme_list_item(&theme, ui_lblTTYD, TS("Virtual Terminal"), false, true);
     apply_theme_list_item(&theme, ui_lblSyncthing, TS("Syncthing"), false, true);
-    apply_theme_list_item(&theme, ui_lblResilio, TS("Resilio"), false, true);
+    apply_theme_list_item(&theme, ui_lblRSLSync, TS("Resilio"), false, true);
     apply_theme_list_item(&theme, ui_lblNTP, TS("Network Time Sync"), false, true);
 
-    apply_theme_list_glyph(&theme, ui_icoShell, mux_module, "shell");
-    apply_theme_list_glyph(&theme, ui_icoBrowser, mux_module, "browser");
-    apply_theme_list_glyph(&theme, ui_icoTerminal, mux_module, "terminal");
-    apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_module, "sync");
-    apply_theme_list_glyph(&theme, ui_icoResilio, mux_module, "resilio");
+    apply_theme_list_glyph(&theme, ui_icoSSHD, mux_module, "sshd");
+    apply_theme_list_glyph(&theme, ui_icoSFTPGo, mux_module, "sftpgo");
+    apply_theme_list_glyph(&theme, ui_icoTTYD, mux_module, "ttyd");
+    apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_module, "syncthing");
+    apply_theme_list_glyph(&theme, ui_icoRSLSync, mux_module, "rslsync");
     apply_theme_list_glyph(&theme, ui_icoNTP, mux_module, "ntp");
 
     char options[MAX_BUFFER_SIZE];
     snprintf(options, sizeof(options), "%s\n%s", TG("Disabled"), TG("Enabled"));
-    apply_theme_list_drop_down(&theme, ui_droShell, options);
-    apply_theme_list_drop_down(&theme, ui_droBrowser, options);
-    apply_theme_list_drop_down(&theme, ui_droTerminal, options);
+    apply_theme_list_drop_down(&theme, ui_droSSHD, options);
+    apply_theme_list_drop_down(&theme, ui_droSFTPGo, options);
+    apply_theme_list_drop_down(&theme, ui_droTTYD, options);
     apply_theme_list_drop_down(&theme, ui_droSyncthing, options);
-    apply_theme_list_drop_down(&theme, ui_droResilio, options);
+    apply_theme_list_drop_down(&theme, ui_droRSLSync, options);
     apply_theme_list_drop_down(&theme, ui_droNTP, options);
 
     ui_group = lv_group_create();
@@ -381,11 +381,11 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblShell, "shell");
-    lv_obj_set_user_data(ui_lblBrowser, "browser");
-    lv_obj_set_user_data(ui_lblTerminal, "terminal");
-    lv_obj_set_user_data(ui_lblSyncthing, "sync");
-    lv_obj_set_user_data(ui_lblResilio, "resilio");
+    lv_obj_set_user_data(ui_lblSSHD, "sshd");
+    lv_obj_set_user_data(ui_lblSFTPGo, "sftpgo");
+    lv_obj_set_user_data(ui_lblTTYD, "ttyd");
+    lv_obj_set_user_data(ui_lblSyncthing, "syncthing");
+    lv_obj_set_user_data(ui_lblRSLSync, "rslsync");
     lv_obj_set_user_data(ui_lblNTP, "ntp");
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
