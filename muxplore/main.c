@@ -961,7 +961,7 @@ void create_root_items(char *dir_name) {
 void init_navigation_groups_grid() {
     init_grid_info(item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, item_count);
-
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
     for (size_t i = 0; i < item_count; i++) {
         if (strcasecmp(items[i].name, prev_dir) == 0) {
             sys_index = i;
@@ -2035,7 +2035,6 @@ void init_footer_elements() {
 void init_fonts() {
     load_font_text(mux_module, ui_screen);
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
     load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 }
