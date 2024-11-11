@@ -92,10 +92,10 @@ void init_navigation_groups_grid(char* item_labels[], char* glyph_names[]) {
         char device_dimension[15];
         get_device_dimension(device_dimension, sizeof(device_dimension));
         char grid_image[MAX_BUFFER_SIZE];
-        if (!load_image_specifics(STORAGE_THEME, device_dimension, glyph_names[i], "grid", "png",
+        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_names[i], "png",
                                  grid_image, sizeof(grid_image))) {
             
-            load_image_specifics(STORAGE_THEME, "", glyph_names[i], "grid", "png",
+            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_names[i], "png",
                                  grid_image, sizeof(grid_image));
         }
 
