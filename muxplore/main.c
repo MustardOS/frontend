@@ -63,7 +63,7 @@ lv_group_t *ui_group_panel;
 lv_obj_t *ui_imgSplash;
 
 lv_obj_t *ui_viewport_objects[7];
-lv_obj_t *ui_mux_panels[5];
+lv_obj_t *ui_mux_panels[7];
 
 char *sd_dir = NULL;
 
@@ -1897,9 +1897,6 @@ void set_nav_flag(lv_obj_t *nav_keep[], size_t keep_size, lv_obj_t *nav_hide[], 
 void init_elements() {
     lv_label_set_long_mode(ui_lblHelpContent, LV_LABEL_LONG_SCROLL_CIRCULAR);
 
-    lv_obj_move_foreground(ui_pnlFooter);
-    lv_obj_move_foreground(ui_pnlHeader);
-
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
     switch (config.VISUAL.BOX_ART) {
@@ -1927,11 +1924,13 @@ void init_elements() {
             break;
     }
 
-    ui_mux_panels[0] = ui_lblCounter;
-    ui_mux_panels[1] = ui_pnlHelp;
-    ui_mux_panels[2] = ui_pnlProgressBrightness;
-    ui_mux_panels[3] = ui_pnlProgressVolume;
-    ui_mux_panels[4] = ui_pnlMessage;
+    ui_mux_panels[0] = ui_pnlFooter;
+    ui_mux_panels[1] = ui_pnlHeader;
+    ui_mux_panels[2] = ui_lblCounter;
+    ui_mux_panels[3] = ui_pnlHelp;
+    ui_mux_panels[4] = ui_pnlProgressBrightness;
+    ui_mux_panels[5] = ui_pnlProgressVolume;
+    ui_mux_panels[6] = ui_pnlMessage;
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
