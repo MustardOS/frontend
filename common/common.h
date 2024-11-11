@@ -186,6 +186,10 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t ov
 int load_image_specifics(const char *theme_base, const char *device_dimension, const char *program,
                          const char *image_type, const char *image_extension, char *image_path, size_t path_size);
 
+int load_element_image_specifics(const char *theme_base, const char *device_dimension, const char *program,
+                                 const char *image_type, const char *element, const char *image_extension,
+                                 char *image_path, size_t path_size);
+
 void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
 
 void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *current_wall);
