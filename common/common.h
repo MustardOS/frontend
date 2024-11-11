@@ -19,6 +19,7 @@ extern int bar_footer;
 extern char *osd_message;
 extern int progress_onscreen;
 extern struct mux_config config;
+extern char *mux_module;
 
 struct ImageSettings {
     char *image_path;
@@ -170,7 +171,7 @@ void load_gov(const char *rom, const char *dir, const char *sys, int forced);
 
 void load_mux(const char *value);
 
-void play_sound(const char *sound, int enabled, int wait);
+void play_sound(const char *sound, int enabled, int wait, int background);
 
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive);
 
@@ -213,7 +214,7 @@ void adjust_visual_label(char *text, int method, int rep_dash);
 void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings);
 
 void update_grid_scroll_position(int col_count, int row_count, int row_height,
-                            int current_item_index, lv_obj_t *ui_pnlGrid);
+                                 int current_item_index, lv_obj_t *ui_pnlGrid);
 
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
                             lv_obj_t *ui_pnlContent);

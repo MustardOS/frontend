@@ -5,6 +5,7 @@
 #include "theme.h"
 #include "config.h"
 #include "device.h"
+#include "log.h"
 #include "mini/mini.h"
 
 int load_scheme(const char *theme_base, const char *device_dimension,
@@ -25,9 +26,9 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     get_device_dimension(device_dimension, sizeof(device_dimension));
 
     if (load_scheme(STORAGE_THEME, device_dimension, mux_name, scheme, sizeof(scheme))) {
-        printf("Loading STORAGE Theme Scheme: %s\n", scheme);
+        LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme)
     } else if (load_scheme(INTERNAL_THEME, device_dimension, mux_name, scheme, sizeof(scheme))) {
-        printf("Loading DEFAULT Theme Scheme: %s\n", scheme);
+        LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme)
     }
 
     mini_t *muos_theme = mini_try_load(scheme);
@@ -181,7 +182,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", 0);
     theme->GRID.CELL_DEFAULT.TEXT = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_TEXT");
     theme->GRID.CELL_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_TEXT_ALPHA", 255);
-    
+
     theme->GRID.CELL_FOCUS.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BACKGROUND");
     theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_ALPHA", 255);
     theme->GRID.CELL_FOCUS.BORDER = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BORDER");

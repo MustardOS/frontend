@@ -849,22 +849,38 @@ void load_mux(const char *value) {
     fclose(file);
 }
 
-void play_sound(const char *sound, int enabled, int wait) {
-    if (enabled) {
-        char ns_file[MAX_BUFFER_SIZE];
-        snprintf(ns_file, sizeof(ns_file), "%s/sound/%s.wav", STORAGE_THEME, sound);
+void play_sound(const char *sound, int enabled, int wait, int background) {
+    if (!enabled) return;
 
-        if (file_exist(ns_file)) {
-            printf("PLAYING SOUND: %s\n", ns_file);
-            Mix_Chunk *sound_chunk = Mix_LoadWAV(ns_file);
+    char ns_file[MAX_BUFFER_SIZE];
+    snprintf(ns_file, sizeof(ns_file), "%s/sound/%s.wav", STORAGE_THEME, sound);
 
-            if (sound_chunk) {
-                int sound_play = Mix_PlayChannel(-1, sound_chunk, 0);
+    if (!file_exist(ns_file)) {
+        LOG_ERROR(mux_module, "Sound file not found: %s", ns_file)
+        return;
+    }
 
-                if (wait) {
-                    while (Mix_Playing(sound_play)) {
-                        SDL_Delay(MAX_BUFFER_SIZE); // Could be shorter but some sounds get cut off so I'm cheating!~~
-                    }
+    LOG_SUCCESS(mux_module, "Playing Sound: %s", ns_file)
+
+    if (background) {
+        pid_t pid = fork();
+        if (pid == 0) {
+            snprintf(ns_file, sizeof(ns_file), "%s", sound);
+            execlp("/opt/muos/extra/muplay", "muplay", ns_file, (char *) NULL);
+            LOG_ERROR(mux_module, "Failed to start 'muplay' for sound playback")
+            _exit(1);
+        } else if (pid < 0) {
+            LOG_ERROR(mux_module, "Failed to fork sound process!")
+        }
+    } else {
+        Mix_Chunk *sound_chunk = Mix_LoadWAV(ns_file);
+
+        if (sound_chunk) {
+            int sound_play = Mix_PlayChannel(-1, sound_chunk, 0);
+
+            if (wait) {
+                while (Mix_Playing(sound_play)) {
+                    SDL_Delay(MAX_BUFFER_SIZE); // Could be shorter but some sounds get cut off so I'm cheating!~~
                 }
             }
         }
@@ -1277,12 +1293,13 @@ void load_font_text(const char *program, lv_obj_t *screen) {
                           "%s/%sfont/default.bin", STORAGE_THEME, device_dimensions[i]) >= 0 &&
                  file_exist(theme_font_text))) {
 
-                printf("Loading Main Theme Font: %s\n", theme_font_text);
+                LOG_INFO(mux_module, "Loading Main Theme Font: %s", theme_font_text)
                 load_font_text_from_file(theme_font_text, screen);
                 return;
             }
         }
     }
+    LOG_INFO(mux_module, "Loading Default Language Font")
     printf("Loading Default Language Font\n");
     lv_obj_set_style_text_font(screen, language_font, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
@@ -1313,7 +1330,7 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
                           "%s/%sfont/%s/default.bin", STORAGE_THEME, device_dimensions[i], section) >= 0 &&
                  file_exist(theme_font_section))) {
 
-                printf("Loading Section '%s' Font: %s\n", section, theme_font_section);
+                LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, theme_font_section)
                 load_font_text_from_file(theme_font_section, element);
                 return;
             }
@@ -1543,7 +1560,7 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings) {
 }
 
 void update_grid_scroll_position(int col_count, int row_count, int row_height,
-                            int current_item_index, lv_obj_t *ui_pnlGrid) {
+                                 int current_item_index, lv_obj_t *ui_pnlGrid) {
     uint8_t cell_row_index = get_grid_row_index(current_item_index);
     lv_coord_t scroll_y = lv_obj_get_scroll_y(ui_pnlGrid);
     int first_visible_row = scroll_y / row_height;
@@ -1554,7 +1571,7 @@ void update_grid_scroll_position(int col_count, int row_count, int row_height,
         // The cell is already within the visible range; no scroll needed
         return;
     }
-    
+
     int y_offset = 0;
 
     // If the cell is below the visible range, scroll to bring it into view at the bottom
@@ -1850,7 +1867,7 @@ int init_nav_sound(const char *mux_module) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
             Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-            LOG_INFO(mux_module, "SDL Init Success")
+            LOG_SUCCESS(mux_module, "SDL Init Success")
             return 1;
         } else {
             LOG_ERROR(mux_module, "SDL Failed To Init")
@@ -1877,7 +1894,7 @@ int safe_atoi(const char *str) {
 void init_grid_info(int item_count, int column_count) {
     grid_info.item_count = item_count;
     grid_info.column_count = column_count;
-    
+
     // Calculate items in the last row
     int last_row_item_count = item_count % column_count;
     if (last_row_item_count == 0 && item_count != 0) {
@@ -1899,7 +1916,7 @@ int get_grid_column_index(int current_item_index) {
 
 int get_grid_row_item_count(int current_item_index) {
     uint8_t row_index = current_item_index / grid_info.column_count;
-    
+
     if (row_index == grid_info.last_row_index) {
         return grid_info.last_row_item_count;
     } else {
