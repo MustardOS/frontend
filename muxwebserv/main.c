@@ -256,6 +256,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droTTYD, options);
     apply_theme_list_drop_down(&theme, ui_droSyncthing, options);
     apply_theme_list_drop_down(&theme, ui_droRSLSync, options);
+    apply_theme_list_drop_down(&theme, ui_droNTP, options);
     apply_theme_list_drop_down(&theme, ui_droTailscaled, options);
 
     ui_group = lv_group_create();
