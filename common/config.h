@@ -93,6 +93,7 @@ struct mux_config {
         int16_t SYNCTHING;
         int16_t RSLSYNC;
         int16_t NTP;
+        int16_t TAILSCALED;
     } WEB;
 };
 
