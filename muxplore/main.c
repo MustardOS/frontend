@@ -27,7 +27,6 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
 int safe_quit = 0;
@@ -1638,9 +1637,7 @@ void handle_y() {
 }
 
 void handle_start() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     switch (module) {
         case MMC:
@@ -1719,9 +1716,7 @@ void handle_menu() {
 }
 
 void handle_up() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     // Grid mode.  Wrap on Row.
     if (is_grid_enabled() &&
@@ -1735,9 +1730,7 @@ void handle_up() {
 }
 
 void handle_down() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     // Grid Navigation.  Wrap on Row.
     if (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 &&
@@ -1750,9 +1743,7 @@ void handle_down() {
 }
 
 void handle_up_hold(void) {//prev
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     // Don't wrap around when scrolling on hold.
     if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
@@ -1763,9 +1754,7 @@ void handle_up_hold(void) {//prev
 }
 
 void handle_down_hold(void) {//next
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     // Don't wrap around when scrolling on hold.
     if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 &&
@@ -1777,9 +1766,7 @@ void handle_down_hold(void) {//next
 }
 
 void handle_left() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     // Horizontal Navigation with 2 rows of 4 items
     if (is_grid_enabled() &&
@@ -1795,9 +1782,7 @@ void handle_left() {
 }
 
 void handle_right() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     // Horizontal Navigation with 2 rows of 4 items
     if (is_grid_enabled() &&
@@ -1818,9 +1803,7 @@ void handle_right() {
 }
 
 void handle_left_hold(void) {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     // Don't wrap around when scrolling on hold.
     if (is_grid_enabled() && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
@@ -1830,9 +1813,7 @@ void handle_left_hold(void) {
 }
 
 void handle_right_hold(void) {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     // Don't wrap around when scrolling on hold.
     if (is_grid_enabled() && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&

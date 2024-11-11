@@ -23,7 +23,6 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
@@ -257,7 +256,7 @@ void init_navigation_groups() {
 }
 
 void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
@@ -270,7 +269,7 @@ void list_nav_prev(int steps) {
 }
 
 void list_nav_next(int steps) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
@@ -283,33 +282,28 @@ void list_nav_next(int steps) {
 }
 
 void handle_option_prev(void) {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_option_next(void) {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
 void handle_back(void) {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 1);
+        play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
-    play_sound("back", nav_sound, 1);
-    input_disable = 1;
+    play_sound("back", nav_sound, 0, 1);
 
     osd_message = TG("Saving Changes");
     lv_label_set_text(ui_lblMessage, osd_message);
@@ -322,12 +316,10 @@ void handle_back(void) {
 }
 
 void handle_help(void) {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 1);
+        play_sound("confirm", nav_sound, 0, 0);
         show_help(lv_group_get_focused(ui_group));
     }
 }

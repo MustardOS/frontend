@@ -20,7 +20,6 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
@@ -340,7 +339,7 @@ void reset_osk() {
 }
 
 void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
@@ -356,7 +355,7 @@ void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
-        play_sound("navigate", nav_sound, 0);
+        play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
@@ -370,16 +369,20 @@ void list_nav_next(int steps) {
 }
 
 void handle_keyboard_press(void) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
+
     const char *is_key;
+
     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
         is_key = lv_btnmatrix_get_btn_text(num_entry, key_curr);
     } else {
         is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     }
+
     if (strcasecmp(is_key, "OK") == 0) {
         key_show = 0;
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
         if (element_focused == ui_lblIdentifier) {
             lv_label_set_text(ui_lblIdentifierValue,
                               lv_textarea_get_text(ui_txtEntry));
@@ -397,7 +400,9 @@ void handle_keyboard_press(void) {
         } else if (element_focused == ui_lblDNS) {
             lv_label_set_text(ui_lblDNSValue, lv_textarea_get_text(ui_txtEntry));
         }
+
         reset_osk();
+
         lv_textarea_set_text(ui_txtEntry, "");
         lv_group_set_focus_cb(ui_group, NULL);
         lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
@@ -417,7 +422,7 @@ void handle_keyboard_press(void) {
 }
 
 void handle_keyboard_close(void) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("keypress", nav_sound, 0, 0);
     key_show = 0;
     reset_osk();
     lv_textarea_set_text(ui_txtEntry, "");
@@ -426,12 +431,13 @@ void handle_keyboard_close(void) {
 }
 
 void handle_keyboard_backspace(void) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("keypress", nav_sound, 0, 0);
     lv_textarea_del_char(ui_txtEntry);
 }
 
 void handle_keyboard_swap(void) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("keypress", nav_sound, 0, 0);
+
     if (key_show == 1) {
         switch (key_map) {
             case 0:
@@ -453,6 +459,8 @@ void handle_keyboard_swap(void) {
 }
 
 void handle_keyboard_up(void) {
+    play_sound("keypress", nav_sound, 0, 0);
+
     if (key_curr >= 1) {
         switch (key_curr) {
             case 26:
@@ -496,6 +504,8 @@ void handle_keyboard_up(void) {
 }
 
 void handle_keyboard_down(void) {
+    play_sound("keypress", nav_sound, 0, 0);
+
     int max_key;
     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
         max_key = 11;
@@ -584,7 +594,7 @@ void handle_keyboard_right(void) {
 bool handle_navigate(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblEnable) {
-        play_sound("navigate", nav_sound, 1);
+        play_sound("navigate", nav_sound, 0, 0);
         if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
             lv_label_set_text(ui_lblEnableValue, enabled_false);
             lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
@@ -620,7 +630,7 @@ bool handle_navigate(void) {
         }
         return true;
     } else if (element_focused == ui_lblType) {
-        play_sound("navigate", nav_sound, 1);
+        play_sound("navigate", nav_sound, 0, 0);
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                 lv_label_set_text(ui_lblTypeValue, type_dhcp);
@@ -656,7 +666,7 @@ bool handle_navigate(void) {
 void handle_confirm(void) {
     if (handle_navigate()) return;
 
-    play_sound("confirm", nav_sound, 1);
+    play_sound("confirm", nav_sound, 0, 1);
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblConnect) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
@@ -756,7 +766,7 @@ void handle_confirm(void) {
 }
 
 void handle_back(void) {
-    play_sound("back", nav_sound, 1);
+    play_sound("back", nav_sound, 0, 1);
 
     save_network_config();
 
@@ -783,7 +793,7 @@ void handle_back(void) {
 void handle_scan(void) {
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
-            play_sound("confirm", nav_sound, 1);
+            play_sound("confirm", nav_sound, 0, 1);
 
             save_network_config();
             load_mux("net_scan");
@@ -798,7 +808,7 @@ void handle_scan(void) {
 
 void handle_profiles(void) {
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
-        play_sound("confirm", nav_sound, 1);
+        play_sound("confirm", nav_sound, 0, 1);
 
         save_network_config();
         system("/opt/muos/script/web/password.sh");
@@ -812,9 +822,7 @@ void handle_profiles(void) {
 }
 
 void handle_a(void) {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     if (key_show) {
         handle_keyboard_press();
@@ -826,7 +834,7 @@ void handle_a(void) {
 
 void handle_b(void) {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 1);
+        play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -842,9 +850,7 @@ void handle_b(void) {
 }
 
 void handle_x(void) {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     if (key_show) {
         handle_keyboard_backspace();
@@ -855,9 +861,7 @@ void handle_x(void) {
 }
 
 void handle_y(void) {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     if (key_show) {
         handle_keyboard_swap();
@@ -873,7 +877,7 @@ void handle_help(void) {
     }
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 1);
+        play_sound("confirm", nav_sound, 0, 0);
         show_help(lv_group_get_focused(ui_group));
     }
 }

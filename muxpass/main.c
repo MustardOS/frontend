@@ -25,7 +25,6 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
 int exit_status = 2;
@@ -67,6 +66,8 @@ void init_navigation_groups() {
 }
 
 void handle_confirm(void) {
+    play_sound("confirm", nav_sound, 0, 0);
+
     char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
     uint32_t bs = sizeof(b1);
 
@@ -87,13 +88,15 @@ void handle_confirm(void) {
 }
 
 void handle_back(void) {
+    play_sound("back", nav_sound, 0, 0);
+
     exit_status = 2;
     mux_input_stop();
 }
 
 void handle_up(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     lv_roller_set_selected(element_focused,
                            lv_roller_get_selected(element_focused) - 1,
                            LV_ANIM_ON);
@@ -101,19 +104,19 @@ void handle_up(void) {
 
 void handle_down(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     lv_roller_set_selected(element_focused,
                            lv_roller_get_selected(element_focused) + 1,
                            LV_ANIM_ON);
 }
 
 void handle_left(void) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     nav_prev(ui_group, 1);
 }
 
 void handle_right(void) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     nav_next(ui_group, 1);
 }
 

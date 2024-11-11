@@ -12,7 +12,6 @@ extern int battery_capacity;
 extern int msgbox_active;
 extern lv_obj_t *msgbox_element;
 extern int turbo_mode;
-extern int input_disable;
 extern int nav_sound;
 extern int bar_header;
 extern int bar_footer;

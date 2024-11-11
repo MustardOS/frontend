@@ -22,7 +22,6 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int input_disable = 0;
 int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
@@ -296,7 +295,7 @@ void init_navigation_groups() {
 }
 
 void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
@@ -309,7 +308,7 @@ void list_nav_prev(int steps) {
 }
 
 void list_nav_next(int steps) {
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
@@ -322,21 +321,18 @@ void list_nav_next(int steps) {
 }
 
 void handle_a() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblTimezone) {
-        play_sound("confirm", nav_sound, 1);
-        input_disable = 1;
+        play_sound("confirm", nav_sound, 0, 1);
         save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
                             rtcHourValue, rtcMinuteValue);
         load_mux("timezone");
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
         mux_input_stop();
     } else {
-        play_sound("navigate", nav_sound, 0);
+        play_sound("navigate", nav_sound, 0, 0);
         if (element_focused == ui_lblYear) {
             if (rtcYearValue >= 1969 && rtcYearValue < 2199) {
                 rtcYearValue++;
@@ -397,15 +393,14 @@ void handle_a() {
 
 void handle_b() {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 1);
+        play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 1);
-    input_disable = 1;
+    play_sound("back", nav_sound, 0, 1);
 
     osd_message = TG("Saving Changes");
     lv_label_set_text(ui_lblMessage, osd_message);
@@ -425,12 +420,10 @@ void handle_b() {
 }
 
 void handle_left() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     if (element_focused == ui_lblYear) {
         if (rtcYearValue > 1970 && rtcYearValue <= 2199) {
             rtcYearValue--;
@@ -490,12 +483,10 @@ void handle_left() {
 }
 
 void handle_right() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    play_sound("navigate", nav_sound, 0);
+    play_sound("navigate", nav_sound, 0, 0);
     if (element_focused == ui_lblYear) {
         if (rtcYearValue >= 1970 && rtcYearValue < 2199) {
             rtcYearValue++;
@@ -554,12 +545,10 @@ void handle_right() {
 }
 
 void handle_menu() {
-    if (msgbox_active) {
-        return;
-    }
+    if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 1);
+        play_sound("confirm", nav_sound, 0, 0);
         show_help();
     }
 }
