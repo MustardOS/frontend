@@ -46,6 +46,7 @@ int key_show = 0;
 int key_curr = 0;
 int key_map = 0;
 
+static char search_result[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char lookup_value[MAX_BUFFER_SIZE];
 
@@ -503,6 +504,9 @@ void handle_confirm(void) {
 
 void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
+
+    if (file_exist(search_result)) remove(search_result);
+
     mux_input_stop();
 }
 
@@ -830,7 +834,6 @@ int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
 
-    static char search_result[MAX_BUFFER_SIZE];
     snprintf(search_result, sizeof(search_result), "%s/MUOS/info/search.json",
              device.STORAGE.ROM.MOUNT);
 
