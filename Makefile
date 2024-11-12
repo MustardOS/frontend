@@ -1,8 +1,8 @@
 MODULES := muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxgov muxinfo \
            muxlanguage muxlaunch muxnetprofile muxnetscan muxnetwork muxoption muxpass \
-           muxpower muxplore muxrtc muxsplash muxstart muxstorage muxsysinfo muxtask \
-           muxtester muxtheme muxtimezone muxtweakadv muxtweakgen muxvisual muxwebserv \
-           muhotkey muplay
+           muxpower muxplore muxrtc muxsearch muxsplash muxstart muxstorage muxsysinfo \
+           muxtask muxtester muxtheme muxtimezone muxtweakadv muxtweakgen muxvisual \
+           muxwebserv muhotkey muplay
 
 BUILD_TOTAL := $(words $(MODULES))
 BUILD_FILE := .build_count

@@ -17,7 +17,6 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -28,6 +27,7 @@ int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
+char *mux_module;
 
 struct mux_config config;
 struct mux_device device;
@@ -46,7 +46,7 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 2
+#define UI_COUNT 3
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
 
@@ -59,6 +59,7 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
+            {ui_lblSearch,   TS("Search for content within the selected directory")},
             {ui_lblCore,     TS("Set the system core or external emulator for the selected content or directory")},
             {ui_lblGovernor, TS("Set the CPU governor for the selected content or directory")},
     };
@@ -81,22 +82,28 @@ void show_help(lv_obj_t *element_focused) {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
+            ui_pnlSearch,
             ui_pnlCore,
             ui_pnlGovernor
     };
 
-    ui_objects[0] = ui_lblCore;
-    ui_objects[1] = ui_lblGovernor;
+    ui_objects[0] = ui_lblSearch;
+    ui_objects[1] = ui_lblCore;
+    ui_objects[2] = ui_lblGovernor;
 
-    ui_icons[0] = ui_icoCore;
-    ui_icons[1] = ui_icoGovernor;
+    ui_icons[0] = ui_icoSearch;
+    ui_icons[1] = ui_icoCore;
+    ui_icons[2] = ui_icoGovernor;
 
+    apply_theme_list_panel(&theme, &device, ui_pnlSearch);
     apply_theme_list_panel(&theme, &device, ui_pnlCore);
     apply_theme_list_panel(&theme, &device, ui_pnlGovernor);
 
+    apply_theme_list_item(&theme, ui_lblSearch, TS("Search Content"), false, false);
     apply_theme_list_item(&theme, ui_lblCore, TS("Assign Core"), false, false);
     apply_theme_list_item(&theme, ui_lblGovernor, TS("System Governor"), false, false);
 
+    apply_theme_list_glyph(&theme, ui_icoSearch, mux_module, "search");
     apply_theme_list_glyph(&theme, ui_icoCore, mux_module, "core");
     apply_theme_list_glyph(&theme, ui_icoGovernor, mux_module, "governor");
 
@@ -145,7 +152,9 @@ void handle_confirm() {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblCore) {
+    if (element_focused == ui_lblSearch) {
+        load_mux("search");
+    } else if (element_focused == ui_lblCore) {
         load_mux("assign");
     } else if (element_focused == ui_lblGovernor) {
         load_mux("governor");
@@ -226,6 +235,7 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
+    lv_obj_set_user_data(ui_lblSearch, "search");
     lv_obj_set_user_data(ui_lblCore, "core");
     lv_obj_set_user_data(ui_lblGovernor, "governor");
 
