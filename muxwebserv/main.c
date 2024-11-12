@@ -42,14 +42,14 @@ lv_obj_t *overlay_image = NULL;
 
 int progress_onscreen = -1;
 
-int sshd_original, sftpgo_original, ttyd_original, syncthing_original, rslsync_original, ntp_original;
+int sshd_original, sftpgo_original, ttyd_original, syncthing_original, rslsync_original, ntp_original, tailscaled_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 6
+#define UI_COUNT 7
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -67,6 +67,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblSyncthing, TS("Toggle Syncthing - WebUI can be found on port 7070")},
             {ui_lblRSLSync,   TS("Toggle RSLSync - WebUI can be found on port 6060")},
             {ui_lblNTP,       TS("Toggle network time protocol for active network connections")},
+            {ui_lblTailscaled, TS("Toggle Tailscale - Need to login via SSH first")},
     };
 
     char *message = TG("No Help Information Found");
@@ -102,7 +103,8 @@ void elements_events_init() {
             ui_droTTYD,
             ui_droSyncthing,
             ui_droRSLSync,
-            ui_droNTP
+            ui_droNTP,
+            ui_droTailscaled
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -117,6 +119,7 @@ void init_dropdown_settings() {
     syncthing_original = lv_dropdown_get_selected(ui_droSyncthing);
     rslsync_original = lv_dropdown_get_selected(ui_droRSLSync);
     ntp_original = lv_dropdown_get_selected(ui_droNTP);
+    tailscaled_original = lv_dropdown_get_selected(ui_droTailscaled);
 }
 
 void restore_web_options() {
@@ -126,6 +129,7 @@ void restore_web_options() {
     lv_dropdown_set_selected(ui_droSyncthing, config.WEB.SYNCTHING);
     lv_dropdown_set_selected(ui_droRSLSync, config.WEB.RSLSYNC);
     lv_dropdown_set_selected(ui_droNTP, config.WEB.NTP);
+    lv_dropdown_set_selected(ui_droTailscaled, config.WEB.TAILSCALED);
 }
 
 void save_web_options() {
@@ -135,6 +139,7 @@ void save_web_options() {
     int idx_syncthing = lv_dropdown_get_selected(ui_droSyncthing);
     int idx_rslsync = lv_dropdown_get_selected(ui_droRSLSync);
     int idx_ntp = lv_dropdown_get_selected(ui_droNTP);
+    int idx_tailscaled = lv_dropdown_get_selected(ui_droTailscaled);
 
     int is_modified = 0;
 
@@ -168,6 +173,11 @@ void save_web_options() {
         write_text_to_file("/run/muos/global/web/ntp", "w", INT, idx_ntp);
     }
 
+    if (lv_dropdown_get_selected(ui_droTailscaled) != tailscaled_original) {
+        is_modified++;
+        write_text_to_file("/run/muos/global/web/tailscaled", "w", INT, idx_tailscaled);
+    }
+
     if (is_modified > 0) {
         static char service_script[MAX_BUFFER_SIZE];
         snprintf(service_script, sizeof(service_script),
@@ -184,6 +194,7 @@ void init_navigation_groups() {
             ui_pnlSyncthing,
             ui_pnlRSLSync,
             ui_pnlNTP,
+            ui_pnlTailscaled,
     };
 
     ui_objects[0] = ui_lblSSHD;
@@ -192,6 +203,7 @@ void init_navigation_groups() {
     ui_objects[3] = ui_lblSyncthing;
     ui_objects[4] = ui_lblRSLSync;
     ui_objects[5] = ui_lblNTP;
+    ui_objects[6] = ui_lblTailscaled;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droSSHD,
@@ -199,7 +211,8 @@ void init_navigation_groups() {
             ui_droTTYD,
             ui_droSyncthing,
             ui_droRSLSync,
-            ui_droNTP
+            ui_droNTP,
+            ui_droTailscaled
     };
 
     lv_obj_t *ui_objects_glyph[] = {
@@ -208,7 +221,8 @@ void init_navigation_groups() {
             ui_icoTTYD,
             ui_icoSyncthing,
             ui_icoRSLSync,
-            ui_icoNTP
+            ui_icoNTP,
+            ui_icoTailscaled
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlSSHD);
@@ -217,6 +231,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
     apply_theme_list_panel(&theme, &device, ui_pnlRSLSync);
     apply_theme_list_panel(&theme, &device, ui_pnlNTP);
+    apply_theme_list_panel(&theme, &device, ui_pnlTailscaled);
 
     apply_theme_list_item(&theme, ui_lblSSHD, TS("Secure Shell"), false, true);
     apply_theme_list_item(&theme, ui_lblSFTPGo, TS("SFTP + Filebrowser"), false, true);
@@ -224,6 +239,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblSyncthing, TS("Syncthing"), false, true);
     apply_theme_list_item(&theme, ui_lblRSLSync, TS("Resilio"), false, true);
     apply_theme_list_item(&theme, ui_lblNTP, TS("Network Time Sync"), false, true);
+    apply_theme_list_item(&theme, ui_lblTailscaled, TS("Tailscale"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoSSHD, mux_module, "sshd");
     apply_theme_list_glyph(&theme, ui_icoSFTPGo, mux_module, "sftpgo");
@@ -231,6 +247,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_module, "syncthing");
     apply_theme_list_glyph(&theme, ui_icoRSLSync, mux_module, "rslsync");
     apply_theme_list_glyph(&theme, ui_icoNTP, mux_module, "ntp");
+    apply_theme_list_glyph(&theme, ui_icoTailscaled, mux_module, "tailscaled");
 
     char options[MAX_BUFFER_SIZE];
     snprintf(options, sizeof(options), "%s\n%s", TG("Disabled"), TG("Enabled"));
@@ -240,6 +257,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droSyncthing, options);
     apply_theme_list_drop_down(&theme, ui_droRSLSync, options);
     apply_theme_list_drop_down(&theme, ui_droNTP, options);
+    apply_theme_list_drop_down(&theme, ui_droTailscaled, options);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -379,6 +397,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblSyncthing, "syncthing");
     lv_obj_set_user_data(ui_lblRSLSync, "rslsync");
     lv_obj_set_user_data(ui_lblNTP, "ntp");
+    lv_obj_set_user_data(ui_lblTailscaled, "tailscaled");
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
 

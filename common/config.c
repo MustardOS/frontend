@@ -93,6 +93,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->WEB.SYNCTHING, "web/syncthing", 0)
     CFG_INT_FIELD(config->WEB.RSLSYNC, "web/rslsync", 0)
     CFG_INT_FIELD(config->WEB.NTP, "web/ntp", 1)
+    CFG_INT_FIELD(config->WEB.TAILSCALED, "web/tailscaled", 0)
 
 #undef CFG_INT_FIELD
 #undef CFG_STR_FIELD

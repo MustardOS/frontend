@@ -7,6 +7,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_pnlSyncthing = lv_obj_create(ui_pnlContent);
     ui_pnlRSLSync = lv_obj_create(ui_pnlContent);
     ui_pnlNTP = lv_obj_create(ui_pnlContent);
+    ui_pnlTailscaled = lv_obj_create(ui_pnlContent);
 
     ui_lblSSHD = lv_label_create(ui_pnlSSHD);
     ui_lblSFTPGo = lv_label_create(ui_pnlSFTPGo);
@@ -14,6 +15,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblSyncthing = lv_label_create(ui_pnlSyncthing);
     ui_lblRSLSync = lv_label_create(ui_pnlRSLSync);
     ui_lblNTP = lv_label_create(ui_pnlNTP);
+    ui_lblTailscaled = lv_label_create(ui_pnlTailscaled);
 
     ui_icoSSHD = lv_img_create(ui_pnlSSHD);
     ui_icoSFTPGo = lv_img_create(ui_pnlSFTPGo);
@@ -21,6 +23,7 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_icoSyncthing = lv_img_create(ui_pnlSyncthing);
     ui_icoRSLSync = lv_img_create(ui_pnlRSLSync);
     ui_icoNTP = lv_img_create(ui_pnlNTP);
+    ui_icoTailscaled = lv_img_create(ui_pnlTailscaled);
 
     ui_droSSHD = lv_dropdown_create(ui_pnlSSHD);
     ui_droSFTPGo = lv_dropdown_create(ui_pnlSFTPGo);
@@ -28,4 +31,5 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_droSyncthing = lv_dropdown_create(ui_pnlSyncthing);
     ui_droRSLSync = lv_dropdown_create(ui_pnlRSLSync);
     ui_droNTP = lv_dropdown_create(ui_pnlNTP);
+    ui_droTailscaled = lv_dropdown_create(ui_pnlTailscaled);
 }
