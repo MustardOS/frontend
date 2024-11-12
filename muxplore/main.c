@@ -1823,9 +1823,7 @@ void handle_right_hold(void) {
 }
 
 void handle_page_up(void) {
-    if (msgbox_active || !ui_count) {
-        return;
-    }
+    if (msgbox_active || !ui_count) return;
 
     // Don't wrap around when scrolling by page.
     int steps = 0;
@@ -1840,9 +1838,7 @@ void handle_page_up(void) {
 }
 
 void handle_page_down(void) {
-    if (msgbox_active || !ui_count) {
-        return;
-    }
+    if (msgbox_active || !ui_count) return;
 
     // Don't wrap around when scrolling by page.
     int steps = 0;
@@ -1854,6 +1850,15 @@ void handle_page_down(void) {
     if (steps > 0) {
         list_nav_next(steps);
     }
+}
+
+void random_select(void) {
+    if (msgbox_active || !ui_count) return;
+
+    uint32_t random_select = arc4random() % ui_count;
+    int selected_index = (int) (random_select & INT32_MAX);
+
+    !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
 }
 
 void set_nav_text(const char *nav_a, const char *nav_b, const char *nav_x, const char *nav_y, const char *nav_menu) {
@@ -2366,6 +2371,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
                     [MUX_INPUT_L1] = handle_page_up,
                     [MUX_INPUT_R1] = handle_page_down,
+                    [MUX_INPUT_R2] = random_select,
             },
             .hold_handler = {
                     // List navigation:
@@ -2375,6 +2381,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_page_up,
                     [MUX_INPUT_R1] = handle_page_down,
+                    [MUX_INPUT_R2] = random_select,
             },
             .combo = {
                     {
