@@ -12,6 +12,8 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
+#include "../common/log.h"
+#include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
 static int js_fd;
@@ -44,7 +46,10 @@ int key_show = 0;
 int key_curr = 0;
 int key_map = 0;
 
-char *rom_dir;
+static char rom_dir[MAX_BUFFER_SIZE];
+static char lookup_value[MAX_BUFFER_SIZE];
+
+struct json search_folders;
 
 lv_obj_t *key_entry;
 
@@ -131,7 +136,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoLookup, mux_module, "lookup");
     apply_theme_list_glyph(&theme, ui_icoSearch, mux_module, "search");
 
-    apply_theme_list_value(&theme, ui_lblLookupValue, "");
+    apply_theme_list_value(&theme, ui_lblLookupValue, lookup_value);
     apply_theme_list_value(&theme, ui_lblSearchValue, "");
 
     ui_group = lv_group_create();
@@ -145,6 +150,53 @@ void init_navigation_groups() {
         lv_group_add_obj(ui_group_value, ui_values[i]);
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
         lv_group_add_obj(ui_group_panel, ui_panels[i]);
+    }
+}
+
+void process_results(const char *json_results) {
+    if (!json_valid(json_results)) {
+        LOG_ERROR(mux_module, "Invalid JSON Format")
+        return;
+    }
+
+    struct json root = json_parse(json_results);
+
+    struct json lookup = json_object_get(root, "lookup");
+    if (json_exists(lookup) && json_type(lookup) == JSON_STRING) {
+        json_string_copy(lookup, lookup_value, sizeof(lookup_value));
+    }
+
+    struct json directory = json_object_get(root, "directory");
+    if (json_exists(directory) && json_type(directory) == JSON_STRING) {
+        json_string_copy(directory, rom_dir, sizeof(rom_dir));
+    }
+
+    search_folders = json_object_get(root, "folders");
+    if (json_exists(search_folders) && json_type(search_folders) == JSON_OBJECT) {
+        struct json folder = json_first(search_folders);
+        while (json_exists(folder)) {
+
+            if (json_type(folder) == JSON_STRING) {
+                char folder_name[MAX_BUFFER_SIZE];
+                json_string_copy(folder, folder_name, sizeof(folder_name));
+                LOG_DEBUG(mux_module, "FOLDER\t\t%s", folder_name)
+            }
+
+            struct json content = json_object_get(folder, "content");
+            if (json_exists(content) && json_type(content) == JSON_ARRAY) {
+                size_t count = json_array_count(content);
+                for (size_t i = 0; i < count; i++) {
+                    struct json item = json_array_get(content, i);
+                    if (json_type(item) == JSON_STRING) {
+                        char item_value[MAX_BUFFER_SIZE];
+                        json_string_copy(item, item_value, sizeof(item_value));
+                        LOG_DEBUG(mux_module, "CONTENT\t\t\t%s", item_value)
+                    }
+                }
+            }
+
+            folder = json_next(folder);
+        }
     }
 }
 
@@ -400,7 +452,7 @@ void handle_confirm(void) {
         static char command[MAX_BUFFER_SIZE];
         snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
                  rom_dir, lv_label_get_text(ui_lblLookupValue));
-        printf("SEARCH COMMAND: %s\n", command);
+        LOG_DEBUG(mux_module, "SEARCH COMMAND: %s", command)
         system("tree /tmp/muxresult");
     }
 }
@@ -733,18 +785,32 @@ int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
 
-    char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
-                     "\t-d Name of directory to search\n\n";
+    static char search_result[MAX_BUFFER_SIZE];
+    snprintf(search_result, sizeof(search_result), "%s/MUOS/info/search.json",
+             device.STORAGE.ROM.MOUNT);
 
-    int opt;
-    while ((opt = getopt(argc, argv, "d:")) != -1) {
-        switch (opt) {
-            case 'd':
-                rom_dir = optarg;
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
+    if (file_exist(search_result)) {
+        char *json_content = read_text_from_file(search_result);
+        if (json_content) {
+            process_results(json_content);
+            free(json_content);
+        } else {
+            LOG_ERROR(mux_module, "Error reading search results")
+        }
+    } else {
+        char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
+                         "\t-d Name of directory to search\n\n";
+
+        int opt;
+        while ((opt = getopt(argc, argv, "d:")) != -1) {
+            switch (opt) {
+                case 'd':
+                    snprintf(rom_dir, sizeof(rom_dir), "%s", optarg);
+                    break;
+                default:
+                    fprintf(stderr, cmd_help, argv[0]);
+                    return 1;
+            }
         }
     }
 

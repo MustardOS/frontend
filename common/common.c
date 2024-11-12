@@ -1300,7 +1300,6 @@ void load_font_text(const char *program, lv_obj_t *screen) {
         }
     }
     LOG_INFO(mux_module, "Loading Default Language Font")
-    printf("Loading Default Language Font\n");
     lv_obj_set_style_text_font(screen, language_font, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
