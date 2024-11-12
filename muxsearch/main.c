@@ -155,7 +155,7 @@ void init_navigation_groups() {
     }
 }
 
-void gen_label(char *item_glyph, char *item_text) {
+void gen_label(char *item_glyph, char *item_text, char *item_data) {
     lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlResult);
 
@@ -171,6 +171,8 @@ void gen_label(char *item_glyph, char *item_text) {
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblResultItem, item_text);
+
+    lv_obj_set_user_data(ui_lblResultItem, item_data);
 
     ui_count++;
 }
@@ -207,8 +209,8 @@ void process_results(const char *json_results) {
                          folder_name);
 
                 LOG_DEBUG(mux_module, "FOLDER\t\t%s", folder_name)
-                gen_label("", "");
-                gen_label("folder", bracket_folder_name);
+                gen_label("", "", "blank");
+                gen_label("folder", bracket_folder_name, "folder");
             }
 
             struct json content = json_object_get(folder, "content");
@@ -219,7 +221,7 @@ void process_results(const char *json_results) {
                         char content_name[MAX_BUFFER_SIZE];
                         json_string_copy(item, content_name, sizeof(content_name));
                         LOG_DEBUG(mux_module, "CONTENT\t\t\t%s", content_name)
-                        gen_label("content", content_name);
+                        gen_label("content", content_name, "content");
                     }
                 }
             }
@@ -475,7 +477,7 @@ void handle_confirm(void) {
         key_show = 1;
         lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
         lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
-    } else {
+    } else if (element_focused == ui_lblSearch) {
         if (strlen(lv_label_get_text(ui_lblLookupValue)) <= 2) {
             toast_message(TS("Lookup has to be 3 characters or more!"), 1000, 1000);
             return;
@@ -491,6 +493,11 @@ void handle_confirm(void) {
 
         load_mux("search");
         mux_input_stop();
+    } else {
+        if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
+            toast_message(TS("Doing something..."), 1000, 1000);
+            // TODO: Launch the selected item back to muxplore
+        }
     }
 }
 
@@ -543,6 +550,8 @@ void handle_y(void) {
         handle_keyboard_swap();
         return;
     }
+
+    // TODO: A way to directly add the item to favourites
 }
 
 void handle_help(void) {
