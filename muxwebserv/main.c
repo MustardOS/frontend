@@ -65,7 +65,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblSFTPGo,    TS("Toggle SFTP support - WebUI can be found on port 9090")},
             {ui_lblTTYD,      TS("Toggle virtual terminal - WebUI can be found on port 8080")},
             {ui_lblSyncthing, TS("Toggle Syncthing - WebUI can be found on port 7070")},
-            {ui_lblRSLSync,   TS("Toggle RSLSync - WebUI can be found on port 6060")},
+            {ui_lblRSLSync,   TS("Toggle Resilio - WebUI can be found on port 6060")},
             {ui_lblNTP,       TS("Toggle network time protocol for active network connections")},
             {ui_lblTailscaled, TS("Toggle Tailscale - Need to login via SSH first")},
     };
