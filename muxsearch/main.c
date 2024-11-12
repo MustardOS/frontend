@@ -138,7 +138,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoLookup, mux_module, "lookup");
     apply_theme_list_glyph(&theme, ui_icoSearch, mux_module, "search");
 
-    apply_theme_list_value(&theme, ui_lblLookupValue, lookup_value);
+    apply_theme_list_value(&theme, ui_lblLookupValue, "");
     apply_theme_list_value(&theme, ui_lblSearchValue, "");
 
     ui_group = lv_group_create();
@@ -155,7 +155,7 @@ void init_navigation_groups() {
     }
 }
 
-void gen_label(char *item_glyph, char *item_text, int skip_item) {
+void gen_label(char *item_glyph, char *item_text) {
     lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlResult);
 
@@ -165,18 +165,15 @@ void gen_label(char *item_glyph, char *item_text, int skip_item) {
     lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
     apply_theme_list_glyph(&theme, ui_lblResultItemGlyph, mux_module, item_glyph);
 
-    if (!skip_item) {
-        lv_group_add_obj(ui_group, ui_lblResultItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblResultItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlResult);
-    }
+    lv_group_add_obj(ui_group, ui_lblResultItem);
+    lv_group_add_obj(ui_group_glyph, ui_lblResultItemGlyph);
+    lv_group_add_obj(ui_group_panel, ui_pnlResult);
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblResultItem, item_text);
 
     ui_count++;
 }
-
 
 void process_results(const char *json_results) {
     if (!json_valid(json_results)) {
@@ -210,20 +207,19 @@ void process_results(const char *json_results) {
                          folder_name);
 
                 LOG_DEBUG(mux_module, "FOLDER\t\t%s", folder_name)
-                gen_label("", "", 1);
-                gen_label("folder", bracket_folder_name, 1);
+                gen_label("", "");
+                gen_label("folder", bracket_folder_name);
             }
 
             struct json content = json_object_get(folder, "content");
             if (json_exists(content) && json_type(content) == JSON_ARRAY) {
-                size_t count = json_array_count(content);
-                for (size_t i = 0; i < count; i++) {
+                for (size_t i = 0; i < json_array_count(content); i++) {
                     struct json item = json_array_get(content, i);
                     if (json_type(item) == JSON_STRING) {
                         char content_name[MAX_BUFFER_SIZE];
                         json_string_copy(item, content_name, sizeof(content_name));
                         LOG_DEBUG(mux_module, "CONTENT\t\t\t%s", content_name)
-                        gen_label("content", content_name, 0);
+                        gen_label("content", content_name);
                     }
                 }
             }
