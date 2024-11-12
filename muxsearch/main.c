@@ -89,8 +89,9 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblLookup, TS("Enter in a search time to find stuff and things")},
-            {ui_lblSearch, TS("Do the search thing")},
+            {ui_lblLookup,       TS("Enter in a search time to find stuff and things")},
+            {ui_lblSearchLocal,  TS("Do the search thing")},
+            {ui_lblSearchGlobal, TS("Do the search thing")},
     };
 
     char *message = TG("No Help Information Found");
@@ -112,35 +113,43 @@ void show_help(lv_obj_t *element_focused) {
 void init_navigation_groups() {
     lv_obj_t *ui_panels[] = {
             ui_pnlLookup,
-            ui_pnlSearch,
+            ui_pnlSearchLocal,
+            ui_pnlSearchGlobal,
     };
 
     lv_obj_t *ui_labels[] = {
             ui_lblLookup,
-            ui_lblSearch,
+            ui_lblSearchLocal,
+            ui_lblSearchGlobal,
     };
 
     lv_obj_t *ui_values[] = {
             ui_lblLookupValue,
-            ui_lblSearchValue,
+            ui_lblSearchLocalValue,
+            ui_lblSearchGlobalValue,
     };
 
     lv_obj_t *ui_icons[] = {
             ui_icoLookup,
-            ui_icoSearch,
+            ui_icoSearchLocal,
+            ui_icoSearchGlobal,
     };
 
     apply_theme_list_panel(&theme, &device, ui_pnlLookup);
-    apply_theme_list_panel(&theme, &device, ui_pnlSearch);
+    apply_theme_list_panel(&theme, &device, ui_pnlSearchLocal);
+    apply_theme_list_panel(&theme, &device, ui_pnlSearchGlobal);
 
     apply_theme_list_item(&theme, ui_lblLookup, TS("Lookup"), false, true);
-    apply_theme_list_item(&theme, ui_lblSearch, TS("Search"), false, true);
+    apply_theme_list_item(&theme, ui_lblSearchLocal, TS("Search Local"), false, true);
+    apply_theme_list_item(&theme, ui_lblSearchGlobal, TS("Search Global"), false, true);
 
     apply_theme_list_glyph(&theme, ui_icoLookup, mux_module, "lookup");
-    apply_theme_list_glyph(&theme, ui_icoSearch, mux_module, "search");
+    apply_theme_list_glyph(&theme, ui_icoSearchLocal, mux_module, "local");
+    apply_theme_list_glyph(&theme, ui_icoSearchGlobal, mux_module, "global");
 
     apply_theme_list_value(&theme, ui_lblLookupValue, "");
-    apply_theme_list_value(&theme, ui_lblSearchValue, "");
+    apply_theme_list_value(&theme, ui_lblSearchLocalValue, "");
+    apply_theme_list_value(&theme, ui_lblSearchGlobalValue, "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -191,11 +200,6 @@ void process_results(const char *json_results) {
         json_string_copy(lookup, lookup_value, sizeof(lookup_value));
     }
 
-    struct json directory = json_object_get(root, "directory");
-    if (json_exists(directory) && json_type(directory) == JSON_STRING) {
-        json_string_copy(directory, rom_dir, sizeof(rom_dir));
-    }
-
     search_folders = json_object_get(root, "folders");
     if (json_exists(search_folders) && json_type(search_folders) == JSON_OBJECT) {
         struct json folder = json_first(search_folders);
@@ -207,11 +211,14 @@ void process_results(const char *json_results) {
 
                 static char bracket_folder_name[MAX_BUFFER_SIZE];
                 snprintf(bracket_folder_name, sizeof(bracket_folder_name), "[%s]",
-                         folder_name);
+                         str_replace(folder_name, "/mnt/", ""));
 
                 LOG_DEBUG(mux_module, "FOLDER\t\t%s", folder_name)
                 gen_label("", "", "blank");
-                gen_label("folder", bracket_folder_name, "folder");
+
+                if (strcasecmp(bracket_folder_name, "[.]") != 0) {
+                    gen_label("folder", bracket_folder_name, "folder");
+                }
             }
 
             struct json content = json_object_get(folder, "content");
@@ -478,7 +485,7 @@ void handle_confirm(void) {
         key_show = 1;
         lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
         lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
-    } else if (element_focused == ui_lblSearch) {
+    } else if (element_focused == ui_lblSearchLocal || element_focused == ui_lblSearchGlobal) {
         if (strlen(lv_label_get_text(ui_lblLookupValue)) <= 2) {
             toast_message(TS("Lookup has to be 3 characters or more!"), 1000, 1000);
             return;
@@ -487,9 +494,19 @@ void handle_confirm(void) {
         toast_message(TS("Searching..."), 1000, 1000);
 
         static char command[MAX_BUFFER_SIZE];
-        snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
-                 rom_dir, lv_label_get_text(ui_lblLookupValue));
 
+        if (element_focused == ui_lblSearchLocal) {
+            snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
+                     rom_dir, lv_label_get_text(ui_lblLookupValue));
+        } else {
+            snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
+                     str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
+                     lv_label_get_text(ui_lblLookupValue));
+        }
+
+        LOG_DEBUG(mux_module, "Running Search: %s", command)
+
+        if (file_exist(search_result)) remove(search_result);
         system(command);
 
         load_mux("search");
@@ -715,7 +732,8 @@ void init_elements() {
     }
 
     lv_obj_set_user_data(ui_lblLookup, "lookup");
-    lv_obj_set_user_data(ui_lblSearch, "search");
+    lv_obj_set_user_data(ui_lblSearchLocal, "local");
+    lv_obj_set_user_data(ui_lblSearchGlobal, "global");
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
 
@@ -834,6 +852,21 @@ int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
 
+    char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
+                     "\t-d Name of directory to search\n\n";
+
+    int opt;
+    while ((opt = getopt(argc, argv, "d:")) != -1) {
+        switch (opt) {
+            case 'd':
+                snprintf(rom_dir, sizeof(rom_dir), "%s", optarg);
+                break;
+            default:
+                fprintf(stderr, cmd_help, argv[0]);
+                return 1;
+        }
+    }
+
     snprintf(search_result, sizeof(search_result), "%s/MUOS/info/search.json",
              device.STORAGE.ROM.MOUNT);
 
@@ -845,21 +878,6 @@ int main(int argc, char *argv[]) {
             got_results = 1;
         } else {
             LOG_ERROR(mux_module, "Error reading search results")
-        }
-    } else {
-        char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
-                         "\t-d Name of directory to search\n\n";
-
-        int opt;
-        while ((opt = getopt(argc, argv, "d:")) != -1) {
-            switch (opt) {
-                case 'd':
-                    snprintf(rom_dir, sizeof(rom_dir), "%s", optarg);
-                    break;
-                default:
-                    fprintf(stderr, cmd_help, argv[0]);
-                    return 1;
-            }
         }
     }
 

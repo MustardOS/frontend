@@ -5,16 +5,20 @@ void ui_screen_init(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_c
 lv_obj_t *ui_scrSearch;
 
 lv_obj_t *ui_pnlLookup;
-lv_obj_t *ui_pnlSearch;
+lv_obj_t *ui_pnlSearchLocal;
+lv_obj_t *ui_pnlSearchGlobal;
 
 lv_obj_t *ui_lblLookup;
-lv_obj_t *ui_lblSearch;
+lv_obj_t *ui_lblSearchLocal;
+lv_obj_t *ui_lblSearchGlobal;
 
 lv_obj_t *ui_icoLookup;
-lv_obj_t *ui_icoSearch;
+lv_obj_t *ui_icoSearchLocal;
+lv_obj_t *ui_icoSearchGlobal;
 
 lv_obj_t *ui_lblLookupValue;
-lv_obj_t *ui_lblSearchValue;
+lv_obj_t *ui_lblSearchLocalValue;
+lv_obj_t *ui_lblSearchGlobalValue;
 
 lv_obj_t *ui_pnlEntry;
 lv_obj_t *ui_txtEntry;

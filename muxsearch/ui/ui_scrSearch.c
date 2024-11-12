@@ -3,16 +3,20 @@
 
 void ui_screen_init(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
     ui_pnlLookup = lv_obj_create(ui_pnlContent);
-    ui_pnlSearch = lv_obj_create(ui_pnlContent);
+    ui_pnlSearchLocal = lv_obj_create(ui_pnlContent);
+    ui_pnlSearchGlobal = lv_obj_create(ui_pnlContent);
 
     ui_lblLookup = lv_label_create(ui_pnlLookup);
-    ui_lblSearch = lv_label_create(ui_pnlSearch);
+    ui_lblSearchLocal = lv_label_create(ui_pnlSearchLocal);
+    ui_lblSearchGlobal = lv_label_create(ui_pnlSearchGlobal);
 
     ui_icoLookup = lv_img_create(ui_pnlLookup);
-    ui_icoSearch = lv_img_create(ui_pnlSearch);
+    ui_icoSearchLocal = lv_img_create(ui_pnlSearchLocal);
+    ui_icoSearchGlobal = lv_img_create(ui_pnlSearchGlobal);
 
     ui_lblLookupValue = lv_label_create(ui_pnlLookup);
-    ui_lblSearchValue = lv_label_create(ui_pnlSearch);
+    ui_lblSearchLocalValue = lv_label_create(ui_pnlSearchLocal);
+    ui_lblSearchGlobalValue = lv_label_create(ui_pnlSearchGlobal);
 
     ui_pnlEntry = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlEntry, device.MUX.WIDTH);
