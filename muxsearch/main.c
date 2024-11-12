@@ -41,7 +41,7 @@ lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
 
 int progress_onscreen = -1;
-
+int got_results = 0;
 int key_show = 0;
 int key_curr = 0;
 int key_map = 0;
@@ -57,12 +57,6 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
-
-#define UI_COUNT 2
-lv_obj_t *ui_panels[UI_COUNT];
-lv_obj_t *ui_objects[UI_COUNT];
-lv_obj_t *ui_values[UI_COUNT];
-lv_obj_t *ui_icons[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[7];
 
@@ -115,17 +109,25 @@ void show_help(lv_obj_t *element_focused) {
 }
 
 void init_navigation_groups() {
-    ui_panels[0] = ui_pnlLookup;
-    ui_panels[1] = ui_pnlSearch;
+    lv_obj_t *ui_panels[] = {
+            ui_pnlLookup,
+            ui_pnlSearch,
+    };
 
-    ui_objects[0] = ui_lblLookup;
-    ui_objects[1] = ui_lblSearch;
+    lv_obj_t *ui_labels[] = {
+            ui_lblLookup,
+            ui_lblSearch,
+    };
 
-    ui_values[0] = ui_lblLookupValue;
-    ui_values[1] = ui_lblSearchValue;
+    lv_obj_t *ui_values[] = {
+            ui_lblLookupValue,
+            ui_lblSearchValue,
+    };
 
-    ui_icons[0] = ui_icoLookup;
-    ui_icons[1] = ui_icoSearch;
+    lv_obj_t *ui_icons[] = {
+            ui_icoLookup,
+            ui_icoSearch,
+    };
 
     apply_theme_list_panel(&theme, &device, ui_pnlLookup);
     apply_theme_list_panel(&theme, &device, ui_pnlSearch);
@@ -144,14 +146,37 @@ void init_navigation_groups() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
+    ui_count = sizeof(ui_panels) / sizeof(ui_panels[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_objects[i]);
+        lv_group_add_obj(ui_group, ui_labels[i]);
         lv_group_add_obj(ui_group_value, ui_values[i]);
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
         lv_group_add_obj(ui_group_panel, ui_panels[i]);
     }
 }
+
+void gen_label(char *item_glyph, char *item_text, int skip_item) {
+    lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
+    apply_theme_list_panel(&theme, &device, ui_pnlResult);
+
+    lv_obj_t *ui_lblResultItem = lv_label_create(ui_pnlResult);
+    apply_theme_list_item(&theme, ui_lblResultItem, item_text, true, false);
+
+    lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
+    apply_theme_list_glyph(&theme, ui_lblResultItemGlyph, mux_module, item_glyph);
+
+    if (!skip_item) {
+        lv_group_add_obj(ui_group, ui_lblResultItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblResultItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlResult);
+    }
+
+    apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lblResultItem, item_text);
+
+    ui_count++;
+}
+
 
 void process_results(const char *json_results) {
     if (!json_valid(json_results)) {
@@ -179,7 +204,14 @@ void process_results(const char *json_results) {
             if (json_type(folder) == JSON_STRING) {
                 char folder_name[MAX_BUFFER_SIZE];
                 json_string_copy(folder, folder_name, sizeof(folder_name));
+
+                static char bracket_folder_name[MAX_BUFFER_SIZE];
+                snprintf(bracket_folder_name, sizeof(bracket_folder_name), "[%s]",
+                         folder_name);
+
                 LOG_DEBUG(mux_module, "FOLDER\t\t%s", folder_name)
+                gen_label("", "", 1);
+                gen_label("folder", bracket_folder_name, 1);
             }
 
             struct json content = json_object_get(folder, "content");
@@ -188,9 +220,10 @@ void process_results(const char *json_results) {
                 for (size_t i = 0; i < count; i++) {
                     struct json item = json_array_get(content, i);
                     if (json_type(item) == JSON_STRING) {
-                        char item_value[MAX_BUFFER_SIZE];
-                        json_string_copy(item, item_value, sizeof(item_value));
-                        LOG_DEBUG(mux_module, "CONTENT\t\t\t%s", item_value)
+                        char content_name[MAX_BUFFER_SIZE];
+                        json_string_copy(item, content_name, sizeof(content_name));
+                        LOG_DEBUG(mux_module, "CONTENT\t\t\t%s", content_name)
+                        gen_label("content", content_name, 0);
                     }
                 }
             }
@@ -447,19 +480,26 @@ void handle_confirm(void) {
         lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
         lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
     } else {
-        toast_message("Searching...", 1000, 1000);
+        if (strlen(lv_label_get_text(ui_lblLookupValue)) <= 2) {
+            toast_message(TS("Lookup has to be 3 characters or more!"), 1000, 1000);
+            return;
+        }
+
+        toast_message(TS("Searching..."), 1000, 1000);
 
         static char command[MAX_BUFFER_SIZE];
         snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
                  rom_dir, lv_label_get_text(ui_lblLookupValue));
-        LOG_DEBUG(mux_module, "SEARCH COMMAND: %s", command)
-        system("tree /tmp/muxresult");
+
+        system(command);
+
+        load_mux("search");
+        mux_input_stop();
     }
 }
 
 void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "muxoption");
     mux_input_stop();
 }
 
@@ -789,11 +829,12 @@ int main(int argc, char *argv[]) {
     snprintf(search_result, sizeof(search_result), "%s/MUOS/info/search.json",
              device.STORAGE.ROM.MOUNT);
 
+    char *json_content;
+
     if (file_exist(search_result)) {
-        char *json_content = read_text_from_file(search_result);
+        json_content = read_text_from_file(search_result);
         if (json_content) {
-            process_results(json_content);
-            free(json_content);
+            got_results = 1;
         } else {
             LOG_ERROR(mux_module, "Error reading search results")
         }
@@ -859,6 +900,12 @@ int main(int argc, char *argv[]) {
 
     nav_sound = init_nav_sound(mux_module);
     init_navigation_groups();
+
+    if (got_results) {
+        process_results(json_content);
+        lv_label_set_text(ui_lblLookupValue, lookup_value);
+        free(json_content);
+    }
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
