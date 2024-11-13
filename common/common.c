@@ -1590,6 +1590,11 @@ void update_grid_scroll_position(int col_count, int row_count, int row_height,
     }
 }
 
+void scroll_object_to_middle(lv_obj_t* container, lv_obj_t* obj) {
+    lv_coord_t scroll_y = lv_obj_get_y(obj) - (lv_obj_get_height(container) / 2) + (lv_obj_get_height(obj) / 2);
+    lv_obj_scroll_to(container, lv_obj_get_scroll_x(container), scroll_y, LV_ANIM_OFF);
+}
+
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count,
                             int current_item_index, lv_obj_t *ui_pnlContent) {
     // how many items should be above the currently selected item when scrolling

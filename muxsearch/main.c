@@ -175,16 +175,17 @@ void gen_label(char *item_glyph, char *item_text, char *item_data) {
     lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
     apply_theme_list_glyph(&theme, ui_lblResultItemGlyph, mux_module, item_glyph);
 
-    lv_group_add_obj(ui_group, ui_lblResultItem);
-    lv_group_add_obj(ui_group_glyph, ui_lblResultItemGlyph);
-    lv_group_add_obj(ui_group_panel, ui_pnlResult);
-
     apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblResultItem, item_text);
 
     lv_obj_set_user_data(ui_lblResultItem, item_data);
 
-    ui_count++;
+    if (strcasecmp(item_data, "blank") != 0 && strcasecmp(item_data, "folder") != 0) {
+        lv_group_add_obj(ui_group, ui_lblResultItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblResultItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlResult);
+        ui_count++;
+    }
 }
 
 void process_results(const char *json_results) {
@@ -255,7 +256,7 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
     nav_moved = 1;
 }
 
@@ -272,7 +273,7 @@ void list_nav_next(int steps) {
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
     nav_moved = 1;
 }
 
