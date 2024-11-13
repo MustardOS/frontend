@@ -219,6 +219,8 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings);
 void update_grid_scroll_position(int col_count, int row_count, int row_height,
                                  int current_item_index, lv_obj_t *ui_pnlGrid);
 
+void scroll_object_to_middle(lv_obj_t* container, lv_obj_t* obj);
+
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
                             lv_obj_t *ui_pnlContent);
 
