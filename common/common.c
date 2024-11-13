@@ -216,9 +216,9 @@ char *str_trim(char *text) {
     return text;
 }
 
-char *str_replace(char *orig, char *rep, char *with) {
+char *str_replace(const char *orig, const char *rep, const char *with) {
     char *result;
-    char *ins;
+    const char *ins;
     char *tmp;
     size_t len_rep;
     size_t len_with;
@@ -257,6 +257,59 @@ char *str_replace(char *orig, char *rep, char *with) {
     }
     strcpy(tmp, orig);
     return result;
+}
+
+int str_replace_segment(const char *orig, const char *prefix, const char *suffix,
+                        const char *with, char **replacement) {
+    const char *start, *end;
+    size_t len_front, len_with, len_suffix, total_len;
+
+    if (!orig || !prefix || !suffix || !replacement) return 0;
+
+    start = strstr(orig, prefix);
+    if (!start) return 0;
+
+    start += strlen(prefix);
+    end = strstr(start, suffix);
+    if (!end) return 0;
+
+    len_front = start - orig;
+    len_suffix = strlen(end);
+    len_with = strlen(with);
+    total_len = len_front + len_with + len_suffix + 1;
+
+    *replacement = (char *) malloc(total_len);
+    if (!*replacement) return 0;
+
+    strncpy(*replacement, orig, len_front);
+    strcpy(*replacement + len_front, with);
+    strcpy(*replacement + len_front + len_with, end);
+
+    return 1;
+}
+
+int str_extract(const char *orig, const char *prefix, const char *suffix, char **extraction) {
+    const char *start, *end;
+    size_t len_dynamic;
+
+    if (!orig || !prefix || !suffix) return 0;
+
+    start = strstr(orig, prefix);
+    if (!start) return 0;
+
+    start += strlen(prefix);
+    end = strstr(start, suffix);
+    if (!end) return 0;
+
+    len_dynamic = end - start;
+
+    *extraction = (char *) malloc(len_dynamic + 1);
+    if (!*extraction) return 0;
+
+    strncpy(*extraction, start, len_dynamic);
+    (*extraction)[len_dynamic] = '\0';
+
+    return 1;
 }
 
 char *get_last_subdir(char *text, char separator, int n) {
@@ -1590,7 +1643,7 @@ void update_grid_scroll_position(int col_count, int row_count, int row_height,
     }
 }
 
-void scroll_object_to_middle(lv_obj_t* container, lv_obj_t* obj) {
+void scroll_object_to_middle(lv_obj_t *container, lv_obj_t *obj) {
     lv_coord_t scroll_y = lv_obj_get_y(obj) - (lv_obj_get_height(container) / 2) + (lv_obj_get_height(obj) / 2);
     lv_obj_scroll_to(container, lv_obj_get_scroll_x(container), scroll_y, LV_ANIM_OFF);
 }

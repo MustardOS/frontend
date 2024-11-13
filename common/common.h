@@ -96,7 +96,12 @@ char *str_remchars(char *text, char *c);
 
 char *str_trim(char *text);
 
-char *str_replace(char *orig, char *rep, char *with);
+char *str_replace(const char *orig, const char *rep, const char *with);
+
+int str_replace_segment(const char *orig, const char *prefix, const char *suffix,
+                        const char *with, char **replacement);
+
+int str_extract(const char *orig, const char *prefix, const char *suffix, char **extraction);
 
 char *str_tolower(char *text);
 
@@ -219,7 +224,7 @@ void update_image(lv_obj_t *ui_imgobj, struct ImageSettings image_settings);
 void update_grid_scroll_position(int col_count, int row_count, int row_height,
                                  int current_item_index, lv_obj_t *ui_pnlGrid);
 
-void scroll_object_to_middle(lv_obj_t* container, lv_obj_t* obj);
+void scroll_object_to_middle(lv_obj_t *container, lv_obj_t *obj);
 
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
                             lv_obj_t *ui_pnlContent);

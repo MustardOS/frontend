@@ -165,12 +165,16 @@ void init_navigation_groups() {
     }
 }
 
-void gen_label(char *item_glyph, char *item_text, char *item_data) {
+void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_value) {
     lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlResult);
 
     lv_obj_t *ui_lblResultItem = lv_label_create(ui_pnlResult);
     apply_theme_list_item(&theme, ui_lblResultItem, item_text, true, false);
+
+    lv_obj_t *ui_lblResultItemValue = lv_label_create(ui_pnlResult);
+    lv_label_set_text(ui_lblResultItemValue, item_value);
+    lv_obj_set_style_text_opa(ui_lblResultItemValue, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
     apply_theme_list_glyph(&theme, ui_lblResultItemGlyph, mux_module, item_glyph);
@@ -182,6 +186,7 @@ void gen_label(char *item_glyph, char *item_text, char *item_data) {
 
     if (strcasecmp(item_data, "blank") != 0 && strcasecmp(item_data, "folder") != 0) {
         lv_group_add_obj(ui_group, ui_lblResultItem);
+        lv_group_add_obj(ui_group_value, ui_lblResultItemValue);
         lv_group_add_obj(ui_group_glyph, ui_lblResultItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlResult);
         ui_count++;
@@ -206,19 +211,44 @@ void process_results(const char *json_results) {
         struct json folder = json_first(search_folders);
         while (json_exists(folder)) {
 
+            char folder_name[MAX_BUFFER_SIZE];
+
             if (json_type(folder) == JSON_STRING) {
-                char folder_name[MAX_BUFFER_SIZE];
                 json_string_copy(folder, folder_name, sizeof(folder_name));
 
-                static char bracket_folder_name[MAX_BUFFER_SIZE];
-                snprintf(bracket_folder_name, sizeof(bracket_folder_name), "[%s]",
-                         str_replace(folder_name, "/mnt/", ""));
+                char bracket_storage_name[MAX_BUFFER_SIZE];
+                char *storage_name = NULL;
 
-                LOG_DEBUG(mux_module, "FOLDER\t\t%s", folder_name)
-                gen_label("", "", "blank");
+                if (str_extract(folder_name, "", "/ROMS/", &storage_name)) {
+                    snprintf(bracket_storage_name, sizeof(bracket_storage_name), "%s",
+                             storage_name);
+                    free(storage_name);
+
+                    if (strcasecmp(bracket_storage_name, device.STORAGE.ROM.MOUNT) == 0) {
+                        snprintf(bracket_storage_name, sizeof(bracket_storage_name), "SD1");
+                    } else if (strcasecmp(bracket_storage_name, device.STORAGE.SDCARD.MOUNT) == 0) {
+                        snprintf(bracket_storage_name, sizeof(bracket_storage_name), "SD2");
+                    } else if (strcasecmp(bracket_storage_name, device.STORAGE.USB.MOUNT) == 0) {
+                        snprintf(bracket_storage_name, sizeof(bracket_storage_name), "USB");
+                    }
+                }
+
+                char bracket_folder_name[MAX_BUFFER_SIZE];
+                char *modified_name = NULL;
+
+                if (str_replace_segment(folder_name, "/mnt/", "/ROMS/", "", &modified_name)) {
+                    snprintf(bracket_folder_name, sizeof(bracket_folder_name), "[%s] [%s]",
+                             bracket_storage_name, str_replace(modified_name, "/mnt//ROMS/", ""));
+                    free(modified_name);
+                } else {
+                    snprintf(bracket_folder_name, sizeof(bracket_folder_name), "[%s]",
+                             folder_name);
+                }
+
+                gen_label("", "", "blank", "");
 
                 if (strcasecmp(bracket_folder_name, "[.]") != 0) {
-                    gen_label("folder", bracket_folder_name, "folder");
+                    gen_label("folder", bracket_folder_name, "folder", "");
                 }
             }
 
@@ -226,11 +256,21 @@ void process_results(const char *json_results) {
             if (json_exists(content) && json_type(content) == JSON_ARRAY) {
                 for (size_t i = 0; i < json_array_count(content); i++) {
                     struct json item = json_array_get(content, i);
+
                     if (json_type(item) == JSON_STRING) {
                         char content_name[MAX_BUFFER_SIZE];
                         json_string_copy(item, content_name, sizeof(content_name));
-                        LOG_DEBUG(mux_module, "CONTENT\t\t\t%s", content_name)
-                        gen_label("content", content_name, "content");
+
+                        char content_full_path[MAX_BUFFER_SIZE];
+                        if (folder_name[0] != '/') {
+                            snprintf(content_full_path, sizeof(content_full_path), "%s/%s/%s",
+                                     rom_dir, folder_name, content_name);
+                        } else {
+                            snprintf(content_full_path, sizeof(content_full_path), "%s/%s",
+                                     folder_name, content_name);
+                        }
+
+                        gen_label("content", strip_ext(content_name), "content", content_full_path);
                     }
                 }
             }
@@ -505,24 +545,38 @@ void handle_confirm(void) {
                      lv_label_get_text(ui_lblLookupValue));
         }
 
-        LOG_DEBUG(mux_module, "Running Search: %s", command)
-
+        if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
         if (file_exist(search_result)) remove(search_result);
+
         system(command);
 
         load_mux("search");
         mux_input_stop();
     } else {
         if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
-            toast_message(TS("Doing something..."), 1000, 1000);
-            // TODO: Launch the selected item back to muxplore
+            write_text_to_file(MUOS_RES_LOAD, "w", CHAR,
+                               str_replace(lv_label_get_text(lv_group_get_focused(ui_group_value)), "/./", "/"));
+            if (file_exist(search_result)) remove(search_result);
+
+            load_mux("explore");
+            mux_input_stop();
         }
     }
+}
+
+void random_select(void) {
+    if (msgbox_active || !ui_count) return;
+
+    uint32_t random_select = arc4random() % ui_count;
+    int selected_index = (int) (random_select & INT32_MAX);
+
+    !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
 }
 
 void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
 
+    if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
     if (file_exist(search_result)) remove(search_result);
 
     mux_input_stop();
@@ -563,6 +617,12 @@ void handle_x(void) {
         handle_keyboard_backspace();
         return;
     }
+
+    if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
+    if (file_exist(search_result)) remove(search_result);
+
+    load_mux("search");
+    mux_input_stop();
 }
 
 void handle_y(void) {
@@ -713,12 +773,11 @@ void init_elements() {
 
     lv_label_set_text(ui_lblNavA, TG("Select"));
     lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavX, TG("Clear"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
             ui_lblNavC,
-            ui_lblNavXGlyph,
-            ui_lblNavX,
             ui_lblNavYGlyph,
             ui_lblNavY,
             ui_lblNavZGlyph,
@@ -858,13 +917,10 @@ int main(int argc, char *argv[]) {
 
     int opt;
     while ((opt = getopt(argc, argv, "d:")) != -1) {
-        switch (opt) {
-            case 'd':
-                snprintf(rom_dir, sizeof(rom_dir), "%s", optarg);
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
+        if (opt == 'd') {
+            snprintf(rom_dir, sizeof(rom_dir), "%s", optarg);
+        } else {
+            fprintf(stderr, cmd_help, argv[0]);
         }
     }
 
@@ -1003,6 +1059,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
                     [MUX_INPUT_L1] = handle_l1,
                     [MUX_INPUT_R1] = handle_r1,
+                    [MUX_INPUT_R2] = random_select,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
@@ -1011,6 +1068,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
                     [MUX_INPUT_R1] = handle_r1,
+                    [MUX_INPUT_R2] = random_select,
             },
             .combo = {
                     {
