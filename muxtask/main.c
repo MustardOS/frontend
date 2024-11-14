@@ -153,7 +153,7 @@ void create_task_items() {
 
         ui_count++;
 
-        add_item(&items, &item_count, task_store, TS(task_store), ROM);
+        add_item(&items, &item_count, task_store, TS(task_store), "", ROM);
 
         lv_obj_t *ui_pnlTask = lv_obj_create(ui_pnlContent);
         if (ui_pnlTask) {
@@ -164,16 +164,8 @@ void create_task_items() {
 
             lv_obj_t *ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
             if (ui_lblTaskItemGlyph) {
-                char get_icon[MAX_BUFFER_SIZE];
-                snprintf(get_icon, sizeof(get_icon),
-                         "%s/MUOS/task/%s.sh", device.STORAGE.ROM.MOUNT, task_store);
-
-                char *item_glyph = get_script_value(get_icon, "ICON");
-                if (!item_glyph || strlen(item_glyph) <= 1) {
-                    item_glyph = "task";
-                }
-
-                apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module, item_glyph);
+                apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module,
+                                       get_glyph_from_file(task_path, items[i].name, "task"));
             }
 
             lv_group_add_obj(ui_group, ui_lblTaskItem);

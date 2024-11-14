@@ -835,7 +835,8 @@ void gen_item(char **file_names, int file_count) {
         snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
 
         ui_count++;
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, ROM);
+
+        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ROM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
     }
 
@@ -848,11 +849,11 @@ void gen_item(char **file_names, int file_count) {
             break;
     }
 
-    static char* e_name = "/tmp/explore_name";
+    static char *e_name = "/tmp/explore_name";
     for (size_t i = 0; i < item_count; i++) {
         if (file_exist(e_name)) {
             if (strcasecmp(items[i].name, read_line_from_file(e_name, 1)) == 0) {
-                sys_index = i;
+                sys_index = (int) i;
                 remove(e_name);
             }
         }
@@ -960,12 +961,12 @@ void create_root_items(char *dir_name) {
 }
 
 void init_navigation_groups_grid() {
-    init_grid_info(item_count, theme.GRID.COLUMN_COUNT);
-    create_grid_panel(&theme, item_count);
+    init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
+    create_grid_panel(&theme, (int) item_count);
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
     for (size_t i = 0; i < item_count; i++) {
         if (strcasecmp(items[i].name, prev_dir) == 0) {
-            sys_index = i;
+            sys_index = (int) i;
         }
 
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
@@ -1022,7 +1023,7 @@ void create_explore_items(void *count) {
         for (int i = 0; i < dir_count; i++) {
             content_item *new_item = NULL;
             char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
-            new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, FOLDER);
+            new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, "", FOLDER);
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
             if (config.VISUAL.FOLDERITEMCOUNT) {
                 char display_name[MAX_BUFFER_SIZE];
@@ -1099,9 +1100,9 @@ void explore_root() {
         case 10:
         case 12:
         case 14: // All the single cards put your hands up!
-            if (single_card & 2) add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", FOLDER);
-            if (single_card & 4) add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", FOLDER);
-            if (single_card & 8) add_item(&items, &item_count, "USB (external)", "USB (external)", FOLDER);
+            if (single_card & 2) add_item(&items, &item_count, "SD1 (mmc)", "SD1 (mmc)", "", FOLDER);
+            if (single_card & 4) add_item(&items, &item_count, "SD2 (sdcard)", "SD2 (sdcard)", "", FOLDER);
+            if (single_card & 8) add_item(&items, &item_count, "USB (external)", "USB (external)", "", FOLDER);
 
             if (single_card & 2) gen_label("folder", full_labels[0]);
             if (single_card & 4) gen_label("folder", full_labels[1]);
@@ -1833,7 +1834,7 @@ void handle_page_up(void) {
     if (msgbox_active || !ui_count) return;
 
     // Don't wrap around when scrolling by page.
-    int steps = 0;
+    int steps;
     if (is_grid_enabled()) {
         steps = LV_MIN(theme.GRID.ROW_COUNT * theme.GRID.COLUMN_COUNT, current_item_index);
     } else {
@@ -1848,7 +1849,7 @@ void handle_page_down(void) {
     if (msgbox_active || !ui_count) return;
 
     // Don't wrap around when scrolling by page.
-    int steps = 0;
+    int steps;
     if (is_grid_enabled()) {
         steps = LV_MIN(theme.GRID.ROW_COUNT * theme.GRID.COLUMN_COUNT, ui_count - current_item_index - 1);
     } else {
@@ -2080,6 +2081,7 @@ void ui_refresh_task() {
         }
 
         update_file_counter();
+        lv_obj_move_foreground(overlay_image);
 
         nav_moved = 0;
     }
@@ -2173,6 +2175,7 @@ int main(int argc, char *argv[]) {
 
     ui_common_screen_init(&theme, &device, "");
     ui_init(ui_screen, &theme);
+
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
     ui_viewport_objects[2] = lv_img_create(ui_viewport_objects[0]);

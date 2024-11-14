@@ -153,9 +153,12 @@ void create_archive_items() {
         static char archive_store[MAX_BUFFER_SIZE];
         snprintf(archive_store, sizeof(archive_store), "%s %s", prefix, strip_ext(archive_name));
 
+        char item_glyph[MAX_BUFFER_SIZE];
+        snprintf(item_glyph, sizeof(item_glyph), "%s", (is_installed) ? "installed" : "archive");
+
         ui_count++;
 
-        add_item(&items, &item_count, base_filename, archive_store, ROM);
+        add_item(&items, &item_count, base_filename, archive_store, item_glyph, ROM);
 
         lv_obj_t *ui_pnlArchive = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlArchive);
@@ -167,9 +170,7 @@ void create_archive_items() {
         apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? TS("INSTALLED") : "");
 
         lv_obj_t *ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
-        char item_glyph[MAX_BUFFER_SIZE];
-        snprintf(item_glyph, sizeof(item_glyph), "%s", (is_installed) ? "installed" : "archive");
-        apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_module, item_glyph);
+        apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_module, items[i].extra_data);
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);
         lv_group_add_obj(ui_group_glyph, ui_lblArchiveItemGlyph);

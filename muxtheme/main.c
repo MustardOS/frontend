@@ -133,7 +133,7 @@ void create_theme_items() {
             if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
                 *last_dot = '\0';
 
-                add_item(&items, &item_count, tf->d_name, tf->d_name, ROM);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, "", ROM);
             }
         }
     }

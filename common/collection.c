@@ -26,13 +26,14 @@ void reformat_display_name(char *display_name) {
 }
 
 content_item *add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name,
-                       content_type content_type) {
+                       const char *extra_data, content_type content_type) {
     *content_items = realloc(*content_items, (*count + 1) * sizeof(content_item));
 
     (*content_items)[*count].name = strdup(name);
     (*content_items)[*count].display_name = strdup(sort_name);
     (*content_items)[*count].sort_name = strdup(sort_name);
     (*content_items)[*count].content_type = content_type;
+    (*content_items)[*count].extra_data = strdup(extra_data);
 
     if (config.VISUAL.THETITLEFORMAT) {
         reformat_display_name((*content_items)[*count].display_name);

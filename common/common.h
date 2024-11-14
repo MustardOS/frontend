@@ -267,3 +267,5 @@ int get_grid_row_index(int current_item_index);
 int get_grid_column_index(int current_item_index);
 
 int get_grid_row_item_count(int current_item_index);
+
+char *get_glyph_from_file(const char *directory_name, const char *item_name, char *item_default);

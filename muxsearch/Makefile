@@ -70,6 +70,7 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 		../common/img/nothing.c \
 		../common/json/json.c \
 		../common/mini/mini.c \
+		../common/collection.c \
 		../common/config.c \
 		../common/device.c \
 		../common/common.c \

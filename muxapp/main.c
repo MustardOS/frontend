@@ -16,7 +16,6 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
-#include "../common/input/list_nav.h"
 
 char *mux_module;
 static int js_fd;
@@ -90,20 +89,9 @@ void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
 }
 
-char *get_glyph_name(const char *item_name) {
-    char get_icon[MAX_BUFFER_SIZE];
-    snprintf(get_icon, sizeof(get_icon),
-            "%s/MUOS/application/%s.sh", device.STORAGE.ROM.MOUNT, item_name);
-
-    char *item_glyph = get_script_value(get_icon, "ICON");
-    if (!item_glyph || strlen(item_glyph) <= 1) return "app";
-
-    return item_glyph;
-}
-
-void init_navigation_groups_grid() {
-    init_grid_info(item_count, theme.GRID.COLUMN_COUNT);
-    create_grid_panel(&theme, item_count);
+void init_navigation_groups_grid(const char *app_path) {
+    init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
+    create_grid_panel(&theme, (int) item_count);
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
     for (size_t i = 0; i < item_count; i++) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
@@ -113,19 +101,19 @@ void init_navigation_groups_grid() {
         lv_obj_t *cell_image = lv_img_create(cell_panel);
         lv_obj_t *cell_label = lv_label_create(cell_panel);
 
-        char *glyph_name = get_glyph_name(items[i].name);
+        char *glyph_name = get_glyph_from_file(app_path, items[i].name, "app");
         char device_dimension[15];
         get_device_dimension(device_dimension, sizeof(device_dimension));
         char grid_image[MAX_BUFFER_SIZE];
-        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_name, "png",
-                                          grid_image, sizeof(grid_image)) &&
-            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", "app", "png",
-                                          grid_image, sizeof(grid_image)) &&
-            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_name, "png",
-                                         grid_image, sizeof(grid_image))) {
+        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid",
+                                          glyph_name, "png", grid_image, sizeof(grid_image)) &&
+            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid",
+                                          "app", "png", grid_image, sizeof(grid_image)) &&
+            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
+                                          glyph_name, "png", grid_image, sizeof(grid_image))) {
 
-            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "app", "png",
-                                         grid_image, sizeof(grid_image));
+            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
+                                         "app", "png", grid_image, sizeof(grid_image));
         }
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
@@ -202,13 +190,14 @@ void create_app_items() {
         char app_store[MAX_BUFFER_SIZE];
         snprintf(app_store, sizeof(app_store), "%s", strip_ext(app_name));
 
-        add_item(&items, &item_count, app_store, TS(app_store), ROM);
+        add_item(&items, &item_count, app_store, TS(app_store), file_names[i], ROM);
 
         free(base_filename);
     }
+
     if (theme.GRID.ENABLED && item_count > 0) {
-        init_navigation_groups_grid();
-        ui_count += item_count;
+        init_navigation_groups_grid(app_path);
+        ui_count += (int) item_count;
     } else {
         for (size_t i = 0; i < item_count; i++) {
             lv_obj_t *ui_pnlApp = lv_obj_create(ui_pnlContent);
@@ -220,7 +209,8 @@ void create_app_items() {
 
                 lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
                 if (ui_lblAppItemGlyph) {
-                    apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, get_glyph_name(items[i].name));
+                    apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module,
+                                           get_glyph_from_file(app_path, items[i].name, "app"));
                 }
 
                 lv_group_add_obj(ui_group, ui_lblAppItem);
@@ -234,7 +224,7 @@ void create_app_items() {
     }
 
     if (ui_count > 0) {
-        theme.GRID.ENABLED ? lv_obj_update_layout(ui_pnlGrid) : lv_obj_update_layout(ui_pnlContent) ;
+        theme.GRID.ENABLED ? lv_obj_update_layout(ui_pnlGrid) : lv_obj_update_layout(ui_pnlContent);
     }
 
     free(file_names);
@@ -432,7 +422,7 @@ void handle_page_up(void) {
     if (msgbox_active || !ui_count) return;
 
     // Don't wrap around when scrolling by page.
-    int steps = 0;
+    int steps;
     if (is_grid_enabled()) {
         steps = LV_MIN(theme.GRID.ROW_COUNT * theme.GRID.COLUMN_COUNT, current_item_index);
     } else {
@@ -447,7 +437,7 @@ void handle_page_down(void) {
     if (msgbox_active || !ui_count) return;
 
     // Don't wrap around when scrolling by page.
-    int steps = 0;
+    int steps;
     if (is_grid_enabled()) {
         steps = LV_MIN(theme.GRID.ROW_COUNT * theme.GRID.COLUMN_COUNT, ui_count - current_item_index - 1);
     } else {

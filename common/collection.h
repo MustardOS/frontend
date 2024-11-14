@@ -12,10 +12,11 @@ typedef struct {
     char *display_name;
     char *sort_name;
     content_type content_type;
+    char *extra_data;
 } content_item;
 
-content_item *add_item(content_item **content_items, size_t *count, const char *name,
-                       const char *sort_name, content_type content_type);
+content_item *add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name,
+                       const char *extra_data, content_type content_type);
 
 void sort_items(content_item *content_items, size_t count);
 

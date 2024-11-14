@@ -7,12 +7,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/input.h"
 #include "../common/log.h"
+#include "../common/collection.h"
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
@@ -36,10 +38,7 @@ int nav_moved = 1;
 int current_item_index = 0;
 int first_open = 1;
 int ui_count = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-
+int starter_image = 0;
 int progress_onscreen = -1;
 int got_results = 0;
 int key_show = 0;
@@ -49,9 +48,15 @@ int key_map = 0;
 static char search_result[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char lookup_value[MAX_BUFFER_SIZE];
+static char box_image_previous_path[MAX_BUFFER_SIZE];
 
 struct json search_folders;
 
+size_t all_item_count = 0;
+content_item *all_items = NULL;
+
+lv_obj_t *msgbox_element = NULL;
+lv_obj_t *overlay_image = NULL;
 lv_obj_t *key_entry;
 
 lv_group_t *ui_group;
@@ -59,6 +64,7 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
+lv_obj_t *ui_viewport_objects[7];
 lv_obj_t *ui_mux_panels[7];
 
 static const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
@@ -165,6 +171,128 @@ void init_navigation_groups() {
     }
 }
 
+void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
+    mini_t *artwork_config_ini = mini_try_load(artwork_config);
+
+    int device_width = device.MUX.WIDTH / 2;
+
+    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) device_width);
+    int16_t viewport_height = get_ini_int(artwork_config_ini, "viewport", "HEIGHT", 400);
+    int16_t column_mode = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE", 0);
+    int16_t column_mode_alignment = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE_ALIGNMENT", 2);
+
+    lv_obj_set_width(ui_viewport_objects[0], viewport_width == 0 ? LV_SIZE_CONTENT : viewport_width);
+    lv_obj_set_height(ui_viewport_objects[0], viewport_height == 0 ? LV_SIZE_CONTENT : viewport_height);
+    if (column_mode) {
+        lv_obj_set_flex_flow(ui_viewport_objects[0], LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(ui_viewport_objects[0], LV_FLEX_ALIGN_CENTER, column_mode_alignment,
+                              LV_FLEX_ALIGN_CENTER);
+    }
+
+    for (int index = 1; index < 6; index++) {
+        char section_name[15];
+        snprintf(section_name, sizeof(section_name), "image%d", index);
+        char *folder_name = get_ini_string(artwork_config_ini, section_name, "FOLDER", "");
+
+        char image[MAX_BUFFER_SIZE];
+        snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
+                 STORAGE_PATH, catalogue_folder, folder_name, content_name);
+
+        if (!file_exist(image)) {
+            snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/default.png",
+                     STORAGE_PATH, catalogue_folder, folder_name);
+        }
+
+        struct ImageSettings image_settings = {
+                image,
+                get_ini_int(artwork_config_ini, section_name, "ALIGN", 9),
+                get_ini_int(artwork_config_ini, section_name, "MAX_WIDTH", 0),
+                get_ini_int(artwork_config_ini, section_name, "MAX_HEIGHT", 0),
+                get_ini_int(artwork_config_ini, section_name, "PAD_LEFT", 0),
+                get_ini_int(artwork_config_ini, section_name, "PAD_RIGHT", 0),
+                get_ini_int(artwork_config_ini, section_name, "PAD_TOP", 0),
+                get_ini_int(artwork_config_ini, section_name, "PAD_BOTTOM", 0)
+        };
+
+        update_image(ui_viewport_objects[index], image_settings);
+    }
+
+    mini_free(artwork_config_ini);
+}
+
+void image_refresh(char *image_type) {
+    if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
+        printf("BOX ART IS SET TO DISABLED\n");
+        return;
+    }
+
+    char device_dimension[15];
+    get_device_dimension(device_dimension, sizeof(device_dimension));
+
+    char image[MAX_BUFFER_SIZE];
+    char image_path[MAX_BUFFER_SIZE];
+    char core_artwork[MAX_BUFFER_SIZE];
+
+    char *file_name = get_last_subdir(strip_ext(all_items[current_item_index].name), '/', 4);
+    char *last_dir = get_last_dir(strip_ext(all_items[current_item_index].name));
+
+    char core_file[MAX_BUFFER_SIZE];
+    snprintf(core_file, sizeof(core_file), "%s/info/core/%s.cfg",
+             STORAGE_PATH, str_replace(file_name, last_dir, ""));
+
+    if (!file_exist(core_file)) {
+        snprintf(core_file, sizeof(core_file), "%s/info/core/%score.cfg",
+                 STORAGE_PATH, str_replace(file_name, last_dir, ""));
+        snprintf(core_artwork, sizeof(core_artwork), "%s",
+                 read_line_from_file(core_file, 2));
+    } else {
+        snprintf(core_artwork, sizeof(core_artwork), "%s",
+                 read_line_from_file(core_file, 3));
+    }
+
+    LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
+
+    if (strlen(core_artwork) <= 1) {
+        snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
+                 STORAGE_THEME, device_dimension, image_type);
+        if (!file_exist(image)) {
+            snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                     STORAGE_THEME, image_type);
+        }
+        snprintf(image_path, sizeof(image_path), "M:%s", image);
+    } else {
+        snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
+                 STORAGE_PATH, core_artwork, image_type, last_dir);
+        snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
+                 STORAGE_PATH, core_artwork, image_type, last_dir);
+    }
+
+    LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
+
+    if (strcasecmp(box_image_previous_path, image) != 0) {
+        char artwork_config_path[MAX_BUFFER_SIZE];
+        snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/%s.ini",
+                 STORAGE_PATH, core_artwork);
+        if (!file_exist(artwork_config_path)) {
+            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/default.ini",
+                     STORAGE_PATH);
+        }
+
+        if (file_exist(artwork_config_path)) {
+            viewport_refresh(artwork_config_path, core_artwork, last_dir);
+            snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+        } else {
+            if (file_exist(image)) {
+                lv_img_set_src(ui_imgBox, image_path);
+                snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
+            } else {
+                lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+                snprintf(box_image_previous_path, sizeof(box_image_previous_path), " ");
+            }
+        }
+    }
+}
+
 void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_value) {
     lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlResult);
@@ -191,6 +319,17 @@ void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_va
         lv_group_add_obj(ui_group_panel, ui_pnlResult);
         ui_count++;
     }
+
+    if (strcasecmp(item_data, "folder") == 0) {
+        lv_obj_set_style_border_width(ui_pnlResult, 1,
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_color(ui_pnlResult, lv_color_hex(theme.LIST_DEFAULT.TEXT),
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_opa(ui_pnlResult, theme.LIST_DEFAULT.TEXT_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_side(ui_pnlResult, LV_BORDER_SIDE_TOP,
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
 }
 
 void process_results(const char *json_results) {
@@ -208,6 +347,9 @@ void process_results(const char *json_results) {
 
     search_folders = json_object_get(root, "folders");
     if (json_exists(search_folders) && json_type(search_folders) == JSON_OBJECT) {
+        size_t t_all_item_count = 0;
+        content_item *t_all_items = NULL;
+
         struct json folder = json_first(search_folders);
         while (json_exists(folder)) {
 
@@ -245,12 +387,15 @@ void process_results(const char *json_results) {
                              folder_name);
                 }
 
-                gen_label("", "", "blank", "");
+                //gen_label("", "", "blank", "");
 
                 if (strcasecmp(bracket_folder_name, "[.]") != 0) {
                     gen_label("folder", bracket_folder_name, "folder", "");
                 }
             }
+
+            size_t folder_item_count = 0;
+            content_item *folder_items = NULL;
 
             struct json content = json_object_get(folder, "content");
             if (json_exists(content) && json_type(content) == JSON_ARRAY) {
@@ -261,22 +406,87 @@ void process_results(const char *json_results) {
                         char content_name[MAX_BUFFER_SIZE];
                         json_string_copy(item, content_name, sizeof(content_name));
 
+                        char content_path[MAX_BUFFER_SIZE];
+                        json_string_copy(item, content_path, sizeof(content_path));
+
                         char content_full_path[MAX_BUFFER_SIZE];
                         if (folder_name[0] != '/') {
                             snprintf(content_full_path, sizeof(content_full_path), "%s/%s/%s",
-                                     rom_dir, folder_name, content_name);
+                                     rom_dir, folder_name, content_path);
                         } else {
                             snprintf(content_full_path, sizeof(content_full_path), "%s/%s",
-                                     folder_name, content_name);
+                                     folder_name, content_path);
                         }
 
-                        gen_label("content", strip_ext(content_name), "content", content_full_path);
+                        adjust_visual_label(content_name, config.VISUAL.NAME, config.VISUAL.DASH);
+                        add_item(&folder_items, &folder_item_count, content_name, content_name, content_full_path, ROM);
                     }
                 }
+
+                sort_items(folder_items, folder_item_count);
+
+                for (size_t i = 0; i < folder_item_count; i++) {
+                    if (folder_items[i].content_type == ROM) {
+                        add_item(&t_all_items, &t_all_item_count, folder_items[i].extra_data,
+                                 folder_items[i].extra_data, folder_items[i].extra_data, ROM);
+                        gen_label("content", strip_ext(folder_items[i].display_name),
+                                  "content", folder_items[i].extra_data);
+                    }
+                }
+
+                free_items(folder_items, folder_item_count);
+
+                folder_item_count = 0;
+                folder_items = NULL;
             }
 
             folder = json_next(folder);
         }
+
+        // Add the three top labels - lookup, local, and global
+        add_item(&all_items, &all_item_count, "", "", "", FOLDER);
+        add_item(&all_items, &all_item_count, "", "", "", FOLDER);
+        add_item(&all_items, &all_item_count, "", "", "", FOLDER);
+
+        for (size_t i = 0; i < t_all_item_count; i++) {
+            if (t_all_items[i].content_type == ROM) {
+                add_item(&all_items, &all_item_count, t_all_items[i].name,
+                         t_all_items[i].display_name, t_all_items[i].extra_data, ROM);
+            }
+        }
+
+        free_items(t_all_items, t_all_item_count);
+
+        t_all_item_count = 0;
+        t_all_items = NULL;
+    }
+}
+
+void reset_label_long_mode() {
+    char content_name[MAX_BUFFER_SIZE];
+    snprintf(content_name, sizeof(content_name), "%s",
+             strip_ext(get_last_dir(all_items[current_item_index].display_name)));
+
+    adjust_visual_label(content_name, config.VISUAL.NAME, config.VISUAL.DASH);
+    apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), content_name);
+}
+
+void set_label_long_mode() {
+    char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
+
+    size_t len = strlen(content_label);
+    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
+
+    if (strcasecmp(all_items[current_item_index].display_name, content_label) != 0 && ends_with_ellipse) {
+        char content_name[MAX_BUFFER_SIZE];
+        snprintf(content_name, sizeof(content_name), "%s",
+                 strip_ext(get_last_dir(all_items[current_item_index].display_name)));
+
+        lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
+
+        adjust_visual_label(content_name, config.VISUAL.NAME, config.VISUAL.DASH);
+
+        lv_label_set_text(lv_group_get_focused(ui_group), content_name);
     }
 }
 
@@ -290,6 +500,9 @@ void reset_osk() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
+        if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+            reset_label_long_mode();
+        }
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_value, 1);
@@ -297,6 +510,10 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group_panel, 1);
     }
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
+    if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+        image_refresh("box");
+        set_label_long_mode();
+    }
     nav_moved = 1;
 }
 
@@ -307,6 +524,9 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
+        if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+            reset_label_long_mode();
+        }
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_value, 1);
@@ -314,6 +534,10 @@ void list_nav_next(int steps) {
         nav_next(ui_group_panel, 1);
     }
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
+    if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+        image_refresh("box");
+        set_label_long_mode();
+    }
     nav_moved = 1;
 }
 
@@ -747,6 +971,34 @@ static void osk_handler(lv_event_t *e) {
 }
 
 void init_elements() {
+    lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
+    lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
+
+    switch (config.VISUAL.BOX_ART) {
+        case 0: // Behind
+            lv_obj_move_background(ui_pnlBox);
+            lv_obj_move_background(ui_pnlWall);
+            break;
+        case 1: // Front
+            lv_obj_move_foreground(ui_pnlBox);
+            break;
+        case 2: // Fullscreen + Behind
+            lv_obj_set_y(ui_pnlBox, 0);
+            lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
+            lv_obj_move_background(ui_pnlBox);
+            lv_obj_move_background(ui_pnlWall);
+            break;
+        case 3: // Fullscreen + Front
+            lv_obj_set_y(ui_pnlBox, 0);
+            lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
+            lv_obj_move_foreground(ui_pnlBox);
+            break;
+        case 4: // Disabled
+            lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_FLOATING);
+            break;
+    }
+
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -905,7 +1157,6 @@ void ui_refresh_task() {
 
         lv_obj_move_foreground(overlay_image);
 
-        lv_obj_invalidate(ui_pnlContent);
         nav_moved = 0;
     }
 }
@@ -969,6 +1220,15 @@ int main(int argc, char *argv[]) {
 
     ui_common_screen_init(&theme, &device, TS("SEARCH CONTENT"));
     ui_init(ui_screen, ui_pnlContent, &theme);
+
+    ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
+    ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[2] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[3] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[4] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[5] = lv_img_create(ui_viewport_objects[0]);
+    ui_viewport_objects[6] = lv_img_create(ui_viewport_objects[0]);
+
     init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
