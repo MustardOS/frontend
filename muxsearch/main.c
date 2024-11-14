@@ -517,6 +517,8 @@ void handle_keyboard_right(void) {
 
 void handle_confirm(void) {
     play_sound("confirm", nav_sound, 0, 1);
+    if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
+    if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblLookup) {
