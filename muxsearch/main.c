@@ -195,12 +195,12 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
         char *folder_name = get_ini_string(artwork_config_ini, section_name, "FOLDER", "");
 
         char image[MAX_BUFFER_SIZE];
-        snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                 STORAGE_PATH, catalogue_folder, folder_name, content_name);
+        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
+                 CATALOGUE_PATH, catalogue_folder, folder_name, content_name);
 
         if (!file_exist(image)) {
-            snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/default.png",
-                     STORAGE_PATH, catalogue_folder, folder_name);
+            snprintf(image, sizeof(image), "%s/%s/%s/default.png",
+                     CATALOGUE_PATH, catalogue_folder, folder_name);
         }
 
         struct ImageSettings image_settings = {
@@ -261,21 +261,21 @@ void image_refresh(char *image_type) {
         }
         snprintf(image_path, sizeof(image_path), "M:%s", image);
     } else {
-        snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                 STORAGE_PATH, core_artwork, image_type, last_dir);
-        snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
-                 STORAGE_PATH, core_artwork, image_type, last_dir);
+        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
+                 CATALOGUE_PATH, core_artwork, image_type, last_dir);
+        snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
+                 CATALOGUE_PATH, core_artwork, image_type, last_dir);
     }
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
 
     if (strcasecmp(box_image_previous_path, image) != 0) {
         char artwork_config_path[MAX_BUFFER_SIZE];
-        snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/%s.ini",
-                 STORAGE_PATH, core_artwork);
+        snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
+                 CATALOGUE_PATH, core_artwork);
         if (!file_exist(artwork_config_path)) {
-            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/default.ini",
-                     STORAGE_PATH);
+            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini",
+                     CATALOGUE_PATH);
         }
 
         if (file_exist(artwork_config_path)) {

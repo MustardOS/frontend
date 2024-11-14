@@ -217,11 +217,11 @@ char *load_content_description() {
     switch (module) {
         case ROOT: {
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
-                snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Root/text/sd1.txt",
-                         STORAGE_PATH);
+                snprintf(content_desc, sizeof(content_desc), "%s/Root/text/sd1.txt",
+                         CATALOGUE_PATH);
             } else if (strcasecmp(content_label, "SD2 (sdcard)") == 0) {
-                snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Root/text/sd2.txt",
-                         STORAGE_PATH);
+                snprintf(content_desc, sizeof(content_desc), "%s/Root/text/sd2.txt",
+                         CATALOGUE_PATH);
             }
         }
             break;
@@ -235,8 +235,8 @@ char *load_content_description() {
             snprintf(f_pointer, sizeof(f_pointer), "%s/info/core/%s",
                      STORAGE_PATH, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
 
-            snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/%s/text/%s.txt",
-                     STORAGE_PATH, read_line_from_file(f_pointer, 3),
+            snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
+                     CATALOGUE_PATH, read_line_from_file(f_pointer, 3),
                      strip_ext(read_line_from_file(f_pointer, 7)));
         }
             break;
@@ -250,8 +250,8 @@ char *load_content_description() {
             snprintf(h_pointer, sizeof(h_pointer), "%s/info/core/%s",
                      STORAGE_PATH, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
 
-            snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/%s/text/%s.txt",
-                     STORAGE_PATH, read_line_from_file(h_pointer, 3),
+            snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
+                     CATALOGUE_PATH, read_line_from_file(h_pointer, 3),
                      strip_ext(read_line_from_file(h_pointer, 7)));
         }
             break;
@@ -282,11 +282,11 @@ char *load_content_description() {
             printf("TEXT IS STORED AT: %s\n", core_desc);
 
             if (items[current_item_index].content_type == FOLDER) {
-                snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/Folder/text/%s.txt",
-                         STORAGE_PATH, content_label);
+                snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
+                         CATALOGUE_PATH, content_label);
             } else {
-                snprintf(content_desc, sizeof(content_desc), "%s/info/catalogue/%s/text/%s.txt",
-                         STORAGE_PATH, core_desc, desc_name);
+                snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
+                         CATALOGUE_PATH, core_desc, desc_name);
             }
         }
             break;
@@ -356,12 +356,12 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
         char *folder_name = get_ini_string(artwork_config_ini, section_name, "FOLDER", "");
 
         char image[MAX_BUFFER_SIZE];
-        snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                 STORAGE_PATH, catalogue_folder, folder_name, content_name);
+        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
+                 CATALOGUE_PATH, catalogue_folder, folder_name, content_name);
 
         if (!file_exist(image)) {
-            snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/default.png",
-                     STORAGE_PATH, catalogue_folder, folder_name);
+            snprintf(image, sizeof(image), "%s/%s/%s/default.png",
+                     CATALOGUE_PATH, catalogue_folder, folder_name);
         }
 
         struct ImageSettings image_settings = {
@@ -399,20 +399,20 @@ void image_refresh(char *image_type) {
     switch (module) {
         case ROOT: {
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
-                snprintf(image, sizeof(image), "%s/info/catalogue/Root/%s/sd1.png",
-                         STORAGE_PATH, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/Root/%s/sd1.png",
-                         STORAGE_PATH, image_type);
+                snprintf(image, sizeof(image), "%s/Root/%s/sd1.png",
+                         CATALOGUE_PATH, image_type);
+                snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/sd1.png",
+                         CATALOGUE_PATH, image_type);
             } else if (strcasecmp(content_label, "SD2 (sdcard)") == 0) {
-                snprintf(image, sizeof(image), "%s/info/catalogue/Root/%s/sd2.png",
-                         STORAGE_PATH, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/Root/%s/sd2.png",
-                         STORAGE_PATH, image_type);
+                snprintf(image, sizeof(image), "%s/Root/%s/sd2.png",
+                         CATALOGUE_PATH, image_type);
+                snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/sd2.png",
+                         CATALOGUE_PATH, image_type);
             } else if (strcasecmp(content_label, "USB (external)") == 0) {
-                snprintf(image, sizeof(image), "%s/info/catalogue/Root/%s/usb.png",
-                         STORAGE_PATH, image_type);
-                snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/Root/%s/usb.png",
-                         STORAGE_PATH, image_type);
+                snprintf(image, sizeof(image), "%s/Root/%s/usb.png",
+                         CATALOGUE_PATH, image_type);
+                snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/usb.png",
+                         CATALOGUE_PATH, image_type);
             }
         }
             break;
@@ -439,10 +439,10 @@ void image_refresh(char *image_type) {
             } else {
                 char *f_file_name = strip_ext(read_line_from_file(f_pointer, 7));
 
-                snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                         STORAGE_PATH, f_core_artwork, image_type, f_file_name);
-                snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
-                         STORAGE_PATH, f_core_artwork, image_type, f_file_name);
+                snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
+                         CATALOGUE_PATH, f_core_artwork, image_type, f_file_name);
+                snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
+                         CATALOGUE_PATH, f_core_artwork, image_type, f_file_name);
             }
             snprintf(core_artwork, sizeof(core_artwork), "%s", f_core_artwork);
         }
@@ -469,10 +469,10 @@ void image_refresh(char *image_type) {
             } else {
                 char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
 
-                snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                         STORAGE_PATH, h_core_artwork, image_type, h_file_name);
-                snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
-                         STORAGE_PATH, h_core_artwork, image_type, h_file_name);
+                snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
+                         CATALOGUE_PATH, h_core_artwork, image_type, h_file_name);
+                snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
+                         CATALOGUE_PATH, h_core_artwork, image_type, h_file_name);
             }
             snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
         }
@@ -494,10 +494,10 @@ void image_refresh(char *image_type) {
             }
 
             if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
-                snprintf(image, sizeof(image), "%s/info/catalogue/Folder/%s/%s.png",
-                         STORAGE_PATH, image_type, content_label);
-                snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/Folder/%s/%s.png",
-                         STORAGE_PATH, image_type, content_label);
+                snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
+                         CATALOGUE_PATH, image_type, content_label);
+                snprintf(image_path, sizeof(image_path), "M:%s/Folder/%s/%s.png",
+                         CATALOGUE_PATH, image_type, content_label);
             } else {
                 char *file_name = strip_ext(items[current_item_index].name);
 
@@ -527,15 +527,15 @@ void image_refresh(char *image_type) {
                     snprintf(image_path, sizeof(image_path), "M:%s", image);
                 } else {
                     if (items[current_item_index].content_type == FOLDER) {
-                        snprintf(image, sizeof(image), "%s/info/catalogue/Folder/%s/%s.png",
-                                 STORAGE_PATH, image_type, content_label);
-                        snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/Folder/%s/%s.png",
-                                 STORAGE_PATH, image_type, content_label);
+                        snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
+                                 CATALOGUE_PATH, image_type, content_label);
+                        snprintf(image_path, sizeof(image_path), "M:%s/Folder/%s/%s.png",
+                                 CATALOGUE_PATH, image_type, content_label);
                     } else {
-                        snprintf(image, sizeof(image), "%s/info/catalogue/%s/%s/%s.png",
-                                 STORAGE_PATH, core_artwork, image_type, file_name);
-                        snprintf(image_path, sizeof(image_path), "M:%s/info/catalogue/%s/%s/%s.png",
-                                 STORAGE_PATH, core_artwork, image_type, file_name);
+                        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
+                                 CATALOGUE_PATH, core_artwork, image_type, file_name);
+                        snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
+                                 CATALOGUE_PATH, core_artwork, image_type, file_name);
                     }
                 }
             }
@@ -585,11 +585,11 @@ void image_refresh(char *image_type) {
                     items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
                             items[current_item_index].name);
             char artwork_config_path[MAX_BUFFER_SIZE];
-            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/%s.ini",
-                     STORAGE_PATH, catalogue_folder);
+            snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
+                     CATALOGUE_PATH, catalogue_folder);
             if (!file_exist(artwork_config_path)) {
-                snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/info/catalogue/default.ini",
-                         STORAGE_PATH);
+                snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini",
+                         CATALOGUE_PATH);
             }
 
             if (file_exist(artwork_config_path)) {
@@ -977,8 +977,8 @@ void init_navigation_groups_grid() {
         lv_obj_t *cell_label = lv_label_create(cell_panel);
 
         char grid_image[MAX_BUFFER_SIZE];
-        snprintf(grid_image, sizeof(grid_image), "%s/info/catalogue/Folder/grid/%s.png",
-                 STORAGE_PATH, strip_ext(items[i].name));
+        snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/%s.png",
+                 CATALOGUE_PATH, strip_ext(items[i].name));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, items[i].display_name);
