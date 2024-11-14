@@ -812,13 +812,6 @@ void gen_item(char **file_names, int file_count) {
         char fn_name[MAX_BUFFER_SIZE];
         char cache_fn_name[MAX_BUFFER_SIZE];
 
-        static char* e_name = "/tmp/explore_name";
-        if (file_exist(e_name)) {
-            if (strcasecmp(file_names[i], read_line_from_file(e_name, 1)) == 0) {
-                sys_index = i;
-            }
-        }
-
         snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
         if (read_int_from_file(local_name_cache, 3) || module == FAVOURITE || module == HISTORY) {
             if (is_cache) {
@@ -855,7 +848,14 @@ void gen_item(char **file_names, int file_count) {
             break;
     }
 
+    static char* e_name = "/tmp/explore_name";
     for (size_t i = 0; i < item_count; i++) {
+        if (file_exist(e_name)) {
+            if (strcasecmp(items[i].name, read_line_from_file(e_name, 1)) == 0) {
+                sys_index = i;
+                remove(e_name);
+            }
+        }
         if (items[i].content_type == ROM) {
             char *glyph_icon = get_glyph_name(i);
             gen_label(glyph_icon, items[i].display_name);
