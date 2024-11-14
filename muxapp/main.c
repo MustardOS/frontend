@@ -74,6 +74,10 @@ void glyph_task();
 
 void ui_refresh_task();
 
+bool is_grid_enabled() {
+    return theme.GRID.ENABLED && ui_count > 0;
+}
+
 void show_help() {
     char *title = items[current_item_index].name;
 
@@ -84,6 +88,53 @@ void show_help() {
 
     if (strlen(message) <= 1) message = TG("No Help Information Found");
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
+}
+
+char *get_glyph_name(const char *item_name) {
+    char get_icon[MAX_BUFFER_SIZE];
+    snprintf(get_icon, sizeof(get_icon),
+            "%s/MUOS/application/%s.sh", device.STORAGE.ROM.MOUNT, item_name);
+
+    char *item_glyph = get_script_value(get_icon, "ICON");
+    if (!item_glyph || strlen(item_glyph) <= 1) return "app";
+
+    return item_glyph;
+}
+
+void init_navigation_groups_grid() {
+    init_grid_info(item_count, theme.GRID.COLUMN_COUNT);
+    create_grid_panel(&theme, item_count);
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
+    for (size_t i = 0; i < item_count; i++) {
+        uint8_t col = i % theme.GRID.COLUMN_COUNT;
+        uint8_t row = i / theme.GRID.COLUMN_COUNT;
+
+        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t *cell_image = lv_img_create(cell_panel);
+        lv_obj_t *cell_label = lv_label_create(cell_panel);
+
+        char *glyph_name = get_glyph_name(items[i].name);
+        char device_dimension[15];
+        get_device_dimension(device_dimension, sizeof(device_dimension));
+        char grid_image[MAX_BUFFER_SIZE];
+        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_name, "png",
+                                          grid_image, sizeof(grid_image)) &&
+            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", "app", "png",
+                                          grid_image, sizeof(grid_image)) &&
+            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_name, "png",
+                                         grid_image, sizeof(grid_image))) {
+
+            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "app", "png",
+                                         grid_image, sizeof(grid_image));
+        }
+
+        create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
+                         grid_image, items[i].display_name);
+
+        lv_group_add_obj(ui_group, cell_label);
+        lv_group_add_obj(ui_group_glyph, cell_image);
+        lv_group_add_obj(ui_group_panel, cell_panel);
+    }
 }
 
 void create_app_items() {
@@ -151,42 +202,40 @@ void create_app_items() {
         char app_store[MAX_BUFFER_SIZE];
         snprintf(app_store, sizeof(app_store), "%s", strip_ext(app_name));
 
-        ui_count++;
-
         add_item(&items, &item_count, app_store, TS(app_store), ROM);
-
-        lv_obj_t *ui_pnlApp = lv_obj_create(ui_pnlContent);
-        if (ui_pnlApp) {
-            apply_theme_list_panel(&theme, &device, ui_pnlApp);
-
-            lv_obj_t *ui_lblAppItem = lv_label_create(ui_pnlApp);
-            if (ui_lblAppItem) apply_theme_list_item(&theme, ui_lblAppItem, TS(app_store), true, false);
-
-            lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
-            if (ui_lblAppItemGlyph) {
-                char get_icon[MAX_BUFFER_SIZE];
-                snprintf(get_icon, sizeof(get_icon),
-                         "%s/MUOS/application/%s.sh", device.STORAGE.ROM.MOUNT, app_store);
-
-                char *item_glyph = get_script_value(get_icon, "ICON");
-                if (!item_glyph || strlen(item_glyph) <= 1) {
-                    item_glyph = "app";
-                }
-
-                apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, item_glyph);
-            }
-
-            lv_group_add_obj(ui_group, ui_lblAppItem);
-            lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
-            lv_group_add_obj(ui_group_panel, ui_pnlApp);
-
-            apply_size_to_content(&theme, ui_pnlContent, ui_lblAppItem, ui_lblAppItemGlyph, app_store);
-        }
 
         free(base_filename);
     }
+    if (theme.GRID.ENABLED && item_count > 0) {
+        init_navigation_groups_grid();
+        ui_count += item_count;
+    } else {
+        for (size_t i = 0; i < item_count; i++) {
+            lv_obj_t *ui_pnlApp = lv_obj_create(ui_pnlContent);
+            if (ui_pnlApp) {
+                apply_theme_list_panel(&theme, &device, ui_pnlApp);
 
-    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+                lv_obj_t *ui_lblAppItem = lv_label_create(ui_pnlApp);
+                if (ui_lblAppItem) apply_theme_list_item(&theme, ui_lblAppItem, TS(items[i].name), true, false);
+
+                lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
+                if (ui_lblAppItemGlyph) {
+                    apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module, get_glyph_name(items[i].name));
+                }
+
+                lv_group_add_obj(ui_group, ui_lblAppItem);
+                lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
+                lv_group_add_obj(ui_group_panel, ui_pnlApp);
+
+                apply_size_to_content(&theme, ui_pnlContent, ui_lblAppItem, ui_lblAppItemGlyph, items[i].name);
+                ui_count++;
+            }
+        }
+    }
+
+    if (ui_count > 0) {
+        theme.GRID.ENABLED ? lv_obj_update_layout(ui_pnlGrid) : lv_obj_update_layout(ui_pnlContent) ;
+    }
 
     free(file_names);
 }
@@ -199,7 +248,12 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    if (is_grid_enabled()) {
+        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
+                                    current_item_index, ui_pnlGrid);
+    } else {
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    }
     nav_moved = 1;
 }
 
@@ -215,7 +269,12 @@ void list_nav_next(int steps) {
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    if (is_grid_enabled()) {
+        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
+                                    current_item_index, ui_pnlGrid);
+    } else {
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    }
     nav_moved = 1;
 }
 
@@ -259,6 +318,143 @@ void handle_menu() {
     if (progress_onscreen == -1) {
         play_sound("confirm", nav_sound, 0, 0);
         show_help();
+    }
+}
+
+void handle_up() {
+    if (msgbox_active) return;
+
+    // Grid mode.  Wrap on Row.
+    if (is_grid_enabled() &&
+        theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) == 0) {
+        list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ?
+                      grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
+        // Regular Navigation
+    } else {
+        list_nav_prev(1);
+    }
+}
+
+void handle_down() {
+    if (msgbox_active) return;
+
+    // Grid Navigation.  Wrap on Row.
+    if (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 &&
+        get_grid_column_index(current_item_index) == get_grid_row_item_count(current_item_index) - 1) {
+        list_nav_prev(get_grid_row_item_count(current_item_index) - 1);
+        // Regular Navigation
+    } else {
+        list_nav_next(1);
+    }
+}
+
+void handle_up_hold(void) {//prev
+    if (msgbox_active) return;
+
+    // Don't wrap around when scrolling on hold.
+    if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
+        (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index > 0) ||
+        ((!is_grid_enabled()) && current_item_index > 0)) {
+        handle_up();
+    }
+}
+
+void handle_down_hold(void) {//next
+    if (msgbox_active) return;
+
+    // Don't wrap around when scrolling on hold.
+    if ((is_grid_enabled() && theme.GRID.NAVIGATION_TYPE == 4 &&
+         get_grid_column_index(current_item_index) < get_grid_row_item_count(current_item_index) - 1) ||
+        (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE < 4 && current_item_index < ui_count - 1) ||
+        ((!is_grid_enabled()) && current_item_index < ui_count - 1)) {
+        handle_down();
+    }
+}
+
+void handle_left() {
+    if (msgbox_active) return;
+
+    // Horizontal Navigation with 2 rows of 4 items
+    if (is_grid_enabled() &&
+        (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
+        int column_index = current_item_index % grid_info.column_count;
+
+        if (current_item_index < grid_info.column_count) {
+            list_nav_prev(LV_MAX(column_index + 1, grid_info.last_row_item_count));
+        } else {
+            list_nav_prev(grid_info.column_count);
+        }
+    }
+}
+
+void handle_right() {
+    if (msgbox_active) return;
+
+    // Horizontal Navigation with 2 rows of 4 items
+    if (is_grid_enabled() &&
+        (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4)) {
+        uint8_t row_index = current_item_index / grid_info.column_count;
+
+        //when on 2nd to last row do not go past last item
+        if (row_index == grid_info.last_row_index - 1) {
+            int new_item_index = LV_MIN(current_item_index + grid_info.column_count, ui_count - 1);
+            list_nav_next(new_item_index - current_item_index);
+            //when on the last row only move based on amount of items in that row
+        } else if (row_index == grid_info.last_row_index) {
+            list_nav_next(grid_info.last_row_item_count);
+        } else {
+            list_nav_next(grid_info.column_count);
+        }
+    }
+}
+
+void handle_left_hold(void) {
+    if (msgbox_active) return;
+
+    // Don't wrap around when scrolling on hold.
+    if (is_grid_enabled() && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+        get_grid_row_index(current_item_index) > 0) {
+        handle_left();
+    }
+}
+
+void handle_right_hold(void) {
+    if (msgbox_active) return;
+
+    // Don't wrap around when scrolling on hold.
+    if (is_grid_enabled() && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
+        get_grid_row_index(current_item_index) < grid_info.last_row_index) {
+        handle_right();
+    }
+}
+
+void handle_page_up(void) {
+    if (msgbox_active || !ui_count) return;
+
+    // Don't wrap around when scrolling by page.
+    int steps = 0;
+    if (is_grid_enabled()) {
+        steps = LV_MIN(theme.GRID.ROW_COUNT * theme.GRID.COLUMN_COUNT, current_item_index);
+    } else {
+        steps = LV_MIN(theme.MUX.ITEM.COUNT, current_item_index);
+    }
+    if (steps > 0) {
+        list_nav_prev(steps);
+    }
+}
+
+void handle_page_down(void) {
+    if (msgbox_active || !ui_count) return;
+
+    // Don't wrap around when scrolling by page.
+    int steps = 0;
+    if (is_grid_enabled()) {
+        steps = LV_MIN(theme.GRID.ROW_COUNT * theme.GRID.COLUMN_COUNT, ui_count - current_item_index - 1);
+    } else {
+        steps = LV_MIN(theme.MUX.ITEM.COUNT, ui_count - current_item_index - 1);
+    }
+    if (steps > 0) {
+        list_nav_next(steps);
     }
 }
 
@@ -487,24 +683,29 @@ int main(int argc, char *argv[]) {
             .system_fd = js_fd_sys,
             .max_idle_ms = 16 /* ~60 FPS */,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
+                          (is_grid_enabled() && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
             .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
                     // List navigation:
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+                    [MUX_INPUT_DPAD_UP] = handle_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
+                    [MUX_INPUT_L1] = handle_page_up,
+                    [MUX_INPUT_R1] = handle_page_down,
             },
             .hold_handler = {
                     // List navigation:
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+                    [MUX_INPUT_DPAD_UP] = handle_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
+                    [MUX_INPUT_L1] = handle_page_up,
+                    [MUX_INPUT_R1] = handle_page_down,
             },
             .combo = {
                     {
