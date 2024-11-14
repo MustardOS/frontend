@@ -134,6 +134,7 @@ struct theme_config {
         int16_t BACKGROUND_ALPHA;
         int16_t GRADIENT_START;
         int16_t GRADIENT_STOP;
+        int16_t GRADIENT_DIRECTION;
         uint32_t INDICATOR;
         int16_t INDICATOR_ALPHA;
         uint32_t TEXT;
@@ -143,6 +144,22 @@ struct theme_config {
         uint32_t GLYPH_RECOLOUR;
         int16_t GLYPH_RECOLOUR_ALPHA;
     } LIST_DEFAULT;
+
+    struct {
+        uint32_t BACKGROUND;
+        uint32_t BACKGROUND_GRADIENT;
+        int16_t BACKGROUND_ALPHA;
+        int16_t GRADIENT_START;
+        int16_t GRADIENT_STOP;
+        int16_t GRADIENT_DIRECTION;
+        uint32_t INDICATOR;
+        int16_t INDICATOR_ALPHA;
+        uint32_t TEXT;
+        int16_t TEXT_ALPHA;
+        int16_t GLYPH_ALPHA;
+        uint32_t GLYPH_RECOLOUR;
+        int16_t GLYPH_RECOLOUR_ALPHA;
+    } LIST_FOCUS;
 
     struct {
         uint32_t TEXT;
@@ -193,21 +210,6 @@ struct theme_config {
             int16_t IMAGE_RECOLOUR_ALPHA;
         } CELL_FOCUS;
     } GRID;
-
-    struct {
-        uint32_t BACKGROUND;
-        uint32_t BACKGROUND_GRADIENT;
-        int16_t BACKGROUND_ALPHA;
-        int16_t GRADIENT_START;
-        int16_t GRADIENT_STOP;
-        uint32_t INDICATOR;
-        int16_t INDICATOR_ALPHA;
-        uint32_t TEXT;
-        int16_t TEXT_ALPHA;
-        int16_t GLYPH_ALPHA;
-        uint32_t GLYPH_RECOLOUR;
-        int16_t GLYPH_RECOLOUR_ALPHA;
-    } LIST_FOCUS;
 
     struct {
         int16_t ALPHA;

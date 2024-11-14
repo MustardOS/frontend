@@ -198,6 +198,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BACKGROUND_ALPHA", 255);
     theme->LIST_DEFAULT.GRADIENT_START = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_START", 0);
     theme->LIST_DEFAULT.GRADIENT_STOP = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_STOP", 200);
+    theme->LIST_DEFAULT.GRADIENT_DIRECTION = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_DIRECTION", 0);
     theme->LIST_DEFAULT.INDICATOR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_INDICATOR");
     theme->LIST_DEFAULT.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_INDICATOR_ALPHA", 255);
     theme->LIST_DEFAULT.TEXT = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_TEXT");
@@ -216,6 +217,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_FOCUS.BACKGROUND_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_BACKGROUND_ALPHA", 255);
     theme->LIST_FOCUS.GRADIENT_START = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_START", 0);
     theme->LIST_FOCUS.GRADIENT_STOP = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_STOP", 200);
+    theme->LIST_FOCUS.GRADIENT_DIRECTION = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_DIRECTION", 0);
     theme->LIST_FOCUS.INDICATOR = get_ini_hex(muos_theme, "list", "LIST_FOCUS_INDICATOR");
     theme->LIST_FOCUS.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_INDICATOR_ALPHA", 255);
     theme->LIST_FOCUS.TEXT = get_ini_hex(muos_theme, "list", "LIST_FOCUS_TEXT");
@@ -439,7 +441,8 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
     lv_obj_set_style_bg_grad_color(ui_pnlList, lv_color_hex(theme->LIST_FOCUS.BACKGROUND_GRADIENT),
                                    LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_bg_main_stop(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_pnlList, LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_pnlList,
+        (theme->LIST_DEFAULT.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnlList, lv_color_hex(theme->LIST_DEFAULT.BACKGROUND),
                               LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -455,6 +458,8 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
     lv_obj_set_style_bg_opa(ui_pnlList, theme->LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_bg_main_stop(ui_pnlList, theme->LIST_FOCUS.GRADIENT_START, LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_bg_grad_stop(ui_pnlList, theme->LIST_FOCUS.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_grad_dir(ui_pnlList,
+        (theme->LIST_FOCUS.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_color(ui_pnlList, lv_color_hex(theme->LIST_FOCUS.INDICATOR),
                                   LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_pnlList, theme->LIST_FOCUS.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
