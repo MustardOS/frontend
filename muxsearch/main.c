@@ -196,11 +196,11 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
 
         char image[MAX_BUFFER_SIZE];
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                 CATALOGUE_PATH, catalogue_folder, folder_name, content_name);
+                 INFO_CAT_PATH, catalogue_folder, folder_name, content_name);
 
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/%s/%s/default.png",
-                     CATALOGUE_PATH, catalogue_folder, folder_name);
+                     INFO_CAT_PATH, catalogue_folder, folder_name);
         }
 
         struct ImageSettings image_settings = {
@@ -237,12 +237,12 @@ void image_refresh(char *image_type) {
     char *last_dir = get_last_dir(strip_ext(all_items[current_item_index].name));
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/info/core/%s.cfg",
-             STORAGE_PATH, str_replace(file_name, last_dir, ""));
+    snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
+             INFO_COR_PATH, str_replace(file_name, last_dir, ""));
 
     if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), "%s/info/core/%score.cfg",
-                 STORAGE_PATH, str_replace(file_name, last_dir, ""));
+        snprintf(core_file, sizeof(core_file), "%s/%score.cfg",
+                 INFO_COR_PATH, str_replace(file_name, last_dir, ""));
         snprintf(core_artwork, sizeof(core_artwork), "%s",
                  read_line_from_file(core_file, 2));
     } else {
@@ -262,9 +262,9 @@ void image_refresh(char *image_type) {
         snprintf(image_path, sizeof(image_path), "M:%s", image);
     } else {
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                 CATALOGUE_PATH, core_artwork, image_type, last_dir);
+                 INFO_CAT_PATH, core_artwork, image_type, last_dir);
         snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                 CATALOGUE_PATH, core_artwork, image_type, last_dir);
+                 INFO_CAT_PATH, core_artwork, image_type, last_dir);
     }
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
@@ -272,10 +272,10 @@ void image_refresh(char *image_type) {
     if (strcasecmp(box_image_previous_path, image) != 0) {
         char artwork_config_path[MAX_BUFFER_SIZE];
         snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
-                 CATALOGUE_PATH, core_artwork);
+                 INFO_CAT_PATH, core_artwork);
         if (!file_exist(artwork_config_path)) {
             snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini",
-                     CATALOGUE_PATH);
+                     INFO_CAT_PATH);
         }
 
         if (file_exist(artwork_config_path)) {

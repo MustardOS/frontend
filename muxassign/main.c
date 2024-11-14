@@ -190,8 +190,8 @@ void assign_core_directory(char *core_dir, const char *core, char *sys, int cach
     }
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
     FILE *file = fopen(core_file, "w");
     if (file == NULL) {
@@ -233,8 +233,8 @@ void assign_core_parent(char *core_dir, const char *core, char *sys, int cache) 
 
 void create_core_assignment(const char *core, char *sys, char *rom, int cache, enum core_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), "%s/info/core/%s/",
-             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_dir, sizeof(core_dir), "%s/%s/",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
     create_directories(core_dir);
 
@@ -387,8 +387,8 @@ char *get_raw_core(const char *group) {
 
 char *get_directory_core() {
     char content_core[MAX_BUFFER_SIZE];
-    snprintf(content_core, sizeof(content_core), "%s/info/core/%s/core.cfg",
-             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
     if (file_exist(content_core)) {
         return read_line_from_file(content_core, 1);
     }
@@ -397,8 +397,8 @@ char *get_directory_core() {
 
 char *get_file_core() {
     char content_core[MAX_BUFFER_SIZE];
-    snprintf(content_core, sizeof(content_core), "%s/info/core/%s/%s.cfg",
-             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
+    snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
     if (file_exist(content_core)) {
         return read_line_from_file(content_core, 2);
     }
@@ -819,8 +819,8 @@ int main(int argc, char *argv[]) {
         LOG_INFO(mux_module, "Automatic Assign Core Initiated")
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                 STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
+                 INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
             return 0;

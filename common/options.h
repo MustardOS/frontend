@@ -16,7 +16,12 @@
 #define STORAGE_PATH   "/run/muos/storage"
 #define STORAGE_THEME  "/run/muos/storage/theme/active"
 
-#define CATALOGUE_PATH "/run/muos/storage/info/catalogue"
+#define INFO_CAT_PATH "/run/muos/storage/info/catalogue"
+#define INFO_COR_PATH "/run/muos/storage/info/core"
+#define INFO_CFG_PATH "/run/muos/storage/info/config"
+#define INFO_FAV_PATH "/run/muos/storage/info/favourite"
+#define INFO_HIS_PATH "/run/muos/storage/info/history"
+#define INFO_NAM_PATH "/run/muos/storage/info/name"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index

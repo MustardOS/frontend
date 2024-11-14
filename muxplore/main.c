@@ -136,18 +136,18 @@ char *load_content_core(int force, int run_quit) {
     }
 
     if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
-        snprintf(content_core, sizeof(content_core), "%s/info/core/core.cfg",
-                 STORAGE_PATH);
+        snprintf(content_core, sizeof(content_core), "%s/core.cfg",
+                 INFO_COR_PATH);
     } else {
-        snprintf(content_core, sizeof(content_core), "%s/info/core/%s/%s.cfg",
-                 STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
+        snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
+                 INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
         if (file_exist(content_core) && !force) {
             printf("LOADING INDIVIDUAL CORE AT: %s\n", content_core);
             return build_core(content_core, 2, 3, 4);
         } else {
             printf("NO INDIVIDUAL CORE INFO AT: %s\n", content_core);
-            snprintf(content_core, sizeof(content_core), "%s/info/core/%s/core.cfg",
-                     STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+            snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
+                     INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4));
         }
     }
 
@@ -182,18 +182,18 @@ char *load_content_governor(int force, int run_quit) {
     }
 
     if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
-        snprintf(content_gov, sizeof(content_gov), "%s/info/core/core.gov",
-                 STORAGE_PATH);
+        snprintf(content_gov, sizeof(content_gov), "%s/core.gov",
+                 INFO_COR_PATH);
     } else {
-        snprintf(content_gov, sizeof(content_gov), "%s/info/core/%s/%s.gov",
-                 STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
+        snprintf(content_gov, sizeof(content_gov), "%s/%s/%s.gov",
+                 INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
         if (file_exist(content_gov) && !force) {
             printf("LOADING INDIVIDUAL GOVERNOR AT: %s\n", content_gov);
             return read_text_from_file(content_gov);
         } else {
             printf("NO INDIVIDUAL GOVERNOR INFO AT: %s\n", content_gov);
-            snprintf(content_gov, sizeof(content_gov), "%s/info/core/%s/core.gov",
-                     STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+            snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov",
+                     INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4));
         }
     }
 
@@ -218,10 +218,10 @@ char *load_content_description() {
         case ROOT: {
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
                 snprintf(content_desc, sizeof(content_desc), "%s/Root/text/sd1.txt",
-                         CATALOGUE_PATH);
+                         INFO_CAT_PATH);
             } else if (strcasecmp(content_label, "SD2 (sdcard)") == 0) {
                 snprintf(content_desc, sizeof(content_desc), "%s/Root/text/sd2.txt",
-                         CATALOGUE_PATH);
+                         INFO_CAT_PATH);
             }
         }
             break;
@@ -229,14 +229,14 @@ char *load_content_description() {
             char f_core_file[MAX_BUFFER_SIZE];
             char f_pointer[MAX_BUFFER_SIZE];
 
-            snprintf(f_core_file, sizeof(f_core_file), "%s/info/favourite/%s.cfg",
-                     STORAGE_PATH, strip_ext(items[current_item_index].name));
+            snprintf(f_core_file, sizeof(f_core_file), "%s/%s.cfg",
+                     INFO_FAV_PATH, strip_ext(items[current_item_index].name));
 
-            snprintf(f_pointer, sizeof(f_pointer), "%s/info/core/%s",
-                     STORAGE_PATH, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
+            snprintf(f_pointer, sizeof(f_pointer), "%s/%s",
+                     INFO_COR_PATH, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
 
             snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-                     CATALOGUE_PATH, read_line_from_file(f_pointer, 3),
+                     INFO_CAT_PATH, read_line_from_file(f_pointer, 3),
                      strip_ext(read_line_from_file(f_pointer, 7)));
         }
             break;
@@ -244,14 +244,14 @@ char *load_content_description() {
             char h_core_file[MAX_BUFFER_SIZE];
             char h_pointer[MAX_BUFFER_SIZE];
 
-            snprintf(h_core_file, sizeof(h_core_file), "%s/info/history/%s.cfg",
-                     STORAGE_PATH, strip_ext(items[current_item_index].name));
+            snprintf(h_core_file, sizeof(h_core_file), "%s/%s.cfg",
+                     INFO_HIS_PATH, strip_ext(items[current_item_index].name));
 
-            snprintf(h_pointer, sizeof(h_pointer), "%s/info/core/%s",
-                     STORAGE_PATH, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
+            snprintf(h_pointer, sizeof(h_pointer), "%s/%s",
+                     INFO_COR_PATH, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
 
             snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-                     CATALOGUE_PATH, read_line_from_file(h_pointer, 3),
+                     INFO_CAT_PATH, read_line_from_file(h_pointer, 3),
                      strip_ext(read_line_from_file(h_pointer, 7)));
         }
             break;
@@ -260,14 +260,14 @@ char *load_content_description() {
 
             char core_desc[MAX_BUFFER_SIZE];
             char core_file[MAX_BUFFER_SIZE];
-            snprintf(core_file, sizeof(core_file), "%s/info/core/%s/%s.cfg",
-                     STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
+            snprintf(core_file, sizeof(core_file), "%s/%s/%s.cfg",
+                     INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
 
             printf("TRYING TO READ CONFIG AT: %s\n", core_file);
 
             if (!file_exist(core_file)) {
-                snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                         STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+                snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
+                         INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4));
                 snprintf(core_desc, sizeof(core_desc), "%s",
                          read_line_from_file(core_file, 2));
             } else {
@@ -283,10 +283,10 @@ char *load_content_description() {
 
             if (items[current_item_index].content_type == FOLDER) {
                 snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
-                         CATALOGUE_PATH, content_label);
+                         INFO_CAT_PATH, content_label);
             } else {
                 snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-                         CATALOGUE_PATH, core_desc, desc_name);
+                         INFO_CAT_PATH, core_desc, desc_name);
             }
         }
             break;
@@ -357,11 +357,11 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
 
         char image[MAX_BUFFER_SIZE];
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                 CATALOGUE_PATH, catalogue_folder, folder_name, content_name);
+                 INFO_CAT_PATH, catalogue_folder, folder_name, content_name);
 
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/%s/%s/default.png",
-                     CATALOGUE_PATH, catalogue_folder, folder_name);
+                     INFO_CAT_PATH, catalogue_folder, folder_name);
         }
 
         struct ImageSettings image_settings = {
@@ -400,19 +400,19 @@ void image_refresh(char *image_type) {
         case ROOT: {
             if (strcasecmp(content_label, "SD1 (mmc)") == 0) {
                 snprintf(image, sizeof(image), "%s/Root/%s/sd1.png",
-                         CATALOGUE_PATH, image_type);
+                         INFO_CAT_PATH, image_type);
                 snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/sd1.png",
-                         CATALOGUE_PATH, image_type);
+                         INFO_CAT_PATH, image_type);
             } else if (strcasecmp(content_label, "SD2 (sdcard)") == 0) {
                 snprintf(image, sizeof(image), "%s/Root/%s/sd2.png",
-                         CATALOGUE_PATH, image_type);
+                         INFO_CAT_PATH, image_type);
                 snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/sd2.png",
-                         CATALOGUE_PATH, image_type);
+                         INFO_CAT_PATH, image_type);
             } else if (strcasecmp(content_label, "USB (external)") == 0) {
                 snprintf(image, sizeof(image), "%s/Root/%s/usb.png",
-                         CATALOGUE_PATH, image_type);
+                         INFO_CAT_PATH, image_type);
                 snprintf(image_path, sizeof(image_path), "M:%s/Root/%s/usb.png",
-                         CATALOGUE_PATH, image_type);
+                         INFO_CAT_PATH, image_type);
             }
         }
             break;
@@ -420,11 +420,11 @@ void image_refresh(char *image_type) {
             char f_core_file[MAX_BUFFER_SIZE];
             char f_pointer[MAX_BUFFER_SIZE];
 
-            snprintf(f_core_file, sizeof(f_core_file), "%s/info/favourite/%s.cfg",
-                     STORAGE_PATH, strip_ext(items[current_item_index].name));
+            snprintf(f_core_file, sizeof(f_core_file), "%s/%s.cfg",
+                     INFO_FAV_PATH, strip_ext(items[current_item_index].name));
 
-            snprintf(f_pointer, sizeof(f_pointer), "%s/info/core/%s",
-                     STORAGE_PATH, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
+            snprintf(f_pointer, sizeof(f_pointer), "%s/%s",
+                     INFO_COR_PATH, get_last_subdir(read_text_from_file(f_core_file), '/', 6));
 
             char *f_core_artwork = read_line_from_file(f_pointer, 3);
 
@@ -440,9 +440,9 @@ void image_refresh(char *image_type) {
                 char *f_file_name = strip_ext(read_line_from_file(f_pointer, 7));
 
                 snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                         CATALOGUE_PATH, f_core_artwork, image_type, f_file_name);
+                         INFO_CAT_PATH, f_core_artwork, image_type, f_file_name);
                 snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                         CATALOGUE_PATH, f_core_artwork, image_type, f_file_name);
+                         INFO_CAT_PATH, f_core_artwork, image_type, f_file_name);
             }
             snprintf(core_artwork, sizeof(core_artwork), "%s", f_core_artwork);
         }
@@ -451,11 +451,11 @@ void image_refresh(char *image_type) {
             char h_core_file[MAX_BUFFER_SIZE];
             char h_pointer[MAX_BUFFER_SIZE];
 
-            snprintf(h_core_file, sizeof(h_core_file), "%s/info/history/%s.cfg",
-                     STORAGE_PATH, strip_ext(items[current_item_index].name));
+            snprintf(h_core_file, sizeof(h_core_file), "%s/%s.cfg",
+                     INFO_HIS_PATH, strip_ext(items[current_item_index].name));
 
-            snprintf(h_pointer, sizeof(h_pointer), "%s/info/core/%s",
-                     STORAGE_PATH, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
+            snprintf(h_pointer, sizeof(h_pointer), "%s/%s",
+                     INFO_COR_PATH, get_last_subdir(read_text_from_file(h_core_file), '/', 6));
 
             char *h_core_artwork = read_line_from_file(h_pointer, 3);
             if (strlen(h_core_artwork) <= 1) {
@@ -470,9 +470,9 @@ void image_refresh(char *image_type) {
                 char *h_file_name = strip_ext(read_line_from_file(h_pointer, 7));
 
                 snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                         CATALOGUE_PATH, h_core_artwork, image_type, h_file_name);
+                         INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
                 snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                         CATALOGUE_PATH, h_core_artwork, image_type, h_file_name);
+                         INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
             }
             snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
         }
@@ -495,21 +495,21 @@ void image_refresh(char *image_type) {
 
             if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
                 snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
-                         CATALOGUE_PATH, image_type, content_label);
+                         INFO_CAT_PATH, image_type, content_label);
                 snprintf(image_path, sizeof(image_path), "M:%s/Folder/%s/%s.png",
-                         CATALOGUE_PATH, image_type, content_label);
+                         INFO_CAT_PATH, image_type, content_label);
             } else {
                 char *file_name = strip_ext(items[current_item_index].name);
 
                 char core_file[MAX_BUFFER_SIZE];
-                snprintf(core_file, sizeof(core_file), "%s/info/core/%s/%s.cfg",
-                         STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
+                snprintf(core_file, sizeof(core_file), "%s/%s/%s.cfg",
+                         INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(content_label));
 
                 LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
 
                 if (!file_exist(core_file)) {
-                    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.cfg",
-                             STORAGE_PATH, get_last_subdir(sd_dir, '/', 4));
+                    snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
+                             INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4));
                     snprintf(core_artwork, sizeof(core_artwork), "%s",
                              read_line_from_file(core_file, 2));
                 } else {
@@ -528,14 +528,14 @@ void image_refresh(char *image_type) {
                 } else {
                     if (items[current_item_index].content_type == FOLDER) {
                         snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
-                                 CATALOGUE_PATH, image_type, content_label);
+                                 INFO_CAT_PATH, image_type, content_label);
                         snprintf(image_path, sizeof(image_path), "M:%s/Folder/%s/%s.png",
-                                 CATALOGUE_PATH, image_type, content_label);
+                                 INFO_CAT_PATH, image_type, content_label);
                     } else {
                         snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                                 CATALOGUE_PATH, core_artwork, image_type, file_name);
+                                 INFO_CAT_PATH, core_artwork, image_type, file_name);
                         snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                                 CATALOGUE_PATH, core_artwork, image_type, file_name);
+                                 INFO_CAT_PATH, core_artwork, image_type, file_name);
                     }
                 }
             }
@@ -586,10 +586,10 @@ void image_refresh(char *image_type) {
                             items[current_item_index].name);
             char artwork_config_path[MAX_BUFFER_SIZE];
             snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
-                     CATALOGUE_PATH, catalogue_folder);
+                     INFO_CAT_PATH, catalogue_folder);
             if (!file_exist(artwork_config_path)) {
                 snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini",
-                         CATALOGUE_PATH);
+                         INFO_CAT_PATH);
             }
 
             if (file_exist(artwork_config_path)) {
@@ -707,12 +707,12 @@ void gen_label(char *item_glyph, char *item_text) {
 
 char *get_glyph_name(size_t index) {
     char fav_dir[PATH_MAX];
-    snprintf(fav_dir, sizeof(fav_dir), "%s/info/favourite/%s.cfg",
-             STORAGE_PATH, strip_ext(items[index].name));
+    snprintf(fav_dir, sizeof(fav_dir), "%s/%s.cfg",
+             INFO_FAV_PATH, strip_ext(items[index].name));
 
     char hist_dir[PATH_MAX];
-    snprintf(hist_dir, sizeof(hist_dir), "%s/info/history/%s.cfg",
-             STORAGE_PATH, strip_ext(items[index].name));
+    snprintf(hist_dir, sizeof(hist_dir), "%s/%s.cfg",
+             INFO_HIS_PATH, strip_ext(items[index].name));
 
     char *glyph_icon;
     if (file_exist(fav_dir)) {
@@ -734,39 +734,39 @@ void gen_item(char **file_names, int file_count) {
             if (strcasecmp(sd_dir, strip_dir(SD1)) != 0) {
                 snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/mmc/%s.ini",
                          device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(SD1));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/info/core/%s/",
-                         STORAGE_PATH, strchr(strdup(sd_dir), '/') + strlen(SD1));
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
+                         INFO_COR_PATH, strchr(strdup(sd_dir), '/') + strlen(SD1));
             } else {
                 snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/root_mmc.ini",
                          device.STORAGE.ROM.MOUNT);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/info/core/",
-                         STORAGE_PATH);
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
+                         INFO_COR_PATH);
             }
             break;
         case SDCARD:
             if (strcasecmp(sd_dir, strip_dir(SD2)) != 0) {
                 snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/sdcard/%s.ini",
                          device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(SD2));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/info/core/%s/",
-                         STORAGE_PATH, strchr(strdup(sd_dir), '/') + strlen(SD2));
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
+                         INFO_COR_PATH, strchr(strdup(sd_dir), '/') + strlen(SD2));
             } else {
                 snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/root_sdcard.ini",
                          device.STORAGE.ROM.MOUNT);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/info/core/",
-                         STORAGE_PATH);
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
+                         INFO_COR_PATH);
             }
             break;
         case USB:
             if (strcasecmp(sd_dir, strip_dir(E_USB)) != 0) {
                 snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/usb/%s.ini",
                          device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(E_USB));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/info/core/%s/",
-                         STORAGE_PATH, strchr(strdup(sd_dir), '/') + strlen(E_USB));
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
+                         INFO_COR_PATH, strchr(strdup(sd_dir), '/') + strlen(E_USB));
             } else {
                 snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/root_usb.ini",
                          device.STORAGE.ROM.MOUNT);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/info/core/",
-                         STORAGE_PATH);
+                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
+                         INFO_COR_PATH);
             }
             break;
         default:
@@ -792,12 +792,12 @@ void gen_item(char **file_names, int file_count) {
     }
 
     char name_file[MAX_BUFFER_SIZE];
-    snprintf(name_file, sizeof(name_file), "%s/info/name/%s.json",
-             STORAGE_PATH, friendly_name_file);
+    snprintf(name_file, sizeof(name_file), "%s/%s.json",
+             INFO_NAM_PATH, friendly_name_file);
 
     if (!file_exist(name_file)) {
-        snprintf(name_file, sizeof(name_file), "%s/info/name/general.json",
-                 STORAGE_PATH);
+        snprintf(name_file, sizeof(name_file), "%s/general.json",
+                 INFO_NAM_PATH);
     }
 
     LOG_INFO(mux_module, "Reading Friendly Name Set: %s", name_file)
@@ -978,7 +978,7 @@ void init_navigation_groups_grid() {
 
         char grid_image[MAX_BUFFER_SIZE];
         snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/%s.png",
-                 CATALOGUE_PATH, strip_ext(items[i].name));
+                 INFO_CAT_PATH, strip_ext(items[i].name));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, items[i].display_name);
@@ -1008,8 +1008,8 @@ void create_explore_items(void *count) {
 
     if (config.VISUAL.FRIENDLYFOLDER) {
         char folder_name_file[MAX_BUFFER_SIZE];
-        snprintf(folder_name_file, sizeof(folder_name_file), "%s/info/name/folder.json",
-                 STORAGE_PATH);
+        snprintf(folder_name_file, sizeof(folder_name_file), "%s/folder.json",
+                 INFO_NAM_PATH);
 
         if (json_valid(read_text_from_file(folder_name_file))) {
             fn_valid = 1;
@@ -1161,8 +1161,8 @@ int load_content(int add_favourite) {
     }
 
     char content_loader_file[MAX_BUFFER_SIZE];
-    snprintf(content_loader_file, sizeof(content_loader_file), "%s/info/core/%s/%s.cfg",
-             STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
+    snprintf(content_loader_file, sizeof(content_loader_file), "%s/%s/%s.cfg",
+             INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
 
     printf("CONFIG FILE: %s\n", content_loader_file);
 
@@ -1194,22 +1194,17 @@ int load_content(int add_favourite) {
         char add_to_hf[MAX_BUFFER_SIZE];
         char *hf_type;
 
-        char fav_dir[MAX_BUFFER_SIZE];
-        char his_dir[MAX_BUFFER_SIZE];
-        snprintf(fav_dir, sizeof(fav_dir), "%s/info/favourite", STORAGE_PATH);
-        snprintf(his_dir, sizeof(his_dir), "%s/info/history", STORAGE_PATH);
-
         if (add_favourite) {
-            hf_type = fav_dir;
+            hf_type = INFO_FAV_PATH;
         } else {
-            hf_type = his_dir;
+            hf_type = INFO_HIS_PATH;
         }
 
         snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s.cfg", hf_type, strip_ext(items[current_item_index].name));
 
         char pointer[MAX_BUFFER_SIZE];
-        snprintf(pointer, sizeof(pointer), "%s/info/core/%s/%s.cfg",
-                 STORAGE_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
+        snprintf(pointer, sizeof(pointer), "%s/%s/%s.cfg",
+                 INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
 
         if (add_favourite) {
             add_to_favourites(add_to_hf, pointer);
@@ -1251,8 +1246,8 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
         char add_to_hf[MAX_BUFFER_SIZE];
 
         if (add_favourite) {
-            snprintf(add_to_hf, sizeof(add_to_hf), "%s/info/favourite/%s",
-                     STORAGE_PATH, content_name);
+            snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s",
+                     INFO_FAV_PATH, content_name);
             add_to_favourites(add_to_hf, pointer_file);
             return 1;
         } else {
@@ -1260,8 +1255,8 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
             printf("ASSIGNED CORE: %s\n", assigned_core);
             printf("CONFIG FILE: %s\n", cache_file);
 
-            snprintf(add_to_hf, sizeof(add_to_hf), "%s/info/history/%s",
-                     STORAGE_PATH, content_name);
+            snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s",
+                     INFO_HIS_PATH, content_name);
 
             printf("TRYING TO LOAD CONTENT...\n");
 /*
@@ -1576,8 +1571,8 @@ void handle_x() {
         case FAVOURITE:
             play_sound("confirm", nav_sound, 0, 1);
 
-            snprintf(cache_file, sizeof(cache_file), "%s/info/favourite/%s.cfg",
-                     STORAGE_PATH, strip_ext(f_content));
+            snprintf(cache_file, sizeof(cache_file), "%s/%s.cfg",
+                     INFO_FAV_PATH, strip_ext(f_content));
 
             remove(cache_file);
             write_text_to_file("/tmp/mux_reload", "w", INT, 1);
@@ -1586,8 +1581,8 @@ void handle_x() {
         case HISTORY:
             play_sound("confirm", nav_sound, 0, 1);
 
-            snprintf(cache_file, sizeof(cache_file), "%s/info/history/%s.cfg",
-                     STORAGE_PATH, strip_ext(f_content));
+            snprintf(cache_file, sizeof(cache_file), "%s/%s.cfg",
+                     INFO_HIS_PATH, strip_ext(f_content));
 
             remove(cache_file);
             write_text_to_file("/tmp/mux_reload", "w", INT, 1);

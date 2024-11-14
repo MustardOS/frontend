@@ -94,8 +94,8 @@ void assign_gov_directory(char *core_dir, const char *gov, int purge) {
     }
 
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.gov",
-             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_file, sizeof(core_file), "%s/%s/core.gov",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
     FILE *file = fopen(core_file, "w");
     if (file == NULL) {
@@ -133,8 +133,8 @@ void assign_gov_parent(char *core_dir, const char *gov) {
 
 void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), "%s/info/core/%s/",
-             STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_dir, sizeof(core_dir), "%s/%s/",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
     create_directories(core_dir);
 
@@ -485,8 +485,8 @@ int main(int argc, char *argv[]) {
         LOG_INFO(mux_module, "Automatic Assign Governor Initiated")
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "%s/info/core/%s/core.gov",
-                 STORAGE_PATH, get_last_subdir(rom_dir, '/', 4));
+        snprintf(core_file, sizeof(core_file), "%s/%s/core.gov",
+                 INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
             return 0;

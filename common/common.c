@@ -1048,7 +1048,7 @@ int load_image_specifics(const char *theme_base, const char *device_dimension, c
 
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *device_dimension,
                          const char *image_type, char *image_path, size_t path_size) {
-    return (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", CATALOGUE_PATH, catalogue_name,
+    return (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
                      image_type, device_dimension, program) >= 0 &&
             file_exist(image_path));
 }
@@ -1427,7 +1427,7 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
 
 void load_skip_patterns() {
     char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/info/config/skip.ini", STORAGE_PATH);
+    snprintf(skip_ini, sizeof(skip_ini), "%s/skip.ini", INFO_CFG_PATH);
 
     if (!file_exist(skip_ini)) {
         snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
