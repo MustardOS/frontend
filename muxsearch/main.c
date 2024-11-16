@@ -71,6 +71,10 @@ lv_group_t *ui_group_panel;
 lv_obj_t *ui_viewport_objects[7];
 lv_obj_t *ui_mux_panels[7];
 
+void list_nav_prev(int steps);
+
+void list_nav_next(int steps);
+
 static const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
                                       "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
                                       "a", "s", "d", "f", "g", "h", "j", "k", "l", "\n",
@@ -99,9 +103,9 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblLookup,       TS("Enter in a search time to find stuff and things")},
-            {ui_lblSearchLocal,  TS("Do the search thing")},
-            {ui_lblSearchGlobal, TS("Do the search thing")},
+            {ui_lblLookup,       TS("Enter in the name of the content you are looking for")},
+            {ui_lblSearchLocal,  TS("Search within the current selected folder and folders within")},
+            {ui_lblSearchGlobal, TS("Search all current active storage devices")},
     };
 
     char *message = TG("No Help Information Found");
@@ -371,6 +375,13 @@ void process_results(const char *json_results) {
     struct json lookup = json_object_get(root, "lookup");
     if (json_exists(lookup) && json_type(lookup) == JSON_STRING) {
         json_string_copy(lookup, lookup_value, sizeof(lookup_value));
+    }
+
+    struct json directories = json_object_get(root, "directories");
+    if (json_exists(directories) && json_type(directories) == JSON_ARRAY) {
+        if (json_array_count(directories) > 0) {
+            list_nav_next(json_array_count(directories) == 1 ? 1 : 2);
+        }
     }
 
     search_folders = json_object_get(root, "folders");
@@ -789,16 +800,18 @@ void handle_confirm(void) {
             return;
         }
 
-        toast_message(TS("Searching..."), 1000, 1000);
+        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(ui_lblMessage, "Searching...");
+        refresh_screen(device.SCREEN.WAIT);
 
         static char command[MAX_BUFFER_SIZE];
 
         if (element_focused == ui_lblSearchLocal) {
             snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
-                     lv_label_get_text(ui_lblLookupValue), rom_dir);
+                     str_trim(lv_label_get_text(ui_lblLookupValue)), rom_dir);
         } else {
             snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\" \"%s\" \"%s\"",
-                     lv_label_get_text(ui_lblLookupValue), SD1, SD2, E_USB);
+                     str_trim(lv_label_get_text(ui_lblLookupValue)), SD1, SD2, E_USB);
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
