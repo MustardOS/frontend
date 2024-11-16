@@ -418,11 +418,11 @@ void process_results(const char *json_results) {
                 char *modified_name = NULL;
 
                 if (str_replace_segment(folder_name, "/mnt/", "/ROMS/", "", &modified_name)) {
-                    snprintf(bracket_folder_name, sizeof(bracket_folder_name), "[%s] [%s]",
+                    snprintf(bracket_folder_name, sizeof(bracket_folder_name), " %s/%s",
                              bracket_storage_name, str_replace(modified_name, "/mnt//ROMS/", ""));
                     free(modified_name);
                 } else {
-                    snprintf(bracket_folder_name, sizeof(bracket_folder_name), "[%s]",
+                    snprintf(bracket_folder_name, sizeof(bracket_folder_name), "%s",
                              folder_name);
                 }
 
@@ -844,6 +844,10 @@ void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
+
+    if (strcasecmp(get_last_dir(rom_dir), "ROMS") == 0) {
+        load_mux("explore");
+    }
 
     mux_input_stop();
 }
