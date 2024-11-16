@@ -45,6 +45,10 @@ int key_show = 0;
 int key_curr = 0;
 int key_map = 0;
 
+static char SD1[MAX_BUFFER_SIZE];
+static char SD2[MAX_BUFFER_SIZE];
+static char E_USB[MAX_BUFFER_SIZE];
+
 static char search_result[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char lookup_value[MAX_BUFFER_SIZE];
@@ -791,11 +795,10 @@ void handle_confirm(void) {
 
         if (element_focused == ui_lblSearchLocal) {
             snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
-                     rom_dir, lv_label_get_text(ui_lblLookupValue));
+                     lv_label_get_text(ui_lblLookupValue), rom_dir);
         } else {
-            snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
-                     str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
-                     lv_label_get_text(ui_lblLookupValue));
+            snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\" \"%s\" \"%s\"",
+                     lv_label_get_text(ui_lblLookupValue), SD1, SD2, E_USB);
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
@@ -891,7 +894,7 @@ void handle_help(void) {
         return;
     }
 
-    if (progress_onscreen == -1) {
+    if (progress_onscreen == -1 && all_items[current_item_index].content_type != ROM) {
         play_sound("confirm", nav_sound, 0, 0);
         show_help(lv_group_get_focused(ui_group));
     }
@@ -1252,6 +1255,10 @@ int main(int argc, char *argv[]) {
     ui_viewport_objects[4] = lv_img_create(ui_viewport_objects[0]);
     ui_viewport_objects[5] = lv_img_create(ui_viewport_objects[0]);
     ui_viewport_objects[6] = lv_img_create(ui_viewport_objects[0]);
+
+    snprintf(SD1, sizeof(SD1), "%s/ROMS/", device.STORAGE.ROM.MOUNT);
+    snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
+    snprintf(E_USB, sizeof(E_USB), "%s/ROMS/", device.STORAGE.USB.MOUNT);
 
     init_elements();
 
