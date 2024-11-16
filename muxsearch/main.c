@@ -314,19 +314,15 @@ void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_va
     lv_obj_set_user_data(ui_lblResultItem, item_data);
 
     if (strcasecmp(item_data, "content") == 0) {
-        char friendly_name_file[MAX_BUFFER_SIZE];
-        snprintf(friendly_name_file, sizeof(friendly_name_file), "%s",
-                 FRIENDLY_RESULT);
-
-        if (file_exist(friendly_name_file)) {
-            LOG_INFO(mux_module, "Reading Friendly Name Set: %s", friendly_name_file)
+        if (file_exist(FRIENDLY_RESULT)) {
+            LOG_INFO(mux_module, "Reading Friendly Name Set: %s", FRIENDLY_RESULT)
 
             int fn_valid = 0;
             struct json fn_json;
 
-            if (json_valid(read_text_from_file(friendly_name_file))) {
+            if (json_valid(read_text_from_file(FRIENDLY_RESULT))) {
                 fn_valid = 1;
-                fn_json = json_parse(read_text_from_file(friendly_name_file));
+                fn_json = json_parse(read_text_from_file(FRIENDLY_RESULT));
             }
 
             if (fn_valid) {
@@ -467,6 +463,11 @@ void process_results(const char *json_results) {
             }
 
             folder = json_next(folder);
+        }
+
+        // We are done with the friendly results JSON
+        if (file_exist(FRIENDLY_RESULT)) {
+            remove(FRIENDLY_RESULT);
         }
 
         // Add the three top labels - lookup, local, and global
