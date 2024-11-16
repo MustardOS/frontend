@@ -193,6 +193,19 @@ char *str_remchars(char *text, char *c) {
     return text;
 }
 
+void str_split(char *text, char sep, char *p1, char *p2) {
+    const char *pos = strchr(text, sep);
+
+    if (pos) {
+        size_t len = pos - text;
+        strncpy(p1, text, len);
+        p1[len] = '\0';
+        strcpy(p2, pos + 1);
+    } else {
+        strcpy(p1, text);
+        p2[0] = '\0';
+    }
+}
 
 char *str_trim(char *text) {
     if (!text || !*text) {

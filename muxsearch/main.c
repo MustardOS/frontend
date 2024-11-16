@@ -313,11 +313,38 @@ void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_va
 
     lv_obj_set_user_data(ui_lblResultItem, item_data);
 
-    if (strcasecmp(item_data, "blank") != 0 && strcasecmp(item_data, "folder") != 0) {
+    if (strcasecmp(item_data, "content") == 0) {
+        char friendly_name_file[MAX_BUFFER_SIZE];
+        snprintf(friendly_name_file, sizeof(friendly_name_file), "%s",
+                 FRIENDLY_RESULT);
+
+        if (file_exist(friendly_name_file)) {
+            LOG_INFO(mux_module, "Reading Friendly Name Set: %s", friendly_name_file)
+
+            int fn_valid = 0;
+            struct json fn_json;
+
+            if (json_valid(read_text_from_file(friendly_name_file))) {
+                fn_valid = 1;
+                fn_json = json_parse(read_text_from_file(friendly_name_file));
+            }
+
+            if (fn_valid) {
+                char fn_name[MAX_BUFFER_SIZE];
+                struct json good_name_json = json_object_get(fn_json, strip_ext(item_text));
+
+                if (json_exists(good_name_json)) {
+                    json_string_copy(good_name_json, fn_name, sizeof(fn_name));
+                    lv_label_set_text(ui_lblResultItem, fn_name);
+                }
+            }
+        }
+
         lv_group_add_obj(ui_group, ui_lblResultItem);
         lv_group_add_obj(ui_group_value, ui_lblResultItemValue);
         lv_group_add_obj(ui_group_glyph, ui_lblResultItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlResult);
+
         ui_count++;
     }
 
@@ -387,8 +414,6 @@ void process_results(const char *json_results) {
                     snprintf(bracket_folder_name, sizeof(bracket_folder_name), "[%s]",
                              folder_name);
                 }
-
-                //gen_label("", "", "blank", "");
 
                 if (strcasecmp(bracket_folder_name, "[.]") != 0) {
                     gen_label("folder", bracket_folder_name, "folder", "");

@@ -94,6 +94,8 @@ char *str_remchar(char *text, char c);
 
 char *str_remchars(char *text, char *c);
 
+void str_split(char *text, char sep, char *p1, char *p2);
+
 char *str_trim(char *text);
 
 char *str_replace(const char *orig, const char *rep, const char *with);

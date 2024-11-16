@@ -42,6 +42,8 @@
 #define BRIGHT_PERC "/tmp/current_brightness_percent"
 #define VOLUME_PERC "/tmp/current_volume_percent"
 
+#define FRIENDLY_RESULT "/tmp/f_result.json"
+
 #define FONT_PANEL_FOLDER  "panel"
 #define FONT_HEADER_FOLDER "header"
 #define FONT_FOOTER_FOLDER "footer"
