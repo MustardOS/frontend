@@ -1662,8 +1662,7 @@ void handle_select() {
         return;
     }
 
-    if (module != ROOT && module != FAVOURITE && module != HISTORY &&
-        strcasecmp(get_last_dir(sd_dir), "ROMS") != 0) {
+    if (module != ROOT && module != FAVOURITE && module != HISTORY) {
         play_sound("confirm", nav_sound, 0, 1);
 
         switch (module) {
@@ -1672,15 +1671,21 @@ void handle_select() {
             case USB:
                 write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
-                write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
-                write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
+                if (strcasecmp(get_last_dir(sd_dir), "ROMS") != 0) {
+                    write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
+                    write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
 
-                load_content_core(1, 0);
-                if (safe_quit) mux_input_stop();
-                load_content_governor(1, 0);
-                if (safe_quit) mux_input_stop();
+                    load_content_core(1, 0);
+                    if (safe_quit) mux_input_stop();
 
-                load_mux("option");
+                    load_content_governor(1, 0);
+                    if (safe_quit) mux_input_stop();
+
+                    load_mux("option");
+                } else {
+                    load_mux("search");
+                }
+
                 mux_input_stop();
                 break;
             default:
