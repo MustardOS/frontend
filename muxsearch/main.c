@@ -799,7 +799,6 @@ void handle_confirm(void) {
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
-        if (file_exist(search_result)) remove(search_result);
 
         system(command);
 
@@ -809,7 +808,6 @@ void handle_confirm(void) {
         if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
             write_text_to_file(MUOS_RES_LOAD, "w", CHAR,
                                str_replace(lv_label_get_text(lv_group_get_focused(ui_group_value)), "/./", "/"));
-            if (file_exist(search_result)) remove(search_result);
 
             load_mux("explore");
             mux_input_stop();
@@ -830,7 +828,6 @@ void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
-    if (file_exist(search_result)) remove(search_result);
 
     mux_input_stop();
 }
