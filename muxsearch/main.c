@@ -397,37 +397,37 @@ void process_results(const char *json_results) {
             if (json_type(folder) == JSON_STRING) {
                 json_string_copy(folder, folder_name, sizeof(folder_name));
 
-                char bracket_storage_name[MAX_BUFFER_SIZE];
+                char storage_name_short[MAX_BUFFER_SIZE];
                 char *storage_name = NULL;
 
                 if (str_extract(folder_name, "", "/ROMS/", &storage_name)) {
-                    snprintf(bracket_storage_name, sizeof(bracket_storage_name), "%s",
+                    snprintf(storage_name_short, sizeof(storage_name_short), "%s",
                              storage_name);
                     free(storage_name);
 
-                    if (strcasecmp(bracket_storage_name, device.STORAGE.ROM.MOUNT) == 0) {
-                        snprintf(bracket_storage_name, sizeof(bracket_storage_name), "SD1");
-                    } else if (strcasecmp(bracket_storage_name, device.STORAGE.SDCARD.MOUNT) == 0) {
-                        snprintf(bracket_storage_name, sizeof(bracket_storage_name), "SD2");
-                    } else if (strcasecmp(bracket_storage_name, device.STORAGE.USB.MOUNT) == 0) {
-                        snprintf(bracket_storage_name, sizeof(bracket_storage_name), "USB");
+                    if (strcasecmp(storage_name_short, device.STORAGE.ROM.MOUNT) == 0) {
+                        snprintf(storage_name_short, sizeof(storage_name_short), "SD1");
+                    } else if (strcasecmp(storage_name_short, device.STORAGE.SDCARD.MOUNT) == 0) {
+                        snprintf(storage_name_short, sizeof(storage_name_short), "SD2");
+                    } else if (strcasecmp(storage_name_short, device.STORAGE.USB.MOUNT) == 0) {
+                        snprintf(storage_name_short, sizeof(storage_name_short), "USB");
                     }
                 }
 
-                char bracket_folder_name[MAX_BUFFER_SIZE];
+                char folder_name_short[MAX_BUFFER_SIZE];
                 char *modified_name = NULL;
 
                 if (str_replace_segment(folder_name, "/mnt/", "/ROMS/", "", &modified_name)) {
-                    snprintf(bracket_folder_name, sizeof(bracket_folder_name), " %s/%s",
-                             bracket_storage_name, str_replace(modified_name, "/mnt//ROMS/", ""));
+                    snprintf(folder_name_short, sizeof(folder_name_short), " %s/%s",
+                             storage_name_short, str_replace(modified_name, "/mnt//ROMS/", ""));
                     free(modified_name);
                 } else {
-                    snprintf(bracket_folder_name, sizeof(bracket_folder_name), "%s",
+                    snprintf(folder_name_short, sizeof(folder_name_short), "%s",
                              folder_name);
                 }
 
-                if (strcasecmp(bracket_folder_name, "[.]") != 0) {
-                    gen_label("folder", bracket_folder_name, "folder", "");
+                if (strcasecmp(folder_name_short, ".") != 0) {
+                    gen_label("folder", folder_name_short, "folder", "");
                 }
             }
 
