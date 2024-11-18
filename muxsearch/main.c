@@ -312,6 +312,7 @@ void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_va
     lv_obj_t *ui_lblResultItemValue = lv_label_create(ui_pnlResult);
     lv_label_set_text(ui_lblResultItemValue, item_value);
     lv_obj_set_style_text_opa(ui_lblResultItemValue, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_width(ui_lblResultItemValue, 0);
 
     lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
     apply_theme_list_glyph(&theme, ui_lblResultItemGlyph, mux_module, item_glyph);
