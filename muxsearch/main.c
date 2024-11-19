@@ -556,6 +556,9 @@ void list_nav_prev(int steps) {
     if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
         image_refresh("box");
         set_label_long_mode();
+    } else {
+        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
     }
     nav_moved = 1;
 }
@@ -580,6 +583,9 @@ void list_nav_next(int steps) {
     if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
         image_refresh("box");
         set_label_long_mode();
+    } else {
+        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
     }
     nav_moved = 1;
 }
