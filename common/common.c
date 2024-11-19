@@ -1936,7 +1936,7 @@ int init_nav_sound(const char *mux_module) {
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
-            Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 2048);
             LOG_SUCCESS(mux_module, "SDL Init Success")
             return 1;
         } else {
