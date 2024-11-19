@@ -136,7 +136,7 @@ void update_system_info() {
 
     char build_version[MAX_BUFFER_SIZE];
     sprintf(build_version, "%s (%s)",
-            read_line_from_file("/opt/muos/config/version.txt", 1),
+            str_replace(read_line_from_file("/opt/muos/config/version.txt", 1), "_", " "),
             read_line_from_file("/opt/muos/config/version.txt", 2));
 
     lv_label_set_text(ui_lblVersionValue,
