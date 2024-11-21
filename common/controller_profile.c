@@ -29,6 +29,11 @@ void create_controller_profile(char *controller_profile_path) {
     fprintf(file, "BUTTON_START=11\n");
     fprintf(file, "BUTTON_MENU=12\n\n");
 
+    fprintf(file, "[trigger]\n");
+    fprintf(file, "AXIS=32767\n");
+    fprintf(file, "L2=-1\n");
+    fprintf(file, "R2=-1\n\n");
+
     fprintf(file, "[dpad]\n");
     fprintf(file, "AXIS=32767\n");
     fprintf(file, "LEFT=6\n");
@@ -74,6 +79,10 @@ void load_controller_profile(struct controller_profile *controller, char *contro
     controller->BUTTON.START = get_ini_int(muos_controller_profile, "buttons", "BUTTON_START", 11);
     controller->BUTTON.MENU = get_ini_int(muos_controller_profile, "buttons", "BUTTON_MENU", 12);
     
+    controller->TRIGGER.AXIS = get_ini_int(muos_controller_profile, "trigger", "AXIS", 32767);
+    controller->TRIGGER.L2 = get_ini_int(muos_controller_profile, "trigger", "L2", -1);
+    controller->TRIGGER.R2 = get_ini_int(muos_controller_profile, "trigger", "R2", -1);
+
     controller->DPAD.AXIS = get_ini_int(muos_controller_profile, "dpad", "AXIS", 32767);
     controller->DPAD.LEFT = get_ini_int(muos_controller_profile, "dpad", "LEFT", 6);
     controller->DPAD.UP = get_ini_int(muos_controller_profile, "dpad", "UP", 7);

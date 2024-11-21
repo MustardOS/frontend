@@ -211,6 +211,22 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
         // Axis: right stick horizontal
         axis = !opts->swap_axis ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
         axis_max = controller.ANALOG.RIGHT.AXIS;
+    } else if (js.number == controller.TRIGGER.L2) {
+        int threshold = (controller.TRIGGER.AXIS * 80) / 100;
+        if (threshold > 0) {
+            pressed = (js.value >= threshold) ? (pressed | BIT(MUX_INPUT_L2)) : (pressed & ~BIT(MUX_INPUT_L2));
+        } else {
+            pressed = (js.value <= threshold) ? (pressed | BIT(MUX_INPUT_L2)) : (pressed & ~BIT(MUX_INPUT_L2));
+        }
+        return;
+    } else if (js.number == controller.TRIGGER.R2) {
+        int threshold = (controller.TRIGGER.AXIS * 80) / 100;
+        if (threshold > 0) {
+            pressed = (js.value >= threshold) ? (pressed | BIT(MUX_INPUT_R2)) : (pressed & ~BIT(MUX_INPUT_R2));
+        } else {
+            pressed = (js.value <= threshold) ? (pressed | BIT(MUX_INPUT_R2)) : (pressed & ~BIT(MUX_INPUT_R2));
+        }
+        return;
     } else {
         return;
     }

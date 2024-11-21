@@ -23,6 +23,12 @@ struct controller_profile {
     } BUTTON;
 
     struct {
+        int16_t AXIS;
+        int16_t L2;        
+        int16_t R2;
+    } TRIGGER;
+
+    struct {
         int16_t AXIS;        
         int16_t UP;
         int16_t LEFT;
