@@ -57,6 +57,8 @@ void load_controller_profile(struct controller_profile *controller, char *contro
     snprintf(controller_profile_path, sizeof(controller_profile_path), "%s/%s.ini",
                 INFO_CNT_PATH, controller_name);
 
+    printf("Loading Controller Profile: %s\n", controller_profile_path);
+
     if (!file_exist(controller_profile_path)) {
         create_controller_profile(controller_profile_path);
     }

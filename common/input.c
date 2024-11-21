@@ -433,10 +433,11 @@ void *joystick_handler(void *arg) {
             perror("Error reading joystick event");
             break;
         }
+
+        if (js.type & JS_EVENT_INIT) continue;
+
         printf("Joystick Event: type=%u, number=%u, value=%d\n", js.type, js.number, js.value);
-        if (js.type & JS_EVENT_INIT) {
-            printf("CLEARING %u moved to %d\n", js.number, js.value);
-        } else if (js.type & JS_EVENT_BUTTON) {
+        if (js.type & JS_EVENT_BUTTON) {
             process_usb_key(opts, js);
         } else if (js.type & JS_EVENT_AXIS) {
             process_usb_abs(opts, js);
