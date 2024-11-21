@@ -76,6 +76,7 @@ void handle_input(mux_input_type type, mux_input_action action) {
             [MUX_INPUT_VOL_DOWN] = "⇽",
 
             // Function buttons:
+            [MUX_INPUT_MENU_SHORT] = "⇹",
             [MUX_INPUT_MENU_LONG] = "⇹",
     };
 

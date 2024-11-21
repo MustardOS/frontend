@@ -13,7 +13,10 @@
 
 #include "common.h"
 #include "config.h"
+#include "controller_profile.h"
 #include "device.h"
+
+struct controller_profile controller;
 
 extern uint32_t mux_tick(void);
 
@@ -148,31 +151,31 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad buttons.
 static void process_usb_key(const mux_input_options *opts, struct js_event js) {
     mux_input_type type;
-    if (js.number == 0) {
+    if (js.number == controller.BUTTON.A) {
         type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
-    } else if (js.number  == 1) {
+    } else if (js.number  == controller.BUTTON.B) {
         type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
-    } else if (js.number  == 3) {
+    } else if (js.number  == controller.BUTTON.X) {
         type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
-    } else if (js.number  == 4) {
+    } else if (js.number  == controller.BUTTON.Y) {
         type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
-    } else if (js.number  == 6) {
+    } else if (js.number  == controller.BUTTON.L1) {
         type = MUX_INPUT_L1;
-    } else if (js.number  == 8) {
+    } else if (js.number  == controller.BUTTON.L2) {
         type = MUX_INPUT_L2;
-    } else if (js.number  == 13) {
+    } else if (js.number  == controller.BUTTON.L3) {
         type = MUX_INPUT_L3;
-    } else if (js.number  == 7) {
+    } else if (js.number  == controller.BUTTON.R1) {
         type = MUX_INPUT_R1;
-    } else if (js.number  == 9) {
+    } else if (js.number  == controller.BUTTON.R2) {
         type = MUX_INPUT_R2;
-    } else if (js.number  == 14) {
+    } else if (js.number  == controller.BUTTON.R3) {
         type = MUX_INPUT_R3;
-    } else if (js.number  == 10) {
+    } else if (js.number  == controller.BUTTON.SELECT) {
         type = MUX_INPUT_SELECT;
-    } else if (js.number  == 11) {
+    } else if (js.number  == controller.BUTTON.START) {
         type = MUX_INPUT_START;
-    } else if (js.number  == 12) {
+    } else if (js.number  == controller.BUTTON.MENU) {
         type = MUX_INPUT_MENU_SHORT;
     } else {
         return;
@@ -183,24 +186,47 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad axes (D-pad and the sticks).
 static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     int axis;
-    if (js.number  == 7) {
+    int axis_max = 32767;
+    if (js.number == controller.DPAD.UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
-    } else if (js.number  == 6) {
+        axis_max = controller.DPAD.AXIS;
+    } else if (js.number == controller.DPAD.LEFT) {
         // Axis: D-pad horizontal
         axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
-    } else if (js.number  == 1) {
+        axis_max = controller.DPAD.AXIS;
+    } else if (js.number == controller.ANALOG.LEFT.UP) {
         // Axis: left stick vertical
         axis = !opts->swap_axis ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
-    } else if (js.number  == 0) {
+        axis_max = controller.ANALOG.LEFT.AXIS;
+    } else if (js.number == controller.ANALOG.LEFT.LEFT) {
         // Axis: left stick horizontal
         axis = !opts->swap_axis ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
-    } else if (js.number  == 3) {
+        axis_max = controller.ANALOG.LEFT.AXIS;
+    } else if (js.number == controller.ANALOG.RIGHT.UP) {
         // Axis: right stick vertical
         axis = !opts->swap_axis ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
-    } else if (js.number  == 2) {
+        axis_max = controller.ANALOG.RIGHT.AXIS;
+    } else if (js.number == controller.ANALOG.RIGHT.LEFT) {
         // Axis: right stick horizontal
         axis = !opts->swap_axis ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+        axis_max = controller.ANALOG.RIGHT.AXIS;
+    } else if (js.number == controller.TRIGGER.L2) {
+        int threshold = (controller.TRIGGER.AXIS * 80) / 100;
+        if (threshold > 0) {
+            pressed = (js.value >= threshold) ? (pressed | BIT(MUX_INPUT_L2)) : (pressed & ~BIT(MUX_INPUT_L2));
+        } else {
+            pressed = (js.value <= threshold) ? (pressed | BIT(MUX_INPUT_L2)) : (pressed & ~BIT(MUX_INPUT_L2));
+        }
+        return;
+    } else if (js.number == controller.TRIGGER.R2) {
+        int threshold = (controller.TRIGGER.AXIS * 80) / 100;
+        if (threshold > 0) {
+            pressed = (js.value >= threshold) ? (pressed | BIT(MUX_INPUT_R2)) : (pressed & ~BIT(MUX_INPUT_R2));
+        } else {
+            pressed = (js.value <= threshold) ? (pressed | BIT(MUX_INPUT_R2)) : (pressed & ~BIT(MUX_INPUT_R2));
+        }
+        return;
     } else {
         return;
     }
@@ -210,10 +236,10 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     //
     // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
     // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
-    if (js.value <= -32767 + 32767 / 5) {
+    if (js.value <= -axis_max + axis_max / 5) {
         // Direction: up/left
         pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
-    } else if (js.value >= 32767 - 32767 / 5) {
+    } else if (js.value >= axis_max - axis_max / 5) {
         // Direction: down/right
         pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
     } else {
@@ -391,6 +417,14 @@ void *joystick_handler(void *arg) {
         perror("Failed to open USB controller");
         return NULL;
     }
+
+    char name[128]; // Buffer to hold the joystick name
+    if (ioctl(usb_fd, JSIOCGNAME(sizeof(name)), name) < 0) {
+        strncpy(name, "Unknown", sizeof(name));
+    }
+
+    load_controller_profile(&controller, name);
+
     struct js_event js;
     while (!stop) {
         // Read joystick event
@@ -400,9 +434,10 @@ void *joystick_handler(void *arg) {
             break;
         }
 
-        if (js.type & JS_EVENT_INIT) {
-            printf("CLEARING %u moved to %d\n", js.number, js.value);
-        } else if (js.type & JS_EVENT_BUTTON) {
+        if (js.type & JS_EVENT_INIT) continue;
+
+        printf("Joystick Event: type=%u, number=%u, value=%d\n", js.type, js.number, js.value);
+        if (js.type & JS_EVENT_BUTTON) {
             process_usb_key(opts, js);
         } else if (js.type & JS_EVENT_AXIS) {
             process_usb_abs(opts, js);
