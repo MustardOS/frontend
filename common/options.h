@@ -19,6 +19,7 @@
 #define INFO_CAT_PATH "/run/muos/storage/info/catalogue"
 #define INFO_COR_PATH "/run/muos/storage/info/core"
 #define INFO_CFG_PATH "/run/muos/storage/info/config"
+#define INFO_CONT_PATH "/run/muos/storage/info/controller"
 #define INFO_FAV_PATH "/run/muos/storage/info/favourite"
 #define INFO_HIS_PATH "/run/muos/storage/info/history"
 #define INFO_NAM_PATH "/run/muos/storage/info/name"
