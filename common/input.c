@@ -1,6 +1,8 @@
 #include "input.h"
-
+#include <pthread.h>
 #include <linux/input.h>
+#include <linux/joystick.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -140,6 +142,83 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
                 pressed &= ~(BIT(MUX_INPUT_POWER_SHORT) | BIT(MUX_INPUT_POWER_LONG));
                 break;
         }
+    }
+}
+
+// Processes 8bitdo USB Pro 2 in D-Input mode gamepad buttons.
+static void process_usb_key(const mux_input_options *opts, struct js_event js) {
+    mux_input_type type;
+    if (js.number == 0) {
+        type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
+    } else if (js.number  == 1) {
+        type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
+    } else if (js.number  == 3) {
+        type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
+    } else if (js.number  == 4) {
+        type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
+    } else if (js.number  == 6) {
+        type = MUX_INPUT_L1;
+    } else if (js.number  == 8) {
+        type = MUX_INPUT_L2;
+    } else if (js.number  == 13) {
+        type = MUX_INPUT_L3;
+    } else if (js.number  == 7) {
+        type = MUX_INPUT_R1;
+    } else if (js.number  == 9) {
+        type = MUX_INPUT_R2;
+    } else if (js.number  == 14) {
+        type = MUX_INPUT_R3;
+    } else if (js.number  == 10) {
+        type = MUX_INPUT_SELECT;
+    } else if (js.number  == 11) {
+        type = MUX_INPUT_START;
+    } else if (js.number  == 12) {
+        type = MUX_INPUT_MENU_SHORT;
+    } else {
+        return;
+    }
+    pressed = (js.value == 1) ? (pressed | BIT(type)) : (pressed & ~BIT(type));
+}
+
+// Processes 8bitdo USB Pro 2 in D-Input mode gamepad axes (D-pad and the sticks).
+static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
+    int axis;
+    if (js.number  == 7) {
+        // Axis: D-pad vertical
+        axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+    } else if (js.number  == 6) {
+        // Axis: D-pad horizontal
+        axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+    } else if (js.number  == 1) {
+        // Axis: left stick vertical
+        axis = !opts->swap_axis ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+    } else if (js.number  == 0) {
+        // Axis: left stick horizontal
+        axis = !opts->swap_axis ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
+    } else if (js.number  == 3) {
+        // Axis: right stick vertical
+        axis = !opts->swap_axis ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
+    } else if (js.number  == 2) {
+        // Axis: right stick horizontal
+        axis = !opts->swap_axis ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+    } else {
+        return;
+    }
+
+    // Sometimes, hardware issues prevent sticks from reaching the full range of the analog axis.
+    // (This is especially common with cheap Hall-effect sticks.)
+    //
+    // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
+    // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
+    if (js.value <= -32767 + 32767 / 5) {
+        // Direction: up/left
+        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+    } else if (js.value >= 32767 - 32767 / 5) {
+        // Direction: down/right
+        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+    } else {
+        // Direction: center
+        pressed &= ~(BIT(axis) | BIT(axis + 1));
     }
 }
 
@@ -303,6 +382,36 @@ static void handle_combos(const mux_input_options *opts) {
     }
 }
 
+void *joystick_handler(void *arg) {
+    // Cast the argument back to the correct type
+    const mux_input_options *opts = (const mux_input_options *)arg;
+    // Open USB controller
+    int usb_fd = open("/dev/input/js1", O_RDONLY);
+    if (usb_fd == -1) {
+        perror("Failed to open USB controller");
+        return NULL;
+    }
+    struct js_event js;
+    while (!stop) {
+        // Read joystick event
+        ssize_t bytes = read(usb_fd, &js, sizeof(struct js_event));
+        if (bytes != sizeof(struct js_event)) {
+            perror("Error reading joystick event");
+            break;
+        }
+
+        if (js.type & JS_EVENT_INIT) {
+            printf("CLEARING %u moved to %d\n", js.number, js.value);
+        } else if (js.type & JS_EVENT_BUTTON) {
+            process_usb_key(opts, js);
+        } else if (js.type & JS_EVENT_AXIS) {
+            process_usb_abs(opts, js);
+        }
+    }
+    close(usb_fd);
+    return NULL;
+}
+
 void mux_input_task(const mux_input_options *opts) {
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -325,6 +434,10 @@ void mux_input_task(const mux_input_options *opts) {
         perror("mux_input_task: epoll_ctl(system_fd)");
         return;
     }
+
+    pthread_t joystick_thread;
+    mux_input_options joystick_opts = *opts;
+    pthread_create(&joystick_thread, NULL, joystick_handler, &joystick_opts);
 
     // Delay (millis) to wait for input before timing out. This determines the rate at which the
     // hold_handlers and idle_handler are called. To save CPU, we want to wait as long as possible.
