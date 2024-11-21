@@ -173,7 +173,7 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
         type = MUX_INPUT_R3;
     } else if (js.number  == controller.BUTTON.SELECT) {
         type = MUX_INPUT_SELECT;
-    } else if (js.number  == controller.BUTTON.SELECT) {
+    } else if (js.number  == controller.BUTTON.START) {
         type = MUX_INPUT_START;
     } else if (js.number  == controller.BUTTON.MENU) {
         type = MUX_INPUT_MENU_SHORT;
@@ -417,11 +417,10 @@ void *joystick_handler(void *arg) {
             perror("Error reading joystick event");
             break;
         }
-
+        printf("Joystick Event: type=%u, number=%u, value=%d\n", js.type, js.number, js.value);
         if (js.type & JS_EVENT_INIT) {
             printf("CLEARING %u moved to %d\n", js.number, js.value);
         } else if (js.type & JS_EVENT_BUTTON) {
-            printf("Button %u (%s)\n", js.number, js.value == 1 ? "PRESSED" : "RELEASED");
             process_usb_key(opts, js);
         } else if (js.type & JS_EVENT_AXIS) {
             process_usb_abs(opts, js);

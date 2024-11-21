@@ -50,7 +50,7 @@ void create_controller_profile(char *controller_profile_path) {
 void load_controller_profile(struct controller_profile *controller, char *controller_name) {
     char controller_profile_path[MAX_BUFFER_SIZE];
     snprintf(controller_profile_path, sizeof(controller_profile_path), "%s/%s.ini",
-                INFO_CONT_PATH, controller_name);
+                INFO_CNT_PATH, controller_name);
 
     if (!file_exist(controller_profile_path)) {
         create_controller_profile(controller_profile_path);
@@ -66,7 +66,7 @@ void load_controller_profile(struct controller_profile *controller, char *contro
     controller->BUTTON.Y = get_ini_int(muos_controller_profile, "buttons", "BUTTON_Y", 4);
     controller->BUTTON.L1 = get_ini_int(muos_controller_profile, "buttons", "BUTTON_L1", 6);
     controller->BUTTON.L2 = get_ini_int(muos_controller_profile, "buttons", "BUTTON_L2", 8);
-    controller->BUTTON.L3 = get_ini_int(muos_controller_profile, "buttons", "BUTTON_L2", 13);
+    controller->BUTTON.L3 = get_ini_int(muos_controller_profile, "buttons", "BUTTON_L3", 13);
     controller->BUTTON.R1 = get_ini_int(muos_controller_profile, "buttons", "BUTTON_R1", 7);
     controller->BUTTON.R2 = get_ini_int(muos_controller_profile, "buttons", "BUTTON_R2", 9);
     controller->BUTTON.R3 = get_ini_int(muos_controller_profile, "buttons", "BUTTON_R3", 14);
