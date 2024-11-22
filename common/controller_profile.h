@@ -20,6 +20,10 @@ struct controller_profile {
         int16_t SELECT;
         int16_t START;
         int16_t MENU;
+        int16_t UP;
+        int16_t DOWN;
+        int16_t LEFT;
+        int16_t RIGHT;
     } BUTTON;
 
     struct {

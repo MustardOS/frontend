@@ -10,7 +10,7 @@
 #include <sys/epoll.h>
 #include <sys/param.h>
 #include <unistd.h>
-
+#include <ctype.h>
 #include "common.h"
 #include "config.h"
 #include "controller_profile.h"
@@ -248,6 +248,42 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     }
 }
 
+// Processes gamepad button D-pad.  // Some controllers like PS3 the DPAD triggers button press events
+static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js_event js) {
+    int axis;
+    int direction;
+    if (js.number == controller.BUTTON.UP) {
+        // Axis: D-pad vertical
+        axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        direction = -js.value;
+    } else if (js.number == controller.BUTTON.LEFT) {
+        // Axis: D-pad horizontal
+        axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        direction = -js.value;
+    } else if (js.number == controller.BUTTON.DOWN) {
+        // Axis: D-pad vertical
+        axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        direction = js.value;
+    } else if (js.number == controller.BUTTON.RIGHT) {
+        // Axis: D-pad horizontal
+        axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        direction = js.value;
+    } else {
+        return;
+    }
+
+    if (direction == -1) {
+        // Direction: up/left
+        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+    } else if (direction == 1) {
+        // Direction: down/right
+        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+    } else {
+        // Direction: center
+        pressed &= ~(BIT(axis) | BIT(axis + 1));
+    }
+}
+
 // Invokes the relevant handler(s) for a particular input type and action.
 static void dispatch_input(const mux_input_options *opts,
                            mux_input_type type,
@@ -408,6 +444,58 @@ static void handle_combos(const mux_input_options *opts) {
     }
 }
 
+char *get_unique_controller_id(int usb_fd) {
+    char name[128] = "Unknown";
+    char vendor[16] = "0000";
+    char product[16] = "0000";
+    char controller_id[256];
+    static char result[256];
+
+    // Get joystick name
+    if (ioctl(usb_fd, JSIOCGNAME(sizeof(name)), name) < 0) {
+        perror("Failed to get joystick name");
+        strncpy(name, "Unknown", sizeof(name));
+    }
+
+    // Normalize name to remove multiple spaces
+    int j = 0;
+    for (int i = 0; name[i] != '\0'; i++) {
+        if (!(isspace(name[i]) && (j > 0 && isspace(result[j - 1])))) {
+            result[j++] = name[i];
+        }
+    }
+    result[j] = '\0';
+    strncpy(name, result, sizeof(name));
+
+    // Get Vendor ID
+    FILE *vendor_file = fopen("/sys/class/input/js1/device/id/vendor", "r");
+    if (vendor_file) {
+        if (fgets(vendor, sizeof(vendor), vendor_file)) {
+            vendor[strcspn(vendor, "\n")] = '\0'; // Remove trailing newline
+        }
+        fclose(vendor_file);
+    } else {
+        perror("Failed to read vendor ID");
+    }
+
+    // Get Product ID
+    FILE *product_file = fopen("/sys/class/input/js1/device/id/product", "r");
+    if (product_file) {
+        if (fgets(product, sizeof(product), product_file)) {
+            product[strcspn(product, "\n")] = '\0'; // Remove trailing newline
+        }
+        fclose(product_file);
+    } else {
+        perror("Failed to read product ID");
+    }
+
+    // Build the unique ID
+    snprintf(controller_id, sizeof(controller_id), "%s_V%s_P%s", name, vendor, product);
+    strncpy(result, controller_id, sizeof(result));
+
+    return result;
+}
+
 void *joystick_handler(void *arg) {
     // Cast the argument back to the correct type
     const mux_input_options *opts = (const mux_input_options *)arg;
@@ -418,12 +506,7 @@ void *joystick_handler(void *arg) {
         return NULL;
     }
 
-    char name[128]; // Buffer to hold the joystick name
-    if (ioctl(usb_fd, JSIOCGNAME(sizeof(name)), name) < 0) {
-        strncpy(name, "Unknown", sizeof(name));
-    }
-
-    load_controller_profile(&controller, name);
+    load_controller_profile(&controller, get_unique_controller_id(usb_fd));
 
     struct js_event js;
     while (!stop) {
@@ -438,7 +521,12 @@ void *joystick_handler(void *arg) {
 
         printf("Joystick Event: type=%u, number=%u, value=%d\n", js.type, js.number, js.value);
         if (js.type & JS_EVENT_BUTTON) {
-            process_usb_key(opts, js);
+            if (js.number  == controller.BUTTON.UP || js.number  == controller.BUTTON.DOWN || 
+                    js.number  == controller.BUTTON.LEFT || js.number  == controller.BUTTON.RIGHT ){
+                process_usb_dpad_as_buttons(opts, js);
+            } else {
+                process_usb_key(opts, js);
+            }
         } else if (js.type & JS_EVENT_AXIS) {
             process_usb_abs(opts, js);
         }

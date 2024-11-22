@@ -27,7 +27,11 @@ void create_controller_profile(char *controller_profile_path) {
     fprintf(file, "BUTTON_R3=14\n");
     fprintf(file, "BUTTON_SELECT=10\n");
     fprintf(file, "BUTTON_START=11\n");
-    fprintf(file, "BUTTON_MENU=12\n\n");
+    fprintf(file, "BUTTON_MENU=12\n");
+    fprintf(file, "BUTTON_UP=-1\n");
+    fprintf(file, "BUTTON_DOWN=-1\n");
+    fprintf(file, "BUTTON_LEFT=-1\n");
+    fprintf(file, "BUTTON_RIGHT=-1\n\n");
 
     fprintf(file, "[trigger]\n");
     fprintf(file, "AXIS=32767\n");
@@ -47,7 +51,7 @@ void create_controller_profile(char *controller_profile_path) {
     fprintf(file, "[analog_right]\n");
     fprintf(file, "AXIS=32767\n");
     fprintf(file, "LEFT=2\n");
-    fprintf(file, "UP=3\n\n");
+    fprintf(file, "UP=3\n");
 
     fclose(file);
 }
@@ -80,6 +84,10 @@ void load_controller_profile(struct controller_profile *controller, char *contro
     controller->BUTTON.SELECT = get_ini_int(muos_controller_profile, "buttons", "BUTTON_SELECT", 10);
     controller->BUTTON.START = get_ini_int(muos_controller_profile, "buttons", "BUTTON_START", 11);
     controller->BUTTON.MENU = get_ini_int(muos_controller_profile, "buttons", "BUTTON_MENU", 12);
+    controller->BUTTON.UP = get_ini_int(muos_controller_profile, "buttons", "BUTTON_UP", -1);
+    controller->BUTTON.DOWN = get_ini_int(muos_controller_profile, "buttons", "BUTTON_DOWN", -1);
+    controller->BUTTON.LEFT = get_ini_int(muos_controller_profile, "buttons", "BUTTON_LEFT", -1);
+    controller->BUTTON.RIGHT = get_ini_int(muos_controller_profile, "buttons", "BUTTON_RIGHT", -1);
     
     controller->TRIGGER.AXIS = get_ini_int(muos_controller_profile, "trigger", "AXIS", 32767);
     controller->TRIGGER.L2 = get_ini_int(muos_controller_profile, "trigger", "L2", -1);
