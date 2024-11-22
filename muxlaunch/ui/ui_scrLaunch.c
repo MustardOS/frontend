@@ -19,6 +19,15 @@ void ui_screen_init(lv_obj_t *ui_pnlContent) {
     ui_lblReboot = lv_label_create(ui_pnlReboot);
     ui_lblShutdown = lv_label_create(ui_pnlShutdown);
 
+    lv_label_set_text(ui_lblContent, "");
+    lv_label_set_text(ui_lblFavourites, "");
+    lv_label_set_text(ui_lblHistory, "");
+    lv_label_set_text(ui_lblApps, "");
+    lv_label_set_text(ui_lblInfo, "");
+    lv_label_set_text(ui_lblConfig, "");
+    lv_label_set_text(ui_lblReboot, "");
+    lv_label_set_text(ui_lblShutdown, "");
+
     ui_icoContent = lv_img_create(ui_pnlExplore);
     ui_icoFavourites = lv_img_create(ui_pnlFavourites);
     ui_icoHistory = lv_img_create(ui_pnlHistory);
