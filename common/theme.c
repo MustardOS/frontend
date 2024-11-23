@@ -169,7 +169,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->GRID.CELL.RADIUS = get_ini_int(muos_theme, "grid", "CELL_RADIUS", 10);
     theme->GRID.CELL.BORDER_WIDTH = get_ini_int(muos_theme, "grid", "CELL_BORDER_WIDTH", 5);
     theme->GRID.CELL.IMAGE_PADDING_TOP = get_ini_int(muos_theme, "grid", "CELL_IMAGE_PADDING_TOP", 5);
-    theme->GRID.CELL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_BOTTOM ", 5);
+    theme->GRID.CELL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_BOTTOM", 5);
     theme->GRID.CELL.TEXT_PADDING_SIDE = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_SIDE", 5);
     theme->GRID.CELL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid", "CELL_TEXT_LINE_SPACING", 0);
 
