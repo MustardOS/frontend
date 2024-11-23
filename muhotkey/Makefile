@@ -51,6 +51,7 @@ compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@START=$(START_TIME); \
 	$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
 		../common/json/json.c \
+		../common/mini/mini.c \
 		../common/config.c \
 		../common/device.c \
 		../common/common.c \
