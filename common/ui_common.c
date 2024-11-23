@@ -165,6 +165,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_img_opa(ui_imgBox, theme->IMAGE_LIST.ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_img_recolor(ui_imgBox, lv_color_hex(theme->IMAGE_LIST.RECOLOUR), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_imgBox, theme->IMAGE_LIST.RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_imgBox, theme->IMAGE_LIST.PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_imgBox, theme->IMAGE_LIST.PAD_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_imgBox, theme->IMAGE_LIST.PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_imgBox, theme->IMAGE_LIST.PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+
 
     ui_pnlHeader = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlHeader, device->MUX.WIDTH);
