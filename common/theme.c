@@ -232,6 +232,10 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->IMAGE_LIST.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RADIUS", 3);
     theme->IMAGE_LIST.RECOLOUR = get_ini_hex(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR");
     theme->IMAGE_LIST.RECOLOUR_ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR_ALPHA", 255);
+    theme->IMAGE_LIST.PAD_TOP = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_TOP", 0);
+    theme->IMAGE_LIST.PAD_BOTTOM = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_BOTTOM", 0);
+    theme->IMAGE_LIST.PAD_LEFT = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_LEFT", 0);
+    theme->IMAGE_LIST.PAD_RIGHT = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_RIGHT", 0);
 
     theme->IMAGE_PREVIEW.ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_ALPHA", 255);
     theme->IMAGE_PREVIEW.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RADIUS", 3);

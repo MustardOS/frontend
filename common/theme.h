@@ -216,6 +216,10 @@ struct theme_config {
         int16_t RADIUS;
         uint32_t RECOLOUR;
         int16_t RECOLOUR_ALPHA;
+        int16_t PAD_TOP;
+        int16_t PAD_BOTTOM;
+        int16_t PAD_LEFT;
+        int16_t PAD_RIGHT;
     } IMAGE_LIST;
 
     struct {
