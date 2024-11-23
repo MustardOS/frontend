@@ -107,15 +107,35 @@ void init_navigation_groups_grid(const char *app_path) {
                                           glyph_name, "png", grid_image, sizeof(grid_image)) &&
             !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid",
                                           "app", "png", grid_image, sizeof(grid_image)) &&
+            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid",
+                                          "default", "png", grid_image, sizeof(grid_image)) &&
             !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
-                                          glyph_name, "png", grid_image, sizeof(grid_image))) {
-
+                                          glyph_name, "png", grid_image, sizeof(grid_image)) &&
+            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
+                                         "app", "png", grid_image, sizeof(grid_image))) {
             load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
-                                         "app", "png", grid_image, sizeof(grid_image));
+                                         "default", "png", grid_image, sizeof(grid_image));
+        }
+
+        char glyph_name_focused[MAX_BUFFER_SIZE];
+        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_name);                
+        char grid_image_focused[MAX_BUFFER_SIZE];
+        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid",
+                                          glyph_name_focused, "png", grid_image_focused, sizeof(grid_image_focused)) &&
+            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid",
+                                          "app_focused", "png", grid_image_focused, sizeof(grid_image_focused)) &&
+            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid",
+                                          "default_focused", "png", grid_image_focused, sizeof(grid_image_focused)) &&
+            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
+                                          glyph_name_focused, "png", grid_image_focused, sizeof(grid_image_focused)) &&
+            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
+                                         "app_focused", "png", grid_image_focused, sizeof(grid_image_focused))) {
+            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
+                                         "default_focused", "png", grid_image_focused, sizeof(grid_image_focused));
         }
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                         grid_image, items[i].display_name);
+                         grid_image, grid_image_focused, items[i].display_name);
 
         lv_group_add_obj(ui_group, cell_label);
         lv_group_add_obj(ui_group_glyph, cell_image);

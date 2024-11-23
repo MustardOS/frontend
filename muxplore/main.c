@@ -975,11 +975,20 @@ void init_navigation_groups_grid() {
         lv_obj_t *cell_label = lv_label_create(cell_panel);
 
         char grid_image[MAX_BUFFER_SIZE];
-        snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/%s.png",
-                 INFO_CAT_PATH, strip_ext(items[i].name));
+        if (snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/%s.png",
+                INFO_CAT_PATH, strip_ext(items[i].name)) >= 0 && !file_exist(grid_image)) {
+            snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/default.png", INFO_CAT_PATH);
+        }
+
+        char grid_image_focused[MAX_BUFFER_SIZE];
+        if (snprintf(grid_image_focused, sizeof(grid_image_focused), "%s/Folder/grid/%s_focused.png",
+                INFO_CAT_PATH, strip_ext(items[i].name)) >= 0 && !file_exist(grid_image_focused)) {
+            snprintf(grid_image_focused, sizeof(grid_image_focused), 
+                    "%s/Folder/grid/default_focused.png", INFO_CAT_PATH);                
+        }
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                         grid_image, items[i].display_name);
+                         grid_image, grid_image_focused, items[i].display_name);
 
         lv_group_add_obj(ui_group, cell_label);
         lv_group_add_obj(ui_group_glyph, cell_image);
