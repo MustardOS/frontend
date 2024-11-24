@@ -404,16 +404,16 @@ int main(int argc, char *argv[]) {
 
     if (strcasecmp(picker_type, "theme") == 0) {
         ui_common_screen_init(&theme, &device, TS("THEME PICKER"));
-        lv_label_set_text(ui_lblScreenMessage, "No Theme Packages Found");
+        lv_label_set_text(ui_lblScreenMessage, TS("No Theme Packages Found"));
     } else if (strcasecmp(picker_type, "package/catalogue") == 0) {
         ui_common_screen_init(&theme, &device, TS("CATALOGUE PICKER"));
-        lv_label_set_text(ui_lblScreenMessage, "No Catalogue Packages Found");
+        lv_label_set_text(ui_lblScreenMessage, TS("No Catalogue Packages Found"));
     } else if (strcasecmp(picker_type, "package/config") == 0) {
         ui_common_screen_init(&theme, &device, TS("CONFIG PICKER"));
-        lv_label_set_text(ui_lblScreenMessage, "No Configuration Packages Found");
+        lv_label_set_text(ui_lblScreenMessage, TS("No Configuration Packages Found"));
     } else {
         ui_common_screen_init(&theme, &device, TS("CUSTOM PICKER"));
-        lv_label_set_text(ui_lblScreenMessage, "No Custom Packages Found");
+        lv_label_set_text(ui_lblScreenMessage, TS("No Custom Packages Found"));
     }
 
     init_elements();
