@@ -306,7 +306,7 @@ void set_label_long_mode() {
     char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
     size_t len = strlen(content_label);
-    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
+    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "…") == 0;
 
     if (strcasecmp(items[current_item_index].display_name, content_label) != 0 && ends_with_ellipse) {
         lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);

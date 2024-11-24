@@ -518,7 +518,7 @@ void set_label_long_mode() {
     char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
     size_t len = strlen(content_label);
-    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
+    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "…") == 0;
 
     if (strcasecmp(all_items[current_item_index].display_name, content_label) != 0 && ends_with_ellipse) {
         char content_name[MAX_BUFFER_SIZE];
@@ -1225,6 +1225,7 @@ int main(int argc, char *argv[]) {
             snprintf(rom_dir, sizeof(rom_dir), "%s", optarg);
         } else {
             fprintf(stderr, cmd_help, argv[0]);
+            return 1;
         }
     }
 

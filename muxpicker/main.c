@@ -36,11 +36,15 @@ struct mux_device device;
 struct theme_config theme;
 
 int nav_moved = 1;
+int progress_onscreen = -1;
+int ui_count = 0;
+int current_item_index = 0;
+int first_open = 1;
+
+char *picker_type;
+
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
-lv_obj_t *ui_black;
-
-int progress_onscreen = -1;
 
 size_t item_count = 0;
 content_item *items = NULL;
@@ -49,21 +53,17 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-int ui_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-
 lv_obj_t *ui_mux_panels[5];
 
 void show_help() {
-    char *theme_name = lv_label_get_text(lv_group_get_focused(ui_group));
-    char theme_archive[MAX_BUFFER_SIZE];
+    char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
+    char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(theme_archive, sizeof(theme_archive), "%s/theme/%s.zip", STORAGE_PATH, theme_name);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s/%s.zip", STORAGE_PATH, picker_type, picker_name);
 
     char credits[MAX_BUFFER_SIZE];
-    if (extract_file_from_zip(theme_archive, "credits.txt", "/tmp/credits.txt")) {
-        strcpy(credits, TS("This theme has no attributed credits!"));
+    if (extract_file_from_zip(picker_archive, "credits.txt", "/tmp/credits.txt")) {
+        strcpy(credits, TS("There are no attributed credits!"));
     } else {
         strcpy(credits, read_text_from_file("/tmp/credits.txt"));
     }
@@ -80,7 +80,7 @@ void set_label_long_mode() {
     char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
 
     size_t len = strlen(content_label);
-    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
+    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "…") == 0;
 
     if (strcasecmp(items[current_item_index].display_name, content_label) != 0 && ends_with_ellipse) {
         lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
@@ -92,18 +92,18 @@ void image_refresh() {
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
-    char *theme_name = lv_label_get_text(lv_group_get_focused(ui_group));
-    char theme_archive[MAX_BUFFER_SIZE];
+    char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
+    char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(theme_archive, sizeof(theme_archive), "%s/theme/%s.zip", STORAGE_PATH, theme_name);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s/%s.zip", STORAGE_PATH, picker_type, picker_name);
 
     char device_dimension[15];
     get_device_dimension(device_dimension, sizeof(device_dimension));
     char device_preview[PATH_MAX];
     snprintf(device_preview, sizeof(device_preview), "%spreview.png", device_dimension);
 
-    if (extract_file_from_zip(theme_archive, device_preview, "/tmp/preview.png") &&
-        extract_file_from_zip(theme_archive, "preview.png", "/tmp/preview.png")) {
+    if (extract_file_from_zip(picker_archive, device_preview, "/tmp/preview.png") &&
+        extract_file_from_zip(picker_archive, "preview.png", "/tmp/preview.png")) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         return;
     }
@@ -111,14 +111,14 @@ void image_refresh() {
     lv_img_set_src(ui_imgBox, "M:/tmp/preview.png");
 }
 
-void create_theme_items() {
+void create_picker_items() {
     DIR *td;
     struct dirent *tf;
 
-    char theme_dir[PATH_MAX];
-    snprintf(theme_dir, sizeof(theme_dir), "%s/theme", STORAGE_PATH);
+    char picker_dir[PATH_MAX];
+    snprintf(picker_dir, sizeof(picker_dir), "%s/%s", STORAGE_PATH, picker_type);
 
-    td = opendir(theme_dir);
+    td = opendir(picker_dir);
     if (td == NULL) {
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
         return;
@@ -127,7 +127,7 @@ void create_theme_items() {
     while ((tf = readdir(td))) {
         if (tf->d_type == DT_REG) {
             char filename[FILENAME_MAX];
-            snprintf(filename, sizeof(filename), "%s/%s", theme_dir, tf->d_name);
+            snprintf(filename, sizeof(filename), "%s/%s", picker_dir, tf->d_name);
 
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
@@ -148,21 +148,21 @@ void create_theme_items() {
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
-        lv_obj_t *ui_pnlTheme = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(&theme, &device, ui_pnlTheme);
+        lv_obj_t *ui_pnlPicker = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(&theme, &device, ui_pnlPicker);
 
-        lv_obj_t *ui_lblThemeItem = lv_label_create(ui_pnlTheme);
-        apply_theme_list_item(&theme, ui_lblThemeItem, items[i].display_name, true, false);
+        lv_obj_t *ui_lblPickerItem = lv_label_create(ui_pnlPicker);
+        apply_theme_list_item(&theme, ui_lblPickerItem, items[i].display_name, true, false);
 
-        lv_obj_t *ui_lblThemeItemGlyph = lv_img_create(ui_pnlTheme);
-        apply_theme_list_glyph(&theme, ui_lblThemeItemGlyph, mux_module, "theme");
+        lv_obj_t *ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
+        apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module, get_last_subdir(picker_type, '/', 1));
 
-        lv_group_add_obj(ui_group, ui_lblThemeItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblThemeItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlTheme);
+        lv_group_add_obj(ui_group, ui_lblPickerItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblPickerItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlPicker);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblThemeItem, ui_lblThemeItemGlyph, items[i].display_name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblThemeItem, items[i].display_name);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblPickerItem, ui_lblPickerItemGlyph, items[i].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblPickerItem, items[i].display_name);
     }
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
@@ -208,13 +208,13 @@ void handle_confirm() {
         play_sound("confirm", nav_sound, 0, 1);
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-        static char theme_script[MAX_BUFFER_SIZE];
-        snprintf(theme_script, sizeof(theme_script),
-                 "%s/script/mux/theme.sh", INTERNAL_PATH);
+        static char picker_script[MAX_BUFFER_SIZE];
+        snprintf(picker_script, sizeof(picker_script),
+                 "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
         static char command[MAX_BUFFER_SIZE];
         snprintf(command, sizeof(command), "/opt/muos/bin/fbpad %s \"%s\"",
-                 theme_script, lv_label_get_text(lv_group_get_focused(ui_group)));
+                 picker_script, lv_label_get_text(lv_group_get_focused(ui_group)));
         setenv("TERM", "xterm-256color", 1);
         printf("RUNNING: %s\n", command);
 
@@ -226,9 +226,9 @@ void handle_confirm() {
 
         system(command);
 
-        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+        write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
-        load_mux("theme");
+        load_mux("picker");
         mux_input_stop();
     }
 }
@@ -243,7 +243,7 @@ void handle_back() {
     }
 
     play_sound("back", nav_sound, 0, 1);
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "theme");
+    load_mux("custom");
     mux_input_stop();
 }
 
@@ -337,7 +337,7 @@ void glyph_task() {
 void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
-    if (nav_moved) {
+    if (ui_count > 0 && nav_moved) {
         image_refresh();
 
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -348,10 +348,30 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
-    (void) argc;
-
     mux_module = basename(argv[0]);
     load_device(&device);
+
+    char *cmd_help = "\nmuOS Extras - Custom Picker\nUsage: %s <-m>\n\nOptions:\n"
+                     "\t-m Picker module from:\n"
+                     "\t\ttheme\n" // This might need to be changed later?
+                     "\t\tpackage/catalogue\n"
+                     "\t\tpackage/config\n\n";
+
+    int opt;
+    while ((opt = getopt(argc, argv, "m:")) != -1) {
+        if (opt == 'm') {
+            picker_type = optarg;
+        } else {
+            fprintf(stderr, cmd_help, argv[0]);
+            return 1;
+
+        }
+    }
+
+    if (picker_type == NULL) {
+        fprintf(stderr, cmd_help, argv[0]);
+        return 1;
+    }
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -381,10 +401,22 @@ int main(int argc, char *argv[]) {
     load_language(mux_module);
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
-    ui_common_screen_init(&theme, &device, TS("THEME PICKER"));
-    init_elements();
 
-    lv_label_set_text(ui_lblScreenMessage, TS("No Themes Found"));
+    if (strcasecmp(picker_type, "theme") == 0) {
+        ui_common_screen_init(&theme, &device, TS("THEME PICKER"));
+        lv_label_set_text(ui_lblScreenMessage, "No Theme Packages Found");
+    } else if (strcasecmp(picker_type, "package/catalogue") == 0) {
+        ui_common_screen_init(&theme, &device, TS("CATALOGUE PICKER"));
+        lv_label_set_text(ui_lblScreenMessage, "No Catalogue Packages Found");
+    } else if (strcasecmp(picker_type, "package/config") == 0) {
+        ui_common_screen_init(&theme, &device, TS("CONFIG PICKER"));
+        lv_label_set_text(ui_lblScreenMessage, "No Configuration Packages Found");
+    } else {
+        ui_common_screen_init(&theme, &device, TS("CUSTOM PICKER"));
+        lv_label_set_text(ui_lblScreenMessage, "No Custom Packages Found");
+    }
+
+    init_elements();
 
     lv_obj_set_user_data(ui_screen, basename(argv[0]));
 
@@ -399,13 +431,15 @@ int main(int argc, char *argv[]) {
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
     nav_sound = init_nav_sound(mux_module);
-    create_theme_items();
+
+    create_picker_items();
 
     int sys_index = 0;
-    if (file_exist(MUOS_IDX_LOAD)) {
-        sys_index = read_int_from_file(MUOS_IDX_LOAD, 1);
-        remove(MUOS_IDX_LOAD);
+    if (file_exist(MUOS_PIN_LOAD)) {
+        sys_index = read_int_from_file(MUOS_PIN_LOAD, 1);
+        remove(MUOS_PIN_LOAD);
     }
+
 
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
@@ -451,6 +485,10 @@ int main(int argc, char *argv[]) {
             list_nav_next(sys_index);
         }
     } else {
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 

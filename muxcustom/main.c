@@ -17,7 +17,6 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -28,6 +27,7 @@ int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
+char *mux_module;
 
 struct mux_config config;
 struct mux_device device;
@@ -46,7 +46,7 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 7
+#define UI_COUNT 3
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
 
@@ -59,13 +59,9 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblTweakGeneral, TS("Device specific and muOS frontend settings can be found here")},
-            {ui_lblCustom,       TS("Customise your muOS setup with user created packages")},
-            {ui_lblNetwork,      TS("Connect to a Wi-Fi network manually or via a saved profile")},
-            {ui_lblServices,     TS("Toggle a range of configurable services you can access via an active network")},
-            {ui_lblRTC,          TS("Change your current date, time, and timezone")},
-            {ui_lblLanguage,     TS("Select your preferred language")},
-            {ui_lblStorage,      TS("Find out what storage device core settings and configurations are mounted")},
+            {ui_lblTheme,     TS("Change the appearance of the muOS frontend launcher")},
+            {ui_lblCatalogue, TS("Load user created artwork catalogue for content")},
+            {ui_lblConfig,    TS("Load user created RetroArch configurations")},
     };
 
     char *message = TG("No Help Information Found");
@@ -86,54 +82,30 @@ void show_help(lv_obj_t *element_focused) {
 
 void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlTweakGeneral,
-            ui_pnlCustom,
-            ui_pnlNetwork,
-            ui_pnlServices,
-            ui_pnlRTC,
-            ui_pnlLanguage,
-            ui_pnlStorage
+            ui_pnlTheme,
+            ui_pnlCatalogue,
+            ui_pnlConfig
     };
 
-    ui_objects[0] = ui_lblTweakGeneral;
-    ui_objects[1] = ui_lblCustom;
-    ui_objects[2] = ui_lblNetwork;
-    ui_objects[3] = ui_lblServices;
-    ui_objects[4] = ui_lblRTC;
-    ui_objects[5] = ui_lblLanguage;
-    ui_objects[6] = ui_lblStorage;
+    ui_objects[0] = ui_lblTheme;
+    ui_objects[1] = ui_lblCatalogue;
+    ui_objects[2] = ui_lblConfig;
 
-    ui_icons[0] = ui_icoTweakGeneral;
-    ui_icons[1] = ui_icoCustom;
-    ui_icons[2] = ui_icoNetwork;
-    ui_icons[3] = ui_icoServices;
-    ui_icons[4] = ui_icoRTC;
-    ui_icons[5] = ui_icoLanguage;
-    ui_icons[6] = ui_icoStorage;
+    ui_icons[0] = ui_icoTheme;
+    ui_icons[1] = ui_icoCatalogue;
+    ui_icons[2] = ui_icoConfig;
 
-    apply_theme_list_panel(&theme, &device, ui_pnlTweakGeneral);
-    apply_theme_list_panel(&theme, &device, ui_pnlCustom);
-    apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
-    apply_theme_list_panel(&theme, &device, ui_pnlServices);
-    apply_theme_list_panel(&theme, &device, ui_pnlRTC);
-    apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
-    apply_theme_list_panel(&theme, &device, ui_pnlStorage);
+    apply_theme_list_panel(&theme, &device, ui_pnlTheme);
+    apply_theme_list_panel(&theme, &device, ui_pnlCatalogue);
+    apply_theme_list_panel(&theme, &device, ui_pnlConfig);
 
-    apply_theme_list_item(&theme, ui_lblTweakGeneral, TS("General Settings"), false, false);
-    apply_theme_list_item(&theme, ui_lblCustom, TS("Customisation"), false, false);
-    apply_theme_list_item(&theme, ui_lblNetwork, TS("Wi-Fi Network"), false, false);
-    apply_theme_list_item(&theme, ui_lblServices, TS("Web Services"), false, false);
-    apply_theme_list_item(&theme, ui_lblRTC, TS("Date and Time"), false, false);
-    apply_theme_list_item(&theme, ui_lblLanguage, TS("Language"), false, false);
-    apply_theme_list_item(&theme, ui_lblStorage, TS("Storage"), false, false);
+    apply_theme_list_item(&theme, ui_lblTheme, TS("muOS Themes"), false, false);
+    apply_theme_list_item(&theme, ui_lblCatalogue, TS("Catalogue Sets"), false, false);
+    apply_theme_list_item(&theme, ui_lblConfig, TS("RetroArch Configurations"), false, false);
 
-    apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_module, "general");
-    apply_theme_list_glyph(&theme, ui_icoCustom, mux_module, "custom");
-    apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
-    apply_theme_list_glyph(&theme, ui_icoServices, mux_module, "service");
-    apply_theme_list_glyph(&theme, ui_icoRTC, mux_module, "clock");
-    apply_theme_list_glyph(&theme, ui_icoLanguage, mux_module, "language");
-    apply_theme_list_glyph(&theme, ui_icoStorage, mux_module, "storage");
+    apply_theme_list_glyph(&theme, ui_icoTheme, mux_module, "theme");
+    apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_module, "catalogue");
+    apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -152,52 +124,51 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
-void handle_a() {
+void handle_confirm() {
     if (msgbox_active) return;
+
+    play_sound("confirm", nav_sound, 0, 0);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    play_sound("confirm", nav_sound, 0, 1);
-    if (element_focused == ui_lblTweakGeneral) {
-        load_mux("tweakgen");
-    } else if (element_focused == ui_lblCustom) {
-        load_mux("custom");
-    } else if (element_focused == ui_lblNetwork) {
-        load_mux("network");
-    } else if (element_focused == ui_lblServices) {
-        load_mux("webserv");
-    } else if (element_focused == ui_lblRTC) {
-        load_mux("rtc");
-    } else if (element_focused == ui_lblLanguage) {
-        load_mux("language");
-    } else if (element_focused == ui_lblStorage) {
-        load_mux("storage");
+    if (element_focused == ui_lblTheme) {
+        write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, "theme");
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "theme");
+    } else if (element_focused == ui_lblCatalogue) {
+        write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, "package/catalogue");
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "catalogue");
+    } else if (element_focused == ui_lblConfig) {
+        write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, "package/config");
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
     }
+
+    load_mux("picker");
+
     mux_input_stop();
 }
 
-void handle_b() {
+void handle_back() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -207,11 +178,11 @@ void handle_b() {
     }
 
     play_sound("back", nav_sound, 0, 1);
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
     mux_input_stop();
 }
 
-void handle_menu() {
+void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -268,21 +239,9 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblTweakGeneral, "general");
-    lv_obj_set_user_data(ui_lblCustom, "custom");
-    lv_obj_set_user_data(ui_lblNetwork, "network");
-    lv_obj_set_user_data(ui_lblServices, "service");
-    lv_obj_set_user_data(ui_lblRTC, "clock");
-    lv_obj_set_user_data(ui_lblLanguage, "language");
-    lv_obj_set_user_data(ui_lblStorage, "storage");
-
-    if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlServices, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlServices, LV_OBJ_FLAG_FLOATING);
-        ui_count -= 2;
-    }
+    lv_obj_set_user_data(ui_lblTheme, "theme");
+    lv_obj_set_user_data(ui_lblCatalogue, "catalogue");
+    lv_obj_set_user_data(ui_lblConfig, "config");
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
 
@@ -379,7 +338,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("CONFIGURATION"));
+    ui_common_screen_init(&theme, &device, TS("CUSTOMISATION"));
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -445,7 +404,6 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     direct_to_previous();
-
     refresh_screen(device.SCREEN.WAIT);
 
     mux_input_options input_opts = {
@@ -456,9 +414,9 @@ int main(int argc, char *argv[]) {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,
             .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
-                    [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_MENU_SHORT] = handle_menu,
+                    [MUX_INPUT_A] = handle_confirm,
+                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
                     // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,

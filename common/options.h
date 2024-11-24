@@ -32,6 +32,8 @@
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
 #define MUOS_GVR_LOAD "/tmp/gvr_go" // Governor Runtime
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
+#define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
+#define MUOS_PIN_LOAD "/tmp/pin_go" // Customisation Picker Last Index
 #define MUOS_RES_LOAD "/tmp/res_go" // Full Path of ROM Content Search
 #define MUOS_ROM_LOAD "/tmp/rom_go" // ROM Content for Launching
 #define MUOS_SAA_LOAD "/tmp/saa_go" // Auto Assign Core Flag

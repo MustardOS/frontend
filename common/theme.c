@@ -179,7 +179,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->GRID.CELL_DEFAULT.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BORDER_ALPHA", 255);
     theme->GRID.CELL_DEFAULT.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_ALPHA", 255);
     theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR");
-    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", 0);
+    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid",
+                                                                "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", 0);
     theme->GRID.CELL_DEFAULT.TEXT = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_TEXT");
     theme->GRID.CELL_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_TEXT_ALPHA", 255);
 
@@ -398,7 +399,7 @@ void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
             char *new_string = (char *) malloc(i + 4);
             strncpy(new_string, item_text, i);
             new_string[i] = '\0';
-            strcat(new_string, "...");
+            strcat(new_string, "…");
 
             if (max_item_width >=
                 lv_txt_get_width(new_string, strlen(new_string), font, letter_space, LV_TEXT_FLAG_EXPAND)) {
@@ -446,7 +447,8 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
                                    LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_bg_main_stop(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_grad_dir(ui_pnlList,
-        (theme->LIST_DEFAULT.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                 (theme->LIST_DEFAULT.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR,
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_pnlList, lv_color_hex(theme->LIST_DEFAULT.BACKGROUND),
                               LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -463,7 +465,8 @@ void apply_theme_list_panel(struct theme_config *theme, struct mux_device *devic
     lv_obj_set_style_bg_main_stop(ui_pnlList, theme->LIST_FOCUS.GRADIENT_START, LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_bg_grad_stop(ui_pnlList, theme->LIST_FOCUS.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_bg_grad_dir(ui_pnlList,
-        (theme->LIST_FOCUS.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR, LV_PART_MAIN | LV_STATE_FOCUSED);
+                                 (theme->LIST_FOCUS.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR,
+                                 LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_color(ui_pnlList, lv_color_hex(theme->LIST_FOCUS.INDICATOR),
                                   LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(ui_pnlList, theme->LIST_FOCUS.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
