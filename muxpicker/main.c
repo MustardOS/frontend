@@ -168,6 +168,8 @@ void create_picker_items() {
 }
 
 void list_nav_prev(int steps) {
+    if (ui_count <= 0) return;
+
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         reset_label_long_mode();
@@ -183,6 +185,8 @@ void list_nav_prev(int steps) {
 }
 
 void list_nav_next(int steps) {
+    if (ui_count <= 0) return;
+
     if (first_open) {
         first_open = 0;
     } else {
@@ -202,35 +206,33 @@ void list_nav_next(int steps) {
 }
 
 void handle_confirm() {
-    if (msgbox_active) return;
+    if (msgbox_active || ui_count <= 0) return;
 
-    if (ui_count > 0) {
-        play_sound("confirm", nav_sound, 0, 1);
-        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    play_sound("confirm", nav_sound, 0, 1);
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-        static char picker_script[MAX_BUFFER_SIZE];
-        snprintf(picker_script, sizeof(picker_script),
-                 "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
+    static char picker_script[MAX_BUFFER_SIZE];
+    snprintf(picker_script, sizeof(picker_script),
+             "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
-        static char command[MAX_BUFFER_SIZE];
-        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad %s \"%s\"",
-                 picker_script, lv_label_get_text(lv_group_get_focused(ui_group)));
-        setenv("TERM", "xterm-256color", 1);
-        printf("RUNNING: %s\n", command);
+    static char command[MAX_BUFFER_SIZE];
+    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad %s \"%s\"",
+             picker_script, lv_label_get_text(lv_group_get_focused(ui_group)));
+    setenv("TERM", "xterm-256color", 1);
+    printf("RUNNING: %s\n", command);
 
-        if (config.VISUAL.BLACKFADE) {
-            fade_to_black(ui_screen);
-        } else {
-            unload_image_animation();
-        }
-
-        system(command);
-
-        write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
-
-        load_mux("picker");
-        mux_input_stop();
+    if (config.VISUAL.BLACKFADE) {
+        fade_to_black(ui_screen);
+    } else {
+        unload_image_animation();
     }
+
+    system(command);
+
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
+
+    load_mux("picker");
+    mux_input_stop();
 }
 
 void handle_back() {
@@ -250,7 +252,7 @@ void handle_back() {
 void handle_help() {
     if (msgbox_active) return;
 
-    if (progress_onscreen == -1) {
+    if (progress_onscreen == -1 && ui_count > 0) {
         play_sound("confirm", nav_sound, 0, 0);
         show_help();
     }
