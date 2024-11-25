@@ -345,7 +345,7 @@ void init_navigation_groups() {
     char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
     add_drop_down_options(ui_droHidden, disabled_enabled, 2);
     add_drop_down_options(ui_droBGM, (char *[]) {
-            TS("Disabled"), TS("Global"), TS("Theme")}, 3);
+            TG("Disabled"), TS("Global"), TS("Theme")}, 3);
     add_drop_down_options(ui_droSound, disabled_enabled, 2);
     add_drop_down_options(ui_droStartup, (char *[]) {
             TS("Main Menu"), TS("Content Explorer"), TS("Favourites"),
