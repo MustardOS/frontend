@@ -15,11 +15,11 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "miniz/miniz.h"
-#include "font/notosans.h"
-#include "font/notosans_jp.h"
-#include "font/notosans_kr.h"
-#include "font/notosans_sc.h"
-#include "font/notosans_tc.h"
+#include "../font/notosans.h"
+#include "../font/notosans_jp.h"
+#include "../font/notosans_kr.h"
+#include "../font/notosans_sc.h"
+#include "../font/notosans_tc.h"
 #include "img/nothing.h"
 #include "json/json.h"
 #include "common.h"

@@ -2,7 +2,7 @@
 #include "../../common/common.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
-#include "../../common/font/notosans.h"
+#include "../../font/notosans.h"
 #include "../../common/img/nothing.h"
 
 void ui_scrCharge_screen_init(void) {

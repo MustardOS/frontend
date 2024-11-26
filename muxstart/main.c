@@ -26,8 +26,17 @@ struct mux_config config;
 struct mux_device device;
 struct theme_config theme;
 
+int progress_onscreen = -1;
+int ui_count = 0;
+int current_item_index = 0;
+
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
+
+// Stubs to appease the compiler!
+void list_nav_prev(void) {}
+
+void list_nav_next(void) {}
 
 void setup_background_process() {
     pid_t pid = fork();

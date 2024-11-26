@@ -1,6 +1,6 @@
 #include "ui.h"
-#include "../../common/font/notosans.h"
-#include "../../common/font/notosans_big.h"
+#include "../../font/notosans.h"
+#include "../../font/notosans_big.h"
 
 void ui_scrCredits_screen_init(void) {
     ui_scrCredits = lv_obj_create(NULL);

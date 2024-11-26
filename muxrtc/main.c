@@ -402,9 +402,6 @@ void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    osd_message = TG("Saving Changes");
-    lv_label_set_text(ui_lblMessage, osd_message);
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
     save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
                         rtcHourValue, rtcMinuteValue);
 

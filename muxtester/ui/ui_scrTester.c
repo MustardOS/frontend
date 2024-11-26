@@ -2,7 +2,7 @@
 #include "../../common/common.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
-#include "../../common/font/gamepad.h"
+#include "../../font/gamepad.h"
 
 void ui_scrTester_screen_init(lv_obj_t *ui_pnlContent) {
     lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);

@@ -651,10 +651,6 @@ void handle_back(void) {
     }
     play_sound("back", nav_sound, 0, 1);
 
-    osd_message = TG("Saving Changes");
-    lv_label_set_text(ui_lblMessage, osd_message);
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-
     save_tweak_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "advanced");

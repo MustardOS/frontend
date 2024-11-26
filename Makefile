@@ -1,4 +1,4 @@
-MODULES := muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxcustom muxgov \
+MODULES := font common muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxcustom muxgov \
 		   muxinfo muxlanguage muxlaunch muxnetprofile muxnetscan muxnetwork muxoption \
 		   muxpass muxpicker muxpower muxplore muxrtc muxsearch muxsplash muxstart \
 		   muxstorage muxsysinfo muxtask muxtester muxtimezone muxtweakadv muxtweakgen \

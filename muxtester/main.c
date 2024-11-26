@@ -17,6 +17,8 @@
 #include "../common/input.h"
 
 char *mux_module;
+char *osd_message;
+
 static int js_fd;
 static int js_fd_sys;
 
@@ -32,8 +34,17 @@ struct mux_config config;
 struct mux_device device;
 struct theme_config theme;
 
+int progress_onscreen = -1;
+int ui_count = 0;
+int current_item_index = 0;
+
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
+
+// Stubs to appease the compiler!
+void list_nav_prev(void) {}
+
+void list_nav_next(void) {}
 
 void handle_input(mux_input_type type, mux_input_action action) {
     const char *glyph[MUX_INPUT_COUNT] = {

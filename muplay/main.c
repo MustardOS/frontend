@@ -8,12 +8,24 @@
 #include "../common/device.h"
 
 char *mux_module;
+char *osd_message;
+int msgbox_active = 0;
+int nav_sound = 0;
 
 struct mux_config config;
 struct mux_device device;
 struct theme_config theme;
 
-int nav_sound = 0;
+int progress_onscreen = -1;
+int ui_count = 0;
+int current_item_index = 0;
+
+lv_obj_t *msgbox_element = NULL;
+
+// Stubs to appease the compiler!
+void list_nav_prev(void) {}
+
+void list_nav_next(void) {}
 
 void setup_background_process() {
     pid_t pid = fork();
@@ -35,7 +47,7 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    //setup_background_process();
+    setup_background_process();
 
     mux_module = basename(argv[0]);
     nav_sound = init_nav_sound(mux_module);

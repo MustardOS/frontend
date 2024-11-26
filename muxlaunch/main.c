@@ -35,6 +35,7 @@ struct theme_config theme;
 int nav_moved = 1;
 int current_item_index = 0;
 int first_open = 1;
+int ui_count = 0;
 
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;

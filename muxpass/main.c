@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
-#include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
@@ -17,7 +16,6 @@
 #include "../common/device.h"
 #include "../common/passcode.h"
 #include "../common/input.h"
-#include "ui/theme.h"
 
 char *mux_module;
 static int js_fd;
@@ -34,7 +32,12 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct theme_config theme;
 struct mux_passcode passcode;
+
+int progress_onscreen = -1;
+int ui_count = 0;
+int current_item_index = 0;
 
 char *p_type;
 char *p_code;
@@ -42,6 +45,11 @@ char *p_msg;
 
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
+
+// Stubs to appease the compiler!
+void list_nav_prev(void) {}
+
+void list_nav_next(void) {}
 
 lv_group_t *ui_group;
 
@@ -259,7 +267,8 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    apply_theme();
+    apply_pass_theme(ui_rolComboOne, ui_rolComboTwo, ui_rolComboThree,
+                     ui_rolComboFour, ui_rolComboFive, ui_rolComboSix);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);

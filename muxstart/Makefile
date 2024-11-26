@@ -1,13 +1,9 @@
 START_TIME := $(shell date +%s)
 
 ifeq ($(DEVICE), RG35XX)
-	ARCH = -march=armv7-a \
-		-mtune=cortex-a9 \
-		-mfpu=neon-vfpv3 \
-		-mfloat-abi=softfp 
+	ARCH = -march=armv7-a -mtune=cortex-a9 -mfpu=neon-vfpv3 -mfloat-abi=softfp
 else ifeq ($(DEVICE), RG35XXPLUS)
-	ARCH = -march=armv8-a+simd \
-		-mtune=cortex-a53
+	ARCH = -march=armv8-a+simd -mtune=cortex-a53
 else
 	$(error Unsupported Device: $(DEVICE))
 endif
@@ -16,20 +12,17 @@ TARGET = ${shell basename $$(pwd)}
 
 CC = ccache $(CROSS_COMPILE)gcc -O3
 
-CFLAGS  = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
+CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
 	-flto -finline-functions -Wall -Wno-format-zero-length \
-	-I../common/font
 
-CFONTS = -L../bin/lib \
-	-lawesome_small \
-	-lgamepad_nav \
-	-lnotosans \
-	-lnotosans_jp \
-	-lnotosans_kr \
-	-lnotosans_sc \
-	-lnotosans_tc
+MUXINC = -I../font -I../common -I../common/img -I../common/input \
+	-I../common/json -I../common/mini -I../common/miniz
 
-LDFLAGS = $(CFLAGS) $(CFONTS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
+MUXLIBS = -L../bin/lib -lmux -lawesome_small -lgamepad -lgamepad_nav \
+	-lnotosans -lnotosans_big -lnotosans_jp -lnotosans_kr -lnotosans_sc -lnotosans_tc
+
+LDFLAGS = $(CFLAGS) $(MUXINC) $(MUXLIBS) -lSDL2 -lSDL2_mixer \
+	-lpthread -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fno-unroll-loops -fmerge-all-constants -fno-ident \
@@ -66,15 +59,7 @@ clean:
 compile: $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS)
 	@printf "Building: %s... " "$(TARGET)"
 	@START=$(START_TIME); \
-	$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) \
-		../common/img/nothing.c \
-		../common/json/json.c \
-		../common/mini/mini.c \
-		../common/config.c \
-		../common/device.c \
-		../common/common.c \
-		../common/theme.c \
-		$(EXTRA); \
+	$(CC) -D$(DEVICE) $(MAINOBJ) $(AOBJS) $(COBJS) $(SOBJS) -o $(TARGET) $(EXTRA); \
 	END=$$(date +%s); \
 	ELAPSED_TIME=$$((END - START)); \
 	printf "DONE (%ds)\n" "$${ELAPSED_TIME}"
