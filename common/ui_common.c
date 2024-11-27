@@ -98,6 +98,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_add_flag(ui_imgWall, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
 
+    ui_pnlGrid = lv_obj_create(ui_screen);
+    
     ui_pnlContent = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlContent, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlContent, theme->MISC.CONTENT.HEIGHT);
@@ -1004,7 +1006,6 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     }
     row_dsc[row_count] = LV_GRID_TEMPLATE_LAST;
 
-    ui_pnlGrid = lv_obj_create(ui_screen);
     lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, col_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH, theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
