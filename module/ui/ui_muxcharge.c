@@ -18,6 +18,7 @@ lv_obj_t *ui_lblBoot;
 
 void ui_init(void) {
     ui_scrCharge = lv_obj_create(NULL);
+
     lv_obj_clear_flag(ui_scrCharge, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE |
                                     LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
     lv_obj_set_scrollbar_mode(ui_scrCharge, LV_SCROLLBAR_MODE_OFF);
@@ -108,4 +109,6 @@ void ui_init(void) {
     lv_obj_set_style_text_color(ui_lblBoot, lv_color_hex(theme.CHARGER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblBoot, theme.CHARGER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblBoot, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_disp_load_scr(ui_scrCharge);
 }
