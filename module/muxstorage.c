@@ -565,7 +565,6 @@ int main(int argc, char *argv[]) {
     int sin_index = 0;
     if (file_exist(MUOS_SIN_LOAD)) {
         sin_index = read_int_from_file(MUOS_SIN_LOAD, 1);
-        printf("loading SIN at: %d\n", sin_index);
         remove(MUOS_SIN_LOAD);
     }
 
