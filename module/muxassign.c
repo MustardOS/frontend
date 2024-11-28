@@ -543,14 +543,14 @@ void handle_confirm() {
                 chosen_core, u_data,
                 "core", "none");
 
-        int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
+        int name_lookup = mini_get_int(chosen_core, "global", "lookup", 0);
 
         static char core_catalogue[MAX_BUFFER_SIZE];
         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
                                               "catalogue", rom_system));
 
         create_core_assignment(raw_core, core_catalogue, rom_name,
-                               name_cache, SINGLE);
+                               name_lookup, SINGLE);
 
         mini_free(chosen_core);
     }
@@ -578,14 +578,14 @@ void handle_x() {
                 chosen_core, u_data,
                 "core", "none");
 
-        int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
+        int name_lookup = mini_get_int(chosen_core, "global", "lookup", 0);
 
         static char core_catalogue[MAX_BUFFER_SIZE];
         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
                                               "catalogue", rom_system));
 
         create_core_assignment(raw_core, core_catalogue, rom_name,
-                               name_cache, DIRECTORY);
+                               name_lookup, DIRECTORY);
 
         mini_free(chosen_core);
 
@@ -613,14 +613,14 @@ void handle_y() {
                 chosen_core, u_data,
                 "core", "none");
 
-        int name_cache = mini_get_int(chosen_core, "global", "cache", 0);
+        int name_lookup = mini_get_int(chosen_core, "global", "lookup", 0);
 
         static char core_catalogue[MAX_BUFFER_SIZE];
         strcpy(core_catalogue, get_ini_string(chosen_core, "global",
                                               "catalogue", rom_system));
 
         create_core_assignment(raw_core, core_catalogue, rom_name,
-                               name_cache, PARENT);
+                               name_lookup, PARENT);
 
         mini_free(chosen_core);
 
@@ -871,12 +871,12 @@ int main(int argc, char *argv[]) {
                         static char core_catalogue[MAX_BUFFER_SIZE];
                         strcpy(core_catalogue, get_ini_string(core_config_ini, "global", "catalogue", "none"));
 
-                        int name_cache = mini_get_int(core_config_ini, "global", "cache", 0);
+                        int name_lookup = mini_get_int(core_config_ini, "global", "lookup", 0);
 
-                        LOG_INFO(mux_module, "<Automatic Core Assign> Core Cache: %d", name_cache)
+                        LOG_INFO(mux_module, "<Automatic Core Assign> Core Cache: %d", name_lookup)
                         LOG_INFO(mux_module, "<Automatic Core Assign> Core Catalogue: %s", core_catalogue)
 
-                        create_core_assignment(auto_core, core_catalogue, rom_name, name_cache, DIRECTORY_NO_WIPE);
+                        create_core_assignment(auto_core, core_catalogue, rom_name, name_lookup, DIRECTORY_NO_WIPE);
 
                         auto_assign_good = 1;
                         LOG_SUCCESS(mux_module, "<Automatic Core Assign> Successful")
