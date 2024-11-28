@@ -131,6 +131,7 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droBGM, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
     lv_dropdown_set_selected(ui_droBrightness, config.SETTINGS.GENERAL.BRIGHTNESS + 1);
+    lv_dropdown_set_selected(ui_droColour, config.SETTINGS.GENERAL.COLOUR + 255);
 
     map_drop_down_to_index(ui_droHDMI, config.SETTINGS.GENERAL.HDMI,
                            (int[]) {-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 12, 0);
@@ -149,10 +150,6 @@ void restore_tweak_options() {
     } else {
         lv_dropdown_set_selected(ui_droStartup, 0);
     }
-
-    map_drop_down_to_index(ui_droColour, config.SETTINGS.GENERAL.COLOUR,
-                           (int[]) {-256, -224, -192, -160, -128, -96, -64, -32, 0,
-                                    32, 64, 96, 128, 160, 192, 224, 256}, 17, 9);
 }
 
 void save_tweak_options() {
@@ -184,14 +181,11 @@ void save_tweak_options() {
             break;
     }
 
-    int idx_colour = map_drop_down_to_value(lv_dropdown_get_selected(ui_droColour),
-                                            (int[]) {-256, -224, -192, -160, -128, -96, -64, -32, 0,
-                                                     32, 64, 96, 128, 160, 192, 224, 256}, 17, 9);
-
     int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
     int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
     int idx_sound = lv_dropdown_get_selected(ui_droSound);
     int idx_brightness = lv_dropdown_get_selected(ui_droBrightness);
+    int idx_colour = lv_dropdown_get_selected(ui_droColour) - 255;
 
     int is_modified = 0;
 
@@ -336,6 +330,10 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droBrightness, brightness_string);
     free(brightness_string);
 
+    char *colour_string = generate_number_string(-255, 255, 1, NULL, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droColour, colour_string);
+    free(colour_string);
+
     apply_theme_list_drop_down(&theme, ui_droHDMI, NULL);
 
     apply_theme_list_drop_down(&theme, ui_droPower, "");
@@ -350,12 +348,6 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droStartup, (char *[]) {
             TS("Main Menu"), TS("Content Explorer"), TS("Favourites"),
             TS("History"), TS("Last Game"), TS("Resume Game")}, 6);
-    add_drop_down_options(ui_droColour, (char *[]) {
-            TS("Deep Arctic (-256)"), TS("Icy Chill (-224)"), TS("Frosty Breeze (-192)"),
-            TS("Cool Glacier (-160)"), TS("Arctic Frost (-128)"), TS("Winter Sky (-96)"),
-            TS("Frostbite Blue (-64)"), TS("Arctic Blue (-32)"), TS("Neutral White (0)"), TS("Daylight White (32)"),
-            TS("Warm White (64)"), TS("Soft Ivory (96)"), TS("Candlelight Yellow (128)"), TS("Warm Glow (160)"),
-            TS("Sunset Orange (192)"), TS("Amber Flame (224)"), TS("Deep Ember (256)")}, 17);
     add_drop_down_options(ui_droHDMI, (char *[]) {
             TG("Disabled"), TS("480i"), TS("576i"), TS("480p"), TS("576p"), TS("720p + 50hz"), TS("720p + 60hz"),
             TS("1080i + 50hz"), TS("1080i + 60hz"), TS("1080p + 24hz"), TS("1080p + 50hz"), TS("1080p + 60hz")}, 12);
