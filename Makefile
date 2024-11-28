@@ -17,7 +17,7 @@ MODULES = muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxcustom \
           muxstart muxstorage muxsysinfo muxtask muxtester muxtimezone muxtweakadv \
           muxtweakgen muxvisual muxwebserv muhotkey muplay
 
-DEPENDENCIES = common font lvgl
+DEPENDENCIES = common font lvgl lookup
 
 DEBUG ?= 0
 VERBOSE = $(if $(filter 2,$(DEBUG)),, @)
@@ -28,11 +28,11 @@ CC = ccache $(CROSS_COMPILE)gcc -O3
 CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
          -flto -finline-functions -Wall -Wno-format-zero-length
 
-MUXLIB = $(CFLAGS) -I./module/ui -I./font -I./common -I./common/img \
-         -I./common/input -I./common/json -I./common/mini \
-         -I./common/miniz
+MUXLIB = $(CFLAGS) -I./module/ui -I./font -I./lookup -I./common \
+         -I./common/img -I./common/input -I./common/json \
+         -I./common/mini -I./common/miniz
 
-LDFLAGS = $(MUXLIB) -L./bin/lib -lui -lmux -lawesome_small -lgamepad -lgamepad_nav \
+LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux -lawesome_small -lgamepad -lgamepad_nav \
           -lnotosans -lnotosans_big -lnotosans_jp -lnotosans_kr -lnotosans_sc -lnotosans_tc \
           -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 
