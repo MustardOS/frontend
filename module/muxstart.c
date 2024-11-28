@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
     ui_init();
 
-    lv_obj_set_user_data(ui_scrStart, "muxstart");
+    lv_obj_set_user_data(ui_scrStart, mux_module);
 
     if (config.BOOT.FACTORY_RESET) {
         char device_dimension[15];

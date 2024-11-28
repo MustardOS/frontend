@@ -305,7 +305,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblScreenMessage, TS("Scanning for Wi-Fi Networks..."));
     lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
 
-    lv_obj_set_user_data(ui_screen, basename(argv[0]));
+    lv_obj_set_user_data(ui_screen, mux_module);
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 

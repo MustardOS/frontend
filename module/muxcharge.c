@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
     ui_init();
     set_brightness(read_int_from_file("/opt/muos/config/brightness.txt", 1));
 
-    lv_obj_set_user_data(ui_scrCharge, "muxcharge");
+    lv_obj_set_user_data(ui_scrCharge, mux_module);
 
     load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);

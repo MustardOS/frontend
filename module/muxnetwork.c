@@ -1326,7 +1326,7 @@ int main(int argc, char *argv[]) {
     ui_init(ui_screen, ui_pnlContent, &theme);
     init_elements();
 
-    lv_obj_set_user_data(ui_screen, basename(argv[0]));
+    lv_obj_set_user_data(ui_screen, mux_module);
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
