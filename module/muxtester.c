@@ -184,6 +184,7 @@ int main(int argc, char *argv[]) {
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
+    lv_label_set_text(ui_lblFirst, TS("Press any button to start input testing!"));
 
     lv_label_set_text(ui_lblDatetime, get_datetime());
 

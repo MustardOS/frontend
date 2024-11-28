@@ -29,7 +29,6 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     lv_obj_set_x(ui_lblFirst, 0);
     lv_obj_set_y(ui_lblFirst, device.MUX.HEIGHT / 2);
     lv_obj_set_align(ui_lblFirst, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblFirst, TS("Press any button to start input testing!"));
     lv_obj_set_style_text_color(ui_lblFirst, lv_color_hex(theme.LIST_DEFAULT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblFirst, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblFirst, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
