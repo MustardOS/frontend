@@ -1,16 +1,19 @@
 # muOS Frontend
 
-This is where all the magic of the user interface of mustardOS (muOS) comes to life:
+This is where all the magic of the user interface of MustardOS (muOS) comes to life:
 
 * `common`: Common Libraries and Functions
+* `font`: Common binary compiled fonts with individual language support
 * `lvgl`: [LVGL Embedded Graphics Library](https://github.com/lvgl/lvgl)
 * `muhotkey`: Global Hotkey System
+* `muplay`: Internal Navigation Sound Player
 * `muxapp`: Application List
 * `muxarchive`: Archive Manager
 * `muxassign`: Assignable System/Core for Content
 * `muxcharge`: Charging Information Screen
 * `muxconfig`: Configuration Menu
 * `muxcredits`: Supporter Credits Screen
+* `muxcustom`: Customisation Menu
 * `muxgov`: System Governor Selector
 * `muxinfo`: Information Menu
 * `muxlanguage`: Language Selector
@@ -22,17 +25,19 @@ This is where all the magic of the user interface of mustardOS (muOS) comes to l
   * **Current Options**
     * `muxassign`
     * `muxgov`
+    * `muxsearch`
 * `muxpass`: Passcode Screen
+* `muxpicker`: Customisation Package Selector
 * `muxplore`: Content Explorer
 * `muxpower`: Power Settings
 * `muxrtc`: Date and Time
+* `muxsearch`: Content Search
 * `muxsplash`: Simple PNG Based Splash Screen
 * `muxstart`: Information and Progress Screen
 * `muxstorage`: Storage Migrate/Sync Information
 * `muxsysinfo`: System Information
 * `muxtask`: Task Toolkit
 * `muxtester`: Input Tester
-* `muxtheme`: Theme Picker
 * `muxtimezone`: Timezone Selector
 * `muxtweakadv`: Advanced Settings
 * `muxtweakgen`: General Settings
