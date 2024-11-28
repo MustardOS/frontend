@@ -4,6 +4,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 
 * `common`: Common Libraries and Functions
 * `font`: Common binary compiled fonts with individual language support
+* `lookup`: Friendly name lookup table mainly for arcade content
 * `lvgl`: [LVGL Embedded Graphics Library](https://github.com/lvgl/lvgl)
 * `muhotkey`: Global Hotkey System
 * `muplay`: Internal Navigation Sound Player
