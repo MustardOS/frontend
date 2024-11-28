@@ -182,8 +182,7 @@ void fbdev_hdmi_rotate(lv_disp_drv_t *driver) {
     fgets(state, 7, f);
     fclose(f);
 
-    if (strstr(state, "HDMI=1") && strstr(device.DEVICE.NAME, "RG28XX")) {
-        printf("hdmi on \n");
+    if (strstr(state, "HDMI=1") && strstr(device.DEVICE.NAME, "RG28XX-H")) {
         driver->hor_res = device.SCREEN.HEIGHT;
         driver->ver_res = device.SCREEN.WIDTH;
         driver->sw_rotate = LV_DISP_ROT_NONE;
