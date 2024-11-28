@@ -20,6 +20,7 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 #include "../common/log.h"
+#include "../lookup/lookup.h"
 
 struct theme_config theme;
 
@@ -103,13 +104,13 @@ void check_for_disable_grid_file(char *item_curr_dir) {
     nogrid_file_exists = file_exist(no_grid_path);
 }
 
-char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_cache) {
+char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_lookup) {
     char *b_core = malloc(MAX_BUFFER_SIZE);
     if (b_core) {
         snprintf(b_core, MAX_BUFFER_SIZE, "%s\n%s\n%s",
                  read_line_from_file(core_path, line_core),
                  read_line_from_file(core_path, line_catalogue),
-                 read_line_from_file(core_path, line_cache));
+                 read_line_from_file(core_path, line_lookup));
     }
     return b_core;
 }
@@ -723,137 +724,72 @@ char *get_glyph_name(size_t index) {
 }
 
 void gen_item(char **file_names, int file_count) {
-    char init_cache_file[MAX_BUFFER_SIZE];
     char init_meta_dir[MAX_BUFFER_SIZE];
+    char *module_dir = NULL;
 
     switch (module) {
         case MMC:
-            if (strcasecmp(sd_dir, strip_dir(SD1)) != 0) {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/mmc/%s.ini",
-                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(SD1));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
-                         INFO_COR_PATH, strchr(strdup(sd_dir), '/') + strlen(SD1));
-            } else {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/root_mmc.ini",
-                         device.STORAGE.ROM.MOUNT);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
-                         INFO_COR_PATH);
-            }
+            module_dir = SD1;
             break;
         case SDCARD:
-            if (strcasecmp(sd_dir, strip_dir(SD2)) != 0) {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/sdcard/%s.ini",
-                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(SD2));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
-                         INFO_COR_PATH, strchr(strdup(sd_dir), '/') + strlen(SD2));
-            } else {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/root_sdcard.ini",
-                         device.STORAGE.ROM.MOUNT);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
-                         INFO_COR_PATH);
-            }
+            module_dir = SD2;
             break;
         case USB:
-            if (strcasecmp(sd_dir, strip_dir(E_USB)) != 0) {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/usb/%s.ini",
-                         device.STORAGE.ROM.MOUNT, strchr(strdup(sd_dir), '/') + strlen(E_USB));
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
-                         INFO_COR_PATH, strchr(strdup(sd_dir), '/') + strlen(E_USB));
-            } else {
-                snprintf(init_cache_file, sizeof(init_cache_file), "%s/MUOS/info/cache/root_usb.ini",
-                         device.STORAGE.ROM.MOUNT);
-                snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/",
-                         INFO_COR_PATH);
-            }
+            module_dir = E_USB;
             break;
         default:
             break;
     }
 
-    create_directories(strip_dir(init_cache_file));
+    if (module_dir) {
+        if (strcasecmp(sd_dir, strip_dir(module_dir)) != 0) {
+            snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
+                     INFO_COR_PATH, strchr(sd_dir, '/') + strlen(module_dir));
+        } else {
+            snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/", INFO_COR_PATH);
+        }
+    }
+
     create_directories(init_meta_dir);
 
-    char local_name_cache[MAX_BUFFER_SIZE];
-    snprintf(local_name_cache, sizeof(local_name_cache), "%score.cfg", init_meta_dir);
+    char name_lookup[MAX_BUFFER_SIZE];
+    snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
 
-    int is_cache = file_exist(init_cache_file);
-    int fn_valid = 0;
-    struct json fn_json;
-
-    char friendly_name_file[MAX_BUFFER_SIZE];
-    if (module == FAVOURITE || module == HISTORY) {
-        snprintf(friendly_name_file, sizeof(friendly_name_file), "general");
-    } else {
-        snprintf(friendly_name_file, sizeof(friendly_name_file), "%s",
-                 str_replace(read_line_from_file(local_name_cache, 1), "_libretro.so", ""));
-    }
-
-    char name_file[MAX_BUFFER_SIZE];
-    snprintf(name_file, sizeof(name_file), "%s/%s.json",
-             INFO_NAM_PATH, friendly_name_file);
-
-    if (!file_exist(name_file)) {
-        snprintf(name_file, sizeof(name_file), "%s/general.json",
-                 INFO_NAM_PATH);
-    }
-
-    LOG_INFO(mux_module, "Reading Friendly Name Set: %s", name_file)
-
-    if (json_valid(read_text_from_file(name_file))) {
-        fn_valid = 1;
-        fn_json = json_parse(read_text_from_file(name_file));
-    }
+    int use_lookup = read_int_from_file(name_lookup, 3);
 
     for (int i = 0; i < file_count; i++) {
-        char curr_item[MAX_BUFFER_SIZE];
+        const char *stripped_name = strip_ext(file_names[i]);
+        const char *lookup_result = use_lookup ? lookup(stripped_name) : NULL;
+
         char fn_name[MAX_BUFFER_SIZE];
-        char cache_fn_name[MAX_BUFFER_SIZE];
+        snprintf(fn_name, sizeof(fn_name), "%s",
+                 lookup_result ? lookup_result : stripped_name);
 
-        snprintf(fn_name, sizeof(fn_name), "%s", strip_ext((char *) file_names[i]));
-        if (read_int_from_file(local_name_cache, 3) || module == FAVOURITE || module == HISTORY) {
-            if (is_cache) {
-                snprintf(fn_name, sizeof(fn_name), "%s", read_line_from_file(init_cache_file, i + 1));
-            } else {
-                if (fn_valid) {
-                    struct json good_name_json = json_object_get(fn_json, strip_ext(file_names[i]));
-                    if (json_exists(good_name_json)) {
-                        json_string_copy(good_name_json, fn_name, sizeof(fn_name));
-                        snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
-                        write_text_to_file(init_cache_file, "a", CHAR, cache_fn_name);
-                    } else {
-                        snprintf(cache_fn_name, sizeof(cache_fn_name), "%s\n", fn_name);
-                        write_text_to_file(init_cache_file, "a", CHAR, cache_fn_name);
-                        printf("MISSING LABEL: %s", cache_fn_name);
-                    }
-                }
-            }
-        }
-
-        snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
-
-        ui_count++;
+        char curr_item[MAX_BUFFER_SIZE];
+        snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count++);
 
         content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ROM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
     }
 
-    switch (module) {
-        case HISTORY:
-            sort_items_time(items, item_count);
-            break;
-        default:
-            sort_items(items, item_count);
-            break;
+    if (module == HISTORY) {
+        sort_items_time(items, item_count);
+    } else {
+        sort_items(items, item_count);
     }
 
-    static char *e_name = "/tmp/explore_name";
-    for (size_t i = 0; i < item_count; i++) {
-        if (file_exist(e_name)) {
-            if (strcasecmp(items[i].name, read_line_from_file(e_name, 1)) == 0) {
+    char *e_name_line = file_exist("/tmp/explore_name") ? read_line_from_file("/tmp/explore_name", 1) : NULL;
+    if (e_name_line) {
+        for (size_t i = 0; i < item_count; i++) {
+            if (strcasecmp(items[i].name, e_name_line) == 0) {
                 sys_index = (int) i;
-                remove(e_name);
+                remove("/tmp/explore_name");
+                break;
             }
         }
+    }
+
+    for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ROM) {
             char *glyph_icon = get_glyph_name(i);
             gen_label(glyph_icon, items[i].display_name);
@@ -865,13 +801,12 @@ char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_j
     char *friendly_folder_name = (char *) malloc(MAX_BUFFER_SIZE);
     strcpy(friendly_folder_name, folder_name);
     if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
+
     struct json good_name_json = json_object_get(fn_json, folder_name);
-    if (json_exists(good_name_json)) {
-        json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
-    }
+    if (json_exists(good_name_json)) json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
+
     return friendly_folder_name;
 }
-
 
 void update_title(char *folder_path, int fn_valid, struct json fn_json) {
     char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
@@ -976,15 +911,15 @@ void init_navigation_groups_grid() {
 
         char grid_image[MAX_BUFFER_SIZE];
         if (snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/%s.png",
-                INFO_CAT_PATH, strip_ext(items[i].name)) >= 0 && !file_exist(grid_image)) {
+                     INFO_CAT_PATH, strip_ext(items[i].name)) >= 0 && !file_exist(grid_image)) {
             snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/default.png", INFO_CAT_PATH);
         }
 
         char grid_image_focused[MAX_BUFFER_SIZE];
         if (snprintf(grid_image_focused, sizeof(grid_image_focused), "%s/Folder/grid/%s_focused.png",
-                INFO_CAT_PATH, strip_ext(items[i].name)) >= 0 && !file_exist(grid_image_focused)) {
-            snprintf(grid_image_focused, sizeof(grid_image_focused), 
-                    "%s/Folder/grid/default_focused.png", INFO_CAT_PATH);                
+                     INFO_CAT_PATH, strip_ext(items[i].name)) >= 0 && !file_exist(grid_image_focused)) {
+            snprintf(grid_image_focused, sizeof(grid_image_focused),
+                     "%s/Folder/grid/default_focused.png", INFO_CAT_PATH);
         }
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
@@ -1332,32 +1267,6 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void cache_message(char *n_dir) {
-    char cache_file[MAX_BUFFER_SIZE];
-    switch (module) {
-        case MMC:
-            snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/mmc/%s.ini", device.STORAGE.ROM.MOUNT,
-                     get_last_subdir(n_dir, '/', 4));
-            break;
-        case SDCARD:
-            snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/sdcard/%s.ini", device.STORAGE.ROM.MOUNT,
-                     get_last_subdir(n_dir, '/', 4));
-            break;
-        case USB:
-            snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/usb/%s.ini", device.STORAGE.ROM.MOUNT,
-                     get_last_subdir(n_dir, '/', 4));
-            break;
-        case FAVOURITE:
-            snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/favourite.ini", device.STORAGE.ROM.MOUNT);
-            break;
-        case HISTORY:
-            snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/history.ini", device.STORAGE.ROM.MOUNT);
-            break;
-        default:
-            break;
-    }
-}
-
 void handle_a() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
@@ -1414,16 +1323,6 @@ void handle_a() {
 
                         write_text_to_file("/tmp/explore_dir", "w", CHAR, n_dir);
                         load_mux("explore");
-
-                        switch (module) {
-                            case MMC:
-                            case SDCARD:
-                            case USB:
-                                cache_message(n_dir);
-                                break;
-                            default:
-                                break;
-                        }
                     } else {
                         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
@@ -1541,70 +1440,29 @@ void handle_x() {
         return;
     }
 
-    char n_dir[MAX_BUFFER_SIZE];
-    snprintf(n_dir, sizeof(n_dir), "%s", sd_dir);
-
-    char f_content[MAX_BUFFER_SIZE];
-    snprintf(f_content, sizeof(f_content), "%s.cfg",
-             strip_ext(items[current_item_index].name));
-
-    char cache_file[MAX_BUFFER_SIZE];
     switch (module) {
         case MMC:
             play_sound("confirm", nav_sound, 0, 1);
-
-            snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/mmc/%s.ini",
-                     device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
-
             write_text_to_file("/tmp/explore_card", "w", CHAR, "mmc");
             break;
         case SDCARD:
             play_sound("confirm", nav_sound, 0, 1);
-
-            snprintf(cache_file, sizeof(cache_file),
-                     "%s/MUOS/info/cache/sdcard/%s.ini",
-                     device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
-
             write_text_to_file("/tmp/explore_card", "w", CHAR, "sdcard");
             break;
         case USB:
             play_sound("confirm", nav_sound, 0, 1);
-
-            snprintf(cache_file, sizeof(cache_file), "%s/MUOS/info/cache/usb/%s.ini",
-                     device.STORAGE.ROM.MOUNT, get_last_subdir(n_dir, '/', 4));
-
             write_text_to_file("/tmp/explore_card", "w", CHAR, "usb");
             break;
         case FAVOURITE:
-            play_sound("confirm", nav_sound, 0, 1);
-
-            snprintf(cache_file, sizeof(cache_file), "%s/%s.cfg",
-                     INFO_FAV_PATH, strip_ext(f_content));
-
-            remove(cache_file);
-            write_text_to_file("/tmp/mux_reload", "w", INT, 1);
-
-            goto ttq;
         case HISTORY:
             play_sound("confirm", nav_sound, 0, 1);
-
-            snprintf(cache_file, sizeof(cache_file), "%s/%s.cfg",
-                     INFO_HIS_PATH, strip_ext(f_content));
-
-            remove(cache_file);
             write_text_to_file("/tmp/mux_reload", "w", INT, 1);
-
             goto ttq;
         default:
             return;
     }
 
-    if (file_exist(cache_file)) {
-        remove(cache_file);
-        cache_message(n_dir);
-    }
-
-    write_text_to_file("/tmp/explore_dir", "w", CHAR, n_dir);
+    write_text_to_file("/tmp/explore_dir", "w", CHAR, sd_dir);
     load_mux("explore");
 
     ttq:
