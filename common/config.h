@@ -45,6 +45,7 @@ struct mux_config {
             int16_t RUMBLE;
             int16_t USERINIT;
             int16_t DPADSWAP;
+            int16_t OVERDRIVE;
         } ADVANCED;
         struct {
             int16_t HIDDEN;

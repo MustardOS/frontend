@@ -17,6 +17,7 @@ lv_obj_t *ui_pnlVerbose;
 lv_obj_t *ui_pnlRumble;
 lv_obj_t *ui_pnlUserInit;
 lv_obj_t *ui_pnlDPADSwap;
+lv_obj_t *ui_pnlOverdrive;
 
 lv_obj_t *ui_lblAccelerate;
 lv_obj_t *ui_lblSwap;
@@ -35,6 +36,7 @@ lv_obj_t *ui_lblVerbose;
 lv_obj_t *ui_lblRumble;
 lv_obj_t *ui_lblUserInit;
 lv_obj_t *ui_lblDPADSwap;
+lv_obj_t *ui_lblOverdrive;
 
 lv_obj_t *ui_icoAccelerate;
 lv_obj_t *ui_icoSwap;
@@ -53,6 +55,7 @@ lv_obj_t *ui_icoVerbose;
 lv_obj_t *ui_icoRumble;
 lv_obj_t *ui_icoUserInit;
 lv_obj_t *ui_icoDPADSwap;
+lv_obj_t *ui_icoOverdrive;
 
 lv_obj_t *ui_droAccelerate;
 lv_obj_t *ui_droSwap;
@@ -71,6 +74,7 @@ lv_obj_t *ui_droVerbose;
 lv_obj_t *ui_droRumble;
 lv_obj_t *ui_droUserInit;
 lv_obj_t *ui_droDPADSwap;
+lv_obj_t *ui_droOverdrive;
 
 void ui_init(lv_obj_t *ui_pnlContent) {
     ui_pnlAccelerate = lv_obj_create(ui_pnlContent);
@@ -90,6 +94,7 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     ui_pnlRumble = lv_obj_create(ui_pnlContent);
     ui_pnlUserInit = lv_obj_create(ui_pnlContent);
     ui_pnlDPADSwap = lv_obj_create(ui_pnlContent);
+    ui_pnlOverdrive = lv_obj_create(ui_pnlContent);
 
     ui_lblAccelerate = lv_label_create(ui_pnlAccelerate);
     ui_lblSwap = lv_label_create(ui_pnlSwap);
@@ -108,6 +113,7 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     ui_lblRumble = lv_label_create(ui_pnlRumble);
     ui_lblUserInit = lv_label_create(ui_pnlUserInit);
     ui_lblDPADSwap = lv_label_create(ui_pnlDPADSwap);
+    ui_lblOverdrive = lv_label_create(ui_pnlOverdrive);
 
     ui_icoAccelerate = lv_img_create(ui_pnlAccelerate);
     ui_icoSwap = lv_img_create(ui_pnlSwap);
@@ -126,6 +132,7 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     ui_icoRumble = lv_img_create(ui_pnlRumble);
     ui_icoUserInit = lv_img_create(ui_pnlUserInit);
     ui_icoDPADSwap = lv_img_create(ui_pnlDPADSwap);
+    ui_icoOverdrive = lv_img_create(ui_pnlOverdrive);
 
     ui_droAccelerate = lv_dropdown_create(ui_pnlAccelerate);
     ui_droSwap = lv_dropdown_create(ui_pnlSwap);
@@ -144,4 +151,5 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     ui_droRumble = lv_dropdown_create(ui_pnlRumble);
     ui_droUserInit = lv_dropdown_create(ui_pnlUserInit);
     ui_droDPADSwap = lv_dropdown_create(ui_pnlDPADSwap);
+    ui_droOverdrive = lv_dropdown_create(ui_pnlOverdrive);
 }

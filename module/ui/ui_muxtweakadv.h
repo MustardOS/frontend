@@ -21,6 +21,7 @@ extern lv_obj_t *ui_pnlVerbose;
 extern lv_obj_t *ui_pnlRumble;
 extern lv_obj_t *ui_pnlUserInit;
 extern lv_obj_t *ui_pnlDPADSwap;
+extern lv_obj_t *ui_pnlOverdrive;
 
 extern lv_obj_t *ui_lblAccelerate;
 extern lv_obj_t *ui_lblSwap;
@@ -39,6 +40,7 @@ extern lv_obj_t *ui_lblVerbose;
 extern lv_obj_t *ui_lblRumble;
 extern lv_obj_t *ui_lblUserInit;
 extern lv_obj_t *ui_lblDPADSwap;
+extern lv_obj_t *ui_lblOverdrive;
 
 extern lv_obj_t *ui_icoAccelerate;
 extern lv_obj_t *ui_icoSwap;
@@ -57,6 +59,7 @@ extern lv_obj_t *ui_icoVerbose;
 extern lv_obj_t *ui_icoRumble;
 extern lv_obj_t *ui_icoUserInit;
 extern lv_obj_t *ui_icoDPADSwap;
+extern lv_obj_t *ui_icoOverdrive;
 
 extern lv_obj_t *ui_droAccelerate;
 extern lv_obj_t *ui_droSwap;
@@ -75,3 +78,4 @@ extern lv_obj_t *ui_droVerbose;
 extern lv_obj_t *ui_droRumble;
 extern lv_obj_t *ui_droUserInit;
 extern lv_obj_t *ui_droDPADSwap;
+extern lv_obj_t *ui_droOverdrive;
