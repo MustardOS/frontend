@@ -1459,10 +1459,13 @@ void handle_b() {
 }
 
 void handle_x() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
+    if (msgbox_active || ui_count == 0) return;
 
+    char f_content[MAX_BUFFER_SIZE];
+    snprintf(f_content, sizeof(f_content), "%s.cfg",
+             strip_ext(items[current_item_index].name));
+
+    char cache_file[MAX_BUFFER_SIZE];
     switch (module) {
         case MMC:
             play_sound("confirm", nav_sound, 0, 1);
@@ -1477,8 +1480,17 @@ void handle_x() {
             write_text_to_file("/tmp/explore_card", "w", CHAR, "usb");
             break;
         case FAVOURITE:
+            play_sound("confirm", nav_sound, 0, 1);
+            snprintf(cache_file, sizeof(cache_file), "%s/%s.cfg",
+                     INFO_FAV_PATH, strip_ext(f_content));
+            remove(cache_file);
+            write_text_to_file("/tmp/mux_reload", "w", INT, 1);
+            goto ttq;
         case HISTORY:
             play_sound("confirm", nav_sound, 0, 1);
+            snprintf(cache_file, sizeof(cache_file), "%s/%s.cfg",
+                     INFO_HIS_PATH, strip_ext(f_content));
+            remove(cache_file);
             write_text_to_file("/tmp/mux_reload", "w", INT, 1);
             goto ttq;
         default:
@@ -1493,9 +1505,7 @@ void handle_x() {
 }
 
 void handle_y() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
+    if (msgbox_active || ui_count == 0) return;
 
     play_sound("confirm", nav_sound, 0, 1);
 
@@ -1548,9 +1558,7 @@ void handle_start() {
 }
 
 void handle_select() {
-    if (msgbox_active || ui_count == 0) {
-        return;
-    }
+    if (msgbox_active || ui_count == 0) return;
 
     if (module != ROOT && module != FAVOURITE && module != HISTORY) {
         play_sound("confirm", nav_sound, 0, 1);
