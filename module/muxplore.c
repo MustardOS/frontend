@@ -1614,7 +1614,7 @@ void handle_menu() {
 void handle_random_select() {
     if (msgbox_active || !ui_count) return;
 
-    uint32_t random_select = arc4random_uniform((ui_count / 2));
+    uint32_t random_select = arc4random_uniform(MAX_BUFFER_SIZE);
     int selected_index = (int) (random_select & INT16_MAX);
 
     !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
