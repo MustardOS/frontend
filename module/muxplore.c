@@ -757,13 +757,36 @@ void gen_item(char **file_names, int file_count) {
 
     int use_lookup = read_int_from_file(name_lookup, 3);
 
-    for (int i = 0; i < file_count; i++) {
-        const char *stripped_name = strip_ext(file_names[i]);
-        const char *lookup_result = use_lookup ? lookup(stripped_name) : NULL;
+    char custom_lookup[MAX_BUFFER_SIZE];
+    snprintf(custom_lookup, sizeof(custom_lookup), "%s/content.json",
+             INFO_NAM_PATH);
 
+    int fn_valid = 0;
+    struct json fn_json = {0};
+
+    if (json_valid(read_text_from_file(custom_lookup))) {
+        fn_valid = 1;
+        fn_json = json_parse(read_text_from_file(custom_lookup));
+    }
+
+    for (int i = 0; i < file_count; i++) {
+        int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
-        snprintf(fn_name, sizeof(fn_name), "%s",
-                 lookup_result ? lookup_result : stripped_name);
+        const char *stripped_name = strip_ext(file_names[i]);
+
+        if (fn_valid) {
+            struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
+            if (json_exists(custom_lookup_json)) {
+                json_string_copy(custom_lookup_json, fn_name, sizeof(fn_name));
+                has_custom_name = 1;
+            }
+        }
+
+        if (!has_custom_name) {
+            const char *lookup_result = use_lookup ? lookup(stripped_name) : NULL;
+            snprintf(fn_name, sizeof(fn_name), "%s",
+                     lookup_result ? lookup_result : stripped_name);
+        }
 
         char curr_item[MAX_BUFFER_SIZE];
         snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count++);
