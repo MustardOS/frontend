@@ -1213,7 +1213,7 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
         if (add_favourite) {
             snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s",
                      INFO_FAV_PATH, content_name);
-            add_to_favourites(add_to_hf, pointer_file);
+            add_to_favourites(add_to_hf, read_text_from_file(pointer_file));
             return 1;
         } else {
             char *assigned_core = read_line_from_file(cache_file, 2);
