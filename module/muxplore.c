@@ -686,13 +686,13 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
 }
 
 void gen_label(char *item_glyph, char *item_text) {
-    lv_obj_t *ui_pnlExplore = lv_obj_create(ui_pnlContent);
+    lv_obj_t * ui_pnlExplore = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlExplore);
 
-    lv_obj_t *ui_lblExploreItem = lv_label_create(ui_pnlExplore);
+    lv_obj_t * ui_lblExploreItem = lv_label_create(ui_pnlExplore);
     apply_theme_list_item(&theme, ui_lblExploreItem, item_text, true, false);
 
-    lv_obj_t *ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
+    lv_obj_t * ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
     apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_module, item_glyph);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
@@ -905,9 +905,9 @@ void init_navigation_groups_grid() {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
-        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_t *cell_image = lv_img_create(cell_panel);
-        lv_obj_t *cell_label = lv_label_create(cell_panel);
+        lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t * cell_image = lv_img_create(cell_panel);
+        lv_obj_t * cell_label = lv_label_create(cell_panel);
 
         char grid_image[MAX_BUFFER_SIZE];
         if (snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/%s.png",
@@ -1588,11 +1588,11 @@ void handle_menu() {
                   load_content_description());
 }
 
-void random_select(void) {
+void handle_random_select() {
     if (msgbox_active || !ui_count) return;
 
-    uint32_t random_select = arc4random() % ui_count;
-    int selected_index = (int) (random_select & INT32_MAX);
+    uint32_t random_select = arc4random_uniform((ui_count / 2));
+    int selected_index = (int) (random_select & INT16_MAX);
 
     !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
 }
@@ -2109,7 +2109,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
-                    [MUX_INPUT_R2] = random_select,
+                    [MUX_INPUT_R2] = handle_random_select,
             },
             .hold_handler = {
                     // List navigation:
@@ -2119,7 +2119,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
-                    [MUX_INPUT_R2] = random_select,
+                    [MUX_INPUT_R2] = handle_random_select,
             },
             .combo = {
                     {
