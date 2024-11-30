@@ -15,7 +15,6 @@ lv_obj_t *ui_pnlUSBFunction;
 lv_obj_t *ui_pnlState;
 lv_obj_t *ui_pnlVerbose;
 lv_obj_t *ui_pnlRumble;
-lv_obj_t *ui_pnlHDMIOutput;
 lv_obj_t *ui_pnlUserInit;
 lv_obj_t *ui_pnlDPADSwap;
 
@@ -34,7 +33,6 @@ lv_obj_t *ui_lblUSBFunction;
 lv_obj_t *ui_lblState;
 lv_obj_t *ui_lblVerbose;
 lv_obj_t *ui_lblRumble;
-lv_obj_t *ui_lblHDMIOutput;
 lv_obj_t *ui_lblUserInit;
 lv_obj_t *ui_lblDPADSwap;
 
@@ -53,7 +51,6 @@ lv_obj_t *ui_icoUSBFunction;
 lv_obj_t *ui_icoState;
 lv_obj_t *ui_icoVerbose;
 lv_obj_t *ui_icoRumble;
-lv_obj_t *ui_icoHDMIOutput;
 lv_obj_t *ui_icoUserInit;
 lv_obj_t *ui_icoDPADSwap;
 
@@ -72,7 +69,6 @@ lv_obj_t *ui_droUSBFunction;
 lv_obj_t *ui_droState;
 lv_obj_t *ui_droVerbose;
 lv_obj_t *ui_droRumble;
-lv_obj_t *ui_droHDMIOutput;
 lv_obj_t *ui_droUserInit;
 lv_obj_t *ui_droDPADSwap;
 
@@ -92,7 +88,6 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     ui_pnlState = lv_obj_create(ui_pnlContent);
     ui_pnlVerbose = lv_obj_create(ui_pnlContent);
     ui_pnlRumble = lv_obj_create(ui_pnlContent);
-    ui_pnlHDMIOutput = lv_obj_create(ui_pnlContent);
     ui_pnlUserInit = lv_obj_create(ui_pnlContent);
     ui_pnlDPADSwap = lv_obj_create(ui_pnlContent);
 
@@ -111,7 +106,6 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     ui_lblState = lv_label_create(ui_pnlState);
     ui_lblVerbose = lv_label_create(ui_pnlVerbose);
     ui_lblRumble = lv_label_create(ui_pnlRumble);
-    ui_lblHDMIOutput = lv_label_create(ui_pnlHDMIOutput);
     ui_lblUserInit = lv_label_create(ui_pnlUserInit);
     ui_lblDPADSwap = lv_label_create(ui_pnlDPADSwap);
 
@@ -130,7 +124,6 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     ui_icoState = lv_img_create(ui_pnlState);
     ui_icoVerbose = lv_img_create(ui_pnlVerbose);
     ui_icoRumble = lv_img_create(ui_pnlRumble);
-    ui_icoHDMIOutput = lv_img_create(ui_pnlHDMIOutput);
     ui_icoUserInit = lv_img_create(ui_pnlUserInit);
     ui_icoDPADSwap = lv_img_create(ui_pnlDPADSwap);
 
@@ -149,7 +142,6 @@ void ui_init(lv_obj_t *ui_pnlContent) {
     ui_droState = lv_dropdown_create(ui_pnlState);
     ui_droVerbose = lv_dropdown_create(ui_pnlVerbose);
     ui_droRumble = lv_dropdown_create(ui_pnlRumble);
-    ui_droHDMIOutput = lv_dropdown_create(ui_pnlHDMIOutput);
     ui_droUserInit = lv_dropdown_create(ui_pnlUserInit);
     ui_droDPADSwap = lv_dropdown_create(ui_pnlDPADSwap);
 }

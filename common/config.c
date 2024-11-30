@@ -50,7 +50,6 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.VOLUME, "settings/advanced/volume", "previous")
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, "settings/advanced/brightness", "previous")
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.STATE, "settings/advanced/state", "mem")
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.HDMIOUTPUT, "settings/advanced/hdmi_output", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.USERINIT, "settings/advanced/user_init", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.DPADSWAP, "settings/advanced/dpad_swap", 1)
 
@@ -59,9 +58,16 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.GENERAL.BGM, "settings/general/bgm", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.COLOUR, "settings/general/colour", 32)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 96)
-    CFG_INT_FIELD(config->SETTINGS.GENERAL.HDMI, "settings/general/hdmi", 0)
     CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, "settings/general/startup", "launcher")
     CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, "settings/general/language", "English")
+
+    CFG_INT_FIELD(config->SETTINGS.HDMI.ENABLED, "settings/hdmi/enabled", 0)
+    CFG_INT_FIELD(config->SETTINGS.HDMI.RESOLUTION, "settings/hdmi/resolution", 0)
+    CFG_INT_FIELD(config->SETTINGS.HDMI.SPACE, "settings/hdmi/space", 0)
+    CFG_INT_FIELD(config->SETTINGS.HDMI.DEPTH, "settings/hdmi/depth", 0)
+    CFG_INT_FIELD(config->SETTINGS.HDMI.DEPTH, "settings/hdmi/range", 0)
+    CFG_INT_FIELD(config->SETTINGS.HDMI.SCAN, "settings/hdmi/scan", 0)
+    CFG_INT_FIELD(config->SETTINGS.HDMI.SCAN, "settings/hdmi/audio", 0)
 
     CFG_INT_FIELD(config->SETTINGS.POWER.LOW_BATTERY, "settings/power/low_battery", 0)
     CFG_INT_FIELD(config->SETTINGS.POWER.SHUTDOWN, "settings/power/shutdown", 0)

@@ -43,7 +43,6 @@ struct mux_config {
             char STATE[MAX_BUFFER_SIZE];
             int16_t VERBOSE;
             int16_t RUMBLE;
-            int16_t HDMIOUTPUT;
             int16_t USERINIT;
             int16_t DPADSWAP;
         } ADVANCED;
@@ -54,9 +53,17 @@ struct mux_config {
             char STARTUP[MAX_BUFFER_SIZE];
             int16_t COLOUR;
             int16_t BRIGHTNESS;
-            int16_t HDMI;
             char LANGUAGE[MAX_BUFFER_SIZE];
         } GENERAL;
+        struct {
+            int16_t ENABLED;
+            int16_t RESOLUTION;
+            int16_t SPACE;
+            int16_t DEPTH;
+            int16_t RANGE;
+            int16_t SCAN;
+            int16_t AUDIO;
+        } HDMI;
         struct {
             int16_t LOW_BATTERY;
             int16_t SHUTDOWN;
