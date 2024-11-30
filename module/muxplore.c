@@ -1381,6 +1381,9 @@ void handle_a() {
                         write_text_to_file("/tmp/explore_card", "w", CHAR, "favourite");
                         write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
                         write_text_to_file("/tmp/manual_launch", "w", INT, 1);
+
+                        load_message = 0;
+                        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
                     } else {
                         return;
                     }
@@ -1390,6 +1393,9 @@ void handle_a() {
                         write_text_to_file("/tmp/explore_card", "w", CHAR, "history");
                         write_text_to_file("/tmp/explore_dir", "w", CHAR, "");
                         write_text_to_file("/tmp/manual_launch", "w", INT, 1);
+
+                        load_message = 0;
+                        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
                     } else {
                         return;
                     }
@@ -1521,16 +1527,12 @@ void handle_y() {
                 toast_message(TS("Directories cannot be added to Favourites"), 1000, 1000);
             } else {
                 load_content(1);
-                if (file_exist(MUOS_ROM_LOAD)) {
-                    remove(MUOS_ROM_LOAD);
-                }
+                if (file_exist(MUOS_ROM_LOAD)) remove(MUOS_ROM_LOAD);
             }
             break;
         case HISTORY:
             load_cached_content(f_content, "history", 1);
-            if (file_exist(MUOS_ROM_LOAD)) {
-                remove(MUOS_ROM_LOAD);
-            }
+            if (file_exist(MUOS_ROM_LOAD)) remove(MUOS_ROM_LOAD);
             break;
         default:
             break;
