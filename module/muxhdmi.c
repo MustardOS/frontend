@@ -274,15 +274,15 @@ void init_navigation_groups() {
             TS("480i"), TS("576i"), TS("480p"), TS("576p"), TS("720p + 50hz"), TS("720p + 60hz"),
             TS("1080i + 50hz"), TS("1080i + 60hz"), TS("1080p + 24hz"), TS("1080p + 50hz"), TS("1080p + 60hz")}, 11);
     add_drop_down_options(ui_droSpace, (char *[]) {
-            TG("RGB"), TS("YUV444"), TS("YUV422"), TS("YUV420")}, 4);
+            TS("RGB"), TS("YUV444"), TS("YUV422"), TS("YUV420")}, 4);
     add_drop_down_options(ui_droDepth, (char *[]) {
-            TG("8"), TS("10"), TS("12"), TS("16")}, 4);
+            TS("8"), TS("10"), TS("12"), TS("16")}, 4);
     add_drop_down_options(ui_droRange, (char *[]) {
-            TG("Limited"), TS("Full")}, 2);
+            TS("Limited"), TS("Full")}, 2);
     add_drop_down_options(ui_droScan, (char *[]) {
-            TG("Over"), TS("Under")}, 2);
+            TS("Over"), TS("Under")}, 2);
     add_drop_down_options(ui_droAudio, (char *[]) {
-            TG("External"), TS("Internal")}, 2);
+            TS("External"), TS("Internal")}, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
