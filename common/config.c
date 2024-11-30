@@ -65,9 +65,9 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.HDMI.RESOLUTION, "settings/hdmi/resolution", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.SPACE, "settings/hdmi/space", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.DEPTH, "settings/hdmi/depth", 0)
-    CFG_INT_FIELD(config->SETTINGS.HDMI.DEPTH, "settings/hdmi/range", 0)
+    CFG_INT_FIELD(config->SETTINGS.HDMI.RANGE, "settings/hdmi/range", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.SCAN, "settings/hdmi/scan", 0)
-    CFG_INT_FIELD(config->SETTINGS.HDMI.SCAN, "settings/hdmi/audio", 0)
+    CFG_INT_FIELD(config->SETTINGS.HDMI.AUDIO, "settings/hdmi/audio", 0)
 
     CFG_INT_FIELD(config->SETTINGS.POWER.LOW_BATTERY, "settings/power/low_battery", 0)
     CFG_INT_FIELD(config->SETTINGS.POWER.SHUTDOWN, "settings/power/shutdown", 0)
