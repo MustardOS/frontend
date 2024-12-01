@@ -20,6 +20,7 @@ struct mux_config {
         int16_t TYPE;
         char SSID[MAX_BUFFER_SIZE];
         char PASS[MAX_BUFFER_SIZE];
+        int16_t SCAN;
         char ADDRESS[MAX_BUFFER_SIZE];
         char GATEWAY[MAX_BUFFER_SIZE];
         char SUBNET[MAX_BUFFER_SIZE];
