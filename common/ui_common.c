@@ -10,6 +10,7 @@
 #include "theme.h"
 #include "device.h"
 #include "ui_common.h"
+#include "log.h"
 
 lv_obj_t *ui_screen;
 lv_obj_t *ui_pnlWall;
@@ -921,7 +922,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
              load_static_image(ui_screen, ui_group, wall_type));
 
     if (strlen(static_image) > 0) {
-        printf("LOADING STATIC IMAGE: %s\n", static_image);
+        LOG_INFO(mux_module, "Loading Static Image: %s", static_image);
 
         switch (theme.MISC.STATIC_ALIGNMENT) {
             case 0: // Bottom + Front
