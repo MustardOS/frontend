@@ -343,6 +343,7 @@ void direct_to_previous() {
         if (text_hit != 0) {
             list_nav_next(text_hit);
         }
+        remove(MUOS_PDI_LOAD);
     }
 }
 
