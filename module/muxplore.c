@@ -72,7 +72,7 @@ static char SD1[MAX_BUFFER_SIZE];
 static char SD2[MAX_BUFFER_SIZE];
 static char E_USB[MAX_BUFFER_SIZE];
 
-char *prev_dir;
+char *prev_dir = "";
 int sys_index = -1;
 
 int ui_count = 0;
