@@ -240,7 +240,6 @@ void handle_a() {
     } else if (current_item_index == 5) {
         play_sound("confirm", nav_sound, 0, 1);
         load_mux("config");
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
     } else if (current_item_index == 6) {
         play_sound("reboot", nav_sound, 0, 1);
         load_mux("reboot");
@@ -537,6 +536,7 @@ void direct_to_previous() {
             list_nav_next(text_hit);
             nav_moved = 1;
         }
+        remove(MUOS_PDI_LOAD);
     }
 }
 
