@@ -1112,17 +1112,17 @@ void add_to_favourites(char *filename, const char *pointer) {
 
 int load_content(int add_favourite) {
     char *assigned_core = load_content_core(0, 1);
-    printf("ASSIGNED CORE: %s\n", assigned_core);
-
-    char *assigned_gov = load_content_governor(0, 1);
-    printf("ASSIGNED GOVERNOR: %s\n", assigned_gov);
-
     if (assigned_core == NULL) {
         return 0;
+    } else {
+        LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
     }
 
+    char *assigned_gov = load_content_governor(0, 1);
     if (assigned_gov == NULL) {
         assigned_gov = device.CPU.DEFAULT;
+    } else {
+        LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
     }
 
     char content_loader_file[MAX_BUFFER_SIZE];
@@ -1184,8 +1184,9 @@ int load_content(int add_favourite) {
                      strip_ext(items[current_item_index].name), curr_sd, read_line_from_file(content_loader_file, 5));
             prepare_activity_file(act_content, act_file);
 */
-            write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(add_to_hf, "w", CHAR, pointer);
+            write_text_to_file(LAST_PLAY_FILE, "w", CHAR, pointer);
+            write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(content_loader_file));
         }
 
@@ -1199,6 +1200,13 @@ int load_content(int add_favourite) {
 }
 
 int load_cached_content(const char *content_name, char *cache_type, int add_favourite) {
+    char *assigned_gov = load_content_governor(0, 1);
+    if (assigned_gov == NULL) {
+        assigned_gov = device.CPU.DEFAULT;
+    } else {
+        LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
+    }
+
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), "%s/info/%s/%s",
              STORAGE_PATH, cache_type, content_name);
@@ -1234,6 +1242,8 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
         prepare_activity_file(act_content, act_file);
 */
             write_text_to_file(add_to_hf, "w", CHAR, read_text_from_file(pointer_file));
+            write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_text_from_file(pointer_file));
+            write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(cache_file));
 
             printf("CONTENT LOADED SUCCESSFULLY\n");
