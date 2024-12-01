@@ -161,22 +161,41 @@ char *load_content_core(int force, int run_quit) {
     return NULL;
 }
 
-char *load_content_governor(int force, int run_quit) {
+char *load_content_governor(int force, int run_quit, int storage_card, char *pointer) {
     char content_gov[MAX_BUFFER_SIZE];
-
     char *card_full;
-    switch (module) {
-        case MMC:
-            card_full = SD1;
-            break;
-        case SDCARD:
-            card_full = SD2;
-            break;
-        case USB:
-            card_full = E_USB;
-            break;
-        default:
-            return NULL;
+
+    if (storage_card > -1) {
+        switch (storage_card) {
+            case MMC:
+                sd_dir = str_replace(str_replace(pointer, INFO_COR_PATH, SD1), get_last_dir(pointer), "");
+                card_full = SD1;
+                break;
+            case SDCARD:
+                sd_dir = str_replace(str_replace(pointer, INFO_COR_PATH, SD2), get_last_dir(pointer), "");
+                card_full = SD2;
+                break;
+            case USB:
+                sd_dir = str_replace(str_replace(pointer, INFO_COR_PATH, E_USB), get_last_dir(pointer), "");
+                card_full = E_USB;
+                break;
+            default:
+                return NULL;
+        }
+    } else {
+        switch (module) {
+            case MMC:
+                card_full = SD1;
+                break;
+            case SDCARD:
+                card_full = SD2;
+                break;
+            case USB:
+                card_full = E_USB;
+                break;
+            default:
+                return NULL;
+        }
     }
 
     if (strcasecmp(get_last_subdir(sd_dir, '/', 4), strip_dir(card_full)) == 0) {
@@ -186,20 +205,18 @@ char *load_content_governor(int force, int run_quit) {
         snprintf(content_gov, sizeof(content_gov), "%s/%s/%s.gov",
                  INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4), strip_ext(items[current_item_index].name));
         if (file_exist(content_gov) && !force) {
-            printf("LOADING INDIVIDUAL GOVERNOR AT: %s\n", content_gov);
+            LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov);
             return read_text_from_file(content_gov);
         } else {
-            printf("NO INDIVIDUAL GOVERNOR INFO AT: %s\n", content_gov);
             snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov",
                      INFO_COR_PATH, get_last_subdir(sd_dir, '/', 4));
         }
     }
 
     if (file_exist(content_gov) && !force) {
-        printf("LOADING GLOBAL GOVERNOR AT: %s\n", content_gov);
+        LOG_SUCCESS(mux_module, "Loading Global Governor: %s", content_gov);
         return read_text_from_file(content_gov);
     } else {
-        printf("NO GLOBAL GOVERNOR INFO AT: %s\n", content_gov);
         load_gov(items[current_item_index].name, sd_dir, "none", force);
         if (run_quit) safe_quit = 1;
     }
@@ -1118,7 +1135,7 @@ int load_content(int add_favourite) {
         LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
     }
 
-    char *assigned_gov = load_content_governor(0, 1);
+    char *assigned_gov = load_content_governor(0, 1, -1, "");
     if (assigned_gov == NULL) {
         assigned_gov = device.CPU.DEFAULT;
     } else {
@@ -1200,16 +1217,20 @@ int load_content(int add_favourite) {
 }
 
 int load_cached_content(const char *content_name, char *cache_type, int add_favourite) {
-    char *assigned_gov = load_content_governor(0, 1);
-    if (assigned_gov == NULL) {
-        assigned_gov = device.CPU.DEFAULT;
-    } else {
-        LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
-    }
-
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), "%s/info/%s/%s",
              STORAGE_PATH, cache_type, content_name);
+
+    int fh_current_card = 0;
+    char *assigned_gov = NULL;
+
+    while (fh_current_card <= 2) {
+        assigned_gov = load_content_governor(0, 1, fh_current_card, read_text_from_file(pointer_file));
+        if (assigned_gov != NULL) break;
+        fh_current_card++;
+    }
+
+    if (assigned_gov == NULL) assigned_gov = device.CPU.DEFAULT;
 
     char cache_file[MAX_BUFFER_SIZE];
     snprintf(cache_file, sizeof(cache_file), "%s",
@@ -1225,13 +1246,12 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
             return 1;
         } else {
             char *assigned_core = read_line_from_file(cache_file, 2);
-            printf("ASSIGNED CORE: %s\n", assigned_core);
-            printf("CONFIG FILE: %s\n", cache_file);
+            LOG_INFO(mux_module, "Assigned Core: %s", assigned_core);
+            LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov);
+            LOG_INFO(mux_module, "Using Configuration: %s", cache_file);
 
             snprintf(add_to_hf, sizeof(add_to_hf), "%s/%s",
                      INFO_HIS_PATH, content_name);
-
-            printf("TRYING TO LOAD CONTENT...\n");
 /*
         char act_file[MAX_BUFFER_SIZE];
         char act_content[MAX_BUFFER_SIZE];
@@ -1245,8 +1265,6 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
             write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_text_from_file(pointer_file));
             write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(cache_file));
-
-            printf("CONTENT LOADED SUCCESSFULLY\n");
             return 1;
         }
     }
@@ -1588,7 +1606,7 @@ void handle_select() {
                     load_content_core(1, 0);
                     if (safe_quit) mux_input_stop();
 
-                    load_content_governor(1, 0);
+                    load_content_governor(1, 0, -1, "");
                     if (safe_quit) mux_input_stop();
 
                     load_mux("option");
