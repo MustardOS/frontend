@@ -210,6 +210,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_DEFAULT.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_ALPHA", 255);
     theme->LIST_DEFAULT.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR");
     theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", 0);
+    theme->LIST_DEFAULT.LABEL_LONG_MODE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE", LV_LABEL_LONG_SCROLL_CIRCULAR);
 
     theme->LIST_DISABLED.TEXT = get_ini_hex(muos_theme, "list", "LIST_DISABLED_TEXT");
     theme->LIST_DISABLED.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DISABLED_TEXT_ALPHA", 255);
@@ -384,8 +385,24 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     }
 }
 
+void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, char *item_text) {
+    if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) return;
+
+    char *content_label = lv_label_get_text(ui_lblItem);
+
+    size_t len = strlen(content_label);
+    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "…") == 0;
+
+    if (strcasecmp(item_text, content_label) != 0 && ends_with_ellipse) {
+        lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_SCROLL_CIRCULAR);
+        lv_label_set_text(ui_lblItem, item_text);
+    }
+}
+
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
                          lv_obj_t *ui_lblItem, const char *item_text) {
+    if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) return;
+
     lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
     const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
     const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
@@ -485,7 +502,7 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, con
                            bool enable_scrolling_text, bool is_config_menu) {
     lv_label_set_text(ui_lblItem, item_text);
 
-    if (enable_scrolling_text) {
+    if (enable_scrolling_text && theme->LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) {
         static lv_anim_t item_anim;
         static lv_style_t item_style;
         lv_anim_init(&item_anim);
@@ -498,9 +515,14 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, con
     lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
 
     lv_obj_set_width(ui_lblItem, theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_RIGHT);
-    const lv_font_t *font = lv_obj_get_style_text_font(ui_lblItem, LV_PART_MAIN);
-    lv_coord_t font_height = lv_font_get_line_height(font);
-    lv_obj_set_height(ui_lblItem, font_height);
+    if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) {
+        lv_obj_set_height(ui_lblItem, LV_SIZE_CONTENT);
+    } else {
+        const lv_font_t *font = lv_obj_get_style_text_font(ui_lblItem, LV_PART_MAIN);
+        lv_coord_t font_height = lv_font_get_line_height(font);
+        lv_obj_set_height(ui_lblItem, font_height);
+    }
+
     lv_obj_set_align(ui_lblItem, LV_ALIGN_LEFT_MID);
 
     lv_obj_set_style_text_color(ui_lblItem, lv_color_hex(theme->LIST_DEFAULT.TEXT),

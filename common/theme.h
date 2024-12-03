@@ -153,6 +153,7 @@ struct theme_config {
         int16_t GLYPH_ALPHA;
         uint32_t GLYPH_RECOLOUR;
         int16_t GLYPH_RECOLOUR_ALPHA;
+        int16_t LABEL_LONG_MODE;
     } LIST_DEFAULT;
 
     struct {
@@ -363,6 +364,8 @@ int load_scheme(const char *theme_base, const char *device_dimension, const char
                 char *scheme, size_t scheme_size);
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name);
+
+void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, char *item_text);
 
 void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
                          lv_obj_t *ui_lblItem, const char *item_text);
