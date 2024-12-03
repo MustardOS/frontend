@@ -426,6 +426,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblDepth, "depth");
     lv_obj_set_user_data(ui_lblRange, "range");
     lv_obj_set_user_data(ui_lblScan, "scan");
+    lv_obj_set_user_data(ui_lblAudio, "audio");
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
 

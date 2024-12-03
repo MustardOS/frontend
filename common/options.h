@@ -13,6 +13,8 @@
 #define INTERNAL_PATH  "/opt/muos"
 #define INTERNAL_THEME "/opt/muos/default/MUOS/theme/active"
 
+#define LAST_PLAY_FILE "/opt/muos/config/lastplay.txt"
+
 #define STORAGE_PATH   "/run/muos/storage"
 #define STORAGE_THEME  "/run/muos/storage/theme/active"
 

@@ -10,6 +10,7 @@
 #include "theme.h"
 #include "device.h"
 #include "ui_common.h"
+#include "log.h"
 
 lv_obj_t *ui_screen;
 lv_obj_t *ui_pnlWall;
@@ -99,7 +100,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
 
     ui_pnlGrid = lv_obj_create(ui_screen);
-    
+
     ui_pnlContent = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlContent, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlContent, theme->MISC.CONTENT.HEIGHT);
@@ -674,6 +675,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     ui_barProgressVolume = lv_bar_create(ui_pnlProgressVolume);
     lv_bar_set_value(ui_barProgressVolume, 0, LV_ANIM_ON);
     lv_bar_set_start_value(ui_barProgressVolume, 0, LV_ANIM_ON);
+    if (config.SETTINGS.ADVANCED.OVERDRIVE) {
+        lv_bar_set_range(ui_barProgressVolume, 0, 200);
+    } else {
+        lv_bar_set_range(ui_barProgressVolume, 0, 100);
+    }
     lv_obj_set_width(ui_barProgressVolume, theme->BAR.PROGRESS_WIDTH);
     lv_obj_set_height(ui_barProgressVolume, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressVolume, LV_ALIGN_CENTER);
@@ -727,7 +733,7 @@ void ui_common_handle_idle() {
 }
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
-    lv_obj_t *ui_glyph;
+    lv_obj_t * ui_glyph;
     ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
@@ -741,7 +747,7 @@ lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
 
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name,
                               struct footer_glyph nav_footer_glyph) {
-    lv_obj_t *ui_glyph;
+    lv_obj_t * ui_glyph;
 
     char footer_image_path[MAX_BUFFER_SIZE];
     char footer_image_embed[MAX_BUFFER_SIZE];
@@ -780,7 +786,7 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 }
 
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha) {
-    lv_obj_t *ui_lblNavText = lv_label_create(parent);
+    lv_obj_t * ui_lblNavText = lv_label_create(parent);
     lv_obj_set_width(ui_lblNavText, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblNavText, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavText, -220);
@@ -921,7 +927,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
              load_static_image(ui_screen, ui_group, wall_type));
 
     if (strlen(static_image) > 0) {
-        printf("LOADING STATIC IMAGE: %s\n", static_image);
+        LOG_INFO(mux_module, "Loading Static Image: %s", static_image);
 
         switch (theme.MISC.STATIC_ALIGNMENT) {
             case 0: // Bottom + Front
@@ -963,7 +969,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
 }
 
 void fade_to_black(lv_obj_t *ui_screen) {
-    lv_obj_t *black = lv_obj_create(ui_screen);
+    lv_obj_t * black = lv_obj_create(ui_screen);
 
     lv_obj_set_width(black, device.MUX.WIDTH);
     lv_obj_set_height(black, device.MUX.HEIGHT);
@@ -993,8 +999,8 @@ void fade_from_black(lv_obj_t *ui_black) {
 
 void create_grid_panel(struct theme_config *theme, int item_count) {
     int row_count = item_count / theme->GRID.COLUMN_COUNT + 1;
-    lv_coord_t *col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
-    lv_coord_t *row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
+    lv_coord_t * col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
+    lv_coord_t * row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
 
     for (int i = 0; i < theme->GRID.COLUMN_COUNT; i++) {
         col_dsc[i] = theme->GRID.COLUMN_WIDTH;
@@ -1008,7 +1014,8 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
 
     lv_obj_set_style_grid_column_dsc_array(ui_pnlGrid, col_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH, theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
+    lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH,
+                    theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
     lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
     lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
     lv_obj_set_layout(ui_pnlGrid, LV_LAYOUT_GRID);
@@ -1020,9 +1027,9 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
 }
 
 void grid_item_focus_event_cb(lv_event_t *e) {
-    lv_obj_t *cell_pnl = lv_event_get_target(e);
+    lv_obj_t * cell_pnl = lv_event_get_target(e);
     uint32_t child_cnt = lv_obj_get_child_cnt(cell_pnl);
-    lv_obj_t *cell_image_focused = lv_obj_get_child(cell_pnl, child_cnt - 1);
+    lv_obj_t * cell_image_focused = lv_obj_get_child(cell_pnl, child_cnt - 1);
 
     if (lv_event_get_code(e) == LV_EVENT_FOCUSED) {
         lv_obj_set_style_img_opa(cell_image_focused, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1031,49 +1038,54 @@ void grid_item_focus_event_cb(lv_event_t *e) {
     }
 }
 
-void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image, int16_t col, int16_t row,
-            char *item_image_path, char *item_image_focused_path, char *item_text) {
+void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image,
+                      int16_t col, int16_t row,
+                      char *item_image_path, char *item_image_focused_path, char *item_text) {
 
     lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH);
     lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT);
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BORDER),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
+
     lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_DEFAULT.TEXT),
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(cell_label, theme->GRID.CELL.TEXT_LINE_SPACING, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
-    
-    lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND), LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_ALPHA,
+                             LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR),
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA,
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BORDER), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BORDER),
+                                  LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_FOCUS.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-    
+
     lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_FOCUS.TEXT),
                                 LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_text_opa(cell_label, theme->GRID.CELL_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-    
-    
+
+
     lv_obj_set_style_img_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
+                             LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_img_recolor(cell_image, lv_color_hex(theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR),
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
+                                 LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_FOCUSED);
-    
+                                     LV_PART_MAIN | LV_STATE_FOCUSED);
+
     lv_obj_set_grid_cell(cell_pnl, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
 
     if (file_exist(item_image_path)) {
@@ -1090,7 +1102,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     if (file_exist(item_image_focused_path)) {
         char grid_image_focused[MAX_BUFFER_SIZE];
         snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
-        lv_obj_t *cell_image_focused = lv_img_create(cell_pnl);
+        lv_obj_t * cell_image_focused = lv_img_create(cell_pnl);
         lv_img_set_src(cell_image_focused, grid_image_focused);
         if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
             lv_obj_align(cell_image_focused, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);

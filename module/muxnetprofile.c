@@ -85,6 +85,9 @@ void load_profile(char *name) {
     write_text_to_file("/run/muos/global/network/ssid", "w", CHAR,
                        mini_get_string(net_profile, "network", "ssid", ""));
 
+    write_text_to_file("/run/muos/global/network/scan", "w", INT,
+                       mini_get_int(net_profile, "network", "scan", 0));
+
     write_text_to_file("/run/muos/global/network/pass", "w", CHAR,
                        mini_get_string(net_profile, "network", "pass", ""));
 
@@ -107,6 +110,7 @@ int save_profile() {
     const char *p_type = read_text_from_file("/run/muos/global/network/type");
     const char *p_ssid = read_text_from_file("/run/muos/global/network/ssid");
     const char *p_pass = read_text_from_file("/run/muos/global/network/pass");
+    const char *p_scan = read_text_from_file("/run/muos/global/network/scan");
     const char *p_address = read_text_from_file("/run/muos/global/network/address");
     const char *p_subnet = read_text_from_file("/run/muos/global/network/subnet");
     const char *p_gateway = read_text_from_file("/run/muos/global/network/gateway");
@@ -149,6 +153,7 @@ int save_profile() {
 
     mini_set_string(net_profile, "network", "ssid", p_ssid);
     mini_set_string(net_profile, "network", "pass", p_pass);
+    mini_set_string(net_profile, "network", "scan", p_scan);
     mini_set_string(net_profile, "network", "type", (type == 0) ? "dhcp" : "static");
     mini_set_string(net_profile, "network", "address", (type == 0) ? "" : p_address);
     mini_set_string(net_profile, "network", "subnet", (type == 0) ? "" : p_subnet);
@@ -230,15 +235,15 @@ void create_profile_items() {
 
         add_item(&items, &item_count, profile_store, profile_store, "", ROM);
 
-        lv_obj_t *ui_pnlProfile = lv_obj_create(ui_pnlContent);
+        lv_obj_t * ui_pnlProfile = lv_obj_create(ui_pnlContent);
         if (ui_pnlProfile) {
             apply_theme_list_panel(&theme, &device, ui_pnlProfile);
             lv_obj_set_user_data(ui_pnlProfile, strdup(profile_store));
 
-            lv_obj_t *ui_lblProfileItem = lv_label_create(ui_pnlProfile);
+            lv_obj_t * ui_lblProfileItem = lv_label_create(ui_pnlProfile);
             if (ui_lblProfileItem) apply_theme_list_item(&theme, ui_lblProfileItem, profile_store, true, false);
 
-            lv_obj_t *ui_lblProfileItemGlyph = lv_img_create(ui_pnlProfile);
+            lv_obj_t * ui_lblProfileItemGlyph = lv_img_create(ui_pnlProfile);
             apply_theme_list_glyph(&theme, ui_lblProfileItemGlyph, mux_module, "profile");
 
             lv_group_add_obj(ui_group, ui_lblProfileItem);

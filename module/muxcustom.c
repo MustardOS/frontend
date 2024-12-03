@@ -306,6 +306,7 @@ void direct_to_previous() {
         }
 
         list_nav_next(text_hit);
+        remove(MUOS_PDI_LOAD);
     }
 }
 

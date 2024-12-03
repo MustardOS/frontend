@@ -59,7 +59,7 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 9
+#define UI_COUNT 10
 lv_obj_t *ui_panels[UI_COUNT];
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_values[UI_COUNT];
@@ -103,6 +103,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblEnable,     TS("Toggle the Wi-Fi network on and off")},
             {ui_lblIdentifier, TS("Enter the network identifier (SSID) here")},
             {ui_lblPassword,   TS("Enter the network password here (optional)")},
+            {ui_lblScan,       TS("Toggle whether or not to try and connect to a hidden SSID broadcast")},
             {ui_lblType,       TS("Toggle between DHCP and Static network types")},
             {ui_lblAddress,    TS("Enter the device IP address here (Static only)")},
             {ui_lblSubnet,     TS("Enter the device Subnet (CIDR) number here (Static only)")},
@@ -198,6 +199,12 @@ void restore_network_values() {
         ui_count = 5;
     }
 
+    if (config.NETWORK.SCAN) {
+        lv_label_set_text(ui_lblScanValue, enabled_true);
+    } else {
+        lv_label_set_text(ui_lblScanValue, enabled_false);
+    }
+
     lv_label_set_text(ui_lblIdentifierValue, config.NETWORK.SSID);
     lv_label_set_text(ui_lblPasswordValue, config.NETWORK.PASS);
     lv_label_set_text(ui_lblAddressValue, config.NETWORK.ADDRESS);
@@ -213,12 +220,15 @@ void restore_network_values() {
 void save_network_config() {
     int idx_enable = 0;
     int idx_type = 0;
+    int idx_scan = 0;
 
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) idx_enable = 1;
     if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) idx_type = 1;
+    if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) idx_scan = 1;
 
     write_text_to_file("/run/muos/global/network/enabled", "w", INT, idx_enable);
     write_text_to_file("/run/muos/global/network/type", "w", INT, idx_type);
+    write_text_to_file("/run/muos/global/network/scan", "w", INT, idx_scan);
     write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue));
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue), PASS_ENCODE) != 0) {
@@ -235,46 +245,51 @@ void init_navigation_groups() {
     ui_panels[0] = ui_pnlEnable;
     ui_panels[1] = ui_pnlIdentifier;
     ui_panels[2] = ui_pnlPassword;
-    ui_panels[3] = ui_pnlType;
-    ui_panels[4] = ui_pnlAddress;
-    ui_panels[5] = ui_pnlSubnet;
-    ui_panels[6] = ui_pnlGateway;
-    ui_panels[7] = ui_pnlDNS;
-    ui_panels[8] = ui_pnlConnect;
+    ui_panels[3] = ui_pnlScan;
+    ui_panels[4] = ui_pnlType;
+    ui_panels[5] = ui_pnlAddress;
+    ui_panels[6] = ui_pnlSubnet;
+    ui_panels[7] = ui_pnlGateway;
+    ui_panels[8] = ui_pnlDNS;
+    ui_panels[9] = ui_pnlConnect;
 
     ui_objects[0] = ui_lblEnable;
     ui_objects[1] = ui_lblIdentifier;
     ui_objects[2] = ui_lblPassword;
-    ui_objects[3] = ui_lblType;
-    ui_objects[4] = ui_lblAddress;
-    ui_objects[5] = ui_lblSubnet;
-    ui_objects[6] = ui_lblGateway;
-    ui_objects[7] = ui_lblDNS;
-    ui_objects[8] = ui_lblConnect;
+    ui_objects[3] = ui_lblScan;
+    ui_objects[4] = ui_lblType;
+    ui_objects[5] = ui_lblAddress;
+    ui_objects[6] = ui_lblSubnet;
+    ui_objects[7] = ui_lblGateway;
+    ui_objects[8] = ui_lblDNS;
+    ui_objects[9] = ui_lblConnect;
 
     ui_values[0] = ui_lblEnableValue;
     ui_values[1] = ui_lblIdentifierValue;
     ui_values[2] = ui_lblPasswordValue;
-    ui_values[3] = ui_lblTypeValue;
-    ui_values[4] = ui_lblAddressValue;
-    ui_values[5] = ui_lblSubnetValue;
-    ui_values[6] = ui_lblGatewayValue;
-    ui_values[7] = ui_lblDNSValue;
-    ui_values[8] = ui_lblConnectValue;
+    ui_values[3] = ui_lblScanValue;
+    ui_values[4] = ui_lblTypeValue;
+    ui_values[5] = ui_lblAddressValue;
+    ui_values[6] = ui_lblSubnetValue;
+    ui_values[7] = ui_lblGatewayValue;
+    ui_values[8] = ui_lblDNSValue;
+    ui_values[9] = ui_lblConnectValue;
 
     ui_icons[0] = ui_icoEnable;
     ui_icons[1] = ui_icoIdentifier;
     ui_icons[2] = ui_icoPassword;
-    ui_icons[3] = ui_icoType;
-    ui_icons[4] = ui_icoAddress;
-    ui_icons[5] = ui_icoSubnet;
-    ui_icons[6] = ui_icoGateway;
-    ui_icons[7] = ui_icoDNS;
-    ui_icons[8] = ui_icoConnect;
+    ui_icons[3] = ui_icoScan;
+    ui_icons[4] = ui_icoType;
+    ui_icons[5] = ui_icoAddress;
+    ui_icons[6] = ui_icoSubnet;
+    ui_icons[7] = ui_icoGateway;
+    ui_icons[8] = ui_icoDNS;
+    ui_icons[9] = ui_icoConnect;
 
     apply_theme_list_panel(&theme, &device, ui_pnlEnable);
     apply_theme_list_panel(&theme, &device, ui_pnlIdentifier);
     apply_theme_list_panel(&theme, &device, ui_pnlPassword);
+    apply_theme_list_panel(&theme, &device, ui_pnlScan);
     apply_theme_list_panel(&theme, &device, ui_pnlType);
     apply_theme_list_panel(&theme, &device, ui_pnlAddress);
     apply_theme_list_panel(&theme, &device, ui_pnlSubnet);
@@ -285,6 +300,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblEnable, TS("Network Active"), false, true);
     apply_theme_list_item(&theme, ui_lblIdentifier, TS("Identifier"), false, true);
     apply_theme_list_item(&theme, ui_lblPassword, TS("Password"), false, true);
+    apply_theme_list_item(&theme, ui_lblScan, TS("Hidden Network"), false, true);
     apply_theme_list_item(&theme, ui_lblType, TS("Network Type"), false, true);
     apply_theme_list_item(&theme, ui_lblAddress, TS("Device IP"), false, true);
     apply_theme_list_item(&theme, ui_lblSubnet, TS("Subnet CIDR"), false, true);
@@ -295,6 +311,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_module, "enable");
     apply_theme_list_glyph(&theme, ui_icoIdentifier, mux_module, "identifier");
     apply_theme_list_glyph(&theme, ui_icoPassword, mux_module, "password");
+    apply_theme_list_glyph(&theme, ui_icoScan, mux_module, "scan");
     apply_theme_list_glyph(&theme, ui_icoType, mux_module, "type");
     apply_theme_list_glyph(&theme, ui_icoAddress, mux_module, "address");
     apply_theme_list_glyph(&theme, ui_icoSubnet, mux_module, "subnet");
@@ -305,13 +322,12 @@ void init_navigation_groups() {
     apply_theme_list_value(&theme, ui_lblEnableValue, "");
     apply_theme_list_value(&theme, ui_lblIdentifierValue, "");
     apply_theme_list_value(&theme, ui_lblPasswordValue, "");
+    apply_theme_list_value(&theme, ui_lblScanValue, "");
     apply_theme_list_value(&theme, ui_lblTypeValue, "");
     apply_theme_list_value(&theme, ui_lblAddressValue, "");
     apply_theme_list_value(&theme, ui_lblSubnetValue, "");
     apply_theme_list_value(&theme, ui_lblGatewayValue, "");
     apply_theme_list_value(&theme, ui_lblDNSValue, "");
-    apply_theme_list_value(&theme, ui_lblConnectValue, "");
-
     apply_theme_list_value(&theme, ui_lblConnectValue, "");
 
     ui_group = lv_group_create();
@@ -599,6 +615,7 @@ bool handle_navigate(void) {
             lv_label_set_text(ui_lblEnableValue, enabled_false);
             lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_pnlScan, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -613,6 +630,7 @@ bool handle_navigate(void) {
             lv_label_set_text(ui_lblEnableValue, enabled_true);
             lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_pnlScan, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
             if (!is_network_connected()) {
@@ -629,9 +647,24 @@ bool handle_navigate(void) {
             }
         }
         return true;
-    } else if (element_focused == ui_lblType) {
-        play_sound("navigate", nav_sound, 0, 0);
+    } else if (element_focused == ui_lblScan) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+            play_sound("navigate", nav_sound, 0, 0);
+            if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) {
+                write_text_to_file("/run/muos/global/network/scan", "w", INT, 0);
+                lv_label_set_text(ui_lblScanValue, enabled_false);
+            } else {
+                write_text_to_file("/run/muos/global/network/scan", "w", INT, 1);
+                lv_label_set_text(ui_lblScanValue, enabled_true);
+            }
+        } else {
+            play_sound("error", nav_sound, 0, 0);
+            toast_message(TS("Cannot modify while connected!"), 1000, 1000);
+        }
+        return true;
+    } else if (element_focused == ui_lblType) {
+        if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+            play_sound("navigate", nav_sound, 0, 0);
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                 lv_label_set_text(ui_lblTypeValue, type_dhcp);
                 ui_count = 5;
@@ -656,6 +689,7 @@ bool handle_navigate(void) {
                 lv_obj_clear_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
             }
         } else {
+            play_sound("error", nav_sound, 0, 0);
             toast_message(TS("Cannot modify while connected!"), 1000, 1000);
         }
         return true;
@@ -666,10 +700,10 @@ bool handle_navigate(void) {
 void handle_confirm(void) {
     if (handle_navigate()) return;
 
-    play_sound("confirm", nav_sound, 0, 1);
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblConnect) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
+            play_sound("confirm", nav_sound, 0, 0);
             write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
             system("/opt/muos/script/system/network.sh");
             write_text_to_file("/run/muos/global/network/enabled", "w", INT, 1);
@@ -700,6 +734,7 @@ void handle_confirm(void) {
             }
 
             if (valid_info) {
+                play_sound("confirm", nav_sound, 0, 0);
                 save_network_config();
 
                 if (config.NETWORK.ENABLED) {
@@ -729,37 +764,50 @@ void handle_confirm(void) {
                     refresh_screen(device.SCREEN.WAIT);
                 }
             } else {
+                play_sound("error", nav_sound, 0, 0);
                 toast_message(TS("Please check network settings"), 1000, 1000);
             }
         }
     } else {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
-            key_curr = 0;
-            if (element_focused == ui_lblIdentifier ||
-                element_focused == ui_lblPassword) {
-                lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
-
-                lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_state(num_entry, LV_STATE_DISABLED);
-
-                key_show = 1;
+            play_sound("confirm", nav_sound, 0, 0);
+            if (element_focused == ui_lblScan) {
+                if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) {
+                    write_text_to_file("/run/muos/global/network/scan", "w", INT, 0);
+                    lv_label_set_text(ui_lblScanValue, enabled_false);
+                } else {
+                    write_text_to_file("/run/muos/global/network/scan", "w", INT, 1);
+                    lv_label_set_text(ui_lblScanValue, enabled_true);
+                }
             } else {
-                lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
+                key_curr = 0;
+                if (element_focused == ui_lblIdentifier ||
+                    element_focused == ui_lblPassword) {
+                    lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
-                lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_state(key_entry, LV_STATE_DISABLED);
+                    lv_obj_add_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_state(num_entry, LV_STATE_DISABLED);
 
-                key_show = 2;
-            }
-            lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-            if (element_focused == ui_lblPassword) {
-                lv_textarea_set_text(ui_txtEntry, "");
-            } else {
-                lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
+                    key_show = 1;
+                } else {
+                    lv_obj_clear_flag(num_entry, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_clear_state(num_entry, LV_STATE_DISABLED);
+
+                    lv_obj_add_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_state(key_entry, LV_STATE_DISABLED);
+
+                    key_show = 2;
+                }
+                lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
+                if (element_focused == ui_lblPassword) {
+                    lv_textarea_set_text(ui_txtEntry, "");
+                } else {
+                    lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
+                }
             }
         } else {
+            play_sound("error", nav_sound, 0, 0);
             toast_message(TS("Cannot modify while connected!"), 1000, 1000);
         }
     }
@@ -776,6 +824,7 @@ void handle_back(void) {
         write_text_to_file("/run/muos/global/network/type", "w", INT, 0);
         write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, "");
         write_text_to_file("/run/muos/global/network/pass", "w", CHAR, "");
+        write_text_to_file("/run/muos/global/network/scan", "w", INT, 0);
         write_text_to_file("/run/muos/global/network/address", "w", CHAR, "192.168.0.123");
         write_text_to_file("/run/muos/global/network/subnet", "w", INT, 24);
         write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, "192.168.0.1");
@@ -968,7 +1017,7 @@ void handle_r1(void) {
 
 static void osk_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t * obj = lv_event_get_target(e);
 
     switch (code) {
         case LV_EVENT_SCROLL:
@@ -985,7 +1034,7 @@ static void osk_handler(lv_event_t *e) {
 
 static void num_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t * obj = lv_event_get_target(e);
 
     switch (code) {
         case LV_EVENT_SCROLL:
@@ -1055,6 +1104,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblEnable, "enable");
     lv_obj_set_user_data(ui_lblIdentifier, "identifier");
     lv_obj_set_user_data(ui_lblPassword, "password");
+    lv_obj_set_user_data(ui_lblScan, "scan");
     lv_obj_set_user_data(ui_lblType, "type");
     lv_obj_set_user_data(ui_lblAddress, "address");
     lv_obj_set_user_data(ui_lblSubnet, "subnet");
@@ -1065,6 +1115,7 @@ void init_elements() {
     if (!config.NETWORK.ENABLED) {
         lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlScan, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
@@ -1078,6 +1129,7 @@ void init_elements() {
     } else {
         lv_obj_clear_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pnlScan, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlType, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pnlConnect, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);

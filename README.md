@@ -16,6 +16,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxcredits`: Supporter Credits Screen
 * `muxcustom`: Customisation Menu
 * `muxgov`: System Governor Selector
+* `muxhdmi`: HDMI Configuration
 * `muxinfo`: Information Menu
 * `muxlanguage`: Language Selector
 * `muxlaunch`: Main Menu
