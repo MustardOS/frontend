@@ -90,9 +90,10 @@ void create_network_items() {
 
         lv_obj_t *ui_pnlNetScan = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlNetScan);
+        lv_obj_set_user_data(ui_pnlNetScan, strdup(str_nonew(ssid)));
 
         lv_obj_t *ui_lblNetScanItem = lv_label_create(ui_pnlNetScan);
-        apply_theme_list_item(&theme, ui_lblNetScanItem, str_nonew(ssid), false, false);
+        apply_theme_list_item(&theme, ui_lblNetScanItem, str_nonew(ssid), true, false);
 
         lv_obj_t *ui_lblNetScanGlyph = lv_img_create(ui_pnlNetScan);
         apply_theme_list_glyph(&theme, ui_lblNetScanGlyph, mux_module, "netscan");
@@ -102,20 +103,24 @@ void create_network_items() {
         lv_group_add_obj(ui_group_panel, ui_pnlNetScan);
 
         apply_size_to_content(&theme, ui_pnlContent, ui_lblNetScanItem, ui_lblNetScanGlyph, str_nonew(ssid));
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblNetScanItem, str_nonew(ssid));
     }
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+    list_nav_next(0);
     fclose(file);
 }
 
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -126,12 +131,14 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 

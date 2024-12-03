@@ -72,22 +72,6 @@ void show_help() {
                      TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits));
 }
 
-void reset_label_long_mode() {
-    apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-}
-
-void set_label_long_mode() {
-    char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
-
-    size_t len = strlen(content_label);
-    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "…") == 0;
-
-    if (strcasecmp(items[current_item_index].display_name, content_label) != 0 && ends_with_ellipse) {
-        lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
-        lv_label_set_text(lv_group_get_focused(ui_group), items[current_item_index].display_name);
-    }
-}
-
 void image_refresh() {
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
@@ -172,7 +156,7 @@ void list_nav_prev(int steps) {
 
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        reset_label_long_mode();
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
@@ -180,7 +164,7 @@ void list_nav_prev(int steps) {
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     image_refresh();
-    set_label_long_mode();
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
     nav_moved = 1;
 }
 
@@ -193,7 +177,7 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        reset_label_long_mode();
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
@@ -201,7 +185,7 @@ void list_nav_next(int steps) {
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     image_refresh();
-    set_label_long_mode();
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
     nav_moved = 1;
 }
 

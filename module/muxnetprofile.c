@@ -238,6 +238,7 @@ void create_profile_items() {
         lv_obj_t * ui_pnlProfile = lv_obj_create(ui_pnlContent);
         if (ui_pnlProfile) {
             apply_theme_list_panel(&theme, &device, ui_pnlProfile);
+            lv_obj_set_user_data(ui_pnlProfile, strdup(profile_store));
 
             lv_obj_t * ui_lblProfileItem = lv_label_create(ui_pnlProfile);
             if (ui_lblProfileItem) apply_theme_list_item(&theme, ui_lblProfileItem, profile_store, true, false);
@@ -250,6 +251,7 @@ void create_profile_items() {
             lv_group_add_obj(ui_group_panel, ui_pnlProfile);
 
             apply_size_to_content(&theme, ui_pnlContent, ui_lblProfileItem, ui_lblProfileItemGlyph, profile_store);
+            apply_text_long_dot(&theme, ui_pnlContent, ui_lblProfileItem, profile_store);
         }
 
         free(base_filename);
@@ -272,6 +274,7 @@ void create_profile_items() {
         lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
+        list_nav_next(0);
     } else {
         lv_label_set_text(ui_lblScreenMessage, TS("No Saved Network Profiles Found"));
     }
@@ -280,12 +283,14 @@ void create_profile_items() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -296,12 +301,14 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 

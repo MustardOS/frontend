@@ -495,6 +495,11 @@ void process_results(const char *json_results) {
             if (t_all_items[i].content_type == ROM) {
                 add_item(&all_items, &all_item_count, t_all_items[i].name,
                          t_all_items[i].display_name, t_all_items[i].extra_data, ROM);
+                char display_name[MAX_BUFFER_SIZE];
+                snprintf(display_name, sizeof(display_name), "%s",
+                        strip_ext(get_last_dir(t_all_items[i].display_name)));
+                adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+                all_items[i].display_name = strdup(display_name);
             }
         }
 
@@ -502,34 +507,6 @@ void process_results(const char *json_results) {
 
         t_all_item_count = 0;
         t_all_items = NULL;
-    }
-}
-
-void reset_label_long_mode() {
-    char content_name[MAX_BUFFER_SIZE];
-    snprintf(content_name, sizeof(content_name), "%s",
-             strip_ext(get_last_dir(all_items[current_item_index].display_name)));
-
-    adjust_visual_label(content_name, config.VISUAL.NAME, config.VISUAL.DASH);
-    apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), content_name);
-}
-
-void set_label_long_mode() {
-    char *content_label = lv_label_get_text(lv_group_get_focused(ui_group));
-
-    size_t len = strlen(content_label);
-    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "…") == 0;
-
-    if (strcasecmp(all_items[current_item_index].display_name, content_label) != 0 && ends_with_ellipse) {
-        char content_name[MAX_BUFFER_SIZE];
-        snprintf(content_name, sizeof(content_name), "%s",
-                 strip_ext(get_last_dir(all_items[current_item_index].display_name)));
-
-        lv_label_set_long_mode(lv_group_get_focused(ui_group), LV_LABEL_LONG_SCROLL_CIRCULAR);
-
-        adjust_visual_label(content_name, config.VISUAL.NAME, config.VISUAL.DASH);
-
-        lv_label_set_text(lv_group_get_focused(ui_group), content_name);
     }
 }
 
@@ -544,7 +521,7 @@ void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
-            reset_label_long_mode();
+            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
         }
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
@@ -555,7 +532,7 @@ void list_nav_prev(int steps) {
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
     if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
         image_refresh("box");
-        set_label_long_mode();
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
     } else {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
@@ -571,7 +548,7 @@ void list_nav_next(int steps) {
     }
     for (int step = 0; step < steps; ++step) {
         if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
-            reset_label_long_mode();
+            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
         }
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
@@ -582,7 +559,7 @@ void list_nav_next(int steps) {
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
     if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
         image_refresh("box");
-        set_label_long_mode();
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
     } else {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");

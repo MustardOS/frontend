@@ -348,9 +348,10 @@ void create_system_items() {
 
             lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
             apply_theme_list_panel(&theme, &device, ui_pnlCore);
+            lv_obj_set_user_data(ui_pnlCore, strdup(base_filename));
 
             lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
-            apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, false, false);
+            apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, true, false);
             lv_obj_set_user_data(ui_lblCoreItem, strdup(base_filename));
 
             lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
@@ -361,6 +362,7 @@ void create_system_items() {
             lv_group_add_obj(ui_group_panel, ui_pnlCore);
 
             apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, base_filename);
+            apply_text_long_dot(&theme, ui_pnlContent, ui_lblCoreItem, base_filename);
         }
         if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     }
@@ -469,9 +471,10 @@ void create_core_items(const char *target) {
 
         lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlCore);
+        lv_obj_set_user_data(ui_pnlCore, strdup(display_name));
 
         lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
-        apply_theme_list_item(&theme, ui_lblCoreItem, display_name, false, false);
+        apply_theme_list_item(&theme, ui_lblCoreItem, display_name, true, false);
         lv_obj_set_user_data(ui_lblCoreItem, strdup(core_headers[i]));
 
         lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
@@ -483,7 +486,8 @@ void create_core_items(const char *target) {
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlCore);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, core_headers[i]);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblCoreItem, display_name);
 
         free(core_headers[i]);
     }
@@ -497,12 +501,14 @@ void create_core_items(const char *target) {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -513,12 +519,14 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -999,6 +1007,7 @@ int main(int argc, char *argv[]) {
         char title[MAX_BUFFER_SIZE];
         snprintf(title, sizeof(title), "%s - %s", TS("ASSIGN"), get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
+        list_nav_next(0);
     } else {
         LOG_ERROR(mux_module, "No Cores Detected - Check Directory!")
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);

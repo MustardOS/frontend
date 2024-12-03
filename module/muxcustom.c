@@ -99,9 +99,9 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlCatalogue);
     apply_theme_list_panel(&theme, &device, ui_pnlConfig);
 
-    apply_theme_list_item(&theme, ui_lblTheme, TS("muOS Themes"), false, false);
-    apply_theme_list_item(&theme, ui_lblCatalogue, TS("Catalogue Sets"), false, false);
-    apply_theme_list_item(&theme, ui_lblConfig, TS("RetroArch Configurations"), false, false);
+    apply_theme_list_item(&theme, ui_lblTheme, TS("muOS Themes"), true, false);
+    apply_theme_list_item(&theme, ui_lblCatalogue, TS("Catalogue Sets"), true, false);
+    apply_theme_list_item(&theme, ui_lblConfig, TS("RetroArch Configurations"), true, false);
 
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_module, "theme");
     apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_module, "catalogue");
@@ -113,35 +113,41 @@ void init_navigation_groups() {
 
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
+        lv_obj_set_user_data(ui_objects_panel[i], strdup(lv_label_get_text(ui_objects[i])));
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
 
         apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
+        apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], lv_label_get_text(ui_objects[i]));
     }
 }
 
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -299,9 +305,7 @@ void direct_to_previous() {
             }
         }
 
-        if (text_hit != 0) {
-            list_nav_next(text_hit);
-        }
+        list_nav_next(text_hit);
         remove(MUOS_PDI_LOAD);
     }
 }
