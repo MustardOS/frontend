@@ -155,15 +155,15 @@ void create_task_items() {
 
         add_item(&items, &item_count, task_store, TS(task_store), "", ROM);
 
-        lv_obj_t *ui_pnlTask = lv_obj_create(ui_pnlContent);
+        lv_obj_t * ui_pnlTask = lv_obj_create(ui_pnlContent);
         if (ui_pnlTask) {
             apply_theme_list_panel(&theme, &device, ui_pnlTask);
             lv_obj_set_user_data(ui_pnlTask, strdup(TS(task_store)));
 
-            lv_obj_t *ui_lblTaskItem = lv_label_create(ui_pnlTask);
+            lv_obj_t * ui_lblTaskItem = lv_label_create(ui_pnlTask);
             if (ui_lblTaskItem) apply_theme_list_item(&theme, ui_lblTaskItem, TS(task_store), true, false);
 
-            lv_obj_t *ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
+            lv_obj_t * ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
             if (ui_lblTaskItemGlyph) {
                 apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module,
                                        get_glyph_from_file(task_path, items[i].name, "task"));
@@ -188,14 +188,16 @@ void create_task_items() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -206,14 +208,16 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -227,7 +231,8 @@ void handle_confirm() {
              "%s/MUOS/task", device.STORAGE.ROM.MOUNT);
 
     static char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad \"%s/%s.sh\"",
+    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s \"%s/%s.sh\"",
+             theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
              task_path, items[current_item_index].name);
     setenv("TERM", "xterm-256color", 1);
     printf("RUNNING: %s\n", command);

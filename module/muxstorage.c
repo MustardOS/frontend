@@ -373,10 +373,12 @@ void handle_confirm(void) {
     static char command[MAX_BUFFER_SIZE];
 
     if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
-        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad \"%s/script/mux/sync.sh\" \"%s\"",
+        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s \"%s/script/mux/sync.sh\" \"%s\"",
+                 theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
                  INTERNAL_PATH, storage_path[current_item_index].path_suffix);
     } else {
-        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad \"%s/script/mux/migrate.sh\" \"%s\"",
+        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s \"%s/script/mux/migrate.sh\" \"%s\"",
+                 theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
                  INTERNAL_PATH, storage_path[current_item_index].path_suffix);
     }
 

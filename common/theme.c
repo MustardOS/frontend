@@ -31,7 +31,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme)
     }
 
-    mini_t *muos_theme = mini_try_load(scheme);
+    mini_t * muos_theme = mini_try_load(scheme);
 
     theme->SYSTEM.BACKGROUND = get_ini_hex(muos_theme, "background", "BACKGROUND");
     theme->SYSTEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "background", "BACKGROUND_ALPHA", 255);
@@ -210,7 +210,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_DEFAULT.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_ALPHA", 255);
     theme->LIST_DEFAULT.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR");
     theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", 0);
-    theme->LIST_DEFAULT.LABEL_LONG_MODE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE", LV_LABEL_LONG_SCROLL_CIRCULAR);
+    theme->LIST_DEFAULT.LABEL_LONG_MODE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE",
+                                                      LV_LABEL_LONG_SCROLL_CIRCULAR);
 
     theme->LIST_DISABLED.TEXT = get_ini_hex(muos_theme, "list", "LIST_DISABLED_TEXT");
     theme->LIST_DISABLED.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DISABLED_TEXT_ALPHA", 255);
@@ -284,7 +285,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MESSAGE.TEXT = get_ini_hex(muos_theme, "notification", "MSG_TEXT");
     theme->MESSAGE.TEXT_ALPHA = get_ini_int(muos_theme, "notification", "MSG_TEXT_ALPHA", 255);
 
-    theme->BAR.PANEL_WIDTH = get_ini_int(muos_theme, "bar", "BAR_WIDTH", (int16_t) (device->MUX.WIDTH - 25));
+    theme->BAR.PANEL_WIDTH = get_ini_int(muos_theme, "bar", "BAR_WIDTH", (int16_t)(device->MUX.WIDTH - 25));
     theme->BAR.PANEL_HEIGHT = get_ini_int(muos_theme, "bar", "BAR_HEIGHT", 42);
     theme->BAR.PANEL_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_BACKGROUND");
     theme->BAR.PANEL_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_BACKGROUND_ALPHA", 255);
@@ -292,7 +293,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->BAR.PANEL_BORDER_ALPHA = get_ini_int(muos_theme, "bar", "BAR_BORDER_ALPHA", 255);
     theme->BAR.PANEL_BORDER_RADIUS = get_ini_int(muos_theme, "bar", "BAR_RADIUS", 3);
     theme->BAR.PROGRESS_WIDTH = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_WIDTH",
-                                            (int16_t) (device->MUX.WIDTH - 90));
+                                            (int16_t)(device->MUX.WIDTH - 90));
     theme->BAR.PROGRESS_HEIGHT = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_HEIGHT", 16);
     theme->BAR.PROGRESS_MAIN_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND");
     theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND_ALPHA", 255);
@@ -302,7 +303,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->BAR.PROGRESS_RADIUS = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_RADIUS", 3);
     theme->BAR.ICON = get_ini_hex(muos_theme, "bar", "BAR_ICON");
     theme->BAR.ICON_ALPHA = get_ini_int(muos_theme, "bar", "BAR_ICON_ALPHA", 255);
-    theme->BAR.Y_POS = get_ini_int(muos_theme, "bar", "BAR_Y_POS", (int16_t) (device->MUX.HEIGHT - 96));
+    theme->BAR.Y_POS = get_ini_int(muos_theme, "bar", "BAR_Y_POS", (int16_t)(device->MUX.HEIGHT - 96));
 
     theme->ROLL.TEXT = get_ini_hex(muos_theme, "roll", "ROLL_TEXT");
     theme->ROLL.TEXT_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_TEXT_ALPHA", 255);
@@ -350,6 +351,13 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", 0);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", 0);
 
+    strncpy(theme->TERMINAL.FOREGROUND, get_ini_string(muos_theme, "terminal", "FOREGROUND", "FFFFFF"),
+            MAX_BUFFER_SIZE - 1);
+    theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
+    strncpy(theme->TERMINAL.BACKGROUND, get_ini_string(muos_theme, "terminal", "BACKGROUND", "000000"),
+            MAX_BUFFER_SIZE - 1);
+    theme->TERMINAL.BACKGROUND[MAX_BUFFER_SIZE - 1] = '\0';
+
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
     if (theme->MUX.ITEM.HEIGHT > 0) {
@@ -368,7 +376,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     char scheme_override[MAX_BUFFER_SIZE];
     snprintf(scheme_override, sizeof(scheme), "%s/theme/override/%s.txt", STORAGE_PATH, mux_name);
     if (file_exist(scheme_override)) {
-        mini_t *muos_theme_overrides = mini_try_load(scheme_override);
+        mini_t * muos_theme_overrides = mini_try_load(scheme_override);
         int16_t pad_right = get_ini_int(muos_theme_overrides, "font", "FONT_LIST_PAD_RIGHT", -1);
         int16_t list_default_radius = get_ini_int(muos_theme_overrides, "list", "LIST_DEFAULT_RADIUS", -1);
         int16_t content_width = get_ini_int(muos_theme_overrides, "misc", "CONTENT_WIDTH", -1);
@@ -432,7 +440,7 @@ void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
 void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
                            lv_obj_t *ui_lblItemGlyph, const char *item_text) {
     if (theme->MISC.CONTENT.SIZE_TO_CONTENT) {
-        lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblItem);
+        lv_obj_t * ui_pnlItem = lv_obj_get_parent(ui_lblItem);
         lv_obj_set_width(ui_pnlItem, LV_SIZE_CONTENT);
         lv_obj_get_style_max_width(ui_pnlItem, theme->MISC.CONTENT.WIDTH);
 

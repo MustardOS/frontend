@@ -160,16 +160,16 @@ void create_archive_items() {
 
         add_item(&items, &item_count, base_filename, archive_store, item_glyph, ROM);
 
-        lv_obj_t *ui_pnlArchive = lv_obj_create(ui_pnlContent);
+        lv_obj_t * ui_pnlArchive = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlArchive);
 
-        lv_obj_t *ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
+        lv_obj_t * ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
         apply_theme_list_item(&theme, ui_lblArchiveItem, archive_store, false, true);
 
-        lv_obj_t *ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
+        lv_obj_t * ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
         apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? TS("INSTALLED") : "");
 
-        lv_obj_t *ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
+        lv_obj_t * ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_module, items[i].extra_data);
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);
@@ -224,7 +224,8 @@ void handle_a() {
                  "%s/script/mux/extract.sh", INTERNAL_PATH);
 
         static char command[MAX_BUFFER_SIZE];
-        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad %s \"%s\"",
+        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s %s \"%s\"",
+                 theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
                  extract_script, items[current_item_index].name);
         setenv("TERM", "xterm-256color", 1);
         printf("RUNNING: %s\n", command);

@@ -132,13 +132,13 @@ void create_picker_items() {
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
-        lv_obj_t *ui_pnlPicker = lv_obj_create(ui_pnlContent);
+        lv_obj_t * ui_pnlPicker = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlPicker);
 
-        lv_obj_t *ui_lblPickerItem = lv_label_create(ui_pnlPicker);
+        lv_obj_t * ui_lblPickerItem = lv_label_create(ui_pnlPicker);
         apply_theme_list_item(&theme, ui_lblPickerItem, items[i].display_name, true, false);
 
-        lv_obj_t *ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
+        lv_obj_t * ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
         apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module, get_last_subdir(picker_type, '/', 1));
 
         lv_group_add_obj(ui_group, ui_lblPickerItem);
@@ -156,7 +156,8 @@ void list_nav_prev(int steps) {
 
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            items[current_item_index].display_name);
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
@@ -177,7 +178,8 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            items[current_item_index].display_name);
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
@@ -200,7 +202,8 @@ void handle_confirm() {
              "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
     static char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad %s \"%s\"",
+    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s %s \"%s\"",
+             theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
              picker_script, lv_label_get_text(lv_group_get_focused(ui_group)));
     setenv("TERM", "xterm-256color", 1);
     printf("RUNNING: %s\n", command);

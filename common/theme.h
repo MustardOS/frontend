@@ -358,6 +358,11 @@ struct theme_config {
             int16_t WIDTH;
         } CONTENT;
     } MISC;
+
+    struct {
+        char FOREGROUND[MAX_BUFFER_SIZE];
+        char BACKGROUND[MAX_BUFFER_SIZE];
+    } TERMINAL;
 };
 
 int load_scheme(const char *theme_base, const char *device_dimension, const char *mux_name,
