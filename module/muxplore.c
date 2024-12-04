@@ -753,10 +753,15 @@ void gen_item(char **file_names, int file_count) {
 
     create_directories(init_meta_dir);
 
-    char name_lookup[MAX_BUFFER_SIZE];
-    snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
+    int use_lookup;
+    if (module == FAVOURITE || module == HISTORY) {
+        use_lookup = 1;
+    } else {
+        char name_lookup[MAX_BUFFER_SIZE];
+        snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
 
-    int use_lookup = read_int_from_file(name_lookup, 3);
+        use_lookup = read_int_from_file(name_lookup, 3);
+    }
 
     char custom_lookup[MAX_BUFFER_SIZE];
     snprintf(custom_lookup, sizeof(custom_lookup), "%s/content.json",
@@ -1261,7 +1266,8 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            items[current_item_index].display_name);
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
@@ -1285,7 +1291,8 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            items[current_item_index].display_name);
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
