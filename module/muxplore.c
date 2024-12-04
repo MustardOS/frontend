@@ -753,7 +753,7 @@ void gen_item(char **file_names, int file_count) {
 
     create_directories(init_meta_dir);
 
-    int use_lookup;
+    int use_lookup = 0;
     if (module == FAVOURITE || module == HISTORY) {
         use_lookup = 1;
     } else {
