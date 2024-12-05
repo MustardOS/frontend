@@ -54,6 +54,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.USERINIT, "settings/advanced/user_init", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.DPADSWAP, "settings/advanced/dpad_swap", 1)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.OVERDRIVE, "settings/advanced/overdrive", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAPFILE, "settings/advanced/swapfile", 0)
 
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HIDDEN, "settings/general/hidden", 0)
     CFG_INT_FIELD(config->SETTINGS.GENERAL.SOUND, "settings/general/sound", 0)

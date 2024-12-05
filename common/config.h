@@ -47,6 +47,7 @@ struct mux_config {
             int16_t USERINIT;
             int16_t DPADSWAP;
             int16_t OVERDRIVE;
+            int16_t SWAPFILE;
         } ADVANCED;
         struct {
             int16_t HIDDEN;
