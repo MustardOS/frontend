@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -52,22 +53,8 @@ int content_item_compare(const void *a, const void *b) {
     if (itemA->content_type < itemB->content_type) return -1;
     if (itemA->content_type > itemB->content_type) return 1;
 
-    const char *str1 = itemA->sort_name;
-    const char *str2 = itemB->sort_name;
-
-    while (*str1 && *str2) {
-        char c1 = tolower(*str1);
-        char c2 = tolower(*str2);
-
-        if (c1 != c2) {
-            return c1 - c2;
-        }
-
-        str1++;
-        str2++;
-    }
-
-    return *str1 - *str2;
+    // Use strverscmp for natural sorting on sort_name
+    return strverscmp(str_tolower(itemA->sort_name), str_tolower(itemB->sort_name));
 }
 
 int time_compare_for_history(const void *a, const void *b) {
