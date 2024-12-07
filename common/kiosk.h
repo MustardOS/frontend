@@ -22,6 +22,7 @@ struct mux_kiosk {
         int16_t ASSIGN_CORE;
         int16_t ASSIGN_GOVERNOR;
         int16_t OPTION;
+        int16_t RETROARCH;
         int16_t SEARCH;
     } CONTENT;
 
