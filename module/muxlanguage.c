@@ -15,6 +15,7 @@
 #include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
@@ -32,6 +33,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -84,6 +86,38 @@ void populate_languages() {
     closedir(dir);
 }
 
+void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0, 0);
+    for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_glyph, 1);
+        nav_prev(ui_group_panel, 1);
+    }
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    nav_moved = 1;
+}
+
+void list_nav_next(int steps) {
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound("navigate", nav_sound, 0, 0);
+    }
+    for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_glyph, 1);
+        nav_next(ui_group_panel, 1);
+    }
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    nav_moved = 1;
+}
+
 void create_language_items() {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -116,38 +150,6 @@ void create_language_items() {
         lv_label_set_text(ui_lblScreenMessage, TS("No Languages Found..."));
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
-}
-
-void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-    nav_moved = 1;
-}
-
-void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-    nav_moved = 1;
 }
 
 void handle_confirm() {
@@ -375,6 +377,8 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
+
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,

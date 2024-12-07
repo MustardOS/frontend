@@ -8,6 +8,7 @@
 #include "../common/common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/theme.h"
 #include "../common/input.h"
 
@@ -23,6 +24,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int progress_onscreen = -1;

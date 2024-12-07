@@ -2022,3 +2022,7 @@ char *get_glyph_from_file(const char *storage_path, const char *item_name, char 
 
     return item_glyph;
 }
+
+char *kiosk_nope() {
+    return TG("This is disabled in kiosk mode!");
+}

@@ -13,6 +13,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
@@ -30,6 +31,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -325,6 +327,8 @@ void handle_a() {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblTimezone) {
+        if (kiosk.DATETIME.TIMEZONE) return;
+
         play_sound("confirm", nav_sound, 0, 1);
         save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
                             rtcHourValue, rtcMinuteValue);
@@ -775,6 +779,7 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

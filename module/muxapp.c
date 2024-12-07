@@ -15,6 +15,7 @@
 #include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
@@ -32,6 +33,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -95,9 +97,9 @@ void init_navigation_groups_grid(const char *app_path) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
-        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_t *cell_image = lv_img_create(cell_panel);
-        lv_obj_t *cell_label = lv_label_create(cell_panel);
+        lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t * cell_image = lv_img_create(cell_panel);
+        lv_obj_t * cell_label = lv_label_create(cell_panel);
 
         char *glyph_name = get_glyph_from_file(app_path, items[i].name, "app");
         char device_dimension[15];
@@ -112,13 +114,13 @@ void init_navigation_groups_grid(const char *app_path) {
             !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
                                           glyph_name, "png", grid_image, sizeof(grid_image)) &&
             !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
-                                         "app", "png", grid_image, sizeof(grid_image))) {
+                                          "app", "png", grid_image, sizeof(grid_image))) {
             load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
                                          "default", "png", grid_image, sizeof(grid_image));
         }
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
-        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_name);                
+        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_name);
         char grid_image_focused[MAX_BUFFER_SIZE];
         if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid",
                                           glyph_name_focused, "png", grid_image_focused, sizeof(grid_image_focused)) &&
@@ -129,7 +131,7 @@ void init_navigation_groups_grid(const char *app_path) {
             !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
                                           glyph_name_focused, "png", grid_image_focused, sizeof(grid_image_focused)) &&
             !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
-                                         "app_focused", "png", grid_image_focused, sizeof(grid_image_focused))) {
+                                          "app_focused", "png", grid_image_focused, sizeof(grid_image_focused))) {
             load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid",
                                          "default_focused", "png", grid_image_focused, sizeof(grid_image_focused));
         }
@@ -218,14 +220,14 @@ void create_app_items() {
         ui_count += (int) item_count;
     } else {
         for (size_t i = 0; i < item_count; i++) {
-            lv_obj_t *ui_pnlApp = lv_obj_create(ui_pnlContent);
+            lv_obj_t * ui_pnlApp = lv_obj_create(ui_pnlContent);
             if (ui_pnlApp) {
                 apply_theme_list_panel(&theme, &device, ui_pnlApp);
 
-                lv_obj_t *ui_lblAppItem = lv_label_create(ui_pnlApp);
+                lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
                 if (ui_lblAppItem) apply_theme_list_item(&theme, ui_lblAppItem, TS(items[i].name), true, false);
 
-                lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
+                lv_obj_t * ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
                 if (ui_lblAppItemGlyph) {
                     apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module,
                                            get_glyph_from_file(app_path, items[i].name, "app"));
@@ -252,7 +254,8 @@ void create_app_items() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            items[current_item_index].display_name);
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
@@ -275,7 +278,8 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            items[current_item_index].display_name);
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
@@ -295,6 +299,23 @@ void handle_a() {
     if (msgbox_active) return;
 
     if (ui_count > 0) {
+        struct {
+            const char *app_name;
+            int16_t *kiosk_flag;
+        } elements[] = {
+                {"Archive Manager", &kiosk.APPLICATION.ARCHIVE},
+                {"Task Toolkit",    &kiosk.APPLICATION.TASK}
+        };
+
+        for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+            if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
+                if (*(elements[i].kiosk_flag)) {
+                    toast_message(kiosk_nope(), 1000, 1000);
+                    return;
+                }
+            }
+        }
+
         play_sound("confirm", nav_sound, 0, 1);
 
         lv_label_set_text(ui_lblMessage, TS("Loading Application"));
@@ -553,6 +574,7 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

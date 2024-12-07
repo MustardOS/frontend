@@ -14,6 +14,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
@@ -31,6 +32,7 @@ char *mux_module;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -126,44 +128,61 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
 void handle_confirm() {
     if (msgbox_active) return;
 
-    play_sound("confirm", nav_sound, 0, 0);
+    struct {
+        struct _lv_obj_t *element;
+        const char *mux_name;
+        int16_t *kiosk_flag;
+    } elements[] = {
+            {ui_lblSearch,   "search",   &kiosk.CONTENT.SEARCH},
+            {ui_lblCore,     "assign",   &kiosk.CONTENT.ASSIGN_CORE},
+            {ui_lblGovernor, "governor", &kiosk.CONTENT.ASSIGN_GOVERNOR}
+    };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblSearch) {
-        load_mux("search");
-    } else if (element_focused == ui_lblCore) {
-        load_mux("assign");
-    } else if (element_focused == ui_lblGovernor) {
-        load_mux("governor");
+    for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+        if (element_focused == elements[i].element) {
+            if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
+                toast_message(kiosk_nope(), 1000, 1000);
+                return;
+            }
+
+            play_sound("confirm", nav_sound, 0, 1);
+            load_mux(elements[i].mux_name);
+            break;
+        }
     }
 
     mux_input_stop();
@@ -304,7 +323,8 @@ void direct_to_previous() {
         if (text_hit != 0) {
             list_nav_next(text_hit);
         } else {
-            set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));            
+            set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                                lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         }
     }
 }
@@ -408,7 +428,9 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     direct_to_previous();
+
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

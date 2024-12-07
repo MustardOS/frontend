@@ -15,6 +15,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/collection.h"
 #include "../common/json/json.h"
 #include "../common/input.h"
@@ -39,6 +40,7 @@ char *mux_module;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
@@ -1591,6 +1593,14 @@ void handle_select() {
                 write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
                 if (strcasecmp(get_last_dir(sd_dir), "ROMS") != 0) {
+                    if (kiosk.CONTENT.OPTION) {
+                        if (!kiosk.CONTENT.SEARCH) {
+                            load_mux("search");
+                            mux_input_stop();
+                        }
+                        return;
+                    }
+
                     write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
                     write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
 
@@ -1602,7 +1612,7 @@ void handle_select() {
 
                     load_mux("option");
                 } else {
-                    load_mux("search");
+                    if (!kiosk.CONTENT.SEARCH) load_mux("search");
                 }
 
                 mux_input_stop();
@@ -2137,6 +2147,7 @@ int main(int argc, char *argv[]) {
     update_file_counter();
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

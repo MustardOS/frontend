@@ -14,6 +14,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
@@ -31,6 +32,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -541,6 +543,8 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
+
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,

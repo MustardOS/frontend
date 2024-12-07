@@ -12,6 +12,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/log.h"
 #include "../common/collection.h"
@@ -32,6 +33,7 @@ char *mux_module;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -303,18 +305,18 @@ void image_refresh(char *image_type) {
 }
 
 void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_value) {
-    lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
+    lv_obj_t * ui_pnlResult = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlResult);
 
-    lv_obj_t *ui_lblResultItem = lv_label_create(ui_pnlResult);
+    lv_obj_t * ui_lblResultItem = lv_label_create(ui_pnlResult);
     apply_theme_list_item(&theme, ui_lblResultItem, item_text, true, false);
 
-    lv_obj_t *ui_lblResultItemValue = lv_label_create(ui_pnlResult);
+    lv_obj_t * ui_lblResultItemValue = lv_label_create(ui_pnlResult);
     lv_label_set_text(ui_lblResultItemValue, item_value);
     lv_obj_set_style_text_opa(ui_lblResultItemValue, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_width(ui_lblResultItemValue, 0);
 
-    lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
+    lv_obj_t * ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
     apply_theme_list_glyph(&theme, ui_lblResultItemGlyph, mux_module, item_glyph);
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
@@ -497,7 +499,7 @@ void process_results(const char *json_results) {
                          t_all_items[i].display_name, t_all_items[i].extra_data, ROM);
                 char display_name[MAX_BUFFER_SIZE];
                 snprintf(display_name, sizeof(display_name), "%s",
-                        strip_ext(get_last_dir(t_all_items[i].display_name)));
+                         strip_ext(get_last_dir(t_all_items[i].display_name)));
                 adjust_visual_label(display_name, config.VISUAL.NAME, config.VISUAL.DASH);
                 all_items[i].display_name = strdup(display_name);
             }
@@ -521,7 +523,8 @@ void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
-            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
+            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                                all_items[current_item_index].display_name);
         }
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
@@ -548,7 +551,8 @@ void list_nav_next(int steps) {
     }
     for (int step = 0; step < steps; ++step) {
         if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
-            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
+            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                                all_items[current_item_index].display_name);
         }
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
@@ -828,10 +832,7 @@ void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
-
-    if (strcasecmp(get_last_dir(rom_dir), "ROMS") == 0) {
-        load_mux("explore");
-    }
+    if (strcasecmp(get_last_dir(rom_dir), "ROMS") == 0 || kiosk.CONTENT.OPTION) load_mux("explore");
 
     mux_input_stop();
 }
@@ -983,7 +984,7 @@ void handle_r1(void) {
 
 static void osk_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t * obj = lv_event_get_target(e);
 
     switch (code) {
         case LV_EVENT_SCROLL:
@@ -1334,6 +1335,7 @@ int main(int argc, char *argv[]) {
     init_osk();
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

@@ -14,6 +14,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 
 char *mux_module;
@@ -30,6 +31,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -83,38 +85,38 @@ void init_navigation_groups_grid(char *item_labels[], char *glyph_names[]) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
-        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_t *cell_image = lv_img_create(cell_panel);
-        lv_obj_t *cell_label = lv_label_create(cell_panel);
+        lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t * cell_image = lv_img_create(cell_panel);
+        lv_obj_t * cell_label = lv_label_create(cell_panel);
         lv_obj_set_user_data(cell_label, glyph_names[i]);
         ui_objects[i] = cell_label;
 
         char device_dimension[15];
         get_device_dimension(device_dimension, sizeof(device_dimension));
         char grid_image[MAX_BUFFER_SIZE];
-        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_names[i], "png",
-                                          grid_image, sizeof(grid_image)) &&
-            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_names[i], "png",
-                                         grid_image, sizeof(grid_image)) &&
-            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", "default", "png",
-                                          grid_image, sizeof(grid_image))) {
+        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_names[i],
+                                          "png", grid_image, sizeof(grid_image)) &&
+            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_names[i],
+                                          "png", grid_image, sizeof(grid_image)) &&
+            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", "default",
+                                          "png", grid_image, sizeof(grid_image))) {
 
-            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "default", "png",
-                                         grid_image, sizeof(grid_image));
+            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "default",
+                                         "png", grid_image, sizeof(grid_image));
         }
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
-        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);       
+        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);
         char grid_image_focused[MAX_BUFFER_SIZE];
-        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_name_focused, "png",
-                                          grid_image_focused, sizeof(grid_image_focused)) &&
-            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_name_focused, "png",
-                                         grid_image_focused, sizeof(grid_image_focused)) &&
-            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", "default_focused", "png",
-                                          grid_image_focused, sizeof(grid_image_focused))) {
+        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_name_focused,
+                                          "png", grid_image_focused, sizeof(grid_image_focused)) &&
+            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_name_focused,
+                                          "png", grid_image_focused, sizeof(grid_image_focused)) &&
+            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", "default_focused",
+                                          "png", grid_image_focused, sizeof(grid_image_focused))) {
 
-            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "default_focused", "png",
-                                         grid_image_focused, sizeof(grid_image_focused));
+            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "default_focused",
+                                         "png", grid_image_focused, sizeof(grid_image_focused));
         }
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
@@ -222,31 +224,40 @@ void list_nav_next(int steps) {
 void handle_a() {
     if (msgbox_active) return;
 
-    if (current_item_index == 0) {
-        play_sound("confirm", nav_sound, 0, 1);
-        load_mux("explore_alt");
-    } else if (current_item_index == 1) {
-        play_sound("confirm", nav_sound, 0, 1);
-        load_mux("favourite");
-    } else if (current_item_index == 2) {
-        play_sound("confirm", nav_sound, 0, 1);
-        load_mux("history");
-    } else if (current_item_index == 3) {
-        play_sound("confirm", nav_sound, 0, 1);
-        load_mux("app");
-    } else if (current_item_index == 4) {
-        play_sound("confirm", nav_sound, 0, 1);
-        load_mux("info");
-    } else if (current_item_index == 5) {
-        play_sound("confirm", nav_sound, 0, 1);
-        load_mux("config");
-    } else if (current_item_index == 6) {
-        play_sound("reboot", nav_sound, 0, 1);
-        load_mux("reboot");
-    } else if (current_item_index == 7) {
-        play_sound("shutdown", nav_sound, 0, 1);
-        load_mux("shutdown");
+    struct {
+        struct _lv_obj_t *element;
+        const char *mux_name;
+        int16_t *kiosk_flag;
+    } elements[] = {
+            {ui_lblContent,    "explore_alt", &kiosk.LAUNCH.EXPLORE},
+            {ui_lblFavourites, "favourite",   &kiosk.LAUNCH.FAVOURITE},
+            {ui_lblHistory,    "history",     &kiosk.LAUNCH.HISTORY},
+            {ui_lblApps,       "app",         &kiosk.LAUNCH.APPLICATION},
+            {ui_lblInfo,       "info",        &kiosk.LAUNCH.INFORMATION},
+            {ui_lblConfig,     "config",      &kiosk.LAUNCH.CONFIGURATION},
+            {ui_lblReboot,     "reboot",      NULL},
+            {ui_lblShutdown,   "shutdown",    NULL}
+    }; /* Leave the reboot and shutdown as null as they should always be available! */
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+    for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+        if (element_focused == elements[i].element) {
+            if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
+                toast_message(kiosk_nope(), 1000, 1000);
+                return;
+            }
+
+            const char *sound = (strcmp(elements[i].mux_name, "reboot") == 0) ? "reboot" :
+                                (strcmp(elements[i].mux_name, "shutdown") == 0) ? "shutdown" :
+                                "confirm";
+
+            play_sound(sound, nav_sound, 0, 1);
+            load_mux(elements[i].mux_name);
+            break;
+        }
     }
+
     mux_input_stop();
 }
 
@@ -415,6 +426,28 @@ void handle_right() {
                 list_nav_next(5);
                 break;
         }
+    }
+}
+
+void handle_kiosk_disable() {
+    if (current_item_index == 6) { /* reboot */
+        if (file_exist(KIOSK_CONFIG)) remove(KIOSK_CONFIG);
+        handle_a();
+    }
+}
+
+void handle_kiosk_unlock() {
+    if (current_item_index == 6) { /* reboot */
+        char kiosk_storage[MAX_BUFFER_SIZE];
+        snprintf(kiosk_storage, sizeof(kiosk_storage), "%s/MUOS/kiosk.ini", device.STORAGE.ROM.MOUNT);
+
+        char kiosk_backup[MAX_BUFFER_SIZE];
+        snprintf(kiosk_backup, sizeof(kiosk_backup), "cp \"%s\" \"%s\"", KIOSK_CONFIG, kiosk_storage);
+
+        system("touch /opt/muos/kiosk_unlock");
+        system(kiosk_backup);
+
+        handle_a();
     }
 }
 
@@ -641,6 +674,7 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
@@ -664,6 +698,16 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
             },
             .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_L1) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_X),
+                            .press_handler = handle_kiosk_disable,
+                            .hold_handler = handle_kiosk_disable,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_L1) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_Y),
+                            .press_handler = handle_kiosk_unlock,
+                            .hold_handler = handle_kiosk_unlock,
+                    },
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
                             .press_handler = ui_common_handle_bright,

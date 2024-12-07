@@ -11,6 +11,7 @@
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -24,6 +25,7 @@ char *mux_module;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int progress_onscreen = -1;

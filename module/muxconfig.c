@@ -14,6 +14,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
@@ -31,6 +32,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -154,54 +156,70 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
 void handle_a() {
     if (msgbox_active) return;
 
+    struct {
+        struct _lv_obj_t *element;
+        const char *mux_name;
+        int16_t *kiosk_flag;
+    } elements[] = {
+            {ui_lblTweakGeneral, "tweakgen", &kiosk.SETTING.GENERAL},
+            {ui_lblCustom,       "custom",   &kiosk.CONFIG.CUSTOMISATION},
+            {ui_lblNetwork,      "network",  &kiosk.CONFIG.NETWORK},
+            {ui_lblServices,     "webserv",  &kiosk.CONFIG.WEB_SERVICES},
+            {ui_lblRTC,          "rtc",      &kiosk.DATETIME.CLOCK},
+            {ui_lblLanguage,     "language", &kiosk.CONFIG.LANGUAGE},
+            {ui_lblStorage,      "storage",  &kiosk.CONFIG.STORAGE}
+    };
+
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    play_sound("confirm", nav_sound, 0, 1);
-    if (element_focused == ui_lblTweakGeneral) {
-        load_mux("tweakgen");
-    } else if (element_focused == ui_lblCustom) {
-        load_mux("custom");
-    } else if (element_focused == ui_lblNetwork) {
-        load_mux("network");
-    } else if (element_focused == ui_lblServices) {
-        load_mux("webserv");
-    } else if (element_focused == ui_lblRTC) {
-        load_mux("rtc");
-    } else if (element_focused == ui_lblLanguage) {
-        load_mux("language");
-    } else if (element_focused == ui_lblStorage) {
-        load_mux("storage");
+    for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+        if (element_focused == elements[i].element) {
+            if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
+                toast_message(kiosk_nope(), 1000, 1000);
+                return;
+            }
+
+            play_sound("confirm", nav_sound, 0, 1);
+            load_mux(elements[i].mux_name);
+            break;
+        }
     }
+
     mux_input_stop();
 }
+
 
 void handle_b() {
     if (msgbox_active) {
@@ -452,6 +470,7 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

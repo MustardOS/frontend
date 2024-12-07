@@ -14,6 +14,7 @@
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
@@ -31,6 +32,7 @@ char *osd_message;
 
 struct mux_config config;
 struct mux_device device;
+struct mux_kiosk kiosk;
 struct theme_config theme;
 
 int nav_moved = 1;
@@ -392,34 +394,35 @@ void handle_option_next(void) {
 void handle_confirm(void) {
     if (msgbox_active) return;
 
+    struct {
+        struct _lv_obj_t *element;
+        const char *mux_name;
+        int16_t *kiosk_flag;
+    } elements[] = {
+            {ui_lblHDMI,      "hdmi",     &kiosk.SETTING.HDMI},
+            {ui_lblPower,     "power",    &kiosk.SETTING.POWER},
+            {ui_lblInterface, "visual",   &kiosk.SETTING.VISUAL},
+            {ui_lblAdvanced,  "tweakadv", &kiosk.SETTING.ADVANCED}
+    };
+
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblHDMI) {
-        play_sound("confirm", nav_sound, 0, 1);
-        save_tweak_options();
 
-        load_mux("hdmi");
-        mux_input_stop();
-    } else if (element_focused == ui_lblPower) {
-        play_sound("confirm", nav_sound, 0, 1);
-        save_tweak_options();
+    for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+        if (element_focused == elements[i].element) {
+            if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
+                toast_message(kiosk_nope(), 1000, 1000);
+                return;
+            }
 
-        load_mux("power");
-        mux_input_stop();
-    } else if (element_focused == ui_lblInterface) {
-        play_sound("confirm", nav_sound, 0, 1);
-        save_tweak_options();
-
-        load_mux("visual");
-        mux_input_stop();
-    } else if (element_focused == ui_lblAdvanced) {
-        play_sound("confirm", nav_sound, 0, 1);
-        save_tweak_options();
-
-        load_mux("tweakadv");
-        mux_input_stop();
-    } else {
-        handle_option_next();
+            play_sound("confirm", nav_sound, 0, 1);
+            save_tweak_options();
+            load_mux(elements[i].mux_name);
+            mux_input_stop();
+            break;
+        }
     }
+
+    handle_option_next();
 }
 
 void handle_back(void) {
@@ -682,6 +685,7 @@ int main(int argc, char *argv[]) {
     direct_to_previous();
 
     refresh_screen(device.SCREEN.WAIT);
+    load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
