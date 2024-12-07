@@ -442,7 +442,7 @@ void handle_kiosk_unlock() {
         snprintf(kiosk_storage, sizeof(kiosk_storage), "%s/MUOS/kiosk.ini", device.STORAGE.ROM.MOUNT);
 
         char kiosk_backup[MAX_BUFFER_SIZE];
-        snprintf(kiosk_backup, sizeof(kiosk_backup), "cp \"%s\" \"%s\"", KIOSK_CONFIG, kiosk_storage);
+        snprintf(kiosk_backup, sizeof(kiosk_backup), "mv \"%s\" \"%s\"", KIOSK_CONFIG, kiosk_storage);
 
         system("touch /opt/muos/kiosk_unlock");
         system(kiosk_backup);
