@@ -236,8 +236,8 @@ void handle_a() {
             {ui_lblApps,       "app",         &kiosk.LAUNCH.APPLICATION},
             {ui_lblInfo,       "info",        &kiosk.LAUNCH.INFORMATION},
             {ui_lblConfig,     "config",      &kiosk.LAUNCH.CONFIGURATION},
-            {ui_lblReboot,     "reboot",      NULL},
-            {ui_lblShutdown,   "shutdown",    NULL}
+            {ui_lblReboot,     "reboot",   NULL},
+            {ui_lblShutdown,   "shutdown", NULL}
     }; /* Leave the reboot and shutdown as null as they should always be available! */
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -430,25 +430,77 @@ void handle_right() {
     }
 }
 
-void handle_kiosk_disable() {
+void handle_kiosk_purge() {
     if (current_item_index == 6) { /* reboot */
         if (file_exist(KIOSK_CONFIG)) remove(KIOSK_CONFIG);
-        handle_a();
+
+        const char *kiosk_paths[] = {
+                "application/archive",
+                "application/task",
+                "config/customisation",
+                "config/language",
+                "config/network",
+                "config/storage",
+                "config/webserv",
+                "content/core",
+                "content/governor",
+                "content/option",
+                "content/retroarch",
+                "content/search",
+                "custom/catalogue",
+                "custom/configuration",
+                "custom/theme",
+                "datetime/clock",
+                "datetime/timezone",
+                "launch/application",
+                "launch/config",
+                "launch/explore",
+                "launch/favourite",
+                "launch/history",
+                "launch/info",
+                "setting/advanced",
+                "setting/general",
+                "setting/hdmi",
+                "setting/power",
+                "setting/visual"
+        };
+
+        char path[MAX_BUFFER_SIZE];
+        for (size_t i = 0; i < sizeof(kiosk_paths) / sizeof(kiosk_paths[0]); i++) {
+            snprintf(path, sizeof(path), "%s%s", "/run/muos/kiosk/", kiosk_paths[i]);
+            write_text_to_file(path, "w", INT, 0);
+        }
+
+        handle_b();
     }
 }
 
-void handle_kiosk_unlock() {
+void handle_kiosk_toggle() {
     if (current_item_index == 6) { /* reboot */
         char kiosk_storage[MAX_BUFFER_SIZE];
         snprintf(kiosk_storage, sizeof(kiosk_storage), "%s/MUOS/kiosk.ini", device.STORAGE.ROM.MOUNT);
 
         char kiosk_backup[MAX_BUFFER_SIZE];
-        snprintf(kiosk_backup, sizeof(kiosk_backup), "mv \"%s\" \"%s\"", KIOSK_CONFIG, kiosk_storage);
+        if (file_exist(KIOSK_CONFIG)) {
+            snprintf(kiosk_backup, sizeof(kiosk_backup), "mv \"%s\" \"%s\"", KIOSK_CONFIG, kiosk_storage);
 
-        system("touch /opt/muos/kiosk_unlock");
-        system(kiosk_backup);
+            system(kiosk_backup);
+            handle_kiosk_purge();
+        } else {
+            if (file_exist(kiosk_storage)) {
+                snprintf(kiosk_backup, sizeof(kiosk_backup), "mv \"%s\" \"%s\"", kiosk_storage, KIOSK_CONFIG);
 
-        handle_a();
+                system(kiosk_backup);
+                system("/opt/muos/script/var/init/kiosk.sh init");
+
+                toast_message(TS("Processing kiosk configuration"), 1000, 1000);
+                sleep(1); /* not really needed but it's a good buffer... */
+
+                handle_b();
+            } else {
+                toast_message(TS("Kiosk configuration not found"), 1000, 1000);
+            }
+        }
     }
 }
 
@@ -704,13 +756,13 @@ int main(int argc, char *argv[]) {
             .combo = {
                     {
                             .type_mask = BIT(MUX_INPUT_L1) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_X),
-                            .press_handler = handle_kiosk_disable,
-                            .hold_handler = handle_kiosk_disable,
+                            .press_handler = handle_kiosk_purge,
+                            .hold_handler = handle_kiosk_purge,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_L1) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_Y),
-                            .press_handler = handle_kiosk_unlock,
-                            .hold_handler = handle_kiosk_unlock,
+                            .press_handler = handle_kiosk_toggle,
+                            .hold_handler = handle_kiosk_toggle,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
