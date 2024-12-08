@@ -23,6 +23,7 @@ extern lv_obj_t *ui_pnlUserInit;
 extern lv_obj_t *ui_pnlDPADSwap;
 extern lv_obj_t *ui_pnlOverdrive;
 extern lv_obj_t *ui_pnlSwapfile;
+extern lv_obj_t *ui_pnlCardMode;
 
 extern lv_obj_t *ui_lblAccelerate;
 extern lv_obj_t *ui_lblSwap;
@@ -43,6 +44,7 @@ extern lv_obj_t *ui_lblUserInit;
 extern lv_obj_t *ui_lblDPADSwap;
 extern lv_obj_t *ui_lblOverdrive;
 extern lv_obj_t *ui_lblSwapfile;
+extern lv_obj_t *ui_lblCardMode;
 
 extern lv_obj_t *ui_icoAccelerate;
 extern lv_obj_t *ui_icoSwap;
@@ -63,6 +65,7 @@ extern lv_obj_t *ui_icoUserInit;
 extern lv_obj_t *ui_icoDPADSwap;
 extern lv_obj_t *ui_icoOverdrive;
 extern lv_obj_t *ui_icoSwapfile;
+extern lv_obj_t *ui_icoCardMode;
 
 extern lv_obj_t *ui_droAccelerate;
 extern lv_obj_t *ui_droSwap;
@@ -83,3 +86,4 @@ extern lv_obj_t *ui_droUserInit;
 extern lv_obj_t *ui_droDPADSwap;
 extern lv_obj_t *ui_droOverdrive;
 extern lv_obj_t *ui_droSwapfile;
+extern lv_obj_t *ui_droCardMode;
