@@ -1234,6 +1234,29 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t ov
     }
 }
 
+void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
+    if (file_exist(KIOSK_CONFIG)) {
+        const char *program = lv_obj_get_user_data(ui_screen);
+
+        char device_dimension[15];
+        get_device_dimension(device_dimension, sizeof(device_dimension));
+
+        static char static_image_path[MAX_BUFFER_SIZE];
+        static char static_image_embed[MAX_BUFFER_SIZE];
+
+        if (load_image_specifics(STORAGE_THEME, device_dimension, program, "kiosk", "png",
+                                 static_image_path, sizeof(static_image_path)) ||
+            load_image_specifics(STORAGE_THEME, "", program, "kiosk", "png",
+                                 static_image_path, sizeof(static_image_path))) {
+
+            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+
+            lv_img_set_src(kiosk_image, static_image_embed);
+            lv_obj_move_foreground(kiosk_image);
+        }
+    }
+}
+
 static void image_anim_cb(void *var, int32_t img_idx) {
     lv_img_set_src(img_obj, img_paths[img_idx]);
 }

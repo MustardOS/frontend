@@ -190,6 +190,8 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
 
 void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t overlay_enabled);
 
+void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
+
 int load_image_specifics(const char *theme_base, const char *device_dimension, const char *program,
                          const char *image_type, const char *image_extension, char *image_path, size_t path_size);
 
@@ -272,4 +274,4 @@ int get_grid_row_item_count(int current_item_index);
 
 char *get_glyph_from_file(const char *directory_name, const char *item_name, char *item_default);
 
-char* kiosk_nope();
+char *kiosk_nope();

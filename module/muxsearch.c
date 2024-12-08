@@ -63,6 +63,7 @@ content_item *all_items = NULL;
 
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
+lv_obj_t *kiosk_image = NULL;
 lv_obj_t *key_entry;
 
 lv_group_t *ui_group;
@@ -1082,6 +1083,9 @@ void init_elements() {
 
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
+
+    kiosk_image = lv_img_create(ui_screen);
+    load_kiosk_image(ui_screen, kiosk_image);
 }
 
 void init_osk() {

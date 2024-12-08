@@ -42,6 +42,7 @@ int current_item_index = 0;
 
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
+lv_obj_t *kiosk_image = NULL;
 
 // Stubs to appease the compiler!
 void list_nav_prev(void) {}
@@ -146,6 +147,9 @@ void init_elements() {
 
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
+
+    kiosk_image = lv_img_create(ui_screen);
+    load_kiosk_image(ui_screen, kiosk_image);
 }
 
 int main(int argc, char *argv[]) {

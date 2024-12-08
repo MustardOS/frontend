@@ -33,6 +33,7 @@ int current_item_index = 0;
 
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
+lv_obj_t *kiosk_image = NULL;
 
 // Stubs to appease the compiler!
 void list_nav_prev(void) {}
