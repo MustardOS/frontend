@@ -74,7 +74,7 @@ void ui_init(void) {
     ui_barProgress = lv_bar_create(ui_scrStart);
     int bar_height = 24;
     lv_bar_set_range(ui_barProgress, 0, 100);
-    lv_obj_set_y(ui_barProgress, device.MUX.HEIGHT - bar_height);
+    lv_obj_set_y(ui_barProgress, 0);
     lv_obj_set_size(ui_barProgress, device.MUX.WIDTH, bar_height);
     lv_obj_set_style_pad_all(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
