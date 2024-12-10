@@ -162,20 +162,20 @@ void handle_confirm() {
     if (msgbox_active) return;
 
     struct {
-        struct _lv_obj_t *element;
         const char *mux_name;
         const char *launch;
         int16_t *kiosk_flag;
     } elements[] = {
-            {ui_lblTheme,     "theme",     "theme",             &kiosk.CUSTOM.THEME},
-            {ui_lblCatalogue, "catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
-            {ui_lblConfig,    "config",    "package/config",    &kiosk.CUSTOM.CONFIGURATION}
+            {"theme",     "theme",             &kiosk.CUSTOM.THEME},
+            {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
+            {"config",    "package/config",    &kiosk.CUSTOM.CONFIGURATION}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    const char *u_data = lv_obj_get_user_data(element_focused);
 
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
-        if (element_focused == elements[i].element) {
+        if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 toast_message(kiosk_nope(), 1000, 1000);
                 return;

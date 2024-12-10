@@ -190,23 +190,24 @@ void handle_a() {
     if (msgbox_active) return;
 
     struct {
-        struct _lv_obj_t *element;
+        const char *glyph_name;
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {ui_lblTweakGeneral, "tweakgen", &kiosk.SETTING.GENERAL},
-            {ui_lblCustom,       "custom",   &kiosk.CONFIG.CUSTOMISATION},
-            {ui_lblNetwork,      "network",  &kiosk.CONFIG.NETWORK},
-            {ui_lblServices,     "webserv",  &kiosk.CONFIG.WEB_SERVICES},
-            {ui_lblRTC,          "rtc",      &kiosk.DATETIME.CLOCK},
-            {ui_lblLanguage,     "language", &kiosk.CONFIG.LANGUAGE},
-            {ui_lblStorage,      "storage",  &kiosk.CONFIG.STORAGE}
+            {"general",  "tweakgen", &kiosk.SETTING.GENERAL},
+            {"custom",   "custom",   &kiosk.CONFIG.CUSTOMISATION},
+            {"network",  "network",  &kiosk.CONFIG.NETWORK},
+            {"service",  "webserv",  &kiosk.CONFIG.WEB_SERVICES},
+            {"clock",    "rtc",      &kiosk.DATETIME.CLOCK},
+            {"language", "language", &kiosk.CONFIG.LANGUAGE},
+            {"storage",  "storage",  &kiosk.CONFIG.STORAGE}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    const char *u_data = lv_obj_get_user_data(element_focused);
 
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
-        if (element_focused == elements[i].element) {
+        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 toast_message(kiosk_nope(), 1000, 1000);
                 return;

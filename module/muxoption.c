@@ -162,19 +162,20 @@ void handle_confirm() {
     if (msgbox_active) return;
 
     struct {
-        struct _lv_obj_t *element;
+        const char *glyph_name;
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {ui_lblSearch,   "search",   &kiosk.CONTENT.SEARCH},
-            {ui_lblCore,     "assign",   &kiosk.CONTENT.ASSIGN_CORE},
-            {ui_lblGovernor, "governor", &kiosk.CONTENT.ASSIGN_GOVERNOR}
+            {"search",   "search",   &kiosk.CONTENT.SEARCH},
+            {"core",     "assign",   &kiosk.CONTENT.ASSIGN_CORE},
+            {"governor", "governor", &kiosk.CONTENT.ASSIGN_GOVERNOR}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    const char *u_data = lv_obj_get_user_data(element_focused);
 
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
-        if (element_focused == elements[i].element) {
+        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 toast_message(kiosk_nope(), 1000, 1000);
                 return;

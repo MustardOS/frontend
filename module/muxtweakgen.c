@@ -396,20 +396,21 @@ void handle_confirm(void) {
     if (msgbox_active) return;
 
     struct {
-        struct _lv_obj_t *element;
+        const char *glyph_name;
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {ui_lblHDMI,      "hdmi",     &kiosk.SETTING.HDMI},
-            {ui_lblPower,     "power",    &kiosk.SETTING.POWER},
-            {ui_lblInterface, "visual",   &kiosk.SETTING.VISUAL},
-            {ui_lblAdvanced,  "tweakadv", &kiosk.SETTING.ADVANCED}
+            {"hdmi",      "hdmi",     &kiosk.SETTING.HDMI},
+            {"power",     "power",    &kiosk.SETTING.POWER},
+            {"interface", "visual",   &kiosk.SETTING.VISUAL},
+            {"advanced",  "tweakadv", &kiosk.SETTING.ADVANCED}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    const char *u_data = lv_obj_get_user_data(element_focused);
 
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
-        if (element_focused == elements[i].element) {
+        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 toast_message(kiosk_nope(), 1000, 1000);
                 return;

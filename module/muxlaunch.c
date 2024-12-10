@@ -230,14 +230,14 @@ void handle_a() {
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {"explore",    "explore_alt", &kiosk.LAUNCH.EXPLORE},
-            {"favourite",  "favourite",   &kiosk.LAUNCH.FAVOURITE},
-            {"history",    "history",     &kiosk.LAUNCH.HISTORY},
-            {"apps",       "app",         &kiosk.LAUNCH.APPLICATION},
-            {"info",       "info",        &kiosk.LAUNCH.INFORMATION},
-            {"config",     "config",      &kiosk.LAUNCH.CONFIGURATION},
-            {"reboot",     "reboot",   NULL},
-            {"shutdown",   "shutdown", NULL}
+            {"explore",   "explore_alt", &kiosk.LAUNCH.EXPLORE},
+            {"favourite", "favourite",   &kiosk.LAUNCH.FAVOURITE},
+            {"history",   "history",     &kiosk.LAUNCH.HISTORY},
+            {"apps",      "app",         &kiosk.LAUNCH.APPLICATION},
+            {"info",      "info",        &kiosk.LAUNCH.INFORMATION},
+            {"config",    "config",      &kiosk.LAUNCH.CONFIGURATION},
+            {"reboot",    "reboot",   NULL},
+            {"shutdown",  "shutdown", NULL}
     }; /* Leave the reboot and shutdown as null as they should always be available! */
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
