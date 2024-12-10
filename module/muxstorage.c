@@ -50,7 +50,7 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 16
+#define UI_COUNT 18
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -69,22 +69,24 @@ struct storage storage_path[UI_COUNT];
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBIOS,       TS("Location of system BIOS files")},
-            {ui_lblCatalogue,  TS("Location of content images and text")},
-            {ui_lblName,       TS("Location of friendly name configurations")},
-            {ui_lblRetroArch,  TS("Location of the RetroArch emulator")},
-            {ui_lblConfig,     TS("Location of RetroArch configurations")},
-            {ui_lblCore,       TS("Location of assigned core and governor configurations")},
-            {ui_lblFavourite,  TS("Location of favourites")},
-            {ui_lblHistory,    TS("Location of history")},
-            {ui_lblMusic,      TS("Location of background music")},
-            {ui_lblSave,       TS("Location of save states and files")},
-            {ui_lblScreenshot, TS("Location of screenshots")},
-            {ui_lblTheme,      TS("Location of themes")},
-            {ui_lblLanguage,   TS("Location of Language files")},
-            {ui_lblNetwork,    TS("Location of Network Profiles")},
-            {ui_lblSyncthing,  TS("Location of Syncthing configurations")},
-            {ui_lblUserInit,   TS("Location of User Initialisation scripts")},
+            {ui_lblBIOS,             TS("Location of system BIOS files")},
+            {ui_lblCatalogue,        TS("Location of content images and text")},
+            {ui_lblName,             TS("Location of friendly name configurations")},
+            {ui_lblRetroArch,        TS("Location of the RetroArch emulator")},
+            {ui_lblConfig,           TS("Location of RetroArch configurations")},
+            {ui_lblCore,             TS("Location of assigned core and governor configurations")},
+            {ui_lblFavourite,        TS("Location of favourites")},
+            {ui_lblHistory,          TS("Location of history")},
+            {ui_lblMusic,            TS("Location of background music")},
+            {ui_lblSave,             TS("Location of save states and files")},
+            {ui_lblScreenshot,       TS("Location of screenshots")},
+            {ui_lblTheme,            TS("Location of themes")},
+            {ui_lblCataloguePackage, TS("Location of catalogue packages")},
+            {ui_lblConfigPackage,    TS("Location of RetroArch configuration packages")},
+            {ui_lblLanguage,         TS("Location of Language files")},
+            {ui_lblNetwork,          TS("Location of Network Profiles")},
+            {ui_lblSyncthing,        TS("Location of Syncthing configurations")},
+            {ui_lblUserInit,         TS("Location of User Initialisation scripts")},
     };
 
     char *message = TG("No Help Information Found");
@@ -144,17 +146,23 @@ void update_storage_info() {
     storage_path[11].path_suffix = "MUOS/theme";
     storage_path[11].ui_label = ui_lblThemeValue;
 
-    storage_path[12].path_suffix = "MUOS/language";
-    storage_path[12].ui_label = ui_lblLanguageValue;
+    storage_path[12].path_suffix = "MUOS/package/catalogue";
+    storage_path[12].ui_label = ui_lblCataloguePackageValue;
 
-    storage_path[13].path_suffix = "MUOS/network";
-    storage_path[13].ui_label = ui_lblNetworkValue;
+    storage_path[13].path_suffix = "MUOS/package/config";
+    storage_path[13].ui_label = ui_lblConfigPackageValue;
 
-    storage_path[14].path_suffix = "MUOS/syncthing";
-    storage_path[14].ui_label = ui_lblSyncthingValue;
+    storage_path[14].path_suffix = "MUOS/language";
+    storage_path[14].ui_label = ui_lblLanguageValue;
 
-    storage_path[15].path_suffix = "MUOS/init";
-    storage_path[15].ui_label = ui_lblUserInitValue;
+    storage_path[15].path_suffix = "MUOS/network";
+    storage_path[15].ui_label = ui_lblNetworkValue;
+
+    storage_path[16].path_suffix = "MUOS/syncthing";
+    storage_path[16].ui_label = ui_lblSyncthingValue;
+
+    storage_path[17].path_suffix = "MUOS/init";
+    storage_path[17].ui_label = ui_lblUserInitValue;
 
     char dir[FILENAME_MAX];
     for (int i = 0; i < sizeof(storage_path) / sizeof(storage_path[0]); i++) {
@@ -183,6 +191,8 @@ void init_navigation_groups() {
             ui_pnlSave,
             ui_pnlScreenshot,
             ui_pnlTheme,
+            ui_pnlCataloguePackage,
+            ui_pnlConfigPackage,
             ui_pnlLanguage,
             ui_pnlNetwork,
             ui_pnlSyncthing,
@@ -201,10 +211,12 @@ void init_navigation_groups() {
     ui_objects[9] = ui_lblSave;
     ui_objects[10] = ui_lblScreenshot;
     ui_objects[11] = ui_lblTheme;
-    ui_objects[12] = ui_lblLanguage;
-    ui_objects[13] = ui_lblNetwork;
-    ui_objects[14] = ui_lblSyncthing;
-    ui_objects[15] = ui_lblUserInit;
+    ui_objects[12] = ui_lblCataloguePackage;
+    ui_objects[13] = ui_lblConfigPackage;
+    ui_objects[14] = ui_lblLanguage;
+    ui_objects[15] = ui_lblNetwork;
+    ui_objects[16] = ui_lblSyncthing;
+    ui_objects[17] = ui_lblUserInit;
 
     lv_obj_t *ui_objects_value[] = {
             ui_lblBIOSValue,
@@ -219,6 +231,8 @@ void init_navigation_groups() {
             ui_lblSaveValue,
             ui_lblScreenshotValue,
             ui_lblThemeValue,
+            ui_lblCataloguePackageValue,
+            ui_lblConfigPackageValue,
             ui_lblLanguageValue,
             ui_lblNetworkValue,
             ui_lblSyncthingValue,
@@ -238,6 +252,8 @@ void init_navigation_groups() {
             ui_icoSave,
             ui_icoScreenshot,
             ui_icoTheme,
+            ui_icoCataloguePackage,
+            ui_icoConfigPackage,
             ui_icoLanguage,
             ui_icoNetwork,
             ui_icoSyncthing,
@@ -256,6 +272,8 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlSave);
     apply_theme_list_panel(&theme, &device, ui_pnlScreenshot);
     apply_theme_list_panel(&theme, &device, ui_pnlTheme);
+    apply_theme_list_panel(&theme, &device, ui_pnlCataloguePackage);
+    apply_theme_list_panel(&theme, &device, ui_pnlConfigPackage);
     apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
     apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
     apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
@@ -273,6 +291,8 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblSave, TS("Save Games + Save States"), false, true);
     apply_theme_list_item(&theme, ui_lblScreenshot, TS("Screenshots"), false, true);
     apply_theme_list_item(&theme, ui_lblTheme, TS("Themes"), false, true);
+    apply_theme_list_item(&theme, ui_lblCataloguePackage, TS("Catalogue Packages"), false, true);
+    apply_theme_list_item(&theme, ui_lblConfigPackage, TS("RetroArch Config Packages"), false, true);
     apply_theme_list_item(&theme, ui_lblLanguage, TS("Languages"), false, true);
     apply_theme_list_item(&theme, ui_lblNetwork, TS("Network Profiles"), false, true);
     apply_theme_list_item(&theme, ui_lblSyncthing, TS("Syncthing Configs"), false, true);
@@ -290,6 +310,8 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoSave, mux_module, "save");
     apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_module, "screenshot");
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_module, "theme");
+    apply_theme_list_glyph(&theme, ui_icoCataloguePackage, mux_module, "pack-catalogue");
+    apply_theme_list_glyph(&theme, ui_icoConfigPackage, mux_module, "pack-config");
     apply_theme_list_glyph(&theme, ui_icoLanguage, mux_module, "language");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
     apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_module, "syncthing");
@@ -307,6 +329,8 @@ void init_navigation_groups() {
     apply_theme_list_value(&theme, ui_lblSaveValue, "");
     apply_theme_list_value(&theme, ui_lblScreenshotValue, "");
     apply_theme_list_value(&theme, ui_lblThemeValue, "");
+    apply_theme_list_value(&theme, ui_lblCataloguePackageValue, "");
+    apply_theme_list_value(&theme, ui_lblConfigPackageValue, "");
     apply_theme_list_value(&theme, ui_lblLanguageValue, "");
     apply_theme_list_value(&theme, ui_lblNetworkValue, "");
     apply_theme_list_value(&theme, ui_lblSyncthingValue, "");
@@ -466,6 +490,8 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblSave, "save");
     lv_obj_set_user_data(ui_lblScreenshot, "screenshot");
     lv_obj_set_user_data(ui_lblTheme, "theme");
+    lv_obj_set_user_data(ui_lblCataloguePackage, "pack-catalogue");
+    lv_obj_set_user_data(ui_lblConfigPackage, "pack-config");
     lv_obj_set_user_data(ui_lblLanguage, "language");
     lv_obj_set_user_data(ui_lblNetwork, "network");
     lv_obj_set_user_data(ui_lblSyncthing, "syncthing");
