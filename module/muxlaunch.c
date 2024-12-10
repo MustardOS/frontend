@@ -226,24 +226,25 @@ void handle_a() {
     if (msgbox_active) return;
 
     struct {
-        struct _lv_obj_t *element;
+        const char *glyph_name;
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {ui_lblContent,    "explore_alt", &kiosk.LAUNCH.EXPLORE},
-            {ui_lblFavourites, "favourite",   &kiosk.LAUNCH.FAVOURITE},
-            {ui_lblHistory,    "history",     &kiosk.LAUNCH.HISTORY},
-            {ui_lblApps,       "app",         &kiosk.LAUNCH.APPLICATION},
-            {ui_lblInfo,       "info",        &kiosk.LAUNCH.INFORMATION},
-            {ui_lblConfig,     "config",      &kiosk.LAUNCH.CONFIGURATION},
-            {ui_lblReboot,     "reboot",   NULL},
-            {ui_lblShutdown,   "shutdown", NULL}
+            {"explore",    "explore_alt", &kiosk.LAUNCH.EXPLORE},
+            {"favourite",  "favourite",   &kiosk.LAUNCH.FAVOURITE},
+            {"history",    "history",     &kiosk.LAUNCH.HISTORY},
+            {"apps",       "app",         &kiosk.LAUNCH.APPLICATION},
+            {"info",       "info",        &kiosk.LAUNCH.INFORMATION},
+            {"config",     "config",      &kiosk.LAUNCH.CONFIGURATION},
+            {"reboot",     "reboot",   NULL},
+            {"shutdown",   "shutdown", NULL}
     }; /* Leave the reboot and shutdown as null as they should always be available! */
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    const char *u_data = lv_obj_get_user_data(element_focused);
 
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
-        if (element_focused == elements[i].element) {
+        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 toast_message(kiosk_nope(), 1000, 1000);
                 return;
