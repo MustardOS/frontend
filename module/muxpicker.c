@@ -205,7 +205,7 @@ void handle_confirm() {
              "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
     static char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s %s \"%s\"",
+    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s %s install \"%s\"",
              theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
              picker_script, lv_label_get_text(lv_group_get_focused(ui_group)));
     setenv("TERM", "xterm-256color", 1);
@@ -236,6 +236,36 @@ void handle_back() {
 
     play_sound("back", nav_sound, 0, 1);
     load_mux("custom");
+    mux_input_stop();
+}
+
+void handle_save() {
+    if (msgbox_active) return;
+
+    play_sound("confirm", nav_sound, 0, 1);
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+
+    static char picker_script[MAX_BUFFER_SIZE];
+    snprintf(picker_script, sizeof(picker_script),
+             "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
+
+    static char command[MAX_BUFFER_SIZE];
+    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s %s save -",
+             theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND, picker_script);
+    setenv("TERM", "xterm-256color", 1);
+    printf("RUNNING: %s\n", command);
+
+    if (config.VISUAL.BLACKFADE) {
+        fade_to_black(ui_screen);
+    } else {
+        unload_image_animation();
+    }
+
+    system(command);
+
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
+
+    load_mux("picker");
     mux_input_stop();
 }
 
@@ -279,14 +309,13 @@ void init_elements() {
 
     lv_label_set_text(ui_lblNavA, TG("Select"));
     lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavY, TG("Save"));
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
             ui_lblNavC,
             ui_lblNavXGlyph,
             ui_lblNavX,
-            ui_lblNavYGlyph,
-            ui_lblNavY,
             ui_lblNavZGlyph,
             ui_lblNavZ,
             ui_lblNavMenuGlyph,
@@ -500,6 +529,7 @@ int main(int argc, char *argv[]) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_confirm,
                     [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_Y] = handle_save,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
