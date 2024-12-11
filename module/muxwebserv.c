@@ -182,12 +182,7 @@ void save_web_options() {
         write_text_to_file("/run/muos/global/web/tailscaled", "w", INT, idx_tailscaled);
     }
 
-    if (is_modified > 0) {
-        static char service_script[MAX_BUFFER_SIZE];
-        snprintf(service_script, sizeof(service_script),
-                 "%s/script/web/service.sh", INTERNAL_PATH);
-        system(service_script);
-    }
+    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "/script/web/service.sh", NULL});
 }
 
 void init_navigation_groups() {

@@ -212,18 +212,13 @@ void save_tweak_options() {
     if (lv_dropdown_get_selected(ui_droBrightness) != brightness_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/brightness", "w", INT, idx_brightness);
-        char command[MAX_BUFFER_SIZE];
-        snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
-                 INTERNAL_PATH, str_tolower(device.DEVICE.NAME), idx_brightness + 1);
-        system(command);
+
+        char bright_value[8];
+        snprintf(bright_value, sizeof(bright_value), "%d", idx_brightness + 1);
+        run_exec((const char *[]) {(char *) INTERNAL_PATH "/device/current/input/combo/bright.sh", bright_value, NULL});
     }
 
-    if (is_modified > 0) {
-        static char tweak_script[MAX_BUFFER_SIZE];
-        snprintf(tweak_script, sizeof(tweak_script),
-                 "%s/script/mux/tweak.sh", INTERNAL_PATH);
-        system(tweak_script);
-    }
+    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "/script/mux/tweak.sh", NULL});
 }
 
 void init_navigation_groups() {

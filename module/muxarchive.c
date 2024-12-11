@@ -226,15 +226,24 @@ void handle_a() {
         snprintf(extract_script, sizeof(extract_script),
                  "%s/script/mux/extract.sh", INTERNAL_PATH);
 
-        static char command[MAX_BUFFER_SIZE];
-        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s %s \"%s\"",
-                 theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
-                 extract_script, items[current_item_index].name);
-        setenv("TERM", "xterm-256color", 1);
-        printf("RUNNING: %s\n", command);
+        const char *args[] = {
+                "/opt/muos/bin/fbpad",
+                "-bg", (char *) theme.TERMINAL.BACKGROUND,
+                "-fg", (char *) theme.TERMINAL.FOREGROUND,
+                extract_script,
+                items[current_item_index].name,
+                NULL
+        };
 
-        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
-        system(command);
+        setenv("TERM", "xterm-256color", 1);
+
+        if (config.VISUAL.BLACKFADE) {
+            fade_to_black(ui_screen);
+        } else {
+            unload_image_animation();
+        }
+
+        run_exec(args);
 
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 

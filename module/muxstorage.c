@@ -397,28 +397,35 @@ void handle_confirm(void) {
     play_sound("confirm", nav_sound, 0, 1);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
-    static char command[MAX_BUFFER_SIZE];
 
+    static char storage_script[MAX_BUFFER_SIZE];
     if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
-        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s \"%s/script/mux/sync.sh\" \"%s\"",
-                 theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
-                 INTERNAL_PATH, storage_path[current_item_index].path_suffix);
+        snprintf(storage_script, sizeof(storage_script), "%s/script/mux/sync.sh", INTERNAL_PATH);
     } else {
-        snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s \"%s/script/mux/migrate.sh\" \"%s\"",
-                 theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
-                 INTERNAL_PATH, storage_path[current_item_index].path_suffix);
+        snprintf(storage_script, sizeof(storage_script), "%s/script/mux/migrate.sh", INTERNAL_PATH);
     }
 
-    setenv("TERM", "xterm-256color", 1);
-    printf("RUNNING: %s\n", command);
+    const char *args[] = {
+            "/opt/muos/bin/fbpad",
+            "-bg", theme.TERMINAL.BACKGROUND,
+            "-fg", theme.TERMINAL.FOREGROUND,
+            storage_script, storage_path[current_item_index].path_suffix,
+            NULL
+    };
 
-    if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
-    system(command);
+    setenv("TERM", "xterm-256color", 1);
+
+    if (config.VISUAL.BLACKFADE) {
+        fade_to_black(ui_screen);
+    } else {
+        unload_image_animation();
+    }
+
+    run_exec(args);
 
     write_text_to_file(MUOS_SIN_LOAD, "w", INT, current_item_index);
 
     load_mux("storage");
-
     mux_input_stop();
 }
 

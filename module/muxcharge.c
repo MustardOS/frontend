@@ -62,10 +62,9 @@ void check_for_cable() {
 }
 
 void set_brightness(int brightness) {
-    char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "%s/device/%s/input/combo/bright.sh %d",
-             INTERNAL_PATH, str_tolower(device.DEVICE.NAME), brightness);
-    system(command);
+    char bright_value[8];
+    snprintf(bright_value, sizeof(bright_value), "%d", brightness);
+    run_exec((const char *[]) {(char *) INTERNAL_PATH "/device/current/input/combo/bright.sh", bright_value, NULL});
 }
 
 void handle_power_short(void) {

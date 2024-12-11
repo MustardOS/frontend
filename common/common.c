@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "miniz/miniz.h"
@@ -2048,4 +2049,14 @@ char *get_glyph_from_file(const char *storage_path, const char *item_name, char 
 
 char *kiosk_nope() {
     return TG("This is disabled in kiosk mode!");
+}
+
+void run_exec(const char *args[]) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        execvp(args[0], args);
+        _exit(EXIT_FAILURE);
+    } else if (pid > 0) {
+        waitpid(pid, NULL, 0);
+    }
 }

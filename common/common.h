@@ -275,3 +275,5 @@ int get_grid_row_item_count(int current_item_index);
 char *get_glyph_from_file(const char *directory_name, const char *item_name, char *item_default);
 
 char *kiosk_nope();
+
+void run_exec(const char *args[]);

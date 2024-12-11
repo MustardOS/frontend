@@ -1389,9 +1389,11 @@ void handle_a() {
                                 sleep(1);
                             }
                         }
-
-                        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
-
+                        if (config.VISUAL.BLACKFADE) {
+                            fade_to_black(ui_screen);
+                        } else {
+                            unload_image_animation();
+                        }
                         if (load_content(0)) {
                             write_text_to_file("/tmp/manual_launch", "w", INT, 1);
                             load_mux("explore");
@@ -1405,7 +1407,11 @@ void handle_a() {
                         write_text_to_file("/tmp/manual_launch", "w", INT, 1);
 
                         load_message = 0;
-                        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
+                        if (config.VISUAL.BLACKFADE) {
+                            fade_to_black(ui_screen);
+                        } else {
+                            unload_image_animation();
+                        }
                     } else {
                         return;
                     }
@@ -1417,7 +1423,11 @@ void handle_a() {
                         write_text_to_file("/tmp/manual_launch", "w", INT, 1);
 
                         load_message = 0;
-                        if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
+                        if (config.VISUAL.BLACKFADE) {
+                            fade_to_black(ui_screen);
+                        } else {
+                            unload_image_animation();
+                        }
                     } else {
                         return;
                     }

@@ -87,7 +87,7 @@ void confirm_rtc_config() {
 
     write_text_to_file("/run/muos/global/clock/notation", "w", INT, idx_notation);
 
-    system("hwclock -w");
+    run_exec((const char *[]) {"hwclock", "-w", NULL});
 }
 
 void restore_clock_settings() {

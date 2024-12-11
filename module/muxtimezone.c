@@ -67,14 +67,14 @@ void create_timezone_items() {
 
         ui_count++;
 
-        lv_obj_t *ui_pnlTimezone = lv_obj_create(ui_pnlContent);
+        lv_obj_t * ui_pnlTimezone = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlTimezone);
         lv_obj_set_user_data(ui_pnlTimezone, strdup(base_key));
 
-        lv_obj_t *ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
+        lv_obj_t * ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
         apply_theme_list_item(&theme, ui_lblTimezoneItem, base_key, true, false);
 
-        lv_obj_t *ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
+        lv_obj_t * ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
         apply_theme_list_glyph(&theme, ui_lblTimezoneGlyph, mux_module, "timezone");
 
         lv_group_add_obj(ui_group, ui_lblTimezoneItem);
@@ -86,21 +86,24 @@ void create_timezone_items() {
     }
     if (ui_count > 0) {
         lv_obj_update_layout(ui_pnlContent);
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     }
 }
 
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -111,14 +114,16 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -131,10 +136,10 @@ void handle_a() {
     lv_label_set_text(ui_lblMessage, osd_message);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-    char tz[MAX_BUFFER_SIZE];
-    snprintf(tz, sizeof(tz), "ln -sf /usr/share/zoneinfo/%s /etc/localtime",
+    char zone_group[MAX_BUFFER_SIZE];
+    snprintf(zone_group, sizeof(zone_group), "/usr/share/zoneinfo/%s",
              lv_label_get_text(lv_group_get_focused(ui_group)));
-    system(tz);
+    run_exec((const char *[]) {"ln", "-sf", zone_group, "/etc/localtime", NULL});
 
     mux_input_stop();
 }

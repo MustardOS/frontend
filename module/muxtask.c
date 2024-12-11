@@ -229,24 +229,31 @@ void handle_confirm() {
 
     play_sound("confirm", nav_sound, 0, 1);
 
-    char task_path[MAX_BUFFER_SIZE];
-    snprintf(task_path, sizeof(task_path),
-             "%s/MUOS/task", device.STORAGE.ROM.MOUNT);
+    static char task_script[MAX_BUFFER_SIZE];
+    snprintf(task_script, sizeof(task_script), "%s/MUOS/task/%s.sh",
+             device.STORAGE.ROM.MOUNT, items[current_item_index].name);
 
-    static char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s \"%s/%s.sh\"",
-             theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
-             task_path, items[current_item_index].name);
+    const char *args[] = {
+            "/opt/muos/bin/fbpad",
+            "-bg", theme.TERMINAL.BACKGROUND,
+            "-fg", theme.TERMINAL.FOREGROUND,
+            task_script,
+            NULL
+    };
+
     setenv("TERM", "xterm-256color", 1);
-    printf("RUNNING: %s\n", command);
 
-    if (config.VISUAL.BLACKFADE) fade_to_black(ui_screen);
-    system(command);
+    if (config.VISUAL.BLACKFADE) {
+        fade_to_black(ui_screen);
+    } else {
+        unload_image_animation();
+    }
+
+    run_exec(args);
 
     write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
 
     load_mux("task");
-
     mux_input_stop();
 }
 

@@ -204,12 +204,16 @@ void handle_confirm() {
     snprintf(picker_script, sizeof(picker_script),
              "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
-    static char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s %s install \"%s\"",
-             theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND,
-             picker_script, lv_label_get_text(lv_group_get_focused(ui_group)));
+    const char *focused_label = lv_label_get_text(lv_group_get_focused(ui_group));
+    const char *args[] = {
+            "/opt/muos/bin/fbpad",
+            "-bg", (char *) theme.TERMINAL.BACKGROUND,
+            "-fg", (char *) theme.TERMINAL.FOREGROUND,
+            picker_script, "install", focused_label,
+            NULL
+    };
+
     setenv("TERM", "xterm-256color", 1);
-    printf("RUNNING: %s\n", command);
 
     if (config.VISUAL.BLACKFADE) {
         fade_to_black(ui_screen);
@@ -217,7 +221,7 @@ void handle_confirm() {
         unload_image_animation();
     }
 
-    system(command);
+    run_exec(args);
 
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
@@ -249,11 +253,15 @@ void handle_save() {
     snprintf(picker_script, sizeof(picker_script),
              "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
-    static char command[MAX_BUFFER_SIZE];
-    snprintf(command, sizeof(command), "/opt/muos/bin/fbpad -bg %s -fg %s %s save -",
-             theme.TERMINAL.BACKGROUND, theme.TERMINAL.FOREGROUND, picker_script);
+    const char *args[] = {
+            "/opt/muos/bin/fbpad",
+            "-bg", theme.TERMINAL.BACKGROUND,
+            "-fg", theme.TERMINAL.FOREGROUND,
+            picker_script, "save", "-",
+            NULL
+    };
+
     setenv("TERM", "xterm-256color", 1);
-    printf("RUNNING: %s\n", command);
 
     if (config.VISUAL.BLACKFADE) {
         fade_to_black(ui_screen);
@@ -261,7 +269,7 @@ void handle_save() {
         unload_image_animation();
     }
 
-    system(command);
+    run_exec(args);
 
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 

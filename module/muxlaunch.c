@@ -481,18 +481,13 @@ void handle_kiosk_toggle() {
         char kiosk_storage[MAX_BUFFER_SIZE];
         snprintf(kiosk_storage, sizeof(kiosk_storage), "%s/MUOS/kiosk.ini", device.STORAGE.ROM.MOUNT);
 
-        char kiosk_backup[MAX_BUFFER_SIZE];
         if (file_exist(KIOSK_CONFIG)) {
-            snprintf(kiosk_backup, sizeof(kiosk_backup), "mv \"%s\" \"%s\"", KIOSK_CONFIG, kiosk_storage);
-
-            system(kiosk_backup);
+            run_exec((const char *[]) {"mv", KIOSK_CONFIG, kiosk_storage, NULL});
             handle_kiosk_purge();
         } else {
             if (file_exist(kiosk_storage)) {
-                snprintf(kiosk_backup, sizeof(kiosk_backup), "mv \"%s\" \"%s\"", kiosk_storage, KIOSK_CONFIG);
-
-                system(kiosk_backup);
-                system("/opt/muos/script/var/init/kiosk.sh init");
+                run_exec((const char *[]) {"mv", kiosk_storage, KIOSK_CONFIG, NULL});
+                run_exec((const char *[]) {"/opt/muos/script/var/init/kiosk.sh", "init", NULL});
 
                 toast_message(TS("Processing kiosk configuration"), 1000, 1000);
                 sleep(1); /* not really needed but it's a good buffer... */

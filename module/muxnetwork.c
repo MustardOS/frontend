@@ -37,6 +37,9 @@ int current_item_index = 0;
 int first_open = 1;
 int ui_count = 0;
 
+const char *pass_args[] = {"/opt/muos/script/web/password.sh", NULL};
+const char *net_args[] = {"/opt/muos/script/system/network.sh", NULL};
+
 #define PASS_ENCODE "********"
 
 lv_obj_t *msgbox_element = NULL;
@@ -708,7 +711,7 @@ void handle_confirm(void) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("confirm", nav_sound, 0, 0);
             write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
-            system("/opt/muos/script/system/network.sh");
+            run_exec(net_args);
             write_text_to_file("/run/muos/global/network/enabled", "w", INT, 1);
             can_scan_check();
         } else {
@@ -755,10 +758,10 @@ void handle_confirm(void) {
                     lv_label_set_text(ui_lblConnectValue, TS("Trying to Connect..."));
                     refresh_screen(sec);
 
-                    system("/opt/muos/script/web/password.sh");
+                    run_exec(pass_args);
                     refresh_screen(sec);
 
-                    system("/opt/muos/script/system/network.sh");
+                    run_exec(net_args);
                     refresh_screen(sec);
 
                     get_current_ip();
@@ -833,7 +836,7 @@ void handle_back(void) {
         write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, "192.168.0.1");
         write_text_to_file("/run/muos/global/network/dns", "w", CHAR, "1.1.1.1");
 
-        system("/opt/muos/script/system/network.sh");
+        run_exec(net_args);
     }
 
     toast_message(TS("Changes Saved"), 1000, 1000);
@@ -863,7 +866,8 @@ void handle_profiles(void) {
         play_sound("confirm", nav_sound, 0, 1);
 
         save_network_config();
-        system("/opt/muos/script/web/password.sh");
+        run_exec(pass_args);
+
         load_mux("net_profile");
 
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR,

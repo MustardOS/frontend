@@ -430,12 +430,7 @@ void save_tweak_options() {
         write_text_to_file("/run/muos/global/settings/advanced/cardmode", "w", CHAR, idx_cardmode);
     }
 
-    if (is_modified > 0) {
-        static char tweak_script[MAX_BUFFER_SIZE];
-        snprintf(tweak_script, sizeof(tweak_script),
-                 "%s/script/mux/tweak.sh", INTERNAL_PATH);
-        system(tweak_script);
-    }
+    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "/script/mux/tweak.sh", NULL});
 }
 
 void init_navigation_groups() {

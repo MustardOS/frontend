@@ -88,7 +88,7 @@ void show_help(lv_obj_t *element_focused) {
 
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
+    lv_obj_t * obj = lv_event_get_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         char buf[MAX_BUFFER_SIZE];
@@ -169,7 +169,7 @@ void save_tweak_options() {
         static char tweak_script[MAX_BUFFER_SIZE];
         snprintf(tweak_script, sizeof(tweak_script),
                  "%s/script/mux/tweak.sh", INTERNAL_PATH);
-        system(tweak_script);
+        run_exec((const char *[]) {tweak_script, NULL});
     }
 }
 

@@ -793,19 +793,21 @@ void handle_confirm(void) {
         lv_label_set_text(ui_lblMessage, "Searching...");
         refresh_screen(device.SCREEN.WAIT);
 
-        static char command[MAX_BUFFER_SIZE];
-
         if (element_focused == ui_lblSearchLocal) {
-            snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\"",
-                     str_trim(lv_label_get_text(ui_lblLookupValue)), rom_dir);
+            run_exec((const char *[]) {
+                    "/opt/muos/script/mux/find.sh",
+                    str_trim(lv_label_get_text(ui_lblLookupValue)), rom_dir,
+                    NULL
+            });
         } else {
-            snprintf(command, sizeof(command), "/opt/muos/script/mux/find.sh \"%s\" \"%s\" \"%s\" \"%s\"",
-                     str_trim(lv_label_get_text(ui_lblLookupValue)), SD1, SD2, E_USB);
+            run_exec((const char *[]) {
+                    "/opt/muos/script/mux/find.sh",
+                    str_trim(lv_label_get_text(ui_lblLookupValue)), SD1, SD2, E_USB,
+                    NULL
+            });
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
-
-        system(command);
 
         load_mux("search");
         mux_input_stop();

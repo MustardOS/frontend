@@ -260,9 +260,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
     char pico8_splore[MAX_BUFFER_SIZE];
     snprintf(pico8_splore, sizeof(pico8_splore), "%s/Splore.p8", rom_dir);
     if (strcasecmp(core, "ext-pico8") == 0 && !file_exist(pico8_splore)) {
-        char pico8_splore_create[MAX_BUFFER_SIZE];
-        snprintf(pico8_splore_create, sizeof(pico8_splore_create), "touch %s", pico8_splore);
-        system(pico8_splore_create);
+        run_exec((const char *[]) {"touch", pico8_splore, NULL});
     }
 
     if (file_exist(MUOS_SAA_LOAD)) {
@@ -349,15 +347,15 @@ void create_system_items() {
             char *base_filename = file_names[i];
             ui_count++;
 
-            lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
+            lv_obj_t * ui_pnlCore = lv_obj_create(ui_pnlContent);
             apply_theme_list_panel(&theme, &device, ui_pnlCore);
             lv_obj_set_user_data(ui_pnlCore, strdup(base_filename));
 
-            lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
+            lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
             apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, true, false);
             lv_obj_set_user_data(ui_lblCoreItem, strdup(base_filename));
 
-            lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
+            lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
             apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, "system");
 
             lv_group_add_obj(ui_group, ui_lblCoreItem);
@@ -472,15 +470,15 @@ void create_core_items(const char *target) {
             snprintf(display_name, sizeof(display_name), "%s", core_headers[i]);
         }
 
-        lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
+        lv_obj_t * ui_pnlCore = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlCore);
         lv_obj_set_user_data(ui_pnlCore, strdup(display_name));
 
-        lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
+        lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
         apply_theme_list_item(&theme, ui_lblCoreItem, display_name, true, false);
         lv_obj_set_user_data(ui_lblCoreItem, strdup(core_headers[i]));
 
-        lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
+        lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
 
         char *glyph = (strcasecmp(core_headers[i], assign_default) == 0) ? "default" : "core";
         apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, glyph);
@@ -504,14 +502,16 @@ void create_core_items(const char *target) {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -522,14 +522,16 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 

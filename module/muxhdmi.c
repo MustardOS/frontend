@@ -184,19 +184,14 @@ void save_hdmi_options() {
         write_text_to_file("/run/muos/global/settings/hdmi/audio", "w", INT, idx_audio);
     }
 
-    static char hdmi_script[MAX_BUFFER_SIZE];
     if (idx_enable == 0) {
         if (lv_dropdown_get_selected(ui_droEnable) != enable_original) {
-            snprintf(hdmi_script, sizeof(hdmi_script),
-                     "%s/device/current/script/hdmi_stop.sh", INTERNAL_PATH);
-            system(hdmi_script);
+            run_exec((const char *[]) {(char *) INTERNAL_PATH "/device/current/script/hdmi_stop.sh", NULL});
         }
     } else {
         if (is_modified > 0) {
-            system("killall -q \"hdmi_start.sh\"");
-            snprintf(hdmi_script, sizeof(hdmi_script),
-                     "%s/device/current/script/hdmi_start.sh", INTERNAL_PATH);
-            system(hdmi_script);
+            run_exec((const char *[]) {"killall", "-q", "hdmi_start.sh", NULL});
+            run_exec((const char *[]) {(char *) INTERNAL_PATH "/device/current/script/hdmi_start.sh", NULL});
         }
     }
 }
