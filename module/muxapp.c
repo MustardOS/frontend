@@ -269,6 +269,7 @@ void list_nav_prev(int steps) {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     }
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
     nav_moved = 1;
 }
 
@@ -293,6 +294,7 @@ void list_nav_next(int steps) {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     }
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
     nav_moved = 1;
 }
 

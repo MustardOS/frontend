@@ -87,6 +87,7 @@ void init_navigation_groups_grid(char *item_labels[], char *glyph_names[]) {
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
         lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_set_user_data(cell_panel, strdup(item_labels[i]));
         lv_obj_t * cell_image = lv_img_create(cell_panel);
         lv_obj_t * cell_label = lv_label_create(cell_panel);
         lv_obj_set_user_data(cell_label, glyph_names[i]);
@@ -138,6 +139,7 @@ void init_navigation_groups() {
                            TS("Information"), TS("Configuration"), TS("Reboot"), TS("Shutdown")};
     char *glyph_names[] = {"explore", "favourite", "history", "apps", "info", "config", "reboot", "shutdown"};
 
+    lv_label_set_text(ui_lblGridCurrentItem, item_labels[0]);
     if (theme.GRID.ENABLED) {
         init_navigation_groups_grid(item_labels, glyph_names);
     } else {
@@ -177,6 +179,7 @@ void init_navigation_groups() {
 
             lv_group_add_obj(ui_group, ui_objects[i]);
             lv_group_add_obj(ui_group_glyph, ui_icons[i]);
+            lv_obj_set_user_data(ui_objects_panel[i], strdup(item_labels[i]));
             lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
 
             apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], item_labels[i]);
@@ -199,6 +202,7 @@ void list_nav_prev(int steps) {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     }
     nav_moved = 1;
+    lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
 }
 
 void list_nav_next(int steps) {
@@ -219,6 +223,7 @@ void list_nav_next(int steps) {
     } else {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     }
+    lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 

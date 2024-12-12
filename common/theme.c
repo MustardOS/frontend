@@ -161,6 +161,26 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->GRID.ROW_COUNT = get_ini_int(muos_theme, "grid", "ROW_COUNT", 0);
     theme->GRID.ENABLED = (theme->GRID.COLUMN_COUNT > 0 && theme->GRID.ROW_COUNT > 0);
 
+    theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_ALIGNMENT", LV_ALIGN_BOTTOM_MID);
+    theme->GRID.CURRENT_ITEM_LABEL.WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_WIDTH", (int16_t)(device->MUX.WIDTH * .8));
+    theme->GRID.CURRENT_ITEM_LABEL.HEIGHT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_HEIGHT", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_X", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_Y", -(theme->FOOTER.HEIGHT * 2));
+    theme->GRID.CURRENT_ITEM_LABEL.RADIUS = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_RADIUS", 10);
+    theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_WIDTH", 5);
+    theme->GRID.CURRENT_ITEM_LABEL.BORDER = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER");
+    theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_ALPHA", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND");
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT");
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALIGNMENT", LV_TEXT_ALIGN_CENTER);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_LINE_SPACING", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_LEFT", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_RIGHT", 0);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_TOP", 0);
+
     theme->GRID.ROW_HEIGHT = get_ini_int(muos_theme, "grid", "ROW_HEIGHT", 0);
     theme->GRID.COLUMN_WIDTH = get_ini_int(muos_theme, "grid", "COLUMN_WIDTH", 0);
 

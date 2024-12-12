@@ -1284,6 +1284,7 @@ void list_nav_prev(int steps) {
     }
     image_refresh("box");
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
     nav_moved = 1;
 }
 
@@ -1309,6 +1310,7 @@ void list_nav_next(int steps) {
     }
     image_refresh("box");
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
     nav_moved = 1;
 }
 
