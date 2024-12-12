@@ -82,6 +82,7 @@ void init_navigation_groups_grid(char *item_labels[], char *glyph_names[]) {
     init_grid_info(UI_COUNT, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, UI_COUNT);
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
     for (int i = 0; i < UI_COUNT; i++) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
