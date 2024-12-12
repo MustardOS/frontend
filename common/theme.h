@@ -189,6 +189,27 @@ struct theme_config {
         int16_t ROW_COUNT;
         int16_t ROW_HEIGHT;
         struct {
+            int16_t ALIGNMENT;
+            int16_t WIDTH;
+            int16_t HEIGHT;
+            int16_t OFFSET_X;
+            int16_t OFFSET_Y;
+            int16_t RADIUS;
+            int16_t BORDER_WIDTH;
+            uint32_t BORDER;
+            int16_t BORDER_ALPHA;
+            uint32_t BACKGROUND;
+            int16_t BACKGROUND_ALPHA;
+            uint32_t TEXT;
+            int16_t TEXT_ALPHA;
+            int16_t TEXT_ALIGNMENT;
+            int16_t TEXT_LINE_SPACING;
+            int16_t TEXT_PADDING_LEFT;
+            int16_t TEXT_PADDING_TOP;
+            int16_t TEXT_PADDING_RIGHT;
+            int16_t TEXT_PADDING_BOTTOM;
+        } CURRENT_ITEM_LABEL;
+        struct {
             int16_t WIDTH;
             int16_t HEIGHT;
             int16_t RADIUS;

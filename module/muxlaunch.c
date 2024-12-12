@@ -82,11 +82,13 @@ void init_navigation_groups_grid(char *item_labels[], char *glyph_names[]) {
     init_grid_info(UI_COUNT, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, UI_COUNT);
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
     for (int i = 0; i < UI_COUNT; i++) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
         lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_set_user_data(cell_panel, strdup(item_labels[i]));
         lv_obj_t * cell_image = lv_img_create(cell_panel);
         lv_obj_t * cell_label = lv_label_create(cell_panel);
         lv_obj_set_user_data(cell_label, glyph_names[i]);
@@ -172,21 +174,26 @@ void init_navigation_groups() {
 
         for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
             apply_theme_list_panel(&theme, &device, ui_objects_panel[i]);
-            apply_theme_list_item(&theme, ui_objects[i], item_labels[i], false, false);
+            apply_theme_list_item(&theme, ui_objects[i], item_labels[i], true, false);
             apply_theme_list_glyph(&theme, ui_icons[i], mux_module, glyph_names[i]);
 
             lv_group_add_obj(ui_group, ui_objects[i]);
             lv_group_add_obj(ui_group_glyph, ui_icons[i]);
+            lv_obj_set_user_data(ui_objects_panel[i], strdup(item_labels[i]));
             lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
 
             apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], item_labels[i]);
+            apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], item_labels[i]);
         }
     }
+    lv_label_set_text(ui_lblGridCurrentItem, item_labels[0]);
+    set_label_long_mode(&theme, ui_objects[0], item_labels[0]);
 }
 
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
@@ -198,6 +205,8 @@ void list_nav_prev(int steps) {
     } else {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     }
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -208,6 +217,7 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
@@ -219,6 +229,8 @@ void list_nav_next(int steps) {
     } else {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     }
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 

@@ -94,6 +94,7 @@ void init_navigation_groups_grid(const char *app_path) {
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
     for (size_t i = 0; i < item_count; i++) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
@@ -269,6 +270,7 @@ void list_nav_prev(int steps) {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     }
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
     nav_moved = 1;
 }
 
@@ -293,6 +295,7 @@ void list_nav_next(int steps) {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     }
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
     nav_moved = 1;
 }
 

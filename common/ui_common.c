@@ -27,6 +27,7 @@ lv_obj_t *ui_staBluetooth;
 lv_obj_t *ui_staNetwork;
 lv_obj_t *ui_staCapacity;
 lv_obj_t *ui_pnlFooter;
+lv_obj_t *ui_lblGridCurrentItem;
 lv_obj_t *ui_lblNavAGlyph;
 lv_obj_t *ui_lblNavA;
 lv_obj_t *ui_lblNavBGlyph;
@@ -100,6 +101,9 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
 
     ui_pnlGrid = lv_obj_create(ui_screen);
+    ui_lblGridCurrentItem = lv_label_create(ui_screen);
+    lv_label_set_text(ui_lblGridCurrentItem, "");
+    lv_obj_add_flag(ui_lblGridCurrentItem, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
     ui_pnlContent = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlContent, device->MUX.WIDTH);
@@ -1024,6 +1028,32 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_scroll_dir(ui_pnlGrid, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(ui_pnlGrid, LV_SCROLLBAR_MODE_ON);
     lv_obj_set_scroll_snap_y(ui_pnlGrid, LV_SCROLL_SNAP_NONE);
+
+    lv_obj_clear_flag(ui_lblGridCurrentItem, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT , theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X, theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
+    lv_label_set_long_mode(ui_lblGridCurrentItem, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.WIDTH == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
+    lv_obj_set_height(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.HEIGHT == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
+    lv_obj_set_style_radius(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_bg_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_text_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.TEXT),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 void grid_item_focus_event_cb(lv_event_t *e) {

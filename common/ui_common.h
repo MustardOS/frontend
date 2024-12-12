@@ -54,6 +54,7 @@ extern lv_obj_t *ui_staBluetooth;
 extern lv_obj_t *ui_staNetwork;
 extern lv_obj_t *ui_staCapacity;
 extern lv_obj_t *ui_pnlFooter;
+extern lv_obj_t *ui_lblGridCurrentItem;
 extern lv_obj_t *ui_lblNavAGlyph;
 extern lv_obj_t *ui_lblNavA;
 extern lv_obj_t *ui_lblNavBGlyph;
