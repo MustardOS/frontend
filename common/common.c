@@ -2054,7 +2054,7 @@ char *kiosk_nope() {
 void run_exec(const char *args[]) {
     pid_t pid = fork();
     if (pid == 0) {
-        execvp(args[0], args);
+        execvp(args[0], (char * const *)args);
         _exit(EXIT_FAILURE);
     } else if (pid > 0) {
         waitpid(pid, NULL, 0);
