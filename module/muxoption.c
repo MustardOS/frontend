@@ -102,17 +102,16 @@ void add_info_item(int index, char *item_text, char *glyph_name, bool add_bottom
     apply_theme_list_item(&theme, ui_lblInfoItem, item_text, false, false);
     lv_obj_t * ui_icoInfoItem = lv_img_create(ui_pnlInfoItem);
     apply_theme_list_glyph(&theme, ui_icoInfoItem, mux_module, glyph_name);
-    lv_obj_set_style_border_width(ui_pnlInfoItem, 5,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+
     if (add_bottom_border) {
+        lv_obj_set_height(ui_pnlInfoItem, 1);
+        lv_obj_set_style_border_width(ui_pnlInfoItem, 1,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_color(ui_pnlInfoItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_opa(ui_pnlInfoItem, theme.LIST_DEFAULT.TEXT_ALPHA,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else {
-        lv_obj_set_style_border_opa(ui_pnlInfoItem, 0,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
     lv_obj_move_to_index(ui_pnlInfoItem, index);
@@ -124,7 +123,8 @@ void add_info_items() {
     add_info_item(0, game_directory, "folder", false);
     char game_name[FILENAME_MAX];
     snprintf(game_name, sizeof(game_name), "%s:  %s", TS("Name"), rom_name);
-    add_info_item(1, game_name, "rom", true);
+    add_info_item(1, game_name, "rom", false);
+    add_info_item(2, "", "", true);
 }
 
 void init_navigation_groups() {
