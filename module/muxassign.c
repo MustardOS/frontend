@@ -388,29 +388,9 @@ char *get_raw_core(const char *group) {
     return raw_core_copy;
 }
 
-char *get_directory_core() {
-    char content_core[MAX_BUFFER_SIZE];
-    snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
-    if (file_exist(content_core)) {
-        return read_line_from_file(content_core, 1);
-    }
-    return "";
-}
-
-char *get_file_core() {
-    char content_core[MAX_BUFFER_SIZE];
-    snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
-    if (file_exist(content_core)) {
-        return read_line_from_file(content_core, 2);
-    }
-    return "";
-}
-
 void create_core_items(const char *target) {
-    char *directory_core = get_directory_core();
-    char *file_core = get_file_core();
+    char *directory_core = get_directory_core(rom_dir);
+    char *file_core = get_file_core(rom_dir, rom_name);
     char filename[FILENAME_MAX];
     snprintf(filename, sizeof(filename), "%s/MUOS/info/assign/%s.ini",
              device.STORAGE.ROM.MOUNT, target);

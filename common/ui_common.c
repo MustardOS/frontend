@@ -385,8 +385,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_pnlHelp, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHelpMessage = lv_obj_create(ui_pnlHelp);
-    lv_obj_set_width(ui_pnlHelpMessage, 550);
-    lv_obj_set_height(ui_pnlHelpMessage, 385);
+    lv_obj_set_width(ui_pnlHelpMessage, device->MUX.WIDTH * .9);
+    lv_obj_set_height(ui_pnlHelpMessage, device->MUX.HEIGHT * .9);
     lv_obj_set_align(ui_pnlHelpMessage, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_pnlHelpMessage, LV_FLEX_FLOW_COLUMN_WRAP);
     lv_obj_set_flex_align(ui_pnlHelpMessage, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -402,7 +402,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_column(ui_pnlHelpMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblHelpHeader = lv_label_create(ui_pnlHelpMessage);
-    lv_obj_set_width(ui_lblHelpHeader, 515);
+    lv_obj_set_width(ui_lblHelpHeader, device->MUX.WIDTH * .9 - 30);
     lv_obj_set_height(ui_lblHelpHeader, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpHeader, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpHeader, LV_LABEL_LONG_DOT);
@@ -411,8 +411,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_opa(ui_lblHelpHeader, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblHelpContent = lv_label_create(ui_pnlHelpMessage);
-    lv_obj_set_width(ui_lblHelpContent, 515);
-    lv_obj_set_height(ui_lblHelpContent, 250);
+    lv_obj_set_width(ui_lblHelpContent, device->MUX.WIDTH * .9 - 30);
+    lv_obj_set_height(ui_lblHelpContent, device->MUX.HEIGHT * .9 - 30);
     lv_obj_set_align(ui_lblHelpContent, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpContent, LV_LABEL_LONG_WRAP);
     lv_label_set_text(ui_lblHelpContent, "");
@@ -422,7 +422,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_line_space(ui_lblHelpContent, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHelpExtra = lv_obj_create(ui_pnlHelpMessage);
-    lv_obj_set_width(ui_pnlHelpExtra, 515);
+    lv_obj_set_width(ui_pnlHelpExtra, device->MUX.WIDTH * .9 - 30);
     lv_obj_set_height(ui_pnlHelpExtra, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_pnlHelpExtra, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_pnlHelpExtra, LV_FLEX_FLOW_ROW);
@@ -475,8 +475,8 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_bottom(ui_lblPreviewHeader, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHelpPreview = lv_obj_create(ui_pnlHelp);
-    lv_obj_set_width(ui_pnlHelpPreview, 550);
-    lv_obj_set_height(ui_pnlHelpPreview, 385);
+    lv_obj_set_width(ui_pnlHelpPreview, device->MUX.WIDTH * .9);
+    lv_obj_set_height(ui_pnlHelpPreview, device->MUX.HEIGHT * .9);
     lv_obj_set_align(ui_pnlHelpPreview, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_pnlHelpPreview, LV_FLEX_FLOW_COLUMN_WRAP);
     lv_obj_set_flex_align(ui_pnlHelpPreview, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -493,7 +493,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_column(ui_pnlHelpPreview, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblHelpPreviewHeader = lv_label_create(ui_pnlHelpPreview);
-    lv_obj_set_width(ui_lblHelpPreviewHeader, 515);
+    lv_obj_set_width(ui_lblHelpPreviewHeader, device->MUX.WIDTH * .9 - 30);
     lv_obj_set_height(ui_lblHelpPreviewHeader, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHelpPreviewHeader, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblHelpPreviewHeader, LV_LABEL_LONG_DOT);

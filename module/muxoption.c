@@ -29,6 +29,9 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 char *mux_module;
+char *rom_name;
+char *rom_dir;
+char *rom_system;
 
 struct mux_config config;
 struct mux_device device;
@@ -67,23 +70,65 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblGovernor, TS("Set the CPU governor for the selected content or directory")},
     };
 
-    char *message = TG("No Help Information Found");
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
+    char message[MAX_BUFFER_SIZE];
+    snprintf(message, sizeof(message), "%s", TG("No Help Information Found"));
 
-    for (int i = 0; i < num_messages; i++) {
-        if (element_focused == help_messages[i].element) {
-            message = help_messages[i].message;
-            break;
-        }
-    }
+    if (element_focused == help_messages[0].element) {
+        snprintf(message, sizeof(message), "%s", help_messages[0].message);
+    } else if (element_focused == help_messages[1].element) {
+        snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s", 
+                TS("Set the system core or external emulator for the selected content or directory"),
+                TS("Current"),
+                TS("Directory"), get_directory_core(rom_dir),
+                TS("Individual"), get_file_core(rom_dir, rom_name));
+    } else if (element_focused == help_messages[2].element) {
+        snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s", 
+                TS("Set the CPU governor for the selected content or directory"),
+                TS("Current"),
+                TS("Directory"), get_directory_governor(rom_dir),
+                TS("Individual"), get_file_governor(rom_dir, rom_name));
+    } 
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) snprintf(message, sizeof(message), "%s", TG("No Help Information Found"));
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
 }
 
+void add_info_item(int index, char *item_text, char *glyph_name, bool add_bottom_border) {
+    lv_obj_t * ui_pnlInfoItem = lv_obj_create(ui_pnlContent);
+    apply_theme_list_panel(&theme, &device, ui_pnlInfoItem);
+    lv_obj_t * ui_lblInfoItem = lv_label_create(ui_pnlInfoItem);
+    apply_theme_list_item(&theme, ui_lblInfoItem, item_text, false, false);
+    lv_obj_t * ui_icoInfoItem = lv_img_create(ui_pnlInfoItem);
+    apply_theme_list_glyph(&theme, ui_icoInfoItem, mux_module, glyph_name);
+    if (add_bottom_border) {
+        lv_obj_set_style_border_width(ui_pnlInfoItem, 5,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_color(ui_pnlInfoItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_opa(ui_pnlInfoItem, theme.LIST_DEFAULT.TEXT_ALPHA,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM,
+                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+    } else {
+        lv_obj_set_style_border_width(ui_pnlInfoItem, 0,
+                            LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
+    lv_obj_move_to_index(ui_pnlInfoItem, index);
+}
+
+void add_info_items() {
+    char game_directory[FILENAME_MAX];
+    snprintf(game_directory, sizeof(game_directory), "%s:  %s", TS("Directory"), get_last_subdir(rom_dir, '/', 4));
+    add_info_item(0, game_directory, "folder", false);
+    char game_name[FILENAME_MAX];
+    snprintf(game_name, sizeof(game_name), "%s:  %s", TS("Name"), rom_name);
+    add_info_item(1, game_name, "rom", true);
+}
+
 void init_navigation_groups() {
+    add_info_items();
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlSearch,
             ui_pnlCore,
@@ -339,6 +384,29 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+
+    char *cmd_help = "\nmuOS Options\nUsage: %s <-cds>\n\nOptions:\n"
+                     "\t-c Name of content file\n"
+                     "\t-d Name of content directory\n"
+                     "\t-s Name of content system (use 'none' for root)\n\n";
+
+    int opt;
+    while ((opt = getopt(argc, argv, "c:d:s:")) != -1) {
+        switch (opt) {
+            case 'c':
+                rom_name = optarg;
+                break;
+            case 'd':
+                rom_dir = optarg;
+                break;
+            case 's':
+                rom_system = optarg;
+                break;
+            default:
+                fprintf(stderr, cmd_help, argv[0]);
+                return 1;
+        }
+    }
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
