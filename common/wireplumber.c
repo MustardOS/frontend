@@ -6,11 +6,8 @@
 #include "json/json.h"
 #include "wireplumber.h"
 
-#ifdef DEBUG
-#define DEBUG_PRINT(fmt, ...) printf("[DEBUG] %s:%d: " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
-#else
-#define DEBUG_PRINT(fmt, ...)
-#endif
+#include "common.h"
+#include "log.h"
 
 static char *execute_pw_dump(void);
 static int parse_json_to_sinks(const char *json_output, Sink **sinks, int *count);
@@ -93,7 +90,7 @@ static char *execute_pw_dump(void) {
     }
     pclose(fp);
 
-    DEBUG_PRINT("JSON output size: %zu bytes\n", json_size);
+    LOG_DEBUG(mux_module, "JSON output size: %zu bytes\n", json_size);
     return json_output;
 }
 
@@ -215,10 +212,10 @@ static Sink create_sink_from_json(struct json item) {
     const char *raw_json = json_raw(item);
     size_t raw_length = json_raw_length(item);
     if (raw_json && raw_length > 0) {
-        DEBUG_PRINT("Full JSON for sink: %.*s\n", (int)raw_length, raw_json);
+        LOG_DEBUG(mux_module, "Full JSON for sink: %.*s\n", (int)raw_length, raw_json);
     }
 
-    DEBUG_PRINT("Found sink: ID=%d, Description=%s, Nick=%s, Name=%s\n", sink.id, sink.description, sink.nick, sink.name);
+    LOG_INFO(mux_module, "Found sink: ID=%d, Description=%s, Nick=%s, Name=%s\n", sink.id, sink.description, sink.nick, sink.name);
     return sink;
 }
 
@@ -247,11 +244,11 @@ int get_default_sink_id(int *sink_id) {
 int set_default_sink(int sink_id) {
     char command[256];
     snprintf(command, sizeof(command), "wpctl set-default %d", sink_id);
-    DEBUG_PRINT("Executing command: %s\n", command);
+    LOG_INFO(mux_module, "Executing command: %s\n", command);
     int result = system(command);
     if (result != 0) {
         perror("Failed to execute command");
     }
-    DEBUG_PRINT("Command result: %d\n", result);
+    LOG_INFO(mux_module, "Command result: %d\n", result);
     return result;
 }

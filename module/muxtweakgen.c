@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <log.h>
+
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/theme.h"
@@ -17,6 +19,7 @@
 #include "../common/kiosk.h"
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
+#include "../common/wireplumber.h"
 
 char *mux_module;
 static int js_fd;
@@ -45,14 +48,14 @@ lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
 
-int hidden_original, bgm_original, sound_original, startup_original, colour_original, brightness_original;
+int hidden_original, bgm_original, sound_original, startup_original, colour_original, brightness_original, audio_sink_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 10
+#define UI_COUNT 11
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -68,6 +71,7 @@ void show_help(lv_obj_t *element_focused) {
                                   "at the start of a file or folder name to hide it")},
             {ui_lblBGM,        TS("Toggle the background music of the frontend - This will stop if content is launched")},
             {ui_lblSound,      TS("Toggle the navigation sound of the frontend if the current theme supports it")},
+            {ui_lblAudioSink,  TS("Change the audio output sink")},
             {ui_lblStartup,    TS("Change where the device will start up into")},
             {ui_lblColour,     TS("Change the colour temperature of the display if the device supports it")},
             {ui_lblBrightness, TS("Change the brightness of the device to a specific level")},
@@ -93,6 +97,69 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
+void init_audio_sink_dropdown() {
+    LOG_DEBUG(mux_module, "Initializing audio sink dropdown...\n");
+
+    Sink *sinks = NULL;
+    int count = 0;
+
+    if (get_sinks(&sinks, &count) != 0) {
+        LOG_ERROR(mux_module, "Failed to retrieve audio sinks.\n");
+        return;
+    }
+
+    lv_dropdown_clear_options(ui_droAudioSink);
+
+    for (int i = 0; i < count; i++) {
+        char dropdown_option[128];
+        snprintf(dropdown_option, sizeof(dropdown_option), "%d: %s", sinks[i].id, sinks[i].description);
+        LOG_DEBUG(mux_module, "Adding sink to dropdown: %s\n", dropdown_option);
+        lv_dropdown_add_option(ui_droAudioSink, dropdown_option, LV_DROPDOWN_POS_LAST);
+    }
+
+    int default_sink_id = -1;
+    if (get_default_sink_id(&default_sink_id) == 0) {
+        LOG_DEBUG(mux_module, "Default sink ID: %d\n", default_sink_id);
+        for (int i = 0; i < count; i++) {
+            if (sinks[i].id == default_sink_id) {
+                audio_sink_original = i;
+                LOG_DEBUG(mux_module, "Setting default sink to index: %d\n", i);
+                lv_dropdown_set_selected(ui_droAudioSink, i);
+                break;
+            }
+        }
+    } else {
+        LOG_ERROR(mux_module, "Failed to retrieve default sink ID.\n");
+    }
+
+    free(sinks);
+}
+
+static void update_default_sink(int selected_index) {
+    Sink *sinks = NULL;
+    int count = 0;
+
+    if (get_sinks(&sinks, &count) != 0) {
+        fprintf(stderr, "Failed to retrieve sinks.\n");
+        return;
+    }
+
+    if (selected_index >= 0 && selected_index < count) {
+        int sink_id = sinks[selected_index].id;
+        LOG_DEBUG(mux_module, "Setting default sink ID: %d\n", sink_id);
+
+        if (set_default_sink(sink_id) == 0) {
+            LOG_DEBUG(mux_module, "Successfully set default sink.\n");
+        } else {
+            LOG_ERROR(mux_module, "Failed to set default sink.\n");
+        }
+    } else {
+        LOG_ERROR(mux_module, "Invalid selected audio sink index: %d\n", selected_index);
+    }
+
+    free(sinks);
+}
+
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t * obj = lv_event_get_target(e);
@@ -108,6 +175,7 @@ void elements_events_init() {
             ui_droHidden,
             ui_droBGM,
             ui_droSound,
+            ui_droAudioSink,
             ui_droStartup,
             ui_droColour,
             ui_droBrightness
@@ -125,6 +193,7 @@ void init_dropdown_settings() {
     startup_original = lv_dropdown_get_selected(ui_droStartup);
     colour_original = lv_dropdown_get_selected(ui_droColour);
     brightness_original = lv_dropdown_get_selected(ui_droBrightness);
+    init_audio_sink_dropdown();
 }
 
 void restore_tweak_options() {
@@ -199,6 +268,12 @@ void save_tweak_options() {
         write_text_to_file("/run/muos/global/settings/general/sound", "w", INT, idx_sound);
     }
 
+    int idx_audio_sink = lv_dropdown_get_selected(ui_droAudioSink);
+    if (idx_audio_sink != audio_sink_original) {
+        is_modified++;
+        update_default_sink(idx_audio_sink);
+    }
+
     if (lv_dropdown_get_selected(ui_droStartup) != startup_original) {
         is_modified++;
         write_text_to_file("/run/muos/global/settings/general/startup", "w", CHAR, idx_startup);
@@ -226,6 +301,7 @@ void init_navigation_groups() {
             ui_pnlHidden,
             ui_pnlBGM,
             ui_pnlSound,
+            ui_pnlAudioSink,
             ui_pnlStartup,
             ui_pnlColour,
             ui_pnlBrightness,
@@ -238,18 +314,20 @@ void init_navigation_groups() {
     ui_objects[0] = ui_lblHidden;
     ui_objects[1] = ui_lblBGM;
     ui_objects[2] = ui_lblSound;
-    ui_objects[3] = ui_lblStartup;
-    ui_objects[4] = ui_lblColour;
-    ui_objects[5] = ui_lblBrightness;
-    ui_objects[6] = ui_lblHDMI;
-    ui_objects[7] = ui_lblPower;
-    ui_objects[8] = ui_lblInterface;
-    ui_objects[9] = ui_lblAdvanced;
+    ui_objects[3] = ui_lblAudioSink;
+    ui_objects[4] = ui_lblStartup;
+    ui_objects[5] = ui_lblColour;
+    ui_objects[6] = ui_lblBrightness;
+    ui_objects[7] = ui_lblHDMI;
+    ui_objects[8] = ui_lblPower;
+    ui_objects[9] = ui_lblInterface;
+    ui_objects[10] = ui_lblAdvanced;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droHidden,
             ui_droBGM,
             ui_droSound,
+            ui_droAudioSink,
             ui_droStartup,
             ui_droColour,
             ui_droBrightness,
@@ -263,6 +341,7 @@ void init_navigation_groups() {
             ui_icoHidden,
             ui_icoBGM,
             ui_icoSound,
+            ui_icoAudioSink,
             ui_icoStartup,
             ui_icoColour,
             ui_icoBrightness,
@@ -275,6 +354,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlHidden);
     apply_theme_list_panel(&theme, &device, ui_pnlBGM);
     apply_theme_list_panel(&theme, &device, ui_pnlSound);
+    apply_theme_list_panel(&theme, &device, ui_pnlAudioSink);
     apply_theme_list_panel(&theme, &device, ui_pnlStartup);
     apply_theme_list_panel(&theme, &device, ui_pnlColour);
     apply_theme_list_panel(&theme, &device, ui_pnlBrightness);
@@ -286,6 +366,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblHidden, TS("Show Hidden Content"), false, true);
     apply_theme_list_item(&theme, ui_lblBGM, TS("Background Music"), false, true);
     apply_theme_list_item(&theme, ui_lblSound, TS("Navigation Sound"), false, true);
+    apply_theme_list_item(&theme, ui_lblAudioSink, TS("Audio Sink"), false, true);
     apply_theme_list_item(&theme, ui_lblStartup, TS("Device Startup"), false, true);
     apply_theme_list_item(&theme, ui_lblColour, TS("Colour Temperature"), false, true);
     apply_theme_list_item(&theme, ui_lblBrightness, TS("Brightness"), false, true);
@@ -297,6 +378,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoHidden, mux_module, "hidden");
     apply_theme_list_glyph(&theme, ui_icoBGM, mux_module, "bgm");
     apply_theme_list_glyph(&theme, ui_icoSound, mux_module, "sound");
+    apply_theme_list_glyph(&theme, ui_icoAudioSink, mux_module, "audiosink");
     apply_theme_list_glyph(&theme, ui_icoStartup, mux_module, "startup");
     apply_theme_list_glyph(&theme, ui_icoColour, mux_module, "colour");
     apply_theme_list_glyph(&theme, ui_icoBrightness, mux_module, "brightness");
@@ -308,6 +390,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droHidden, NULL);
     apply_theme_list_drop_down(&theme, ui_droBGM, NULL);
     apply_theme_list_drop_down(&theme, ui_droSound, NULL);
+    apply_theme_list_drop_down(&theme, ui_droAudioSink, NULL);
     apply_theme_list_drop_down(&theme, ui_droStartup, NULL);
     apply_theme_list_drop_down(&theme, ui_droColour, NULL);
 
@@ -500,6 +583,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblHidden, "hidden");
     lv_obj_set_user_data(ui_lblBGM, "bgm");
     lv_obj_set_user_data(ui_lblSound, "sound");
+    lv_obj_set_user_data(ui_lblAudioSink, "audiosink");
     lv_obj_set_user_data(ui_lblStartup, "startup");
     lv_obj_set_user_data(ui_lblColour, "colour");
     lv_obj_set_user_data(ui_lblBrightness, "brightness");
