@@ -555,7 +555,7 @@ void image_refresh(char *image_type) {
             }
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
-                        image, LV_ALIGN_CENTER, 515, 250, 0, 0, 0, 0
+                        image, LV_ALIGN_CENTER, device.MUX.WIDTH * .9 - 60, device.MUX.HEIGHT * .9 - 120, 0, 0, 0, 0
                 };
                 update_image(ui_imgHelpPreviewImage, image_settings);
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "%s", image);

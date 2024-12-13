@@ -277,3 +277,11 @@ char *get_glyph_from_file(const char *directory_name, const char *item_name, cha
 char *kiosk_nope();
 
 void run_exec(const char *args[]);
+
+char *get_directory_core(char *rom_dir);
+
+char *get_file_core(char *rom_dir, char *rom_name);
+
+char *get_directory_governor(char *rom_dir);
+
+char *get_file_governor(char *rom_dir, char *rom_name);

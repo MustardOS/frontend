@@ -2060,3 +2060,43 @@ void run_exec(const char *args[]) {
         waitpid(pid, NULL, 0);
     }
 }
+
+char *get_directory_core(char *rom_dir) {
+    char content_core[MAX_BUFFER_SIZE];
+    snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    if (file_exist(content_core)) {
+        return read_line_from_file(content_core, 1);
+    }
+    return "";
+}
+
+char *get_file_core(char *rom_dir, char *rom_name) {
+    char content_core[MAX_BUFFER_SIZE];
+    snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
+    if (file_exist(content_core)) {
+        return read_line_from_file(content_core, 2);
+    }
+    return "";
+}
+
+char *get_directory_governor(char *rom_dir) {
+    char content_governor[MAX_BUFFER_SIZE];
+    snprintf(content_governor, sizeof(content_governor), "%s/%s/core.gov",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    if (file_exist(content_governor)) {
+        return read_line_from_file(content_governor, 1);
+    }
+    return "";
+}
+
+char *get_file_governor(char *rom_dir, char *rom_name) {
+    char content_governor[MAX_BUFFER_SIZE];
+    snprintf(content_governor, sizeof(content_governor), "%s/%s/%s.gov",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
+    if (file_exist(content_governor)) {
+        return read_line_from_file(content_governor, 1);
+    }
+    return "";
+}
