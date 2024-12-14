@@ -419,10 +419,10 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_pnlHelpExtra = lv_obj_create(ui_pnlHelpMessage);
     lv_obj_set_width(ui_pnlHelpExtra, device->MUX.WIDTH * .9 - 60);
-    lv_obj_set_height(ui_pnlHelpExtra, LV_SIZE_CONTENT);
-    lv_obj_align(ui_pnlHelpExtra, LV_ALIGN_BOTTOM_LEFT, 15, -15);
+    lv_obj_set_height(ui_pnlHelpExtra, theme->FOOTER.HEIGHT);
+    lv_obj_align(ui_pnlHelpExtra, LV_ALIGN_BOTTOM_LEFT, 15, 0);
     lv_obj_set_flex_flow(ui_pnlHelpExtra, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_pnlHelpExtra, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_align(ui_pnlHelpExtra, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHelpExtra, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE |
                                        LV_OBJ_FLAG_GESTURE_BUBBLE | LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE |
                                        LV_OBJ_FLAG_SCROLL_ELASTIC |
@@ -432,37 +432,11 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlHelpExtra, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpExtra, LV_BORDER_SIDE_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblPreviewHeaderGlyph = lv_label_create(ui_pnlHelpExtra);
-    lv_obj_set_width(ui_lblPreviewHeaderGlyph, 28);
-    lv_obj_set_height(ui_lblPreviewHeaderGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblPreviewHeaderGlyph, LV_ALIGN_CENTER);
-    lv_label_set_long_mode(ui_lblPreviewHeaderGlyph, LV_LABEL_LONG_CLIP);
-    if (config.SETTINGS.ADVANCED.SWAP) {
-        lv_label_set_text(ui_lblPreviewHeaderGlyph, "\u21D2");
-    } else {
-        lv_label_set_text(ui_lblPreviewHeaderGlyph, "\u21D3");
-    }
-    lv_obj_set_style_text_color(ui_lblPreviewHeaderGlyph, lv_color_hex(theme->NAV.A.GLYPH),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblPreviewHeaderGlyph, theme->NAV.A.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblPreviewHeaderGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblPreviewHeaderGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblPreviewHeaderGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblPreviewHeaderGlyph, theme->FONT.FOOTER_ICON_PAD_TOP,
-                             LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblPreviewHeaderGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblPreviewHeaderGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
+                                          theme->NAV.A);
 
-    ui_lblPreviewHeader = lv_label_create(ui_pnlHelpExtra);
-    lv_obj_set_width(ui_lblPreviewHeader, device->MUX.WIDTH * .9 - 60);
-    lv_obj_set_height(ui_lblPreviewHeader, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblPreviewHeader, LV_ALIGN_CENTER);
-    lv_label_set_long_mode(ui_lblPreviewHeader, LV_LABEL_LONG_CLIP);
+    ui_lblPreviewHeader = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
     lv_label_set_text(ui_lblPreviewHeader, TG("Switch to Preview Image"));
-    lv_obj_set_style_text_color(ui_lblPreviewHeader, lv_color_hex(theme->NAV.A.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblPreviewHeader, theme->NAV.A.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblPreviewHeader, theme->FONT.FOOTER_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblPreviewHeader, theme->FONT.FOOTER_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlHelpPreview = lv_obj_create(ui_pnlHelp);
     lv_obj_set_width(ui_pnlHelpPreview, device->MUX.WIDTH * .9);
@@ -517,49 +491,21 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
 
     ui_pnlHelpPreviewInfo = lv_obj_create(ui_pnlHelpPreview);
     lv_obj_set_width(ui_pnlHelpPreviewInfo, device->MUX.WIDTH * .9 - 60);
-    lv_obj_set_height(ui_pnlHelpPreviewInfo, LV_SIZE_CONTENT);
-    lv_obj_align(ui_pnlHelpPreviewInfo, LV_ALIGN_BOTTOM_LEFT, 15, -15);
+    lv_obj_set_height(ui_pnlHelpPreviewInfo, theme->FOOTER.HEIGHT);
+    lv_obj_align(ui_pnlHelpPreviewInfo, LV_ALIGN_BOTTOM_LEFT, 15, 0);
     lv_obj_set_flex_flow(ui_pnlHelpPreviewInfo, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_pnlHelpPreviewInfo, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_flex_align(ui_pnlHelpPreviewInfo, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlHelpPreviewInfo, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlHelpPreviewInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_pnlHelpPreviewInfo, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpPreviewInfo, LV_BORDER_SIDE_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblHelpPreviewInfoGlyph = lv_label_create(ui_pnlHelpPreviewInfo);
-    lv_obj_set_width(ui_lblHelpPreviewInfoGlyph, 28);
-    lv_obj_set_height(ui_lblHelpPreviewInfoGlyph, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblHelpPreviewInfoGlyph, LV_ALIGN_CENTER);
-    lv_label_set_long_mode(ui_lblHelpPreviewInfoGlyph, LV_LABEL_LONG_CLIP);
-    if (config.SETTINGS.ADVANCED.SWAP) {
-        lv_label_set_text(ui_lblHelpPreviewInfoGlyph, "\u21D2");
-    } else {
-        lv_label_set_text(ui_lblHelpPreviewInfoGlyph, "\u21D3");
-    }
-    lv_obj_set_style_text_color(ui_lblHelpPreviewInfoGlyph, lv_color_hex(theme->NAV.A.GLYPH),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHelpPreviewInfoGlyph, theme->NAV.A.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_lblHelpPreviewInfoGlyph, &ui_font_GamepadNav, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblHelpPreviewInfoGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblHelpPreviewInfoGlyph, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblHelpPreviewInfoGlyph, theme->FONT.FOOTER_ICON_PAD_TOP,
-                             LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblHelpPreviewInfoGlyph, theme->FONT.FOOTER_ICON_PAD_BOTTOM,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
+                                          theme->NAV.A);
 
-    ui_lblHelpPreviewInfoMessage = lv_label_create(ui_pnlHelpPreviewInfo);
-    lv_obj_set_width(ui_lblHelpPreviewInfoMessage, device->MUX.WIDTH * .9 - 60);
-    lv_obj_set_height(ui_lblHelpPreviewInfoMessage, LV_SIZE_CONTENT);
-    lv_obj_set_align(ui_lblHelpPreviewInfoMessage, LV_ALIGN_CENTER);
-    lv_label_set_long_mode(ui_lblHelpPreviewInfoMessage, LV_LABEL_LONG_CLIP);
+    ui_lblHelpPreviewInfoMessage = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
     lv_label_set_text(ui_lblHelpPreviewInfoMessage, TG("Switch to Information"));
-    lv_obj_set_style_text_color(ui_lblHelpPreviewInfoMessage, lv_color_hex(theme->NAV.A.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblHelpPreviewInfoMessage, theme->NAV.A.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblHelpPreviewInfoMessage, theme->FONT.FOOTER_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblHelpPreviewInfoMessage, theme->FONT.FOOTER_PAD_BOTTOM,
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlProgressBrightness = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlProgressBrightness, theme->BAR.PANEL_WIDTH);
