@@ -1,7 +1,6 @@
 #include <stdlib.h>
 
 #include "../font/awesome_small.h"
-#include "../font/gamepad_nav.h"
 #include "../font/notosans.h"
 #include "img/nothing.h"
 #include "common.h"
