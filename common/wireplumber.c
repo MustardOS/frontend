@@ -6,19 +6,19 @@
 #include "json/json.h"
 #include "wireplumber.h"
 
+#include <errno.h>
+
 #include "common.h"
 #include "log.h"
 
-static char *execute_pw_dump(void);
 static int parse_json_to_sinks(const char *json_output, Sink **sinks, int *count);
-static Sink create_sink_from_json(struct json item);
 
 int get_sinks(Sink **sinks, int *count) {
     printf("Executing pw-dump command to retrieve sinks...\n");
 
     FILE *fp = popen("pw-dump", "r");
     if (!fp) {
-        perror("Failed to run pw-dump");
+        LOG_ERROR(mux_module, "Failed to run pw-dump: %s", strerror(errno));
         return -1;
     }
 
@@ -30,7 +30,7 @@ int get_sinks(Sink **sinks, int *count) {
         size_t line_length = strlen(buffer);
         char *new_output = realloc(json_output, json_size + line_length + 1);
         if (!new_output) {
-            perror("Failed to allocate memory for JSON buffer");
+            LOG_ERROR(mux_module, "Failed to allocate memory for JSON buffer: %s", strerror(errno));
             free(json_output);
             pclose(fp);
             return -1;
@@ -51,47 +51,6 @@ int get_sinks(Sink **sinks, int *count) {
     free(json_output);
 
     return result;
-}
-
-static char *execute_pw_dump(void) {
-    FILE *fp = popen("pw-dump", "r");
-    if (!fp) {
-        perror("Failed to run pw-dump");
-        return NULL;
-    }
-
-    size_t buffer_size = 4096;
-    char *json_output = malloc(buffer_size);
-    if (!json_output) {
-        perror("Failed to allocate memory for JSON buffer");
-        pclose(fp);
-        return NULL;
-    }
-
-    size_t json_size = 0;
-    char line[512];
-
-    while (fgets(line, sizeof(line), fp)) {
-        size_t line_length = strlen(line);
-        if (json_size + line_length + 1 > buffer_size) {
-            buffer_size *= 2;
-            char *new_output = realloc(json_output, buffer_size);
-            if (!new_output) {
-                perror("Failed to reallocate memory for JSON buffer");
-                free(json_output);
-                pclose(fp);
-                return NULL;
-            }
-            json_output = new_output;
-        }
-        memcpy(json_output + json_size, line, line_length);
-        json_size += line_length;
-        json_output[json_size] = '\0';
-    }
-    pclose(fp);
-
-    LOG_DEBUG(mux_module, "JSON output size: %zu bytes\n", json_size);
-    return json_output;
 }
 
 static int parse_json_to_sinks(const char *json_output, Sink **sinks, int *count) {
@@ -153,7 +112,7 @@ static int parse_json_to_sinks(const char *json_output, Sink **sinks, int *count
         // Allocate memory for the new sink
         Sink *new_sinks = realloc(*sinks, (*count + 1) * sizeof(Sink));
         if (!new_sinks) {
-            perror("Failed to allocate memory for sinks array");
+            LOG_ERROR(mux_module, "Failed to allocate memory for sinks array: %s", strerror(errno));
             free(*sinks);
             return -1;
         }
@@ -166,64 +125,11 @@ static int parse_json_to_sinks(const char *json_output, Sink **sinks, int *count
     return 0;
 }
 
-static Sink create_sink_from_json(struct json item) {
-    Sink sink;
-    sink.id = -1;
-    struct json info = json_object_get(item, "info");
-    if (!json_exists(info)) {
-        return sink;
-    }
-
-    struct json props = json_object_get(info, "props");
-    if (!json_exists(props)) {
-        return sink;
-    }
-
-    struct json media_class = json_object_get(props, "media.class");
-    struct json description = json_object_get(props, "node.description");
-    struct json object_id = json_object_get(item, "id");
-
-    if (!json_exists(media_class) || json_string_compare(media_class, "Audio/Sink") != 0) {
-        return sink;
-    }
-
-    if (!json_exists(description) || !json_exists(object_id)) {
-        return sink;
-    }
-
-    json_string_copy(description, sink.description, sizeof(sink.description));
-
-    struct json nick = json_object_get(props, "node.nick");
-    struct json name = json_object_get(props, "node.name");
-    if (json_exists(nick)) {
-        json_string_copy(nick, sink.nick, sizeof(sink.nick));
-    } else {
-        strcpy(sink.nick, "Unknown");
-    }
-
-    if (json_exists(name)) {
-        json_string_copy(name, sink.name, sizeof(sink.name));
-    } else {
-        strcpy(sink.name, "Unknown");
-    }
-
-    sink.id = json_int(object_id);
-
-    const char *raw_json = json_raw(item);
-    size_t raw_length = json_raw_length(item);
-    if (raw_json && raw_length > 0) {
-        LOG_DEBUG(mux_module, "Full JSON for sink: %.*s\n", (int)raw_length, raw_json);
-    }
-
-    LOG_INFO(mux_module, "Found sink: ID=%d, Description=%s, Nick=%s, Name=%s\n", sink.id, sink.description, sink.nick, sink.name);
-    return sink;
-}
-
 int get_default_sink_id(int *sink_id) {
     const char* command = "wpctl status | grep -A 5 Sinks | grep '\\*' | sed 's/ \\|.*\\*   //' | cut -f1 -d'.'";
     FILE *fp = popen(command, "r");
     if (fp == NULL) {
-        perror("Failed to run command");
+        LOG_ERROR(mux_module, "Failed to run command: %s", strerror(errno));
         return -1;
     }
 
@@ -232,7 +138,7 @@ int get_default_sink_id(int *sink_id) {
         buffer[strcspn(buffer, "\n")] = '\0';
         *sink_id = atoi(buffer);
     } else {
-        perror("Failed to read sink ID");
+        LOG_ERROR(mux_module, "Failed to read sink ID: %s", strerror(errno));
         pclose(fp);
         return -1;
     }
@@ -244,11 +150,11 @@ int get_default_sink_id(int *sink_id) {
 int set_default_sink(int sink_id) {
     char command[256];
     snprintf(command, sizeof(command), "wpctl set-default %d", sink_id);
-    LOG_INFO(mux_module, "Executing command: %s\n", command);
+    LOG_INFO(mux_module, "Executing command: %s", command);
     int result = system(command);
     if (result != 0) {
-        perror("Failed to execute command");
+        LOG_ERROR(mux_module, "Failed to execute command: %s", strerror(errno));
     }
-    LOG_INFO(mux_module, "Command result: %d\n", result);
+    LOG_INFO(mux_module, "Command result: %d", result);
     return result;
 }

@@ -98,13 +98,13 @@ void show_help(lv_obj_t *element_focused) {
 }
 
 void init_audio_sink_dropdown() {
-    LOG_DEBUG(mux_module, "Initializing audio sink dropdown...\n");
+    LOG_DEBUG(mux_module, "Initializing audio sink dropdown...");
 
     Sink *sinks = NULL;
     int count = 0;
 
     if (get_sinks(&sinks, &count) != 0) {
-        LOG_ERROR(mux_module, "Failed to retrieve audio sinks.\n");
+        LOG_ERROR(mux_module, "Failed to retrieve audio sinks");
         return;
     }
 
@@ -113,23 +113,23 @@ void init_audio_sink_dropdown() {
     for (int i = 0; i < count; i++) {
         char dropdown_option[128];
         snprintf(dropdown_option, sizeof(dropdown_option), "%d: %s", sinks[i].id, sinks[i].description);
-        LOG_DEBUG(mux_module, "Adding sink to dropdown: %s\n", dropdown_option);
+        LOG_DEBUG(mux_module, "Adding sink to dropdown: %s", dropdown_option);
         lv_dropdown_add_option(ui_droAudioSink, dropdown_option, LV_DROPDOWN_POS_LAST);
     }
 
     int default_sink_id = -1;
     if (get_default_sink_id(&default_sink_id) == 0) {
-        LOG_DEBUG(mux_module, "Default sink ID: %d\n", default_sink_id);
+        LOG_DEBUG(mux_module, "Default sink ID: %d", default_sink_id);
         for (int i = 0; i < count; i++) {
             if (sinks[i].id == default_sink_id) {
                 audio_sink_original = i;
-                LOG_DEBUG(mux_module, "Setting default sink to index: %d\n", i);
+                LOG_DEBUG(mux_module, "Setting default sink to index: %d", i);
                 lv_dropdown_set_selected(ui_droAudioSink, i);
                 break;
             }
         }
     } else {
-        LOG_ERROR(mux_module, "Failed to retrieve default sink ID.\n");
+        LOG_ERROR(mux_module, "Failed to retrieve default sink ID.");
     }
 
     free(sinks);
@@ -140,21 +140,21 @@ static void update_default_sink(int selected_index) {
     int count = 0;
 
     if (get_sinks(&sinks, &count) != 0) {
-        fprintf(stderr, "Failed to retrieve sinks.\n");
+        LOG_ERROR(mux_module, "Failed to retrieve sinks.");
         return;
     }
 
     if (selected_index >= 0 && selected_index < count) {
         int sink_id = sinks[selected_index].id;
-        LOG_DEBUG(mux_module, "Setting default sink ID: %d\n", sink_id);
+        LOG_DEBUG(mux_module, "Setting default sink ID: %d", sink_id);
 
         if (set_default_sink(sink_id) == 0) {
-            LOG_DEBUG(mux_module, "Successfully set default sink.\n");
+            LOG_DEBUG(mux_module, "Successfully set default sink.");
         } else {
-            LOG_ERROR(mux_module, "Failed to set default sink.\n");
+            LOG_ERROR(mux_module, "Failed to set default sink.");
         }
     } else {
-        LOG_ERROR(mux_module, "Invalid selected audio sink index: %d\n", selected_index);
+        LOG_ERROR(mux_module, "Invalid selected audio sink index: %d", selected_index);
     }
 
     free(sinks);
@@ -378,7 +378,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoHidden, mux_module, "hidden");
     apply_theme_list_glyph(&theme, ui_icoBGM, mux_module, "bgm");
     apply_theme_list_glyph(&theme, ui_icoSound, mux_module, "sound");
-    apply_theme_list_glyph(&theme, ui_icoAudioSink, mux_module, "audiosink");
+    apply_theme_list_glyph(&theme, ui_icoAudioSink, mux_module, "sound");
     apply_theme_list_glyph(&theme, ui_icoStartup, mux_module, "startup");
     apply_theme_list_glyph(&theme, ui_icoColour, mux_module, "colour");
     apply_theme_list_glyph(&theme, ui_icoBrightness, mux_module, "brightness");
