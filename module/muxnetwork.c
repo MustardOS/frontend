@@ -65,6 +65,8 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
+#define UI_DHCP 6
+#define UI_STATIC 10
 #define UI_COUNT 10
 lv_obj_t *ui_panels[UI_COUNT];
 lv_obj_t *ui_objects[UI_COUNT];
@@ -199,10 +201,10 @@ void restore_network_values() {
 
     if (config.NETWORK.TYPE) {
         lv_label_set_text(ui_lblTypeValue, type_static);
-        ui_count = 9;
+        ui_count = UI_STATIC;
     } else {
         lv_label_set_text(ui_lblTypeValue, type_dhcp);
-        ui_count = 5;
+        ui_count = UI_DHCP;
     }
 
     if (config.NETWORK.SCAN) {
@@ -673,7 +675,7 @@ bool handle_navigate(void) {
             play_sound("navigate", nav_sound, 0, 0);
             if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
                 lv_label_set_text(ui_lblTypeValue, type_dhcp);
-                ui_count = 5;
+                ui_count = UI_DHCP;
                 lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
@@ -684,7 +686,7 @@ bool handle_navigate(void) {
                 lv_obj_add_flag(ui_pnlDNS, LV_OBJ_FLAG_FLOATING);
             } else {
                 lv_label_set_text(ui_lblTypeValue, type_static);
-                ui_count = 9;
+                ui_count = UI_STATIC;
                 lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
