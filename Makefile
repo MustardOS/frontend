@@ -4,8 +4,10 @@ ifeq ($(DEVICE), RG35XX)
     ARCH = -march=armv7-a -mtune=cortex-a9 -mfpu=neon-vfpv3 -mfloat-abi=softfp
 else ifeq ($(DEVICE), RG35XXPLUS)
     ARCH = -march=armv8-a+simd -mtune=cortex-a53
-else ifeq ($(DEVICE), GENERIC)
+else ifeq ($(DEVICE), ARM64)
     ARCH = -march=armv8-a
+else ifeq ($(DEVICE), NATIVE)
+    ARCH = -march=native
 else
     $(error Unsupported Device: $(DEVICE))
 endif
