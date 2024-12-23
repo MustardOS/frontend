@@ -10,22 +10,29 @@
 #define TIME_STRING_12 "%I:%M %p"
 #define TIME_STRING_24 "%H:%M"
 
-#define INTERNAL_PATH  "/opt/muos"
-#define INTERNAL_THEME "/opt/muos/default/MUOS/theme/active"
+#define INTERNAL_PATH  "/opt/muos/"
+#define INTERNAL_THEME INTERNAL_PATH "default/MUOS/theme/active"
 
-#define KIOSK_CONFIG   "/opt/muos/config/kiosk.ini"
-#define LAST_PLAY_FILE "/opt/muos/config/lastplay.txt"
+#define KIOSK_CONFIG   INTERNAL_PATH "config/kiosk.ini"
+#define LAST_PLAY_FILE INTERNAL_PATH "config/lastplay.txt"
 
-#define STORAGE_PATH   "/run/muos/storage"
-#define STORAGE_THEME  "/run/muos/storage/theme/active"
+#define RUN_PATH "/run/muos/"
 
-#define INFO_CAT_PATH "/run/muos/storage/info/catalogue"
-#define INFO_COR_PATH "/run/muos/storage/info/core"
-#define INFO_CFG_PATH "/run/muos/storage/info/config"
-#define INFO_CNT_PATH "/run/muos/storage/info/controller"
-#define INFO_FAV_PATH "/run/muos/storage/info/favourite"
-#define INFO_HIS_PATH "/run/muos/storage/info/history"
-#define INFO_NAM_PATH "/run/muos/storage/info/name"
+#define RUN_DEVICE_PATH  RUN_PATH "device/"
+#define RUN_GLOBAL_PATH  RUN_PATH "global/"
+#define RUN_KIOSK_PATH   RUN_PATH "kiosk/"
+#define RUN_STORAGE_PATH RUN_PATH "storage/"
+#define RUN_SYSTEM_PATH  RUN_PATH "system/"
+
+#define STORAGE_THEME RUN_STORAGE_PATH "theme/active"
+
+#define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
+#define INFO_COR_PATH RUN_STORAGE_PATH "info/core"
+#define INFO_CFG_PATH RUN_STORAGE_PATH "info/config"
+#define INFO_CNT_PATH RUN_STORAGE_PATH "info/controller"
+#define INFO_FAV_PATH RUN_STORAGE_PATH "info/favourite"
+#define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
+#define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index

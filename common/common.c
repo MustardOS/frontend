@@ -591,7 +591,7 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
 
 char *format_meta_text(char *filename) {
     char meta_cut[MAX_BUFFER_SIZE];
-    snprintf(meta_cut, sizeof(meta_cut), "/opt/muos/script/mux/metacut.sh \"%s\"", filename);
+    snprintf(meta_cut, sizeof(meta_cut), (INTERNAL_PATH "script/mux/metacut.sh \"%s\""), filename);
 
     FILE * fp = popen(meta_cut, "r");
     if (fp == NULL) {
@@ -933,7 +933,7 @@ void play_sound(const char *sound, int enabled, int wait, int background) {
         pid_t pid = fork();
         if (pid == 0) {
             snprintf(ns_file, sizeof(ns_file), "%s", sound);
-            execlp("/opt/muos/extra/muplay", "muplay", ns_file, (char *) NULL);
+            execlp((INTERNAL_PATH "extra/muplay"), "muplay", ns_file, (char *) NULL);
             LOG_ERROR(mux_module, "Failed to start 'muplay' for sound playback")
             _exit(1);
         } else if (pid < 0) {
@@ -1708,8 +1708,8 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 
 void load_language(const char *program) {
     char language_file[MAX_BUFFER_SIZE];
-    snprintf(language_file, sizeof(language_file), "%s/language/%s.json",
-             STORAGE_PATH, config.SETTINGS.GENERAL.LANGUAGE);
+    snprintf(language_file, sizeof(language_file), (RUN_STORAGE_PATH "language/%s.json"),
+             config.SETTINGS.GENERAL.LANGUAGE);
 
     if (json_valid(read_text_from_file(language_file))) {
         translation_specific = json_object_get(json_parse(read_text_from_file(language_file)), program);

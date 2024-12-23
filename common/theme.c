@@ -394,7 +394,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     mini_free(muos_theme);
 
     char scheme_override[MAX_BUFFER_SIZE];
-    snprintf(scheme_override, sizeof(scheme), "%s/theme/override/%s.txt", STORAGE_PATH, mux_name);
+    snprintf(scheme_override, sizeof(scheme), (RUN_STORAGE_PATH "theme/override/%s.txt"), mux_name);
     if (file_exist(scheme_override)) {
         mini_t * muos_theme_overrides = mini_try_load(scheme_override);
         int16_t pad_right = get_ini_int(muos_theme_overrides, "font", "FONT_LIST_PAD_RIGHT", -1);

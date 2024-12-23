@@ -147,22 +147,22 @@ void save_tweak_options() {
 
     if (lv_dropdown_get_selected(ui_droShutdown) != shutdown_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/power/shutdown", "w", INT, idx_shutdown);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/power/shutdown"), "w", INT, idx_shutdown);
     }
 
     if (lv_dropdown_get_selected(ui_droBattery) != battery_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/power/low_battery", "w", INT, idx_battery);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/power/low_battery"), "w", INT, idx_battery);
     }
 
     if (lv_dropdown_get_selected(ui_droIdleDisplay) != idle_display_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/power/idle_display", "w", INT, idx_idle_display);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/power/idle_display"), "w", INT, idx_idle_display);
     }
 
     if (lv_dropdown_get_selected(ui_droIdleSleep) != idle_sleep_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/power/idle_sleep", "w", INT, idx_idle_sleep);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/power/idle_sleep"), "w", INT, idx_idle_sleep);
     }
 
     if (is_modified > 0) {

@@ -85,7 +85,7 @@ void confirm_rtc_config() {
         idx_notation = 1;
     }
 
-    write_text_to_file("/run/muos/global/clock/notation", "w", INT, idx_notation);
+    write_text_to_file((RUN_GLOBAL_PATH "clock/notation"), "w", INT, idx_notation);
 
     run_exec((const char *[]) {"hwclock", "-w", NULL});
 }
@@ -416,7 +416,7 @@ void handle_b() {
     snprintf(config_file, sizeof(config_file),
              "%s/config/config.ini", INTERNAL_PATH);
 
-    write_text_to_file("/run/muos/global/boot/clock_setup", "w", INT, 0);
+    write_text_to_file((RUN_GLOBAL_PATH "boot/clock_setup"), "w", INT, 0);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
     mux_input_stop();
 }

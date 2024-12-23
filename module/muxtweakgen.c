@@ -186,39 +186,39 @@ void save_tweak_options() {
 
     if (lv_dropdown_get_selected(ui_droHidden) != hidden_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/general/hidden", "w", INT, idx_hidden);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/general/hidden"), "w", INT, idx_hidden);
     }
 
     if (lv_dropdown_get_selected(ui_droBGM) != bgm_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/general/bgm", "w", INT, idx_bgm);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/general/bgm"), "w", INT, idx_bgm);
     }
 
     if (lv_dropdown_get_selected(ui_droSound) != sound_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/general/sound", "w", INT, idx_sound);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/general/sound"), "w", INT, idx_sound);
     }
 
     if (lv_dropdown_get_selected(ui_droStartup) != startup_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/general/startup", "w", CHAR, idx_startup);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/general/startup"), "w", CHAR, idx_startup);
     }
 
     if (lv_dropdown_get_selected(ui_droColour) != colour_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/general/colour", "w", INT, idx_colour);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/general/colour"), "w", INT, idx_colour);
     }
 
     if (lv_dropdown_get_selected(ui_droBrightness) != brightness_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/general/brightness", "w", INT, idx_brightness);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/general/brightness"), "w", INT, idx_brightness);
 
         char bright_value[8];
         snprintf(bright_value, sizeof(bright_value), "%d", idx_brightness + 1);
-        run_exec((const char *[]) {(char *) INTERNAL_PATH "/device/current/input/combo/bright.sh", bright_value, NULL});
+        run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/input/combo/bright.sh", bright_value, NULL});
     }
 
-    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "/script/mux/tweak.sh", NULL});
+    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
 }
 
 void init_navigation_groups() {

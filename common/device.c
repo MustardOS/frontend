@@ -4,19 +4,18 @@
 #include "device.h"
 
 void load_device(struct mux_device *device) {
-    const char *base_path = "/run/muos/device";
     char buffer[MAX_BUFFER_SIZE];
 
-#define DEV_INT_FIELD(field, path)                               \
-    snprintf(buffer, sizeof(buffer), "%s/%s", base_path, path);  \
-    field = (int)({                                              \
-        char *ep;                                                \
-        long val = strtol(read_text_from_file(buffer), &ep, 10); \
-        *ep ? 0 : val;                                           \
+#define DEV_INT_FIELD(field, path)                                  \
+    snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path); \
+    field = (int)({                                                 \
+        char *ep;                                                   \
+        long val = strtol(read_text_from_file(buffer), &ep, 10);    \
+        *ep ? 0 : val;                                              \
     });
 
 #define DEV_STR_FIELD(field, path)                                    \
-    snprintf(buffer, sizeof(buffer), "%s/%s", base_path, path);       \
+    snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path);   \
     strncpy(field, read_text_from_file(buffer), MAX_BUFFER_SIZE - 1); \
     field[MAX_BUFFER_SIZE - 1] = '\0';
 

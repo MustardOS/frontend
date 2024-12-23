@@ -151,47 +151,47 @@ void save_hdmi_options() {
 
     if (lv_dropdown_get_selected(ui_droEnable) != enable_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/hdmi/enabled", "w", INT, idx_enable);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/enabled"), "w", INT, idx_enable);
     }
 
     if (lv_dropdown_get_selected(ui_droResolution) != resolution_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/hdmi/resolution", "w", INT, idx_resolution);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/resolution"), "w", INT, idx_resolution);
     }
 
     if (lv_dropdown_get_selected(ui_droSpace) != space_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/hdmi/space", "w", INT, idx_space);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/space"), "w", INT, idx_space);
     }
 
     if (lv_dropdown_get_selected(ui_droDepth) != depth_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/hdmi/depth", "w", INT, idx_depth);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/depth"), "w", INT, idx_depth);
     }
 
     if (lv_dropdown_get_selected(ui_droRange) != range_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/hdmi/range", "w", INT, idx_range);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/range"), "w", INT, idx_range);
     }
 
     if (lv_dropdown_get_selected(ui_droScan) != scan_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/hdmi/scan", "w", INT, idx_scan);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/scan"), "w", INT, idx_scan);
     }
 
     if (lv_dropdown_get_selected(ui_droAudio) != audio_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/hdmi/audio", "w", INT, idx_audio);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/audio"), "w", INT, idx_audio);
     }
 
     if (idx_enable == 0) {
         if (lv_dropdown_get_selected(ui_droEnable) != enable_original) {
-            run_exec((const char *[]) {(char *) INTERNAL_PATH "/device/current/script/hdmi_stop.sh", NULL});
+            run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi_stop.sh", NULL});
         }
     } else {
         if (is_modified > 0) {
             run_exec((const char *[]) {"killall", "-q", "hdmi_start.sh", NULL});
-            run_exec((const char *[]) {(char *) INTERNAL_PATH "/device/current/script/hdmi_start.sh", NULL});
+            run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi_start.sh", NULL});
         }
     }
 }

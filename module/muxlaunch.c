@@ -480,7 +480,7 @@ void handle_kiosk_purge() {
 
         char path[MAX_BUFFER_SIZE];
         for (size_t i = 0; i < sizeof(kiosk_paths) / sizeof(kiosk_paths[0]); i++) {
-            snprintf(path, sizeof(path), "%s%s", "/run/muos/kiosk/", kiosk_paths[i]);
+            snprintf(path, sizeof(path), (RUN_KIOSK_PATH "%s"), kiosk_paths[i]);
             write_text_to_file(path, "w", INT, 0);
         }
 
@@ -499,7 +499,7 @@ void handle_kiosk_toggle() {
         } else {
             if (file_exist(kiosk_storage)) {
                 run_exec((const char *[]) {"mv", kiosk_storage, KIOSK_CONFIG, NULL});
-                run_exec((const char *[]) {"/opt/muos/script/var/init/kiosk.sh", "init", NULL});
+                run_exec((const char *[]) {(INTERNAL_PATH "script/var/init/kiosk.sh"), "init", NULL});
 
                 toast_message(TS("Processing kiosk configuration"), 1000, 1000);
                 sleep(1); /* not really needed but it's a good buffer... */

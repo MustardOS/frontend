@@ -65,8 +65,7 @@ void populate_languages() {
     struct dirent *entry;
 
     char lang_dir[MAX_BUFFER_SIZE];
-    snprintf(lang_dir, sizeof(lang_dir), "%s/language",
-             STORAGE_PATH);
+    snprintf(lang_dir, sizeof(lang_dir), (RUN_STORAGE_PATH "language"));
     DIR *dir = opendir(lang_dir);
 
     if (!dir) {
@@ -162,7 +161,7 @@ void handle_confirm() {
     lv_label_set_text(ui_lblMessage, osd_message);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
-    write_text_to_file("/run/muos/global/settings/general/language", "w", CHAR,
+    write_text_to_file((RUN_GLOBAL_PATH "settings/general/language"), "w", CHAR,
                        items[current_item_index].name);
 
     mux_input_stop();

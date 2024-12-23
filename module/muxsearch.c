@@ -795,13 +795,13 @@ void handle_confirm(void) {
 
         if (element_focused == ui_lblSearchLocal) {
             run_exec((const char *[]) {
-                    "/opt/muos/script/mux/find.sh",
+                    (INTERNAL_PATH "script/mux/find.sh"),
                     str_trim(lv_label_get_text(ui_lblLookupValue)), rom_dir,
                     NULL
             });
         } else {
             run_exec((const char *[]) {
-                    "/opt/muos/script/mux/find.sh",
+                    (INTERNAL_PATH "script/mux/find.sh"),
                     str_trim(lv_label_get_text(ui_lblLookupValue)), SD1, SD2, E_USB,
                     NULL
             });

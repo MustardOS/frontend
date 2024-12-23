@@ -37,8 +37,8 @@ int current_item_index = 0;
 int first_open = 1;
 int ui_count = 0;
 
-const char *pass_args[] = {"/opt/muos/script/web/password.sh", NULL};
-const char *net_args[] = {"/opt/muos/script/system/network.sh", NULL};
+const char *pass_args[] = {(INTERNAL_PATH "script/web/password.sh"), NULL};
+const char *net_args[] = {(INTERNAL_PATH "script/system/network.sh"), NULL};
 
 #define PASS_ENCODE "********"
 
@@ -234,19 +234,19 @@ void save_network_config() {
     if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) idx_type = 1;
     if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) idx_scan = 1;
 
-    write_text_to_file("/run/muos/global/network/enabled", "w", INT, idx_enable);
-    write_text_to_file("/run/muos/global/network/type", "w", INT, idx_type);
-    write_text_to_file("/run/muos/global/network/scan", "w", INT, idx_scan);
-    write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, lv_label_get_text(ui_lblIdentifierValue));
+    write_text_to_file((RUN_GLOBAL_PATH "network/enabled"), "w", INT, idx_enable);
+    write_text_to_file((RUN_GLOBAL_PATH "network/type"), "w", INT, idx_type);
+    write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, idx_scan);
+    write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR, lv_label_get_text(ui_lblIdentifierValue));
 
     if (strcasecmp(lv_label_get_text(ui_lblPasswordValue), PASS_ENCODE) != 0) {
-        write_text_to_file("/run/muos/global/network/pass", "w", CHAR, lv_label_get_text(ui_lblPasswordValue));
+        write_text_to_file((RUN_GLOBAL_PATH "network/pass"), "w", CHAR, lv_label_get_text(ui_lblPasswordValue));
     }
 
-    write_text_to_file("/run/muos/global/network/address", "w", CHAR, lv_label_get_text(ui_lblAddressValue));
-    write_text_to_file("/run/muos/global/network/subnet", "w", CHAR, lv_label_get_text(ui_lblSubnetValue));
-    write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, lv_label_get_text(ui_lblGatewayValue));
-    write_text_to_file("/run/muos/global/network/dns", "w", CHAR, lv_label_get_text(ui_lblDNSValue));
+    write_text_to_file((RUN_GLOBAL_PATH "network/address"), "w", CHAR, lv_label_get_text(ui_lblAddressValue));
+    write_text_to_file((RUN_GLOBAL_PATH "network/subnet"), "w", CHAR, lv_label_get_text(ui_lblSubnetValue));
+    write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR, lv_label_get_text(ui_lblGatewayValue));
+    write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, lv_label_get_text(ui_lblDNSValue));
 }
 
 void init_navigation_groups() {
@@ -659,10 +659,10 @@ bool handle_navigate(void) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("navigate", nav_sound, 0, 0);
             if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) {
-                write_text_to_file("/run/muos/global/network/scan", "w", INT, 0);
+                write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 0);
                 lv_label_set_text(ui_lblScanValue, enabled_false);
             } else {
-                write_text_to_file("/run/muos/global/network/scan", "w", INT, 1);
+                write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 1);
                 lv_label_set_text(ui_lblScanValue, enabled_true);
             }
         } else {
@@ -712,9 +712,9 @@ void handle_confirm(void) {
     if (element_focused == ui_lblConnect) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("confirm", nav_sound, 0, 0);
-            write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
+            write_text_to_file((RUN_GLOBAL_PATH "network/enabled"), "w", INT, 0);
             run_exec(net_args);
-            write_text_to_file("/run/muos/global/network/enabled", "w", INT, 1);
+            write_text_to_file((RUN_GLOBAL_PATH "network/enabled"), "w", INT, 1);
             can_scan_check();
         } else {
             int valid_info = 0;
@@ -781,10 +781,10 @@ void handle_confirm(void) {
             play_sound("confirm", nav_sound, 0, 0);
             if (element_focused == ui_lblScan) {
                 if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) {
-                    write_text_to_file("/run/muos/global/network/scan", "w", INT, 0);
+                    write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 0);
                     lv_label_set_text(ui_lblScanValue, enabled_false);
                 } else {
-                    write_text_to_file("/run/muos/global/network/scan", "w", INT, 1);
+                    write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 1);
                     lv_label_set_text(ui_lblScanValue, enabled_true);
                 }
             } else {
@@ -827,16 +827,16 @@ void handle_back(void) {
     save_network_config();
 
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
-        write_text_to_file("/run/muos/global/network/enabled", "w", INT, 0);
-        write_text_to_file("/run/muos/global/network/interface", "w", CHAR, device.NETWORK.INTERFACE);
-        write_text_to_file("/run/muos/global/network/type", "w", INT, 0);
-        write_text_to_file("/run/muos/global/network/ssid", "w", CHAR, "");
-        write_text_to_file("/run/muos/global/network/pass", "w", CHAR, "");
-        write_text_to_file("/run/muos/global/network/scan", "w", INT, 0);
-        write_text_to_file("/run/muos/global/network/address", "w", CHAR, "192.168.0.123");
-        write_text_to_file("/run/muos/global/network/subnet", "w", INT, 24);
-        write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, "192.168.0.1");
-        write_text_to_file("/run/muos/global/network/dns", "w", CHAR, "1.1.1.1");
+        write_text_to_file((RUN_GLOBAL_PATH "network/enabled"), "w", INT, 0);
+        write_text_to_file((RUN_GLOBAL_PATH "network/interface"), "w", CHAR, device.NETWORK.INTERFACE);
+        write_text_to_file((RUN_GLOBAL_PATH "network/type"), "w", INT, 0);
+        write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR, "");
+        write_text_to_file((RUN_GLOBAL_PATH "network/pass"), "w", CHAR, "");
+        write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 0);
+        write_text_to_file((RUN_GLOBAL_PATH "network/address"), "w", CHAR, "192.168.0.123");
+        write_text_to_file((RUN_GLOBAL_PATH "network/subnet"), "w", INT, 24);
+        write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR, "192.168.0.1");
+        write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, "1.1.1.1");
 
         run_exec(net_args);
     }

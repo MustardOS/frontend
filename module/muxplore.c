@@ -898,14 +898,12 @@ void create_root_items(char *dir_name) {
 
     switch (module) {
         case FAVOURITE:
-            snprintf(spec_dir, sizeof(spec_dir), "%s/info/%s",
-                     STORAGE_PATH, dir_name);
+            snprintf(spec_dir, sizeof(spec_dir), (RUN_STORAGE_PATH "info/%s"), dir_name);
 
             lv_label_set_text(ui_lblTitle, TS("FAVOURITES"));
             break;
         case HISTORY:
-            snprintf(spec_dir, sizeof(spec_dir), "%s/info/%s",
-                     STORAGE_PATH, dir_name);
+            snprintf(spec_dir, sizeof(spec_dir), (RUN_STORAGE_PATH "info/%s"), dir_name);
 
             lv_label_set_text(ui_lblTitle, TS("HISTORY"));
             break;
@@ -1211,8 +1209,8 @@ int load_content(int add_favourite) {
 
 int load_cached_content(const char *content_name, char *cache_type, int add_favourite) {
     char pointer_file[MAX_BUFFER_SIZE];
-    snprintf(pointer_file, sizeof(pointer_file), "%s/info/%s/%s",
-             STORAGE_PATH, cache_type, content_name);
+    snprintf(pointer_file, sizeof(pointer_file), (RUN_STORAGE_PATH "info/%s/%s"),
+             cache_type, content_name);
 
     int fh_current_card = 0;
     char *assigned_gov = NULL;

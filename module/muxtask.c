@@ -234,7 +234,7 @@ void handle_confirm() {
              device.STORAGE.ROM.MOUNT, items[current_item_index].name);
 
     const char *args[] = {
-            "/opt/muos/bin/fbpad",
+            (INTERNAL_PATH "bin/fbpad"),
             "-bg", theme.TERMINAL.BACKGROUND,
             "-fg", theme.TERMINAL.FOREGROUND,
             task_script,

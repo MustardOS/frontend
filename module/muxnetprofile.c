@@ -65,7 +65,7 @@ void show_help() {
 int remove_profile(char *name) {
     static char profile_file[MAX_BUFFER_SIZE];
     snprintf(profile_file, sizeof(profile_file),
-             "%s/network/%s.ini", STORAGE_PATH, name);
+             (RUN_STORAGE_PATH "network/%s.ini"), name);
 
     if (file_exist(profile_file)) {
         remove(profile_file);
@@ -78,46 +78,46 @@ int remove_profile(char *name) {
 void load_profile(char *name) {
     static char profile_file[MAX_BUFFER_SIZE];
     snprintf(profile_file, sizeof(profile_file),
-             "%s/network/%s.ini", STORAGE_PATH, name);
+             (RUN_STORAGE_PATH "network/%s.ini"), name);
 
     mini_t *net_profile = mini_try_load(profile_file);
 
-    write_text_to_file("/run/muos/global/network/type", "w", INT,
+    write_text_to_file((RUN_GLOBAL_PATH "network/type"), "w", INT,
                        (strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static") == 0) ? 1 : 0);
 
-    write_text_to_file("/run/muos/global/network/ssid", "w", CHAR,
+    write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR,
                        mini_get_string(net_profile, "network", "ssid", ""));
 
-    write_text_to_file("/run/muos/global/network/scan", "w", INT,
+    write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT,
                        mini_get_int(net_profile, "network", "scan", 0));
 
-    write_text_to_file("/run/muos/global/network/pass", "w", CHAR,
+    write_text_to_file((RUN_GLOBAL_PATH "network/pass"), "w", CHAR,
                        mini_get_string(net_profile, "network", "pass", ""));
 
-    write_text_to_file("/run/muos/global/network/address", "w", CHAR,
+    write_text_to_file((RUN_GLOBAL_PATH "network/address"), "w", CHAR,
                        mini_get_string(net_profile, "network", "address", ""));
 
-    write_text_to_file("/run/muos/global/network/subnet", "w", CHAR,
+    write_text_to_file((RUN_GLOBAL_PATH "network/subnet"), "w", CHAR,
                        mini_get_string(net_profile, "network", "subnet", ""));
 
-    write_text_to_file("/run/muos/global/network/gateway", "w", CHAR,
+    write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR,
                        mini_get_string(net_profile, "network", "gateway", ""));
 
-    write_text_to_file("/run/muos/global/network/dns", "w", CHAR,
+    write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR,
                        mini_get_string(net_profile, "network", "dns", ""));
 
     mini_free(net_profile);
 }
 
 int save_profile() {
-    const char *p_type = read_text_from_file("/run/muos/global/network/type");
-    const char *p_ssid = read_text_from_file("/run/muos/global/network/ssid");
-    const char *p_pass = read_text_from_file("/run/muos/global/network/pass");
-    const char *p_scan = read_text_from_file("/run/muos/global/network/scan");
-    const char *p_address = read_text_from_file("/run/muos/global/network/address");
-    const char *p_subnet = read_text_from_file("/run/muos/global/network/subnet");
-    const char *p_gateway = read_text_from_file("/run/muos/global/network/gateway");
-    const char *p_dns = read_text_from_file("/run/muos/global/network/dns");
+    const char *p_type = read_text_from_file((RUN_GLOBAL_PATH "network/type"));
+    const char *p_ssid = read_text_from_file((RUN_GLOBAL_PATH "network/ssid"));
+    const char *p_pass = read_text_from_file((RUN_GLOBAL_PATH "network/pass"));
+    const char *p_scan = read_text_from_file((RUN_GLOBAL_PATH "network/scan"));
+    const char *p_address = read_text_from_file((RUN_GLOBAL_PATH "network/address"));
+    const char *p_subnet = read_text_from_file((RUN_GLOBAL_PATH "network/subnet"));
+    const char *p_gateway = read_text_from_file((RUN_GLOBAL_PATH "network/gateway"));
+    const char *p_dns = read_text_from_file((RUN_GLOBAL_PATH "network/dns"));
 
     if (!p_ssid || strlen(p_ssid) == 0) {
         toast_message(TS("Invalid SSID"), 1000, 1000);
@@ -145,11 +145,11 @@ int save_profile() {
     int counter = 1;
 
     snprintf(profile_file, sizeof(profile_file),
-             "%s/network/%s.ini", STORAGE_PATH, p_ssid);
+             (RUN_STORAGE_PATH "network/%s.ini"), p_ssid);
 
     while (file_exist(profile_file)) {
         snprintf(profile_file, sizeof(profile_file),
-                 "%s/network/%s - %d.ini", STORAGE_PATH, p_ssid, ++counter);
+                 (RUN_STORAGE_PATH "network/%s - %d.ini"), p_ssid, ++counter);
     }
 
     mini_t *net_profile = mini_try_load(profile_file);
@@ -169,10 +169,41 @@ int save_profile() {
     return 1;
 }
 
+void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0, 0);
+    for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_glyph, 1);
+        nav_prev(ui_group_panel, 1);
+    }
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    nav_moved = 1;
+}
+
+void list_nav_next(int steps) {
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound("navigate", nav_sound, 0, 0);
+    }
+    for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_glyph, 1);
+        nav_next(ui_group_panel, 1);
+    }
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    nav_moved = 1;
+}
+
 void create_profile_items() {
     char profile_path[MAX_BUFFER_SIZE];
-    snprintf(profile_path, sizeof(profile_path),
-             "%s/network", STORAGE_PATH);
+    snprintf(profile_path, sizeof(profile_path), (RUN_STORAGE_PATH "network"));
 
     const char *profile_directories[] = {
             profile_path
@@ -281,38 +312,6 @@ void create_profile_items() {
     } else {
         lv_label_set_text(ui_lblScreenMessage, TS("No Saved Network Profiles Found"));
     }
-}
-
-void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    nav_moved = 1;
-}
-
-void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    nav_moved = 1;
 }
 
 void handle_confirm(void) {

@@ -210,75 +210,75 @@ void save_visual_options() {
     int idx_blackfade = lv_dropdown_get_selected(ui_droBlackFade);
 
     if (lv_dropdown_get_selected(ui_droBattery) != battery_original) {
-        write_text_to_file("/run/muos/global/visual/battery", "w", INT, idx_battery);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/battery"), "w", INT, idx_battery);
     }
 
     if (lv_dropdown_get_selected(ui_droNetwork) != network_original) {
-        write_text_to_file("/run/muos/global/visual/network", "w", INT, idx_network);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/network"), "w", INT, idx_network);
     }
 
     if (lv_dropdown_get_selected(ui_droBluetooth) != bluetooth_original) {
-        write_text_to_file("/run/muos/global/visual/bluetooth", "w", INT, idx_bluetooth);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
     }
 
     if (lv_dropdown_get_selected(ui_droClock) != mux_clock_original) {
-        write_text_to_file("/run/muos/global/visual/clock", "w", INT, idx_clock);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/clock"), "w", INT, idx_clock);
     }
 
     if (lv_dropdown_get_selected(ui_droBoxArt) != boxart_original) {
-        write_text_to_file("/run/muos/global/visual/boxart", "w", INT, idx_boxart);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/boxart"), "w", INT, idx_boxart);
     }
 
     if (lv_dropdown_get_selected(ui_droBoxArtAlign) != boxartalign_original) {
-        write_text_to_file("/run/muos/global/visual/boxartalign", "w", INT, idx_boxartalign);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/boxartalign"), "w", INT, idx_boxartalign);
     }
 
     if (lv_dropdown_get_selected(ui_droName) != name_original) {
-        write_text_to_file("/run/muos/global/visual/name", "w", INT, idx_name);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/name"), "w", INT, idx_name);
     }
 
     if (lv_dropdown_get_selected(ui_droDash) != dash_original) {
-        write_text_to_file("/run/muos/global/visual/dash", "w", INT, idx_dash);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/dash"), "w", INT, idx_dash);
     }
 
     if (lv_dropdown_get_selected(ui_droFriendlyFolder) != friendlyfolder_original) {
-        write_text_to_file("/run/muos/global/visual/friendlyfolder", "w", INT, idx_friendlyfolder);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/friendlyfolder"), "w", INT, idx_friendlyfolder);
     }
 
     if (lv_dropdown_get_selected(ui_droTheTitleFormat) != thetitleformat_original) {
-        write_text_to_file("/run/muos/global/visual/thetitleformat", "w", INT, idx_thetitleformat);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/thetitleformat"), "w", INT, idx_thetitleformat);
     }
 
     if (lv_dropdown_get_selected(ui_droTitleIncludeRootDrive) != titleincluderootdrive_original) {
-        write_text_to_file("/run/muos/global/visual/titleincluderootdrive", "w", INT, idx_titleincluderootdrive);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/titleincluderootdrive"), "w", INT, idx_titleincluderootdrive);
     }
 
     if (lv_dropdown_get_selected(ui_droFolderItemCount) != folderitemcount_original) {
-        write_text_to_file("/run/muos/global/visual/folderitemcount", "w", INT, idx_folderitemcount);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/folderitemcount"), "w", INT, idx_folderitemcount);
     }
 
     if (lv_dropdown_get_selected(ui_droDisplayEmptyFolder) != display_empty_folder_original) {
-        write_text_to_file("/run/muos/global/visual/folderempty", "w", INT, idx_folderempty);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/folderempty"), "w", INT, idx_folderempty);
     }
 
     if (lv_dropdown_get_selected(ui_droMenuCounterFolder) != menu_counter_folder_original) {
-        write_text_to_file("/run/muos/global/visual/counterfolder", "w", INT, idx_counterfolder);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/counterfolder"), "w", INT, idx_counterfolder);
     }
 
     if (lv_dropdown_get_selected(ui_droMenuCounterFile) != menu_counter_file_original) {
-        write_text_to_file("/run/muos/global/visual/counterfile", "w", INT, idx_counterfile);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/counterfile"), "w", INT, idx_counterfile);
     }
 
     if (lv_dropdown_get_selected(ui_droBackgroundAnimation) != background_animation_original) {
-        write_text_to_file("/run/muos/global/visual/backgroundanimation", "w", INT, idx_backgroundanimation);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/backgroundanimation"), "w", INT, idx_backgroundanimation);
     }
 
     if (lv_dropdown_get_selected(ui_droLaunchSplash) != launch_splash_original) {
-        write_text_to_file("/run/muos/global/visual/launchsplash", "w", INT, idx_launchsplash);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/launchsplash"), "w", INT, idx_launchsplash);
     }
 
     if (lv_dropdown_get_selected(ui_droBlackFade) != black_fade_original) {
-        write_text_to_file("/run/muos/global/visual/blackfade", "w", INT, idx_blackfade);
+        write_text_to_file((RUN_GLOBAL_PATH "visual/blackfade"), "w", INT, idx_blackfade);
     }
 }
 

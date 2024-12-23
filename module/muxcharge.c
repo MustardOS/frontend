@@ -64,7 +64,7 @@ void check_for_cable() {
 void set_brightness(int brightness) {
     char bright_value[8];
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
-    run_exec((const char *[]) {(char *) INTERNAL_PATH "/device/current/input/combo/bright.sh", bright_value, NULL});
+    run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/input/combo/bright.sh", bright_value, NULL});
 }
 
 void handle_power_short(void) {
@@ -86,7 +86,7 @@ void handle_power_short(void) {
     }
 
     blank = 0;
-    set_brightness(read_int_from_file(INTERNAL_PATH "/config/brightness.txt", 1));
+    set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));
 }
 
 void handle_idle(void) {
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
 
     ui_init();
-    set_brightness(read_int_from_file(INTERNAL_PATH "/config/brightness.txt", 1));
+    set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));
 
     lv_obj_set_user_data(ui_scrCharge, mux_module);
     lv_label_set_text(ui_lblBoot, TS("Press POWER button to continue booting..."));

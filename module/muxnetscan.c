@@ -63,7 +63,7 @@ void show_help() {
 }
 
 void *scan_networks() {
-    run_exec((const char *[]) {"/opt/muos/script/web/ssid.sh", NULL});
+    run_exec((const char *[]) {(INTERNAL_PATH "script/web/ssid.sh"), NULL});
     return NULL;
 }
 
@@ -153,13 +153,13 @@ void handle_confirm(void) {
     if (msgbox_active) return;
 
     play_sound("confirm", nav_sound, 0, 1);
-    write_text_to_file("/run/muos/global/network/ssid", "w", CHAR,
+    write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR,
                        lv_label_get_text(lv_group_get_focused(ui_group)));
-    write_text_to_file("/run/muos/global/network/pass", "w", CHAR, "");
-    write_text_to_file("/run/muos/global/network/address", "w", CHAR, "");
-    write_text_to_file("/run/muos/global/network/subnet", "w", CHAR, "");
-    write_text_to_file("/run/muos/global/network/gateway", "w", CHAR, "");
-    write_text_to_file("/run/muos/global/network/dns", "w", CHAR, "");
+    write_text_to_file((RUN_GLOBAL_PATH "network/pass"), "w", CHAR, "");
+    write_text_to_file((RUN_GLOBAL_PATH "network/address"), "w", CHAR, "");
+    write_text_to_file((RUN_GLOBAL_PATH "network/subnet"), "w", CHAR, "");
+    write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR, "");
+    write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, "");
     mux_input_stop();
 }
 

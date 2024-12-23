@@ -4,15 +4,14 @@
 #include "kiosk.h"
 
 void load_kiosk(struct mux_kiosk *kiosk) {
-    const char *base_path = "/run/muos/kiosk";
     char buffer[MAX_BUFFER_SIZE];
 
-#define CFG_INT_FIELD(field, path, def)                          \
-    snprintf(buffer, sizeof(buffer), "%s/%s", base_path, path);  \
-    field = (int)({                                              \
-        char *ep;                                                \
-        long val = strtol(read_text_from_file(buffer), &ep, 10); \
-        *ep ? def : val;                                         \
+#define CFG_INT_FIELD(field, path, def)                            \
+    snprintf(buffer, sizeof(buffer), (RUN_KIOSK_PATH "%s"), path); \
+    field = (int)({                                                \
+        char *ep;                                                  \
+        long val = strtol(read_text_from_file(buffer), &ep, 10);   \
+        *ep ? def : val;                                           \
     });
 
     CFG_INT_FIELD(kiosk->APPLICATION.ARCHIVE, "application/archive", 0)

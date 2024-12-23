@@ -332,105 +332,105 @@ void save_tweak_options() {
 
     if (lv_dropdown_get_selected(ui_droAccelerate) != accelerate_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/accelerate", "w", INT, idx_accelerate);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/accelerate"), "w", INT, idx_accelerate);
     }
 
     if (lv_dropdown_get_selected(ui_droSwap) != swap_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/swap", "w", INT, idx_swap);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/swap"), "w", INT, idx_swap);
     }
 
     if (lv_dropdown_get_selected(ui_droThermal) != thermal_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/thermal", "w", INT, idx_thermal);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/thermal"), "w", INT, idx_thermal);
     }
 
     if (lv_dropdown_get_selected(ui_droFont) != font_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/font", "w", INT, idx_font);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/font"), "w", INT, idx_font);
     }
 
     if (lv_dropdown_get_selected(ui_droVolume) != volume_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/volume", "w", CHAR, idx_volume);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/volume"), "w", CHAR, idx_volume);
     }
 
     if (lv_dropdown_get_selected(ui_droBrightness) != brightness_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/brightness", "w", CHAR, idx_brightness);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/brightness"), "w", CHAR, idx_brightness);
     }
 
     if (lv_dropdown_get_selected(ui_droOffset) != offset_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/offset", "w", INT, idx_offset);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/offset"), "w", INT, idx_offset);
     }
 
     if (lv_dropdown_get_selected(ui_droPasscode) != lockdown_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/lock", "w", INT, idx_lockdown);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/lock"), "w", INT, idx_lockdown);
     }
 
     if (lv_dropdown_get_selected(ui_droLED) != led_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/led", "w", INT, idx_led);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/led"), "w", INT, idx_led);
     }
 
     if (lv_dropdown_get_selected(ui_droTheme) != random_theme_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/random_theme", "w", INT, idx_random_theme);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/random_theme"), "w", INT, idx_random_theme);
     }
 
     if (lv_dropdown_get_selected(ui_droRetroWait) != retrowait_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/retrowait", "w", INT, idx_retrowait);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/retrowait"), "w", INT, idx_retrowait);
     }
 
     if (lv_dropdown_get_selected(ui_droUSBFunction) != usbfunction_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/usb_function", "w", CHAR, idx_usbfunction);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
     }
 
     if (lv_dropdown_get_selected(ui_droState) != state_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/state", "w", CHAR, idx_state);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/state"), "w", CHAR, idx_state);
     }
 
     if (lv_dropdown_get_selected(ui_droVerbose) != verbose_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/verbose", "w", INT, idx_verbose);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/verbose"), "w", INT, idx_verbose);
     }
 
     if (lv_dropdown_get_selected(ui_droRumble) != rumble_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/rumble", "w", INT, idx_rumble);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/rumble"), "w", INT, idx_rumble);
     }
 
     if (lv_dropdown_get_selected(ui_droUserInit) != user_init_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/user_init", "w", INT, idx_user_init);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/user_init"), "w", INT, idx_user_init);
     }
 
     if (lv_dropdown_get_selected(ui_droDPADSwap) != dpad_swap_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/dpad_swap", "w", INT, idx_dpad_swap);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/dpad_swap"), "w", INT, idx_dpad_swap);
     }
 
     if (lv_dropdown_get_selected(ui_droOverdrive) != overdrive_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/overdrive", "w", INT, idx_overdrive);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/overdrive"), "w", INT, idx_overdrive);
     }
 
     if (lv_dropdown_get_selected(ui_droSwapfile) != swapfile_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/swapfile", "w", INT, idx_swapfile);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/swapfile"), "w", INT, idx_swapfile);
     }
 
     if (lv_dropdown_get_selected(ui_droCardMode) != cardmode_original) {
         is_modified++;
-        write_text_to_file("/run/muos/global/settings/advanced/cardmode", "w", CHAR, idx_cardmode);
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/cardmode"), "w", CHAR, idx_cardmode);
     }
 
-    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "/script/mux/tweak.sh", NULL});
+    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
 }
 
 void init_navigation_groups() {

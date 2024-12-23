@@ -4,19 +4,18 @@
 #include "config.h"
 
 void load_config(struct mux_config *config) {
-    const char *base_path = "/run/muos/global";
     char buffer[MAX_BUFFER_SIZE];
 
-#define CFG_INT_FIELD(field, path, def)                          \
-    snprintf(buffer, sizeof(buffer), "%s/%s", base_path, path);  \
-    field = (int)({                                              \
-        char *ep;                                                \
-        long val = strtol(read_text_from_file(buffer), &ep, 10); \
-        *ep ? def : val;                                         \
+#define CFG_INT_FIELD(field, path, def)                             \
+    snprintf(buffer, sizeof(buffer), (RUN_GLOBAL_PATH "%s"), path); \
+    field = (int)({                                                 \
+        char *ep;                                                   \
+        long val = strtol(read_text_from_file(buffer), &ep, 10);    \
+        *ep ? def : val;                                            \
     });
 
 #define CFG_STR_FIELD(field, path, def)                                      \
-    snprintf(buffer, sizeof(buffer), "%s/%s", base_path, path);              \
+    snprintf(buffer, sizeof(buffer), (RUN_GLOBAL_PATH "%s"), path);          \
     strncpy(field, read_text_from_file(buffer) ?: def, MAX_BUFFER_SIZE - 1); \
     field[MAX_BUFFER_SIZE - 1] = '\0';
 

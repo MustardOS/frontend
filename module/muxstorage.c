@@ -406,7 +406,7 @@ void handle_confirm(void) {
     }
 
     const char *args[] = {
-            "/opt/muos/bin/fbpad",
+            (INTERNAL_PATH "bin/fbpad"),
             "-bg", theme.TERMINAL.BACKGROUND,
             "-fg", theme.TERMINAL.FOREGROUND,
             storage_script, storage_path[current_item_index].path_suffix,

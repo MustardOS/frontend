@@ -227,7 +227,7 @@ void handle_a() {
                  "%s/script/mux/extract.sh", INTERNAL_PATH);
 
         const char *args[] = {
-                "/opt/muos/bin/fbpad",
+                (INTERNAL_PATH "bin/fbpad"),
                 "-bg", (char *) theme.TERMINAL.BACKGROUND,
                 "-fg", (char *) theme.TERMINAL.FOREGROUND,
                 extract_script,

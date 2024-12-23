@@ -62,7 +62,7 @@ void show_help() {
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(picker_archive, sizeof(picker_archive), "%s/%s/%s.zip", STORAGE_PATH, picker_type, picker_name);
+    snprintf(picker_archive, sizeof(picker_archive), (RUN_STORAGE_PATH "%s/%s.zip"), picker_type, picker_name);
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(picker_archive, "credits.txt", "/tmp/credits.txt")) {
@@ -82,7 +82,7 @@ void image_refresh() {
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(picker_archive, sizeof(picker_archive), "%s/%s/%s.zip", STORAGE_PATH, picker_type, picker_name);
+    snprintf(picker_archive, sizeof(picker_archive), (RUN_STORAGE_PATH "%s/%s.zip"), picker_type, picker_name);
 
     char device_dimension[15];
     get_device_dimension(device_dimension, sizeof(device_dimension));
@@ -103,7 +103,7 @@ void create_picker_items() {
     struct dirent *tf;
 
     char picker_dir[PATH_MAX];
-    snprintf(picker_dir, sizeof(picker_dir), "%s/%s", STORAGE_PATH, picker_type);
+    snprintf(picker_dir, sizeof(picker_dir), (RUN_STORAGE_PATH "%s"), picker_type);
 
     td = opendir(picker_dir);
     if (td == NULL) {
@@ -206,7 +206,7 @@ void handle_confirm() {
 
     const char *focused_label = lv_label_get_text(lv_group_get_focused(ui_group));
     const char *args[] = {
-            "/opt/muos/bin/fbpad",
+            (INTERNAL_PATH "bin/fbpad"),
             "-bg", (char *) theme.TERMINAL.BACKGROUND,
             "-fg", (char *) theme.TERMINAL.FOREGROUND,
             picker_script, "install", focused_label,
@@ -254,7 +254,7 @@ void handle_save() {
              "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
     const char *args[] = {
-            "/opt/muos/bin/fbpad",
+            (INTERNAL_PATH "bin/fbpad"),
             "-bg", theme.TERMINAL.BACKGROUND,
             "-fg", theme.TERMINAL.FOREGROUND,
             picker_script, "save", "-",
