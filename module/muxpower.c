@@ -455,7 +455,6 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
-    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -481,8 +480,9 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_lang(&lang);
+
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXPOWER.TITLE);
     ui_init(ui_pnlContent);

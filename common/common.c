@@ -53,7 +53,7 @@ uint32_t mux_tick(void) {
         start_ms = now_ms;
     }
 
-    return (uint32_t)(now_ms - start_ms);
+    return (uint32_t) (now_ms - start_ms);
 }
 
 void refresh_screen(int wait) {
@@ -374,7 +374,7 @@ char *strip_ext(char *text) {
 }
 
 char *get_execute_result(const char *command) {
-    FILE * fp = popen(command, "r");
+    FILE *fp = popen(command, "r");
     if (fp == NULL) {
         fprintf(stderr, "Failed to run: %s\n", command);
         return NULL;
@@ -392,7 +392,7 @@ char *get_execute_result(const char *command) {
 }
 
 int read_battery_capacity() {
-    FILE * file = fopen(device.BATTERY.CAPACITY, "r");
+    FILE *file = fopen(device.BATTERY.CAPACITY, "r");
 
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
@@ -417,7 +417,7 @@ int read_battery_capacity() {
 }
 
 char *read_battery_health() {
-    FILE * file = fopen(device.BATTERY.HEALTH, "r");
+    FILE *file = fopen(device.BATTERY.HEALTH, "r");
 
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
@@ -436,7 +436,7 @@ char *read_battery_health() {
 }
 
 char *read_battery_voltage() {
-    FILE * file = fopen(device.BATTERY.VOLTAGE, "r");
+    FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
 
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
@@ -464,7 +464,7 @@ char *read_battery_voltage() {
 
 char *read_text_from_file(const char *filename) {
     char *text = NULL;
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
 
     if (file == NULL) {
         return "";
@@ -494,7 +494,7 @@ char *read_text_from_file(const char *filename) {
 
 char *read_line_from_file(const char *filename, size_t line_number) {
     char *line = NULL;
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
 
     if (file == NULL) {
         return "";
@@ -527,7 +527,7 @@ char *read_line_from_file(const char *filename, size_t line_number) {
 
 int read_int_from_file(const char *filename, size_t line_number) {
     char line[MAX_BUFFER_SIZE];
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (!file) return 0;
 
     for (size_t i = 1; i <= line_number && fgets(line, sizeof(line), file); i++) {
@@ -561,7 +561,7 @@ uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
     uint32_t result;
 
     result = (uint32_t)
-    strtoul(meta, NULL, 16);
+            strtoul(meta, NULL, 16);
 
     return result;
 }
@@ -574,7 +574,7 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
         result = default_value;
     } else {
         result = (int16_t)
-        strtol(meta, NULL, 10);
+                strtol(meta, NULL, 10);
     }
 
     return result;
@@ -594,7 +594,7 @@ char *format_meta_text(char *filename) {
     char meta_cut[MAX_BUFFER_SIZE];
     snprintf(meta_cut, sizeof(meta_cut), (INTERNAL_PATH "script/mux/metacut.sh \"%s\""), filename);
 
-    FILE * fp = popen(meta_cut, "r");
+    FILE *fp = popen(meta_cut, "r");
     if (fp == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return "Could not open metadata!";
@@ -620,7 +620,7 @@ char *format_meta_text(char *filename) {
 }
 
 void write_text_to_file(const char *filename, const char *mode, int type, ...) {
-    FILE * file = fopen(filename, mode);
+    FILE *file = fopen(filename, mode);
 
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_WRITE);
@@ -632,10 +632,10 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
 
     if (type == CHAR) { // type is general text!
         fprintf(file, "%s", va_arg(args,
-        const char *));
+                                   const char *));
     } else if (type == INT) { // type is a number!
         fprintf(file, "%d", va_arg(args,
-        int));
+                                   int));
     }
 
     va_end(args);
@@ -710,7 +710,7 @@ int count_items(const char *path, enum count_type type) {
 }
 
 int detect_storage(const char *target) {
-    FILE * fp;
+    FILE *fp;
     char line[MAX_BUFFER_SIZE];
     int found = 0;
 
@@ -885,7 +885,7 @@ void decrease_option_value(lv_obj_t *element) {
 }
 
 void load_assign(const char *rom, const char *dir, const char *sys, int forced) {
-    FILE * file = fopen(MUOS_ASS_LOAD, "w");
+    FILE *file = fopen(MUOS_ASS_LOAD, "w");
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
@@ -896,7 +896,7 @@ void load_assign(const char *rom, const char *dir, const char *sys, int forced) 
 }
 
 void load_gov(const char *rom, const char *dir, const char *sys, int forced) {
-    FILE * file = fopen(MUOS_GOV_LOAD, "w");
+    FILE *file = fopen(MUOS_GOV_LOAD, "w");
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
@@ -907,7 +907,7 @@ void load_gov(const char *rom, const char *dir, const char *sys, int forced) {
 }
 
 void load_mux(const char *value) {
-    FILE * file = fopen(MUOS_ACT_LOAD, "w");
+    FILE *file = fopen(MUOS_ACT_LOAD, "w");
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
@@ -1347,7 +1347,7 @@ const lv_font_t *get_language_font() {
 void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
     char theme_font_text_fs[MAX_BUFFER_SIZE];
     snprintf(theme_font_text_fs, sizeof(theme_font_text_fs), "M:%s", filepath);
-    lv_font_t * font = lv_font_load(theme_font_text_fs);
+    lv_font_t *font = lv_font_load(theme_font_text_fs);
     font->fallback = get_language_font();
     lv_obj_set_style_text_font(element, font, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
@@ -1471,7 +1471,7 @@ void load_skip_patterns() {
         snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
     }
 
-    FILE * file = fopen(skip_ini, "r");
+    FILE *file = fopen(skip_ini, "r");
     if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
@@ -1525,7 +1525,7 @@ void display_testing_message(lv_obj_t *screen) {
                          "test image! This is a test image! This is a test image! This is a test image! This is a\n"
                          "image! This is a test image! This is a test image! This is a test image! This is a test\n";
 
-    lv_obj_t * ui_conTest = lv_obj_create(screen);
+    lv_obj_t *ui_conTest = lv_obj_create(screen);
     lv_obj_remove_style_all(ui_conTest);
     lv_obj_set_width(ui_conTest, device.SCREEN.WIDTH);
     lv_obj_set_height(ui_conTest, device.SCREEN.HEIGHT);
@@ -1537,7 +1537,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_obj_set_style_text_letter_space(ui_conTest, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_line_space(ui_conTest, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_t * ui_lblTestBottom = lv_label_create(ui_conTest);
+    lv_obj_t *ui_lblTestBottom = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestBottom, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblTestBottom, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblTestBottom, 0);
@@ -1546,7 +1546,7 @@ void display_testing_message(lv_obj_t *screen) {
     lv_label_set_text(ui_lblTestBottom, test_message);
     lv_obj_add_flag(ui_lblTestBottom, LV_OBJ_FLAG_FLOATING);
 
-    lv_obj_t * ui_lblTestTop = lv_label_create(ui_conTest);
+    lv_obj_t *ui_lblTestTop = lv_label_create(ui_conTest);
     lv_obj_set_width(ui_lblTestTop, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblTestTop, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblTestTop, 0);
@@ -1707,13 +1707,13 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
     lv_obj_update_snap(ui_pnlContent, LV_ANIM_OFF);
 }
 
-void load_language(const char *program) {
+void load_language_file(const char *module) {
     char language_file[MAX_BUFFER_SIZE];
     snprintf(language_file, sizeof(language_file), (RUN_STORAGE_PATH "language/%s.json"),
              config.SETTINGS.GENERAL.LANGUAGE);
 
     if (json_valid(read_text_from_file(language_file))) {
-        translation_specific = json_object_get(json_parse(read_text_from_file(language_file)), program);
+        translation_specific = json_object_get(json_parse(read_text_from_file(language_file)), module);
         translation_generic = json_object_get(json_parse(read_text_from_file(language_file)), "generic");
     }
 }
@@ -1801,7 +1801,7 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
 }
 
 char *get_script_value(const char *filename, const char *key) {
-    FILE * file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file!");
         return strdup("");
@@ -2055,7 +2055,7 @@ char *kiosk_nope() {
 void run_exec(const char *args[]) {
     pid_t pid = fork();
     if (pid == 0) {
-        execvp(args[0], (char * const *)args);
+        execvp(args[0], (char *const *) args);
         _exit(EXIT_FAILURE);
     } else if (pid > 0) {
         waitpid(pid, NULL, 0);

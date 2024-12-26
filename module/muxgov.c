@@ -457,8 +457,6 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
-    load_lang(&lang);
-
 
     char *cmd_help = "\nmuOS Extras - Governor Assignment\nUsage: %s <-acds>\n\nOptions:\n"
                      "\t-a Auto assign content directory check\n"
@@ -493,6 +491,7 @@ int main(int argc, char *argv[]) {
     }
 
     load_config(&config);
+    load_lang(&lang);
 
     LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir)
@@ -590,7 +589,6 @@ int main(int argc, char *argv[]) {
 
     load_config(&config);
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, &lang, "");
     init_elements();

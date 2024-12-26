@@ -384,7 +384,6 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
-    load_lang(&lang);
 
     char *cmd_help = "\nmuOS Extras - Custom Picker\nUsage: %s <-m>\n\nOptions:\n"
                      "\t-m Picker module from:\n"
@@ -432,8 +431,9 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_lang(&lang);
+
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_module);
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 

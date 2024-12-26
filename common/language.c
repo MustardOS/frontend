@@ -5,6 +5,7 @@
 
 void load_lang(struct mux_lang *lang) {
     char buffer[MAX_BUFFER_SIZE];
+    load_language_file(mux_module);
 
 #define SYSTEM_FIELD(field, string)                     \
         snprintf(buffer, sizeof(buffer), "%s", string), \
@@ -13,12 +14,12 @@ void load_lang(struct mux_lang *lang) {
 
 #define GENERIC_FIELD(field, string)                     \
         snprintf(buffer, sizeof(buffer), "%s", string),  \
-        strncpy(field, TG(buffer), MAX_BUFFER_SIZE - 1), \
+        strncpy(field, translate_generic(buffer), MAX_BUFFER_SIZE - 1), \
         field[MAX_BUFFER_SIZE - 1] = '\0'
 
 #define SPECIFIC_FIELD(field, string)                    \
         snprintf(buffer, sizeof(buffer), "%s", string),  \
-        strncpy(field, TS(buffer), MAX_BUFFER_SIZE - 1), \
+        strncpy(field, translate_specific(buffer), MAX_BUFFER_SIZE - 1), \
         field[MAX_BUFFER_SIZE - 1] = '\0'
 
     // system language

@@ -1896,7 +1896,6 @@ void ui_refresh_task() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
-    load_lang(&lang);
 
     char *cmd_help = "\nmuOS Extras - System List\nUsage: %s <-im>\n\nOptions:\n"
                      "\t-i Index of content to skip to\n"
@@ -1978,8 +1977,9 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_lang(&lang);
+
     load_theme(&theme, &config, &device, mux_module);
-    load_language("muxplore");
 
     ui_common_screen_init(&theme, &device, &lang, "");
     ui_init(ui_screen, &theme);

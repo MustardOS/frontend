@@ -997,7 +997,6 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
-    load_lang(&lang);
 
     char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
                      "\t-d Name of directory to search\n\n";
@@ -1050,8 +1049,9 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
 
     load_config(&config);
+    load_lang(&lang);
+
     load_theme(&theme, &config, &device, basename(argv[0]));
-    load_language(mux_module);
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
     ui_init(ui_screen, ui_pnlContent, &theme);

@@ -233,7 +233,7 @@ void scroll_object_to_middle(lv_obj_t *container, lv_obj_t *obj);
 void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count, int current_item_index,
                             lv_obj_t *ui_pnlContent);
 
-void load_language(const char *program);
+void load_language_file(const char *module);
 
 char *translate_generic(char *key);
 
