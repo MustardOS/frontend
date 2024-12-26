@@ -117,12 +117,12 @@ void create_network_items() {
         return;
     }
 
-    if (strlen(read_line_from_file(scan_file, 1)) > 0) {
-        lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-    } else {
+    if (strcmp(read_line_from_file(scan_file, 1), "[!]") == 0) {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.NONE);
         return;
     }
+
+    lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
 
     char ssid[40];
     while (fgets(ssid, sizeof(ssid), file)) {
