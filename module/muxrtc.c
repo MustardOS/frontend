@@ -9,6 +9,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -29,6 +30,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -74,7 +76,7 @@ struct help_msg {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("Change your current date, time, and timezone"));
+                     lang.MUXRTC.TITLE, lang.MUXRTC.HELP);
 }
 
 void confirm_rtc_config() {
@@ -101,7 +103,7 @@ void restore_clock_settings() {
     while (attempts < RTC_MAX_RETRIES) {
         fp = popen(command, "r");
         if (fp == NULL) {
-            perror("Failed to run date command");
+            perror(lang.SYSTEM.FAIL_RUN_COMMAND);
             attempts++;
             sleep(RTC_RETRY_DELAY);
             continue;
@@ -111,7 +113,7 @@ void restore_clock_settings() {
             pclose(fp);
             break;
         } else {
-            perror("Failed to read date command output");
+            perror(lang.SYSTEM.FAIL_READ_COMMAND);
             pclose(fp);
             attempts++;
             sleep(RTC_RETRY_DELAY);
@@ -168,14 +170,14 @@ void save_clock_settings(int year, int month, int day, int hour, int minute) {
     while (attempts < RTC_MAX_RETRIES) {
         fp = popen(command, "r");
         if (fp == NULL) {
-            perror("Failed to run date command");
+            perror(lang.SYSTEM.FAIL_RUN_COMMAND);
             attempts++;
             sleep(RTC_RETRY_DELAY);
             continue;
         }
 
         if (pclose(fp) == -1) {
-            perror("Failed to close date command stream");
+            perror(lang.SYSTEM.FAIL_CLOSE_COMMAND);
             attempts++;
             sleep(RTC_RETRY_DELAY);
             continue;
@@ -259,13 +261,13 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlNotation);
     apply_theme_list_panel(&theme, &device, ui_pnlTimezone);
 
-    apply_theme_list_item(&theme, ui_lblYear, TS("Year"), false, false);
-    apply_theme_list_item(&theme, ui_lblMonth, TS("Month"), false, false);
-    apply_theme_list_item(&theme, ui_lblDay, TS("Day"), false, false);
-    apply_theme_list_item(&theme, ui_lblHour, TS("Hour"), false, false);
-    apply_theme_list_item(&theme, ui_lblMinute, TS("Minute"), false, false);
-    apply_theme_list_item(&theme, ui_lblNotation, TS("Time Notation"), false, false);
-    apply_theme_list_item(&theme, ui_lblTimezone, TS("Set Timezone"), false, false);
+    apply_theme_list_item(&theme, ui_lblYear, lang.MUXRTC.YEAR, false, false);
+    apply_theme_list_item(&theme, ui_lblMonth, lang.MUXRTC.MONTH, false, false);
+    apply_theme_list_item(&theme, ui_lblDay, lang.MUXRTC.DAY, false, false);
+    apply_theme_list_item(&theme, ui_lblHour, lang.MUXRTC.HOUR, false, false);
+    apply_theme_list_item(&theme, ui_lblMinute, lang.MUXRTC.MINUTE, false, false);
+    apply_theme_list_item(&theme, ui_lblNotation, lang.MUXRTC.NOTATION, false, false);
+    apply_theme_list_item(&theme, ui_lblTimezone, lang.MUXRTC.TIMEZONE, false, false);
 
     apply_theme_list_glyph(&theme, ui_icoYear, mux_module, "year");
     apply_theme_list_glyph(&theme, ui_icoMonth, mux_module, "month");
@@ -582,7 +584,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Save"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -683,6 +685,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -690,8 +693,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -711,7 +714,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("DATE AND TIME"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXRTC.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -728,8 +731,8 @@ int main(int argc, char *argv[]) {
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
     nav_sound = init_nav_sound(mux_module);
-    notation[0] = TS("12 Hour");
-    notation[1] = TS("24 Hour");
+    notation[0] = lang.MUXRTC.F_12HR;
+    notation[1] = lang.MUXRTC.F_24HR;
 
     init_navigation_groups();
     restore_clock_settings();
@@ -746,13 +749,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -788,7 +791,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

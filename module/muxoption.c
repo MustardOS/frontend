@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -33,6 +34,7 @@ char *rom_name;
 char *rom_dir;
 char *rom_system;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -65,64 +67,65 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblSearch,   TS("Search for content within the selected directory")},
-            {ui_lblCore,     TS("Set the system core or external emulator for the selected content or directory")},
-            {ui_lblGovernor, TS("Set the CPU governor for the selected content or directory")},
+            {ui_lblSearch,   lang.MUXOPTION.HELP.SEARCH},
+            {ui_lblCore,     lang.MUXOPTION.HELP.ASSIGN_CORE},
+            {ui_lblGovernor, lang.MUXOPTION.HELP.ASSIGN_GOV},
     };
 
     char message[MAX_BUFFER_SIZE];
-    snprintf(message, sizeof(message), "%s", TG("No Help Information Found"));
+    snprintf(message, sizeof(message), "%s", lang.GENERIC.NO_HELP);
 
     if (element_focused == help_messages[0].element) {
         snprintf(message, sizeof(message), "%s", help_messages[0].message);
     } else if (element_focused == help_messages[1].element) {
-        snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s", 
-                TS("Set the system core or external emulator for the selected content or directory"),
-                TS("Current"),
-                TS("Directory"), get_directory_core(rom_dir),
-                TS("Individual"), get_file_core(rom_dir, rom_name));
+        snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s",
+                 lang.MUXOPTION.HELP.ASSIGN_CORE,
+                 lang.MUXOPTION.CURRENT,
+                 lang.MUXOPTION.DIRECTORY, get_directory_core(rom_dir),
+                 lang.MUXOPTION.INDIVIDUAL, get_file_core(rom_dir, rom_name));
     } else if (element_focused == help_messages[2].element) {
-        snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s", 
-                TS("Set the CPU governor for the selected content or directory"),
-                TS("Current"),
-                TS("Directory"), get_directory_governor(rom_dir),
-                TS("Individual"), get_file_governor(rom_dir, rom_name));
-    } 
+        snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s",
+                 lang.MUXOPTION.HELP.ASSIGN_GOV,
+                 lang.MUXOPTION.CURRENT,
+                 lang.MUXOPTION.DIRECTORY, get_directory_governor(rom_dir),
+                 lang.MUXOPTION.INDIVIDUAL, get_file_governor(rom_dir, rom_name));
+    }
 
-    if (strlen(message) <= 1) snprintf(message, sizeof(message), "%s", TG("No Help Information Found"));
+    if (strlen(message) <= 1) snprintf(message, sizeof(message), "%s", lang.GENERIC.NO_HELP);
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
 }
 
 void add_info_item(int index, char *item_text, char *glyph_name, bool add_bottom_border) {
-    lv_obj_t * ui_pnlInfoItem = lv_obj_create(ui_pnlContent);
+    lv_obj_t *ui_pnlInfoItem = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlInfoItem);
-    lv_obj_t * ui_lblInfoItem = lv_label_create(ui_pnlInfoItem);
+    lv_obj_t *ui_lblInfoItem = lv_label_create(ui_pnlInfoItem);
     apply_theme_list_item(&theme, ui_lblInfoItem, item_text, false, false);
-    lv_obj_t * ui_icoInfoItem = lv_img_create(ui_pnlInfoItem);
+    lv_obj_t *ui_icoInfoItem = lv_img_create(ui_pnlInfoItem);
     apply_theme_list_glyph(&theme, ui_icoInfoItem, mux_module, glyph_name);
 
     if (add_bottom_border) {
         lv_obj_set_height(ui_pnlInfoItem, 1);
         lv_obj_set_style_border_width(ui_pnlInfoItem, 1,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_color(ui_pnlInfoItem, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+                                      LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_opa(ui_pnlInfoItem, theme.LIST_DEFAULT.TEXT_ALPHA,
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
     lv_obj_move_to_index(ui_pnlInfoItem, index);
 }
 
 void add_info_items() {
     char game_directory[FILENAME_MAX];
-    snprintf(game_directory, sizeof(game_directory), "%s:  %s", TS("Directory"), get_last_subdir(rom_dir, '/', 4));
+    snprintf(game_directory, sizeof(game_directory), "%s:  %s", lang.MUXOPTION.DIRECTORY,
+             get_last_subdir(rom_dir, '/', 4));
     add_info_item(0, game_directory, "folder", false);
     char game_name[FILENAME_MAX];
-    snprintf(game_name, sizeof(game_name), "%s:  %s", TS("Name"), rom_name);
+    snprintf(game_name, sizeof(game_name), "%s:  %s", lang.MUXOPTION.NAME, rom_name);
     add_info_item(1, game_name, "rom", false);
     add_info_item(2, "", "", true);
 }
@@ -147,9 +150,9 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlCore);
     apply_theme_list_panel(&theme, &device, ui_pnlGovernor);
 
-    apply_theme_list_item(&theme, ui_lblSearch, TS("Search Content"), true, false);
-    apply_theme_list_item(&theme, ui_lblCore, TS("Assign Core"), true, false);
-    apply_theme_list_item(&theme, ui_lblGovernor, TS("System Governor"), true, false);
+    apply_theme_list_item(&theme, ui_lblSearch, lang.MUXOPTION.SEARCH, true, false);
+    apply_theme_list_item(&theme, ui_lblCore, lang.MUXOPTION.ASSIGN_CORE, true, false);
+    apply_theme_list_item(&theme, ui_lblGovernor, lang.MUXOPTION.ASSIGN_GOV, true, false);
 
     apply_theme_list_glyph(&theme, ui_icoSearch, mux_module, "search");
     apply_theme_list_glyph(&theme, ui_icoCore, mux_module, "core");
@@ -286,8 +289,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Select"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -384,6 +387,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     char *cmd_help = "\nmuOS Options\nUsage: %s <-cds>\n\nOptions:\n"
                      "\t-c Name of content file\n"
@@ -414,8 +418,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -435,7 +439,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("CONTENT OPTION"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXOPTION.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -466,13 +470,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -508,7 +512,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

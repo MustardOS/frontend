@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include "../common/common.h"
 #include "../common/config.h"
+#include "../common/language.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
 #include "../common/theme.h"
@@ -22,6 +23,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -90,20 +92,20 @@ int main() {
 
     int js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     int js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .combo = {
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_START),

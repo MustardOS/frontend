@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -64,20 +66,19 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblHidden,     TS("Toggle hidden content displayed in Explore Content - Place a '.' or '_' character "
-                                  "at the start of a file or folder name to hide it")},
-            {ui_lblBGM,        TS("Toggle the background music of the frontend - This will stop if content is launched")},
-            {ui_lblSound,      TS("Toggle the navigation sound of the frontend if the current theme supports it")},
-            {ui_lblStartup,    TS("Change where the device will start up into")},
-            {ui_lblColour,     TS("Change the colour temperature of the display if the device supports it")},
-            {ui_lblBrightness, TS("Change the brightness of the device to a specific level")},
-            {ui_lblHDMI,       TS("Settings to change the HDMI output of the device")},
-            {ui_lblPower,      TS("Settings to change the power features of the device")},
-            {ui_lblInterface,  TS("Settings to change the visual aspects of the frontend")},
-            {ui_lblAdvanced,   TS("Settings that should only be changed by those who know what they are doing!")},
+            {ui_lblHidden,     lang.MUXTWEAKGEN.HELP.HIDDEN},
+            {ui_lblBGM,        lang.MUXTWEAKGEN.HELP.MUSIC},
+            {ui_lblSound,      lang.MUXTWEAKGEN.HELP.SOUND},
+            {ui_lblStartup,    lang.MUXTWEAKGEN.HELP.STARTUP},
+            {ui_lblColour,     lang.MUXTWEAKGEN.HELP.TEMP},
+            {ui_lblBrightness, lang.MUXTWEAKGEN.HELP.BRIGHT},
+            {ui_lblHDMI,       lang.MUXTWEAKGEN.HELP.HDMI},
+            {ui_lblPower,      lang.MUXTWEAKGEN.HELP.POWER},
+            {ui_lblInterface,  lang.MUXTWEAKGEN.HELP.VISUAL},
+            {ui_lblAdvanced,   lang.MUXTWEAKGEN.HELP.ADVANCED},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -87,7 +88,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -95,7 +96,7 @@ void show_help(lv_obj_t *element_focused) {
 
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         char buf[MAX_BUFFER_SIZE];
@@ -283,16 +284,16 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlInterface);
     apply_theme_list_panel(&theme, &device, ui_pnlAdvanced);
 
-    apply_theme_list_item(&theme, ui_lblHidden, TS("Show Hidden Content"), false, true);
-    apply_theme_list_item(&theme, ui_lblBGM, TS("Background Music"), false, true);
-    apply_theme_list_item(&theme, ui_lblSound, TS("Navigation Sound"), false, true);
-    apply_theme_list_item(&theme, ui_lblStartup, TS("Device Startup"), false, true);
-    apply_theme_list_item(&theme, ui_lblColour, TS("Colour Temperature"), false, true);
-    apply_theme_list_item(&theme, ui_lblBrightness, TS("Brightness"), false, true);
-    apply_theme_list_item(&theme, ui_lblHDMI, TS("HDMI Output"), false, true);
-    apply_theme_list_item(&theme, ui_lblPower, TS("Power Settings"), false, true);
-    apply_theme_list_item(&theme, ui_lblInterface, TS("Interface Options"), false, true);
-    apply_theme_list_item(&theme, ui_lblAdvanced, TS("Advanced Settings"), false, true);
+    apply_theme_list_item(&theme, ui_lblHidden, lang.MUXTWEAKGEN.HIDDEN, false, true);
+    apply_theme_list_item(&theme, ui_lblBGM, lang.MUXTWEAKGEN.MUSIC.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblSound, lang.MUXTWEAKGEN.SOUND, false, true);
+    apply_theme_list_item(&theme, ui_lblStartup, lang.MUXTWEAKGEN.STARTUP.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblColour, lang.MUXTWEAKGEN.TEMP, false, true);
+    apply_theme_list_item(&theme, ui_lblBrightness, lang.MUXTWEAKGEN.BRIGHT, false, true);
+    apply_theme_list_item(&theme, ui_lblHDMI, lang.MUXTWEAKGEN.HDMI, false, true);
+    apply_theme_list_item(&theme, ui_lblPower, lang.MUXTWEAKGEN.POWER, false, true);
+    apply_theme_list_item(&theme, ui_lblInterface, lang.MUXTWEAKGEN.VISUAL, false, true);
+    apply_theme_list_item(&theme, ui_lblAdvanced, lang.MUXTWEAKGEN.ADVANCED, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoHidden, mux_module, "hidden");
     apply_theme_list_glyph(&theme, ui_icoBGM, mux_module, "bgm");
@@ -324,14 +325,14 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droInterface, "");
     apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
 
-    char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
+    char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
     add_drop_down_options(ui_droHidden, disabled_enabled, 2);
     add_drop_down_options(ui_droBGM, (char *[]) {
-            TG("Disabled"), TS("Global"), TS("Theme")}, 3);
+            lang.GENERIC.DISABLED, lang.MUXTWEAKGEN.MUSIC.GLOBAL, lang.MUXTWEAKGEN.MUSIC.THEME}, 3);
     add_drop_down_options(ui_droSound, disabled_enabled, 2);
     add_drop_down_options(ui_droStartup, (char *[]) {
-            TS("Main Menu"), TS("Content Explorer"), TS("Favourites"),
-            TS("History"), TS("Last Game"), TS("Resume Game")}, 6);
+            lang.MUXTWEAKGEN.STARTUP.MENU, lang.MUXTWEAKGEN.STARTUP.EXPLORE, lang.MUXTWEAKGEN.STARTUP.FAVOURITE,
+            lang.MUXTWEAKGEN.STARTUP.HISTORY, lang.MUXTWEAKGEN.STARTUP.LAST, lang.MUXTWEAKGEN.STARTUP.RESUME}, 6);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -475,7 +476,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Save"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -585,6 +586,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -592,8 +594,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -613,7 +615,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("GENERAL SETTINGS"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXTWEAKGEN.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -648,13 +650,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -690,7 +692,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

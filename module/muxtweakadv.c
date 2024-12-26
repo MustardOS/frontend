@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -45,10 +47,10 @@ lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
 
-int accelerate_original, swap_original, thermal_original, font_original, volume_original, brightness_original;
-int offset_original, lockdown_original, led_original, random_theme_original, retrowait_original, usbfunction_original;
-int state_original, verbose_original, rumble_original, user_init_original, dpad_swap_original, overdrive_original;
-int swapfile_original, cardmode_original;
+int accelerate_original, swap_original, thermal_original, font_original, volume_original, brightness_original,
+        offset_original, lockdown_original, led_original, random_theme_original, retrowait_original,
+        usbfunction_original, state_original, verbose_original, rumble_original, user_init_original,
+        dpad_swap_original, overdrive_original, swapfile_original, cardmode_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -67,32 +69,29 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblAccelerate,  TS("Adjust the rate of speed when holding navigation keys down")},
-            {ui_lblSwap,        TS("Change how the device buttons work globally")},
-            {ui_lblThermal,     TS("Toggle the system ability to automatically shut the device down due high temperature")},
-            {ui_lblFont,        TS("Change how the font type works in the frontend - 'Theme' will ensure frontend will "
-                                   "use fonts within themes with a fallback to language fonts - 'Language' will "
-                                   "specifically use language based font")},
-            {ui_lblVolume,      TS("Change the default audio level that the device will use each time it starts up")},
-            {ui_lblBrightness,  TS("Change the default brightness level that the device will use each time it starts up")},
-            {ui_lblOffset,      TS("Change the displayed battery percentage to improve accuracy based on calibration "
-                                   "or known deviations in the battery capacity reading")},
-            {ui_lblPasscode,    TS("Toggle the passcode lock - More information can be found on the muOS website")},
-            {ui_lblLED,         TS("Toggle the power LED during content launch")},
-            {ui_lblTheme,       TS("Change the default theme used for the next device launch")},
-            {ui_lblRetroWait,   TS("Toggle a delayed start of RetroArch until a network connection is established")},
-            {ui_lblUSBFunction, TS("Toggle between ADB and MTP USB functionality")},
-            {ui_lblState,       TS("Switch between system sleep suspend states")},
-            {ui_lblVerbose,     TS("Toggle startup and shutdown verbose messages used for debugging faults")},
-            {ui_lblRumble,      TS("Toggle vibration for device startup, sleep, and shutdown")},
-            {ui_lblUserInit,    TS("Toggle the functionality of the user initialisation scripts on device startup")},
-            {ui_lblDPADSwap,    TS("Toggle the functionality of the power button to switch DPAD mode")},
-            {ui_lblOverdrive,   TS("Toggle the audio overdrive moving it from 100% to 200%")},
-            {ui_lblSwapfile,    TS("Adjust the system swapfile if required by certain content")},
-            {ui_lblCardMode,    TS("Switch between different storage tuning options")},
+            {ui_lblAccelerate,  lang.MUXTWEAKADV.HELP.SPEED},
+            {ui_lblSwap,        lang.MUXTWEAKADV.HELP.SWAP},
+            {ui_lblThermal,     lang.MUXTWEAKADV.HELP.THERMAL},
+            {ui_lblFont,        lang.MUXTWEAKADV.HELP.FONT},
+            {ui_lblVolume,      lang.MUXTWEAKADV.HELP.VOLUME},
+            {ui_lblBrightness,  lang.MUXTWEAKADV.HELP.BRIGHT},
+            {ui_lblOffset,      lang.MUXTWEAKADV.HELP.OFFSET},
+            {ui_lblPasscode,    lang.MUXTWEAKADV.HELP.LOCK},
+            {ui_lblLED,         lang.MUXTWEAKADV.HELP.LED},
+            {ui_lblTheme,       lang.MUXTWEAKADV.HELP.RANDOM},
+            {ui_lblRetroWait,   lang.MUXTWEAKADV.HELP.NET_WAIT},
+            {ui_lblUSBFunction, lang.MUXTWEAKADV.HELP.USB},
+            {ui_lblState,       lang.MUXTWEAKADV.HELP.STATE},
+            {ui_lblVerbose,     lang.MUXTWEAKADV.HELP.VERBOSE},
+            {ui_lblRumble,      lang.MUXTWEAKADV.HELP.RUMBLE},
+            {ui_lblUserInit,    lang.MUXTWEAKADV.HELP.USER_INIT},
+            {ui_lblDPADSwap,    lang.MUXTWEAKADV.HELP.DPAD},
+            {ui_lblOverdrive,   lang.MUXTWEAKADV.HELP.OVERDRIVE},
+            {ui_lblSwapfile,    lang.MUXTWEAKADV.HELP.SWAPFILE},
+            {ui_lblCardMode,    lang.MUXTWEAKADV.HELP.TUNING},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -102,7 +101,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -110,7 +109,7 @@ void show_help(lv_obj_t *element_focused) {
 
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         char buf[MAX_BUFFER_SIZE];
@@ -545,26 +544,26 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlSwapfile);
     apply_theme_list_panel(&theme, &device, ui_pnlCardMode);
 
-    apply_theme_list_item(&theme, ui_lblAccelerate, TS("Menu Acceleration"), false, true);
-    apply_theme_list_item(&theme, ui_lblSwap, TS("Button Swap"), false, true);
-    apply_theme_list_item(&theme, ui_lblThermal, TS("Thermal Zone Control"), false, true);
-    apply_theme_list_item(&theme, ui_lblFont, TS("Interface Font Type"), false, true);
-    apply_theme_list_item(&theme, ui_lblVolume, TS("Volume On Boot"), false, true);
-    apply_theme_list_item(&theme, ui_lblBrightness, TS("Brightness On Boot"), false, true);
-    apply_theme_list_item(&theme, ui_lblOffset, TS("Battery Offset"), false, true);
-    apply_theme_list_item(&theme, ui_lblPasscode, TS("Passcode Lock"), false, true);
-    apply_theme_list_item(&theme, ui_lblLED, TS("LED During Play"), false, true);
-    apply_theme_list_item(&theme, ui_lblTheme, TS("Random Theme on Boot"), false, true);
-    apply_theme_list_item(&theme, ui_lblRetroWait, TS("RetroArch Network Wait"), false, true);
-    apply_theme_list_item(&theme, ui_lblUSBFunction, TS("USB Function"), false, true);
-    apply_theme_list_item(&theme, ui_lblState, TS("Suspend Power State"), false, true);
-    apply_theme_list_item(&theme, ui_lblVerbose, TS("Verbose Messages"), false, true);
-    apply_theme_list_item(&theme, ui_lblRumble, TS("Device Rumble"), false, true);
-    apply_theme_list_item(&theme, ui_lblUserInit, TS("User Init Scripts"), false, true);
-    apply_theme_list_item(&theme, ui_lblDPADSwap, TS("DPAD Swap Function"), false, true);
-    apply_theme_list_item(&theme, ui_lblOverdrive, TS("Audio Overdrive"), false, true);
-    apply_theme_list_item(&theme, ui_lblSwapfile, TS("System Swapfile"), false, true);
-    apply_theme_list_item(&theme, ui_lblCardMode, TS("Disk Tuning"), false, true);
+    apply_theme_list_item(&theme, ui_lblAccelerate, lang.MUXTWEAKADV.SPEED, false, true);
+    apply_theme_list_item(&theme, ui_lblSwap, lang.MUXTWEAKADV.SWAP.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblThermal, lang.MUXTWEAKADV.THERMAL, false, true);
+    apply_theme_list_item(&theme, ui_lblFont, lang.MUXTWEAKADV.FONT.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblVolume, lang.MUXTWEAKADV.VOLUME.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblBrightness, lang.MUXTWEAKADV.BRIGHT.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblOffset, lang.MUXTWEAKADV.OFFSET, false, true);
+    apply_theme_list_item(&theme, ui_lblPasscode, lang.MUXTWEAKADV.LOCK, false, true);
+    apply_theme_list_item(&theme, ui_lblLED, lang.MUXTWEAKADV.LED, false, true);
+    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXTWEAKADV.RANDOM, false, true);
+    apply_theme_list_item(&theme, ui_lblRetroWait, lang.MUXTWEAKADV.NET_WAIT, false, true);
+    apply_theme_list_item(&theme, ui_lblUSBFunction, lang.MUXTWEAKADV.USB, false, true);
+    apply_theme_list_item(&theme, ui_lblState, lang.MUXTWEAKADV.STATE, false, true);
+    apply_theme_list_item(&theme, ui_lblVerbose, lang.MUXTWEAKADV.VERBOSE, false, true);
+    apply_theme_list_item(&theme, ui_lblRumble, lang.MUXTWEAKADV.RUMBLE.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXTWEAKADV.USER_INIT, false, true);
+    apply_theme_list_item(&theme, ui_lblDPADSwap, lang.MUXTWEAKADV.DPAD, false, true);
+    apply_theme_list_item(&theme, ui_lblOverdrive, lang.MUXTWEAKADV.OVERDRIVE, false, true);
+    apply_theme_list_item(&theme, ui_lblSwapfile, lang.MUXTWEAKADV.SWAPFILE, false, true);
+    apply_theme_list_item(&theme, ui_lblCardMode, lang.MUXTWEAKADV.TUNING, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoAccelerate, mux_module, "accelerate");
     apply_theme_list_glyph(&theme, ui_icoSwap, mux_module, "swap");
@@ -587,7 +586,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoSwapfile, mux_module, "swapfile");
     apply_theme_list_glyph(&theme, ui_icoCardMode, mux_module, "cardmode");
 
-    char *accelerate_string = generate_number_string(16, 256, 16, TG("Disabled"), NULL, NULL, 0);
+    char *accelerate_string = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droAccelerate, accelerate_string);
     free(accelerate_string);
 
@@ -613,28 +612,50 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droDPADSwap, NULL);
     apply_theme_list_drop_down(&theme, ui_droOverdrive, NULL);
 
-    char *swapfile_string = generate_number_string(64, 512, 64, TG("Disabled"), NULL, NULL, 0);
+    char *swapfile_string = generate_number_string(64, 512, 64, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droSwapfile, swapfile_string);
     free(swapfile_string);
 
     apply_theme_list_drop_down(&theme, ui_droCardMode, NULL);
 
-    char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
-    add_drop_down_options(ui_droSwap, (char *[]) {TS("Retro"), TS("Modern")}, 2);
+    char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
+    add_drop_down_options(ui_droSwap, (char *[]) {
+            lang.MUXTWEAKADV.SWAP.RETRO,
+            lang.MUXTWEAKADV.SWAP.MODERN}, 2);
+
     add_drop_down_options(ui_droThermal, disabled_enabled, 2);
-    add_drop_down_options(ui_droFont, (char *[]) {TS("Language"), TS("Theme")}, 2);
-    add_drop_down_options(ui_droVolume, (char *[]) {TG("Previous"), TS("Quiet"), TS("Loud")}, 3);
-    add_drop_down_options(ui_droBrightness, (char *[]) {TG("Previous"), TS("Low"), TS("High")}, 3);
+
+    add_drop_down_options(ui_droFont, (char *[]) {
+            lang.MUXTWEAKADV.FONT.LANG,
+            lang.MUXTWEAKADV.FONT.THEME}, 2);
+
+    add_drop_down_options(ui_droVolume, (char *[]) {
+            lang.GENERIC.PREVIOUS,
+            lang.MUXTWEAKADV.VOLUME.QUIET,
+            lang.MUXTWEAKADV.VOLUME.LOUD}, 3);
+
+    add_drop_down_options(ui_droBrightness, (char *[]) {
+            lang.GENERIC.PREVIOUS,
+            lang.MUXTWEAKADV.BRIGHT.LOW,
+            lang.MUXTWEAKADV.BRIGHT.HIGH}, 3);
+
     add_drop_down_options(ui_droPasscode, disabled_enabled, 2);
     add_drop_down_options(ui_droLED, disabled_enabled, 2);
     add_drop_down_options(ui_droTheme, disabled_enabled, 2);
     add_drop_down_options(ui_droRetroWait, disabled_enabled, 2);
-    add_drop_down_options(ui_droUSBFunction, (char *[]) {TG("Disabled"), "ADB", "MTP"}, 3);
+    add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
     add_drop_down_options(ui_droState, (char *[]) {"mem", "freeze"}, 2);
     add_drop_down_options(ui_droVerbose, disabled_enabled, 2);
-    add_drop_down_options(ui_droRumble, (char *[]) {TG("Disabled"), TS("Startup"), TS("Shutdown"), TS("Sleep"),
-                                                    TS("Startup + Shutdown"), TS("Startup + Sleep"),
-                                                    TS("Shutdown + Sleep")}, 7);
+
+    add_drop_down_options(ui_droRumble, (char *[]) {
+            lang.GENERIC.DISABLED,
+            lang.MUXTWEAKADV.RUMBLE.ST,
+            lang.MUXTWEAKADV.RUMBLE.SH,
+            lang.MUXTWEAKADV.RUMBLE.SL,
+            lang.MUXTWEAKADV.RUMBLE.STSH,
+            lang.MUXTWEAKADV.RUMBLE.STSL,
+            lang.MUXTWEAKADV.RUMBLE.SHSL}, 7);
+
     add_drop_down_options(ui_droUserInit, disabled_enabled, 2);
     add_drop_down_options(ui_droDPADSwap, disabled_enabled, 2);
     add_drop_down_options(ui_droOverdrive, disabled_enabled, 2);
@@ -752,7 +773,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Save"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -872,6 +893,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -879,8 +901,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -900,7 +922,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("ADVANCED SETTINGS"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXTWEAKADV.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -935,13 +957,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -977,7 +999,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

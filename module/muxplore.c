@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"
+#include "../common/language.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
@@ -38,6 +39,7 @@ int bar_footer = 0;
 char *osd_message;
 char *mux_module;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -295,7 +297,7 @@ char *load_content_description() {
 
             if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) {
                 printf("CORE IS NOT SET - TEXT NOT LOADED\n");
-                return TS("No Information Found");
+                return lang.MUXPLORE.ERROR.NO_INFO;
             }
             printf("TEXT IS STORED AT: %s\n", core_desc);
 
@@ -316,7 +318,7 @@ char *load_content_description() {
     }
 
     snprintf(current_meta_text, sizeof(current_meta_text), " ");
-    return TS("No Information Found");
+    return lang.MUXPLORE.ERROR.NO_INFO;
 }
 
 void update_file_counter() {
@@ -623,7 +625,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     DIR *dir = opendir(full_path);
 
     if (!dir) {
-        perror("opendir");
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return 0;
     }
 
@@ -651,7 +653,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
-        perror("opendir");
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
 
@@ -690,13 +692,13 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, int *
 }
 
 void gen_label(char *item_glyph, char *item_text) {
-    lv_obj_t * ui_pnlExplore = lv_obj_create(ui_pnlContent);
+    lv_obj_t *ui_pnlExplore = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlExplore);
 
-    lv_obj_t * ui_lblExploreItem = lv_label_create(ui_pnlExplore);
+    lv_obj_t *ui_lblExploreItem = lv_label_create(ui_pnlExplore);
     apply_theme_list_item(&theme, ui_lblExploreItem, item_text, true, false);
 
-    lv_obj_t * ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
+    lv_obj_t *ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
     apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_module, item_glyph);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
@@ -900,18 +902,18 @@ void create_root_items(char *dir_name) {
         case FAVOURITE:
             snprintf(spec_dir, sizeof(spec_dir), (RUN_STORAGE_PATH "info/%s"), dir_name);
 
-            lv_label_set_text(ui_lblTitle, TS("FAVOURITES"));
+            lv_label_set_text(ui_lblTitle, lang.MUXPLORE.TITLE.FAVOURITE);
             break;
         case HISTORY:
             snprintf(spec_dir, sizeof(spec_dir), (RUN_STORAGE_PATH "info/%s"), dir_name);
 
-            lv_label_set_text(ui_lblTitle, TS("HISTORY"));
+            lv_label_set_text(ui_lblTitle, lang.MUXPLORE.TITLE.HISTORY);
             break;
         default:
-            snprintf(spec_dir, sizeof(spec_dir), "%s/MUOS/info/%s",
-                     device.STORAGE.ROM.MOUNT, dir_name);
+            snprintf(spec_dir, sizeof(spec_dir), "%s/%s/%s",
+                     device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH, dir_name);
 
-            lv_label_set_text(ui_lblTitle, TS("EXPLORE"));
+            lv_label_set_text(ui_lblTitle, lang.MUXPLORE.TITLE.EXPLORE);
             break;
     }
 
@@ -936,9 +938,9 @@ void init_navigation_groups_grid() {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
-        lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_t * cell_image = lv_img_create(cell_panel);
-        lv_obj_t * cell_label = lv_label_create(cell_panel);
+        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t *cell_image = lv_img_create(cell_panel);
+        lv_obj_t *cell_label = lv_label_create(cell_panel);
 
         char grid_image[MAX_BUFFER_SIZE];
         if (snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/%s.png",
@@ -1040,7 +1042,7 @@ void explore_single(const char *card_type, char *directory) {
 }
 
 void explore_root() {
-    lv_label_set_text(ui_lblTitle, TS("EXPLORE"));
+    lv_label_set_text(ui_lblTitle, lang.MUXPLORE.TITLE.EXPLORE);
     int single_card = 0;
 
     if (count_items(SD1, DIRECTORIES_ONLY) > 0) single_card += 2;
@@ -1104,14 +1106,14 @@ void explore_root() {
 void add_to_favourites(char *filename, const char *pointer) {
     if (file_exist(filename)) {
         remove(filename);
-        toast_message(TS("Removed from Favourites"), 1000, 1000);
+        toast_message(lang.MUXPLORE.REM_FAVOURITE, 1000, 1000);
     } else {
         write_text_to_file(filename, "w", CHAR, pointer);
 
         if (file_exist(filename)) {
-            toast_message(TS("Added to Favourites"), 1000, 1000);
+            toast_message(lang.MUXPLORE.ADD_FAVOURITE, 1000, 1000);
         } else {
-            toast_message(TS("Error adding to Favourites"), 1000, 1000);
+            toast_message(lang.MUXPLORE.ERROR.FAVOURITE, 1000, 1000);
         }
     }
     char *glyph_icon = get_glyph_name(current_item_index);
@@ -1186,8 +1188,8 @@ int load_content(int add_favourite) {
 /*
             char act_file[MAX_BUFFER_SIZE];
             char act_content[MAX_BUFFER_SIZE];
-            snprintf(act_file, sizeof(act_file), "%s/MUOS/info/activity/%s.act",
-                     device.STORAGE.ROM.MOUNT, strip_ext(items[current_item_index].name));
+            snprintf(act_file, sizeof(act_file), "%s/%s/activity/%s.act",
+                     device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH, strip_ext(items[current_item_index].name));
             snprintf(act_content, sizeof(act_content), "%s\n%s\n%s",
                      strip_ext(items[current_item_index].name), curr_sd, read_line_from_file(content_loader_file, 5));
             prepare_activity_file(act_content, act_file);
@@ -1202,7 +1204,7 @@ int load_content(int add_favourite) {
         return 1;
     }
 
-    toast_message(TS("Could not load content - No core is associated"), 0, 0);
+    toast_message(lang.MUXPLORE.ERROR.NO_CORE, 0, 0);
 
     return 0;
 }
@@ -1246,8 +1248,8 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
 /*
         char act_file[MAX_BUFFER_SIZE];
         char act_content[MAX_BUFFER_SIZE];
-        snprintf(act_file, sizeof(act_file), "%s/MUOS/info/activity/%s.act",
-                 device.STORAGE.ROM.MOUNT, content_name);
+        snprintf(act_file, sizeof(act_file), "%s/%s/activity/%s.act",
+                 device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH, content_name);
         snprintf(act_content, sizeof(act_content), "%s\n%s\n%s",
                  content_name, curr_sd, read_line_from_file(cache_file, 5));
         prepare_activity_file(act_content, act_file);
@@ -1260,7 +1262,7 @@ int load_cached_content(const char *content_name, char *cache_type, int add_favo
         }
     }
 
-    toast_message(TS("Could not load content!"), 0, 0);
+    toast_message(lang.MUXPLORE.ERROR.GENERAL, 0, 0);
 
     return 0;
 }
@@ -1440,7 +1442,7 @@ void handle_a() {
     }
 
     if (load_message) {
-        toast_message(TS("Loading..."), 0, 0);
+        toast_message(lang.MUXPLORE.LOADING, 0, 0);
         lv_obj_move_foreground(ui_pnlMessage);
 
         // Refresh and add a small delay to actually display the message!
@@ -1557,7 +1559,7 @@ void handle_y() {
         case SDCARD:
         case USB:
             if (items[current_item_index].content_type == FOLDER) {
-                toast_message(TS("Directories cannot be added to Favourites"), 1000, 1000);
+                toast_message(lang.MUXPLORE.ERROR.NO_DIR, 1000, 1000);
             } else {
                 load_content(1);
                 if (file_exist(MUOS_ROM_LOAD)) remove(MUOS_ROM_LOAD);
@@ -1755,7 +1757,7 @@ void init_elements() {
 void init_footer_elements() {
     switch (module) {
         case ROOT: {
-            set_nav_text(TG("Open"), TG("Back"), NULL, NULL, TG("Info"));
+            set_nav_text(lang.GENERIC.OPEN, lang.GENERIC.BACK, NULL, NULL, lang.GENERIC.INFO);
             lv_obj_t *nav_keep[] = {
                     ui_lblNavAGlyph, ui_lblNavA,
                     ui_lblNavBGlyph, ui_lblNavB,
@@ -1776,8 +1778,8 @@ void init_footer_elements() {
         case USB:
         case FAVOURITE:
         case HISTORY: {
-            set_nav_text(TG("Open"), TG("Back"), module == ROOT ? NULL : TS("Refresh"),
-                         module == ROOT ? NULL : TS("Favourite"), TS("Info"));
+            set_nav_text(lang.GENERIC.OPEN, lang.GENERIC.BACK, module == ROOT ? NULL : lang.MUXPLORE.REFRESH,
+                         module == ROOT ? NULL : lang.MUXPLORE.FAVOURITE, lang.MUXPLORE.INFO);
             if (lv_group_get_obj_count(ui_group) <= 0) {
                 lv_obj_t *nav_keep[] = {ui_lblNavBGlyph, ui_lblNavB};
                 lv_obj_t *nav_hide[] = {
@@ -1818,10 +1820,10 @@ void init_footer_elements() {
             lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
-            lv_label_set_text(ui_lblNavX, TG("Remove"));
+            lv_label_set_text(ui_lblNavX, lang.GENERIC.REMOVE);
             break;
         case HISTORY:
-            lv_label_set_text(ui_lblNavX, TG("Remove"));
+            lv_label_set_text(ui_lblNavX, lang.GENERIC.REMOVE);
             break;
         default:
             break;
@@ -1894,6 +1896,7 @@ void ui_refresh_task() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
+    load_lang(&lang);
 
     char *cmd_help = "\nmuOS Extras - System List\nUsage: %s <-im>\n\nOptions:\n"
                      "\t-i Index of content to skip to\n"
@@ -1957,8 +1960,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -1978,7 +1981,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, mux_module);
     load_language("muxplore");
 
-    ui_common_screen_init(&theme, &device, "");
+    ui_common_screen_init(&theme, &device, &lang, "");
     ui_init(ui_screen, &theme);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
@@ -2122,13 +2125,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -2167,7 +2170,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
                           (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),

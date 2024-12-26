@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/collection.h"
@@ -31,6 +32,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -81,11 +83,11 @@ void show_help() {
     char *title = items[current_item_index].name;
 
     char help_info[MAX_BUFFER_SIZE];
-    snprintf(help_info, sizeof(help_info),
-             "%s/MUOS/application/%s.sh", device.STORAGE.ROM.MOUNT, title);
+    snprintf(help_info, sizeof(help_info), "%s/%s/%s.sh",
+             device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, title);
     char *message = get_script_value(help_info, "HELP");
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
 }
 
@@ -99,9 +101,9 @@ void init_navigation_groups_grid(const char *app_path) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
-        lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_t * cell_image = lv_img_create(cell_panel);
-        lv_obj_t * cell_label = lv_label_create(cell_panel);
+        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t *cell_image = lv_img_create(cell_panel);
+        lv_obj_t *cell_label = lv_label_create(cell_panel);
 
         char *glyph_name = get_glyph_from_file(app_path, items[i].name, "app");
         char device_dimension[15];
@@ -150,7 +152,7 @@ void init_navigation_groups_grid(const char *app_path) {
 void create_app_items() {
     char app_path[MAX_BUFFER_SIZE];
     snprintf(app_path, sizeof(app_path),
-             "%s/MUOS/application", device.STORAGE.ROM.MOUNT);
+             "%s/%s", device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH);
 
     const char *app_directories[] = {
             app_path
@@ -173,7 +175,7 @@ void create_app_items() {
                 if (last_dot != NULL && strcasecmp(last_dot, ".sh") == 0) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
                     if (temp == NULL) {
-                        perror("Failed to allocate memory");
+                        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                         free(file_names);
                         closedir(ad);
                         return;
@@ -184,7 +186,7 @@ void create_app_items() {
                     snprintf(full_app_name, sizeof(full_app_name), "%s%s", app_dir, af->d_name);
                     file_names[file_count] = strdup(full_app_name);
                     if (file_names[file_count] == NULL) {
-                        perror("Failed to duplicate string");
+                        perror(lang.SYSTEM.FAIL_DUP_STRING);
                         free(file_names);
                         closedir(ad);
                         return;
@@ -222,14 +224,14 @@ void create_app_items() {
         ui_count += (int) item_count;
     } else {
         for (size_t i = 0; i < item_count; i++) {
-            lv_obj_t * ui_pnlApp = lv_obj_create(ui_pnlContent);
+            lv_obj_t *ui_pnlApp = lv_obj_create(ui_pnlContent);
             if (ui_pnlApp) {
                 apply_theme_list_panel(&theme, &device, ui_pnlApp);
 
-                lv_obj_t * ui_lblAppItem = lv_label_create(ui_pnlApp);
+                lv_obj_t *ui_lblAppItem = lv_label_create(ui_pnlApp);
                 if (ui_lblAppItem) apply_theme_list_item(&theme, ui_lblAppItem, TS(items[i].name), true, false);
 
-                lv_obj_t * ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
+                lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
                 if (ui_lblAppItemGlyph) {
                     apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module,
                                            get_glyph_from_file(app_path, items[i].name, "app"));
@@ -240,7 +242,7 @@ void create_app_items() {
                 lv_group_add_obj(ui_group_panel, ui_pnlApp);
 
                 apply_size_to_content(&theme, ui_pnlContent, ui_lblAppItem, ui_lblAppItemGlyph, items[i].name);
-                apply_text_long_dot(&theme, ui_pnlContent, ui_lblAppItem, items[i].name);;
+                apply_text_long_dot(&theme, ui_pnlContent, ui_lblAppItem, items[i].name);
                 ui_count++;
             }
         }
@@ -307,8 +309,8 @@ void handle_a() {
             const char *app_name;
             int16_t *kiosk_flag;
         } elements[] = {
-                {"Archive Manager", &kiosk.APPLICATION.ARCHIVE},
-                {"Task Toolkit",    &kiosk.APPLICATION.TASK}
+                {lang.MUXAPP.ARCHIVE, &kiosk.APPLICATION.ARCHIVE},
+                {lang.MUXAPP.TASK,    &kiosk.APPLICATION.TASK}
         };
 
         for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
@@ -322,12 +324,12 @@ void handle_a() {
 
         play_sound("confirm", nav_sound, 0, 1);
 
-        lv_label_set_text(ui_lblMessage, TS("Loading Application"));
+        lv_label_set_text(ui_lblMessage, lang.MUXAPP.LOAD_APP);
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
         static char command[MAX_BUFFER_SIZE];
-        snprintf(command, sizeof(command), "%s/MUOS/application/%s.sh",
-                 device.STORAGE.ROM.MOUNT, items[current_item_index].name);
+        snprintf(command, sizeof(command), "%s/%s/%s.sh",
+                 device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, items[current_item_index].name);
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, command);
 
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
@@ -386,8 +388,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Launch"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.LAUNCH);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -476,6 +478,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -483,8 +486,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -504,7 +507,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("APPLICATIONS"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXAPP.TITLE);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -522,7 +525,6 @@ int main(int argc, char *argv[]) {
     int ain_index = 0;
     if (file_exist(MUOS_AIN_LOAD)) {
         ain_index = read_int_from_file(MUOS_AIN_LOAD, 1);
-        printf("loading AIN at: %d\n", ain_index);
         remove(MUOS_AIN_LOAD);
     }
 
@@ -531,7 +533,7 @@ int main(int argc, char *argv[]) {
             list_nav_next(ain_index);
         }
     } else {
-        lv_label_set_text(ui_lblScreenMessage, TS("No Applications Found"));
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXAPP.NO_APP);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
@@ -549,13 +551,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -586,7 +588,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
                           (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),

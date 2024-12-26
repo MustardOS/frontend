@@ -9,6 +9,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/timezone.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -54,7 +56,7 @@ lv_obj_t *ui_mux_panels[5];
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("Select your preferred timezone"));
+                     lang.MUXTIMEZONE.TITLE, lang.MUXTIMEZONE.HELP);
 }
 
 void create_timezone_items() {
@@ -67,14 +69,14 @@ void create_timezone_items() {
 
         ui_count++;
 
-        lv_obj_t * ui_pnlTimezone = lv_obj_create(ui_pnlContent);
+        lv_obj_t *ui_pnlTimezone = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlTimezone);
         lv_obj_set_user_data(ui_pnlTimezone, strdup(base_key));
 
-        lv_obj_t * ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
+        lv_obj_t *ui_lblTimezoneItem = lv_label_create(ui_pnlTimezone);
         apply_theme_list_item(&theme, ui_lblTimezoneItem, base_key, true, false);
 
-        lv_obj_t * ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
+        lv_obj_t *ui_lblTimezoneGlyph = lv_img_create(ui_pnlTimezone);
         apply_theme_list_glyph(&theme, ui_lblTimezoneGlyph, mux_module, "timezone");
 
         lv_group_add_obj(ui_group, ui_lblTimezoneItem);
@@ -132,7 +134,7 @@ void handle_a() {
 
     play_sound("confirm", nav_sound, 0, 1);
 
-    osd_message = TS("Saving Timezone");
+    osd_message = lang.MUXTIMEZONE.SAVE;
     lv_label_set_text(ui_lblMessage, osd_message);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
@@ -193,11 +195,10 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Select"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
-            ui_lblNavBGlyph,
-            ui_lblNavB,
             ui_lblNavCGlyph,
             ui_lblNavC,
             ui_lblNavXGlyph,
@@ -265,6 +266,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -272,8 +274,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -293,7 +295,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("TIMEZONE"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXTIMEZONE.TITLE);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -323,13 +325,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -358,7 +360,7 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     if (ui_count == 0) {
-        lv_label_set_text(ui_lblScreenMessage, TS("No Timezones Found..."));
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
@@ -368,7 +370,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

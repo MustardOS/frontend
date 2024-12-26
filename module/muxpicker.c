@@ -11,6 +11,7 @@
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/collection.h"
@@ -32,6 +33,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -66,7 +68,7 @@ void show_help() {
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(picker_archive, "credits.txt", "/tmp/credits.txt")) {
-        strcpy(credits, TS("There are no attributed credits!"));
+        strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
     } else {
         strcpy(credits, read_text_from_file("/tmp/credits.txt"));
     }
@@ -135,13 +137,13 @@ void create_picker_items() {
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
-        lv_obj_t * ui_pnlPicker = lv_obj_create(ui_pnlContent);
+        lv_obj_t *ui_pnlPicker = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlPicker);
 
-        lv_obj_t * ui_lblPickerItem = lv_label_create(ui_pnlPicker);
+        lv_obj_t *ui_lblPickerItem = lv_label_create(ui_pnlPicker);
         apply_theme_list_item(&theme, ui_lblPickerItem, items[i].display_name, true, false);
 
-        lv_obj_t * ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
+        lv_obj_t *ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
         apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module, get_last_subdir(picker_type, '/', 1));
 
         lv_group_add_obj(ui_group, ui_lblPickerItem);
@@ -315,9 +317,9 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Select"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
-    lv_label_set_text(ui_lblNavY, TG("Save"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
+    lv_label_set_text(ui_lblNavY, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -382,6 +384,7 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     char *cmd_help = "\nmuOS Extras - Custom Picker\nUsage: %s <-m>\n\nOptions:\n"
                      "\t-m Picker module from:\n"
@@ -411,8 +414,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -435,17 +438,17 @@ int main(int argc, char *argv[]) {
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
     if (strcasecmp(picker_type, "theme") == 0) {
-        ui_common_screen_init(&theme, &device, TS("THEME PICKER"));
-        lv_label_set_text(ui_lblScreenMessage, TS("No Theme Packages Found"));
+        ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.THEME);
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.THEME);
     } else if (strcasecmp(picker_type, "package/catalogue") == 0) {
-        ui_common_screen_init(&theme, &device, TS("CATALOGUE PICKER"));
-        lv_label_set_text(ui_lblScreenMessage, TS("No Catalogue Packages Found"));
+        ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.CATALOGUE);
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CATALOGUE);
     } else if (strcasecmp(picker_type, "package/config") == 0) {
-        ui_common_screen_init(&theme, &device, TS("CONFIG PICKER"));
-        lv_label_set_text(ui_lblScreenMessage, TS("No Configuration Packages Found"));
+        ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.CONFIG);
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CONFIG);
     } else {
-        ui_common_screen_init(&theme, &device, TS("CUSTOM PICKER"));
-        lv_label_set_text(ui_lblScreenMessage, TS("No Custom Packages Found"));
+        ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.CUSTOM);
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CUSTOM);
     }
 
     init_elements();
@@ -481,13 +484,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -530,7 +533,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

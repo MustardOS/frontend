@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -65,16 +67,16 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblSSHD,       TS("Toggle SSH support - Access via port 22")},
-            {ui_lblSFTPGo,     TS("Toggle SFTP support - WebUI can be found on port 9090")},
-            {ui_lblTTYD,       TS("Toggle virtual terminal - WebUI can be found on port 8080")},
-            {ui_lblSyncthing,  TS("Toggle Syncthing - WebUI can be found on port 7070")},
-            {ui_lblRSLSync,    TS("Toggle Resilio - WebUI can be found on port 6060")},
-            {ui_lblNTP,        TS("Toggle network time protocol for active network connections")},
-            {ui_lblTailscaled, TS("Toggle Tailscale - Need to login via SSH first")},
+            {ui_lblSSHD,       lang.MUXWEBSERV.HELP.SHELL},
+            {ui_lblSFTPGo,     lang.MUXWEBSERV.HELP.SFTP},
+            {ui_lblTTYD,       lang.MUXWEBSERV.HELP.TERMINAL},
+            {ui_lblSyncthing,  lang.MUXWEBSERV.HELP.SYNCTHING},
+            {ui_lblRSLSync,    lang.MUXWEBSERV.HELP.RESILIO},
+            {ui_lblNTP,        lang.MUXWEBSERV.HELP.NTP},
+            {ui_lblTailscaled, lang.MUXWEBSERV.HELP.TAILSCALE},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -84,7 +86,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -92,7 +94,7 @@ void show_help(lv_obj_t *element_focused) {
 
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         char buf[MAX_BUFFER_SIZE];
@@ -232,13 +234,13 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlNTP);
     apply_theme_list_panel(&theme, &device, ui_pnlTailscaled);
 
-    apply_theme_list_item(&theme, ui_lblSSHD, TS("Secure Shell"), false, true);
-    apply_theme_list_item(&theme, ui_lblSFTPGo, TS("SFTP + Filebrowser"), false, true);
-    apply_theme_list_item(&theme, ui_lblTTYD, TS("Virtual Terminal"), false, true);
-    apply_theme_list_item(&theme, ui_lblSyncthing, TS("Syncthing"), false, true);
-    apply_theme_list_item(&theme, ui_lblRSLSync, TS("Resilio"), false, true);
-    apply_theme_list_item(&theme, ui_lblNTP, TS("Network Time Sync"), false, true);
-    apply_theme_list_item(&theme, ui_lblTailscaled, TS("Tailscale"), false, true);
+    apply_theme_list_item(&theme, ui_lblSSHD, lang.MUXWEBSERV.SHELL, false, true);
+    apply_theme_list_item(&theme, ui_lblSFTPGo, lang.MUXWEBSERV.SFTP, false, true);
+    apply_theme_list_item(&theme, ui_lblTTYD, lang.MUXWEBSERV.TERMINAL, false, true);
+    apply_theme_list_item(&theme, ui_lblSyncthing, lang.MUXWEBSERV.SYNCTHING, false, true);
+    apply_theme_list_item(&theme, ui_lblRSLSync, lang.MUXWEBSERV.RESILIO, false, true);
+    apply_theme_list_item(&theme, ui_lblNTP, lang.MUXWEBSERV.NTP, false, true);
+    apply_theme_list_item(&theme, ui_lblTailscaled, lang.MUXWEBSERV.TAILSCALE, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoSSHD, mux_module, "sshd");
     apply_theme_list_glyph(&theme, ui_icoSFTPGo, mux_module, "sftpgo");
@@ -249,7 +251,8 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoTailscaled, mux_module, "tailscaled");
 
     char options[MAX_BUFFER_SIZE];
-    snprintf(options, sizeof(options), "%s\n%s", TG("Disabled"), TG("Enabled"));
+    snprintf(options, sizeof(options), "%s\n%s",
+             lang.GENERIC.DISABLED, lang.GENERIC.ENABLED);
     apply_theme_list_drop_down(&theme, ui_droSSHD, options);
     apply_theme_list_drop_down(&theme, ui_droSFTPGo, options);
     apply_theme_list_drop_down(&theme, ui_droTTYD, options);
@@ -364,7 +367,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Save"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -444,6 +447,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -451,8 +455,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -472,7 +476,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("WEB SERVICES"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXWEBSERV.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -507,13 +511,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -547,7 +551,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

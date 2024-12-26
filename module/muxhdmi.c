@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -65,16 +67,16 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblEnable,     TS("Enable or disable HDMI output.")},
-            {ui_lblResolution, TS("Select the resolution for HDMI output, such as 720p or 1080p.")},
-            {ui_lblSpace,      TS("Choose the color space, such as RGB or YUV.")},
-            {ui_lblDepth,      TS("Set the color depth, such as 8-bit or 10-bit.")},
-            {ui_lblRange,      TS("Set the color range of RGB colour space.")},
-            {ui_lblScan,       TS("Switch between overscan or underscan to fit the display screen.")},
-            {ui_lblAudio,      TS("Switch between device speaker or external monitor audio via HDMI connection.")}
+            {ui_lblEnable,     lang.MUXHDMI.HELP.ACTIVE},
+            {ui_lblResolution, lang.MUXHDMI.HELP.RESOLUTION},
+            {ui_lblSpace,      lang.MUXHDMI.HELP.COLOUR.SPACE},
+            {ui_lblDepth,      lang.MUXHDMI.HELP.COLOUR.DEPTH},
+            {ui_lblRange,      lang.MUXHDMI.HELP.COLOUR.RANGE},
+            {ui_lblScan,       lang.MUXHDMI.HELP.SCAN_SCALE},
+            {ui_lblAudio,      lang.MUXHDMI.HELP.AUDIO_OUTPUT}
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -84,7 +86,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -92,7 +94,7 @@ void show_help(lv_obj_t *element_focused) {
 
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         char buf[MAX_BUFFER_SIZE];
@@ -243,13 +245,13 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlScan);
     apply_theme_list_panel(&theme, &device, ui_pnlAudio);
 
-    apply_theme_list_item(&theme, ui_lblEnable, TS("HDMI Active"), false, true);
-    apply_theme_list_item(&theme, ui_lblResolution, TS("Resolution"), false, true);
-    apply_theme_list_item(&theme, ui_lblSpace, TS("Colour Space"), false, true);
-    apply_theme_list_item(&theme, ui_lblDepth, TS("Colour Depth"), false, true);
-    apply_theme_list_item(&theme, ui_lblRange, TS("Colour Range"), false, true);
-    apply_theme_list_item(&theme, ui_lblScan, TS("Scan Scaling"), false, true);
-    apply_theme_list_item(&theme, ui_lblAudio, TS("Audio Output"), false, true);
+    apply_theme_list_item(&theme, ui_lblEnable, lang.MUXHDMI.ACTIVE, false, true);
+    apply_theme_list_item(&theme, ui_lblResolution, lang.MUXHDMI.RESOLUTION, false, true);
+    apply_theme_list_item(&theme, ui_lblSpace, lang.MUXHDMI.COLOUR.SPACE, false, true);
+    apply_theme_list_item(&theme, ui_lblDepth, lang.MUXHDMI.COLOUR.DEPTH, false, true);
+    apply_theme_list_item(&theme, ui_lblRange, lang.MUXHDMI.COLOUR.RANGE.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblScan, lang.MUXHDMI.SCAN_SCALE.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblAudio, lang.MUXHDMI.AUDIO_OUTPUT.TITLE, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_module, "enable");
     apply_theme_list_glyph(&theme, ui_icoResolution, mux_module, "resolution");
@@ -262,26 +264,28 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droEnable, NULL);
     apply_theme_list_drop_down(&theme, ui_droResolution, NULL);
     apply_theme_list_drop_down(&theme, ui_droSpace, NULL);
-    apply_theme_list_drop_down(&theme, ui_droDepth, NULL);
+
+    char *depth_string = generate_number_string(8, 16, 2, NULL, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droDepth, depth_string);
+    free(depth_string);
+
     apply_theme_list_drop_down(&theme, ui_droRange, NULL);
     apply_theme_list_drop_down(&theme, ui_droScan, NULL);
     apply_theme_list_drop_down(&theme, ui_droAudio, NULL);
 
     add_drop_down_options(ui_droEnable, (char *[]) {
-            TG("Disabled"), TG("Enabled")}, 2);
+            lang.GENERIC.DISABLED, lang.GENERIC.ENABLED}, 2);
     add_drop_down_options(ui_droResolution, (char *[]) {
-            TS("480i"), TS("576i"), TS("480p"), TS("576p"), TS("720p + 50hz"), TS("720p + 60hz"),
-            TS("1080i + 50hz"), TS("1080i + 60hz"), TS("1080p + 24hz"), TS("1080p + 50hz"), TS("1080p + 60hz")}, 11);
+            "480i", "576i", "480p", "576p", "720p + 50hz", "720p + 60hz",
+            "1080i + 50hz", "1080i + 60hz", "1080p + 24hz", "1080p + 50hz", "1080p + 60hz"}, 11);
     add_drop_down_options(ui_droSpace, (char *[]) {
-            TS("RGB"), TS("YUV444"), TS("YUV422"), TS("YUV420")}, 4);
-    add_drop_down_options(ui_droDepth, (char *[]) {
-            TS("8"), TS("10"), TS("12"), TS("16")}, 4);
+            "RGB", "YUV444", "YUV422", "YUV420"}, 4);
     add_drop_down_options(ui_droRange, (char *[]) {
-            TS("Limited"), TS("Full")}, 2);
+            lang.MUXHDMI.COLOUR.RANGE.LIMITED, lang.MUXHDMI.COLOUR.RANGE.FULL}, 2);
     add_drop_down_options(ui_droScan, (char *[]) {
-            TS("Over"), TS("Under")}, 2);
+            lang.MUXHDMI.SCAN_SCALE.OVER, lang.MUXHDMI.SCAN_SCALE.UNDER}, 2);
     add_drop_down_options(ui_droAudio, (char *[]) {
-            TS("External"), TS("Internal")}, 2);
+            lang.MUXHDMI.AUDIO_OUTPUT.EXTERNAL, lang.MUXHDMI.AUDIO_OUTPUT.INTERNAL}, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -396,7 +400,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Save"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -476,6 +480,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -483,8 +488,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -504,7 +509,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("HDMI SETTINGS"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXHDMI.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -539,13 +544,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -579,7 +584,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

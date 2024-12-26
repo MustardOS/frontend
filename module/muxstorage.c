@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -69,27 +71,27 @@ struct storage storage_path[UI_COUNT];
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBIOS,             TS("Location of system BIOS files")},
-            {ui_lblCatalogue,        TS("Location of content images and text")},
-            {ui_lblName,             TS("Location of friendly name configurations")},
-            {ui_lblRetroArch,        TS("Location of the RetroArch emulator")},
-            {ui_lblConfig,           TS("Location of RetroArch configurations")},
-            {ui_lblCore,             TS("Location of assigned core and governor configurations")},
-            {ui_lblFavourite,        TS("Location of favourites")},
-            {ui_lblHistory,          TS("Location of history")},
-            {ui_lblMusic,            TS("Location of background music")},
-            {ui_lblSave,             TS("Location of save states and files")},
-            {ui_lblScreenshot,       TS("Location of screenshots")},
-            {ui_lblTheme,            TS("Location of themes")},
-            {ui_lblCataloguePackage, TS("Location of catalogue packages")},
-            {ui_lblConfigPackage,    TS("Location of RetroArch configuration packages")},
-            {ui_lblLanguage,         TS("Location of Language files")},
-            {ui_lblNetwork,          TS("Location of Network Profiles")},
-            {ui_lblSyncthing,        TS("Location of Syncthing configurations")},
-            {ui_lblUserInit,         TS("Location of User Initialisation scripts")},
+            {ui_lblBIOS,             lang.MUXSTORAGE.HELP.BIOS},
+            {ui_lblCatalogue,        lang.MUXSTORAGE.HELP.CATALOGUE},
+            {ui_lblName,             lang.MUXSTORAGE.HELP.FRIENDLY},
+            {ui_lblRetroArch,        lang.MUXSTORAGE.HELP.RA_SYSTEM},
+            {ui_lblConfig,           lang.MUXSTORAGE.HELP.RA_CONFIG},
+            {ui_lblCore,             lang.MUXSTORAGE.HELP.ASSIGNED},
+            {ui_lblFavourite,        lang.MUXSTORAGE.HELP.FAVOURITE},
+            {ui_lblHistory,          lang.MUXSTORAGE.HELP.HISTORY},
+            {ui_lblMusic,            lang.MUXSTORAGE.HELP.MUSIC},
+            {ui_lblSave,             lang.MUXSTORAGE.HELP.SAVE},
+            {ui_lblScreenshot,       lang.MUXSTORAGE.HELP.SCREENSHOT},
+            {ui_lblTheme,            lang.MUXSTORAGE.HELP.PACKAGE.THEME},
+            {ui_lblCataloguePackage, lang.MUXSTORAGE.HELP.PACKAGE.CATALOGUE},
+            {ui_lblConfigPackage,    lang.MUXSTORAGE.HELP.PACKAGE.RA_CONFIG},
+            {ui_lblLanguage,         lang.MUXSTORAGE.HELP.LANGUAGE},
+            {ui_lblNetwork,          lang.MUXSTORAGE.HELP.NET_PROFILE},
+            {ui_lblSyncthing,        lang.MUXSTORAGE.HELP.SYNCTHING},
+            {ui_lblUserInit,         lang.MUXSTORAGE.HELP.USER_INIT},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -99,7 +101,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -110,58 +112,58 @@ void update_storage_info() {
      * Check for SD2 pathing, otherwise it should be on SD1.
      * If it's not on SD1 then you have bigger problems!
     */
-    storage_path[0].path_suffix = "MUOS/bios";
+    storage_path[0].path_suffix = STORE_LOC_BIOS;
     storage_path[0].ui_label = ui_lblBIOSValue;
 
-    storage_path[1].path_suffix = "MUOS/info/catalogue";
+    storage_path[1].path_suffix = STORE_LOC_CLOG;
     storage_path[1].ui_label = ui_lblCatalogueValue;
 
-    storage_path[2].path_suffix = "MUOS/info/name";
+    storage_path[2].path_suffix = STORE_LOC_NAME;
     storage_path[2].ui_label = ui_lblNameValue;
 
-    storage_path[3].path_suffix = "MUOS/retroarch";
+    storage_path[3].path_suffix = STORE_LOC_RARC;
     storage_path[3].ui_label = ui_lblRetroArchValue;
 
-    storage_path[4].path_suffix = "MUOS/info/config";
+    storage_path[4].path_suffix = STORE_LOC_CONF;
     storage_path[4].ui_label = ui_lblConfigValue;
 
-    storage_path[5].path_suffix = "MUOS/info/core";
+    storage_path[5].path_suffix = STORE_LOC_CORE;
     storage_path[5].ui_label = ui_lblCoreValue;
 
-    storage_path[6].path_suffix = "MUOS/info/favourite";
+    storage_path[6].path_suffix = STORE_LOC_FAVS;
     storage_path[6].ui_label = ui_lblFavouriteValue;
 
-    storage_path[7].path_suffix = "MUOS/info/history";
+    storage_path[7].path_suffix = STORE_LOC_HIST;
     storage_path[7].ui_label = ui_lblHistoryValue;
 
-    storage_path[8].path_suffix = "MUOS/music";
+    storage_path[8].path_suffix = STORE_LOC_MUSC;
     storage_path[8].ui_label = ui_lblMusicValue;
 
-    storage_path[9].path_suffix = "MUOS/save";
+    storage_path[9].path_suffix = STORE_LOC_SAVE;
     storage_path[9].ui_label = ui_lblSaveValue;
 
-    storage_path[10].path_suffix = "MUOS/screenshot";
+    storage_path[10].path_suffix = STORE_LOC_SCRS;
     storage_path[10].ui_label = ui_lblScreenshotValue;
 
-    storage_path[11].path_suffix = "MUOS/theme";
+    storage_path[11].path_suffix = STORE_LOC_THEM;
     storage_path[11].ui_label = ui_lblThemeValue;
 
-    storage_path[12].path_suffix = "MUOS/package/catalogue";
+    storage_path[12].path_suffix = STORE_LOC_PCAT;
     storage_path[12].ui_label = ui_lblCataloguePackageValue;
 
-    storage_path[13].path_suffix = "MUOS/package/config";
+    storage_path[13].path_suffix = STORE_LOC_PCON;
     storage_path[13].ui_label = ui_lblConfigPackageValue;
 
-    storage_path[14].path_suffix = "MUOS/language";
+    storage_path[14].path_suffix = STORE_LOC_LANG;
     storage_path[14].ui_label = ui_lblLanguageValue;
 
-    storage_path[15].path_suffix = "MUOS/network";
+    storage_path[15].path_suffix = STORE_LOC_NETW;
     storage_path[15].ui_label = ui_lblNetworkValue;
 
-    storage_path[16].path_suffix = "MUOS/syncthing";
+    storage_path[16].path_suffix = STORE_LOC_SYCT;
     storage_path[16].ui_label = ui_lblSyncthingValue;
 
-    storage_path[17].path_suffix = "MUOS/init";
+    storage_path[17].path_suffix = STORE_LOC_INIT;
     storage_path[17].ui_label = ui_lblUserInitValue;
 
     char dir[FILENAME_MAX];
@@ -169,10 +171,10 @@ void update_storage_info() {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage_path[i].path_suffix);
         if (directory_exist(dir)) {
             lv_label_set_text(storage_path[i].ui_label, "SD2");
-            lv_label_set_text(ui_lblNavX, TG("Sync to SD1"));
+            lv_label_set_text(ui_lblNavX, lang.GENERIC.SYNC);
         } else {
             lv_label_set_text(storage_path[i].ui_label, "SD1");
-            lv_label_set_text(ui_lblNavX, TG("Migrate to SD2"));
+            lv_label_set_text(ui_lblNavX, lang.GENERIC.MIGRATE);
         }
     }
 }
@@ -279,24 +281,24 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
     apply_theme_list_panel(&theme, &device, ui_pnlUserInit);
 
-    apply_theme_list_item(&theme, ui_lblBIOS, TS("System BIOS"), false, true);
-    apply_theme_list_item(&theme, ui_lblCatalogue, TS("Metadata Catalogue"), false, true);
-    apply_theme_list_item(&theme, ui_lblName, TS("Friendly Name System"), false, true);
-    apply_theme_list_item(&theme, ui_lblRetroArch, TS("RetroArch System"), false, true);
-    apply_theme_list_item(&theme, ui_lblConfig, TS("RetroArch Configs"), false, true);
-    apply_theme_list_item(&theme, ui_lblCore, TS("Assigned Core/Governor System"), false, true);
-    apply_theme_list_item(&theme, ui_lblFavourite, TS("Favourites"), false, true);
-    apply_theme_list_item(&theme, ui_lblHistory, TS("History"), false, true);
-    apply_theme_list_item(&theme, ui_lblMusic, TS("Background Music"), false, true);
-    apply_theme_list_item(&theme, ui_lblSave, TS("Save Games + Save States"), false, true);
-    apply_theme_list_item(&theme, ui_lblScreenshot, TS("Screenshots"), false, true);
-    apply_theme_list_item(&theme, ui_lblTheme, TS("Themes"), false, true);
-    apply_theme_list_item(&theme, ui_lblCataloguePackage, TS("Catalogue Packages"), false, true);
-    apply_theme_list_item(&theme, ui_lblConfigPackage, TS("RetroArch Config Packages"), false, true);
-    apply_theme_list_item(&theme, ui_lblLanguage, TS("Languages"), false, true);
-    apply_theme_list_item(&theme, ui_lblNetwork, TS("Network Profiles"), false, true);
-    apply_theme_list_item(&theme, ui_lblSyncthing, TS("Syncthing Configs"), false, true);
-    apply_theme_list_item(&theme, ui_lblUserInit, TS("User Init Scripts"), false, true);
+    apply_theme_list_item(&theme, ui_lblBIOS, lang.MUXSTORAGE.BIOS, false, true);
+    apply_theme_list_item(&theme, ui_lblCatalogue, lang.MUXSTORAGE.CATALOGUE, false, true);
+    apply_theme_list_item(&theme, ui_lblName, lang.MUXSTORAGE.FRIENDLY, false, true);
+    apply_theme_list_item(&theme, ui_lblRetroArch, lang.MUXSTORAGE.RA_SYSTEM, false, true);
+    apply_theme_list_item(&theme, ui_lblConfig, lang.MUXSTORAGE.RA_CONFIG, false, true);
+    apply_theme_list_item(&theme, ui_lblCore, lang.MUXSTORAGE.ASSIGNED, false, true);
+    apply_theme_list_item(&theme, ui_lblFavourite, lang.MUXSTORAGE.FAVOURITE, false, true);
+    apply_theme_list_item(&theme, ui_lblHistory, lang.MUXSTORAGE.HISTORY, false, true);
+    apply_theme_list_item(&theme, ui_lblMusic, lang.MUXSTORAGE.MUSIC, false, true);
+    apply_theme_list_item(&theme, ui_lblSave, lang.MUXSTORAGE.SAVE, false, true);
+    apply_theme_list_item(&theme, ui_lblScreenshot, lang.MUXSTORAGE.SCREENSHOT, false, true);
+    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXSTORAGE.PACKAGE.THEME, false, true);
+    apply_theme_list_item(&theme, ui_lblCataloguePackage, lang.MUXSTORAGE.PACKAGE.CATALOGUE, false, true);
+    apply_theme_list_item(&theme, ui_lblConfigPackage, lang.MUXSTORAGE.PACKAGE.RA_CONFIG, false, true);
+    apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXSTORAGE.LANGUAGE, false, true);
+    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXSTORAGE.NET_PROFILE, false, true);
+    apply_theme_list_item(&theme, ui_lblSyncthing, lang.MUXSTORAGE.SYNCTHING, false, true);
+    apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXSTORAGE.USER_INIT, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBIOS, mux_module, "bios");
     apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_module, "catalogue");
@@ -465,7 +467,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -544,9 +546,9 @@ void ui_refresh_task() {
 
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
         if (strcasecmp(lv_label_get_text(element_focused), "SD2") == 0) {
-            lv_label_set_text(ui_lblNavX, TG("Sync to SD1"));
+            lv_label_set_text(ui_lblNavX, lang.GENERIC.SYNC);
         } else {
-            lv_label_set_text(ui_lblNavX, TG("Migrate to SD2"));
+            lv_label_set_text(ui_lblNavX, lang.GENERIC.MIGRATE);
         }
 
         lv_obj_invalidate(ui_pnlContent);
@@ -559,6 +561,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -566,8 +569,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -587,7 +590,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("STORAGE"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXSTORAGE.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -631,13 +634,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -671,7 +674,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

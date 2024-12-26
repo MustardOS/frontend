@@ -1,9 +1,9 @@
 #include <stdlib.h>
-
 #include "../font/awesome_small.h"
 #include "../font/notosans.h"
 #include "img/nothing.h"
 #include "common.h"
+#include "language.h"
 #include "config.h"
 #include "input.h"
 #include "theme.h"
@@ -65,7 +65,8 @@ lv_obj_t *ui_pnlProgressVolume;
 lv_obj_t *ui_icoProgressVolume;
 lv_obj_t *ui_barProgressVolume;
 
-void ui_common_screen_init(struct theme_config *theme, struct mux_device *device, const char *title) {
+void ui_common_screen_init(struct theme_config *theme, struct mux_device *device,
+                           struct mux_lang *lang, const char *title) {
     ui_screen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -313,7 +314,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_lblScreenMessage, device->MUX.WIDTH);
     lv_obj_set_height(ui_lblScreenMessage, 28);
     lv_obj_set_align(ui_lblScreenMessage, LV_ALIGN_LEFT_MID);
-    lv_label_set_text(ui_lblScreenMessage, TG("No Content Found..."));
+    lv_label_set_text(ui_lblScreenMessage, lang->GENERIC.NO_CONTENT);
     lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     lv_obj_set_scroll_dir(ui_lblScreenMessage, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(theme->LIST_DEFAULT.TEXT),
@@ -432,10 +433,10 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_side(ui_pnlHelpExtra, LV_BORDER_SIDE_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblPreviewHeaderGlyph = create_footer_glyph(ui_pnlHelpExtra, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
-                                          theme->NAV.A);
+                                                   theme->NAV.A);
 
     ui_lblPreviewHeader = create_footer_text(ui_pnlHelpExtra, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
-    lv_label_set_text(ui_lblPreviewHeader, TG("Switch to Preview Image"));
+    lv_label_set_text(ui_lblPreviewHeader, lang->GENERIC.SWITCH_IMAGE);
 
     ui_pnlHelpPreview = lv_obj_create(ui_pnlHelp);
     lv_obj_set_width(ui_pnlHelpPreview, device->MUX.WIDTH * .9);
@@ -500,11 +501,13 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlHelpPreviewInfo, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlHelpPreviewInfo, LV_BORDER_SIDE_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
-                                          theme->NAV.A);
+    ui_lblHelpPreviewInfoGlyph = create_footer_glyph(ui_pnlHelpPreviewInfo, theme,
+                                                     (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
+                                                     theme->NAV.A);
 
-    ui_lblHelpPreviewInfoMessage = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.A.TEXT, theme->NAV.A.TEXT_ALPHA);
-    lv_label_set_text(ui_lblHelpPreviewInfoMessage, TG("Switch to Information"));
+    ui_lblHelpPreviewInfoMessage = create_footer_text(ui_pnlHelpPreviewInfo, theme, theme->NAV.A.TEXT,
+                                                      theme->NAV.A.TEXT_ALPHA);
+    lv_label_set_text(ui_lblHelpPreviewInfoMessage, lang->GENERIC.SWITCH_INFO);
 
     ui_pnlProgressBrightness = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlProgressBrightness, theme->BAR.PANEL_WIDTH);
@@ -662,7 +665,7 @@ void ui_common_handle_idle() {
 }
 
 lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
-    lv_obj_t * ui_glyph;
+    lv_obj_t *ui_glyph;
     ui_glyph = lv_img_create(parent);
     lv_obj_set_width(ui_glyph, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_glyph, LV_SIZE_CONTENT);
@@ -676,7 +679,7 @@ lv_obj_t *create_header_glyph(lv_obj_t *parent, struct theme_config *theme) {
 
 lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char *glyph_name,
                               struct footer_glyph nav_footer_glyph) {
-    lv_obj_t * ui_glyph;
+    lv_obj_t *ui_glyph;
 
     char footer_image_path[MAX_BUFFER_SIZE];
     char footer_image_embed[MAX_BUFFER_SIZE];
@@ -715,7 +718,7 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 }
 
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha) {
-    lv_obj_t * ui_lblNavText = lv_label_create(parent);
+    lv_obj_t *ui_lblNavText = lv_label_create(parent);
     lv_obj_set_width(ui_lblNavText, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_lblNavText, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblNavText, -220);
@@ -898,7 +901,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
 }
 
 void fade_to_black(lv_obj_t *ui_screen) {
-    lv_obj_t * black = lv_obj_create(ui_screen);
+    lv_obj_t *black = lv_obj_create(ui_screen);
 
     lv_obj_set_width(black, device.MUX.WIDTH);
     lv_obj_set_height(black, device.MUX.HEIGHT);
@@ -928,8 +931,8 @@ void fade_from_black(lv_obj_t *ui_black) {
 
 void create_grid_panel(struct theme_config *theme, int item_count) {
     int row_count = item_count / theme->GRID.COLUMN_COUNT + 1;
-    lv_coord_t * col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
-    lv_coord_t * row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
+    lv_coord_t *col_dsc = malloc((theme->GRID.COLUMN_COUNT + 1) * sizeof(lv_coord_t));
+    lv_coord_t *row_dsc = malloc((row_count + 1) * sizeof(lv_coord_t));
 
     for (int i = 0; i < theme->GRID.COLUMN_COUNT; i++) {
         col_dsc[i] = theme->GRID.COLUMN_WIDTH;
@@ -955,36 +958,50 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_scroll_snap_y(ui_pnlGrid, LV_SCROLL_SNAP_NONE);
 
     lv_obj_clear_flag(ui_lblGridCurrentItem, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT , theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X, theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
+    lv_obj_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT,
+                 theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X, theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
     lv_label_set_long_mode(ui_lblGridCurrentItem, LV_LABEL_LONG_WRAP);
-    lv_obj_set_style_text_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.WIDTH == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
-    lv_obj_set_height(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.HEIGHT == 0 ? LV_SIZE_CONTENT : theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
-    lv_obj_set_style_radius(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.WIDTH == 0 ? LV_SIZE_CONTENT
+                                                                                      : theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
+    lv_obj_set_height(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.HEIGHT == 0 ? LV_SIZE_CONTENT
+                                                                                        : theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
+    lv_obj_set_style_radius(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.RADIUS,
+                            LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH,
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_bg_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND),
                               LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA,
+                            LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.BORDER),
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_text_color(ui_lblGridCurrentItem, lv_color_hex(theme->GRID.CURRENT_ITEM_LABEL.TEXT),
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_line_space(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA,
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_line_space(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING,
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT,
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT,
+                               LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP,
+                             LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblGridCurrentItem, theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM,
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 void grid_item_focus_event_cb(lv_event_t *e) {
-    lv_obj_t * cell_pnl = lv_event_get_target(e);
+    lv_obj_t *cell_pnl = lv_event_get_target(e);
     uint32_t child_cnt = lv_obj_get_child_cnt(cell_pnl);
-    lv_obj_t * cell_image_focused = lv_obj_get_child(cell_pnl, child_cnt - 1);
+    lv_obj_t *cell_image_focused = lv_obj_get_child(cell_pnl, child_cnt - 1);
 
     if (lv_event_get_code(e) == LV_EVENT_FOCUSED) {
         lv_obj_set_style_img_opa(cell_image_focused, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1057,7 +1074,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     if (file_exist(item_image_focused_path)) {
         char grid_image_focused[MAX_BUFFER_SIZE];
         snprintf(grid_image_focused, sizeof(grid_image_focused), "M:%s", item_image_focused_path);
-        lv_obj_t * cell_image_focused = lv_img_create(cell_pnl);
+        lv_obj_t *cell_image_focused = lv_img_create(cell_pnl);
         lv_img_set_src(cell_image_focused, grid_image_focused);
         if (theme->GRID.CELL_DEFAULT.TEXT_ALPHA == 0 && theme->GRID.CELL_FOCUS.TEXT_ALPHA == 0) {
             lv_obj_align(cell_image_focused, LV_ALIGN_CENTER, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);

@@ -11,6 +11,7 @@
 #include "../common/log.h"
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -32,6 +33,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -68,9 +70,7 @@ enum gov_gen_type {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("Configure CPU governors to dynamically adjust the CPU "
-                                                            "frequency and help balance power consumption "
-                                                            "and performance"));
+                     lang.MUXGOV.TITLE, lang.MUXGOV.HELP);
 }
 
 void assign_gov_single(char *core_dir, const char *gov, char *rom) {
@@ -82,7 +82,7 @@ void assign_gov_single(char *core_dir, const char *gov, char *rom) {
 
     FILE *rom_file = fopen(rom_path, "w");
     if (rom_file == NULL) {
-        perror("Error opening file rom_path file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -102,7 +102,7 @@ void assign_gov_directory(char *core_dir, const char *gov, int purge) {
 
     FILE *file = fopen(core_file, "w");
     if (file == NULL) {
-        perror("Error opening file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -123,7 +123,7 @@ void assign_gov_parent(char *core_dir, const char *gov) {
 
             FILE *subdir_file_handle = fopen(subdir_file, "w");
             if (subdir_file_handle == NULL) {
-                perror("Error opening file");
+                perror(lang.SYSTEM.FAIL_FILE_OPEN);
                 continue;
             }
 
@@ -165,13 +165,13 @@ void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type method)
 char **read_available_governors(const char *filename, int *count) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        perror("Error opening file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return NULL;
     }
 
     char **governors = (char **) malloc(MAX_BUFFER_SIZE * sizeof(char *));
     if (governors == NULL) {
-        perror("Memory allocation failure");
+        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
         fclose(file);
         return NULL;
     }
@@ -184,7 +184,7 @@ char **read_available_governors(const char *filename, int *count) {
         while (token != NULL) {
             governors[*count] = (char *) malloc((strlen(token) + 1) * sizeof(char));
             if (governors[*count] == NULL) {
-                perror("Memory allocation failure");
+                perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                 for (int i = 0; i < *count; i++) {
                     free(governors[i]);
                 }
@@ -204,8 +204,8 @@ char **read_available_governors(const char *filename, int *count) {
 
 void create_gov_items(const char *target) {
     char filename[FILENAME_MAX];
-    snprintf(filename, sizeof(filename), "%s/MUOS/info/assign/%s.ini",
-             device.STORAGE.ROM.MOUNT, target);
+    snprintf(filename, sizeof(filename), "%s/%s/%s.ini",
+             device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, target);
 
     int governor_count;
     char **governors = read_available_governors("/sys/devices/system/cpu/cpu0/cpufreq/"
@@ -267,14 +267,16 @@ void create_gov_items(const char *target) {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -285,14 +287,16 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
@@ -379,10 +383,10 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Individual"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
-    lv_label_set_text(ui_lblNavX, TG("Directory"));
-    lv_label_set_text(ui_lblNavY, TG("Recursive"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.INDIVIDUAL);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
+    lv_label_set_text(ui_lblNavX, lang.GENERIC.DIRECTORY);
+    lv_label_set_text(ui_lblNavY, lang.GENERIC.RECURSIVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -453,6 +457,7 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
 
     char *cmd_help = "\nmuOS Extras - Governor Assignment\nUsage: %s <-acds>\n\nOptions:\n"
@@ -505,8 +510,8 @@ int main(int argc, char *argv[]) {
         }
 
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), "%s/MUOS/info/assign.json",
-                 device.STORAGE.ROM.MOUNT);
+        snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
+                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
 
         if (json_valid(read_text_from_file(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
@@ -525,8 +530,8 @@ int main(int argc, char *argv[]) {
                 LOG_INFO(mux_module, "<Automatic Governor Assign> Core Assigned: %s", ass_config)
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
-                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/MUOS/info/assign/%s",
-                         device.STORAGE.ROM.MOUNT, ass_config);
+                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s/%s",
+                         device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, ass_config);
 
                 LOG_INFO(mux_module, "<Automatic Governor Assign> Obtaining Core INI: %s", assigned_core_ini)
 
@@ -566,8 +571,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -587,7 +592,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, "");
+    ui_common_screen_init(&theme, &device, &lang, "");
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -604,12 +609,12 @@ int main(int argc, char *argv[]) {
 
     nav_sound = init_nav_sound(mux_module);
 
-    lv_label_set_text(ui_lblScreenMessage, TS("No Governors Found..."));
+    lv_label_set_text(ui_lblScreenMessage, lang.MUXGOV.NONE);
 
     if (strcasecmp(rom_system, "none") == 0) {
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), "%s/MUOS/info/assign.json",
-                 device.STORAGE.ROM.MOUNT);
+        snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
+                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
 
         if (json_valid(read_text_from_file(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
@@ -651,7 +656,7 @@ int main(int argc, char *argv[]) {
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -682,7 +687,7 @@ int main(int argc, char *argv[]) {
     if (ui_count > 0) {
         LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s")
         char title[MAX_BUFFER_SIZE];
-        snprintf(title, sizeof(title), "%s - %s", TS("GOVERNOR"), get_last_dir(rom_dir));
+        snprintf(title, sizeof(title), "%s - %s", lang.MUXGOV.TITLE, get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
         list_nav_next(0);
     } else {
@@ -696,7 +701,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

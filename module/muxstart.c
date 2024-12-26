@@ -8,6 +8,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/config.h"
 #include "../common/device.h"
@@ -23,6 +24,7 @@ int bar_footer = 0;
 char *osd_message;
 char *mux_module;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -44,7 +46,7 @@ void setup_background_process() {
     pid_t pid = fork();
 
     if (pid == -1) {
-        perror("Failed to fork");
+        perror(lang.SYSTEM.FAIL_FORK);
         exit(1);
     } else if (pid > 0) {
         exit(0);

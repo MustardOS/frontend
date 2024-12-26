@@ -12,6 +12,7 @@
 #include "../common/log.h"
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -33,6 +34,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -69,8 +71,7 @@ enum core_gen_type {
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("This is where you can assign a core or "
-                                                            "external emulator to content"));
+                     lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP);
 }
 
 void free_lines(char *lines[], int line_count) {
@@ -83,7 +84,7 @@ void modify_cfg_file(const char *filename, const char *core, const char *sys, co
     printf("Updating file: %s\n", filename);
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        perror("Failed to open file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -119,14 +120,14 @@ void modify_cfg_file(const char *filename, const char *core, const char *sys, co
     }
 
     if (remove(filename) != 0) {
-        perror("Failed to delete original file");
+        perror(lang.SYSTEM.FAIL_DELETE_FILE);
         free_lines(lines, line_count);
         return;
     }
 
     FILE *new_file = fopen(filename, "w");
     if (new_file == NULL) {
-        perror("Failed to create new file");
+        perror(lang.SYSTEM.FAIL_CREATE_FILE);
         free_lines(lines, line_count);
         return;
     }
@@ -146,7 +147,7 @@ void update_cfg_files(const char *dirpath, const char *core, const char *sys, co
 
     DIR *dir = opendir(dirpath);
     if (dir == NULL) {
-        perror("Failed to open directory");
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
 
@@ -171,7 +172,7 @@ void assign_core_single(char *core_dir, const char *core, char *sys, char *rom, 
 
     FILE *rom_file = fopen(rom_path, "w");
     if (rom_file == NULL) {
-        perror("Error opening file rom_path file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -198,7 +199,7 @@ void assign_core_directory(char *core_dir, const char *core, char *sys, int cach
 
     FILE *file = fopen(core_file, "w");
     if (file == NULL) {
-        perror("Error opening file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -219,7 +220,7 @@ void assign_core_parent(char *core_dir, const char *core, char *sys, int cache) 
 
             FILE *subdir_file_handle = fopen(subdir_file, "w");
             if (subdir_file_handle == NULL) {
-                perror("Error opening file");
+                perror(lang.SYSTEM.FAIL_FILE_OPEN);
                 continue;
             }
 
@@ -271,13 +272,13 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
 char **read_assign_ini(const char *filename, int *cores) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        perror("Error opening file!");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return NULL;
     }
 
     char **headers = (char **) malloc(MAX_BUFFER_SIZE * sizeof(char *));
     if (headers == NULL) {
-        perror("Memory allocation failure!");
+        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
         fclose(file);
         return NULL;
     }
@@ -307,8 +308,8 @@ void create_system_items() {
     struct dirent *af;
 
     char assign_dir[PATH_MAX];
-    snprintf(assign_dir, sizeof(assign_dir), "%s/MUOS/info/assign",
-             device.STORAGE.ROM.MOUNT);
+    snprintf(assign_dir, sizeof(assign_dir), "%s/%s",
+             device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
 
     ad = opendir(assign_dir);
     if (ad == NULL) {
@@ -347,15 +348,15 @@ void create_system_items() {
             char *base_filename = file_names[i];
             ui_count++;
 
-            lv_obj_t * ui_pnlCore = lv_obj_create(ui_pnlContent);
+            lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
             apply_theme_list_panel(&theme, &device, ui_pnlCore);
             lv_obj_set_user_data(ui_pnlCore, strdup(base_filename));
 
-            lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
+            lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
             apply_theme_list_item(&theme, ui_lblCoreItem, base_filename, true, false);
             lv_obj_set_user_data(ui_lblCoreItem, strdup(base_filename));
 
-            lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
+            lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
             apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, "system");
 
             lv_group_add_obj(ui_group, ui_lblCoreItem);
@@ -372,8 +373,8 @@ void create_system_items() {
 char *get_raw_core(const char *group) {
     char chosen_core_ini[FILENAME_MAX];
     snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-             "%s/MUOS/info/assign/%s.ini",
-             device.STORAGE.ROM.MOUNT, rom_system);
+             "%s/%s/%s.ini",
+             device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, rom_system);
 
     mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -392,8 +393,8 @@ void create_core_items(const char *target) {
     char *directory_core = get_directory_core(rom_dir);
     char *file_core = get_file_core(rom_dir, rom_name);
     char filename[FILENAME_MAX];
-    snprintf(filename, sizeof(filename), "%s/MUOS/info/assign/%s.ini",
-             device.STORAGE.ROM.MOUNT, target);
+    snprintf(filename, sizeof(filename), "%s/%s/%s.ini",
+             device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, target);
 
     int cores;
     char **core_headers = read_assign_ini(filename, &cores);
@@ -443,22 +444,22 @@ void create_core_items(const char *target) {
         char *rawcore = get_raw_core(core_headers[i]);
         char display_name[MAX_BUFFER_SIZE];
         if (strcasecmp(file_core, directory_core) != 0 && strcasecmp(file_core, rawcore) == 0) {
-            snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], TS("Assigned to file"));
+            snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], lang.MUXASSIGN.FILE);
         } else if (strcasecmp(directory_core, rawcore) == 0) {
-            snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], TS("Assigned to directory"));
+            snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], lang.MUXASSIGN.DIR);
         } else {
             snprintf(display_name, sizeof(display_name), "%s", core_headers[i]);
         }
 
-        lv_obj_t * ui_pnlCore = lv_obj_create(ui_pnlContent);
+        lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlCore);
         lv_obj_set_user_data(ui_pnlCore, strdup(display_name));
 
-        lv_obj_t * ui_lblCoreItem = lv_label_create(ui_pnlCore);
+        lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
         apply_theme_list_item(&theme, ui_lblCoreItem, display_name, true, false);
         lv_obj_set_user_data(ui_lblCoreItem, strdup(core_headers[i]));
 
-        lv_obj_t * ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
+        lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
 
         char *glyph = (strcasecmp(core_headers[i], assign_default) == 0) ? "default" : "core";
         apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, glyph);
@@ -528,8 +529,8 @@ void handle_confirm() {
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                 "%s/MUOS/info/assign/%s.ini",
-                 device.STORAGE.ROM.MOUNT, rom_system);
+                 "%s/%s/%s.ini",
+                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, rom_system);
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
         const char *raw_core = mini_get_string(
@@ -561,8 +562,8 @@ void handle_x() {
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                 "%s/MUOS/info/assign/%s.ini",
-                 device.STORAGE.ROM.MOUNT, rom_system);
+                 "%s/%s/%s.ini",
+                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, rom_system);
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -596,8 +597,8 @@ void handle_y() {
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                 "%s/MUOS/info/assign/%s.ini",
-                 device.STORAGE.ROM.MOUNT, rom_system);
+                 "%s/%s/%s.ini",
+                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, rom_system);
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -679,8 +680,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Select"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -701,9 +702,9 @@ void init_elements() {
     }
 
     if (strcasecmp(rom_system, "none") != 0) {
-        lv_label_set_text(ui_lblNavA, TG("Individual"));
-        lv_label_set_text(ui_lblNavX, TG("Directory"));
-        lv_label_set_text(ui_lblNavY, TG("Recursive"));
+        lv_label_set_text(ui_lblNavA, lang.GENERIC.INDIVIDUAL);
+        lv_label_set_text(ui_lblNavX, lang.GENERIC.DIRECTORY);
+        lv_label_set_text(ui_lblNavY, lang.GENERIC.RECURSIVE);
 
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
@@ -771,6 +772,7 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
 
     char *cmd_help = "\nmuOS Extras - Core Assignment\nUsage: %s <-acds>\n\nOptions:\n"
@@ -825,8 +827,8 @@ int main(int argc, char *argv[]) {
         int auto_assign_good = 0;
 
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), "%s/MUOS/info/assign.json",
-                 device.STORAGE.ROM.MOUNT);
+        snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
+                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
 
         if (json_valid(read_text_from_file(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
@@ -845,8 +847,8 @@ int main(int argc, char *argv[]) {
                 LOG_INFO(mux_module, "<Automatic Core Assign> Core Assigned: %s", ass_config)
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
-                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/MUOS/info/assign/%s",
-                         device.STORAGE.ROM.MOUNT, ass_config);
+                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s/%s",
+                         device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, ass_config);
 
                 LOG_INFO(mux_module, "<Automatic Core Assign> Obtaining Core INI: %s", assigned_core_ini)
 
@@ -894,8 +896,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -915,7 +917,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, "");
+    ui_common_screen_init(&theme, &device, &lang, "");
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -932,7 +934,7 @@ int main(int argc, char *argv[]) {
 
     nav_sound = init_nav_sound(mux_module);
 
-    lv_label_set_text(ui_lblScreenMessage, TS("No Cores Found..."));
+    lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
 
     if (strcasecmp(rom_system, "none") == 0) {
         create_system_items();
@@ -958,7 +960,7 @@ int main(int argc, char *argv[]) {
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -993,7 +995,7 @@ int main(int argc, char *argv[]) {
             LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s")
         }
         char title[MAX_BUFFER_SIZE];
-        snprintf(title, sizeof(title), "%s - %s", TS("ASSIGN"), get_last_dir(rom_dir));
+        snprintf(title, sizeof(title), "%s - %s", lang.MUXASSIGN.TITLE, get_last_dir(rom_dir));
         lv_label_set_text(ui_lblTitle, title);
         list_nav_next(0);
     } else {
@@ -1007,7 +1009,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

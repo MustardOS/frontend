@@ -9,6 +9,8 @@
 #include <libgen.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"
+#include "../common/osk.h"
+#include "../common/language.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
 #include "../common/device.h"
@@ -31,6 +33,7 @@ int bar_footer = 0;
 char *osd_message;
 char *mux_module;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -43,9 +46,9 @@ int ui_count = 0;
 int starter_image = 0;
 int progress_onscreen = -1;
 int got_results = 0;
+
 int key_show = 0;
 int key_curr = 0;
-int key_map = 0;
 
 static char SD1[MAX_BUFFER_SIZE];
 static char SD2[MAX_BUFFER_SIZE];
@@ -64,7 +67,9 @@ content_item *all_items = NULL;
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
 lv_obj_t *kiosk_image = NULL;
+
 lv_obj_t *key_entry;
+lv_obj_t *num_entry;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -78,27 +83,6 @@ void list_nav_prev(int steps);
 
 void list_nav_next(int steps);
 
-static const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
-                                      "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
-                                      "a", "s", "d", "f", "g", "h", "j", "k", "l", "\n",
-                                      "§", "z", "x", "c", "v", "b", "n", "m", "§", "\n",
-                                      "ABC", " ", "OK", NULL
-};
-
-static const char *key_upper_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
-                                      "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "\n",
-                                      "A", "S", "D", "F", "G", "H", "J", "K", "L", "\n",
-                                      "§", "Z", "X", "C", "V", "B", "N", "M", "§", "\n",
-                                      "!@#", " ", "OK", NULL
-};
-
-static const char *key_special_map[] = {"!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "\n",
-                                        "`", "~", "_", "-", "+", "=", "{", "}", "[", "]", "\n",
-                                        "|", "\\", ":", ";", "\"", "'", "!", "@", "#", "\n",
-                                        "§", "<", ">", ",", ".", "?", "/", "$", "§", "\n",
-                                        "abc", " ", "OK", NULL
-};
-
 struct help_msg {
     lv_obj_t *element;
     char *message;
@@ -106,12 +90,12 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblLookup,       TS("Enter in the name of the content you are looking for")},
-            {ui_lblSearchLocal,  TS("Search within the current selected folder and folders within")},
-            {ui_lblSearchGlobal, TS("Search all current active storage devices")},
+            {ui_lblLookup,       lang.MUXSEARCH.LOOKUP},
+            {ui_lblSearchLocal,  lang.MUXSEARCH.LOCAL},
+            {ui_lblSearchGlobal, lang.MUXSEARCH.GLOBAL},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -121,7 +105,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -156,9 +140,9 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlSearchLocal);
     apply_theme_list_panel(&theme, &device, ui_pnlSearchGlobal);
 
-    apply_theme_list_item(&theme, ui_lblLookup, TS("Lookup"), false, true);
-    apply_theme_list_item(&theme, ui_lblSearchLocal, TS("Search Local"), false, true);
-    apply_theme_list_item(&theme, ui_lblSearchGlobal, TS("Search Global"), false, true);
+    apply_theme_list_item(&theme, ui_lblLookup, lang.MUXSEARCH.LOOKUP, false, true);
+    apply_theme_list_item(&theme, ui_lblSearchLocal, lang.MUXSEARCH.LOCAL, false, true);
+    apply_theme_list_item(&theme, ui_lblSearchGlobal, lang.MUXSEARCH.GLOBAL, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoLookup, mux_module, "lookup");
     apply_theme_list_glyph(&theme, ui_icoSearchLocal, mux_module, "local");
@@ -306,18 +290,18 @@ void image_refresh(char *image_type) {
 }
 
 void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_value) {
-    lv_obj_t * ui_pnlResult = lv_obj_create(ui_pnlContent);
+    lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(&theme, &device, ui_pnlResult);
 
-    lv_obj_t * ui_lblResultItem = lv_label_create(ui_pnlResult);
+    lv_obj_t *ui_lblResultItem = lv_label_create(ui_pnlResult);
     apply_theme_list_item(&theme, ui_lblResultItem, item_text, true, false);
 
-    lv_obj_t * ui_lblResultItemValue = lv_label_create(ui_pnlResult);
+    lv_obj_t *ui_lblResultItemValue = lv_label_create(ui_pnlResult);
     lv_label_set_text(ui_lblResultItemValue, item_value);
     lv_obj_set_style_text_opa(ui_lblResultItemValue, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_width(ui_lblResultItemValue, 0);
 
-    lv_obj_t * ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
+    lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
     apply_theme_list_glyph(&theme, ui_lblResultItemGlyph, mux_module, item_glyph);
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
@@ -513,13 +497,6 @@ void process_results(const char *json_results) {
     }
 }
 
-void reset_osk() {
-    key_curr = 0;
-    lv_btnmatrix_clear_btn_ctrl_all(key_entry, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_btnmatrix_set_selected_btn(key_entry, key_curr);
-    lv_btnmatrix_set_btn_ctrl(key_entry, lv_btnmatrix_get_selected_btn(key_entry), LV_BTNMATRIX_CTRL_CHECKED);
-}
-
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
@@ -588,7 +565,7 @@ void handle_keyboard_press(void) {
                               lv_textarea_get_text(ui_txtEntry));
         }
 
-        reset_osk();
+        reset_osk(key_entry);
 
         lv_textarea_set_text(ui_txtEntry, "");
         lv_group_set_focus_cb(ui_group, NULL);
@@ -605,169 +582,7 @@ void handle_keyboard_press(void) {
 }
 
 void handle_keyboard_close(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-    key_show = 0;
-    reset_osk();
-    lv_textarea_set_text(ui_txtEntry, "");
-    lv_group_set_focus_cb(ui_group, NULL);
-    lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-}
 
-void handle_keyboard_backspace(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-    lv_textarea_del_char(ui_txtEntry);
-}
-
-void handle_keyboard_swap(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-
-    if (key_show == 1) {
-        switch (key_map) {
-            case 0:
-                lv_btnmatrix_set_map(key_entry, key_upper_map);
-                key_map = 1;
-                break;
-            case 1:
-                lv_btnmatrix_set_map(key_entry, key_special_map);
-                key_map = 2;
-                break;
-            case 2:
-                lv_btnmatrix_set_map(key_entry, key_lower_map);
-                key_map = 0;
-                break;
-            default:
-                break;
-        }
-    }
-}
-
-void handle_keyboard_up(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-
-    if (key_curr >= 1) {
-        switch (key_curr) {
-            case 26:
-                key_curr = 17;
-                break;
-            case 27:
-                key_curr = 18;
-                break;
-            case 28:
-                key_curr = 19;
-                break;
-            case 30 ... 36:
-                key_curr = key_curr - 9;
-                break;
-            case 38:
-                key_curr = 30;
-                break;
-            case 39:
-                key_curr = 33;
-                break;
-            case 40:
-                key_curr = 36;
-                break;
-            default:
-                if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-                    key_curr = key_curr - 3;
-                } else {
-                    key_curr = key_curr - 10;
-                }
-                break;
-        }
-        if (key_curr < 0) {
-            key_curr = 0;
-        }
-    }
-    if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-        key_curr--;
-    }
-    lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-}
-
-void handle_keyboard_down(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-
-    int max_key;
-    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-        max_key = 11;
-    } else {
-        max_key = 40;
-    }
-    if (key_curr <= max_key) {
-        switch (key_curr) {
-            case 17:
-                key_curr = 26;
-                break;
-            case 18:
-                key_curr = 27;
-                break;
-            case 19:
-                key_curr = 28;
-                break;
-            case 21 ... 27:
-                key_curr = key_curr + 9;
-                break;
-            case 28:
-                key_curr = 36;
-                break;
-            case 30:
-                key_curr = 38;
-                break;
-            case 31 ... 35:
-                key_curr = 39;
-                break;
-            case 36:
-                key_curr = 40;
-                break;
-            default:
-                if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-                    key_curr = key_curr + 3;
-                } else {
-                    key_curr = key_curr + 10;
-                }
-                break;
-        }
-        if (key_curr > max_key) {
-            key_curr = max_key;
-        }
-    }
-    if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-        key_curr++;
-    }
-    lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-}
-
-void handle_keyboard_left(void) {
-    if (key_curr >= 1) {
-        key_curr--;
-        if (key_curr < 0) {
-            key_curr = 0;
-        }
-        if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-            key_curr--;
-        }
-        lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-    }
-}
-
-void handle_keyboard_right(void) {
-    int max_key;
-    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-        max_key = 11;
-    } else {
-        max_key = 40;
-    }
-    if (key_curr <= max_key) {
-        key_curr++;
-        if (key_curr > max_key) {
-            key_curr = max_key;
-        }
-        if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-            key_curr++;
-        }
-        lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-    }
 }
 
 void handle_confirm(void) {
@@ -785,12 +600,12 @@ void handle_confirm(void) {
         lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
     } else if (element_focused == ui_lblSearchLocal || element_focused == ui_lblSearchGlobal) {
         if (strlen(lv_label_get_text(ui_lblLookupValue)) <= 2) {
-            toast_message(TS("Lookup has to be 3 characters or more!"), 1000, 1000);
+            toast_message(lang.MUXSEARCH.ERROR, 1000, 1000);
             return;
         }
 
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-        lv_label_set_text(ui_lblMessage, "Searching...");
+        lv_label_set_text(ui_lblMessage, lang.MUXSEARCH.SEARCH);
         refresh_screen(device.SCREEN.WAIT);
 
         if (element_focused == ui_lblSearchLocal) {
@@ -861,7 +676,7 @@ void handle_b(void) {
     }
 
     if (key_show) {
-        handle_keyboard_close();
+        close_osk(num_entry, ui_group, ui_txtEntry, ui_pnlEntry);
         return;
     }
 
@@ -872,7 +687,7 @@ void handle_x(void) {
     if (msgbox_active) return;
 
     if (key_show) {
-        handle_keyboard_backspace();
+        key_backspace(ui_txtEntry);
         return;
     }
 
@@ -887,7 +702,7 @@ void handle_y(void) {
     if (msgbox_active) return;
 
     if (key_show) {
-        handle_keyboard_swap();
+        key_swap();
         return;
     }
 
@@ -907,7 +722,7 @@ void handle_help(void) {
 
 void handle_up(void) {
     if (key_show) {
-        handle_keyboard_up();
+        key_up();
         return;
     }
 
@@ -916,7 +731,7 @@ void handle_up(void) {
 
 void handle_up_hold(void) {
     if (key_show) {
-        handle_keyboard_up();
+        key_up();
         return;
     }
 
@@ -925,7 +740,7 @@ void handle_up_hold(void) {
 
 void handle_down(void) {
     if (key_show) {
-        handle_keyboard_down();
+        key_down();
         return;
     }
 
@@ -934,7 +749,7 @@ void handle_down(void) {
 
 void handle_down_hold(void) {
     if (key_show) {
-        handle_keyboard_down();
+        key_down();
         return;
     }
 
@@ -943,28 +758,28 @@ void handle_down_hold(void) {
 
 void handle_left(void) {
     if (key_show) {
-        handle_keyboard_left();
+        key_left();
         return;
     }
 }
 
 void handle_right(void) {
     if (key_show) {
-        handle_keyboard_right();
+        key_right();
         return;
     }
 }
 
 void handle_left_hold(void) {
     if (key_show) {
-        handle_keyboard_left();
+        key_left();
         return;
     }
 }
 
 void handle_right_hold(void) {
     if (key_show) {
-        handle_keyboard_right();
+        key_right();
         return;
     }
 }
@@ -983,23 +798,6 @@ void handle_r1(void) {
     }
 
     handle_list_nav_page_down();
-}
-
-static void osk_handler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
-
-    switch (code) {
-        case LV_EVENT_SCROLL:
-            lv_btnmatrix_set_selected_btn(obj, key_curr);
-            lv_btnmatrix_set_btn_ctrl(obj, lv_btnmatrix_get_selected_btn(obj), LV_BTNMATRIX_CTRL_CHECKED);
-            break;
-        case LV_EVENT_CLICKED:
-            lv_textarea_add_text(ui_txtEntry, lv_btnmatrix_get_btn_text(obj, lv_btnmatrix_get_selected_btn(obj)));
-            break;
-        default:
-            break;
-    }
 }
 
 void init_elements() {
@@ -1057,9 +855,9 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblNavA, TG("Select"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
-    lv_label_set_text(ui_lblNavX, TG("Clear"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
+    lv_label_set_text(ui_lblNavX, lang.GENERIC.CLEAR);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -1111,7 +909,7 @@ void init_osk() {
 
     lv_obj_align(key_entry, LV_ALIGN_CENTER, 0, 0);
 
-    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry);
 
     lv_obj_set_style_border_width(key_entry, 3, LV_PART_ITEMS | LV_STATE_CHECKED);
     lv_obj_set_style_border_width(key_entry, 1, LV_PART_ITEMS | LV_STATE_DEFAULT);
@@ -1199,6 +997,7 @@ void ui_refresh_task() {
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
                      "\t-d Name of directory to search\n\n";
@@ -1213,8 +1012,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    snprintf(search_result, sizeof(search_result), "%s/MUOS/info/search.json",
-             device.STORAGE.ROM.MOUNT);
+    snprintf(search_result, sizeof(search_result), "%s/%s/search.json",
+             device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
 
     char *json_content;
 
@@ -1233,8 +1032,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -1254,7 +1053,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("SEARCH CONTENT"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
     ui_init(ui_screen, ui_pnlContent, &theme);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
@@ -1304,13 +1103,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -1346,7 +1145,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

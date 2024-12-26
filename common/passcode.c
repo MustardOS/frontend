@@ -7,7 +7,7 @@
 void load_passcode(struct mux_passcode *passcode, struct mux_device *device) {
     char pass_file[MAX_BUFFER_SIZE];
     snprintf(pass_file, sizeof(pass_file),
-             "%s/MUOS/info/pass.ini", device->STORAGE.ROM.MOUNT);
+             "%s/%s/pass.ini", device->STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
 
     mini_t *muos_pass = mini_try_load(pass_file);
 

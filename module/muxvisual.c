@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -45,11 +47,11 @@ lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
 
-int battery_original, network_original, bluetooth_original, mux_clock_original, boxart_original;
-int boxartalign_original, name_original, dash_original, friendlyfolder_original, thetitleformat_original;
-int titleincluderootdrive_original, folderitemcount_original, menu_counter_folder_original;
-int display_empty_folder_original, menu_counter_file_original, background_animation_original;
-int launch_splash_original, black_fade_original;
+int battery_original, network_original, bluetooth_original, mux_clock_original, boxart_original,
+        boxartalign_original, name_original, dash_original, friendlyfolder_original, thetitleformat_original,
+        titleincluderootdrive_original, folderitemcount_original, menu_counter_folder_original,
+        display_empty_folder_original, menu_counter_file_original, background_animation_original,
+        launch_splash_original, black_fade_original;
 
 #define UI_COUNT 18
 lv_obj_t *ui_objects[UI_COUNT];
@@ -68,33 +70,27 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBattery,               TS("Toggle the visibility of the battery glyph")},
-            {ui_lblNetwork,               TS("Toggle the visibility of the network glyph")},
-            {ui_lblBluetooth,             TS("Toggle the visibility of the bluetooth glyph")},
-            {ui_lblClock,                 TS("Toggle the visibility of the clock")},
-            {ui_lblBoxArt,                TS("Change the display priority of the content images")},
-            {ui_lblBoxArtAlign,           TS("Change the screen alignment of the content images")},
-            {ui_lblName,                  TS("Remove extra information from content labels - This does NOT rename your "
-                                             "files it only changes how it is displayed")},
-            {ui_lblDash,                  TS("Replaces the dash (-) with a colon (:) for content labels")},
-            {ui_lblFriendlyFolder,        TS("Replaces the label of shortened content folders to more "
-                                             "appropriately named labels")},
-            {ui_lblTheTitleFormat,        TS("Rearranges the label of content to move the 'The' label to the front - "
-                                             "For example, 'Batman and Robin, The' to 'The Batman and Robin'")},
-            {ui_lblTitleIncludeRootDrive, TS("Changes the top title label in Explore Content to show current storage"
-                                             " device along with folder name")},
-            {ui_lblFolderItemCount,       TS("Toggle the visibility of the item count within folders in Explore Content")},
-            {ui_lblDisplayEmptyFolder,    TS("Toggle the visibility of empty folders in Explore Content")},
-            {ui_lblMenuCounterFolder,     TS("Toggle the visibility of currently selected folder along "
-                                             "with total in Explore Content")},
-            {ui_lblMenuCounterFile,       TS("Toggle the visibility of currently selected file along "
-                                             "with total in Explore Content")},
-            {ui_lblBackgroundAnimation,   TS("Toggle the background animation of the current selected theme")},
-            {ui_lblLaunchSplash,          TS("Toggle the splash image on content launching")},
-            {ui_lblBlackFade,             TS("Toggle the fade to black animation on content launching")},
+            {ui_lblBattery,               lang.MUXVISUAL.HELP.BATTERY},
+            {ui_lblNetwork,               lang.MUXVISUAL.HELP.NETWORK},
+            {ui_lblBluetooth,             lang.MUXVISUAL.HELP.BLUETOOTH},
+            {ui_lblClock,                 lang.MUXVISUAL.HELP.CLOCK},
+            {ui_lblBoxArt,                lang.MUXVISUAL.HELP.BOX_ART},
+            {ui_lblBoxArtAlign,           lang.MUXVISUAL.HELP.BOX_ALIGN},
+            {ui_lblName,                  lang.MUXVISUAL.HELP.NAME},
+            {ui_lblDash,                  lang.MUXVISUAL.HELP.DASH},
+            {ui_lblFriendlyFolder,        lang.MUXVISUAL.HELP.FRIENDLY},
+            {ui_lblTheTitleFormat,        lang.MUXVISUAL.HELP.REFORMAT},
+            {ui_lblTitleIncludeRootDrive, lang.MUXVISUAL.HELP.ROOT},
+            {ui_lblFolderItemCount,       lang.MUXVISUAL.HELP.COUNT},
+            {ui_lblDisplayEmptyFolder,    lang.MUXVISUAL.HELP.EMPTY},
+            {ui_lblMenuCounterFolder,     lang.MUXVISUAL.HELP.COUNT_FOLDER},
+            {ui_lblMenuCounterFile,       lang.MUXVISUAL.HELP.COUNT_FILE},
+            {ui_lblBackgroundAnimation,   lang.MUXVISUAL.HELP.ANIMATION},
+            {ui_lblLaunchSplash,          lang.MUXVISUAL.HELP.SPLASH},
+            {ui_lblBlackFade,             lang.MUXVISUAL.HELP.FADE},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -104,7 +100,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -384,24 +380,24 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlLaunchSplash);
     apply_theme_list_panel(&theme, &device, ui_pnlBlackFade);
 
-    apply_theme_list_item(&theme, ui_lblBattery, TS("Battery"), false, true);
-    apply_theme_list_item(&theme, ui_lblNetwork, TS("Network"), false, true);
-    apply_theme_list_item(&theme, ui_lblBluetooth, TS("Bluetooth"), false, true);
-    apply_theme_list_item(&theme, ui_lblClock, TS("Clock"), false, true);
-    apply_theme_list_item(&theme, ui_lblBoxArt, TS("Content Box Art"), false, true);
-    apply_theme_list_item(&theme, ui_lblBoxArtAlign, TS("Content Box Art Alignment"), false, true);
-    apply_theme_list_item(&theme, ui_lblName, TS("Content Name Scheme"), false, true);
-    apply_theme_list_item(&theme, ui_lblDash, TS("Content Dash Replacement"), false, true);
-    apply_theme_list_item(&theme, ui_lblFriendlyFolder, TS("Friendly Folder Names"), false, true);
-    apply_theme_list_item(&theme, ui_lblTheTitleFormat, TS("Display Title Reformatting"), false, true);
-    apply_theme_list_item(&theme, ui_lblTitleIncludeRootDrive, TS("Title Include Root Drive"), false, true);
-    apply_theme_list_item(&theme, ui_lblFolderItemCount, TS("Folder Item Count"), false, true);
-    apply_theme_list_item(&theme, ui_lblDisplayEmptyFolder, TS("Display Empty Folder"), false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, TS("Menu Counter Folder"), false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFile, TS("Menu Counter File"), false, true);
-    apply_theme_list_item(&theme, ui_lblBackgroundAnimation, TS("Background Animation"), false, true);
-    apply_theme_list_item(&theme, ui_lblLaunchSplash, TS("Content Launch Splash"), false, true);
-    apply_theme_list_item(&theme, ui_lblBlackFade, TS("Black Fade Animation"), false, true);
+    apply_theme_list_item(&theme, ui_lblBattery, lang.MUXVISUAL.BATTERY, false, true);
+    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXVISUAL.NETWORK, false, true);
+    apply_theme_list_item(&theme, ui_lblBluetooth, lang.MUXVISUAL.BLUETOOTH, false, true);
+    apply_theme_list_item(&theme, ui_lblClock, lang.MUXVISUAL.CLOCK, false, true);
+    apply_theme_list_item(&theme, ui_lblBoxArt, lang.MUXVISUAL.BOX_ART.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblBoxArtAlign, lang.MUXVISUAL.BOX_ART.ALIGN.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblName, lang.MUXVISUAL.NAME.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblDash, lang.MUXVISUAL.DASH, false, true);
+    apply_theme_list_item(&theme, ui_lblFriendlyFolder, lang.MUXVISUAL.FRIENDLY, false, true);
+    apply_theme_list_item(&theme, ui_lblTheTitleFormat, lang.MUXVISUAL.REFORMAT, false, true);
+    apply_theme_list_item(&theme, ui_lblTitleIncludeRootDrive, lang.MUXVISUAL.ROOT, false, true);
+    apply_theme_list_item(&theme, ui_lblFolderItemCount, lang.MUXVISUAL.COUNT, false, true);
+    apply_theme_list_item(&theme, ui_lblDisplayEmptyFolder, lang.MUXVISUAL.EMPTY, false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER, false, true);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFile, lang.MUXVISUAL.COUNT_FILE, false, true);
+    apply_theme_list_item(&theme, ui_lblBackgroundAnimation, lang.MUXVISUAL.ANIMATION, false, true);
+    apply_theme_list_item(&theme, ui_lblLaunchSplash, lang.MUXVISUAL.SPLASH, false, true);
+    apply_theme_list_item(&theme, ui_lblBlackFade, lang.MUXVISUAL.FADE, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_module, "battery");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
@@ -441,21 +437,36 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droLaunchSplash, NULL);
     apply_theme_list_drop_down(&theme, ui_droBlackFade, NULL);
 
-    char *disabled_enabled[] = {TG("Disabled"), TG("Enabled")};
+    char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
     add_drop_down_options(ui_droBattery, disabled_enabled, 2);
     add_drop_down_options(ui_droNetwork, disabled_enabled, 2);
     add_drop_down_options(ui_droBluetooth, disabled_enabled, 2);
     add_drop_down_options(ui_droClock, disabled_enabled, 2);
+
     add_drop_down_options(ui_droBoxArt, (char *[]) {
-            TS("Behind"), TS("Front"), TS("Fullscreen + Behind"),
-            TS("Fullscreen + Front"), TG("Disabled")}, 5);
+            lang.MUXVISUAL.BOX_ART.BEHIND,
+            lang.MUXVISUAL.BOX_ART.FRONT,
+            lang.MUXVISUAL.BOX_ART.FS_BEHIND,
+            lang.MUXVISUAL.BOX_ART.FS_FRONT,
+            lang.GENERIC.DISABLED}, 5);
+
     add_drop_down_options(ui_droBoxArtAlign, (char *[]) {
-            TS("Top Left"), TS("Top Middle"), TS("Top Right"),
-            TS("Bottom Left"), TS("Bottom Middle"), TS("Bottom Right"),
-            TS("Middle Left"), TS("Middle Right"), TS("Center")}, 9);
-    add_drop_down_options(ui_droName,
-                          (char *[]) {TS("Full Name"), TS("Remove [ ]"),
-                                      TS("Remove ( )"), TS("Remove [ ] and ( )")}, 4);
+            lang.MUXVISUAL.BOX_ART.ALIGN.T_LEFT,
+            lang.MUXVISUAL.BOX_ART.ALIGN.T_MID,
+            lang.MUXVISUAL.BOX_ART.ALIGN.T_RIGHT,
+            lang.MUXVISUAL.BOX_ART.ALIGN.B_LEFT,
+            lang.MUXVISUAL.BOX_ART.ALIGN.B_MID,
+            lang.MUXVISUAL.BOX_ART.ALIGN.B_RIGHT,
+            lang.MUXVISUAL.BOX_ART.ALIGN.M_LEFT,
+            lang.MUXVISUAL.BOX_ART.ALIGN.M_RIGHT,
+            lang.MUXVISUAL.BOX_ART.ALIGN.M_MID}, 9);
+
+    add_drop_down_options(ui_droName, (char *[]) {
+            lang.MUXVISUAL.NAME.FULL,
+            lang.MUXVISUAL.NAME.REM_SQ,
+            lang.MUXVISUAL.NAME.REM_PA,
+            lang.MUXVISUAL.NAME.REM_SQPA}, 4);
+
     add_drop_down_options(ui_droDash, disabled_enabled, 2);
     add_drop_down_options(ui_droFriendlyFolder, disabled_enabled, 2);
     add_drop_down_options(ui_droTheTitleFormat, disabled_enabled, 2);
@@ -586,7 +597,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Save"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -677,6 +688,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -684,8 +696,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -705,7 +717,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("INTERFACE OPTIONS"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXVISUAL.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -740,13 +752,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -780,7 +792,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

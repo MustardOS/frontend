@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/collection.h"
@@ -31,6 +32,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -82,17 +84,17 @@ void show_help() {
 
     char help_info[MAX_BUFFER_SIZE];
     snprintf(help_info, sizeof(help_info),
-             "%s/MUOS/task/%s.sh", device.STORAGE.ROM.MOUNT, title);
+             "%s/%s/%s.sh", device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH, title);
     char *message = get_script_value(help_info, "HELP");
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
 }
 
 void create_task_items() {
     char task_path[MAX_BUFFER_SIZE];
     snprintf(task_path, sizeof(task_path),
-             "%s/MUOS/task", device.STORAGE.ROM.MOUNT);
+             "%s/%s", device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH);
 
     const char *task_directories[] = {
             task_path
@@ -115,7 +117,7 @@ void create_task_items() {
                 if (last_dot != NULL && strcasecmp(last_dot, ".sh") == 0) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
                     if (temp == NULL) {
-                        perror("Failed to allocate memory");
+                        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                         free(file_names);
                         closedir(ad);
                         return;
@@ -126,7 +128,7 @@ void create_task_items() {
                     snprintf(full_task_name, sizeof(full_task_name), "%s%s", task_dir, tf->d_name);
                     file_names[file_count] = strdup(full_task_name);
                     if (file_names[file_count] == NULL) {
-                        perror("Failed to duplicate string");
+                        perror(lang.SYSTEM.FAIL_DUP_STRING);
                         free(file_names);
                         closedir(ad);
                         return;
@@ -158,15 +160,15 @@ void create_task_items() {
 
         add_item(&items, &item_count, task_store, TS(task_store), "", ROM);
 
-        lv_obj_t * ui_pnlTask = lv_obj_create(ui_pnlContent);
+        lv_obj_t *ui_pnlTask = lv_obj_create(ui_pnlContent);
         if (ui_pnlTask) {
             apply_theme_list_panel(&theme, &device, ui_pnlTask);
             lv_obj_set_user_data(ui_pnlTask, strdup(TS(task_store)));
 
-            lv_obj_t * ui_lblTaskItem = lv_label_create(ui_pnlTask);
+            lv_obj_t *ui_lblTaskItem = lv_label_create(ui_pnlTask);
             if (ui_lblTaskItem) apply_theme_list_item(&theme, ui_lblTaskItem, TS(task_store), true, false);
 
-            lv_obj_t * ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
+            lv_obj_t *ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
             if (ui_lblTaskItemGlyph) {
                 apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module,
                                        get_glyph_from_file(task_path, items[i].name, "task"));
@@ -230,8 +232,8 @@ void handle_confirm() {
     play_sound("confirm", nav_sound, 0, 1);
 
     static char task_script[MAX_BUFFER_SIZE];
-    snprintf(task_script, sizeof(task_script), "%s/MUOS/task/%s.sh",
-             device.STORAGE.ROM.MOUNT, items[current_item_index].name);
+    snprintf(task_script, sizeof(task_script), "%s/%s/%s.sh",
+             device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH, items[current_item_index].name);
 
     const char *args[] = {
             (INTERNAL_PATH "bin/fbpad"),
@@ -306,8 +308,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Launch"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.LAUNCH);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -408,6 +410,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -415,8 +418,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -436,7 +439,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("TASK TOOLKIT"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXTASK.TITLE);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -454,7 +457,6 @@ int main(int argc, char *argv[]) {
     int tin_index = 0;
     if (file_exist(MUOS_TIN_LOAD)) {
         tin_index = read_int_from_file(MUOS_TIN_LOAD, 1);
-        printf("loading TIN at: %d\n", tin_index);
         remove(MUOS_TIN_LOAD);
     }
 
@@ -463,7 +465,7 @@ int main(int argc, char *argv[]) {
             list_nav_next(tin_index);
         }
     } else {
-        lv_label_set_text(ui_lblScreenMessage, TS("No Tasks Found"));
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXTASK.NONE);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
@@ -481,13 +483,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -518,7 +520,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

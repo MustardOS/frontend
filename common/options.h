@@ -7,6 +7,8 @@
 #define RTC_MAX_RETRIES 5
 #define RTC_RETRY_DELAY 1
 
+#define IDLE_MS 16 /* ~60 FPS */
+
 #define TIME_STRING_12 "%I:%M %p"
 #define TIME_STRING_24 "%H:%M"
 
@@ -33,6 +35,30 @@
 #define INFO_FAV_PATH RUN_STORAGE_PATH "info/favourite"
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
+
+#define MUOS_APPS_PATH "MUOS/application"
+#define MUOS_TASK_PATH "MUOS/task"
+#define MUOS_INFO_PATH "MUOS/info"
+#define MUOS_ASIN_PATH MUOS_INFO_PATH "/assign"
+
+#define STORE_LOC_BIOS "MUOS/bios"
+#define STORE_LOC_RARC "MUOS/retroarch"
+#define STORE_LOC_MUSC "MUOS/music"
+#define STORE_LOC_SAVE "MUOS/save"
+#define STORE_LOC_SCRS "MUOS/screenshot"
+#define STORE_LOC_THEM "MUOS/theme"
+#define STORE_LOC_PCAT "MUOS/package/catalogue"
+#define STORE_LOC_PCON "MUOS/package/config"
+#define STORE_LOC_LANG "MUOS/language"
+#define STORE_LOC_NETW "MUOS/network"
+#define STORE_LOC_SYCT "MUOS/syncthing"
+#define STORE_LOC_INIT "MUOS/init"
+#define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
+#define STORE_LOC_NAME MUOS_INFO_PATH "/name"
+#define STORE_LOC_CONF MUOS_INFO_PATH "/config"
+#define STORE_LOC_CORE MUOS_INFO_PATH "/core"
+#define STORE_LOC_FAVS MUOS_INFO_PATH "/favourite"
+#define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index

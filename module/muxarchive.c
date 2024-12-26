@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/collection.h"
@@ -31,6 +32,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -60,8 +62,7 @@ lv_obj_t *ui_mux_panels[5];
 
 void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(ui_lblTitle)), TS("Archive items can be found and installed here - "
-                                                            "Save games and states, updates, themes etc"));
+                     lang.MUXARCHIVE.TITLE, lang.MUXARCHIVE.HELP);
 }
 
 void create_archive_items() {
@@ -91,7 +92,7 @@ void create_archive_items() {
                 if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
                     if (temp == NULL) {
-                        perror("Failed to allocate memory");
+                        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                         free(file_names);
                         closedir(ad);
                         return;
@@ -102,7 +103,7 @@ void create_archive_items() {
                     snprintf(full_app_name, sizeof(full_app_name), "%s%s", archive_dir, af->d_name);
                     file_names[file_count] = strdup(full_app_name);
                     if (file_names[file_count] == NULL) {
-                        perror("Failed to duplicate string");
+                        perror(lang.SYSTEM.FAIL_DUP_STRING);
                         free(file_names);
                         closedir(ad);
                         return;
@@ -163,16 +164,16 @@ void create_archive_items() {
 
         add_item(&items, &item_count, base_filename, archive_store, item_glyph, ROM);
 
-        lv_obj_t * ui_pnlArchive = lv_obj_create(ui_pnlContent);
+        lv_obj_t *ui_pnlArchive = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(&theme, &device, ui_pnlArchive);
 
-        lv_obj_t * ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
+        lv_obj_t *ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
         apply_theme_list_item(&theme, ui_lblArchiveItem, archive_store, false, true);
 
-        lv_obj_t * ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
-        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? TS("INSTALLED") : "");
+        lv_obj_t *ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
+        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? lang.MUXARCHIVE.INSTALLED : "");
 
-        lv_obj_t * ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
+        lv_obj_t *ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_module, items[i].extra_data);
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);
@@ -301,8 +302,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Extract"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.EXTRACT);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -388,6 +389,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -395,8 +397,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -416,7 +418,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("ARCHIVE MANAGER"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXARCHIVE.TITLE);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -448,13 +450,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -484,7 +486,7 @@ int main(int argc, char *argv[]) {
             list_nav_next(sys_index);
         }
     } else {
-        lv_label_set_text(ui_lblScreenMessage, TS("No Archives Found"));
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXARCHIVE.NONE);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
@@ -494,7 +496,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

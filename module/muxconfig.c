@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -62,16 +64,16 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblTweakGeneral, TS("Device specific and muOS frontend settings can be found here")},
-            {ui_lblCustom,       TS("Customise your muOS setup with user created packages")},
-            {ui_lblNetwork,      TS("Connect to a Wi-Fi network manually or via a saved profile")},
-            {ui_lblServices,     TS("Toggle a range of configurable services you can access via an active network")},
-            {ui_lblRTC,          TS("Change your current date, time, and timezone")},
-            {ui_lblLanguage,     TS("Select your preferred language")},
-            {ui_lblStorage,      TS("Find out what storage device core settings and configurations are mounted")},
+            {ui_lblTweakGeneral, lang.MUXCONFIG.HELP.GENERAL},
+            {ui_lblCustom,       lang.MUXCONFIG.HELP.CUSTOM},
+            {ui_lblNetwork,      lang.MUXCONFIG.HELP.WIFI},
+            {ui_lblServices,     lang.MUXCONFIG.HELP.WEB},
+            {ui_lblRTC,          lang.MUXCONFIG.HELP.DATETIME},
+            {ui_lblLanguage,     lang.MUXCONFIG.HELP.LANGUAGE},
+            {ui_lblStorage,      lang.MUXCONFIG.HELP.STORAGE},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -81,7 +83,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -122,13 +124,13 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
     apply_theme_list_panel(&theme, &device, ui_pnlStorage);
 
-    apply_theme_list_item(&theme, ui_lblTweakGeneral, TS("General Settings"), true, false);
-    apply_theme_list_item(&theme, ui_lblCustom, TS("Customisation"), true, false);
-    apply_theme_list_item(&theme, ui_lblNetwork, TS("Wi-Fi Network"), true, false);
-    apply_theme_list_item(&theme, ui_lblServices, TS("Web Services"), true, false);
-    apply_theme_list_item(&theme, ui_lblRTC, TS("Date and Time"), true, false);
-    apply_theme_list_item(&theme, ui_lblLanguage, TS("Language"), true, false);
-    apply_theme_list_item(&theme, ui_lblStorage, TS("Storage"), true, false);
+    apply_theme_list_item(&theme, ui_lblTweakGeneral, lang.MUXCONFIG.GENERAL, true, false);
+    apply_theme_list_item(&theme, ui_lblCustom, lang.MUXCONFIG.CUSTOM, true, false);
+    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXCONFIG.WIFI, true, false);
+    apply_theme_list_item(&theme, ui_lblServices, lang.MUXCONFIG.WEB, true, false);
+    apply_theme_list_item(&theme, ui_lblRTC, lang.MUXCONFIG.DATETIME, true, false);
+    apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXCONFIG.LANGUAGE, true, false);
+    apply_theme_list_item(&theme, ui_lblStorage, lang.MUXCONFIG.STORAGE, true, false);
 
     apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_module, "general");
     apply_theme_list_glyph(&theme, ui_icoCustom, mux_module, "custom");
@@ -273,8 +275,8 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Select"));
-    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
@@ -379,6 +381,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -386,8 +389,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -407,7 +410,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("CONFIGURATION"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXCONFIG.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -438,13 +441,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -480,7 +483,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

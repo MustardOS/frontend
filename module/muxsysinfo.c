@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -62,21 +64,21 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblVersion,    TS("The current version of muOS running on the device")},
-            {ui_lblDevice,     TS("The current device type detected and configured")},
-            {ui_lblKernel,     TS("The current Linux kernel")},
-            {ui_lblUptime,     TS("The current running time of the system")},
-            {ui_lblCPU,        TS("The detected CPU type of the device")},
-            {ui_lblSpeed,      TS("The current CPU frequency of the device")},
-            {ui_lblGovernor,   TS("The current running governor of the device")},
-            {ui_lblMemory,     TS("The current, and total, memory usage of the device")},
-            {ui_lblTemp,       TS("The current detected temperature of the device")},
-            {ui_lblService,    TS("The number of processes currently running on the system")},
-            {ui_lblBatteryCap, TS("The current detected battery capacity")},
-            {ui_lblVoltage,    TS("The current detected battery voltage")},
+            {ui_lblVersion,    lang.MUXSYSINFO.HELP.VERSION},
+            {ui_lblDevice,     lang.MUXSYSINFO.HELP.DEVICE},
+            {ui_lblKernel,     lang.MUXSYSINFO.HELP.KERNEL},
+            {ui_lblUptime,     lang.MUXSYSINFO.HELP.UPTIME},
+            {ui_lblCPU,        lang.MUXSYSINFO.HELP.CPU.INFO},
+            {ui_lblSpeed,      lang.MUXSYSINFO.HELP.CPU.SPEED},
+            {ui_lblGovernor,   lang.MUXSYSINFO.HELP.CPU.GOV},
+            {ui_lblMemory,     lang.MUXSYSINFO.HELP.MEMORY},
+            {ui_lblTemp,       lang.MUXSYSINFO.HELP.TEMP},
+            {ui_lblService,    lang.MUXSYSINFO.HELP.SERVICE},
+            {ui_lblBatteryCap, lang.MUXSYSINFO.HELP.CAPACITY},
+            {ui_lblVoltage,    lang.MUXSYSINFO.HELP.VOLTAGE},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -86,7 +88,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -253,18 +255,18 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlBatteryCap);
     apply_theme_list_panel(&theme, &device, ui_pnlVoltage);
 
-    apply_theme_list_item(&theme, ui_lblVersion, TS("muOS Version"), false, true);
-    apply_theme_list_item(&theme, ui_lblDevice, TS("Device Type"), false, true);
-    apply_theme_list_item(&theme, ui_lblKernel, TS("Linux Kernel"), false, true);
-    apply_theme_list_item(&theme, ui_lblUptime, TS("System Uptime"), false, true);
-    apply_theme_list_item(&theme, ui_lblCPU, TS("CPU Information"), false, true);
-    apply_theme_list_item(&theme, ui_lblSpeed, TS("CPU Speed"), false, true);
-    apply_theme_list_item(&theme, ui_lblGovernor, TS("CPU Governor"), false, true);
-    apply_theme_list_item(&theme, ui_lblMemory, TS("RAM Usage"), false, true);
-    apply_theme_list_item(&theme, ui_lblTemp, TS("Temperature"), false, true);
-    apply_theme_list_item(&theme, ui_lblService, TS("Running Services"), false, true);
-    apply_theme_list_item(&theme, ui_lblBatteryCap, TS("Battery Capacity"), false, true);
-    apply_theme_list_item(&theme, ui_lblVoltage, TS("Battery Voltage"), false, true);
+    apply_theme_list_item(&theme, ui_lblVersion, lang.MUXSYSINFO.VERSION, false, true);
+    apply_theme_list_item(&theme, ui_lblDevice, lang.MUXSYSINFO.DEVICE, false, true);
+    apply_theme_list_item(&theme, ui_lblKernel, lang.MUXSYSINFO.KERNEL, false, true);
+    apply_theme_list_item(&theme, ui_lblUptime, lang.MUXSYSINFO.UPTIME, false, true);
+    apply_theme_list_item(&theme, ui_lblCPU, lang.MUXSYSINFO.CPU.INFO, false, true);
+    apply_theme_list_item(&theme, ui_lblSpeed, lang.MUXSYSINFO.CPU.SPEED, false, true);
+    apply_theme_list_item(&theme, ui_lblGovernor, lang.MUXSYSINFO.CPU.GOV, false, true);
+    apply_theme_list_item(&theme, ui_lblMemory, lang.MUXSYSINFO.MEMORY, false, true);
+    apply_theme_list_item(&theme, ui_lblTemp, lang.MUXSYSINFO.TEMP, false, true);
+    apply_theme_list_item(&theme, ui_lblService, lang.MUXSYSINFO.SERVICE, false, true);
+    apply_theme_list_item(&theme, ui_lblBatteryCap, lang.MUXSYSINFO.CAPACITY, false, true);
+    apply_theme_list_item(&theme, ui_lblVoltage, lang.MUXSYSINFO.VOLTAGE, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoVersion, mux_module, "version");
     apply_theme_list_glyph(&theme, ui_icoDevice, mux_module, "device");
@@ -337,9 +339,14 @@ void handle_a() {
 
     if (lv_group_get_focused(ui_group) == ui_lblVersion) {
         play_sound("muos", nav_sound, 0, 0);
-        osd_message = "Thank you for using muOS!";
-        lv_label_set_text(ui_lblMessage, osd_message);
-        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+        toast_message( /* :) */
+                "\x54\x68\x61\x6E\x6B"
+                "\x20\x79\x6F\x75\x20"
+                "\x66\x6F\x72\x20\x75"
+                "\x73\x69\x6E\x67\x20"
+                "\x6D\x75\x4F\x53\x21",
+                1000, 1000
+        );
     }
 }
 
@@ -393,7 +400,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Back"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -478,6 +485,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -485,8 +493,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -506,7 +514,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("SYSTEM DETAILS"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXSYSINFO.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -539,13 +547,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -582,7 +590,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

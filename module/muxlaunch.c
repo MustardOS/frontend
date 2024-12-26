@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -29,6 +30,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -58,21 +60,21 @@ lv_obj_t *ui_mux_panels[5];
 
 void show_help(lv_obj_t *element_focused) {
     char *help_messages[UI_COUNT] = {
-            TS("Content on storage devices (SD1/SD2/USB) can be found and launched here"),
-            TS("Content marked as favourite can be found and launched here"),
-            TS("Content previously launched can be found and launched here"),
-            TS("Various applications can be found and launched here"),
-            TS("Various information can be found and launched here"),
-            TS("Various configurations can be changed here"),
-            TS("Reboot your device safely"),
-            TS("Shut down your device safely")
+            lang.MUXLAUNCH.HELP.EXPLORE,
+            lang.MUXLAUNCH.HELP.FAVOURITE,
+            lang.MUXLAUNCH.HELP.HISTORY,
+            lang.MUXLAUNCH.HELP.APP,
+            lang.MUXLAUNCH.HELP.INFO,
+            lang.MUXLAUNCH.HELP.CONFIG,
+            lang.MUXLAUNCH.HELP.REBOOT,
+            lang.MUXLAUNCH.HELP.SHUTDOWN
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
     if (current_item_index < num_messages) message = help_messages[current_item_index];
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -87,10 +89,10 @@ void init_navigation_groups_grid(char *item_labels[], char *glyph_names[]) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;
 
-        lv_obj_t * cell_panel = lv_obj_create(ui_pnlGrid);
+        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
         lv_obj_set_user_data(cell_panel, strdup(item_labels[i]));
-        lv_obj_t * cell_image = lv_img_create(cell_panel);
-        lv_obj_t * cell_label = lv_label_create(cell_panel);
+        lv_obj_t *cell_image = lv_img_create(cell_panel);
+        lv_obj_t *cell_label = lv_label_create(cell_panel);
         lv_obj_set_user_data(cell_label, glyph_names[i]);
         ui_objects[i] = cell_label;
 
@@ -136,9 +138,13 @@ void init_navigation_groups() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    char *item_labels[] = {TS("Explore Content"), TS("Favourites"), TS("History"), TS("Applications"),
-                           TS("Information"), TS("Configuration"), TS("Reboot"), TS("Shutdown")};
-    char *glyph_names[] = {"explore", "favourite", "history", "apps", "info", "config", "reboot", "shutdown"};
+    char *item_labels[] = {lang.MUXLAUNCH.EXPLORE, lang.MUXLAUNCH.FAVOURITE, lang.MUXLAUNCH.HISTORY,
+                           lang.MUXLAUNCH.APP, lang.MUXLAUNCH.INFO, lang.MUXLAUNCH.CONFIG,
+                           lang.MUXLAUNCH.REBOOT, lang.MUXLAUNCH.SHUTDOWN};
+
+    char *glyph_names[] = {"explore", "favourite", "history",
+                           "apps", "info", "config",
+                           "reboot", "shutdown"};
 
     if (theme.GRID.ENABLED) {
         init_navigation_groups_grid(item_labels, glyph_names);
@@ -193,7 +199,8 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
@@ -205,7 +212,8 @@ void list_nav_prev(int steps) {
     } else {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     }
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
@@ -217,7 +225,8 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
@@ -229,7 +238,8 @@ void list_nav_next(int steps) {
     } else {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     }
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
@@ -501,12 +511,12 @@ void handle_kiosk_toggle() {
                 run_exec((const char *[]) {"mv", kiosk_storage, KIOSK_CONFIG, NULL});
                 run_exec((const char *[]) {(INTERNAL_PATH "script/var/init/kiosk.sh"), "init", NULL});
 
-                toast_message(TS("Processing kiosk configuration"), 1000, 1000);
+                toast_message(lang.MUXLAUNCH.KIOSK.PROCESS, 1000, 1000);
                 sleep(1); /* not really needed but it's a good buffer... */
 
                 handle_b();
             } else {
-                toast_message(TS("Kiosk configuration not found"), 1000, 1000);
+                toast_message(lang.MUXLAUNCH.KIOSK.ERROR, 1000, 1000);
             }
         }
     }
@@ -539,7 +549,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavA, TG("Select"));
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavBGlyph,
@@ -642,6 +652,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -649,8 +660,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -670,7 +681,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("MAIN MENU"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXLAUNCH.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -701,13 +712,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -743,7 +754,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE >= 1 && theme.MISC.NAVIGATION_TYPE <= 5),
             .stick_nav = true,

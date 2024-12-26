@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include <libgen.h>
 #include "../common/common.h"
+#include "../common/language.h"
 #include "../common/ui_common.h"
+#include "../common/osk.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
@@ -27,6 +29,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -50,15 +53,11 @@ int progress_onscreen = -1;
 
 int key_show = 0;
 int key_curr = 0;
-int key_map = 0;
 
 char *type_dhcp;
 char *type_static;
 char *enabled_true;
-char *enabled_false;
-
-lv_obj_t *key_entry;
-lv_obj_t *num_entry;
+char *enabled_false;;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -75,32 +74,6 @@ lv_obj_t *ui_icons[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[7];
 
-static const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
-                                      "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
-                                      "a", "s", "d", "f", "g", "h", "j", "k", "l", "\n",
-                                      "§", "z", "x", "c", "v", "b", "n", "m", "§", "\n",
-                                      "ABC", " ", "OK", NULL
-};
-
-static const char *key_upper_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
-                                      "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "\n",
-                                      "A", "S", "D", "F", "G", "H", "J", "K", "L", "\n",
-                                      "§", "Z", "X", "C", "V", "B", "N", "M", "§", "\n",
-                                      "!@#", " ", "OK", NULL
-};
-
-static const char *key_special_map[] = {"!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "\n",
-                                        "`", "~", "_", "-", "+", "=", "{", "}", "[", "]", "\n",
-                                        "|", "\\", ":", ";", "\"", "'", "!", "@", "#", "\n",
-                                        "§", "<", ">", ",", ".", "?", "/", "$", "§", "\n",
-                                        "abc", " ", "OK", NULL
-};
-
-static const char *key_number_map[] = {"7", "8", "9", "\n",
-                                       "4", "5", "6", "\n",
-                                       "1", "2", "3", "\n",
-                                       "0", ".", "OK", NULL};
-
 struct help_msg {
     lv_obj_t *element;
     char *message;
@@ -108,18 +81,18 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblEnable,     TS("Toggle the Wi-Fi network on and off")},
-            {ui_lblIdentifier, TS("Enter the network identifier (SSID) here")},
-            {ui_lblPassword,   TS("Enter the network password here (optional)")},
-            {ui_lblScan,       TS("Toggle whether or not to try and connect to a hidden SSID broadcast")},
-            {ui_lblType,       TS("Toggle between DHCP and Static network types")},
-            {ui_lblAddress,    TS("Enter the device IP address here (Static only)")},
-            {ui_lblSubnet,     TS("Enter the device Subnet (CIDR) number here (Static only)")},
-            {ui_lblGateway,    TS("Enter the network gateway address here (Static only)")},
-            {ui_lblConnect,    TS("Connect to the network using options entered above")},
+            {ui_lblEnable,     lang.MUXNETWORK.HELP.ACTIVE},
+            {ui_lblIdentifier, lang.MUXNETWORK.HELP.SSID},
+            {ui_lblPassword,   lang.MUXNETWORK.HELP.PASSWORD},
+            {ui_lblScan,       lang.MUXNETWORK.HELP.HIDDEN},
+            {ui_lblType,       lang.MUXNETWORK.HELP.TYPE},
+            {ui_lblAddress,    lang.MUXNETWORK.HELP.IP},
+            {ui_lblSubnet,     lang.MUXNETWORK.HELP.CIDR},
+            {ui_lblGateway,    lang.MUXNETWORK.HELP.GATEWAY},
+            {ui_lblConnect,    lang.MUXNETWORK.HELP.CONNECT},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -129,7 +102,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -138,28 +111,28 @@ void show_help(lv_obj_t *element_focused) {
 void can_scan_check() {
     if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
         if (is_network_connected()) {
-            lv_label_set_text(ui_lblConnect, TS("Disconnect"));
+            lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.DISCONNECT);
 
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
         } else {
-            lv_label_set_text(ui_lblConnect, TS("Connect"));
+            lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.CONNECT);
 
             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
 
-            lv_label_set_text(ui_lblConnectValue, TS("Not Connected"));
+            lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.NOT_CONNECTED);
         }
     }
 }
 
 void get_current_ip() {
     if (!config.NETWORK.ENABLED) {
-        lv_label_set_text(ui_lblConnectValue, TS("Network Disabled"));
+        lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.DISABLED);
         return;
     }
 
@@ -175,13 +148,13 @@ void get_current_ip() {
             can_scan_check();
         } else {
             if (config.NETWORK.TYPE) {
-                snprintf(net_message, sizeof(net_message), "%s", TS("Connected"));
+                snprintf(net_message, sizeof(net_message), "%s", lang.MUXNETWORK.CONNECTED);
                 lv_label_set_text(ui_lblConnectValue, net_message);
             } else {
                 snprintf(net_message, sizeof(net_message), "%s", curr_ip);
                 lv_label_set_text(ui_lblConnectValue, net_message);
             }
-            lv_label_set_text(ui_lblConnect, TS("Disconnect"));
+            lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.DISCONNECT);
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -305,16 +278,16 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlDNS);
     apply_theme_list_panel(&theme, &device, ui_pnlConnect);
 
-    apply_theme_list_item(&theme, ui_lblEnable, TS("Network Active"), false, true);
-    apply_theme_list_item(&theme, ui_lblIdentifier, TS("Identifier"), false, true);
-    apply_theme_list_item(&theme, ui_lblPassword, TS("Password"), false, true);
-    apply_theme_list_item(&theme, ui_lblScan, TS("Hidden Network"), false, true);
-    apply_theme_list_item(&theme, ui_lblType, TS("Network Type"), false, true);
-    apply_theme_list_item(&theme, ui_lblAddress, TS("Device IP"), false, true);
-    apply_theme_list_item(&theme, ui_lblSubnet, TS("Subnet CIDR"), false, true);
-    apply_theme_list_item(&theme, ui_lblGateway, TS("Gateway IP"), false, true);
-    apply_theme_list_item(&theme, ui_lblDNS, TS("DNS Server"), false, true);
-    apply_theme_list_item(&theme, ui_lblConnect, TS("Connect"), false, true);
+    apply_theme_list_item(&theme, ui_lblEnable, lang.MUXNETWORK.ACTIVE, false, true);
+    apply_theme_list_item(&theme, ui_lblIdentifier, lang.MUXNETWORK.SSID, false, true);
+    apply_theme_list_item(&theme, ui_lblPassword, lang.MUXNETWORK.PASSWORD, false, true);
+    apply_theme_list_item(&theme, ui_lblScan, lang.MUXNETWORK.HIDDEN, false, true);
+    apply_theme_list_item(&theme, ui_lblType, lang.MUXNETWORK.TYPE, false, true);
+    apply_theme_list_item(&theme, ui_lblAddress, lang.MUXNETWORK.IP, false, true);
+    apply_theme_list_item(&theme, ui_lblSubnet, lang.MUXNETWORK.CIDR, false, true);
+    apply_theme_list_item(&theme, ui_lblGateway, lang.MUXNETWORK.GATEWAY, false, true);
+    apply_theme_list_item(&theme, ui_lblDNS, lang.MUXNETWORK.DNS, false, true);
+    apply_theme_list_item(&theme, ui_lblConnect, lang.MUXNETWORK.CONNECT, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_module, "enable");
     apply_theme_list_glyph(&theme, ui_icoIdentifier, mux_module, "identifier");
@@ -350,16 +323,6 @@ void init_navigation_groups() {
         lv_group_add_obj(ui_group_glyph, ui_icons[i]);
         lv_group_add_obj(ui_group_panel, ui_panels[i]);
     }
-}
-
-void reset_osk() {
-    key_curr = 0;
-    lv_btnmatrix_clear_btn_ctrl_all(key_entry, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_btnmatrix_clear_btn_ctrl_all(num_entry, LV_BTNMATRIX_CTRL_CHECKED);
-    lv_btnmatrix_set_selected_btn(key_entry, key_curr);
-    lv_btnmatrix_set_selected_btn(num_entry, key_curr);
-    lv_btnmatrix_set_btn_ctrl(key_entry, lv_btnmatrix_get_selected_btn(key_entry), LV_BTNMATRIX_CTRL_CHECKED);
-    lv_btnmatrix_set_btn_ctrl(num_entry, lv_btnmatrix_get_selected_btn(num_entry), LV_BTNMATRIX_CTRL_CHECKED);
 }
 
 void list_nav_prev(int steps) {
@@ -425,7 +388,11 @@ void handle_keyboard_press(void) {
             lv_label_set_text(ui_lblDNSValue, lv_textarea_get_text(ui_txtEntry));
         }
 
-        reset_osk();
+        if (lv_obj_has_state(key_entry, LV_STATE_DISABLED)) {
+            reset_osk(num_entry);
+        } else {
+            reset_osk(key_entry);
+        }
 
         lv_textarea_set_text(ui_txtEntry, "");
         lv_group_set_focus_cb(ui_group, NULL);
@@ -442,176 +409,6 @@ void handle_keyboard_press(void) {
         } else {
             lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
         }
-    }
-}
-
-void handle_keyboard_close(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-    key_show = 0;
-    reset_osk();
-    lv_textarea_set_text(ui_txtEntry, "");
-    lv_group_set_focus_cb(ui_group, NULL);
-    lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-}
-
-void handle_keyboard_backspace(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-    lv_textarea_del_char(ui_txtEntry);
-}
-
-void handle_keyboard_swap(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-
-    if (key_show == 1) {
-        switch (key_map) {
-            case 0:
-                lv_btnmatrix_set_map(key_entry, key_upper_map);
-                key_map = 1;
-                break;
-            case 1:
-                lv_btnmatrix_set_map(key_entry, key_special_map);
-                key_map = 2;
-                break;
-            case 2:
-                lv_btnmatrix_set_map(key_entry, key_lower_map);
-                key_map = 0;
-                break;
-            default:
-                break;
-        }
-    }
-}
-
-void handle_keyboard_up(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-
-    if (key_curr >= 1) {
-        switch (key_curr) {
-            case 26:
-                key_curr = 17;
-                break;
-            case 27:
-                key_curr = 18;
-                break;
-            case 28:
-                key_curr = 19;
-                break;
-            case 30 ... 36:
-                key_curr = key_curr - 9;
-                break;
-            case 38:
-                key_curr = 30;
-                break;
-            case 39:
-                key_curr = 33;
-                break;
-            case 40:
-                key_curr = 36;
-                break;
-            default:
-                if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-                    key_curr = key_curr - 3;
-                } else {
-                    key_curr = key_curr - 10;
-                }
-                break;
-        }
-        if (key_curr < 0) {
-            key_curr = 0;
-        }
-    }
-    if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-        key_curr--;
-    }
-    lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-    lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
-}
-
-void handle_keyboard_down(void) {
-    play_sound("keypress", nav_sound, 0, 0);
-
-    int max_key;
-    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-        max_key = 11;
-    } else {
-        max_key = 40;
-    }
-    if (key_curr <= max_key) {
-        switch (key_curr) {
-            case 17:
-                key_curr = 26;
-                break;
-            case 18:
-                key_curr = 27;
-                break;
-            case 19:
-                key_curr = 28;
-                break;
-            case 21 ... 27:
-                key_curr = key_curr + 9;
-                break;
-            case 28:
-                key_curr = 36;
-                break;
-            case 30:
-                key_curr = 38;
-                break;
-            case 31 ... 35:
-                key_curr = 39;
-                break;
-            case 36:
-                key_curr = 40;
-                break;
-            default:
-                if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-                    key_curr = key_curr + 3;
-                } else {
-                    key_curr = key_curr + 10;
-                }
-                break;
-        }
-        if (key_curr > max_key) {
-            key_curr = max_key;
-        }
-    }
-    if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-        key_curr++;
-    }
-    lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-    lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
-}
-
-void handle_keyboard_left(void) {
-    if (key_curr >= 1) {
-        key_curr--;
-        if (key_curr < 0) {
-            key_curr = 0;
-        }
-        if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-            key_curr--;
-        }
-        lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-        lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
-    }
-}
-
-void handle_keyboard_right(void) {
-    int max_key;
-    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-        max_key = 11;
-    } else {
-        max_key = 40;
-    }
-    if (key_curr <= max_key) {
-        key_curr++;
-        if (key_curr > max_key) {
-            key_curr = max_key;
-        }
-        if (strcasecmp(lv_btnmatrix_get_btn_text(key_entry, key_curr), "§") == 0) {
-            key_curr++;
-        }
-        lv_event_send(key_entry, LV_EVENT_SCROLL, &key_curr);
-        lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
     }
 }
 
@@ -667,7 +464,7 @@ bool handle_navigate(void) {
             }
         } else {
             play_sound("error", nav_sound, 0, 0);
-            toast_message(TS("Cannot modify while connected!"), 1000, 1000);
+            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000, 1000);
         }
         return true;
     } else if (element_focused == ui_lblType) {
@@ -698,7 +495,7 @@ bool handle_navigate(void) {
             }
         } else {
             play_sound("error", nav_sound, 0, 0);
-            toast_message(TS("Cannot modify while connected!"), 1000, 1000);
+            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000, 1000);
         }
         return true;
     }
@@ -748,16 +545,16 @@ void handle_confirm(void) {
                 if (config.NETWORK.ENABLED) {
                     if (strlen(cv_pass) > 0) {
                         if (strcasecmp(cv_pass, PASS_ENCODE) != 0 && strcasecmp(cv_pass, "") != 0) {
-                            lv_label_set_text(ui_lblConnectValue, TS("Encrypting Password..."));
+                            lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.ENCRYPT_PASSWORD);
                         }
                     } else {
-                        lv_label_set_text(ui_lblConnectValue, TS("No Password Detected..."));
+                        lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.NO_PASSWORD);
                     }
 
                     int sec = 1024;
 
                     lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
-                    lv_label_set_text(ui_lblConnectValue, TS("Trying to Connect..."));
+                    lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.CONNECT_TRY);
                     refresh_screen(sec);
 
                     run_exec(pass_args);
@@ -768,12 +565,12 @@ void handle_confirm(void) {
 
                     get_current_ip();
                 } else {
-                    lv_label_set_text(ui_lblConnectValue, TS("Network Disabled"));
+                    lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.DISABLED);
                     refresh_screen(device.SCREEN.WAIT);
                 }
             } else {
                 play_sound("error", nav_sound, 0, 0);
-                toast_message(TS("Please check network settings"), 1000, 1000);
+                toast_message(lang.MUXNETWORK.CHECK, 1000, 1000);
             }
         }
     } else {
@@ -816,7 +613,7 @@ void handle_confirm(void) {
             }
         } else {
             play_sound("error", nav_sound, 0, 0);
-            toast_message(TS("Cannot modify while connected!"), 1000, 1000);
+            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000, 1000);
         }
     }
 }
@@ -841,7 +638,7 @@ void handle_back(void) {
         run_exec(net_args);
     }
 
-    toast_message(TS("Changes Saved"), 1000, 1000);
+    toast_message(lang.MUXNETWORK.SAVE, 1000, 1000);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
     mux_input_stop();
@@ -900,7 +697,11 @@ void handle_b(void) {
     }
 
     if (key_show) {
-        handle_keyboard_close();
+        if (lv_obj_has_state(key_entry, LV_STATE_DISABLED)) {
+            close_osk(num_entry, ui_group, ui_txtEntry, ui_pnlEntry);
+        } else {
+            close_osk(key_entry, ui_group, ui_txtEntry, ui_pnlEntry);
+        }
         return;
     }
 
@@ -911,7 +712,7 @@ void handle_x(void) {
     if (msgbox_active) return;
 
     if (key_show) {
-        handle_keyboard_backspace();
+        key_backspace(ui_txtEntry);
         return;
     }
 
@@ -922,7 +723,7 @@ void handle_y(void) {
     if (msgbox_active) return;
 
     if (key_show) {
-        handle_keyboard_swap();
+        key_swap();
         return;
     }
 
@@ -942,7 +743,7 @@ void handle_help(void) {
 
 void handle_up(void) {
     if (key_show) {
-        handle_keyboard_up();
+        key_up();
         return;
     }
 
@@ -951,7 +752,7 @@ void handle_up(void) {
 
 void handle_up_hold(void) {
     if (key_show) {
-        handle_keyboard_up();
+        key_up();
         return;
     }
 
@@ -960,7 +761,7 @@ void handle_up_hold(void) {
 
 void handle_down(void) {
     if (key_show) {
-        handle_keyboard_down();
+        key_down();
         return;
     }
 
@@ -969,7 +770,7 @@ void handle_down(void) {
 
 void handle_down_hold(void) {
     if (key_show) {
-        handle_keyboard_down();
+        key_down();
         return;
     }
 
@@ -978,7 +779,7 @@ void handle_down_hold(void) {
 
 void handle_left(void) {
     if (key_show) {
-        handle_keyboard_left();
+        key_left();
         return;
     }
 
@@ -987,7 +788,7 @@ void handle_left(void) {
 
 void handle_right(void) {
     if (key_show) {
-        handle_keyboard_right();
+        key_right();
         return;
     }
 
@@ -996,14 +797,14 @@ void handle_right(void) {
 
 void handle_left_hold(void) {
     if (key_show) {
-        handle_keyboard_left();
+        key_left();
         return;
     }
 }
 
 void handle_right_hold(void) {
     if (key_show) {
-        handle_keyboard_right();
+        key_right();
         return;
     }
 }
@@ -1024,45 +825,11 @@ void handle_r1(void) {
     handle_list_nav_page_down();
 }
 
-static void osk_handler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
-
-    switch (code) {
-        case LV_EVENT_SCROLL:
-            lv_btnmatrix_set_selected_btn(obj, key_curr);
-            lv_btnmatrix_set_btn_ctrl(obj, lv_btnmatrix_get_selected_btn(obj), LV_BTNMATRIX_CTRL_CHECKED);
-            break;
-        case LV_EVENT_CLICKED:
-            lv_textarea_add_text(ui_txtEntry, lv_btnmatrix_get_btn_text(obj, lv_btnmatrix_get_selected_btn(obj)));
-            break;
-        default:
-            break;
-    }
-}
-
-static void num_handler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
-
-    switch (code) {
-        case LV_EVENT_SCROLL:
-            lv_btnmatrix_set_selected_btn(obj, key_curr);
-            lv_btnmatrix_set_btn_ctrl(obj, lv_btnmatrix_get_selected_btn(obj), LV_BTNMATRIX_CTRL_CHECKED);
-            break;
-        case LV_EVENT_CLICKED:
-            lv_textarea_add_text(ui_txtEntry, lv_btnmatrix_get_btn_text(obj, lv_btnmatrix_get_selected_btn(obj)));
-            break;
-        default:
-            break;
-    }
-}
-
 void init_elements() {
-    type_dhcp = TS("DHCP");
-    type_static = TS("Static");
-    enabled_false = TG("Disabled");
-    enabled_true = TG("Enabled");
+    type_dhcp = lang.MUXNETWORK.DHCP;
+    type_static = lang.MUXNETWORK.STATIC;
+    enabled_false = lang.GENERIC.DISABLED;
+    enabled_true = lang.GENERIC.ENABLED;
 
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
@@ -1090,9 +857,9 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblNavB, TG("Back"));
-    lv_label_set_text(ui_lblNavX, TS("Scan"));
-    lv_label_set_text(ui_lblNavY, TS("Profiles"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
+    lv_label_set_text(ui_lblNavX, lang.MUXNETWORK.SCAN);
+    lv_label_set_text(ui_lblNavY, lang.MUXNETWORK.PROFILES);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -1211,8 +978,8 @@ void init_osk() {
     lv_obj_align(key_entry, LV_ALIGN_CENTER, 0, 0);
     lv_obj_align(num_entry, LV_ALIGN_CENTER, 0, 0);
 
-    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(num_entry, num_handler, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry);
+    lv_obj_add_event_cb(num_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry);
 
     lv_obj_set_style_border_width(key_entry, 3, LV_PART_ITEMS | LV_STATE_CHECKED);
     lv_obj_set_style_border_width(key_entry, 1, LV_PART_ITEMS | LV_STATE_DEFAULT);
@@ -1358,6 +1125,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -1365,8 +1133,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -1386,7 +1154,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("WI-FI NETWORK"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXNETWORK.TITLE);
     ui_init(ui_screen, ui_pnlContent, &theme);
     init_elements();
 
@@ -1418,13 +1186,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -1462,7 +1230,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,

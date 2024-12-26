@@ -24,6 +24,7 @@
 #include "img/nothing.h"
 #include "json/json.h"
 #include "common.h"
+#include "language.h"
 #include "log.h"
 #include "options.h"
 #include "config.h"
@@ -75,7 +76,7 @@ unsigned long long total_file_size(const char *path) {
 
     DIR *dir = opendir(path);
     if (!dir) {
-        perror("opendir");
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return 0;
     }
 
@@ -394,13 +395,13 @@ int read_battery_capacity() {
     FILE * file = fopen(device.BATTERY.CAPACITY, "r");
 
     if (file == NULL) {
-        perror("Error opening capacity file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return 0;
     }
 
     int capacity;
     if (fscanf(file, "%d", &capacity) != 1) {
-        perror("Error reading integer");
+        perror(lang.SYSTEM.FAIL_FILE_READ);
         return 0;
     }
 
@@ -419,13 +420,13 @@ char *read_battery_health() {
     FILE * file = fopen(device.BATTERY.HEALTH, "r");
 
     if (file == NULL) {
-        perror("Error opening health file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return strdup("Unknown");
     }
 
     char *health = NULL;
     if (fscanf(file, "%m[^\n]", &health) != 1) {
-        perror("Error reading health file");
+        perror(lang.SYSTEM.FAIL_FILE_READ);
         fclose(file);
         return strdup("Unknown");
     }
@@ -438,13 +439,13 @@ char *read_battery_voltage() {
     FILE * file = fopen(device.BATTERY.VOLTAGE, "r");
 
     if (file == NULL) {
-        perror("Error opening voltage file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return "0.00 V";
     }
 
     int raw_voltage;
     if (fscanf(file, "%d", &raw_voltage) != 1) {
-        perror("Error reading integer");
+        perror(lang.SYSTEM.FAIL_FILE_READ);
         fclose(file);
         return "0.00 V";
     }
@@ -453,7 +454,7 @@ char *read_battery_voltage() {
 
     char *form_voltage = (char *) malloc(10);
     if (form_voltage == NULL) {
-        perror("Error allocating memory");
+        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
         return "0.00 V";
     }
 
@@ -484,7 +485,7 @@ char *read_text_from_file(const char *filename) {
             text[bytesRead] = '\0';
         }
     } else {
-        perror("Error allocating memory for text");
+        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
     }
 
     fclose(file);
@@ -517,7 +518,7 @@ char *read_line_from_file(const char *filename, size_t line_number) {
             }
         }
     } else {
-        perror("allocating memory for line");
+        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
     }
 
     fclose(file);
@@ -595,7 +596,7 @@ char *format_meta_text(char *filename) {
 
     FILE * fp = popen(meta_cut, "r");
     if (fp == NULL) {
-        perror("popen");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return "Could not open metadata!";
     }
 
@@ -607,7 +608,7 @@ char *format_meta_text(char *filename) {
         size_t len = strlen(buffer);
         result = realloc(result, meta_size + len + 1);
         if (result == NULL) {
-            perror("realloc");
+            perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
             return "Could not read metadata!";
         }
         strcpy(result + meta_size, buffer);
@@ -622,7 +623,7 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
     FILE * file = fopen(filename, mode);
 
     if (file == NULL) {
-        perror("Error opening file for writing");
+        perror(lang.SYSTEM.FAIL_FILE_WRITE);
         return;
     }
 
@@ -671,7 +672,7 @@ int count_items(const char *path, enum count_type type) {
     dir = opendir(path);
 
     if (dir == NULL) {
-        perror("opendir");
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return 0;
     }
 
@@ -683,7 +684,7 @@ int count_items(const char *path, enum count_type type) {
             snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
 
             if (stat(full_path, &file_info) == -1) {
-                perror("stat");
+                perror(lang.SYSTEM.FAIL_STAT);
                 continue;
             }
 
@@ -715,7 +716,7 @@ int detect_storage(const char *target) {
 
     fp = fopen("/proc/partitions", "r");
     if (!fp) {
-        perror("Error opening /proc/partitions");
+        perror(lang.SYSTEM.FAIL_PROC_PART);
         return 0;
     }
 
@@ -886,7 +887,7 @@ void decrease_option_value(lv_obj_t *element) {
 void load_assign(const char *rom, const char *dir, const char *sys, int forced) {
     FILE * file = fopen(MUOS_ASS_LOAD, "w");
     if (file == NULL) {
-        perror("fopen");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -897,7 +898,7 @@ void load_assign(const char *rom, const char *dir, const char *sys, int forced) 
 void load_gov(const char *rom, const char *dir, const char *sys, int forced) {
     FILE * file = fopen(MUOS_GOV_LOAD, "w");
     if (file == NULL) {
-        perror("fopen");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -908,7 +909,7 @@ void load_gov(const char *rom, const char *dir, const char *sys, int forced) {
 void load_mux(const char *value) {
     FILE * file = fopen(MUOS_ACT_LOAD, "w");
     if (file == NULL) {
-        perror("fopen");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -982,7 +983,7 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
                     if (!is_exception) {
                         if (remove(file_path) != 0) {
-                            perror("Error deleting file");
+                            perror(lang.SYSTEM.FAIL_DELETE_FILE);
                         }
                     }
                 }
@@ -998,7 +999,7 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
 
         closedir(dir);
     } else {
-        perror("Error opening directory");
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
     }
 }
 
@@ -1019,13 +1020,13 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
                 delete_files_of_name(full_path, filename);
             } else if (entry->d_type == DT_REG && strcmp(entry->d_name, filename) == 0) {
                 if (remove(full_path) != 0) {
-                    perror("Error deleting file");
+                    perror(lang.SYSTEM.FAIL_DELETE_FILE);
                 }
             }
         }
         closedir(dir);
     } else {
-        perror("Error opening directory");
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
     }
 }
 
@@ -1467,12 +1468,12 @@ void load_skip_patterns() {
     snprintf(skip_ini, sizeof(skip_ini), "%s/skip.ini", INFO_CFG_PATH);
 
     if (!file_exist(skip_ini)) {
-        snprintf(skip_ini, sizeof(skip_ini), "%s/MUOS/info/skip.ini", device.STORAGE.ROM.MOUNT);
+        snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
     }
 
     FILE * file = fopen(skip_ini, "r");
     if (!file) {
-        perror("Failed to open 'skip.ini' file");
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
@@ -1912,7 +1913,7 @@ void collect_subdirectories(const char *base_dir, char ***list, int *size, int *
     DIR *dir = opendir(base_dir);
 
     if (!dir) {
-        perror("opendir");
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
 
@@ -2048,7 +2049,7 @@ char *get_glyph_from_file(const char *storage_path, const char *item_name, char 
 }
 
 char *kiosk_nope() {
-    return TG("This is disabled in kiosk mode!");
+    return lang.GENERIC.KIOSK_DISABLE;
 }
 
 void run_exec(const char *args[]) {

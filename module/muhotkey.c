@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "../common/common.h"
+#include "../common/language.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
@@ -18,6 +19,7 @@ char *osd_message;
 int msgbox_active = 0;
 int nav_sound = 0;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -340,13 +342,13 @@ int main(int argc, char *argv[]) {
 
     input_opts.gamepad_fd = open(device.INPUT.EV1, O_RDONLY);
     if (input_opts.gamepad_fd < 0) {
-        perror("muhotkey: couldn't open joystick input device\n");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     input_opts.system_fd = open(device.INPUT.EV0, O_RDONLY);
     if (input_opts.system_fd < 0) {
-        perror("muhotkey: couldn't open system input device");
+        perror(lang.SYSTEM.NO_JOY_ALT);
         return 1;
     }
 

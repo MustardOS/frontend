@@ -10,6 +10,7 @@
 #include <libgen.h>
 #include "../common/common.h"
 #include "../common/options.h"
+#include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -30,6 +31,7 @@ int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
 
+struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
 struct mux_kiosk kiosk;
@@ -64,13 +66,13 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblShutdown,    TS("Configure how the power button functions on long press (2 seconds)")},
-            {ui_lblBattery,     TS("Configure when the red LED will display based on the current capacity percentage")},
-            {ui_lblIdleDisplay, TS("Configure the time the screen will dim when no input is detected")},
-            {ui_lblIdleSleep,   TS("Configure the time the device will sleep when no input is detected")},
+            {ui_lblShutdown,    lang.MUXPOWER.HELP.SLEEP_FUNCTION},
+            {ui_lblBattery,     lang.MUXPOWER.HELP.LOW_BATTERY},
+            {ui_lblIdleDisplay, lang.MUXPOWER.HELP.IDLE_DISPLAY},
+            {ui_lblIdleSleep,   lang.MUXPOWER.HELP.IDLE_SLEEP},
     };
 
-    char *message = TG("No Help Information Found");
+    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
 
     for (int i = 0; i < num_messages; i++) {
@@ -80,7 +82,7 @@ void show_help(lv_obj_t *element_focused) {
         }
     }
 
-    if (strlen(message) <= 1) message = TG("No Help Information Found");
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(element_focused)), message);
@@ -88,7 +90,7 @@ void show_help(lv_obj_t *element_focused) {
 
 static void dropdown_event_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
     if (code == LV_EVENT_VALUE_CHANGED) {
         char buf[MAX_BUFFER_SIZE];
@@ -205,10 +207,10 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlIdleDisplay);
     apply_theme_list_panel(&theme, &device, ui_pnlIdleSleep);
 
-    apply_theme_list_item(&theme, ui_lblShutdown, TS("Sleep Function"), false, true);
-    apply_theme_list_item(&theme, ui_lblBattery, TS("Low Battery Indicator"), false, true);
-    apply_theme_list_item(&theme, ui_lblIdleDisplay, TS("Idle Input Display Timeout"), false, true);
-    apply_theme_list_item(&theme, ui_lblIdleSleep, TS("Idle Input Sleep Timeout"), false, true);
+    apply_theme_list_item(&theme, ui_lblShutdown, lang.MUXPOWER.SLEEP.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblBattery, lang.MUXPOWER.LOW_BATTERY, false, true);
+    apply_theme_list_item(&theme, ui_lblIdleDisplay, lang.MUXPOWER.IDLE.DISPLAY, false, true);
+    apply_theme_list_item(&theme, ui_lblIdleSleep, lang.MUXPOWER.IDLE.SLEEP, false, true);
 
     apply_theme_list_glyph(&theme, ui_icoShutdown, mux_module, "shutdown");
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_module, "battery");
@@ -217,23 +219,30 @@ void init_navigation_groups() {
 
     apply_theme_list_drop_down(&theme, ui_droShutdown, NULL);
 
-    char *battery_string = generate_number_string(5, 50, 5, TG("Disabled"), NULL, NULL, 0);
+    char *battery_string = generate_number_string(5, 50, 5, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droBattery, battery_string);
     free(battery_string);
 
     apply_theme_list_drop_down(&theme, ui_droIdleDisplay, "");
     apply_theme_list_drop_down(&theme, ui_droIdleSleep, "");
 
-    add_drop_down_options(ui_droShutdown, (char *[]) {
-            TG("Disabled"), TS("Sleep Suspend"), TS("Instant Shutdown"),
-            TS("Sleep 10s + Shutdown"), TS("Sleep 30s + Shutdown"),
-            TS("Sleep 60s + Shutdown"), TS("Sleep 2m + Shutdown"),
-            TS("Sleep 5m + Shutdown"), TS("Sleep 10m + Shutdown"),
-            TS("Sleep 30m + Shutdown"), TS("Sleep 60m + Shutdown")}, 11);
-    add_drop_down_options(ui_droIdleDisplay, (char *[]) {
-            TG("Disabled"), TS("10s"), TS("30s"), TS("60s"), TS("2m"), TS("5m"), TS("10m"), TS("15m"), TS("30m")}, 9);
-    add_drop_down_options(ui_droIdleSleep, (char *[]) {
-            TG("Disabled"), TS("10s"), TS("30s"), TS("60s"), TS("2m"), TS("5m"), TS("10m"), TS("15m"), TS("30m")}, 9);
+    char *sleep_timer[11] = {
+            lang.GENERIC.DISABLED,
+            lang.MUXPOWER.SLEEP.SUSPEND, lang.MUXPOWER.SLEEP.INSTANT,
+            lang.MUXPOWER.SLEEP.t10s, lang.MUXPOWER.SLEEP.t30s,
+            lang.MUXPOWER.SLEEP.t60s, lang.MUXPOWER.SLEEP.t2m,
+            lang.MUXPOWER.SLEEP.t5m, lang.MUXPOWER.SLEEP.t10m,
+            lang.MUXPOWER.SLEEP.t30m, lang.MUXPOWER.SLEEP.t60m
+    };
+    add_drop_down_options(ui_droShutdown, sleep_timer, sizeof(sleep_timer));
+
+    char *idle_timer[9] = {
+            lang.GENERIC.DISABLED, lang.MUXPOWER.IDLE.t10s, lang.MUXPOWER.IDLE.t30s,
+            lang.MUXPOWER.IDLE.t60s, lang.MUXPOWER.IDLE.t2m, lang.MUXPOWER.IDLE.t5m,
+            lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t30m
+    };
+    add_drop_down_options(ui_droIdleDisplay, idle_timer, sizeof(idle_timer));
+    add_drop_down_options(ui_droIdleSleep, idle_timer, sizeof(idle_timer));
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -348,7 +357,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, osd_message);
 
-    lv_label_set_text(ui_lblNavB, TG("Save"));
+    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
@@ -446,6 +455,7 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_lang(&lang);
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
@@ -453,8 +463,8 @@ int main(int argc, char *argv[]) {
     static lv_disp_draw_buf_t disp_buf;
     uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -474,7 +484,7 @@ int main(int argc, char *argv[]) {
     load_theme(&theme, &config, &device, basename(argv[0]));
     load_language(mux_module);
 
-    ui_common_screen_init(&theme, &device, TS("POWER SETTINGS"));
+    ui_common_screen_init(&theme, &device, &lang, lang.MUXPOWER.TITLE);
     ui_init(ui_pnlContent);
     init_elements();
 
@@ -509,13 +519,13 @@ int main(int argc, char *argv[]) {
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
     js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
     if (js_fd_sys < 0) {
-        perror("Failed to open joystick device");
+        perror(lang.SYSTEM.NO_JOY);
         return 1;
     }
 
@@ -551,7 +561,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
-            .max_idle_ms = 16 /* ~60 FPS */,
+            .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,
