@@ -285,3 +285,6 @@ char *get_file_core(char *rom_dir, char *rom_name);
 char *get_directory_governor(char *rom_dir);
 
 char *get_file_governor(char *rom_dir, char *rom_name);
+
+int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback, 
+                         const char *device_dimension, const char *image_type, char *image_path, size_t path_size);

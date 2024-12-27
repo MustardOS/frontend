@@ -1061,10 +1061,14 @@ int load_image_specifics(const char *theme_base, const char *device_dimension, c
              file_exist(image_path));
 }
 
-int load_image_catalogue(const char *catalogue_name, const char *program, const char *device_dimension,
-                         const char *image_type, char *image_path, size_t path_size) {
-    return (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
+int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback, 
+                         const char *device_dimension, const char *image_type, char *image_path, size_t path_size) {
+    if (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
                      image_type, device_dimension, program) >= 0 &&
+            file_exist(image_path)) return 1;
+
+    return (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
+                     image_type, device_dimension, program_fallback) >= 0 &&
             file_exist(image_path));
 }
 
@@ -1086,21 +1090,21 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
         for (int i = 0; i < 2; i++) {
             switch (wall_type) {
                 case APPLICATION:
-                    if (load_image_catalogue("Application", element, device_dimensions[i], "wall",
+                    if (load_image_catalogue("Application", element, "default", device_dimensions[i], "wall",
                                              wall_image_path, sizeof(wall_image_path))) {
                         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
                         return wall_image_embed;
                     }
                     break;
                 case ARCHIVE:
-                    if (load_image_catalogue("Archive", element, device_dimensions[i], "wall",
+                    if (load_image_catalogue("Archive", element, "default", device_dimensions[i], "wall",
                                              wall_image_path, sizeof(wall_image_path))) {
                         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
                         return wall_image_embed;
                     }
                     break;
                 case TASK:
-                    if (load_image_catalogue("Task", element, device_dimensions[i], "wall",
+                    if (load_image_catalogue("Task", element, "default", device_dimensions[i], "wall",
                                              wall_image_path, sizeof(wall_image_path))) {
                         snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
                         return wall_image_embed;
@@ -1178,21 +1182,21 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
         for (int i = 0; i < 2; i++) {
             switch (wall_type) {
                 case APPLICATION:
-                    if (load_image_catalogue("Application", element, device_dimensions[i], "box",
+                    if (load_image_catalogue("Application", element, "default", device_dimensions[i], "box",
                                              static_image_path, sizeof(static_image_path))) {
                         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
                         return static_image_embed;
                     }
                     break;
                 case ARCHIVE:
-                    if (load_image_catalogue("Archive", element, device_dimensions[i], "box",
+                    if (load_image_catalogue("Archive", element, "default", device_dimensions[i], "box",
                                              static_image_path, sizeof(static_image_path))) {
                         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
                         return static_image_embed;
                     }
                     break;
                 case TASK:
-                    if (load_image_catalogue("Task", element, device_dimensions[i], "box",
+                    if (load_image_catalogue("Task", element, "default", device_dimensions[i], "box",
                                              static_image_path, sizeof(static_image_path))) {
                         snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
                         return static_image_embed;
