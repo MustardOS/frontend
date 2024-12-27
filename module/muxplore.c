@@ -942,17 +942,22 @@ void init_navigation_groups_grid() {
         lv_obj_t *cell_image = lv_img_create(cell_panel);
         lv_obj_t *cell_label = lv_label_create(cell_panel);
 
+        char device_dimension[15];
+        get_device_dimension(device_dimension, sizeof(device_dimension));
         char grid_image[MAX_BUFFER_SIZE];
-        if (snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/%s.png",
-                     INFO_CAT_PATH, strip_ext(items[i].name)) >= 0 && !file_exist(grid_image)) {
-            snprintf(grid_image, sizeof(grid_image), "%s/Folder/grid/default.png", INFO_CAT_PATH);
+        if (!load_image_catalogue("Folder", strip_ext(items[i].name), "default", device_dimension, "grid",
+                                          grid_image, sizeof(grid_image))) {
+            load_image_catalogue("Folder", strip_ext(items[i].name), "default", "", "grid",
+                                          grid_image, sizeof(grid_image));
         }
 
+        char glyph_name_focused[MAX_BUFFER_SIZE];
+        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
         char grid_image_focused[MAX_BUFFER_SIZE];
-        if (snprintf(grid_image_focused, sizeof(grid_image_focused), "%s/Folder/grid/%s_focused.png",
-                     INFO_CAT_PATH, strip_ext(items[i].name)) >= 0 && !file_exist(grid_image_focused)) {
-            snprintf(grid_image_focused, sizeof(grid_image_focused),
-                     "%s/Folder/grid/default_focused.png", INFO_CAT_PATH);
+        if (!load_image_catalogue("Folder", glyph_name_focused, "default_focused", device_dimension, "grid",
+                                          grid_image_focused, sizeof(grid_image_focused))) {
+            load_image_catalogue("Folder", glyph_name_focused, "default_focused", "", "grid",
+                                          grid_image_focused, sizeof(grid_image_focused));
         }
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
