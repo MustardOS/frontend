@@ -436,7 +436,7 @@ void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
     const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
     lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
                                                   LV_TEXT_FLAG_EXPAND);
-    int max_item_width = theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_LEFT - theme->FONT.LIST_PAD_RIGHT;
+    int max_item_width = theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_LEFT - theme->FONT.LIST_PAD_RIGHT - 10; //compensate for 5 pixel border
 
     if (act_line_length > max_item_width) {
         int len = strlen(item_text);
