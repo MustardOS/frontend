@@ -342,8 +342,20 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
+int check_active_hdmi() {
+    if (current_item_index > 0) {
+        if (read_int_from_file("/tmp/hdmi_in_use", 1)) {
+            play_sound("error", nav_sound, 0, 1);
+            toast_message(lang.MUXHDMI.DENY_MODIFY, 1000, 1000);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void handle_option_prev(void) {
     if (msgbox_active) return;
+    if (check_active_hdmi()) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     decrease_option_value(lv_group_get_focused(ui_group_value));
@@ -351,6 +363,7 @@ void handle_option_prev(void) {
 
 void handle_option_next(void) {
     if (msgbox_active) return;
+    if (check_active_hdmi()) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     increase_option_value(lv_group_get_focused(ui_group_value));
