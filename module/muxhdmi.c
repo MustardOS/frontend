@@ -371,6 +371,12 @@ void handle_back(void) {
         return;
     }
 
+    if (!read_int_from_file(device.SCREEN.HDMI, 1) && lv_dropdown_get_selected(ui_droEnable)) {
+        play_sound("error", nav_sound, 0, 1);
+        toast_message(lang.MUXHDMI.NO_CABLE, 1000, 1000);
+        return;
+    }
+
     play_sound("back", nav_sound, 0, 1);
 
     save_hdmi_options();

@@ -122,6 +122,7 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char NO_CABLE[MAX_BUFFER_SIZE];
         char ACTIVE[MAX_BUFFER_SIZE];
         char RESOLUTION[MAX_BUFFER_SIZE];
         struct {

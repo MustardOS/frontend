@@ -652,13 +652,14 @@ void ui_common_handle_vol() {
 
 void ui_common_handle_idle() {
     if (file_exist("/tmp/hdmi_do_refresh")) {
-        if (safe_atoi(read_text_from_file("/tmp/hdmi_do_refresh"))) {
-            remove("/tmp/hdmi_do_refresh");
-            lv_obj_invalidate(ui_pnlHeader);
-            lv_obj_invalidate(ui_pnlContent);
-            lv_obj_invalidate(ui_pnlFooter);
-            lv_refr_now(NULL);
-        }
+        remove("/tmp/hdmi_do_refresh");
+
+        lv_obj_invalidate(ui_pnlHeader);
+        lv_obj_invalidate(ui_pnlContent);
+        lv_obj_invalidate(ui_pnlFooter);
+
+        lv_obj_invalidate(ui_screen);
+        lv_refr_now(NULL);
     }
 
     refresh_screen(device.SCREEN.WAIT);

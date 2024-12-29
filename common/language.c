@@ -126,6 +126,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxhdmi
     SPECIFIC_FIELD(lang->MUXHDMI.TITLE, "HDMI SETTINGS");
+    SPECIFIC_FIELD(lang->MUXHDMI.NO_CABLE, "HDMI cable is not detected");
     SPECIFIC_FIELD(lang->MUXHDMI.ACTIVE, "HDMI Active");
     SPECIFIC_FIELD(lang->MUXHDMI.RESOLUTION, "Resolution");
     SPECIFIC_FIELD(lang->MUXHDMI.COLOUR.DEPTH, "Colour Depth");

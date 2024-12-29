@@ -81,5 +81,7 @@ int main() {
     SDL_DestroyWindow(window);
     SDL_Quit();
 
+    write_text_to_file("/tmp/hdmi_out", "w", CHAR, "hack");
+
     return 0;
 }
