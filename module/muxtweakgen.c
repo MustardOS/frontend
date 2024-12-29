@@ -548,9 +548,9 @@ void glyph_task() {
 
 void ui_refresh_task() {
     if (file_exist("/tmp/hdmi_out")) {
+        remove("/tmp/hdmi_out");
         handle_list_nav_down();
         handle_list_nav_up();
-        remove("/tmp/hdmi_out");
     }
 
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
