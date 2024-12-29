@@ -226,7 +226,7 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droIdleDisplay, "");
     apply_theme_list_drop_down(&theme, ui_droIdleSleep, "");
 
-    char *sleep_timer[11] = {
+    char *sleep_timer[] = {
             lang.GENERIC.DISABLED,
             lang.MUXPOWER.SLEEP.SUSPEND, lang.MUXPOWER.SLEEP.INSTANT,
             lang.MUXPOWER.SLEEP.t10s, lang.MUXPOWER.SLEEP.t30s,
@@ -234,15 +234,15 @@ void init_navigation_groups() {
             lang.MUXPOWER.SLEEP.t5m, lang.MUXPOWER.SLEEP.t10m,
             lang.MUXPOWER.SLEEP.t30m, lang.MUXPOWER.SLEEP.t60m
     };
-    add_drop_down_options(ui_droShutdown, sleep_timer, sizeof(sleep_timer));
+    add_drop_down_options(ui_droShutdown, sleep_timer, 11);
 
-    char *idle_timer[9] = {
+    char *idle_timer[] = {
             lang.GENERIC.DISABLED, lang.MUXPOWER.IDLE.t10s, lang.MUXPOWER.IDLE.t30s,
             lang.MUXPOWER.IDLE.t60s, lang.MUXPOWER.IDLE.t2m, lang.MUXPOWER.IDLE.t5m,
             lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t30m
     };
-    add_drop_down_options(ui_droIdleDisplay, idle_timer, sizeof(idle_timer));
-    add_drop_down_options(ui_droIdleSleep, idle_timer, sizeof(idle_timer));
+    add_drop_down_options(ui_droIdleDisplay, idle_timer, 9);
+    add_drop_down_options(ui_droIdleSleep, idle_timer, 9);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -455,12 +455,16 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
+
+    struct screen_dimension dims = get_device_dimensions();
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
 
     static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
+    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
 
     lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
     lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
@@ -471,16 +475,16 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = device.SCREEN.WIDTH;
-    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.hor_res = dims.WIDTH;
+    disp_drv.ver_res = dims.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
     disp_drv.full_refresh = 0;
     disp_drv.direct_mode = 0;
+    disp_drv.antialiasing = 1;
+    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
     lv_disp_drv_register(&disp_drv);
-
-    load_config(&config);
-    load_lang(&lang);
+    lv_disp_flush_ready(&disp_drv);
 
     load_theme(&theme, &config, &device, basename(argv[0]));
 
@@ -489,7 +493,6 @@ int main(int argc, char *argv[]) {
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,

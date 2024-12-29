@@ -47,6 +47,9 @@ void setup_background_process() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
+    load_config(&config);
+
+    struct screen_dimension dims = get_device_dimensions();
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <full path to PNG image>\n", argv[0]);
@@ -59,10 +62,10 @@ int main(int argc, char *argv[]) {
     fbdev_init(device.SCREEN.DEVICE);
 
     static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
+    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
 
-    lv_color_t * buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t * buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
+    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
 
@@ -70,13 +73,16 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = device.SCREEN.WIDTH;
-    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.hor_res = dims.WIDTH;
+    disp_drv.ver_res = dims.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
     disp_drv.full_refresh = 0;
     disp_drv.direct_mode = 0;
+    disp_drv.antialiasing = 1;
+    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
     lv_disp_drv_register(&disp_drv);
+    lv_disp_flush_ready(&disp_drv);
 
     ui_init();
 

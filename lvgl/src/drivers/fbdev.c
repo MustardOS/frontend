@@ -19,6 +19,7 @@
 #include <sys/ioctl.h>
 
 #include "../../../common/device.h"
+#include "../../../common/common.h"
 
 #if USE_BSD_FBDEV
 #include <sys/fcntl.h>
@@ -176,21 +177,17 @@ void fbdev_exit(void) {
  * @param disp driver pointer to display driver which active screen should be get.
  */
 void fbdev_hdmi_rotate(lv_disp_drv_t *driver) {
-    char *hdmi_state_file = device.SCREEN.HDMI;
-    FILE *f = fopen(hdmi_state_file, "r");
-    char state[7];
-    fgets(state, 7, f);
-    fclose(f);
+    if (read_int_from_file(device.SCREEN.HDMI, 1) && strcasecmp(device.DEVICE.NAME, "rg28xx-h") == 0) {
+        struct screen_dimension dims = get_device_dimensions();
 
-    if (strstr(state, "HDMI=1") && strstr(device.DEVICE.NAME, "RG28XX-H")) {
-        driver->hor_res = device.SCREEN.HEIGHT;
-        driver->ver_res = device.SCREEN.WIDTH;
+        driver->hor_res = dims.HEIGHT;
+        driver->ver_res = dims.WIDTH;
         driver->sw_rotate = LV_DISP_ROT_NONE;
         driver->rotated = LV_DISP_ROT_NONE;
+
         vinfo.xres = driver->hor_res;
         vinfo.yres = driver->ver_res;
     }
-
 }
 
 /**

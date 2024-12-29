@@ -19,7 +19,7 @@ MODULES = muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxcustom \
           muxgov muxhdmi muxinfo muxlanguage muxlaunch muxnetprofile muxnetscan \
           muxnetwork muxoption muxpass muxpicker muxpower muxplore muxrtc muxsearch \
           muxsplash muxstart muxstorage muxsysinfo muxtask muxtester muxtimezone \
-          muxtweakadv muxtweakgen muxvisual muxwebserv muhotkey muplay
+          muxtweakadv muxtweakgen muxvisual muxwebserv muhotkey muplay murefresh
 
 DEPENDENCIES = common font lvgl lookup
 

@@ -65,17 +65,15 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->NETWORK.STATE, "network/state")
 
     DEV_INT_FIELD(device->SCREEN.BRIGHT, "screen/bright")
-    DEV_INT_FIELD(device->SCREEN.WIDTH, "screen/width")
-    DEV_INT_FIELD(device->SCREEN.HEIGHT, "screen/height")
     DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/rotate")
     DEV_INT_FIELD(device->SCREEN.WAIT, "screen/wait")
     DEV_STR_FIELD(device->SCREEN.DEVICE, "screen/device")
     DEV_STR_FIELD(device->SCREEN.HDMI, "screen/hdmi")
 
-    DEV_INT_FIELD(device->AUDIO.MIN, "audio/min")
-    DEV_INT_FIELD(device->AUDIO.MAX, "audio/max")
-    DEV_STR_FIELD(device->AUDIO.CONTROL, "audio/control")
-    DEV_STR_FIELD(device->AUDIO.CHANNEL, "audio/channel")
+    DEV_INT_FIELD(device->SCREEN.INTERNAL.WIDTH, "screen/internal/width")
+    DEV_INT_FIELD(device->SCREEN.INTERNAL.HEIGHT, "screen/internal/height")
+    DEV_INT_FIELD(device->SCREEN.EXTERNAL.WIDTH, "screen/external/width")
+    DEV_INT_FIELD(device->SCREEN.EXTERNAL.HEIGHT, "screen/external/height")
 
     DEV_INT_FIELD(device->SDL.SCALER, "sdl/scaler")
     DEV_INT_FIELD(device->SDL.ROTATE, "sdl/rotate")

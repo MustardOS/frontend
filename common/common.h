@@ -20,6 +20,11 @@ extern int progress_onscreen;
 extern struct mux_config config;
 extern char *mux_module;
 
+struct screen_dimension {
+    int WIDTH;
+    int HEIGHT;
+};
+
 struct ImageSettings {
     char *image_path;
     int16_t align;
@@ -192,10 +197,10 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t ov
 
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
 
-int load_image_specifics(const char *theme_base, const char *device_dimension, const char *program,
+int load_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
                          const char *image_type, const char *image_extension, char *image_path, size_t path_size);
 
-int load_element_image_specifics(const char *theme_base, const char *device_dimension, const char *program,
+int load_element_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
                                  const char *image_type, const char *element, const char *image_extension,
                                  char *image_path, size_t path_size);
 
@@ -205,7 +210,7 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *curren
 
 void unload_image_animation();
 
-void get_device_dimension(char *device_dimension, size_t size);
+void get_mux_dimension(char *mux_dimension, size_t size);
 
 void load_font_text(const char *program, lv_obj_t *screen);
 
@@ -286,5 +291,7 @@ char *get_directory_governor(char *rom_dir);
 
 char *get_file_governor(char *rom_dir, char *rom_name);
 
-int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback, 
-                         const char *device_dimension, const char *image_type, char *image_path, size_t path_size);
+int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
+                         const char *mux_dimension, const char *image_type, char *image_path, size_t path_size);
+
+struct screen_dimension get_device_dimensions();

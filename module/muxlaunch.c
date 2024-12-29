@@ -96,14 +96,14 @@ void init_navigation_groups_grid(char *item_labels[], char *glyph_names[]) {
         lv_obj_set_user_data(cell_label, glyph_names[i]);
         ui_objects[i] = cell_label;
 
-        char device_dimension[15];
-        get_device_dimension(device_dimension, sizeof(device_dimension));
+        char mux_dimension[15];
+        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char grid_image[MAX_BUFFER_SIZE];
-        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_names[i],
+        if (!load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
                                           "png", grid_image, sizeof(grid_image)) &&
             !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_names[i],
                                           "png", grid_image, sizeof(grid_image)) &&
-            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", "default",
+            !load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", "default",
                                           "png", grid_image, sizeof(grid_image))) {
 
             load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "default",
@@ -113,11 +113,11 @@ void init_navigation_groups_grid(char *item_labels[], char *glyph_names[]) {
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);
         char grid_image_focused[MAX_BUFFER_SIZE];
-        if (!load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", glyph_name_focused,
+        if (!load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_name_focused,
                                           "png", grid_image_focused, sizeof(grid_image_focused)) &&
             !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_name_focused,
                                           "png", grid_image_focused, sizeof(grid_image_focused)) &&
-            !load_element_image_specifics(STORAGE_THEME, device_dimension, mux_module, "grid", "default_focused",
+            !load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", "default_focused",
                                           "png", grid_image_focused, sizeof(grid_image_focused))) {
 
             load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "default_focused",
@@ -651,13 +651,18 @@ int main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
+
     load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
+
+    struct screen_dimension dims = get_device_dimensions();
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
 
     static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
+    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
 
     lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
     lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
@@ -668,16 +673,16 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = device.SCREEN.WIDTH;
-    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.hor_res = dims.WIDTH;
+    disp_drv.ver_res = dims.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
     disp_drv.full_refresh = 0;
     disp_drv.direct_mode = 0;
+    disp_drv.antialiasing = 1;
+    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
     lv_disp_drv_register(&disp_drv);
-
-    load_config(&config);
-    load_lang(&lang);
+    lv_disp_flush_ready(&disp_drv);
 
     load_theme(&theme, &config, &device, basename(argv[0]));
 
@@ -686,7 +691,6 @@ int main(int argc, char *argv[]) {
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,

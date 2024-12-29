@@ -84,18 +84,17 @@ struct mux_device {
         char DEVICE[MAX_BUFFER_SIZE];
         char HDMI[MAX_BUFFER_SIZE];
         int16_t BRIGHT;
-        int16_t WIDTH;
-        int16_t HEIGHT;
         int16_t ROTATE;
         int16_t WAIT;
+        struct {
+            int16_t WIDTH;
+            int16_t HEIGHT;
+        } INTERNAL;
+        struct {
+            int16_t WIDTH;
+            int16_t HEIGHT;
+        } EXTERNAL;
     } SCREEN;
-
-    struct {
-        char CONTROL[MAX_BUFFER_SIZE];
-        char CHANNEL[MAX_BUFFER_SIZE];
-        int16_t MIN;
-        int16_t MAX;
-    } AUDIO;
 
     struct {
         int16_t SCALER;

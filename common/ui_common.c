@@ -177,7 +177,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_pad_top(ui_imgBox, theme->IMAGE_LIST.PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_imgBox, theme->IMAGE_LIST.PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-
     ui_pnlHeader = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlHeader, device->MUX.WIDTH);
     lv_obj_set_height(ui_pnlHeader, theme->HEADER.HEIGHT);
@@ -339,7 +338,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_opa(ui_lblScreenMessage, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     ui_pnlMessage = lv_obj_create(ui_screen);
-    lv_obj_set_width(ui_pnlMessage, 615);
+    lv_obj_set_width(ui_pnlMessage, device->MUX.WIDTH - 25);
     lv_obj_set_height(ui_pnlMessage, 42);
     lv_obj_set_x(ui_pnlMessage, 0);
     lv_obj_set_y(ui_pnlMessage, -theme->FOOTER.HEIGHT - 5);
@@ -357,7 +356,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_side(ui_pnlMessage, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblMessage = lv_label_create(ui_pnlMessage);
-    lv_obj_set_width(ui_lblMessage, 600);
+    lv_obj_set_width(ui_lblMessage, device->MUX.WIDTH - 50);
     lv_obj_set_height(ui_lblMessage, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_lblMessage, -220);
     lv_obj_set_y(ui_lblMessage, -205);
@@ -658,6 +657,7 @@ void ui_common_handle_idle() {
             lv_obj_invalidate(ui_pnlHeader);
             lv_obj_invalidate(ui_pnlContent);
             lv_obj_invalidate(ui_pnlFooter);
+            lv_refr_now(NULL);
         }
     }
 
@@ -683,14 +683,14 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 
     char footer_image_path[MAX_BUFFER_SIZE];
     char footer_image_embed[MAX_BUFFER_SIZE];
-    char device_dimension[15];
-    get_device_dimension(device_dimension, sizeof(device_dimension));
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
-                  STORAGE_THEME, device_dimension, glyph_name) >= 0 && file_exist(footer_image_path)) ||
+                  STORAGE_THEME, mux_dimension, glyph_name) >= 0 && file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
                   STORAGE_THEME, glyph_name) >= 0 && file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
-                  INTERNAL_THEME, device_dimension, glyph_name) >= 0 && file_exist(footer_image_path)) ||
+                  INTERNAL_THEME, mux_dimension, glyph_name) >= 0 && file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
                   INTERNAL_THEME, glyph_name) >= 0 &&
          file_exist(footer_image_path))) {
@@ -736,10 +736,10 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     return ui_lblNavText;
 }
 
-int load_header_glyph(const char *theme_base, const char *device_dimension, const char *glyph_name,
+int load_header_glyph(const char *theme_base, const char *mux_dimension, const char *glyph_name,
                       char *image_path, size_t image_size) {
     return (snprintf(image_path, image_size, "%s/%sglyph/header/%s.png", theme_base,
-                     device_dimension, glyph_name) >= 0 &&
+                     mux_dimension, glyph_name) >= 0 &&
             file_exist(image_path)) ||
            (snprintf(image_path, image_size, "%s/glyph/header/%s.png", theme_base,
                      glyph_name) >= 0 &&
@@ -768,12 +768,12 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char device_dimension[15];
+    char mux_dimension[15];
 
-    get_device_dimension(device_dimension, sizeof(device_dimension));
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-    if (load_header_glyph(STORAGE_THEME, device_dimension, battery_glyph_name, image_path, sizeof(image_path)) ||
-        load_header_glyph(INTERNAL_THEME, device_dimension, battery_glyph_name, image_path, sizeof(image_path))) {
+    if (load_header_glyph(STORAGE_THEME, mux_dimension, battery_glyph_name, image_path, sizeof(image_path)) ||
+        load_header_glyph(INTERNAL_THEME, mux_dimension, battery_glyph_name, image_path, sizeof(image_path))) {
         snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
@@ -783,12 +783,12 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char device_dimension[15];
+    char mux_dimension[15];
 
-    get_device_dimension(device_dimension, sizeof(device_dimension));
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-    if (load_header_glyph(STORAGE_THEME, device_dimension, "bluetooth", image_path, sizeof(image_path)) ||
-        load_header_glyph(INTERNAL_THEME, device_dimension, "bluetooth", image_path, sizeof(image_path))) {
+    if (load_header_glyph(STORAGE_THEME, mux_dimension, "bluetooth", image_path, sizeof(image_path)) ||
+        load_header_glyph(INTERNAL_THEME, mux_dimension, "bluetooth", image_path, sizeof(image_path))) {
         snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
@@ -813,14 +813,14 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) 
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char device_dimension[15];
+    char mux_dimension[15];
     char network_status_filename[15];
 
-    get_device_dimension(device_dimension, sizeof(device_dimension));
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", network_status);
 
-    if (load_header_glyph(STORAGE_THEME, device_dimension, network_status_filename, image_path, sizeof(image_path)) ||
-        load_header_glyph(INTERNAL_THEME, device_dimension, network_status_filename, image_path, sizeof(image_path))) {
+    if (load_header_glyph(STORAGE_THEME, mux_dimension, network_status_filename, image_path, sizeof(image_path)) ||
+        load_header_glyph(INTERNAL_THEME, mux_dimension, network_status_filename, image_path, sizeof(image_path))) {
         snprintf(image_embed, sizeof(image_embed), "M:%s", image_path);
     }
 
@@ -844,10 +844,10 @@ void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels) {
 
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_type) {
     if (config.BOOT.FACTORY_RESET) {
-        char device_dimension[15];
+        char mux_dimension[15];
         char init_wall[MAX_BUFFER_SIZE];
-        get_device_dimension(device_dimension, sizeof(device_dimension));
-        snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", INTERNAL_THEME, device_dimension);
+        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+        snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", INTERNAL_THEME, mux_dimension);
         lv_img_set_src(ui_imgWall, init_wall);
     } else {
         load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,

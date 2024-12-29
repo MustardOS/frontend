@@ -16,7 +16,7 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
 
 lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint32_t text_color, int16_t text_alpha);
 
-int load_header_glyph(const char *theme_base, const char *device_dimension, const char *glyph_name,
+int load_header_glyph(const char *theme_base, const char *mux_dimension, const char *glyph_name,
                       char *image_path, size_t image_size);
 
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme);

@@ -8,11 +8,11 @@
 #include "log.h"
 #include "mini/mini.h"
 
-int load_scheme(const char *theme_base, const char *device_dimension,
+int load_scheme(const char *theme_base, const char *mux_dimension,
                 const char *mux_name, char *scheme, size_t scheme_size) {
-    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.txt", theme_base, device_dimension, mux_name)
+    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.txt", theme_base, mux_dimension, mux_name)
             && file_exist(scheme)) ||
-           (snprintf(scheme, scheme_size, "%s/%sscheme/default.txt", theme_base, device_dimension)
+           (snprintf(scheme, scheme_size, "%s/%sscheme/default.txt", theme_base, mux_dimension)
             && file_exist(scheme)) ||
            (snprintf(scheme, scheme_size, "%s/scheme/%s.txt", theme_base, mux_name)
             && file_exist(scheme)) ||
@@ -22,12 +22,12 @@ int load_scheme(const char *theme_base, const char *device_dimension,
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name) {
     char scheme[MAX_BUFFER_SIZE];
-    char device_dimension[15];
-    get_device_dimension(device_dimension, sizeof(device_dimension));
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-    if (load_scheme(STORAGE_THEME, device_dimension, mux_name, scheme, sizeof(scheme))) {
+    if (load_scheme(STORAGE_THEME, mux_dimension, mux_name, scheme, sizeof(scheme))) {
         LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme)
-    } else if (load_scheme(INTERNAL_THEME, device_dimension, mux_name, scheme, sizeof(scheme))) {
+    } else if (load_scheme(INTERNAL_THEME, mux_dimension, mux_name, scheme, sizeof(scheme))) {
         LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme)
     }
 
@@ -639,14 +639,14 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
 
     char glyph_image_path[MAX_BUFFER_SIZE];
     char glyph_image_embed[MAX_BUFFER_SIZE];
-    char device_dimension[15];
-    get_device_dimension(device_dimension, sizeof(device_dimension));
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  STORAGE_THEME, device_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+                  STORAGE_THEME, mux_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
                   STORAGE_THEME, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  INTERNAL_THEME, device_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+                  INTERNAL_THEME, mux_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
                   INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
          file_exist(glyph_image_path))) {

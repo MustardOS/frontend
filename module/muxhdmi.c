@@ -23,7 +23,6 @@ char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
-int turbo_resolution = 0;
 int msgbox_active = 0;
 int SD2_found = 0;
 int nav_sound = 0;
@@ -188,12 +187,11 @@ void save_hdmi_options() {
 
     if (idx_enable == 0) {
         if (lv_dropdown_get_selected(ui_droEnable) != enable_original) {
-            run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi_stop.sh", NULL});
+            run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi.sh", "stop", NULL});
         }
     } else {
         if (is_modified > 0) {
-            run_exec((const char *[]) {"killall", "-q", "hdmi_start.sh", NULL});
-            run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi_start.sh", NULL});
+            run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi.sh", "start", NULL});
         }
     }
 }
@@ -276,10 +274,27 @@ void init_navigation_groups() {
     add_drop_down_options(ui_droEnable, (char *[]) {
             lang.GENERIC.DISABLED, lang.GENERIC.ENABLED}, 2);
     add_drop_down_options(ui_droResolution, (char *[]) {
-            "480i", "576i", "480p", "576p", "720p + 50hz", "720p + 60hz",
-            "1080i + 50hz", "1080i + 60hz", "1080p + 24hz", "1080p + 50hz", "1080p + 60hz"}, 11);
+            "480i",
+            "576i",
+            "480p",
+            "576p",
+            "720p + 50hz",
+            "720p + 60hz"}, 6);
+/*
+ * Disabling 1080 for now because there seems to be a memory issue
+ * with how much the framebuffer is required to display it at
+ * this resolution.  TODO: This will require fixing at some stage!
+ *           "1080i + 50hz",
+ *           "1080i + 60hz",
+ *           "1080p + 24hz",
+ *           "1080p + 50hz",
+ *           "1080p + 60hz"}, 11);
+ */
     add_drop_down_options(ui_droSpace, (char *[]) {
-            "RGB", "YUV444", "YUV422", "YUV420"}, 4);
+            "RGB",
+            "YUV444",
+            "YUV422",
+            "YUV420"}, 4);
     add_drop_down_options(ui_droRange, (char *[]) {
             lang.MUXHDMI.COLOUR.RANGE.LIMITED, lang.MUXHDMI.COLOUR.RANGE.FULL}, 2);
     add_drop_down_options(ui_droScan, (char *[]) {
@@ -480,12 +495,16 @@ int main(int argc, char *argv[]) {
 
     mux_module = basename(argv[0]);
     load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
+
+    struct screen_dimension dims = get_device_dimensions();
 
     lv_init();
     fbdev_init(device.SCREEN.DEVICE);
 
     static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
+    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
 
     lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
     lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
@@ -496,16 +515,16 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = device.SCREEN.WIDTH;
-    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.hor_res = dims.WIDTH;
+    disp_drv.ver_res = dims.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
     disp_drv.full_refresh = 0;
     disp_drv.direct_mode = 0;
+    disp_drv.antialiasing = 1;
+    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
     lv_disp_drv_register(&disp_drv);
-
-    load_config(&config);
-    load_lang(&lang);
+    lv_disp_flush_ready(&disp_drv);
 
     load_theme(&theme, &config, &device, basename(argv[0]));
 
@@ -514,7 +533,6 @@ int main(int argc, char *argv[]) {
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,

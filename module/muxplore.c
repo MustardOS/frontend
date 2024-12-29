@@ -391,8 +391,8 @@ void image_refresh(char *image_type) {
         return;
     }
 
-    char device_dimension[15];
-    get_device_dimension(device_dimension, sizeof(device_dimension));
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
@@ -434,7 +434,7 @@ void image_refresh(char *image_type) {
 
             if (strlen(f_core_artwork) <= 1) {
                 snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                         STORAGE_THEME, device_dimension, image_type);
+                         STORAGE_THEME, mux_dimension, image_type);
                 if (!file_exist(image)) {
                     snprintf(image, sizeof(image), "%s/image/none_%s.png",
                              STORAGE_THEME, image_type);
@@ -464,7 +464,7 @@ void image_refresh(char *image_type) {
             char *h_core_artwork = read_line_from_file(h_pointer, 3);
             if (strlen(h_core_artwork) <= 1) {
                 snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                         STORAGE_THEME, device_dimension, image_type);
+                         STORAGE_THEME, mux_dimension, image_type);
                 if (!file_exist(image)) {
                     snprintf(image, sizeof(image), "%s/image/none_%s.png",
                              STORAGE_THEME, image_type);
@@ -523,7 +523,7 @@ void image_refresh(char *image_type) {
 
                 if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
                     snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                             STORAGE_THEME, device_dimension, image_type);
+                             STORAGE_THEME, mux_dimension, image_type);
                     if (!file_exist(image)) {
                         snprintf(image, sizeof(image), "%s/image/none_%s.png",
                                  STORAGE_THEME, image_type);
@@ -942,22 +942,22 @@ void init_navigation_groups_grid() {
         lv_obj_t *cell_image = lv_img_create(cell_panel);
         lv_obj_t *cell_label = lv_label_create(cell_panel);
 
-        char device_dimension[15];
-        get_device_dimension(device_dimension, sizeof(device_dimension));
+        char mux_dimension[15];
+        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char grid_image[MAX_BUFFER_SIZE];
-        if (!load_image_catalogue("Folder", strip_ext(items[i].name), "default", device_dimension, "grid",
-                                          grid_image, sizeof(grid_image))) {
+        if (!load_image_catalogue("Folder", strip_ext(items[i].name), "default", mux_dimension, "grid",
+                                  grid_image, sizeof(grid_image))) {
             load_image_catalogue("Folder", strip_ext(items[i].name), "default", "", "grid",
-                                          grid_image, sizeof(grid_image));
+                                 grid_image, sizeof(grid_image));
         }
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
         char grid_image_focused[MAX_BUFFER_SIZE];
-        if (!load_image_catalogue("Folder", glyph_name_focused, "default_focused", device_dimension, "grid",
-                                          grid_image_focused, sizeof(grid_image_focused))) {
+        if (!load_image_catalogue("Folder", glyph_name_focused, "default_focused", mux_dimension, "grid",
+                                  grid_image_focused, sizeof(grid_image_focused))) {
             load_image_catalogue("Folder", glyph_name_focused, "default_focused", "", "grid",
-                                          grid_image_focused, sizeof(grid_image_focused));
+                                 grid_image_focused, sizeof(grid_image_focused));
         }
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
@@ -1901,6 +1901,10 @@ void ui_refresh_task() {
 
 int main(int argc, char *argv[]) {
     load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
+
+    struct screen_dimension dims = get_device_dimensions();
 
     char *cmd_help = "\nmuOS Extras - System List\nUsage: %s <-im>\n\nOptions:\n"
                      "\t-i Index of content to skip to\n"
@@ -1962,7 +1966,7 @@ int main(int argc, char *argv[]) {
     fbdev_init(device.SCREEN.DEVICE);
 
     static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = device.SCREEN.WIDTH * device.SCREEN.HEIGHT;
+    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
 
     lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
     lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
@@ -1973,16 +1977,16 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_init(&disp_drv);
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = device.SCREEN.WIDTH;
-    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.hor_res = dims.WIDTH;
+    disp_drv.ver_res = dims.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
     disp_drv.full_refresh = 0;
     disp_drv.direct_mode = 0;
+    disp_drv.antialiasing = 1;
+    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
     lv_disp_drv_register(&disp_drv);
-
-    load_config(&config);
-    load_lang(&lang);
+    lv_disp_flush_ready(&disp_drv);
 
     load_theme(&theme, &config, &device, mux_module);
 
@@ -2007,7 +2011,6 @@ int main(int argc, char *argv[]) {
     snprintf(E_USB, sizeof(E_USB), "%s/ROMS/", device.STORAGE.USB.MOUNT);
 
     lv_obj_set_user_data(ui_screen, mux_module);
-
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     init_fonts();
