@@ -311,7 +311,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.SLEEP_FUNCTION, "Configure how the power button functions on long press (2 seconds)");
 
     // muxrtc
-    SPECIFIC_FIELD(lang->MUXRTC.TITLE, "Title");
+    SPECIFIC_FIELD(lang->MUXRTC.TITLE, "DATE AND TIME");
     SPECIFIC_FIELD(lang->MUXRTC.DAY, "Day");
     SPECIFIC_FIELD(lang->MUXRTC.MONTH, "Month");
     SPECIFIC_FIELD(lang->MUXRTC.YEAR, "Year");
