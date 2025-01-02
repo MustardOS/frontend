@@ -327,6 +327,7 @@ struct mux_lang {
             char t2m[MAX_BUFFER_SIZE];
             char t5m[MAX_BUFFER_SIZE];
             char t10m[MAX_BUFFER_SIZE];
+            char t15m[MAX_BUFFER_SIZE];
             char t30m[MAX_BUFFER_SIZE];
         } IDLE;
         struct {
@@ -339,6 +340,7 @@ struct mux_lang {
             char t2m[MAX_BUFFER_SIZE];
             char t5m[MAX_BUFFER_SIZE];
             char t10m[MAX_BUFFER_SIZE];
+            char t15m[MAX_BUFFER_SIZE];
             char t30m[MAX_BUFFER_SIZE];
             char t60m[MAX_BUFFER_SIZE];
         } SLEEP;

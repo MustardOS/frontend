@@ -291,6 +291,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t2m, "2m");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t5m, "5m");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t10m, "10m");
+    SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t15m, "15m");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t30m, "30m");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.TITLE, "Sleep Function");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.INSTANT, "Instant Shutdown");
@@ -301,6 +302,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t2m, "Sleep 2m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t5m, "Sleep 5m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t10m, "Sleep 10m + Shutdown");
+    SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t15m, "Sleep 15m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t30m, "Sleep 30m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t60m, "Sleep 60m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_SLEEP, "Configure the time the device will sleep when no input is detected");

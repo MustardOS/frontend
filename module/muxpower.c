@@ -134,7 +134,7 @@ void restore_tweak_options() {
 
 void save_tweak_options() {
     int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown),
-                                              (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600}, 11, -2);
+                                              (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800, 3600}, 12, -2);
 
     int idx_battery = map_drop_down_to_value(lv_dropdown_get_selected(ui_droBattery),
                                              (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 25);
@@ -227,19 +227,17 @@ void init_navigation_groups() {
     apply_theme_list_drop_down(&theme, ui_droIdleSleep, "");
 
     char *sleep_timer[] = {
-            lang.GENERIC.DISABLED,
-            lang.MUXPOWER.SLEEP.SUSPEND, lang.MUXPOWER.SLEEP.INSTANT,
-            lang.MUXPOWER.SLEEP.t10s, lang.MUXPOWER.SLEEP.t30s,
-            lang.MUXPOWER.SLEEP.t60s, lang.MUXPOWER.SLEEP.t2m,
-            lang.MUXPOWER.SLEEP.t5m, lang.MUXPOWER.SLEEP.t10m,
-            lang.MUXPOWER.SLEEP.t30m, lang.MUXPOWER.SLEEP.t60m
+            lang.GENERIC.DISABLED, lang.MUXPOWER.SLEEP.SUSPEND, lang.MUXPOWER.SLEEP.INSTANT,
+            lang.MUXPOWER.SLEEP.t10s, lang.MUXPOWER.SLEEP.t30s, lang.MUXPOWER.SLEEP.t60s,
+            lang.MUXPOWER.SLEEP.t2m, lang.MUXPOWER.SLEEP.t5m, lang.MUXPOWER.SLEEP.t10m,
+            lang.MUXPOWER.SLEEP.t15m, lang.MUXPOWER.SLEEP.t30m, lang.MUXPOWER.SLEEP.t60m
     };
     add_drop_down_options(ui_droShutdown, sleep_timer, 11);
 
     char *idle_timer[] = {
             lang.GENERIC.DISABLED, lang.MUXPOWER.IDLE.t10s, lang.MUXPOWER.IDLE.t30s,
             lang.MUXPOWER.IDLE.t60s, lang.MUXPOWER.IDLE.t2m, lang.MUXPOWER.IDLE.t5m,
-            lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t30m
+            lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t15m, lang.MUXPOWER.IDLE.t30m
     };
     add_drop_down_options(ui_droIdleDisplay, idle_timer, 9);
     add_drop_down_options(ui_droIdleSleep, idle_timer, 9);
