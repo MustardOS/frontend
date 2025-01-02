@@ -17,6 +17,14 @@ int load_scheme(const char *theme_base, const char *mux_dimension,
            (snprintf(scheme, scheme_size, "%s/scheme/%s.txt", theme_base, mux_name)
             && file_exist(scheme)) ||
            (snprintf(scheme, scheme_size, "%s/scheme/default.txt", theme_base)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dimension, mux_name)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/%sscheme/default.ini", theme_base, mux_dimension)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/scheme/%s.ini", theme_base, mux_name)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/scheme/default.ini", theme_base)
             && file_exist(scheme));
 }
 

@@ -195,6 +195,13 @@ int parse_value(mini_group_t *group, char *line) {
     if (get_group_value(group, id))
         return MINI_DUPLICATE_ID;
 
+    /* use proper ini formatting but keep compatibility with existing ini formatting
+     * some_key=some_value
+     * some_key = some_value */
+    while (*id == ' ') id++;
+    char *end = id + strlen(id) - 1;
+    while (end > id && *end == ' ') *end-- = '\0';
+
     char *val = mini_strtok(ctx1, "", &ctx2);
     if (val) {
         size_t len = strlen(val);
