@@ -196,9 +196,15 @@ int parse_value(mini_group_t *group, char *line) {
         return MINI_DUPLICATE_ID;
 
     char *val = mini_strtok(ctx1, "", &ctx2);
-    if (val && strlen(val) > 0)
-        val[strlen(val) - 1] = '\0'; /* Get rid of new line */
-    return add_value(group, id, val);
+    if (val) {
+        size_t len = strlen(val);
+        if (val && len > 1 && val[len - 2] == '\r' && val[len - 1] == '\n') {
+            val[len - 2] = '\0'; /* Get rid of carriage return and line feed */
+        } else if (val && len > 0 && val[len - 1] == '\n') {
+            val[len - 1] = '\0'; /* Get rid of new line */
+        }
+        return add_value(group, id, val);
+    }
 }
 
 void add_group(mini_t *mini, mini_group_t *grp) {
@@ -383,7 +389,6 @@ mini_t *mini_loadf_ex(FILE *f, int *err) {
     char buffer[MINI_CHUNK_SIZE];
 
     current = result->head;
-
     while (fgets(buffer, sizeof(buffer), f)) {
         buffer[MINI_CHUNK_SIZE - 1] = '\0';
 
@@ -391,7 +396,12 @@ mini_t *mini_loadf_ex(FILE *f, int *err) {
             continue;
         } else if (buffer[0] == '[') {
             /* Group header */
-            buffer[strlen(buffer) - 2] = '\0';                  /* Remove ']\n' */
+            size_t len = strlen(buffer);
+            if (len > 3 && buffer[len - 2] == '\r' && buffer[len - 3] == ']') {
+                buffer[len - 3] = '\0';  // Remove ']\r\n'
+            } else if (len > 2 && buffer[len - 2] == ']') {
+                buffer[len - 2] = '\0';  // Remove ']\n'
+            }
             mini_group_t *n = get_group(result, buffer + 1, 1); /* Skip '[' */
 
             if (n)
