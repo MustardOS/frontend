@@ -44,6 +44,7 @@ struct mux_lang {
         char RECURSIVE[MAX_BUFFER_SIZE];
         char REMOVE[MAX_BUFFER_SIZE];
         char RESCAN[MAX_BUFFER_SIZE];
+        char RESTORE[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
         char SELECT[MAX_BUFFER_SIZE];
         char SWITCH_IMAGE[MAX_BUFFER_SIZE];
@@ -379,6 +380,12 @@ struct mux_lang {
             char LOOKUP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXSEARCH;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char HELP[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+    } MUXSNAPSHOT;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

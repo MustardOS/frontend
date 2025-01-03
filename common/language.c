@@ -60,6 +60,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.RECURSIVE, "Recursive");
     GENERIC_FIELD(lang->GENERIC.REMOVE, "Remove");
     GENERIC_FIELD(lang->GENERIC.RESCAN, "Rescan");
+    GENERIC_FIELD(lang->GENERIC.RESTORE, "Restore");
     GENERIC_FIELD(lang->GENERIC.SAVE, "Save");
     GENERIC_FIELD(lang->GENERIC.SELECT, "Select");
     GENERIC_FIELD(lang->GENERIC.SWITCH_IMAGE, "Switch to Preview Image");
@@ -333,6 +334,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.GLOBAL, "Search all current active storage devices");
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.LOCAL, "Search within the current selected folder and folders within");
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.LOOKUP, "Enter in the name of the content you are looking for");
+
+    // muxsnapshot
+    SPECIFIC_FIELD(lang->MUXSNAPSHOT.TITLE, "SAVE SNAPSHOT");
+    SPECIFIC_FIELD(lang->MUXSNAPSHOT.HELP, "Restore your saved game progress from a previous snapshot");
+    SPECIFIC_FIELD(lang->MUXSNAPSHOT.NONE, "No Save Snapshots Found");
 
     // muxstorage
     SPECIFIC_FIELD(lang->MUXSTORAGE.TITLE, "STORAGE");

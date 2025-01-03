@@ -15,9 +15,9 @@ endif
 BIN_DIR = ./bin
 
 MODULE_DIR = module
-MODULES = muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxcustom \
-          muxgov muxhdmi muxinfo muxlanguage muxlaunch muxnetprofile muxnetscan \
-          muxnetwork muxoption muxpass muxpicker muxpower muxplore muxrtc muxsearch \
+MODULES = muxapp muxarchive muxassign muxcharge muxconfig muxcredits muxcustom muxgov \
+          muxhdmi muxinfo muxlanguage muxlaunch muxnetprofile muxnetscan muxnetwork \
+          muxoption muxpass muxpicker muxpower muxplore muxrtc muxsearch muxsnapshot \
           muxsplash muxstart muxstorage muxsysinfo muxtask muxtester muxtimezone \
           muxtweakadv muxtweakgen muxvisual muxwebserv muhotkey muplay murefresh
 
