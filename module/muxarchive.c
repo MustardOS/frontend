@@ -66,56 +66,66 @@ void show_help() {
 }
 
 void create_archive_items() {
-    const char *archive_directories[] = {
-            "/mnt/mmc/muos/update",
-            "/mnt/mmc/backup",
-            "/mnt/mmc/archive",
-            "/mnt/sdcard/backup",
-            "/mnt/sdcard/archive",
-            "/mnt/usb/backup",
-            "/mnt/usb/archive"};
-    char archive_dir[MAX_BUFFER_SIZE];
+    const char *mount_points[] = {
+            device.STORAGE.ROM.MOUNT,
+            device.STORAGE.SDCARD.MOUNT,
+            device.STORAGE.USB.MOUNT
+    };
+
+    const char *subdirs[] = {"/muos/update", "/backup", "/archive"};
+    char archive_directories[9][MAX_BUFFER_SIZE];
+
+    for (int i = 0, k = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j, ++k) {
+            snprintf(archive_directories[k], sizeof(archive_directories[k]), "%s%s", mount_points[i], subdirs[j]);
+        }
+    }
 
     char **file_names = NULL;
     size_t file_count = 0;
 
     for (size_t dir_index = 0; dir_index < sizeof(archive_directories) / sizeof(archive_directories[0]); ++dir_index) {
-        snprintf(archive_dir, sizeof(archive_dir), "%s/", archive_directories[dir_index]);
-
-        DIR *ad = opendir(archive_dir);
+        DIR *ad = opendir(archive_directories[dir_index]);
         if (ad == NULL) continue;
 
         struct dirent *af;
         while ((af = readdir(ad))) {
             if (af->d_type == DT_REG) {
-                char *last_dot = strrchr(af->d_name, '.');
-                if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
+                const char *last_dot = strrchr(af->d_name, '.');
+                if (last_dot && strcasecmp(last_dot, ".zip") == 0) {
+                    char full_app_name[MAX_BUFFER_SIZE];
+                    snprintf(full_app_name, sizeof(full_app_name), "%s/%s", archive_directories[dir_index], af->d_name);
+
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    if (temp == NULL) {
+                    if (!temp) {
                         perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                         free(file_names);
                         closedir(ad);
                         return;
                     }
-                    file_names = temp;
 
-                    char full_app_name[MAX_BUFFER_SIZE];
-                    snprintf(full_app_name, sizeof(full_app_name), "%s%s", archive_dir, af->d_name);
+                    file_names = temp;
                     file_names[file_count] = strdup(full_app_name);
-                    if (file_names[file_count] == NULL) {
+                    if (!file_names[file_count++]) {
                         perror(lang.SYSTEM.FAIL_DUP_STRING);
                         free(file_names);
                         closedir(ad);
                         return;
                     }
-                    file_count++;
                 }
             }
         }
         closedir(ad);
     }
 
+    if (file_names == NULL) return;
     qsort(file_names, file_count, sizeof(char *), str_compare);
+
+    const char *prefix_map[][2] = {
+            {subdirs[0], "[%s-U]"},
+            {subdirs[1], "[%s-B]"},
+            {subdirs[2], "[%s-A]"}
+    };
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -124,41 +134,43 @@ void create_archive_items() {
 
     for (size_t i = 0; i < file_count; i++) {
         char *base_filename = file_names[i];
+        if (base_filename == NULL) continue;
+
+        const char *prefix = NULL;
+        for (size_t j = 0; j < sizeof(mount_points) / sizeof(mount_points[0]); ++j) {
+            for (size_t k = 0; k < sizeof(prefix_map) / sizeof(prefix_map[0]); ++k) {
+                char full_path[MAX_BUFFER_SIZE];
+                snprintf(full_path, sizeof(full_path), "%s%s", mount_points[j], prefix_map[k][0]);
+
+                if (strstr(base_filename, full_path)) {
+                    static char storage_prefix[MAX_BUFFER_SIZE];
+                    snprintf(storage_prefix, sizeof(storage_prefix), prefix_map[k][1],
+                             j == 0 ? "SD1" : (j == 1 ? "SD2" : "USB"));
+                    prefix = storage_prefix;
+                    break;
+                }
+            }
+
+            if (prefix) break;
+        }
+
+        if (!prefix) continue;
 
         static char archive_name[MAX_BUFFER_SIZE];
         snprintf(archive_name, sizeof(archive_name), "%s",
                  str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
 
-        static char install_check[MAX_BUFFER_SIZE];
-        snprintf(install_check, sizeof(install_check), "/mnt/mmc/MUOS/update/installed/%s.done",
-                 archive_name);
+        char install_check[MAX_BUFFER_SIZE];
+        snprintf(install_check, sizeof(install_check), "%s/muos/update/installed/%s.done",
+                 mount_points[0], archive_name);
 
         int is_installed = file_exist(install_check);
 
-        char *prefix;
-        if (strstr(base_filename, "/mnt/mmc/muos/update") != NULL) {
-            prefix = "[MUX]";
-        } else if (strstr(base_filename, "/mnt/mmc/backup") != NULL) {
-            prefix = "[SD1-BK]";
-        } else if (strstr(base_filename, "/mnt/mmc/") != NULL) {
-            prefix = "[SD1]";
-        } else if (strstr(base_filename, "/mnt/sdcard/backup") != NULL) {
-            prefix = "[SD2-BK]";
-        } else if (strstr(base_filename, "/mnt/sdcard/") != NULL) {
-            prefix = "[SD2]";
-        } else if (strstr(base_filename, "/mnt/usb/backup") != NULL) {
-            prefix = "[USB-BK]";
-        } else if (strstr(base_filename, "/mnt/usb/") != NULL) {
-            prefix = "[USB]";
-        } else {
-            continue;
-        }
-
-        static char archive_store[MAX_BUFFER_SIZE];
-        snprintf(archive_store, sizeof(archive_store), "%s %s", prefix, strip_ext(archive_name));
+        char archive_store[MAX_BUFFER_SIZE];
+        snprintf(archive_store, sizeof(archive_store), "%s %s", prefix, archive_name);
 
         char item_glyph[MAX_BUFFER_SIZE];
-        snprintf(item_glyph, sizeof(item_glyph), "%s", (is_installed) ? "installed" : "archive");
+        snprintf(item_glyph, sizeof(item_glyph), "%s", is_installed ? "installed" : "archive");
 
         ui_count++;
 
@@ -171,7 +183,7 @@ void create_archive_items() {
         apply_theme_list_item(&theme, ui_lblArchiveItem, archive_store, false, true);
 
         lv_obj_t *ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
-        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, (is_installed) ? lang.MUXARCHIVE.INSTALLED : "");
+        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, is_installed ? lang.MUXARCHIVE.INSTALLED : "");
 
         lv_obj_t *ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_module, items[i].extra_data);
@@ -183,6 +195,7 @@ void create_archive_items() {
 
         free(base_filename);
     }
+
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     free(file_names);
 }
@@ -303,13 +316,12 @@ void init_elements() {
     lv_label_set_text(ui_lblMessage, osd_message);
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.EXTRACT);
+    lv_label_set_text(ui_lblNavX, lang.GENERIC.REMOVE);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
             ui_lblNavC,
-            ui_lblNavXGlyph,
-            ui_lblNavX,
             ui_lblNavYGlyph,
             ui_lblNavY,
             ui_lblNavZGlyph,
@@ -320,18 +332,6 @@ void init_elements() {
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-    }
-
-    if (ui_count == 0) {
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
-    } else {
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
     }
 
     if (TEST_IMAGE) display_testing_message(ui_screen);
@@ -439,9 +439,9 @@ int main(int argc, char *argv[]) {
     nav_sound = init_nav_sound(mux_module);
     create_archive_items();
 
-    int sys_index = 0;
+    int arc_index = 0;
     if (file_exist(MUOS_IDX_LOAD)) {
-        sys_index = read_int_from_file(MUOS_IDX_LOAD, 1);
+        arc_index = read_int_from_file(MUOS_IDX_LOAD, 1);
         remove(MUOS_IDX_LOAD);
     }
 
@@ -484,14 +484,24 @@ int main(int argc, char *argv[]) {
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
 
+    int nav_hidden = 1;
     if (ui_count > 0) {
-        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(sys_index);
+        nav_hidden = 0;
+        if (arc_index > -1 && arc_index <= ui_count && current_item_index < ui_count) {
+            list_nav_next(arc_index);
         }
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXARCHIVE.NONE);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
+
+    struct nav_flag nav_e[] = {
+            {ui_lblNavA,      nav_hidden},
+            {ui_lblNavAGlyph, nav_hidden},
+            {ui_lblNavX,      nav_hidden},
+            {ui_lblNavXGlyph, nav_hidden}
+    };
+    set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
     refresh_screen(device.SCREEN.WAIT);
     load_kiosk(&kiosk);

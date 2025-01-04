@@ -2121,3 +2121,17 @@ struct screen_dimension get_device_dimensions() {
     LOG_INFO(mux_module, "Screen Output Dimensions: %dx%d", dims.WIDTH, dims.HEIGHT);
     return dims;
 }
+
+void set_nav_flags(struct nav_flag *nav_flags, size_t count) {
+    uint32_t flags[] = {LV_OBJ_FLAG_HIDDEN, LV_OBJ_FLAG_FLOATING};
+
+    for (size_t i = 0; i < count; ++i) {
+        for (size_t j = 0; j < sizeof(flags) / sizeof(flags[0]); ++j) {
+            if (nav_flags[i].visible) {
+                lv_obj_clear_flag(nav_flags[i].element, flags[j]);
+            } else {
+                lv_obj_add_flag(nav_flags[i].element, flags[j]);
+            }
+        }
+    }
+}
