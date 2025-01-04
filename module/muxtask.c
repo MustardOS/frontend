@@ -449,13 +449,16 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
+                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, TASK);
+
     load_font_text(basename(argv[0]), ui_screen);
     load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
     load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 
+    nav_sound = init_nav_sound(mux_module);
     create_task_items();
-    update_footer_nav_elements();
 
     int tin_index = 0;
     if (file_exist(MUOS_TIN_LOAD)) {
@@ -463,21 +466,8 @@ int main(int argc, char *argv[]) {
         remove(MUOS_TIN_LOAD);
     }
 
-    if (ui_count > 0) {
-        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(tin_index);
-        }
-    } else {
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXTASK.NONE);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-    }
-
     lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, TASK);
-
-    nav_sound = init_nav_sound(mux_module);
     struct dt_task_param dt_par;
     struct bat_task_param bat_par;
 
@@ -516,6 +506,23 @@ int main(int argc, char *argv[]) {
 
     lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
     lv_timer_ready(ui_refresh_timer);
+
+    int nav_hidden = 1;
+    if (ui_count > 0) {
+        nav_hidden = 0;
+        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) {
+            list_nav_next(tin_index);
+        }
+    } else {
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXTASK.NONE);
+        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    struct nav_flag nav_e[] = {
+            {ui_lblNavA,      nav_hidden},
+            {ui_lblNavAGlyph, nav_hidden}
+    };
+    set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
     refresh_screen(device.SCREEN.WAIT);
     load_kiosk(&kiosk);
