@@ -33,6 +33,14 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
+    // If theme does not support device resolution fallback to default
+    char theme_device_folder[MAX_BUFFER_SIZE];
+    snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
+    if (!directory_exist(theme_device_folder)) {
+        device->MUX.WIDTH = 640;
+        device->MUX.HEIGHT = 480;        
+    }
+
     if (load_scheme(STORAGE_THEME, mux_dimension, mux_name, scheme, sizeof(scheme))) {
         LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme)
     } else if (load_scheme(INTERNAL_THEME, mux_dimension, mux_name, scheme, sizeof(scheme))) {

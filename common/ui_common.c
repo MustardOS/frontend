@@ -11,6 +11,7 @@
 #include "ui_common.h"
 #include "log.h"
 
+lv_obj_t *ui_screen_container;
 lv_obj_t *ui_screen;
 lv_obj_t *ui_pnlWall;
 lv_obj_t *ui_imgWall;
@@ -67,11 +68,18 @@ lv_obj_t *ui_barProgressVolume;
 
 void ui_common_screen_init(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title) {
-    ui_screen = lv_obj_create(NULL);
+    ui_screen_container = lv_obj_create(NULL);
+    lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_text_font(ui_screen_container, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
+    
+    ui_screen = lv_obj_create(ui_screen_container);
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_screen, theme->SYSTEM.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_screen, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_width(ui_screen, device->MUX.WIDTH);
+    lv_obj_set_height(ui_screen, device->MUX.HEIGHT);
+    lv_obj_set_align(ui_screen, LV_ALIGN_CENTER);
 
     ui_pnlWall = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlWall, device->MUX.WIDTH);
@@ -625,7 +633,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_barProgressVolume, theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA,
                             LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    lv_disp_load_scr(ui_screen);
+    lv_disp_load_scr(ui_screen_container);
 }
 
 void ui_common_handle_bright() {
