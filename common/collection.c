@@ -8,6 +8,7 @@
 #include "collection.h"
 #include "common.h"
 #include "config.h"
+#include "device.h"
 #include "options.h"
 
 void reformat_display_name(char *display_name) {
@@ -136,6 +137,10 @@ void print_items(content_item *content_items, size_t count) {
                  "\nItem %zu\n\tfile_name=%s\n\tdisplay_name=%s\n\tsort_name=%s\n\tcontent_type=%d\n",
                  i, content_items[i].name, content_items[i].display_name, content_items[i].sort_name,
                  content_items[i].content_type);
-        write_text_to_file("/mnt/mmc/MUOS/log/collection.log", "a", CHAR, message);
+
+        char log_location[64];
+        snprintf(log_location, sizeof(log_location), "%s/MUOS/log/collection.log",
+                 device.STORAGE.ROM.MOUNT);
+        write_text_to_file(log_location, "a", CHAR, message);
     }
 }
