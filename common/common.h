@@ -81,6 +81,11 @@ struct pattern {
     size_t capacity;
 };
 
+struct nav_flag {
+    lv_obj_t *element;
+    int visible;
+};
+
 void refresh_screen(int wait);
 
 int file_exist(char *filename);
@@ -295,3 +300,5 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size);
 
 struct screen_dimension get_device_dimensions();
+
+void set_nav_flags(struct nav_flag *nav_flags, size_t count);
