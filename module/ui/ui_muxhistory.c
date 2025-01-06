@@ -1,4 +1,4 @@
-#include "ui_muxplore.h"
+#include "ui_muxhistory.h"
 
 lv_obj_t *ui_lblCounter;
 
@@ -15,7 +15,8 @@ void ui_init(lv_obj_t *ui_screen, struct theme_config *theme) {
     lv_obj_set_style_text_align(ui_lblCounter, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblCounter, lv_color_hex(theme->COUNTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblCounter, theme->COUNTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblCounter, lv_color_hex(theme->COUNTER.BORDER_COLOUR), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblCounter, lv_color_hex(theme->COUNTER.BORDER_COLOUR),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblCounter, theme->COUNTER.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_lblCounter, theme->COUNTER.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblCounter, theme->COUNTER.PADDING_AROUND, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -24,7 +25,6 @@ void ui_init(lv_obj_t *ui_screen, struct theme_config *theme) {
     lv_obj_set_style_pad_bottom(ui_lblCounter, theme->COUNTER.PADDING_AROUND, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_lblCounter, theme->COUNTER.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_y(ui_lblCounter, theme->COUNTER.PADDING_TOP);
-
     switch (theme->COUNTER.ALIGNMENT) {
         case 1:
             lv_obj_set_align(ui_lblCounter, LV_ALIGN_TOP_MID);

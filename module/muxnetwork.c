@@ -109,7 +109,7 @@ void show_help(lv_obj_t *element_focused) {
 }
 
 void can_scan_check() {
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
+    if (!strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true)) {
         if (is_network_connected()) {
             lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.DISCONNECT);
 
@@ -144,7 +144,7 @@ void get_current_ip() {
     static char net_message[MAX_BUFFER_SIZE];
 
     if (strlen(curr_ip) > 1) {
-        if (strcasecmp(curr_ip, "0.0.0.0") == 0) {
+        if (!strcasecmp(curr_ip, "0.0.0.0")) {
             can_scan_check();
         } else {
             if (config.NETWORK.TYPE) {
@@ -203,9 +203,9 @@ void save_network_config() {
     int idx_type = 0;
     int idx_scan = 0;
 
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) idx_enable = 1;
-    if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) idx_type = 1;
-    if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) idx_scan = 1;
+    if (!strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true)) idx_enable = 1;
+    if (!strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static)) idx_type = 1;
+    if (!strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true)) idx_scan = 1;
 
     write_text_to_file((RUN_GLOBAL_PATH "network/enabled"), "w", INT, idx_enable);
     write_text_to_file((RUN_GLOBAL_PATH "network/type"), "w", INT, idx_type);
@@ -328,7 +328,7 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_value, 1);
         nav_prev(ui_group_glyph, 1);
@@ -359,14 +359,13 @@ void handle_keyboard_press(void) {
     play_sound("navigate", nav_sound, 0, 0);
 
     const char *is_key;
-
     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
         is_key = lv_btnmatrix_get_btn_text(num_entry, key_curr);
     } else {
         is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     }
 
-    if (strcasecmp(is_key, "OK") == 0) {
+    if (!strcasecmp(is_key, OSK_DONE)) {
         key_show = 0;
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
@@ -397,11 +396,11 @@ void handle_keyboard_press(void) {
         lv_textarea_set_text(ui_txtEntry, "");
         lv_group_set_focus_cb(ui_group, NULL);
         lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-    } else if (strcmp(is_key, "ABC") == 0) {
+    } else if (!strcmp(is_key, OSK_UPPER)) {
         lv_btnmatrix_set_map(key_entry, key_upper_map);
-    } else if (strcmp(is_key, "!@#") == 0) {
+    } else if (!strcmp(is_key, OSK_CHAR)) {
         lv_btnmatrix_set_map(key_entry, key_special_map);
-    } else if (strcmp(is_key, "abc") == 0) {
+    } else if (!strcmp(is_key, OSK_LOWER)) {
         lv_btnmatrix_set_map(key_entry, key_lower_map);
     } else {
         if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
@@ -416,7 +415,7 @@ bool handle_navigate(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblEnable) {
         play_sound("navigate", nav_sound, 0, 0);
-        if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
+        if (!strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true)) {
             lv_label_set_text(ui_lblEnableValue, enabled_false);
             lv_obj_add_flag(ui_pnlIdentifier, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_pnlPassword, LV_OBJ_FLAG_HIDDEN);
@@ -444,7 +443,7 @@ bool handle_navigate(void) {
             }
             lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
-            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+            if (!strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static)) {
                 lv_obj_clear_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(ui_pnlSubnet, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(ui_pnlGateway, LV_OBJ_FLAG_HIDDEN);
@@ -455,7 +454,7 @@ bool handle_navigate(void) {
     } else if (element_focused == ui_lblScan) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("navigate", nav_sound, 0, 0);
-            if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) {
+            if (!strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true)) {
                 write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 0);
                 lv_label_set_text(ui_lblScanValue, enabled_false);
             } else {
@@ -470,7 +469,7 @@ bool handle_navigate(void) {
     } else if (element_focused == ui_lblType) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("navigate", nav_sound, 0, 0);
-            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+            if (!strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static)) {
                 lv_label_set_text(ui_lblTypeValue, type_dhcp);
                 ui_count = UI_DHCP;
                 lv_obj_add_flag(ui_pnlAddress, LV_OBJ_FLAG_HIDDEN);
@@ -519,9 +518,9 @@ void handle_confirm(void) {
             const char *cv_pass = lv_label_get_text(ui_lblPasswordValue);
 
             // wpa2 pass phrases are 8 to 63 bytes long, or 0 bytes for no password
-            int cv_pass_ok = (strlen(cv_pass) == 0 || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
+            int cv_pass_ok = (!strlen(cv_pass) || (strlen(cv_pass) >= 8 && strlen(cv_pass) <= 63));
 
-            if (strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static) == 0) {
+            if (!strcasecmp(lv_label_get_text(ui_lblTypeValue), type_static)) {
                 const char *cv_address = lv_label_get_text(ui_lblAddressValue);
                 const char *cv_subnet = lv_label_get_text(ui_lblSubnetValue);
                 const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue);
@@ -577,7 +576,7 @@ void handle_confirm(void) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("confirm", nav_sound, 0, 0);
             if (element_focused == ui_lblScan) {
-                if (strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true) == 0) {
+                if (!strcasecmp(lv_label_get_text(ui_lblScanValue), enabled_true)) {
                     write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 0);
                     lv_label_set_text(ui_lblScanValue, enabled_false);
                 } else {
@@ -604,7 +603,10 @@ void handle_confirm(void) {
 
                     key_show = 2;
                 }
+
                 lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_move_foreground(ui_pnlEntry);
+
                 if (element_focused == ui_lblPassword) {
                     lv_textarea_set_text(ui_txtEntry, "");
                 } else {
@@ -623,7 +625,7 @@ void handle_back(void) {
 
     save_network_config();
 
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false) == 0) {
+    if (!strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_false)) {
         write_text_to_file((RUN_GLOBAL_PATH "network/enabled"), "w", INT, 0);
         write_text_to_file((RUN_GLOBAL_PATH "network/interface"), "w", CHAR, device.NETWORK.INTERFACE);
         write_text_to_file((RUN_GLOBAL_PATH "network/type"), "w", INT, 0);
@@ -645,7 +647,7 @@ void handle_back(void) {
 }
 
 void handle_scan(void) {
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
+    if (!strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true)) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("confirm", nav_sound, 0, 1);
 
@@ -661,7 +663,7 @@ void handle_scan(void) {
 }
 
 void handle_profiles(void) {
-    if (strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true) == 0) {
+    if (!strcasecmp(lv_label_get_text(ui_lblEnableValue), enabled_true)) {
         play_sound("confirm", nav_sound, 0, 1);
 
         save_network_config();
@@ -841,13 +843,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -1102,13 +1099,13 @@ void direct_to_previous() {
         for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
             const char *u_data = lv_obj_get_user_data(ui_objects[i]);
 
-            if (strcasecmp(u_data, prev) == 0) {
+            if (!strcasecmp(u_data, prev)) {
                 text_hit = i;
                 break;
             }
         }
 
-        if (!config.NETWORK.TYPE && strcasecmp(prev, "connect") == 0) {
+        if (!config.NETWORK.TYPE && !strcasecmp(prev, "connect")) {
             list_nav_next(4);
             nav_moved = 1;
         } else {

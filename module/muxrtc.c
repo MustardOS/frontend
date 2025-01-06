@@ -83,12 +83,9 @@ void confirm_rtc_config() {
     int idx_notation = 0;
     char *notation_type = lv_label_get_text(ui_lblNotationValue);
 
-    if (strcmp(notation_type, notation[1]) == 0) {
-        idx_notation = 1;
-    }
+    if (!strcmp(notation_type, notation[1])) idx_notation = 1;
 
     write_text_to_file((RUN_GLOBAL_PATH "clock/notation"), "w", INT, idx_notation);
-
     run_exec((const char *[]) {"hwclock", "-w", NULL});
 }
 
@@ -195,11 +192,7 @@ int days_in_month(int year, int month) {
     int max_days;
     switch (month) {
         case 2:  // February
-            if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
-                max_days = 29;
-            } else {
-                max_days = 28;
-            }
+            max_days = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 ? 29 : 28;
             break;
         case 4:  // April
         case 6:  // June
@@ -302,7 +295,7 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_value, 1);
         nav_prev(ui_group_glyph, 1);
@@ -566,13 +559,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -667,7 +655,7 @@ void direct_to_previous() {
         for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
             const char *u_data = lv_obj_get_user_data(ui_objects[i]);
 
-            if (strcasecmp(u_data, prev) == 0) {
+            if (!strcasecmp(u_data, prev)) {
                 text_hit = i;
                 break;
             }
@@ -804,7 +792,6 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -813,7 +800,6 @@ int main(int argc, char *argv[]) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

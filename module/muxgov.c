@@ -245,7 +245,7 @@ void create_gov_items(const char *target) {
 
         lv_obj_t *ui_lblGovItemGlyph = lv_img_create(ui_pnlGov);
 
-        char *glyph = (strcasecmp(governors[i], assign_default) == 0) ? "default" : "governor";
+        char *glyph = !strcasecmp(governors[i], assign_default) ? "default" : "governor";
         apply_theme_list_glyph(&theme, ui_lblGovItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblGovItem);
@@ -269,7 +269,7 @@ void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
@@ -365,13 +365,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -611,7 +606,7 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblScreenMessage, lang.MUXGOV.NONE);
 
-    if (strcasecmp(rom_system, "none") == 0) {
+    if (!strcasecmp(rom_system, "none")) {
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
                  device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
@@ -711,14 +706,12 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .hold_handler = {
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

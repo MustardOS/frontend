@@ -12,6 +12,14 @@
 #define TIME_STRING_12 "%I:%M %p"
 #define TIME_STRING_24 "%H:%M"
 
+#define OSK_UPPER "ABC"
+#define OSK_LOWER "abc"
+#define OSK_CHAR  "!@#"
+#define OSK_DONE  "OK"
+
+#define CONTENT_PATH "/mnt/union/ROMS"
+#define OPTION_SKIP  "/tmp/skip_opt"
+
 #define INTERNAL_PATH  "/opt/muos/"
 #define INTERNAL_THEME INTERNAL_PATH "default/MUOS/theme/active"
 
@@ -19,6 +27,10 @@
 #define LAST_PLAY_FILE INTERNAL_PATH "config/lastplay.txt"
 
 #define RUN_PATH "/run/muos/"
+
+#define ADD_MODE_WORK "/tmp/add_mode_work"
+#define ADD_MODE_DONE "/tmp/add_mode_done"
+#define ADD_MODE_FROM "/tmp/add_mode_from"
 
 #define RUN_DEVICE_PATH  RUN_PATH "device/"
 #define RUN_GLOBAL_PATH  RUN_PATH "global/"
@@ -32,7 +44,7 @@
 #define INFO_COR_PATH RUN_STORAGE_PATH "info/core"
 #define INFO_CFG_PATH RUN_STORAGE_PATH "info/config"
 #define INFO_CNT_PATH RUN_STORAGE_PATH "info/controller"
-#define INFO_FAV_PATH RUN_STORAGE_PATH "info/favourite"
+#define INFO_COL_PATH RUN_STORAGE_PATH "info/collection"
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 
@@ -57,7 +69,7 @@
 #define STORE_LOC_NAME MUOS_INFO_PATH "/name"
 #define STORE_LOC_CONF MUOS_INFO_PATH "/config"
 #define STORE_LOC_CORE MUOS_INFO_PATH "/core"
-#define STORE_LOC_FAVS MUOS_INFO_PATH "/favourite"
+#define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action

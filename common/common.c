@@ -928,8 +928,6 @@ void play_sound(const char *sound, int enabled, int wait, int background) {
         return;
     }
 
-    LOG_SUCCESS(mux_module, "Playing Sound: %s", ns_file)
-
     if (background) {
         pid_t pid = fork();
         if (pid == 0) {
@@ -1301,7 +1299,7 @@ void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path) {
     img_obj = ui_imgWall;
 
     if (img_paths_count > 0) {
-        lv_img_set_src(ui_imgWall, img_paths[arc4random() % img_paths_count]);
+        lv_img_set_src(ui_imgWall, img_paths[random() % img_paths_count]);
     } else {
         lv_img_set_src(ui_imgWall, &ui_image_Nothing);
     }
@@ -2134,4 +2132,80 @@ void set_nav_flags(struct nav_flag *nav_flags, size_t count) {
             }
         }
     }
+}
+
+int16_t validate_int16(int value, const char *field) {
+    if (value < INT16_MIN || value > INT16_MAX) {
+        perror(lang.SYSTEM.FAIL_INT16_LENGTH);
+        return (value < INT16_MIN) ? INT16_MIN : INT16_MAX;
+    }
+    return (int16_t) value;
+}
+
+int at_base(char *sys_dir, char *base_name) {
+    char *base_dir = strrchr(sys_dir, '/');
+    return (base_dir && strcasecmp(base_dir + 1, base_name) == 0) ? 1 : 0;
+}
+
+int search_for_config(const char *base_path, const char *file_name, const char *system_name) {
+    struct dirent *entry;
+    char full_path[PATH_MAX];
+    char sub_path[PATH_MAX];
+    DIR *dir = opendir(base_path);
+
+    puts(base_path);
+
+    if (!dir) {
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        return 0;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
+
+        struct stat st;
+        if (stat(full_path, &st) == -1) {
+            perror(lang.SYSTEM.FAIL_STAT);
+            continue;
+        }
+
+        if (S_ISREG(st.st_mode)) {
+            if (strstr(entry->d_name, file_name)) {
+                char *line = read_line_from_file(full_path, 2);
+
+                if (line && strcmp(line, system_name) == 0) {
+                    closedir(dir);
+                    return 1;
+                }
+            }
+        } else if (S_ISDIR(st.st_mode)) {
+            DIR *sub_dir = opendir(full_path);
+            if (!sub_dir) {
+                perror(lang.SYSTEM.FAIL_DIR_OPEN);
+                continue;
+            }
+
+            struct dirent *sub_entry;
+            while ((sub_entry = readdir(sub_dir)) != NULL) {
+                if (strcmp(sub_entry->d_name, ".") == 0 || strcmp(sub_entry->d_name, "..") == 0) continue;
+                snprintf(sub_path, sizeof(sub_path), "%s/%s", full_path, sub_entry->d_name);
+
+                if (strstr(sub_entry->d_name, file_name) && access(sub_path, F_OK) == 0) {
+                    char *line = read_line_from_file(sub_path, 2);
+
+                    if (line && strcmp(line, system_name) == 0) {
+                        closedir(sub_dir);
+                        closedir(dir);
+                        return 1;
+                    }
+                }
+            }
+
+            closedir(sub_dir);
+        }
+    }
+
+    closedir(dir);
+    return 0;
 }

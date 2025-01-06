@@ -205,13 +205,15 @@ int parse_value(mini_group_t *group, char *line) {
     char *val = mini_strtok(ctx1, "", &ctx2);
     if (val) {
         size_t len = strlen(val);
-        if (val && len > 1 && val[len - 2] == '\r' && val[len - 1] == '\n') {
+        if (len > 1 && val[len - 2] == '\r' && val[len - 1] == '\n') {
             val[len - 2] = '\0'; /* Get rid of carriage return and line feed */
-        } else if (val && len > 0 && val[len - 1] == '\n') {
+        } else if (len > 0 && val[len - 1] == '\n') {
             val[len - 1] = '\0'; /* Get rid of new line */
         }
         return add_value(group, id, val);
     }
+
+    return 0;
 }
 
 void add_group(mini_t *mini, mini_group_t *grp) {
@@ -424,7 +426,7 @@ mini_t *mini_loadf_ex(FILE *f, int *err) {
 }
 
 int mini_save(const mini_t *mini, int flags) {
-    int result = MINI_OK;
+    int result;
 
     if (!mini->path || strlen(mini->path) < 1) {
         result = MINI_INVALID_PATH;

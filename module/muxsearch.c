@@ -69,7 +69,6 @@ lv_obj_t *overlay_image = NULL;
 lv_obj_t *kiosk_image = NULL;
 
 lv_obj_t *key_entry;
-lv_obj_t *num_entry;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -552,11 +551,8 @@ void list_nav_next(int steps) {
 void handle_keyboard_press(void) {
     play_sound("navigate", nav_sound, 0, 0);
 
-    const char *is_key;
-
-    is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
-
-    if (strcasecmp(is_key, "OK") == 0) {
+    const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
+    if (strcasecmp(is_key, OSK_DONE) == 0) {
         key_show = 0;
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
@@ -570,25 +566,23 @@ void handle_keyboard_press(void) {
         lv_textarea_set_text(ui_txtEntry, "");
         lv_group_set_focus_cb(ui_group, NULL);
         lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-    } else if (strcmp(is_key, "ABC") == 0) {
+    } else if (strcmp(is_key, OSK_UPPER) == 0) {
         lv_btnmatrix_set_map(key_entry, key_upper_map);
-    } else if (strcmp(is_key, "!@#") == 0) {
+    } else if (strcmp(is_key, OSK_CHAR) == 0) {
         lv_btnmatrix_set_map(key_entry, key_special_map);
-    } else if (strcmp(is_key, "abc") == 0) {
+    } else if (strcmp(is_key, OSK_LOWER) == 0) {
         lv_btnmatrix_set_map(key_entry, key_lower_map);
     } else {
         lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
     }
 }
 
-void handle_keyboard_close(void) {
-
-}
-
 void handle_confirm(void) {
     play_sound("confirm", nav_sound, 0, 1);
+
     if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
     if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
+
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblLookup) {
@@ -596,7 +590,10 @@ void handle_confirm(void) {
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
         key_show = 1;
+
         lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(ui_pnlEntry);
+
         lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
     } else if (element_focused == ui_lblSearchLocal || element_focused == ui_lblSearchGlobal) {
         if (strlen(lv_label_get_text(ui_lblLookupValue)) <= 2) {
@@ -637,11 +634,11 @@ void handle_confirm(void) {
     }
 }
 
-void random_select(void) {
+void handle_random_select() {
     if (msgbox_active || !ui_count) return;
 
-    uint32_t random_select = arc4random() % ui_count;
-    int selected_index = (int) (random_select & INT32_MAX);
+    uint32_t random_select = random() % ui_count;
+    int selected_index = (int) (random_select & INT16_MAX);
 
     !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
 }
@@ -650,7 +647,7 @@ void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
-    if (strcasecmp(get_last_dir(rom_dir), "ROMS") == 0 || kiosk.CONTENT.OPTION) load_mux("explore");
+    if (strlen(rom_dir) == 0 || strcasecmp(rom_dir, CONTENT_PATH) == 0 || kiosk.CONTENT.OPTION) load_mux("explore");
 
     mux_input_stop();
 }
@@ -676,7 +673,7 @@ void handle_b(void) {
     }
 
     if (key_show) {
-        close_osk(num_entry, ui_group, ui_txtEntry, ui_pnlEntry);
+        close_osk(key_entry, ui_group, ui_txtEntry, ui_pnlEntry);
         return;
     }
 
@@ -706,13 +703,11 @@ void handle_y(void) {
         return;
     }
 
-    // TODO: A way to directly add the item to favourites
+    // TODO: A way to directly add the item to a collection
 }
 
 void handle_help(void) {
-    if (msgbox_active || key_show) {
-        return;
-    }
+    if (msgbox_active || key_show) return;
 
     if (progress_onscreen == -1 && all_items[current_item_index].content_type != ROM) {
         play_sound("confirm", nav_sound, 0, 0);
@@ -785,18 +780,12 @@ void handle_right_hold(void) {
 }
 
 void handle_l1(void) {
-    if (key_show) {
-        return;
-    }
-
+    if (key_show) return;
     handle_list_nav_page_up();
 }
 
 void handle_r1(void) {
-    if (key_show) {
-        return;
-    }
-
+    if (key_show) return;
     handle_list_nav_page_down();
 }
 
@@ -839,13 +828,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -1164,7 +1148,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
                     [MUX_INPUT_L1] = handle_l1,
                     [MUX_INPUT_R1] = handle_r1,
-                    [MUX_INPUT_R2] = random_select,
+                    [MUX_INPUT_R2] = handle_random_select,
             },
             .hold_handler = {
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
@@ -1173,7 +1157,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
                     [MUX_INPUT_R1] = handle_r1,
-                    [MUX_INPUT_R2] = random_select,
+                    [MUX_INPUT_R2] = handle_random_select,
             },
             .combo = {
                     {

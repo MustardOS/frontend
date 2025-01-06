@@ -213,7 +213,7 @@ static void handle_combo(int num, mux_input_action action) {
 static int parse_type(struct json input) {
     int i;
     for (i = 0; i < MUX_INPUT_COUNT; ++i) {
-        if (input_name[i] && json_string_compare(input, input_name[i]) == 0) {
+        if (input_name[i] && !json_string_compare(input, input_name[i])) {
             break;
         }
     }

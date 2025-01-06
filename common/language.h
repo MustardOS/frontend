@@ -22,11 +22,13 @@ struct mux_lang {
         char FAIL_CREATE_FILE[MAX_BUFFER_SIZE];
         char FAIL_STAT[MAX_BUFFER_SIZE];
         char FAIL_PROC_PART[MAX_BUFFER_SIZE];
+        char FAIL_INT16_LENGTH[MAX_BUFFER_SIZE];
     } SYSTEM;
 
     struct {
         char BACK[MAX_BUFFER_SIZE];
         char CLEAR[MAX_BUFFER_SIZE];
+        char COLLECT[MAX_BUFFER_SIZE];
         char DIRECTORY[MAX_BUFFER_SIZE];
         char DISABLED[MAX_BUFFER_SIZE];
         char ENABLED[MAX_BUFFER_SIZE];
@@ -36,9 +38,13 @@ struct mux_lang {
         char KIOSK_DISABLE[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
         char LOAD[MAX_BUFFER_SIZE];
+        char LOADING[MAX_BUFFER_SIZE];
         char MIGRATE[MAX_BUFFER_SIZE];
-        char NO_CONTENT[MAX_BUFFER_SIZE];
+        char NEW[MAX_BUFFER_SIZE];
         char NO_HELP[MAX_BUFFER_SIZE];
+        char NO_INFO[MAX_BUFFER_SIZE];
+        char ADD[MAX_BUFFER_SIZE];
+        char ADD_COLLECT[MAX_BUFFER_SIZE];
         char OPEN[MAX_BUFFER_SIZE];
         char PREVIOUS[MAX_BUFFER_SIZE];
         char RECURSIVE[MAX_BUFFER_SIZE];
@@ -84,6 +90,16 @@ struct mux_lang {
     } MUXCHARGE;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        struct {
+            char REMOVE_FILE[MAX_BUFFER_SIZE];
+            char REMOVE_DIR[MAX_BUFFER_SIZE];
+            char LOAD[MAX_BUFFER_SIZE];
+        } ERROR;
+    } MUXCOLLECT;
+
+    struct {
         char CUSTOM[MAX_BUFFER_SIZE];
         char DATETIME[MAX_BUFFER_SIZE];
         char GENERAL[MAX_BUFFER_SIZE];
@@ -120,6 +136,16 @@ struct mux_lang {
         char NONE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
     } MUXGOV;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char REMOVE[MAX_BUFFER_SIZE];
+        struct {
+            char REMOVE[MAX_BUFFER_SIZE];
+            char LOAD[MAX_BUFFER_SIZE];
+        } ERROR;
+    } MUXHISTORY;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
@@ -185,7 +211,7 @@ struct mux_lang {
         char APP[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
-        char FAVOURITE[MAX_BUFFER_SIZE];
+        char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char EXPLORE[MAX_BUFFER_SIZE];
         char SHUTDOWN[MAX_BUFFER_SIZE];
@@ -198,7 +224,7 @@ struct mux_lang {
             char APP[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
             char INFO[MAX_BUFFER_SIZE];
-            char FAVOURITE[MAX_BUFFER_SIZE];
+            char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char EXPLORE[MAX_BUFFER_SIZE];
             char SHUTDOWN[MAX_BUFFER_SIZE];
@@ -296,23 +322,14 @@ struct mux_lang {
     } MUXPICKER;
 
     struct {
-        char LOADING[MAX_BUFFER_SIZE];
+        char TITLE[MAX_BUFFER_SIZE];
         char REFRESH[MAX_BUFFER_SIZE];
-        char INFO[MAX_BUFFER_SIZE];
-        char FAVOURITE[MAX_BUFFER_SIZE];
-        char ADD_FAVOURITE[MAX_BUFFER_SIZE];
-        char REM_FAVOURITE[MAX_BUFFER_SIZE];
+        char REFRESH_RUN[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
         struct {
-            char EXPLORE[MAX_BUFFER_SIZE];
-            char FAVOURITE[MAX_BUFFER_SIZE];
-            char HISTORY[MAX_BUFFER_SIZE];
-        } TITLE;
-        struct {
-            char FAVOURITE[MAX_BUFFER_SIZE];
+            char NO_FOLDER[MAX_BUFFER_SIZE];
             char NO_CORE[MAX_BUFFER_SIZE];
             char GENERAL[MAX_BUFFER_SIZE];
-            char NO_DIR[MAX_BUFFER_SIZE];
-            char NO_INFO[MAX_BUFFER_SIZE];
         } ERROR;
     } MUXPLORE;
 
@@ -395,7 +412,7 @@ struct mux_lang {
         char RA_SYSTEM[MAX_BUFFER_SIZE];
         char RA_CONFIG[MAX_BUFFER_SIZE];
         char ASSIGNED[MAX_BUFFER_SIZE];
-        char FAVOURITE[MAX_BUFFER_SIZE];
+        char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char MUSIC[MAX_BUFFER_SIZE];
         char SAVE[MAX_BUFFER_SIZE];
@@ -416,7 +433,7 @@ struct mux_lang {
             char RA_SYSTEM[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
             char ASSIGNED[MAX_BUFFER_SIZE];
-            char FAVOURITE[MAX_BUFFER_SIZE];
+            char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
             char SAVE[MAX_BUFFER_SIZE];
@@ -574,7 +591,7 @@ struct mux_lang {
             char TITLE[MAX_BUFFER_SIZE];
             char MENU[MAX_BUFFER_SIZE];
             char EXPLORE[MAX_BUFFER_SIZE];
-            char FAVOURITE[MAX_BUFFER_SIZE];
+            char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char LAST[MAX_BUFFER_SIZE];
             char RESUME[MAX_BUFFER_SIZE];

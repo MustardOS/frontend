@@ -78,7 +78,7 @@ void populate_languages() {
     while ((entry = readdir(dir)) != NULL) {
         if (entry->d_type == DT_REG) {
             size_t len = strlen(entry->d_name);
-            if (len > 5 && strcasecmp(entry->d_name + len - 5, ".json") == 0) {
+            if (len > 5 && !strcasecmp(entry->d_name + len - 5, ".json")) {
                 entry->d_name[len - 5] = '\0';
                 add_item(&items, &item_count, entry->d_name, TS(entry->d_name), "", ROM);
             }
@@ -93,7 +93,7 @@ void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             items[current_item_index].display_name);
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
@@ -150,7 +150,7 @@ void create_language_items() {
     if (ui_count > 0) {
         list_nav_next(0);
         lv_obj_update_layout(ui_pnlContent);
-    } else if (ui_count == 0) {
+    } else if (!ui_count) {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXLANGUAGE.NONE);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
@@ -202,13 +202,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -401,14 +396,12 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_A] = handle_confirm,
                     [MUX_INPUT_B] = handle_back,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .hold_handler = {
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

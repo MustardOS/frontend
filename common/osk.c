@@ -1,5 +1,6 @@
 #include "../lvgl/lvgl.h"
 #include "common.h"
+#include "options.h"
 #include "osk.h"
 
 int key_show;
@@ -13,27 +14,27 @@ const char *key_lower_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
                                "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "\n",
                                "a", "s", "d", "f", "g", "h", "j", "k", "l", "\n",
                                "§", "z", "x", "c", "v", "b", "n", "m", "§", "\n",
-                               "ABC", " ", "OK", NULL
+                               OSK_UPPER, " ", OSK_DONE, NULL
 };
 
 const char *key_upper_map[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "\n",
                                "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "\n",
                                "A", "S", "D", "F", "G", "H", "J", "K", "L", "\n",
                                "§", "Z", "X", "C", "V", "B", "N", "M", "§", "\n",
-                               "!@#", " ", "OK", NULL
+                               OSK_CHAR, " ", OSK_DONE, NULL
 };
 
 const char *key_special_map[] = {"!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "\n",
                                  "`", "~", "_", "-", "+", "=", "{", "}", "[", "]", "\n",
                                  "|", "\\", ":", ";", "\"", "'", "!", "@", "#", "\n",
                                  "§", "<", ">", ",", ".", "?", "/", "$", "§", "\n",
-                                 "abc", " ", "OK", NULL
+                                 OSK_LOWER, " ", OSK_DONE, NULL
 };
 
 const char *key_number_map[] = {"7", "8", "9", "\n",
                                 "4", "5", "6", "\n",
                                 "1", "2", "3", "\n",
-                                "0", ".", "OK", NULL};
+                                "0", ".", OSK_DONE, NULL};
 
 void osk_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);

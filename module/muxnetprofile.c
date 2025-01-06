@@ -84,7 +84,7 @@ void load_profile(char *name) {
     mini_t *net_profile = mini_try_load(profile_file);
 
     write_text_to_file((RUN_GLOBAL_PATH "network/type"), "w", INT,
-                       (strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static") == 0) ? 1 : 0);
+                       (!strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static")) ? 1 : 0);
 
     write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR,
                        mini_get_string(net_profile, "network", "ssid", ""));
@@ -120,17 +120,17 @@ int save_profile() {
     const char *p_gateway = read_text_from_file((RUN_GLOBAL_PATH "network/gateway"));
     const char *p_dns = read_text_from_file((RUN_GLOBAL_PATH "network/dns"));
 
-    if (!p_ssid || strlen(p_ssid) == 0) {
+    if (!p_ssid || !strlen(p_ssid)) {
         toast_message(lang.MUXNETPROFILE.INVALID_SSID, 1000, 1000);
         return 0;
     }
 
     int type = safe_atoi(p_type);
     if (type) {
-        if (!p_address || strlen(p_address) == 0 ||
-            !p_subnet || strlen(p_subnet) == 0 ||
-            !p_gateway || strlen(p_gateway) == 0 ||
-            !p_dns || strlen(p_dns) == 0) {
+        if (!p_address || !strlen(p_address) ||
+            !p_subnet || !strlen(p_subnet) ||
+            !p_gateway || !strlen(p_gateway) ||
+            !p_dns || !strlen(p_dns)) {
             toast_message(lang.MUXNETPROFILE.INVALID_NETWORK, 1000, 1000);
             refresh_screen(device.SCREEN.WAIT);
             return 0;
@@ -158,11 +158,11 @@ int save_profile() {
     mini_set_string(net_profile, "network", "ssid", p_ssid);
     mini_set_string(net_profile, "network", "pass", p_pass);
     mini_set_string(net_profile, "network", "scan", p_scan);
-    mini_set_string(net_profile, "network", "type", (type == 0) ? "dhcp" : "static");
-    mini_set_string(net_profile, "network", "address", (type == 0) ? "" : p_address);
-    mini_set_string(net_profile, "network", "subnet", (type == 0) ? "" : p_subnet);
-    mini_set_string(net_profile, "network", "gateway", (type == 0) ? "" : p_gateway);
-    mini_set_string(net_profile, "network", "dns", (type == 0) ? "" : p_dns);
+    mini_set_string(net_profile, "network", "type", (!type) ? "dhcp" : "static");
+    mini_set_string(net_profile, "network", "address", (!type) ? "" : p_address);
+    mini_set_string(net_profile, "network", "subnet", (!type) ? "" : p_subnet);
+    mini_set_string(net_profile, "network", "gateway", (!type) ? "" : p_gateway);
+    mini_set_string(net_profile, "network", "dns", (!type) ? "" : p_dns);
 
     mini_save(net_profile, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(net_profile);
@@ -175,7 +175,7 @@ void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
@@ -228,7 +228,7 @@ void create_profile_items() {
         while ((pf = readdir(pd))) {
             if (pf->d_type == DT_REG) {
                 char *last_dot = strrchr(pf->d_name, '.');
-                if (last_dot != NULL && strcasecmp(last_dot, ".ini") == 0) {
+                if (last_dot != NULL && !strcasecmp(last_dot, ".ini")) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
                     if (temp == NULL) {
                         perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
@@ -382,13 +382,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -593,14 +588,12 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_X] = handle_save,
                     [MUX_INPUT_Y] = handle_remove,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .hold_handler = {
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

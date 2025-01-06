@@ -180,22 +180,22 @@ void restore_tweak_options() {
 
     const char *volume_type = config.SETTINGS.ADVANCED.VOLUME;
     int volume_index = 0;
-    if (strcasecmp(volume_type, "previous") == 0) {
+    if (!strcasecmp(volume_type, "previous")) {
         volume_index = 0;
-    } else if (strcasecmp(volume_type, "quiet") == 0) {
+    } else if (!strcasecmp(volume_type, "quiet")) {
         volume_index = 1;
-    } else if (strcasecmp(volume_type, "loud") == 0) {
+    } else if (!strcasecmp(volume_type, "loud")) {
         volume_index = 2;
     }
     lv_dropdown_set_selected(ui_droVolume, volume_index);
 
     const char *brightness_type = config.SETTINGS.ADVANCED.BRIGHTNESS;
     int brightness_index = 0;
-    if (strcasecmp(brightness_type, "previous") == 0) {
+    if (!strcasecmp(brightness_type, "previous")) {
         brightness_index = 0;
-    } else if (strcasecmp(brightness_type, "low") == 0) {
+    } else if (!strcasecmp(brightness_type, "low")) {
         brightness_index = 1;
-    } else if (strcasecmp(brightness_type, "high") == 0) {
+    } else if (!strcasecmp(brightness_type, "high")) {
         brightness_index = 2;
     }
     lv_dropdown_set_selected(ui_droBrightness, brightness_index);
@@ -207,16 +207,16 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droRetroWait, config.SETTINGS.ADVANCED.RETROWAIT);
 
     const char *usb_type = config.SETTINGS.ADVANCED.USBFUNCTION;
-    if (strcasecmp(usb_type, "adb") == 0) {
+    if (!strcasecmp(usb_type, "adb")) {
         lv_dropdown_set_selected(ui_droUSBFunction, 1);
-    } else if (strcasecmp(usb_type, "mtp") == 0) {
+    } else if (!strcasecmp(usb_type, "mtp")) {
         lv_dropdown_set_selected(ui_droUSBFunction, 2);
     } else {
         lv_dropdown_set_selected(ui_droUSBFunction, 0);
     }
 
     const char *state_type = config.SETTINGS.ADVANCED.STATE;
-    if (strcasecmp(state_type, "freeze") == 0) {
+    if (!strcasecmp(state_type, "freeze")) {
         lv_dropdown_set_selected(ui_droState, 1);
     } else {
         lv_dropdown_set_selected(ui_droState, 0);
@@ -232,7 +232,7 @@ void restore_tweak_options() {
                            (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
 
     const char *card_type = config.SETTINGS.ADVANCED.CARDMODE;
-    if (strcasecmp(card_type, "noop") == 0) {
+    if (!strcasecmp(card_type, "noop")) {
         lv_dropdown_set_selected(ui_droCardMode, 1);
     } else {
         lv_dropdown_set_selected(ui_droCardMode, 0);
@@ -678,7 +678,7 @@ void init_navigation_groups() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = (!current_item_index) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_value, 1);
         nav_prev(ui_group_glyph, 1);
@@ -755,13 +755,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -875,7 +870,7 @@ void direct_to_previous() {
         for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
             const char *u_data = lv_obj_get_user_data(ui_objects[i]);
 
-            if (strcasecmp(u_data, prev) == 0) {
+            if (!strcasecmp(u_data, prev)) {
                 text_hit = i;
                 break;
             }
@@ -1012,7 +1007,6 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -1021,7 +1015,6 @@ int main(int argc, char *argv[]) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

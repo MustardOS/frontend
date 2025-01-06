@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <linux/limits.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/options.h"
@@ -119,7 +120,7 @@ void create_picker_items() {
             snprintf(filename, sizeof(filename), "%s/%s", picker_dir, tf->d_name);
 
             char *last_dot = strrchr(tf->d_name, '.');
-            if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
+            if (last_dot != NULL && !strcasecmp(last_dot, ".zip")) {
                 *last_dot = '\0';
 
                 add_item(&items, &item_count, tf->d_name, tf->d_name, "", ROM);
@@ -163,7 +164,7 @@ void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             items[current_item_index].display_name);
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
@@ -299,13 +300,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -441,13 +437,13 @@ int main(int argc, char *argv[]) {
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
-    if (strcasecmp(picker_type, "theme") == 0) {
+    if (!strcasecmp(picker_type, "theme")) {
         ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.THEME);
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.THEME);
-    } else if (strcasecmp(picker_type, "package/catalogue") == 0) {
+    } else if (!strcasecmp(picker_type, "package/catalogue")) {
         ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.CATALOGUE);
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CATALOGUE);
-    } else if (strcasecmp(picker_type, "package/config") == 0) {
+    } else if (!strcasecmp(picker_type, "package/config")) {
         ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.CONFIG);
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CONFIG);
     } else {
@@ -545,14 +541,12 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_B] = handle_back,
                     [MUX_INPUT_Y] = handle_save,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .hold_handler = {
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

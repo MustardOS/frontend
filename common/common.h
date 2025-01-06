@@ -302,3 +302,9 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 struct screen_dimension get_device_dimensions();
 
 void set_nav_flags(struct nav_flag *nav_flags, size_t count);
+
+int16_t validate_int16(int value, const char *field);
+
+int at_base(char *sys_dir, char *base_name);
+
+int search_for_config(const char *base_path, const char *file_name, const char *system_name);

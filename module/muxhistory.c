@@ -1,7 +1,7 @@
 #include "../lvgl/lvgl.h"
 #include "../lvgl/src/drivers/fbdev.h"
 #include "../lvgl/src/drivers/evdev.h"
-#include "ui/ui_muxplore.h"
+#include "ui/ui_muxhistory.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <fcntl.h>
@@ -25,11 +25,9 @@
 #include "../common/log.h"
 #include "../lookup/lookup.h"
 
-#define EXPLORE_DIR "/tmp/explore_dir"
-#define EXPLORE_NAME "/tmp/explore_name"
-
 struct theme_config theme;
 
+char *mux_module;
 static int js_fd;
 static int js_fd_sys;
 
@@ -41,7 +39,6 @@ int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 char *osd_message;
-char *mux_module;
 
 struct mux_lang lang;
 struct mux_config config;
@@ -66,13 +63,10 @@ lv_obj_t *ui_imgSplash;
 lv_obj_t *ui_viewport_objects[7];
 lv_obj_t *ui_mux_panels[7];
 
-char *prev_dir = "";
-char *sys_dir = CONTENT_PATH;
+int his_index = -1;
 
 int ui_count = 0;
-int sys_index = -1;
 int file_count = 0;
-int dir_count = 0;
 int current_item_index = 0;
 int first_open = 1;
 int nav_moved = 0;
@@ -80,7 +74,6 @@ int counter_fade = 0;
 int fade_timeout = 3;
 int starter_image = 0;
 int splash_valid = 0;
-int nogrid_file_exists = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
@@ -94,137 +87,45 @@ lv_timer_t *osd_timer;
 lv_timer_t *glyph_timer;
 lv_timer_t *ui_refresh_timer;
 
-void check_for_disable_grid_file(char *item_curr_dir) {
-    char no_grid_path[PATH_MAX];
-    snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
-    nogrid_file_exists = file_exist(no_grid_path);
-}
+char *load_content_governor(char *pointer) {
+    pointer = read_text_from_file(pointer);
 
-char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_lookup) {
-    const char *core_line = read_line_from_file(core_path, line_core) ?: "unknown";
-    const char *catalogue_line = read_line_from_file(core_path, line_catalogue) ?: "unknown";
-    const char *lookup_line = read_line_from_file(core_path, line_lookup) ?: "unknown";
+    char content_gov[MAX_BUFFER_SIZE];
+    snprintf(content_gov, sizeof(content_gov), "%s.gov",
+             strip_ext(pointer));
 
-    size_t required_size = snprintf(NULL, 0, "%s\n%s\n%s", core_line, catalogue_line, lookup_line) + 1;
-
-    char *b_core = malloc(required_size);
-    if (!b_core) {
-        LOG_ERROR(mux_module, "%s", lang.SYSTEM.FAIL_ALLOCATE_MEM)
-        return NULL;
-    }
-
-    snprintf(b_core, required_size, "%s\n%s\n%s", core_line, catalogue_line, lookup_line);
-    return b_core;
-}
-
-char *load_content_core(int force, int run_quit) {
-    char content_core[MAX_BUFFER_SIZE] = {0};
-    const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
-
-    if (!strcasecmp(last_subdir, strip_dir(CONTENT_PATH))) {
-        snprintf(content_core, sizeof(content_core), "%s/core.cfg", INFO_COR_PATH);
+    if (file_exist(content_gov)) {
+        LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
+        return read_text_from_file(content_gov);
     } else {
-        snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
-                 INFO_COR_PATH, last_subdir, strip_ext(items[current_item_index].name));
-
-        if (file_exist(content_core) && !force) {
-            LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core)
-
-            char *core = build_core(content_core, 2, 3, 4);
-            if (core) return core;
-
-            LOG_ERROR(mux_module, "Failed to build individual core")
-        }
-
-        snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg", INFO_COR_PATH, last_subdir);
+        snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov",
+                 INFO_COR_PATH, str_replace(get_last_subdir(pointer, '/', 6), get_last_dir(pointer), ""));
     }
 
-    if (file_exist(content_core) && !force) {
-        LOG_SUCCESS(mux_module, "Loading Global Core: %s", content_core)
+    snprintf(content_gov, sizeof(content_gov), "%s", str_replace(content_gov, "//", "/"));
 
-        char *core = build_core(content_core, 1, 2, 3);
-        if (core) return core;
-
-        LOG_ERROR(mux_module, "Failed to build global core")
-    }
-
-    load_assign(items[current_item_index].name, sys_dir, "none", force);
-    if (run_quit) safe_quit = 1;
-
-    LOG_INFO(mux_module, "No core detected")
-    return NULL;
-}
-
-char *load_content_governor(int force, int run_quit) {
-    char content_gov[MAX_BUFFER_SIZE] = {0};
-    const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
-
-    if (!strcasecmp(last_subdir, strip_dir(CONTENT_PATH))) {
-        snprintf(content_gov, sizeof(content_gov), "%s/core.gov", INFO_COR_PATH);
-    } else {
-        snprintf(content_gov, sizeof(content_gov), "%s/%s/%s.gov",
-                 INFO_COR_PATH, last_subdir, strip_ext(items[current_item_index].name));
-
-        if (file_exist(content_gov) && !force) {
-            LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
-            char *gov_text = read_text_from_file(content_gov);
-            if (gov_text) {
-                return gov_text;
-            } else {
-                LOG_ERROR(mux_module, "Failed to read individual governor")
-            }
-        }
-
-        snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov", INFO_COR_PATH, last_subdir);
-    }
-
-    if (file_exist(content_gov) && !force) {
+    if (file_exist(content_gov)) {
         LOG_SUCCESS(mux_module, "Loading Global Governor: %s", content_gov)
-        char *gov = read_text_from_file(content_gov);
-        if (gov) {
-            return gov;
-        } else {
-            LOG_ERROR(mux_module, "Failed to read global governor")
-        }
+        return read_text_from_file(content_gov);
     }
-
-    load_gov(items[current_item_index].name, sys_dir, "none", force);
-    if (run_quit) safe_quit = 1;
 
     LOG_INFO(mux_module, "No governor detected")
     return NULL;
 }
 
 char *load_content_description() {
-    char content_desc[MAX_BUFFER_SIZE];
-
-    char *content_label = items[current_item_index].name;
-    char *desc_name = strip_ext(items[current_item_index].name);
-
-    char core_desc[MAX_BUFFER_SIZE];
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s/%s.cfg",
-             INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4), strip_ext(content_label));
+    snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
+             INFO_HIS_PATH, strip_ext(items[current_item_index].name));
 
-    if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-                 INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4));
-        snprintf(core_desc, sizeof(core_desc), "%s",
-                 read_line_from_file(core_file, 2));
-    } else {
-        snprintf(core_desc, sizeof(core_desc), "%s",
-                 read_line_from_file(core_file, 3));
-    }
+    char pointer[MAX_BUFFER_SIZE];
+    snprintf(pointer, sizeof(pointer), "%s/%s",
+             INFO_COR_PATH, get_last_subdir(read_text_from_file(core_file), '/', 6));
 
-    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) return lang.GENERIC.NO_INFO;
-
-    if (items[current_item_index].content_type == FOLDER) {
-        snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
-                 INFO_CAT_PATH, content_label);
-    } else {
-        snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-                 INFO_CAT_PATH, core_desc, desc_name);
-    }
+    char content_desc[MAX_BUFFER_SIZE];
+    snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
+             INFO_CAT_PATH, read_line_from_file(pointer, 3),
+             strip_ext(read_line_from_file(pointer, 7)));
 
     if (file_exist(content_desc)) {
         snprintf(current_meta_text, sizeof(current_meta_text), "%s", format_meta_text(content_desc));
@@ -236,7 +137,7 @@ char *load_content_description() {
 }
 
 void update_file_counter() {
-    if ((ui_count > 0 && !file_count && config.VISUAL.COUNTERFOLDER) ||
+    if ((ui_count > 0 && file_count == 0 && config.VISUAL.COUNTERFOLDER) ||
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
         fade_timeout = 3;
         lv_obj_clear_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
@@ -259,8 +160,8 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
     int16_t column_mode = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE", 0);
     int16_t column_mode_alignment = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE_ALIGNMENT", 2);
 
-    lv_obj_set_width(ui_viewport_objects[0], !viewport_width ? LV_SIZE_CONTENT : viewport_width);
-    lv_obj_set_height(ui_viewport_objects[0], !viewport_height ? LV_SIZE_CONTENT : viewport_height);
+    lv_obj_set_width(ui_viewport_objects[0], viewport_width == 0 ? LV_SIZE_CONTENT : viewport_width);
+    lv_obj_set_height(ui_viewport_objects[0], viewport_height == 0 ? LV_SIZE_CONTENT : viewport_height);
     if (column_mode) {
         lv_obj_set_flex_flow(ui_viewport_objects[0], LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(ui_viewport_objects[0], LV_FLEX_ALIGN_CENTER, column_mode_alignment,
@@ -299,7 +200,10 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
 }
 
 void image_refresh(char *image_type) {
-    if (!strcasecmp(image_type, "box") && config.VISUAL.BOX_ART == 8) return;
+    if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
+        printf("BOX ART IS SET TO DISABLED\n");
+        return;
+    }
 
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
@@ -308,58 +212,36 @@ void image_refresh(char *image_type) {
     char image_path[MAX_BUFFER_SIZE];
     char core_artwork[MAX_BUFFER_SIZE];
 
-    char *content_label = items[current_item_index].name;
+    char core_file[MAX_BUFFER_SIZE];
+    snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
+             INFO_HIS_PATH, strip_ext(items[current_item_index].name));
 
-    if (!strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(CONTENT_PATH))) {
-        snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
-                 INFO_CAT_PATH, image_type, content_label);
-        snprintf(image_path, sizeof(image_path), "M:%s/Folder/%s/%s.png",
-                 INFO_CAT_PATH, image_type, content_label);
+    char pointer[MAX_BUFFER_SIZE];
+    snprintf(pointer, sizeof(pointer), "%s/%s",
+             INFO_COR_PATH, get_last_subdir(read_text_from_file(core_file), '/', 6));
+
+    char *h_core_artwork = read_line_from_file(pointer, 3);
+    if (strlen(h_core_artwork) <= 1) {
+        snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
+                 STORAGE_THEME, mux_dimension, image_type);
+        if (!file_exist(image)) {
+            snprintf(image, sizeof(image), "%s/image/none_%s.png",
+                     STORAGE_THEME, image_type);
+        }
+        snprintf(image_path, sizeof(image_path), "M:%s", image);
     } else {
-        char *file_name = strip_ext(items[current_item_index].name);
+        char *h_file_name = strip_ext(read_line_from_file(pointer, 7));
 
-        char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "%s/%s/%s.cfg",
-                 INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4), strip_ext(content_label));
-
-        LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
-
-        if (!file_exist(core_file)) {
-            snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-                     INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4));
-            snprintf(core_artwork, sizeof(core_artwork), "%s",
-                     read_line_from_file(core_file, 2));
-        } else {
-            snprintf(core_artwork, sizeof(core_artwork), "%s",
-                     read_line_from_file(core_file, 3));
-        }
-
-        if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
-            snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                     STORAGE_THEME, mux_dimension, image_type);
-            if (!file_exist(image)) {
-                snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         STORAGE_THEME, image_type);
-            }
-            snprintf(image_path, sizeof(image_path), "M:%s", image);
-        } else {
-            if (items[current_item_index].content_type == FOLDER) {
-                snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
-                         INFO_CAT_PATH, image_type, content_label);
-                snprintf(image_path, sizeof(image_path), "M:%s/Folder/%s/%s.png",
-                         INFO_CAT_PATH, image_type, content_label);
-            } else {
-                snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                         INFO_CAT_PATH, core_artwork, image_type, file_name);
-                snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                         INFO_CAT_PATH, core_artwork, image_type, file_name);
-            }
-        }
+        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
+                 INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
+        snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
+                 INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
     }
+    snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
 
-    if (!strcasecmp(image_type, "preview")) {
+    if (strcasecmp(image_type, "preview") == 0) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
             if (!file_exist(image)) {
                 snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
@@ -380,7 +262,7 @@ void image_refresh(char *image_type) {
                 snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), " ");
             }
         }
-    } else if (!strcasecmp(image_type, "splash")) {
+    } else if (strcasecmp(image_type, "splash") == 0) {
         if (strcasecmp(splash_image_previous_path, image) != 0) {
             if (!file_exist(image)) {
                 snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
@@ -433,37 +315,7 @@ void image_refresh(char *image_type) {
     }
 }
 
-int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
-    char full_path[PATH_MAX];
-    snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, dir_name);
-
-    struct dirent *entry;
-    DIR *dir = opendir(full_path);
-
-    if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
-        return 0;
-    }
-
-    load_skip_patterns();
-
-    int32_t dir_count = 0;
-    while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            if (entry->d_type == DT_DIR) {
-                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-                    dir_count++;
-                }
-            } else if (entry->d_type == DT_REG) {
-                dir_count++;
-            }
-        }
-    }
-    closedir(dir);
-    return dir_count;
-}
-
-void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
+void add_file_names(const char *base_dir, char ***file_names) {
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
 
@@ -478,20 +330,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
         if (!should_skip(entry->d_name)) {
             char full_path[PATH_MAX];
             snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
-            if (entry->d_type == DT_DIR) {
-                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-                    int item_dir_count = get_directory_item_count(base_dir, entry->d_name);
-
-                    if (config.VISUAL.FOLDEREMPTY || item_dir_count != 0) {
-                        char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
-                        snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
-
-                        *dir_names = (char **) realloc(*dir_names, (dir_count + 1) * sizeof(char *));
-                        (*dir_names)[dir_count] = subdir_path;
-                        (dir_count)++;
-                    }
-                }
-            } else if (entry->d_type == DT_REG) {
+            if (entry->d_type == DT_REG) {
                 char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
                 snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
@@ -506,47 +345,36 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
 }
 
 void gen_label(char *item_glyph, char *item_text) {
-    lv_obj_t *ui_pnlExplore = lv_obj_create(ui_pnlContent);
-    apply_theme_list_panel(&theme, &device, ui_pnlExplore);
+    lv_obj_t *ui_pnlHistory = lv_obj_create(ui_pnlContent);
+    apply_theme_list_panel(&theme, &device, ui_pnlHistory);
 
-    lv_obj_t *ui_lblExploreItem = lv_label_create(ui_pnlExplore);
-    apply_theme_list_item(&theme, ui_lblExploreItem, item_text, true, false);
+    lv_obj_t *ui_lblHistoryItem = lv_label_create(ui_pnlHistory);
+    apply_theme_list_item(&theme, ui_lblHistoryItem, item_text, true, false);
 
-    lv_obj_t *ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
-    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_module, item_glyph);
+    lv_obj_t *ui_lblHistoryItemGlyph = lv_img_create(ui_pnlHistory);
+    apply_theme_list_glyph(&theme, ui_lblHistoryItemGlyph, mux_module, item_glyph);
 
-    lv_group_add_obj(ui_group, ui_lblExploreItem);
-    lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
-    lv_group_add_obj(ui_group_panel, ui_pnlExplore);
+    lv_group_add_obj(ui_group, ui_lblHistoryItem);
+    lv_group_add_obj(ui_group_glyph, ui_lblHistoryItemGlyph);
+    lv_group_add_obj(ui_group_panel, ui_pnlHistory);
 
-    apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, ui_lblExploreItemGlyph, item_text);
-    apply_text_long_dot(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
+    apply_size_to_content(&theme, ui_pnlContent, ui_lblHistoryItem, ui_lblHistoryItemGlyph, item_text);
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lblHistoryItem, item_text);
 }
 
 char *get_glyph_name(size_t index) {
+    char history_file[PATH_MAX];
+    snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
+             INFO_HIS_PATH, strip_ext(items[index].name));
+
     const char *file_name = strip_ext(items[index].name);
-    const char *system_name = get_last_subdir(sys_dir, '/', 4);
+    const char *system_name = read_line_from_file(history_file, 2);
 
     if (search_for_config(INFO_COL_PATH, file_name, system_name)) return "collection";
-    if (search_for_config(INFO_HIS_PATH, file_name, system_name)) return "history";
-    return "rom";
+    return "history";
 }
 
 void gen_item(char **file_names, int file_count) {
-    char init_meta_dir[MAX_BUFFER_SIZE];
-
-    if (strcasecmp(sys_dir, strip_dir(CONTENT_PATH)) != 0) {
-        snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
-                 INFO_COR_PATH, strchr(sys_dir, '/') + strlen(CONTENT_PATH));
-    } else {
-        snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/", INFO_COR_PATH);
-    }
-
-    create_directories(init_meta_dir);
-
-    char name_lookup[MAX_BUFFER_SIZE];
-    snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
-
     char custom_lookup[MAX_BUFFER_SIZE];
     snprintf(custom_lookup, sizeof(custom_lookup), "%s/content.json",
              INFO_NAM_PATH);
@@ -558,8 +386,6 @@ void gen_item(char **file_names, int file_count) {
         fn_valid = 1;
         fn_json = json_parse(read_text_from_file(custom_lookup));
     }
-
-    int use_lookup = read_int_from_file(name_lookup, 3);
 
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
@@ -575,32 +401,19 @@ void gen_item(char **file_names, int file_count) {
         }
 
         if (!has_custom_name) {
-            const char *lookup_result = use_lookup ? lookup(stripped_name) : NULL;
+            const char *lookup_result = lookup(stripped_name);
             snprintf(fn_name, sizeof(fn_name), "%s",
                      lookup_result ? lookup_result : stripped_name);
         }
 
         char curr_item[MAX_BUFFER_SIZE];
-        snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
+        snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count++);
 
         content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ROM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
-
-        free(file_names[i]);
     }
 
-    sort_items(items, item_count);
-
-    char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_from_file(EXPLORE_NAME, 1) : NULL;
-    if (e_name_line) {
-        for (size_t i = 0; i < item_count; i++) {
-            if (!strcasecmp(items[i].name, e_name_line)) {
-                sys_index = (int) i;
-                remove(EXPLORE_NAME);
-                break;
-            }
-        }
-    }
+    sort_items_time(items, item_count);
 
     for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ROM) {
@@ -610,159 +423,49 @@ void gen_item(char **file_names, int file_count) {
     }
 }
 
-char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
-    char *friendly_folder_name = (char *) malloc(MAX_BUFFER_SIZE);
-    strcpy(friendly_folder_name, folder_name);
-    if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
-
-    struct json good_name_json = json_object_get(fn_json, folder_name);
-    if (json_exists(good_name_json)) json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
-
-    return friendly_folder_name;
-}
-
-void update_title(char *folder_path, int fn_valid, struct json fn_json) {
-    char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
-    adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
-
-    char title[PATH_MAX];
-    char *label = lang.MUXPLORE.TITLE;
-    char *module_type = "";
-    char *module_path = CONTENT_PATH;
-
-    if (!config.VISUAL.TITLEINCLUDEROOTDRIVE) module_type = "";
-
-    folder_path = str_replace(folder_path, "/", "");
-    module_path = str_replace(module_path, "/", "");
-
-    if (!strcasecmp(folder_path, module_path) && label[0] != '\0') {
-        snprintf(title, sizeof(title), "%s%s",
-                 label, module_type);
-    } else {
-        snprintf(title, sizeof(title), "%s%s",
-                 display_title, module_type);
-    }
-
-    lv_label_set_text(ui_lblTitle, title);
-    free(display_title);
-}
-
-void init_navigation_groups_grid() {
-    grid_mode_enabled = 1;
-    init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
-    create_grid_panel(&theme, (int) item_count);
-    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
-    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
-    for (size_t i = 0; i < item_count; i++) {
-        if (!strcasecmp(items[i].name, prev_dir)) sys_index = (int) i;
-
-        uint8_t col = i % theme.GRID.COLUMN_COUNT;
-        uint8_t row = i / theme.GRID.COLUMN_COUNT;
-
-        lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
-        lv_obj_t *cell_image = lv_img_create(cell_panel);
-        lv_obj_t *cell_label = lv_label_create(cell_panel);
-
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
-        char grid_image[MAX_BUFFER_SIZE];
-        if (!load_image_catalogue("Folder", strip_ext(items[i].name), "default", mux_dimension, "grid",
-                                  grid_image, sizeof(grid_image))) {
-            load_image_catalogue("Folder", strip_ext(items[i].name), "default", "", "grid",
-                                 grid_image, sizeof(grid_image));
-        }
-
-        char glyph_name_focused[MAX_BUFFER_SIZE];
-        snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
-
-        char grid_image_focused[MAX_BUFFER_SIZE];
-        if (!load_image_catalogue("Folder", glyph_name_focused, "default_focused", mux_dimension, "grid",
-                                  grid_image_focused, sizeof(grid_image_focused))) {
-            load_image_catalogue("Folder", glyph_name_focused, "default_focused", "", "grid",
-                                 grid_image_focused, sizeof(grid_image_focused));
-        }
-
-        create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
-                         grid_image, grid_image_focused, items[i].display_name);
-
-        lv_group_add_obj(ui_group, cell_label);
-        lv_group_add_obj(ui_group_glyph, cell_image);
-        lv_group_add_obj(ui_group_panel, cell_panel);
-    }
-}
-
-void create_content_items() {
-    char item_curr_dir[PATH_MAX];
-    snprintf(item_curr_dir, sizeof(item_curr_dir), "%s", sys_dir);
-
-    char **dir_names = NULL;
+void create_history_items() {
     char **file_names = NULL;
-    add_directory_and_file_names(item_curr_dir, &dir_names, &file_names);
 
-    int fn_valid = 0;
-    struct json fn_json = {0};
+    lv_label_set_text(ui_lblTitle, lang.MUXHISTORY.TITLE);
+    add_file_names(INFO_HIS_PATH, &file_names);
 
-    if (config.VISUAL.FRIENDLYFOLDER) {
-        char folder_name_file[MAX_BUFFER_SIZE];
-        snprintf(folder_name_file, sizeof(folder_name_file), "%s/folder.json",
-                 INFO_NAM_PATH);
-
-        if (json_valid(read_text_from_file(folder_name_file))) {
-            fn_valid = 1;
-            fn_json = json_parse(read_text_from_file(folder_name_file));
-        }
+    if (file_count > 0) {
+        gen_item(file_names, file_count);
+        lv_obj_update_layout(ui_pnlContent);
     }
 
-    update_title(item_curr_dir, fn_valid, fn_json);
+    free(file_names);
+}
 
-    if (dir_count > 0 || file_count > 0) {
-        for (int i = 0; i < dir_count; i++) {
-            content_item *new_item = NULL;
-            char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
-            new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, "", FOLDER);
-            adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
-            if (config.VISUAL.FOLDERITEMCOUNT) {
-                char display_name[MAX_BUFFER_SIZE];
-                snprintf(display_name, sizeof(display_name), "%s (%d)",
-                         new_item->display_name, get_directory_item_count(item_curr_dir, new_item->name));
-                new_item->display_name = strdup(display_name);
-            }
+void remove_from_history() {
+    char history_file[MAX_BUFFER_SIZE];
+    snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
+             INFO_HIS_PATH, strip_ext(items[current_item_index].name));
 
-            free(friendly_folder_name);
-            free(dir_names[i]);
-        }
-
-        sort_items(items, item_count);
-        check_for_disable_grid_file(item_curr_dir);
-
-        if (!nogrid_file_exists && theme.GRID.ENABLED && dir_count > 0 && !file_count) {
-            init_navigation_groups_grid();
-        } else {
-            for (int i = 0; i < dir_count; i++) {
-                gen_label("folder", items[i].display_name);
-                if (!strcasecmp(items[i].name, prev_dir)) sys_index = i;
-            }
-        }
-
-        gen_item(file_names, file_count);
-
-        if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
-
-        free(file_names);
-        free(dir_names);
+    if (file_exist(history_file)) {
+        remove(history_file);
+        load_mux("history");
+        mux_input_stop();
+    } else {
+        play_sound("error", nav_sound, 0, 0);
+        toast_message(lang.MUXHISTORY.ERROR.REMOVE, 1000, 1000);
     }
 }
 
-void add_to_collection(char *filename, const char *pointer) {
-    play_sound("confirm", nav_sound, 0, 1);
+void add_to_collection() {
+    char pointer_file[MAX_BUFFER_SIZE];
+    snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
+             items[current_item_index].name);
 
-    char new_content[MAX_BUFFER_SIZE];
-    snprintf(new_content, sizeof(new_content), "%s\n%s\n%s",
-             filename, pointer, get_last_subdir(sys_dir, '/', 4));
+    char history_content[MAX_BUFFER_SIZE];
+    snprintf(history_content, sizeof(history_content), "%s.cfg\n%s\n%s",
+             strip_ext(items[current_item_index].name),
+             read_line_from_file(pointer_file, 1),
+             read_line_from_file(pointer_file, 2)
+    );
 
-    write_text_to_file(ADD_MODE_WORK, "w", CHAR, new_content);
-    write_text_to_file(ADD_MODE_FROM, "w", CHAR, "explore");
+    write_text_to_file(ADD_MODE_WORK, "w", CHAR, history_content);
+    write_text_to_file(ADD_MODE_FROM, "w", CHAR, "history");
 
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
@@ -770,66 +473,38 @@ void add_to_collection(char *filename, const char *pointer) {
     mux_input_stop();
 }
 
-int load_content(int add_collection) {
-    char *assigned_core = load_content_core(0, 1);
-    if (assigned_core && strcasestr(assigned_core, "(null)")) return 0;
-    LOG_INFO(mux_module, "Assigned Core: %s", str_replace(assigned_core, "\n", "|"))
-
-    char *assigned_gov = load_content_governor(0, 1);
-    if (assigned_core && strcasestr(assigned_core, "(null)")) {
-        LOG_INFO(mux_module, "Using Default Governor: %s", device.CPU.DEFAULT)
-        assigned_gov = strdup(device.CPU.DEFAULT);
-    } else {
-        LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
-    }
-
-    const char *content_name = strip_ext(items[current_item_index].name);
-    const char *system_sub = get_last_subdir(sys_dir, '/', 4);
-
-    char content_loader_file[MAX_BUFFER_SIZE];
-    snprintf(content_loader_file, sizeof(content_loader_file), "%s/%s/%s.cfg",
-             INFO_COR_PATH,
-             system_sub,
+int load_content(const char *content_name) {
+    char pointer_file[MAX_BUFFER_SIZE];
+    snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
              content_name);
-    LOG_INFO(mux_module, "Configuration File: %s", content_loader_file)
 
-    if (!file_exist(content_loader_file)) {
-        char content_loader_data[MAX_BUFFER_SIZE];
-        snprintf(content_loader_data, sizeof(content_loader_data), "%s|%s|%s/|%s|%s",
-                 content_name,
-                 str_replace(assigned_core, "\n", "|"),
-                 CONTENT_PATH,
-                 system_sub,
-                 items[current_item_index].name);
+    char *assigned_gov = NULL;
+    assigned_gov = load_content_governor(pointer_file);
+    if (assigned_gov == NULL) assigned_gov = device.CPU.DEFAULT;
 
-        write_text_to_file(content_loader_file, "w", CHAR, str_replace(content_loader_data, "|", "\n"));
-        LOG_INFO(mux_module, "Configuration Data: %s", content_loader_data)
-    }
+    char cache_file[MAX_BUFFER_SIZE];
+    snprintf(cache_file, sizeof(cache_file), "%s",
+             read_line_from_file(pointer_file, 1));
 
-    if (file_exist(content_loader_file)) {
-        char pointer[MAX_BUFFER_SIZE];
-        char content[MAX_BUFFER_SIZE];
+    if (file_exist(cache_file)) {
+        char *assigned_core = read_line_from_file(cache_file, 2);
+        LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
+        LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
+        LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
 
-        snprintf(pointer, sizeof(pointer), "%s/%s/%s.cfg\n%s",
-                 INFO_COR_PATH, system_sub, content_name, system_sub);
+        char add_to_history[MAX_BUFFER_SIZE];
+        snprintf(add_to_history, sizeof(add_to_history), "%s/%s",
+                 INFO_HIS_PATH, content_name);
 
-        if (add_collection) {
-            snprintf(content, sizeof(content), "%s.cfg", content_name);
-            add_to_collection(content, pointer);
-        } else {
-            snprintf(content, sizeof(content), "%s/%s.cfg", INFO_HIS_PATH, content_name);
-            write_text_to_file(content, "w", CHAR, pointer);
-            write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_from_file(pointer, 1));
-            write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
-            write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(content_loader_file));
-        }
-
-        LOG_SUCCESS(mux_module, "Content Loaded Successfully")
-
+        write_text_to_file(add_to_history, "w", CHAR, read_text_from_file(pointer_file));
+        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_from_file(pointer_file, 1));
+        write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
+        write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(cache_file));
         return 1;
     }
 
-    toast_message(lang.MUXPLORE.ERROR.NO_CORE, 0, 0);
+    toast_message(lang.MUXHISTORY.ERROR.LOAD, 1000, 1000);
+    LOG_ERROR(mux_module, "Cache Pointer Not Found: %s", cache_file)
 
     return 0;
 }
@@ -840,22 +515,14 @@ void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             items[current_item_index].display_name);
-        current_item_index = (!current_item_index) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
 
-    if (grid_mode_enabled) {
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
-                                    current_item_index, ui_pnlGrid);
-    } else {
-        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                               current_item_index, ui_pnlContent);
-    }
-
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     image_refresh("box");
     nav_moved = 1;
@@ -877,16 +544,8 @@ void list_nav_next(int steps) {
         nav_next(ui_group_panel, 1);
     }
 
-    if (grid_mode_enabled) {
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
-                                    current_item_index, ui_pnlGrid);
-    } else {
-        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count,
-                               current_item_index, ui_pnlContent);
-    }
-
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     image_refresh("box");
     nav_moved = 1;
@@ -908,60 +567,38 @@ void handle_a() {
     }
 
     play_sound("confirm", nav_sound, 0, 1);
-    int load_message;
 
-    if (items[current_item_index].content_type == FOLDER) {
-        load_message = 1;
+    char f_content[MAX_BUFFER_SIZE];
+    snprintf(f_content, sizeof(f_content), "%s.cfg",
+             strip_ext(items[current_item_index].name));
 
-        char n_dir[MAX_BUFFER_SIZE];
-        snprintf(n_dir, sizeof(n_dir), "%s/%s",
-                 sys_dir, items[current_item_index].name);
+    if (load_content(f_content)) {
+        if (config.VISUAL.LAUNCHSPLASH) {
+            image_refresh("splash");
+            if (splash_valid) {
+                lv_obj_center(ui_imgSplash);
+                lv_obj_move_foreground(ui_imgSplash);
+                lv_obj_move_foreground(overlay_image);
 
-        write_text_to_file(EXPLORE_DIR, "w", CHAR, n_dir);
-        load_mux("explore");
-    } else {
-        load_message = 0;
-        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
-
-        if (load_content(0)) {
-            if (config.VISUAL.LAUNCHSPLASH) {
-                image_refresh("splash");
-                if (splash_valid) {
-                    lv_obj_center(ui_imgSplash);
-                    lv_obj_move_foreground(ui_imgSplash);
-                    lv_obj_move_foreground(overlay_image);
-
-                    for (unsigned int i = 0; i <= 255; i += 15) {
-                        lv_obj_set_style_img_opa(ui_imgSplash, i, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        refresh_screen(device.SCREEN.WAIT / 2);
-                    }
-
-                    sleep(1);
+                for (unsigned int i = 0; i <= 255; i += 15) {
+                    lv_obj_set_style_img_opa(ui_imgSplash, i, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    refresh_screen(device.SCREEN.WAIT / 2);
                 }
-            }
 
-            if (config.VISUAL.BLACKFADE) {
-                fade_to_black(ui_screen);
-            } else {
-                unload_image_animation();
+                sleep(1);
             }
-
-            load_mux("explore");
-        } else {
-            write_text_to_file(OPTION_SKIP, "w", CHAR, "");
-            load_mux("assign");
         }
+
+        if (config.VISUAL.BLACKFADE) {
+            fade_to_black(ui_screen);
+        } else {
+            unload_image_animation();
+        }
+    } else {
+        return;
     }
 
-    if (load_message) {
-        toast_message(lang.GENERIC.LOADING, 0, 0);
-        lv_obj_move_foreground(ui_pnlMessage);
-
-        // Refresh and add a small delay to actually display the message!
-        refresh_screen(device.SCREEN.WAIT);
-        usleep(256);
-    }
-
+    load_mux("history");
     mux_input_stop();
 }
 
@@ -975,92 +612,22 @@ void handle_b() {
     }
 
     play_sound("back", nav_sound, 0, 1);
-
-    if (sys_dir != NULL) {
-        if (at_base(sys_dir, "ROMS")) {
-            remove(EXPLORE_DIR);
-        } else {
-            char *base_dir = strrchr(sys_dir, '/');
-            if (base_dir != NULL) {
-                write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
-            }
-        }
-    }
-
-    load_mux(file_exist(EXPLORE_DIR) ? "explore" : "launcher");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
     mux_input_stop();
 }
 
 void handle_x() {
     if (msgbox_active || !ui_count) return;
 
-    toast_message(lang.MUXPLORE.REFRESH_RUN, 0, 0);
-    lv_obj_move_foreground(ui_pnlMessage);
-
-    run_exec((const char *[]) {INTERNAL_PATH "script/mount/union.sh", "restart", NULL});
-
-    write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
-    load_mux("explore");
-
-    mux_input_stop();
+    play_sound("confirm", nav_sound, 0, 1);
+    remove_from_history();
 }
 
 void handle_y() {
     if (msgbox_active || !ui_count) return;
 
-    if (items[current_item_index].content_type == FOLDER) {
-        play_sound("error", nav_sound, 0, 1);
-        toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, 1000, 1000);
-    } else {
-        if (load_content(1)) return;
-
-        play_sound("error", nav_sound, 0, 1);
-        toast_message(lang.MUXPLORE.ERROR.NO_CORE, 1000, 1000);
-    }
-}
-
-void handle_start() {
-    if (msgbox_active) return;
-
     play_sound("confirm", nav_sound, 0, 1);
-
-    remove(EXPLORE_DIR);
-    load_mux("explore");
-
-    mux_input_stop();
-}
-
-void handle_select() {
-    if (msgbox_active || !ui_count) return;
-
-    play_sound("confirm", nav_sound, 0, 1);
-
-    write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
-
-    if (strcasecmp(get_last_dir(sys_dir), "ROMS") != 0) {
-        if (kiosk.CONTENT.OPTION) {
-            if (!kiosk.CONTENT.SEARCH) {
-                load_mux("search");
-                mux_input_stop();
-            }
-            return;
-        }
-
-        write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
-        write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
-
-        load_content_core(1, 0);
-        if (safe_quit) mux_input_stop();
-
-        load_content_governor(1, 0);
-        if (safe_quit) mux_input_stop();
-
-        load_mux("option");
-    } else {
-        if (!kiosk.CONTENT.SEARCH) load_mux("search");
-    }
-
-    mux_input_stop();
+    add_to_collection();
 }
 
 void handle_menu() {
@@ -1151,7 +718,7 @@ void init_elements() {
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.OPEN);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
-    lv_label_set_text(ui_lblNavX, lang.MUXPLORE.REFRESH);
+    lv_label_set_text(ui_lblNavX, lang.GENERIC.REMOVE);
     lv_label_set_text(ui_lblNavY, lang.GENERIC.COLLECT);
     lv_label_set_text(ui_lblNavMenu, lang.GENERIC.INFO);
 
@@ -1246,30 +813,22 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    puts(read_text_from_file(MUOS_IDX_LOAD));
-
     struct screen_dimension dims = get_device_dimensions();
 
-    char *cmd_help = "\nmuOS Extras - Content List\nUsage: %s <-di>\n\nOptions:\n"
-                     "\t-d Content directory\n"
+    char *cmd_help = "\nmuOS Extras - Content History\nUsage: %s <-i>\n\nOptions:\n"
                      "\t-i Index of content to skip to\n\n";
 
     int opt;
-    while ((opt = getopt(argc, argv, "d:i:")) != -1) {
-        switch (opt) {
-            case 'd':
-                sys_dir = !strlen(optarg) ? CONTENT_PATH : optarg;
-                break;
-            case 'i':
-                sys_index = safe_atoi(optarg);
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
+    while ((opt = getopt(argc, argv, "i:")) != -1) {
+        if (opt == 'i') {
+            his_index = safe_atoi(optarg);
+        } else {
+            fprintf(stderr, cmd_help, argv[0]);
+            return 1;
         }
     }
 
-    if (sys_index == -1) {
+    if (his_index == -1) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
@@ -1349,18 +908,7 @@ int main(int argc, char *argv[]) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    if (file_exist(MUOS_PDI_LOAD)) prev_dir = read_text_from_file(MUOS_PDI_LOAD);
-
-    create_content_items();
-    ui_count = dir_count > 0 || file_count > 0 ? (int) lv_group_get_obj_count(ui_group) : 0;
-
-    if (sys_dir != NULL) {
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
-    }
-
-    if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "ROMS") == 0) {
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
-    }
+    create_history_items();
 
     js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (js_fd < 0) {
@@ -1386,15 +934,14 @@ int main(int argc, char *argv[]) {
     int nav_vis = 0;
     if (ui_count > 0) {
         nav_vis = 1;
-        if (sys_index > -1 && sys_index <= ui_count &&
-            current_item_index < ui_count) {
-            list_nav_next(sys_index);
+        if (his_index > -1 && his_index <= ui_count && current_item_index < ui_count) {
+            list_nav_next(his_index);
         } else {
             image_refresh("box");
         }
         nav_moved = 1;
     } else {
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXPLORE.NONE);
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXHISTORY.NONE);
         lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
@@ -1427,16 +974,13 @@ int main(int argc, char *argv[]) {
             .system_fd = js_fd_sys,
             .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
-                          (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
+            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
-                    [MUX_INPUT_SELECT] = handle_select,
-                    [MUX_INPUT_START] = handle_start,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,

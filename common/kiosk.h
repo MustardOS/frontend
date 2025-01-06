@@ -41,7 +41,7 @@ struct mux_kiosk {
         int16_t APPLICATION;
         int16_t CONFIGURATION;
         int16_t EXPLORE;
-        int16_t FAVOURITE;
+        int16_t COLLECTION;
         int16_t HISTORY;
         int16_t INFORMATION;
     } LAUNCH;

@@ -321,7 +321,6 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     lv_obj_set_width(ui_lblScreenMessage, device->MUX.WIDTH);
     lv_obj_set_height(ui_lblScreenMessage, 28);
     lv_obj_set_align(ui_lblScreenMessage, LV_ALIGN_LEFT_MID);
-    lv_label_set_text(ui_lblScreenMessage, lang->GENERIC.NO_CONTENT);
     lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     lv_obj_set_scroll_dir(ui_lblScreenMessage, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(theme->LIST_DEFAULT.TEXT),

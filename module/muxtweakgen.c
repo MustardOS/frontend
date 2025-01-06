@@ -138,7 +138,7 @@ void restore_tweak_options() {
     const char *startup_type = config.SETTINGS.GENERAL.STARTUP;
     if (strcasecmp(startup_type, "explore") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 1);
-    } else if (strcasecmp(startup_type, "favourite") == 0) {
+    } else if (strcasecmp(startup_type, "collection") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 2);
     } else if (strcasecmp(startup_type, "history") == 0) {
         lv_dropdown_set_selected(ui_droStartup, 3);
@@ -161,7 +161,7 @@ void save_tweak_options() {
             idx_startup = "explore";
             break;
         case 2:
-            idx_startup = "favourite";
+            idx_startup = "collection";
             break;
         case 3:
             idx_startup = "history";
@@ -331,7 +331,7 @@ void init_navigation_groups() {
             lang.GENERIC.DISABLED, lang.MUXTWEAKGEN.MUSIC.GLOBAL, lang.MUXTWEAKGEN.MUSIC.THEME}, 3);
     add_drop_down_options(ui_droSound, disabled_enabled, 2);
     add_drop_down_options(ui_droStartup, (char *[]) {
-            lang.MUXTWEAKGEN.STARTUP.MENU, lang.MUXTWEAKGEN.STARTUP.EXPLORE, lang.MUXTWEAKGEN.STARTUP.FAVOURITE,
+            lang.MUXTWEAKGEN.STARTUP.MENU, lang.MUXTWEAKGEN.STARTUP.EXPLORE, lang.MUXTWEAKGEN.STARTUP.COLLECTION,
             lang.MUXTWEAKGEN.STARTUP.HISTORY, lang.MUXTWEAKGEN.STARTUP.LAST, lang.MUXTWEAKGEN.STARTUP.RESUME}, 6);
 
     ui_group = lv_group_create();
@@ -458,13 +458,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -711,7 +706,6 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
@@ -720,7 +714,6 @@ int main(int argc, char *argv[]) {
             .hold_handler = {
                     [MUX_INPUT_DPAD_LEFT] = handle_option_prev,
                     [MUX_INPUT_DPAD_RIGHT] = handle_option_next,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

@@ -39,10 +39,12 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->SYSTEM.FAIL_CREATE_FILE, "Failed to create file");
     GENERIC_FIELD(lang->SYSTEM.FAIL_STAT, "Failed to retrieve file or directory status");
     GENERIC_FIELD(lang->SYSTEM.FAIL_PROC_PART, "Failed to open /proc/partitions");
+    GENERIC_FIELD(lang->SYSTEM.FAIL_INT16_LENGTH, "Failed to use int16 - out of range");
 
     // generic common language
     GENERIC_FIELD(lang->GENERIC.BACK, "Back");
     GENERIC_FIELD(lang->GENERIC.CLEAR, "Clear");
+    GENERIC_FIELD(lang->GENERIC.COLLECT, "Collect");
     GENERIC_FIELD(lang->GENERIC.DIRECTORY, "Directory");
     GENERIC_FIELD(lang->GENERIC.DISABLED, "Disabled");
     GENERIC_FIELD(lang->GENERIC.ENABLED, "Enabled");
@@ -52,9 +54,13 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.KIOSK_DISABLE, "This is disabled in kiosk mode!");
     GENERIC_FIELD(lang->GENERIC.LAUNCH, "Launch");
     GENERIC_FIELD(lang->GENERIC.LOAD, "Load");
+    GENERIC_FIELD(lang->GENERIC.LOADING, "Loading…");
     GENERIC_FIELD(lang->GENERIC.MIGRATE, "Migrate to SD2");
-    GENERIC_FIELD(lang->GENERIC.NO_CONTENT, "No Content Found…");
+    GENERIC_FIELD(lang->GENERIC.NEW, "New");
     GENERIC_FIELD(lang->GENERIC.NO_HELP, "No Help Information Found");
+    GENERIC_FIELD(lang->GENERIC.NO_INFO, "No Information Found");
+    GENERIC_FIELD(lang->GENERIC.ADD, "Add");
+    GENERIC_FIELD(lang->GENERIC.ADD_COLLECT, "Added to Collection");
     GENERIC_FIELD(lang->GENERIC.OPEN, "Open");
     GENERIC_FIELD(lang->GENERIC.PREVIOUS, "Previous");
     GENERIC_FIELD(lang->GENERIC.RECURSIVE, "Recursive");
@@ -94,13 +100,20 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCHARGE.POWER, "Press POWER button to continue booting…");
     SPECIFIC_FIELD(lang->MUXCHARGE.VOLTAGE, "Voltage");
 
+    // muxcollect
+    SPECIFIC_FIELD(lang->MUXCOLLECT.TITLE, "COLLECTIONS");
+    SPECIFIC_FIELD(lang->MUXCOLLECT.NONE, "Nothing Saved Yet…");
+    SPECIFIC_FIELD(lang->MUXCOLLECT.ERROR.REMOVE_FILE, "Error removing from Collections");
+    SPECIFIC_FIELD(lang->MUXCOLLECT.ERROR.REMOVE_DIR, "Collection folder is not empty");
+    SPECIFIC_FIELD(lang->MUXCOLLECT.ERROR.LOAD, "Error loading content file");
+
     // muxconfig
+    SPECIFIC_FIELD(lang->MUXCONFIG.TITLE, "CONFIGURATION");
     SPECIFIC_FIELD(lang->MUXCONFIG.CUSTOM, "Customisation");
     SPECIFIC_FIELD(lang->MUXCONFIG.DATETIME, "Date and Time");
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage");
-    SPECIFIC_FIELD(lang->MUXCONFIG.TITLE, "CONFIGURATION");
     SPECIFIC_FIELD(lang->MUXCONFIG.WEB, "Web Services");
     SPECIFIC_FIELD(lang->MUXCONFIG.WIFI, "Wi-Fi Network");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your muOS setup with user created packages");
@@ -112,18 +125,18 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
 
     // muxcustom
+    SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CATALOGUE, "Catalogue Sets");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "muOS Themes");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
 
     // muxgov
+    SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
     SPECIFIC_FIELD(lang->MUXGOV.HELP, "Configure CPU governors to dynamically adjust the CPU frequency and help balance power consumption and performance");
     SPECIFIC_FIELD(lang->MUXGOV.NONE, "No Governors Found…");
-    SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
 
     // muxhdmi
     SPECIFIC_FIELD(lang->MUXHDMI.TITLE, "HDMI SETTINGS");
@@ -150,6 +163,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.COLOUR.RANGE, "Set the color range of RGB colour space");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.COLOUR.SPACE, "Set the color space, such as RGB or YUV");
 
+    // muxhistory
+    SPECIFIC_FIELD(lang->MUXHISTORY.TITLE, "HISTORY");
+    SPECIFIC_FIELD(lang->MUXHISTORY.NONE, "Nothing Played Yet…");
+    SPECIFIC_FIELD(lang->MUXHISTORY.REMOVE, "Removed from History");
+    SPECIFIC_FIELD(lang->MUXHISTORY.ERROR.REMOVE, "Error removing from History");
+    SPECIFIC_FIELD(lang->MUXHISTORY.ERROR.LOAD, "Error loading content file");
+
     // muxinfo
     SPECIFIC_FIELD(lang->MUXINFO.TITLE, "INFORMATION");
     SPECIFIC_FIELD(lang->MUXINFO.SYSTEM, "System Details");
@@ -172,7 +192,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLAUNCH.APP, "Applications");
     SPECIFIC_FIELD(lang->MUXLAUNCH.CONFIG, "Configuration");
     SPECIFIC_FIELD(lang->MUXLAUNCH.INFO, "Information");
-    SPECIFIC_FIELD(lang->MUXLAUNCH.FAVOURITE, "Favourites");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.COLLECTION, "Collection");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXLAUNCH.EXPLORE, "Explore Content");
     SPECIFIC_FIELD(lang->MUXLAUNCH.SHUTDOWN, "Shutdown");
@@ -182,7 +202,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.APP, "Various applications can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.CONFIG, "Various configurations can be changed here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.INFO, "Various information can be found and launched here");
-    SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.FAVOURITE, "Content marked as favourite can be found and launched here");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.COLLECTION, "Content added to collections can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.HISTORY, "Content previously launched can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.EXPLORE, "Content on storage devices (SD1/SD2/USB) can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.SHUTDOWN, "Shut down your device safely");
@@ -266,20 +286,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.THEME, "No Theme Packages Found");
 
     // muxplore
-    SPECIFIC_FIELD(lang->MUXPLORE.LOADING, "Loading…");
+    SPECIFIC_FIELD(lang->MUXPLORE.TITLE, "EXPLORE");
     SPECIFIC_FIELD(lang->MUXPLORE.REFRESH, "Refresh");
-    SPECIFIC_FIELD(lang->MUXPLORE.INFO, "Info");
-    SPECIFIC_FIELD(lang->MUXPLORE.FAVOURITE, "Favourite");
-    SPECIFIC_FIELD(lang->MUXPLORE.ADD_FAVOURITE, "Added to Favourites");
-    SPECIFIC_FIELD(lang->MUXPLORE.REM_FAVOURITE, "Removed from Favourites");
-    SPECIFIC_FIELD(lang->MUXPLORE.TITLE.EXPLORE, "EXPLORE");
-    SPECIFIC_FIELD(lang->MUXPLORE.TITLE.FAVOURITE, "FAVOURITES");
-    SPECIFIC_FIELD(lang->MUXPLORE.TITLE.HISTORY, "HISTORY");
-    SPECIFIC_FIELD(lang->MUXPLORE.ERROR.FAVOURITE, "Error adding to Favourites");
-    SPECIFIC_FIELD(lang->MUXPLORE.ERROR.NO_CORE, "Could not load content - No core is associated");
-    SPECIFIC_FIELD(lang->MUXPLORE.ERROR.GENERAL, "Could not load content!");
-    SPECIFIC_FIELD(lang->MUXPLORE.ERROR.NO_DIR, "Directories cannot be added to Favourites");
-    SPECIFIC_FIELD(lang->MUXPLORE.ERROR.NO_INFO, "No Information Found");
+    SPECIFIC_FIELD(lang->MUXPLORE.REFRESH_RUN, "Refreshing…");
+    SPECIFIC_FIELD(lang->MUXPLORE.NONE, "No Content Found…");
+    SPECIFIC_FIELD(lang->MUXPLORE.ERROR.NO_FOLDER, "Folders cannot be added to collections");
+    SPECIFIC_FIELD(lang->MUXPLORE.ERROR.NO_CORE, "Content is not associated with system or core");
+    SPECIFIC_FIELD(lang->MUXPLORE.ERROR.GENERAL, "Could not load content");
 
     // muxpower
     SPECIFIC_FIELD(lang->MUXPOWER.TITLE, "POWER SETTINGS");
@@ -348,7 +361,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.RA_SYSTEM, "RetroArch System");
     SPECIFIC_FIELD(lang->MUXSTORAGE.RA_CONFIG, "RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXSTORAGE.ASSIGNED, "Assigned Core/Governor System");
-    SPECIFIC_FIELD(lang->MUXSTORAGE.FAVOURITE, "Favourites");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.COLLECTION, "Content Collection");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXSTORAGE.MUSIC, "Background Music");
     SPECIFIC_FIELD(lang->MUXSTORAGE.SAVE, "Save Games + Save States");
@@ -366,7 +379,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.RA_SYSTEM, "Location of the RetroArch emulator");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.RA_CONFIG, "Location of RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.ASSIGNED, "Location of assigned core and governor configurations");
-    SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.FAVOURITE, "Location of favourites");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.COLLECTION, "Location of content collection");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.HISTORY, "Location of history");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.MUSIC, "Location of background music");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.SAVE, "Location of save states and files");
@@ -494,7 +507,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.TITLE, "Device Startup");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.MENU, "Main Menu");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.EXPLORE, "Content Explorer");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.FAVOURITE, "Favourites");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.COLLECTION, "Content Collection");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.LAST, "Last Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.RESUME, "Resume Game");

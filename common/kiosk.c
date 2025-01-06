@@ -39,7 +39,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->LAUNCH.APPLICATION, "launch/application", 0)
     CFG_INT_FIELD(kiosk->LAUNCH.CONFIGURATION, "launch/config", 0)
     CFG_INT_FIELD(kiosk->LAUNCH.EXPLORE, "launch/explore", 0)
-    CFG_INT_FIELD(kiosk->LAUNCH.FAVOURITE, "launch/favourite", 0)
+    CFG_INT_FIELD(kiosk->LAUNCH.COLLECTION, "launch/collection", 0)
     CFG_INT_FIELD(kiosk->LAUNCH.HISTORY, "launch/history", 0)
     CFG_INT_FIELD(kiosk->LAUNCH.INFORMATION, "launch/info", 0)
 

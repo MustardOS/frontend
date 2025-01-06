@@ -77,7 +77,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblRetroArch,        lang.MUXSTORAGE.HELP.RA_SYSTEM},
             {ui_lblConfig,           lang.MUXSTORAGE.HELP.RA_CONFIG},
             {ui_lblCore,             lang.MUXSTORAGE.HELP.ASSIGNED},
-            {ui_lblFavourite,        lang.MUXSTORAGE.HELP.FAVOURITE},
+            {ui_lblCollection,       lang.MUXSTORAGE.HELP.COLLECTION},
             {ui_lblHistory,          lang.MUXSTORAGE.HELP.HISTORY},
             {ui_lblMusic,            lang.MUXSTORAGE.HELP.MUSIC},
             {ui_lblSave,             lang.MUXSTORAGE.HELP.SAVE},
@@ -130,8 +130,8 @@ void update_storage_info() {
     storage_path[5].path_suffix = STORE_LOC_CORE;
     storage_path[5].ui_label = ui_lblCoreValue;
 
-    storage_path[6].path_suffix = STORE_LOC_FAVS;
-    storage_path[6].ui_label = ui_lblFavouriteValue;
+    storage_path[6].path_suffix = STORE_LOC_COLL;
+    storage_path[6].ui_label = ui_lblCollectionValue;
 
     storage_path[7].path_suffix = STORE_LOC_HIST;
     storage_path[7].ui_label = ui_lblHistoryValue;
@@ -187,7 +187,7 @@ void init_navigation_groups() {
             ui_pnlRetroArch,
             ui_pnlConfig,
             ui_pnlCore,
-            ui_pnlFavourite,
+            ui_pnlCollection,
             ui_pnlHistory,
             ui_pnlMusic,
             ui_pnlSave,
@@ -207,7 +207,7 @@ void init_navigation_groups() {
     ui_objects[3] = ui_lblRetroArch;
     ui_objects[4] = ui_lblConfig;
     ui_objects[5] = ui_lblCore;
-    ui_objects[6] = ui_lblFavourite;
+    ui_objects[6] = ui_lblCollection;
     ui_objects[7] = ui_lblHistory;
     ui_objects[8] = ui_lblMusic;
     ui_objects[9] = ui_lblSave;
@@ -227,7 +227,7 @@ void init_navigation_groups() {
             ui_lblRetroArchValue,
             ui_lblConfigValue,
             ui_lblCoreValue,
-            ui_lblFavouriteValue,
+            ui_lblCollectionValue,
             ui_lblHistoryValue,
             ui_lblMusicValue,
             ui_lblSaveValue,
@@ -248,7 +248,7 @@ void init_navigation_groups() {
             ui_icoRetroArch,
             ui_icoConfig,
             ui_icoCore,
-            ui_icoFavourite,
+            ui_icoCollection,
             ui_icoHistory,
             ui_icoMusic,
             ui_icoSave,
@@ -268,7 +268,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(&theme, &device, ui_pnlRetroArch);
     apply_theme_list_panel(&theme, &device, ui_pnlConfig);
     apply_theme_list_panel(&theme, &device, ui_pnlCore);
-    apply_theme_list_panel(&theme, &device, ui_pnlFavourite);
+    apply_theme_list_panel(&theme, &device, ui_pnlCollection);
     apply_theme_list_panel(&theme, &device, ui_pnlHistory);
     apply_theme_list_panel(&theme, &device, ui_pnlMusic);
     apply_theme_list_panel(&theme, &device, ui_pnlSave);
@@ -287,7 +287,7 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblRetroArch, lang.MUXSTORAGE.RA_SYSTEM, false, true);
     apply_theme_list_item(&theme, ui_lblConfig, lang.MUXSTORAGE.RA_CONFIG, false, true);
     apply_theme_list_item(&theme, ui_lblCore, lang.MUXSTORAGE.ASSIGNED, false, true);
-    apply_theme_list_item(&theme, ui_lblFavourite, lang.MUXSTORAGE.FAVOURITE, false, true);
+    apply_theme_list_item(&theme, ui_lblCollection, lang.MUXSTORAGE.COLLECTION, false, true);
     apply_theme_list_item(&theme, ui_lblHistory, lang.MUXSTORAGE.HISTORY, false, true);
     apply_theme_list_item(&theme, ui_lblMusic, lang.MUXSTORAGE.MUSIC, false, true);
     apply_theme_list_item(&theme, ui_lblSave, lang.MUXSTORAGE.SAVE, false, true);
@@ -306,7 +306,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoRetroArch, mux_module, "retroarch");
     apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
     apply_theme_list_glyph(&theme, ui_icoCore, mux_module, "core");
-    apply_theme_list_glyph(&theme, ui_icoFavourite, mux_module, "favourite");
+    apply_theme_list_glyph(&theme, ui_icoCollection, mux_module, "collection");
     apply_theme_list_glyph(&theme, ui_icoHistory, mux_module, "history");
     apply_theme_list_glyph(&theme, ui_icoMusic, mux_module, "music");
     apply_theme_list_glyph(&theme, ui_icoSave, mux_module, "save");
@@ -325,7 +325,7 @@ void init_navigation_groups() {
     apply_theme_list_value(&theme, ui_lblRetroArchValue, "");
     apply_theme_list_value(&theme, ui_lblConfigValue, "");
     apply_theme_list_value(&theme, ui_lblCoreValue, "");
-    apply_theme_list_value(&theme, ui_lblFavouriteValue, "");
+    apply_theme_list_value(&theme, ui_lblCollectionValue, "");
     apply_theme_list_value(&theme, ui_lblHistoryValue, "");
     apply_theme_list_value(&theme, ui_lblMusicValue, "");
     apply_theme_list_value(&theme, ui_lblSaveValue, "");
@@ -449,13 +449,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -493,7 +488,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblRetroArch, "retroarch");
     lv_obj_set_user_data(ui_lblConfig, "config");
     lv_obj_set_user_data(ui_lblCore, "core");
-    lv_obj_set_user_data(ui_lblFavourite, "favourite");
+    lv_obj_set_user_data(ui_lblCollection, "collection");
     lv_obj_set_user_data(ui_lblHistory, "history");
     lv_obj_set_user_data(ui_lblMusic, "music");
     lv_obj_set_user_data(ui_lblSave, "save");
@@ -685,14 +680,12 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_B] = handle_back,
                     [MUX_INPUT_X] = handle_confirm,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .hold_handler = {
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,

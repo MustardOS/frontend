@@ -15,6 +15,7 @@
 #include "config.h"
 #include "controller_profile.h"
 #include "device.h"
+#include "log.h"
 
 struct controller_profile controller;
 
@@ -453,7 +454,7 @@ char *get_unique_controller_id(int usb_fd) {
 
     // Get joystick name
     if (ioctl(usb_fd, JSIOCGNAME(sizeof(name)), name) < 0) {
-        perror("Failed to get joystick name");
+        LOG_ERROR("input", "Error reading joystick name")
         strncpy(name, "Unknown", sizeof(name));
     }
 
@@ -475,7 +476,7 @@ char *get_unique_controller_id(int usb_fd) {
         }
         fclose(vendor_file);
     } else {
-        perror("Failed to read vendor ID");
+        LOG_ERROR("input", "Failed to read vendor ID")
     }
 
     // Get Product ID
@@ -486,7 +487,7 @@ char *get_unique_controller_id(int usb_fd) {
         }
         fclose(product_file);
     } else {
-        perror("Failed to read product ID");
+        LOG_ERROR("input", "Failed to read product ID")
     }
 
     // Build the unique ID
@@ -502,7 +503,7 @@ void *joystick_handler(void *arg) {
     // Open USB controller
     int usb_fd = open("/dev/input/js1", O_RDONLY);
     if (usb_fd == -1) {
-        perror("Failed to open USB controller");
+        LOG_WARN("input", "Failed to open USB controller")
         return NULL;
     }
 
@@ -513,13 +514,13 @@ void *joystick_handler(void *arg) {
         // Read joystick event
         ssize_t bytes = read(usb_fd, &js, sizeof(struct js_event));
         if (bytes != sizeof(struct js_event)) {
-            perror("Error reading joystick event");
+            LOG_ERROR("input", "Error reading joystick event")
             break;
         }
 
         if (js.type & JS_EVENT_INIT) continue;
+        LOG_INFO("input", "Joystick Event: type=%u number=%u value=%d", js.type, js.number, js.value)
 
-        printf("Joystick Event: type=%u, number=%u, value=%d\n", js.type, js.number, js.value);
         if (js.type & JS_EVENT_BUTTON) {
             if (js.number  == controller.BUTTON.UP || js.number  == controller.BUTTON.DOWN || 
                     js.number  == controller.BUTTON.LEFT || js.number  == controller.BUTTON.RIGHT ){
@@ -538,7 +539,7 @@ void *joystick_handler(void *arg) {
 void mux_input_task(const mux_input_options *opts) {
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
-        perror("mux_input_task: epoll_create1");
+        LOG_ERROR("input", "epoll create error")
         return;
     }
 
@@ -547,14 +548,14 @@ void mux_input_task(const mux_input_options *opts) {
     epoll_event[0].events = EPOLLIN;
     epoll_event[0].data.fd = opts->gamepad_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->gamepad_fd, &epoll_event[0]) == -1) {
-        perror("mux_input_task: epoll_ctl(gamepad_fd)");
+        LOG_ERROR("input", "epoll control error - gamepad_fd")
         return;
     }
 
     epoll_event[0].events = EPOLLIN;
     epoll_event[0].data.fd = opts->system_fd;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->system_fd, &epoll_event[0]) == -1) {
-        perror("mux_input_task: epoll_ctl(system_fd)");
+        LOG_ERROR("input", "epoll control error - system_fd")
         return;
     }
 
@@ -585,7 +586,7 @@ void mux_input_task(const mux_input_options *opts) {
         int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT,
                                     held ? timeout_hold : timeout);
         if (num_events == -1) {
-            perror("mux_input_task: epoll_wait");
+            LOG_ERROR("input", "epoll wait error")
             continue;
         }
 
@@ -593,7 +594,7 @@ void mux_input_task(const mux_input_options *opts) {
         for (int i = 0; i < num_events; ++i) {
             struct input_event event;
             if (read(epoll_event[i].data.fd, &event, sizeof(event)) == -1) {
-                perror("mux_input_task: read");
+                LOG_ERROR("input", "epoll event read error")
                 continue;
             }
 

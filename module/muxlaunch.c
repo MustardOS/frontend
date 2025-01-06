@@ -61,7 +61,7 @@ lv_obj_t *ui_mux_panels[5];
 void show_help(lv_obj_t *element_focused) {
     char *help_messages[UI_COUNT] = {
             lang.MUXLAUNCH.HELP.EXPLORE,
-            lang.MUXLAUNCH.HELP.FAVOURITE,
+            lang.MUXLAUNCH.HELP.COLLECTION,
             lang.MUXLAUNCH.HELP.HISTORY,
             lang.MUXLAUNCH.HELP.APP,
             lang.MUXLAUNCH.HELP.INFO,
@@ -138,11 +138,11 @@ void init_navigation_groups() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    char *item_labels[] = {lang.MUXLAUNCH.EXPLORE, lang.MUXLAUNCH.FAVOURITE, lang.MUXLAUNCH.HISTORY,
+    char *item_labels[] = {lang.MUXLAUNCH.EXPLORE, lang.MUXLAUNCH.COLLECTION, lang.MUXLAUNCH.HISTORY,
                            lang.MUXLAUNCH.APP, lang.MUXLAUNCH.INFO, lang.MUXLAUNCH.CONFIG,
                            lang.MUXLAUNCH.REBOOT, lang.MUXLAUNCH.SHUTDOWN};
 
-    char *glyph_names[] = {"explore", "favourite", "history",
+    char *glyph_names[] = {"explore", "collection", "history",
                            "apps", "info", "config",
                            "reboot", "shutdown"};
 
@@ -151,7 +151,7 @@ void init_navigation_groups() {
     } else {
         lv_obj_t *ui_objects_panel[] = {
                 ui_pnlExplore,
-                ui_pnlFavourites,
+                ui_pnlCollection,
                 ui_pnlHistory,
                 ui_pnlApps,
                 ui_pnlInfo,
@@ -161,7 +161,7 @@ void init_navigation_groups() {
         };
 
         ui_objects[0] = ui_lblContent;
-        ui_objects[1] = ui_lblFavourites;
+        ui_objects[1] = ui_lblCollection;
         ui_objects[2] = ui_lblHistory;
         ui_objects[3] = ui_lblApps;
         ui_objects[4] = ui_lblInfo;
@@ -170,7 +170,7 @@ void init_navigation_groups() {
         ui_objects[7] = ui_lblShutdown;
 
         ui_icons[0] = ui_icoContent;
-        ui_icons[1] = ui_icoFavourites;
+        ui_icons[1] = ui_icoCollection;
         ui_icons[2] = ui_icoHistory;
         ui_icons[3] = ui_icoApps;
         ui_icons[4] = ui_icoInfo;
@@ -201,7 +201,7 @@ void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
+        current_item_index = !current_item_index ? UI_COUNT - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
@@ -252,28 +252,28 @@ void handle_a() {
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {"explore",   "explore_alt", &kiosk.LAUNCH.EXPLORE},
-            {"favourite", "favourite",   &kiosk.LAUNCH.FAVOURITE},
-            {"history",   "history",     &kiosk.LAUNCH.HISTORY},
-            {"apps",      "app",         &kiosk.LAUNCH.APPLICATION},
-            {"info",      "info",        &kiosk.LAUNCH.INFORMATION},
-            {"config",    "config",      &kiosk.LAUNCH.CONFIGURATION},
-            {"reboot",    "reboot",   NULL},
-            {"shutdown",  "shutdown", NULL}
+            {"explore",    "explore",    &kiosk.LAUNCH.EXPLORE},
+            {"collection", "collection", &kiosk.LAUNCH.COLLECTION},
+            {"history",    "history",    &kiosk.LAUNCH.HISTORY},
+            {"apps",       "app",        &kiosk.LAUNCH.APPLICATION},
+            {"info",       "info",       &kiosk.LAUNCH.INFORMATION},
+            {"config",     "config",     &kiosk.LAUNCH.CONFIGURATION},
+            {"reboot",     "reboot",   NULL},
+            {"shutdown",   "shutdown", NULL}
     }; /* Leave the reboot and shutdown as null as they should always be available! */
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     const char *u_data = lv_obj_get_user_data(element_focused);
 
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
-        if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
+        if (!strcasecmp(u_data, elements[i].glyph_name)) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 toast_message(kiosk_nope(), 1000, 1000);
                 return;
             }
 
-            const char *sound = (strcmp(elements[i].mux_name, "reboot") == 0) ? "reboot" :
-                                (strcmp(elements[i].mux_name, "shutdown") == 0) ? "shutdown" :
+            const char *sound = !strcmp(elements[i].mux_name, "reboot") ? "reboot" :
+                                !strcmp(elements[i].mux_name, "shutdown") ? "shutdown" :
                                 "confirm";
 
             play_sound(sound, nav_sound, 0, 1);
@@ -312,15 +312,15 @@ void handle_up() {
     if (msgbox_active) return;
 
     // Grid mode.  Wrap on Row.
-    if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) == 0) {
+    if (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE == 4 && !get_grid_column_index(current_item_index)) {
         list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ?
                       grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
         // Horizontal Navigation with 2 rows of 4 items.  Wrap on Row.
     } else if (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE == 4 &&
-               (current_item_index == 0 || current_item_index == 4)) {
+               (!current_item_index || current_item_index == 4)) {
         list_nav_next(3);
         // Horizontal Navigation with 3 item first row, 5 item second row.  Wrap on Row.
-    } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 0) {
+    } else if (theme.MISC.NAVIGATION_TYPE == 5 && !current_item_index) {
         list_nav_next(2);
     } else if (theme.MISC.NAVIGATION_TYPE == 5 && current_item_index == 3) {
         list_nav_next(4);
@@ -478,7 +478,7 @@ void handle_kiosk_purge() {
                 "launch/application",
                 "launch/config",
                 "launch/explore",
-                "launch/favourite",
+                "launch/collection",
                 "launch/history",
                 "launch/info",
                 "setting/advanced",
@@ -531,13 +531,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -572,7 +567,7 @@ void init_elements() {
     }
 
     lv_obj_set_user_data(ui_lblContent, "explore");
-    lv_obj_set_user_data(ui_lblFavourites, "favourite");
+    lv_obj_set_user_data(ui_lblCollection, "collection");
     lv_obj_set_user_data(ui_lblHistory, "history");
     lv_obj_set_user_data(ui_lblApps, "apps");
     lv_obj_set_user_data(ui_lblInfo, "info");
@@ -638,7 +633,7 @@ void direct_to_previous() {
         for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
             const char *u_data = lv_obj_get_user_data(ui_objects[i]);
 
-            if (strcasecmp(u_data, prev) == 0) {
+            if (!strcasecmp(u_data, prev)) {
                 text_hit = i;
                 break;
             }
@@ -777,7 +772,6 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
             },
             .hold_handler = {
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
             },

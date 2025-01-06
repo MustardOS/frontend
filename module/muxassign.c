@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include <linux/limits.h>
 #include "../common/log.h"
 #include "../common/common.h"
 #include "../common/options.h"
@@ -176,14 +177,19 @@ void assign_core_single(char *core_dir, const char *core, char *sys, char *rom, 
         return;
     }
 
-    LOG_INFO(mux_module, "Single Assign Content:\n\t%s\n\t%s\n\t%s\n\t%d\n\t%s\n\t%s\n\t%s",
-             strip_ext(rom), core, str_trim(sys), cache,
+    char rom_content[MAX_BUFFER_SIZE]; /* tis a confusing one! */
+    snprintf(rom_content, sizeof(rom_content), "%s\n%s\n%s\n%d\n%s\n%s\n%s",
+             strip_ext(rom),
+             core,
+             str_trim(sys),
+             cache,
              str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
-             get_last_subdir(rom_dir, '/', 4), rom)
-    fprintf(rom_file, "%s\n%s\n%s\n%d\n%s\n%s\n%s\n",
-            strip_ext(rom), core, str_trim(sys), cache,
-            str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
-            get_last_subdir(rom_dir, '/', 4), rom);
+             get_last_subdir(rom_dir, '/', 4),
+             rom
+    );
+
+    LOG_INFO(mux_module, "Assign Content (Single): %s", str_replace(rom_content, "\n", "|"))
+    fprintf(rom_file, "%s", rom_content);
     fclose(rom_file);
 }
 
@@ -203,7 +209,15 @@ void assign_core_directory(char *core_dir, const char *core, char *sys, int cach
         return;
     }
 
-    fprintf(file, "%s\n%s\n%d\n", core, str_trim(sys), cache);
+    char content[MAX_BUFFER_SIZE];
+    snprintf(content, sizeof(content), "%s\n%s\n%d",
+             core,
+             str_trim(sys),
+             cache
+    );
+
+    LOG_INFO(mux_module, "Assign Content (Directory): %s", str_replace(content, "\n", "|"))
+    fprintf(file, "%s", content);
     fclose(file);
 }
 
@@ -224,7 +238,15 @@ void assign_core_parent(char *core_dir, const char *core, char *sys, int cache) 
                 continue;
             }
 
-            fprintf(subdir_file_handle, "%s\n%s\n%d\n", core, str_trim(sys), cache);
+            char content[MAX_BUFFER_SIZE];
+            snprintf(content, sizeof(content), "%s\n%s\n%d",
+                     core,
+                     str_trim(sys),
+                     cache
+            );
+
+            LOG_INFO(mux_module, "Assign Content (Recursive): %s", str_replace(content, "\n", "|"))
+            fprintf(subdir_file_handle, "%s", content);
             fclose(subdir_file_handle);
 
             char core_dir_path[MAX_BUFFER_SIZE];
@@ -260,7 +282,7 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
 
     char pico8_splore[MAX_BUFFER_SIZE];
     snprintf(pico8_splore, sizeof(pico8_splore), "%s/Splore.p8", rom_dir);
-    if (strcasecmp(core, "ext-pico8") == 0 && !file_exist(pico8_splore)) {
+    if (!strcasecmp(core, "ext-pico8") && !file_exist(pico8_splore)) {
         run_exec((const char *[]) {"touch", pico8_splore, NULL});
     }
 
@@ -426,7 +448,7 @@ void create_core_items(const char *target) {
     for (int i = 0; i < cores; ++i) {
         int skip = 0;
         for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); k++) {
-            if (strcasecmp(core_headers[i], skip_entries[k]) == 0) {
+            if (!strcasecmp(core_headers[i], skip_entries[k])) {
                 skip = 1;
                 break;
             }
@@ -443,9 +465,9 @@ void create_core_items(const char *target) {
 
         char *rawcore = get_raw_core(core_headers[i]);
         char display_name[MAX_BUFFER_SIZE];
-        if (strcasecmp(file_core, directory_core) != 0 && strcasecmp(file_core, rawcore) == 0) {
+        if (strcasecmp(file_core, directory_core) != 0 && !strcasecmp(file_core, rawcore)) {
             snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], lang.MUXASSIGN.FILE);
-        } else if (strcasecmp(directory_core, rawcore) == 0) {
+        } else if (!strcasecmp(directory_core, rawcore)) {
             snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], lang.MUXASSIGN.DIR);
         } else {
             snprintf(display_name, sizeof(display_name), "%s", core_headers[i]);
@@ -461,7 +483,7 @@ void create_core_items(const char *target) {
 
         lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
 
-        char *glyph = (strcasecmp(core_headers[i], assign_default) == 0) ? "default" : "core";
+        char *glyph = !strcasecmp(core_headers[i], assign_default) ? "default" : "core";
         apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
@@ -485,7 +507,7 @@ void list_nav_prev(int steps) {
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
@@ -520,7 +542,7 @@ void handle_confirm() {
     if (msgbox_active) return;
 
     const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
-    if (strcasecmp(rom_system, "none") == 0) {
+    if (!strcasecmp(rom_system, "none")) {
         load_assign(rom_name, rom_dir, u_data, 0);
     } else {
         LOG_INFO(mux_module, "Single Core Assignment Triggered")
@@ -632,7 +654,7 @@ void handle_back() {
     }
 
     play_sound("back", nav_sound, 0, 1);
-    if (strcasecmp(rom_system, "none") == 0) {
+    if (!strcasecmp(rom_system, "none")) {
         FILE *file = fopen(MUOS_SYS_LOAD, "w");
         fprintf(file, "%s", "");
         fclose(file);
@@ -662,13 +684,8 @@ void init_elements() {
 
     adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
 
-    if (bar_footer) {
-        lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
-
-    if (bar_header) {
-        lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
@@ -883,7 +900,7 @@ int main(int argc, char *argv[]) {
 
                 mini_free(core_config_ini);
             } else {
-                if (strcmp(rom_system, "none") == 0) return 0;
+                if (!strcmp(rom_system, "none")) return 0;
             }
         }
 
@@ -936,7 +953,7 @@ int main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
 
-    if (strcasecmp(rom_system, "none") == 0) {
+    if (!strcasecmp(rom_system, "none")) {
         create_system_items();
     } else {
         create_core_items(rom_system);
@@ -989,7 +1006,7 @@ int main(int argc, char *argv[]) {
     lv_timer_ready(ui_refresh_timer);
 
     if (ui_count > 0) {
-        if (strcasecmp(rom_system, "none") == 0) {
+        if (!strcasecmp(rom_system, "none")) {
             LOG_SUCCESS(mux_module, "%d System%s Detected", ui_count, ui_count == 1 ? "" : "s")
         } else {
             LOG_SUCCESS(mux_module, "%d Core%s Detected", ui_count, ui_count == 1 ? "" : "s")
@@ -1019,14 +1036,12 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             },
             .hold_handler = {
-                    // List navigation:
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
