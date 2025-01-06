@@ -38,7 +38,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
     if (!directory_exist(theme_device_folder)) {
         device->MUX.WIDTH = 640;
-        device->MUX.HEIGHT = 480;        
+        device->MUX.HEIGHT = 480;
+        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     }
 
     if (load_scheme(STORAGE_THEME, mux_dimension, mux_name, scheme, sizeof(scheme))) {
