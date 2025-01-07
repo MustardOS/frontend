@@ -73,7 +73,6 @@ char *sys_dir = INFO_COL_PATH;
 char new_dir[MAX_BUFFER_SIZE];
 
 int add_mode = 0;
-int key_show = 0;
 int key_curr = 0;
 int ui_count = 0;
 int sys_index = -1;
@@ -139,10 +138,12 @@ char *load_content_description() {
     snprintf(pointer, sizeof(pointer), "%s/%s",
              INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
+    char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(read_line_from_file(pointer, 7));
+    char *h_core_artwork = items[current_item_index].content_type == FOLDER ? "Collection" : read_line_from_file(pointer, 3);
+
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-             INFO_CAT_PATH, read_line_from_file(pointer, 3),
-             strip_ext(read_line_from_file(pointer, 7)));
+             INFO_CAT_PATH, h_core_artwork, h_file_name);
 
     if (file_exist(content_desc)) {
         snprintf(current_meta_text, sizeof(current_meta_text), "%s", format_meta_text(content_desc));
@@ -234,9 +235,10 @@ void image_refresh(char *image_type) {
     snprintf(pointer, sizeof(pointer), "%s/%s",
              INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
-    char *h_file_name = strip_ext(read_line_from_file(pointer, 7));
+    char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(read_line_from_file(pointer, 7));
 
-    char *h_core_artwork = read_line_from_file(pointer, 3);
+    char *h_core_artwork = items[current_item_index].content_type == FOLDER ? "Collection" : read_line_from_file(pointer, 3);
+
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
                  STORAGE_THEME, mux_dimension, image_type);
@@ -295,19 +297,16 @@ void image_refresh(char *image_type) {
         }
     } else {
         if (strcasecmp(box_image_previous_path, image) != 0) {
-            char *catalogue_folder = items[current_item_index].content_type == FOLDER ? "Collection" : core_artwork;
-            char *content_name =
-                    items[current_item_index].content_type == FOLDER ? items[current_item_index].name : h_file_name;
             char artwork_config_path[MAX_BUFFER_SIZE];
             snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
-                     INFO_CAT_PATH, catalogue_folder);
+                     INFO_CAT_PATH, h_core_artwork);
             if (!file_exist(artwork_config_path)) {
                 snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/default.ini",
                          INFO_CAT_PATH);
             }
 
             if (file_exist(artwork_config_path)) {
-                viewport_refresh(artwork_config_path, catalogue_folder, content_name);
+                viewport_refresh(artwork_config_path, h_core_artwork, h_file_name);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
                 if (!file_exist(image)) {
@@ -1018,6 +1017,8 @@ void handle_left(void) {
         key_left();
         return;
     }
+
+    handle_list_nav_left();
 }
 
 void handle_right(void) {
@@ -1025,6 +1026,8 @@ void handle_right(void) {
         key_right();
         return;
     }
+
+    handle_list_nav_right();
 }
 
 void handle_left_hold(void) {
@@ -1032,6 +1035,8 @@ void handle_left_hold(void) {
         key_left();
         return;
     }
+
+    handle_list_nav_left_hold();
 }
 
 void handle_right_hold(void) {
@@ -1039,6 +1044,8 @@ void handle_right_hold(void) {
         key_right();
         return;
     }
+
+    handle_list_nav_right_hold();
 }
 
 void handle_l1(void) {
