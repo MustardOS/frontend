@@ -107,8 +107,6 @@ void check_for_disable_grid_file(char *item_curr_dir) {
 }
 
 char *load_content_governor(char *pointer) {
-    pointer = read_text_from_file(pointer);
-
     char content_gov[MAX_BUFFER_SIZE];
     snprintf(content_gov, sizeof(content_gov), "%s.gov",
              strip_ext(pointer));
@@ -615,13 +613,13 @@ int load_content(const char *content_name) {
     snprintf(pointer_file, sizeof(pointer_file), "%s/%s",
              sys_dir, content_name);
 
-    char *assigned_gov = NULL;
-    assigned_gov = load_content_governor(pointer_file);
-    if (assigned_gov == NULL) assigned_gov = device.CPU.DEFAULT;
-
     char cache_file[MAX_BUFFER_SIZE];
     snprintf(cache_file, sizeof(cache_file), "%s",
              read_line_from_file(pointer_file, 1));
+
+    char *assigned_gov = NULL;
+    assigned_gov = load_content_governor(cache_file);
+    if (assigned_gov == NULL) assigned_gov = device.CPU.DEFAULT;
 
     if (file_exist(cache_file)) {
         char *assigned_core = read_line_from_file(cache_file, 2);
