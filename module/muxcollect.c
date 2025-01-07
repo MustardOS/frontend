@@ -434,7 +434,10 @@ void gen_item(char **file_names, int file_count) {
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
-        const char *stripped_name = strip_ext(file_names[i]);
+        char collection_file[MAX_BUFFER_SIZE];
+        snprintf(collection_file, sizeof(collection_file), "%s/%s",
+                sys_dir, file_names[i]);
+        const char *stripped_name = read_line_from_file(collection_file, 3);;
 
         if (fn_valid) {
             struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
@@ -725,14 +728,22 @@ void handle_keyboard_press(void) {
 }
 
 void add_collection_item() {
+    char *base_file_name = read_line_from_file(ADD_MODE_WORK, 1);
     char collection_file[MAX_BUFFER_SIZE];
     snprintf(collection_file, sizeof(collection_file), "%s/%s",
-             sys_dir, read_line_from_file(ADD_MODE_WORK, 1));
+             sys_dir, base_file_name);
+
+    char *cache_file = read_line_from_file(ADD_MODE_WORK, 2);
 
     char collection_content[MAX_BUFFER_SIZE];
-    snprintf(collection_content, sizeof(collection_content), "%s\n%s",
-             read_line_from_file(ADD_MODE_WORK, 2), read_line_from_file(ADD_MODE_WORK, 3));
+    snprintf(collection_content, sizeof(collection_content), "%s\n%s\n%s",
+             cache_file, read_line_from_file(ADD_MODE_WORK, 3), strip_ext(read_line_from_file(cache_file, 7)));
 
+    int file_counter = 1;
+    while(file_exist(collection_file)) {
+        snprintf(collection_file, sizeof(collection_file), "%s/%s-%d.cfg",
+             sys_dir, strip_ext(base_file_name), file_counter);
+    }
     write_text_to_file(collection_file, "w", CHAR, collection_content);
 
     if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
