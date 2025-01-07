@@ -120,7 +120,7 @@ char *load_content_description() {
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_text_from_file(core_file), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
@@ -218,7 +218,7 @@ void image_refresh(char *image_type) {
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_text_from_file(core_file), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
     char *h_core_artwork = read_line_from_file(pointer, 3);
     if (strlen(h_core_artwork) <= 1) {
@@ -390,7 +390,10 @@ void gen_item(char **file_names, int file_count) {
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
-        const char *stripped_name = strip_ext(file_names[i]);
+        char collection_file[MAX_BUFFER_SIZE];
+        snprintf(collection_file, sizeof(collection_file), "%s/%s",
+                 INFO_HIS_PATH, file_names[i]);
+        const char *stripped_name = read_line_from_file(collection_file, 3);
 
         if (fn_valid) {
             struct json custom_lookup_json = json_object_get(fn_json, stripped_name);

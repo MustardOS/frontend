@@ -770,8 +770,6 @@ void handle_a() {
 
     int load_message;
 
-    if (!add_mode) write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
-
     if (add_mode && !ui_count) {
         add_collection_item();
         goto acq;
@@ -786,6 +784,7 @@ void handle_a() {
 
         write_text_to_file(COLLECTION_DIR, "w", CHAR, n_dir);
     } else {
+        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
         load_message = 0;
         if (add_mode) {
             add_collection_item();
