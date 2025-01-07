@@ -2209,3 +2209,12 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     closedir(dir);
     return 0;
 }
+
+uint32_t fnv1a_hash(const char* str) {
+    uint32_t hash = 2166136261U; // FNV offset basis
+    for (const char* p = str; *p; p++) {
+        hash ^= (uint8_t)(*p);
+        hash *= 16777619; // FNV prime
+    }
+    return hash;
+}

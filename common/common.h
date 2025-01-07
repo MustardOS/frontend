@@ -308,3 +308,5 @@ int16_t validate_int16(int value, const char *field);
 int at_base(char *sys_dir, char *base_name);
 
 int search_for_config(const char *base_path, const char *file_name, const char *system_name);
+
+uint32_t fnv1a_hash(const char* str);
