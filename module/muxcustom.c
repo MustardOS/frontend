@@ -265,7 +265,9 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblCatalogue, "catalogue");
     lv_obj_set_user_data(ui_lblConfig, "config");
 
-    if (TEST_IMAGE) display_testing_message(ui_screen);
+#if TEST_IMAGE
+    display_testing_message(ui_screen);
+#endif
 
     kiosk_image = lv_img_create(ui_screen);
     load_kiosk_image(ui_screen, kiosk_image);

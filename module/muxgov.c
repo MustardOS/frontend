@@ -404,7 +404,9 @@ void init_elements() {
     lv_obj_move_foreground(ui_lblNavYGlyph);
     lv_obj_move_foreground(ui_lblNavY);
 
-    if (TEST_IMAGE) display_testing_message(ui_screen);
+#if TEST_IMAGE
+    display_testing_message(ui_screen);
+#endif
 
     kiosk_image = lv_img_create(ui_screen);
     load_kiosk_image(ui_screen, kiosk_image);

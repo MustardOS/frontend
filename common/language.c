@@ -85,7 +85,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXARCHIVE.TITLE, "ARCHIVE MANAGER");
     SPECIFIC_FIELD(lang->MUXARCHIVE.INSTALLED, "INSTALLED");
     SPECIFIC_FIELD(lang->MUXARCHIVE.NONE, "No Archives Found");
-    SPECIFIC_FIELD(lang->MUXARCHIVE.HELP, "Archive items can be found and installed here - Save games and states, updates, themes etc");
+    SPECIFIC_FIELD(lang->MUXARCHIVE.HELP,
+                   "Archive items can be found and installed here - Save games and states, updates, themes etc");
 
     // muxassign
     SPECIFIC_FIELD(lang->MUXASSIGN.TITLE, "ASSIGN");
@@ -120,8 +121,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.DATETIME, "Change your current date, time, and timezone");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and muOS frontend settings can be found here");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.LANGUAGE, "Select your preferred language");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.STORAGE, "Find out what storage device core settings and configurations are mounted");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.STORAGE,
+                   "Find out what storage device core settings and configurations are mounted");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.WEB,
+                   "Toggle a range of configurable services you can access via an active network");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
 
     // muxcustom
@@ -135,7 +138,8 @@ void load_lang(struct mux_lang *lang) {
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
-    SPECIFIC_FIELD(lang->MUXGOV.HELP, "Configure CPU governors to dynamically adjust the CPU frequency and help balance power consumption and performance");
+    SPECIFIC_FIELD(lang->MUXGOV.HELP,
+                   "Configure CPU governors to dynamically adjust the CPU frequency and help balance power consumption and performance");
     SPECIFIC_FIELD(lang->MUXGOV.NONE, "No Governors Found…");
 
     // muxhdmi
@@ -156,7 +160,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.OVER, "Over");
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.UNDER, "Under");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.ACTIVE, "Enable or disable HDMI output");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.AUDIO_OUTPUT, "Switch between device speaker or external monitor audio via HDMI connection");
+    SPECIFIC_FIELD(lang->MUXHDMI.HELP.AUDIO_OUTPUT,
+                   "Switch between device speaker or external monitor audio via HDMI connection");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.RESOLUTION, "Select the resolution for HDMI output, such as 720p or 1080p");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.SCAN_SCALE, "Switch between overscan or underscan to fit the display screen");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.COLOUR.DEPTH, "Set the color depth, such as 8-bit or 10-bit");
@@ -204,7 +209,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.INFO, "Various information can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.COLLECTION, "Content added to collections can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.HISTORY, "Content previously launched can be found and launched here");
-    SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.EXPLORE, "Content on storage devices (SD1/SD2/USB) can be found and launched here");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.EXPLORE,
+                   "Content on storage devices (SD1/SD2/USB) can be found and launched here");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.SHUTDOWN, "Shut down your device safely");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.REBOOT, "Reboot your device safely");
 
@@ -212,7 +218,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETPROFILE.TITLE, "NETWORK PROFILE");
     SPECIFIC_FIELD(lang->MUXNETPROFILE.LOAD, "Loading Network Profiles…");
     SPECIFIC_FIELD(lang->MUXNETPROFILE.NONE, "No Saved Network Profiles Found");
-    SPECIFIC_FIELD(lang->MUXNETPROFILE.HELP, "Quickly switch between different Wi-Fi configurations based on your location or network preferences");
+    SPECIFIC_FIELD(lang->MUXNETPROFILE.HELP,
+                   "Quickly switch between different Wi-Fi configurations based on your location or network preferences");
     SPECIFIC_FIELD(lang->MUXNETPROFILE.INVALID_SSID, "Invalid SSID");
     SPECIFIC_FIELD(lang->MUXNETPROFILE.INVALID_NETWORK, "Invalid Network Settings");
 
@@ -267,7 +274,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.CURRENT, "Current");
     SPECIFIC_FIELD(lang->MUXOPTION.DIRECTORY, "Directory");
     SPECIFIC_FIELD(lang->MUXOPTION.INDIVIDUAL, "Individual");
-    SPECIFIC_FIELD(lang->MUXOPTION.HELP.ASSIGN_CORE, "Set the system core or external emulator for the selected content or directory");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.ASSIGN_CORE,
+                   "Set the system core or external emulator for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.ASSIGN_GOV, "Set the CPU governor for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
 
@@ -319,10 +327,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t15m, "Sleep 15m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t30m, "Sleep 30m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t60m, "Sleep 60m + Shutdown");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_SLEEP, "Configure the time the device will sleep when no input is detected");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_DISPLAY, "Configure the time the screen will dim when no input is detected");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.LOW_BATTERY, "Configure when the red LED will display based on the current capacity percentage");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.SLEEP_FUNCTION, "Configure how the power button functions on long press (2 seconds)");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_SLEEP,
+                   "Configure the time the device will sleep when no input is detected");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_DISPLAY,
+                   "Configure the time the screen will dim when no input is detected");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.LOW_BATTERY,
+                   "Configure when the red LED will display based on the current capacity percentage");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.SLEEP_FUNCTION,
+                   "Configure how the power button functions on long press (2 seconds)");
 
     // muxrtc
     SPECIFIC_FIELD(lang->MUXRTC.TITLE, "DATE AND TIME");
@@ -471,14 +483,20 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.SHSL, "Shutdown + Sleep");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.TUNING, "Disk Tuning");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SPEED, "Adjust the rate of speed when holding navigation keys down");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OFFSET, "Change the displayed battery percentage to improve accuracy based on calibration or known deviations in the battery capacity reading");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LOCK, "Toggle the passcode lock - More information can be found on the muOS website");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL,
+                   "Toggle the system ability to automatically shut the device down due high temperature");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OFFSET,
+                   "Change the displayed battery percentage to improve accuracy based on calibration or known deviations in the battery capacity reading");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LOCK,
+                   "Toggle the passcode lock - More information can be found on the muOS website");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LED, "Toggle the power LED during content launch");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RANDOM, "Change the default theme used for the next device launch");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.NET_WAIT, "Toggle a delayed start of RetroArch until a network connection is established");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VERBOSE, "Toggle startup and shutdown verbose messages used for debugging faults");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USER_INIT, "Toggle the functionality of the user initialisation scripts on device startup");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.NET_WAIT,
+                   "Toggle a delayed start of RetroArch until a network connection is established");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VERBOSE,
+                   "Toggle startup and shutdown verbose messages used for debugging faults");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USER_INIT,
+                   "Toggle the functionality of the user initialisation scripts on device startup");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DPAD, "Toggle the functionality of the power button to switch DPAD mode");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OVERDRIVE, "Toggle the audio overdrive moving it from 100% to 200%");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAPFILE, "Adjust the system swapfile if required by certain content");
@@ -486,9 +504,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RUMBLE, "Toggle vibration for device startup, sleep, and shutdown");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STATE, "Switch between system sleep suspend states");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USB, "Toggle between ADB and MTP USB functionality");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT, "Change the default brightness level that the device will use each time it starts up");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT,
+                   "Change the default brightness level that the device will use each time it starts up");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME,
+                   "Change the default audio level that the device will use each time it starts up");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.FONT,
+                   "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAP, "Change how the device buttons work globally");
 
     // muxtweakgen
@@ -511,16 +532,21 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.LAST, "Last Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.RESUME, "Resume Game");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.MUSIC, "Toggle the background music of the frontend - This will stop if content is launched");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.SOUND, "Toggle the navigation sound of the frontend if the current theme supports it");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HIDDEN,
+                   "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.MUSIC,
+                   "Toggle the background music of the frontend - This will stop if content is launched");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.SOUND,
+                   "Toggle the navigation sound of the frontend if the current theme supports it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.TEMP, "Change the colour temperature of the display if the device supports it");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.TEMP,
+                   "Change the colour temperature of the display if the device supports it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.BRIGHT, "Change the brightness of the device to a specific level");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HDMI, "Settings to change the HDMI output of the device");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.POWER, "Settings to change the power features of the device");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.VISUAL, "Settings to change the visual aspects of the frontend");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.ADVANCED, "Settings that should only be changed by those who know what they are doing!");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.ADVANCED,
+                   "Settings that should only be changed by those who know what they are doing!");
 
     // muxvisual
     SPECIFIC_FIELD(lang->MUXVISUAL.TITLE, "INTERFACE OPTIONS");
@@ -564,19 +590,26 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CLOCK, "Toggle the visibility of the clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.DASH, "Replaces the dash (-) with a colon (:) for content labels");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FRIENDLY, "Replaces the label of shortened content folders to more appropriately named labels");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.REFORMAT, "Rearranges the label of content to move the 'The' label to the front - For example, 'Batman and Robin, The' to 'The Batman and Robin'");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.ROOT, "Changes the top title label in Explore Content to show current storage device along with folder name");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FRIENDLY,
+                   "Replaces the label of shortened content folders to more appropriately named labels");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.REFORMAT,
+                   "Rearranges the label of content to move the 'The' label to the front - For example, 'Batman and Robin, The' to 'The Batman and Robin'");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.ROOT,
+                   "Changes the top title label in Explore Content to show current storage device along with folder name");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.SPLASH, "Toggle the splash image on content launching");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FADE, "Toggle the fade to black animation on content launching");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT, "Toggle the visibility of the item count within folders in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT,
+                   "Toggle the visibility of the item count within folders in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.EMPTY, "Toggle the visibility of empty folders in Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FOLDER, "Toggle the visibility of currently selected folder along with total in Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FILE, "Toggle the visibility of currently selected file along with total in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FOLDER,
+                   "Toggle the visibility of currently selected folder along with total in Explore Content");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FILE,
+                   "Toggle the visibility of currently selected file along with total in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BOX_ART, "Change the display priority of the content images");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAME, "Remove extra information from content labels - This does NOT rename your files it only changes how it is displayed");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAME,
+                   "Remove extra information from content labels - This does NOT rename your files it only changes how it is displayed");
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");

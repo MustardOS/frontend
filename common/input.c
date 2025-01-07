@@ -154,29 +154,29 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
     mux_input_type type;
     if (js.number == controller.BUTTON.A) {
         type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
-    } else if (js.number  == controller.BUTTON.B) {
+    } else if (js.number == controller.BUTTON.B) {
         type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
-    } else if (js.number  == controller.BUTTON.X) {
+    } else if (js.number == controller.BUTTON.X) {
         type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
-    } else if (js.number  == controller.BUTTON.Y) {
+    } else if (js.number == controller.BUTTON.Y) {
         type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
-    } else if (js.number  == controller.BUTTON.L1) {
+    } else if (js.number == controller.BUTTON.L1) {
         type = MUX_INPUT_L1;
-    } else if (js.number  == controller.BUTTON.L2) {
+    } else if (js.number == controller.BUTTON.L2) {
         type = MUX_INPUT_L2;
-    } else if (js.number  == controller.BUTTON.L3) {
+    } else if (js.number == controller.BUTTON.L3) {
         type = MUX_INPUT_L3;
-    } else if (js.number  == controller.BUTTON.R1) {
+    } else if (js.number == controller.BUTTON.R1) {
         type = MUX_INPUT_R1;
-    } else if (js.number  == controller.BUTTON.R2) {
+    } else if (js.number == controller.BUTTON.R2) {
         type = MUX_INPUT_R2;
-    } else if (js.number  == controller.BUTTON.R3) {
+    } else if (js.number == controller.BUTTON.R3) {
         type = MUX_INPUT_R3;
-    } else if (js.number  == controller.BUTTON.SELECT) {
+    } else if (js.number == controller.BUTTON.SELECT) {
         type = MUX_INPUT_SELECT;
-    } else if (js.number  == controller.BUTTON.START) {
+    } else if (js.number == controller.BUTTON.START) {
         type = MUX_INPUT_START;
-    } else if (js.number  == controller.BUTTON.MENU) {
+    } else if (js.number == controller.BUTTON.MENU) {
         type = MUX_INPUT_MENU_SHORT;
     } else {
         return;
@@ -499,7 +499,7 @@ char *get_unique_controller_id(int usb_fd) {
 
 void *joystick_handler(void *arg) {
     // Cast the argument back to the correct type
-    const mux_input_options *opts = (const mux_input_options *)arg;
+    const mux_input_options *opts = (const mux_input_options *) arg;
     // Open USB controller
     int usb_fd = open("/dev/input/js1", O_RDONLY);
     if (usb_fd == -1) {
@@ -522,8 +522,8 @@ void *joystick_handler(void *arg) {
         LOG_INFO("input", "Joystick Event: type=%u number=%u value=%d", js.type, js.number, js.value)
 
         if (js.type & JS_EVENT_BUTTON) {
-            if (js.number  == controller.BUTTON.UP || js.number  == controller.BUTTON.DOWN || 
-                    js.number  == controller.BUTTON.LEFT || js.number  == controller.BUTTON.RIGHT ){
+            if (js.number == controller.BUTTON.UP || js.number == controller.BUTTON.DOWN ||
+                js.number == controller.BUTTON.LEFT || js.number == controller.BUTTON.RIGHT) {
                 process_usb_dpad_as_buttons(opts, js);
             } else {
                 process_usb_key(opts, js);

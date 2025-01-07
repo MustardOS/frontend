@@ -19,7 +19,8 @@ void ui_init(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *
     lv_obj_set_style_text_align(ui_lblCounter, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_lblCounter, lv_color_hex(theme->COUNTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblCounter, theme->COUNTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_lblCounter, lv_color_hex(theme->COUNTER.BORDER_COLOUR), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_lblCounter, lv_color_hex(theme->COUNTER.BORDER_COLOUR),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_lblCounter, theme->COUNTER.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_lblCounter, theme->COUNTER.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblCounter, theme->COUNTER.PADDING_AROUND, LV_PART_MAIN | LV_STATE_DEFAULT);

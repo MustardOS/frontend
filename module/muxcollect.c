@@ -436,8 +436,8 @@ void gen_item(char **file_names, int file_count) {
         char fn_name[MAX_BUFFER_SIZE];
         char collection_file[MAX_BUFFER_SIZE];
         snprintf(collection_file, sizeof(collection_file), "%s/%s",
-                sys_dir, file_names[i]);
-        const char *stripped_name = read_line_from_file(collection_file, 3);;
+                 sys_dir, file_names[i]);
+        const char *stripped_name = read_line_from_file(collection_file, 3);
 
         if (fn_valid) {
             struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
@@ -740,9 +740,9 @@ void add_collection_item() {
              cache_file, read_line_from_file(ADD_MODE_WORK, 3), strip_ext(read_line_from_file(cache_file, 7)));
 
     int file_counter = 1;
-    while(file_exist(collection_file)) {
+    while (file_exist(collection_file)) {
         snprintf(collection_file, sizeof(collection_file), "%s/%s-%d.cfg",
-             sys_dir, strip_ext(base_file_name), file_counter);
+                 sys_dir, strip_ext(base_file_name), file_counter);
     }
     write_text_to_file(collection_file, "w", CHAR, collection_content);
 
@@ -1119,7 +1119,9 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    if (TEST_IMAGE) display_testing_message(ui_screen);
+#if TEST_IMAGE
+    display_testing_message(ui_screen);
+#endif
 
     kiosk_image = lv_img_create(ui_screen);
     load_kiosk_image(ui_screen, kiosk_image);

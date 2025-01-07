@@ -16,12 +16,17 @@ extern const char *key_number_map[];
 void osk_handler(lv_event_t *e);
 
 void reset_osk(lv_obj_t *osk);
+
 void close_osk(lv_obj_t *osk, lv_group_t *ui, lv_obj_t *entry, lv_obj_t *panel);
 
 void key_up();
+
 void key_down();
+
 void key_left();
+
 void key_right();
 
 void key_swap();
+
 void key_backspace(lv_obj_t *entry);

@@ -143,7 +143,9 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    if (TEST_IMAGE) display_testing_message(ui_screen);
+#if TEST_IMAGE
+    display_testing_message(ui_screen);
+#endif
 
     kiosk_image = lv_img_create(ui_screen);
     load_kiosk_image(ui_screen, kiosk_image);

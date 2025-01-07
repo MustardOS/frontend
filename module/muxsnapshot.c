@@ -75,12 +75,13 @@ void create_snapshot_items() {
         snprintf(snapshot_paths[i], sizeof(snapshot_paths[i]), "%s/save/snapshot", mount_points[i]);
     }
 
-    const char *snapshot_directories[] = { snapshot_paths[0], snapshot_paths[1], snapshot_paths[2] };
+    const char *snapshot_directories[] = {snapshot_paths[0], snapshot_paths[1], snapshot_paths[2]};
     char snapshot_dir[MAX_BUFFER_SIZE];
     char **file_names = NULL;
     size_t file_count = 0;
 
-    for (size_t dir_index = 0; dir_index < sizeof(snapshot_directories) / sizeof(snapshot_directories[0]); ++dir_index) {
+    for (size_t dir_index = 0;
+         dir_index < sizeof(snapshot_directories) / sizeof(snapshot_directories[0]); ++dir_index) {
         snprintf(snapshot_dir, sizeof(snapshot_dir), "%s/", snapshot_directories[dir_index]);
 
         DIR *ad = opendir(snapshot_dir);
@@ -302,7 +303,9 @@ void init_elements() {
         lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
     }
 
-    if (TEST_IMAGE) display_testing_message(ui_screen);
+#if TEST_IMAGE
+    display_testing_message(ui_screen);
+#endif
 
     kiosk_image = lv_img_create(ui_screen);
     load_kiosk_image(ui_screen, kiosk_image);

@@ -71,7 +71,7 @@ void ui_common_screen_init(struct theme_config *theme, struct mux_device *device
     ui_screen_container = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(ui_screen_container, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
+
     ui_screen = lv_obj_create(ui_screen_container);
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);

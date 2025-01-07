@@ -59,16 +59,16 @@ void create_controller_profile(char *controller_profile_path) {
 void load_controller_profile(struct controller_profile *controller, char *controller_name) {
     char controller_profile_path[MAX_BUFFER_SIZE];
     snprintf(controller_profile_path, sizeof(controller_profile_path), "%s/%s.ini",
-                INFO_CNT_PATH, controller_name);
+             INFO_CNT_PATH, controller_name);
 
     printf("Loading Controller Profile: %s\n", controller_profile_path);
 
     if (!file_exist(controller_profile_path)) {
         create_controller_profile(controller_profile_path);
     }
-    
+
     if (!file_exist(controller_profile_path)) return;
-    
+
     mini_t *muos_controller_profile = mini_try_load(controller_profile_path);
 
     controller->BUTTON.A = get_ini_int(muos_controller_profile, "buttons", "BUTTON_A", 0);
@@ -88,7 +88,7 @@ void load_controller_profile(struct controller_profile *controller, char *contro
     controller->BUTTON.DOWN = get_ini_int(muos_controller_profile, "buttons", "BUTTON_DOWN", -1);
     controller->BUTTON.LEFT = get_ini_int(muos_controller_profile, "buttons", "BUTTON_LEFT", -1);
     controller->BUTTON.RIGHT = get_ini_int(muos_controller_profile, "buttons", "BUTTON_RIGHT", -1);
-    
+
     controller->TRIGGER.AXIS = get_ini_int(muos_controller_profile, "trigger", "AXIS", 32767);
     controller->TRIGGER.L2 = get_ini_int(muos_controller_profile, "trigger", "L2", -1);
     controller->TRIGGER.R2 = get_ini_int(muos_controller_profile, "trigger", "R2", -1);
