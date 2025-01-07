@@ -107,8 +107,6 @@ void check_for_disable_grid_file(char *item_curr_dir) {
 }
 
 char *load_content_governor(char *pointer) {
-    pointer = read_text_from_file(pointer);
-
     char content_gov[MAX_BUFFER_SIZE];
     snprintf(content_gov, sizeof(content_gov), "%s.gov",
              strip_ext(pointer));
@@ -135,11 +133,11 @@ char *load_content_governor(char *pointer) {
 char *load_content_description() {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             INFO_COL_PATH, strip_ext(items[current_item_index].name));
+             sys_dir, strip_ext(items[current_item_index].name));
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_text_from_file(core_file), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
@@ -230,11 +228,13 @@ void image_refresh(char *image_type) {
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             INFO_COL_PATH, strip_ext(items[current_item_index].name));
+             sys_dir, strip_ext(items[current_item_index].name));
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_text_from_file(core_file), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
+
+    char *h_file_name = strip_ext(read_line_from_file(pointer, 7));
 
     char *h_core_artwork = read_line_from_file(pointer, 3);
     if (strlen(h_core_artwork) <= 1) {
@@ -246,8 +246,6 @@ void image_refresh(char *image_type) {
         }
         snprintf(image_path, sizeof(image_path), "M:%s", image);
     } else {
-        char *h_file_name = strip_ext(read_line_from_file(pointer, 7));
-
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
                  INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
         snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
@@ -299,8 +297,7 @@ void image_refresh(char *image_type) {
         if (strcasecmp(box_image_previous_path, image) != 0) {
             char *catalogue_folder = items[current_item_index].content_type == FOLDER ? "Collection" : core_artwork;
             char *content_name =
-                    items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
-                            items[current_item_index].name);
+                    items[current_item_index].content_type == FOLDER ? items[current_item_index].name : h_file_name;
             char artwork_config_path[MAX_BUFFER_SIZE];
             snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
                      INFO_CAT_PATH, catalogue_folder);
@@ -437,7 +434,10 @@ void gen_item(char **file_names, int file_count) {
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
-        const char *stripped_name = strip_ext(file_names[i]);
+        char collection_file[MAX_BUFFER_SIZE];
+        snprintf(collection_file, sizeof(collection_file), "%s/%s",
+                sys_dir, file_names[i]);
+        const char *stripped_name = read_line_from_file(collection_file, 3);;
 
         if (fn_valid) {
             struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
@@ -615,13 +615,13 @@ int load_content(const char *content_name) {
     snprintf(pointer_file, sizeof(pointer_file), "%s/%s",
              sys_dir, content_name);
 
-    char *assigned_gov = NULL;
-    assigned_gov = load_content_governor(pointer_file);
-    if (assigned_gov == NULL) assigned_gov = device.CPU.DEFAULT;
-
     char cache_file[MAX_BUFFER_SIZE];
     snprintf(cache_file, sizeof(cache_file), "%s",
              read_line_from_file(pointer_file, 1));
+
+    char *assigned_gov = NULL;
+    assigned_gov = load_content_governor(cache_file);
+    if (assigned_gov == NULL) assigned_gov = device.CPU.DEFAULT;
 
     if (file_exist(cache_file)) {
         char *assigned_core = read_line_from_file(cache_file, 2);
@@ -728,14 +728,22 @@ void handle_keyboard_press(void) {
 }
 
 void add_collection_item() {
+    char *base_file_name = read_line_from_file(ADD_MODE_WORK, 1);
     char collection_file[MAX_BUFFER_SIZE];
     snprintf(collection_file, sizeof(collection_file), "%s/%s",
-             sys_dir, read_line_from_file(ADD_MODE_WORK, 1));
+             sys_dir, base_file_name);
+
+    char *cache_file = read_line_from_file(ADD_MODE_WORK, 2);
 
     char collection_content[MAX_BUFFER_SIZE];
-    snprintf(collection_content, sizeof(collection_content), "%s\n%s",
-             read_line_from_file(ADD_MODE_WORK, 2), read_line_from_file(ADD_MODE_WORK, 3));
+    snprintf(collection_content, sizeof(collection_content), "%s\n%s\n%s",
+             cache_file, read_line_from_file(ADD_MODE_WORK, 3), strip_ext(read_line_from_file(cache_file, 7)));
 
+    int file_counter = 1;
+    while(file_exist(collection_file)) {
+        snprintf(collection_file, sizeof(collection_file), "%s/%s-%d.cfg",
+             sys_dir, strip_ext(base_file_name), file_counter);
+    }
     write_text_to_file(collection_file, "w", CHAR, collection_content);
 
     if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
