@@ -230,11 +230,11 @@ void image_refresh(char *image_type) {
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             INFO_COL_PATH, strip_ext(items[current_item_index].name));
+             sys_dir, strip_ext(items[current_item_index].name));
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_text_from_file(core_file), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
     char *h_core_artwork = read_line_from_file(pointer, 3);
     if (strlen(h_core_artwork) <= 1) {
