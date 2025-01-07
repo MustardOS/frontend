@@ -135,11 +135,11 @@ char *load_content_governor(char *pointer) {
 char *load_content_description() {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
-             INFO_COL_PATH, strip_ext(items[current_item_index].name));
+             sys_dir, strip_ext(items[current_item_index].name));
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_text_from_file(core_file), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
