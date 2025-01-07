@@ -234,6 +234,8 @@ void image_refresh(char *image_type) {
     snprintf(pointer, sizeof(pointer), "%s/%s",
              INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
+    char *h_file_name = strip_ext(read_line_from_file(pointer, 7));
+
     char *h_core_artwork = read_line_from_file(pointer, 3);
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
@@ -244,8 +246,6 @@ void image_refresh(char *image_type) {
         }
         snprintf(image_path, sizeof(image_path), "M:%s", image);
     } else {
-        char *h_file_name = strip_ext(read_line_from_file(pointer, 7));
-
         snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
                  INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
         snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
@@ -297,8 +297,7 @@ void image_refresh(char *image_type) {
         if (strcasecmp(box_image_previous_path, image) != 0) {
             char *catalogue_folder = items[current_item_index].content_type == FOLDER ? "Collection" : core_artwork;
             char *content_name =
-                    items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
-                            items[current_item_index].name);
+                    items[current_item_index].content_type == FOLDER ? items[current_item_index].name : h_file_name;
             char artwork_config_path[MAX_BUFFER_SIZE];
             snprintf(artwork_config_path, sizeof(artwork_config_path), "%s/%s.ini",
                      INFO_CAT_PATH, catalogue_folder);
