@@ -437,6 +437,10 @@ void gen_item(char **file_names, int file_count) {
         snprintf(collection_file, sizeof(collection_file), "%s/%s",
                  sys_dir, file_names[i]);
         const char *stripped_name = read_line_from_file(collection_file, 3);
+        if(stripped_name && stripped_name[0] == '\0') {
+            const char *cache_file = read_line_from_file(collection_file, 1);
+            stripped_name = strip_ext(read_line_from_file(cache_file, 7));
+        }
 
         if (fn_valid) {
             struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
