@@ -84,27 +84,27 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     bool analog;
     if (event->code == device.RAW_INPUT.DPAD.UP) {
         // Axis: D-pad vertical
-        axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
         analog = false;
     } else if (event->code == device.RAW_INPUT.DPAD.LEFT) {
         // Axis: D-pad horizontal
-        axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
         analog = false;
     } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.UP) {
         // Axis: left stick vertical
-        axis = !opts->swap_axis ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
         analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.LEFT) {
         // Axis: left stick horizontal
-        axis = !opts->swap_axis ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
         analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.UP) {
         // Axis: right stick vertical
-        axis = !opts->swap_axis ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
         analog = true;
     } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.LEFT) {
         // Axis: right stick horizontal
-        axis = !opts->swap_axis ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
         analog = true;
     } else {
         return;
@@ -190,27 +190,27 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     int axis_max = 32767;
     if (js.number == controller.DPAD.UP) {
         // Axis: D-pad vertical
-        axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
         axis_max = controller.DPAD.AXIS;
     } else if (js.number == controller.DPAD.LEFT) {
         // Axis: D-pad horizontal
-        axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
         axis_max = controller.DPAD.AXIS;
     } else if (js.number == controller.ANALOG.LEFT.UP) {
         // Axis: left stick vertical
-        axis = !opts->swap_axis ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
         axis_max = controller.ANALOG.LEFT.AXIS;
     } else if (js.number == controller.ANALOG.LEFT.LEFT) {
         // Axis: left stick horizontal
-        axis = !opts->swap_axis ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
         axis_max = controller.ANALOG.LEFT.AXIS;
     } else if (js.number == controller.ANALOG.RIGHT.UP) {
         // Axis: right stick vertical
-        axis = !opts->swap_axis ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
         axis_max = controller.ANALOG.RIGHT.AXIS;
     } else if (js.number == controller.ANALOG.RIGHT.LEFT) {
         // Axis: right stick horizontal
-        axis = !opts->swap_axis ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
         axis_max = controller.ANALOG.RIGHT.AXIS;
     } else if (js.number == controller.TRIGGER.L2) {
         int threshold = (controller.TRIGGER.AXIS * 80) / 100;
@@ -255,19 +255,19 @@ static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js
     int direction;
     if (js.number == controller.BUTTON.UP) {
         // Axis: D-pad vertical
-        axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
         direction = -js.value;
     } else if (js.number == controller.BUTTON.LEFT) {
         // Axis: D-pad horizontal
-        axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
         direction = -js.value;
     } else if (js.number == controller.BUTTON.DOWN) {
         // Axis: D-pad vertical
-        axis = !opts->swap_axis ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
         direction = js.value;
     } else if (js.number == controller.BUTTON.RIGHT) {
         // Axis: D-pad horizontal
-        axis = !opts->swap_axis ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
         direction = js.value;
     } else {
         return;

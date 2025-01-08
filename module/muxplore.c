@@ -810,14 +810,18 @@ int load_content(int add_collection) {
         char pointer[MAX_BUFFER_SIZE];
         char content[MAX_BUFFER_SIZE];
 
-        snprintf(pointer, sizeof(pointer), "%s/%s/%s.cfg\n%s",
-                 INFO_COR_PATH, system_sub, content_name, system_sub);
+        char cache_file[MAX_BUFFER_SIZE];
+        snprintf(cache_file, sizeof(cache_file), "%s/%s/%s.cfg",
+                 INFO_COR_PATH, system_sub, content_name);
+
+        snprintf(pointer, sizeof(pointer), "%s\n%s\n%s",
+                 cache_file, system_sub, content_name);
 
         if (add_collection) {
             snprintf(content, sizeof(content), "%s.cfg", content_name);
             add_to_collection(content, pointer);
         } else {
-            snprintf(content, sizeof(content), "%s/%s.cfg", INFO_HIS_PATH, content_name);
+            snprintf(content, sizeof(content), "%s/%s-%08X.cfg", INFO_HIS_PATH, content_name, fnv1a_hash(cache_file));
             write_text_to_file(content, "w", CHAR, pointer);
             write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_from_file(pointer, 1));
             write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
