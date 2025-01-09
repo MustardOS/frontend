@@ -123,7 +123,9 @@ int main(int argc, char *argv[]) {
     overlay_image = lv_img_create(ui_scrStart);
     load_overlay_image(ui_scrStart, overlay_image, theme.MISC.IMAGE_OVERLAY);
 
-    lv_bar_set_value(ui_barProgress, safe_atoi(argv[1]), LV_ANIM_OFF);
+    int progress = safe_atoi(argv[1]);
+    if (!progress) lv_obj_set_style_bg_opa(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_bar_set_value(ui_barProgress, progress, LV_ANIM_OFF);
     lv_label_set_text(ui_lblMessage, argv[2]);
 
     refresh_screen(device.SCREEN.WAIT);

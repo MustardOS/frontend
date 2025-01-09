@@ -72,20 +72,16 @@ void ui_init(void) {
     lv_obj_set_style_text_align(ui_lblMessage, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_barProgress = lv_bar_create(ui_scrStart);
-    int bar_height = 24;
     lv_bar_set_range(ui_barProgress, 0, 100);
     lv_obj_set_y(ui_barProgress, 0);
-    lv_obj_set_size(ui_barProgress, device.MUX.WIDTH, bar_height);
+    lv_obj_set_size(ui_barProgress, device.MUX.WIDTH, 24);
     lv_obj_set_style_pad_all(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_radius(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_barProgress, lv_color_hex(theme.VERBOSE_BOOT.BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgress, theme.VERBOSE_BOOT.BACKGROUND_ALPHA,
-                            LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_barProgress, lv_color_hex(theme.VERBOSE_BOOT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgress, 25, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(ui_barProgress, lv_color_hex(theme.VERBOSE_BOOT.TEXT),
                               LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_barProgress, theme.VERBOSE_BOOT.TEXT_ALPHA,
-                            LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_barProgress, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
     lv_disp_load_scr(ui_scrStart);
 }
