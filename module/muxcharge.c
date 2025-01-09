@@ -165,7 +165,9 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_scrCharge);
 
-    if (TEST_IMAGE) display_testing_message(ui_scrCharge);
+#if TEST_IMAGE
+    display_testing_message(ui_scrCharge);
+#endif
 
     overlay_image = lv_img_create(ui_scrCharge);
     load_overlay_image(ui_scrCharge, overlay_image, theme.MISC.IMAGE_OVERLAY);

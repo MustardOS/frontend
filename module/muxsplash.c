@@ -92,7 +92,9 @@ int main(int argc, char *argv[]) {
     lv_obj_t *img = lv_img_create(ui_scrSplash);
     lv_img_set_src(img, init_wall);
 
-    if (TEST_IMAGE) display_testing_message(ui_scrSplash);
+#if TEST_IMAGE
+    display_testing_message(ui_scrSplash);
+#endif
 
     overlay_image = lv_img_create(ui_scrSplash);
     load_overlay_image(ui_scrSplash, overlay_image, theme.MISC.IMAGE_OVERLAY);
