@@ -492,7 +492,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
                         (dir_count)++;
                     }
                 }
-            } else if (entry->d_type == DT_REG) {
+            } else if (entry->d_type == DT_REG && !at_base(sys_dir, "ROMS")) {
                 char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
                 snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
