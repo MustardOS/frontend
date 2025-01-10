@@ -320,20 +320,16 @@ void add_file_names(const char *base_dir, char ***file_names) {
         return;
     }
 
-    load_skip_patterns();
-
     while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            char full_path[PATH_MAX];
-            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
-            if (entry->d_type == DT_REG) {
-                char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
-                snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
+        char full_path[PATH_MAX];
+        snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
+        if (entry->d_type == DT_REG) {
+            char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
+            snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
-                *file_names = (char **) realloc(*file_names, (file_count + 1) * sizeof(char *));
-                (*file_names)[file_count] = file_path;
-                (file_count)++;
-            }
+            *file_names = (char **) realloc(*file_names, (file_count + 1) * sizeof(char *));
+            (*file_names)[file_count] = file_path;
+            (file_count)++;
         }
     }
 
@@ -390,7 +386,7 @@ void gen_item(char **file_names, int file_count) {
         snprintf(collection_file, sizeof(collection_file), "%s/%s",
                  INFO_HIS_PATH, file_names[i]);
         const char *stripped_name = read_line_from_file(collection_file, 3);
-        if(stripped_name && stripped_name[0] == '\0') {
+        if (stripped_name && stripped_name[0] == '\0') {
             const char *cache_file = read_line_from_file(collection_file, 1);
             stripped_name = strip_ext(read_line_from_file(cache_file, 7));
         }
