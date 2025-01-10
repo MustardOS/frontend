@@ -138,8 +138,10 @@ char *load_content_description() {
     snprintf(pointer, sizeof(pointer), "%s/%s",
              INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
-    char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(read_line_from_file(pointer, 7));
-    char *h_core_artwork = items[current_item_index].content_type == FOLDER ? "Collection" : read_line_from_file(pointer, 3);
+    char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
+            read_line_from_file(pointer, 7));
+    char *h_core_artwork =
+            items[current_item_index].content_type == FOLDER ? "Collection" : read_line_from_file(pointer, 3);
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
@@ -235,9 +237,11 @@ void image_refresh(char *image_type) {
     snprintf(pointer, sizeof(pointer), "%s/%s",
              INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
 
-    char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(read_line_from_file(pointer, 7));
+    char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
+            read_line_from_file(pointer, 7));
 
-    char *h_core_artwork = items[current_item_index].content_type == FOLDER ? "Collection" : read_line_from_file(pointer, 3);
+    char *h_core_artwork =
+            items[current_item_index].content_type == FOLDER ? "Collection" : read_line_from_file(pointer, 3);
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
@@ -343,14 +347,12 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
 
     int32_t dir_count = 0;
     while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            if (entry->d_type == DT_DIR) {
-                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-                    dir_count++;
-                }
-            } else if (entry->d_type == DT_REG) {
+        if (entry->d_type == DT_DIR) {
+            if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
                 dir_count++;
             }
+        } else if (entry->d_type == DT_REG) {
+            dir_count++;
         }
     }
     closedir(dir);
@@ -369,30 +371,24 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
     load_skip_patterns();
 
     while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            char full_path[PATH_MAX];
-            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
-            if (entry->d_type == DT_DIR) {
-                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
-                    int item_dir_count = get_directory_item_count(base_dir, entry->d_name);
+        char full_path[PATH_MAX];
+        snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
+        if (entry->d_type == DT_DIR) {
+            if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
+                char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
+                snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
-                    if (config.VISUAL.FOLDEREMPTY || item_dir_count != 0) {
-                        char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
-                        snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
-
-                        *dir_names = (char **) realloc(*dir_names, (dir_count + 1) * sizeof(char *));
-                        (*dir_names)[dir_count] = subdir_path;
-                        (dir_count)++;
-                    }
-                }
-            } else if (entry->d_type == DT_REG) {
-                char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
-                snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
-
-                *file_names = (char **) realloc(*file_names, (file_count + 1) * sizeof(char *));
-                (*file_names)[file_count] = file_path;
-                (file_count)++;
+                *dir_names = (char **) realloc(*dir_names, (dir_count + 1) * sizeof(char *));
+                (*dir_names)[dir_count] = subdir_path;
+                (dir_count)++;
             }
+        } else if (entry->d_type == DT_REG) {
+            char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
+            snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
+
+            *file_names = (char **) realloc(*file_names, (file_count + 1) * sizeof(char *));
+            (*file_names)[file_count] = file_path;
+            (file_count)++;
         }
     }
 
@@ -437,7 +433,7 @@ void gen_item(char **file_names, int file_count) {
         snprintf(collection_file, sizeof(collection_file), "%s/%s",
                  sys_dir, file_names[i]);
         const char *stripped_name = read_line_from_file(collection_file, 3);
-        if(stripped_name && stripped_name[0] == '\0') {
+        if (stripped_name && stripped_name[0] == '\0') {
             const char *cache_file = read_line_from_file(collection_file, 1);
             stripped_name = strip_ext(read_line_from_file(cache_file, 7));
         }
@@ -740,7 +736,7 @@ void add_collection_item() {
 
     char collection_file[MAX_BUFFER_SIZE];
     snprintf(collection_file, sizeof(collection_file), "%s/%s-%08X.cfg",
-                sys_dir, strip_ext(base_file_name), fnv1a_hash(cache_file));
+             sys_dir, strip_ext(base_file_name), fnv1a_hash(cache_file));
 
     write_text_to_file(collection_file, "w", CHAR, collection_content);
 
