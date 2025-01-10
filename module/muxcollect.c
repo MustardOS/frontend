@@ -561,29 +561,35 @@ void create_collection_items() {
         snprintf(folder_name_file, sizeof(folder_name_file), "%s/folder.json",
                  INFO_NAM_PATH);
 
-        if (json_valid(read_text_from_file(folder_name_file))) {
+        char *file_content = read_text_from_file(folder_name_file);
+        if (file_content && json_valid(file_content)) {
             fn_valid = 1;
-            fn_json = json_parse(read_text_from_file(folder_name_file));
+            fn_json = json_parse(file_content);
         }
+
+        free(file_content);
     }
 
     update_title(sys_dir, fn_valid, fn_json);
 
     if (dir_count > 0 || file_count > 0) {
-        for (int i = 0; i < dir_count; i++) {
-            content_item *new_item = NULL;
-            char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
-            new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, "", FOLDER);
-            adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
-            if (config.VISUAL.FOLDERITEMCOUNT) {
-                char display_name[MAX_BUFFER_SIZE];
-                snprintf(display_name, sizeof(display_name), "%s (%d)",
-                         new_item->display_name, get_directory_item_count(sys_dir, new_item->name));
-                new_item->display_name = strdup(display_name);
-            }
+        if (at_base(sys_dir, "collection")) {
+            for (int i = 0; i < dir_count; i++) {
+                char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
 
-            free(friendly_folder_name);
-            free(dir_names[i]);
+                content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, "", FOLDER);
+                adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+
+                if (config.VISUAL.FOLDERITEMCOUNT) {
+                    char display_name[MAX_BUFFER_SIZE];
+                    snprintf(display_name, sizeof(display_name), "%s (%d)",
+                             new_item->display_name, get_directory_item_count(sys_dir, new_item->name));
+                    new_item->display_name = strdup(display_name);
+                }
+
+                free(dir_names[i]);
+                free(friendly_folder_name);
+            }
         }
 
         sort_items(items, item_count);
@@ -599,11 +605,12 @@ void create_collection_items() {
         }
 
         gen_item(file_names, file_count);
-        lv_obj_update_layout(ui_pnlContent);
-    }
 
-    free(file_names);
-    free(dir_names);
+        if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
+
+        free(file_names);
+        free(dir_names);
+    }
 }
 
 int load_content(const char *content_name) {
