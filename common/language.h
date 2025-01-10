@@ -153,6 +153,8 @@ struct mux_lang {
         char DENY_MODIFY[MAX_BUFFER_SIZE];
         char ACTIVE[MAX_BUFFER_SIZE];
         char RESOLUTION[MAX_BUFFER_SIZE];
+        char THEME_RESOLUTION[MAX_BUFFER_SIZE];
+        char SCREEN[MAX_BUFFER_SIZE];
         struct {
             char DEPTH[MAX_BUFFER_SIZE];
             char SPACE[MAX_BUFFER_SIZE];
@@ -176,6 +178,7 @@ struct mux_lang {
             char ACTIVE[MAX_BUFFER_SIZE];
             char AUDIO_OUTPUT[MAX_BUFFER_SIZE];
             char RESOLUTION[MAX_BUFFER_SIZE];
+            char THEME_RESOLUTION[MAX_BUFFER_SIZE];
             char SCAN_SCALE[MAX_BUFFER_SIZE];
             struct {
                 char DEPTH[MAX_BUFFER_SIZE];
