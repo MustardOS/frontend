@@ -437,9 +437,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     char full_path[PATH_MAX];
     snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, dir_name);
 
-    struct dirent *entry;
     DIR *dir = opendir(full_path);
-
     if (!dir) {
         perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return 0;
@@ -447,11 +445,13 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
 
     load_skip_patterns();
 
+    struct dirent *entry;
     int32_t dir_count = 0;
+
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
             if (entry->d_type == DT_DIR) {
-                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
+                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
                     dir_count++;
                 }
             } else if (entry->d_type == DT_REG) {
@@ -459,6 +459,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
             }
         }
     }
+
     closedir(dir);
     return dir_count;
 }
