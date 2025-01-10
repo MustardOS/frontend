@@ -343,8 +343,6 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
         return 0;
     }
 
-    load_skip_patterns();
-
     int32_t dir_count = 0;
     while ((entry = readdir(dir)) != NULL) {
         if (entry->d_type == DT_DIR) {
@@ -367,8 +365,6 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
         perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
-
-    load_skip_patterns();
 
     while ((entry = readdir(dir)) != NULL) {
         char full_path[PATH_MAX];
