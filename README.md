@@ -8,32 +8,36 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `lvgl`: [LVGL Embedded Graphics Library](https://github.com/lvgl/lvgl)
 * `muhotkey`: Global Hotkey System
 * `muplay`: Internal Navigation Sound Player
+* `murefresh`: Resolution Change Refresh System
 * `muxapp`: Application List
 * `muxarchive`: Archive Manager
 * `muxassign`: Assignable System/Core for Content
 * `muxcharge`: Charging Information Screen
+* `muxcollect`: Content Collection Manager
 * `muxconfig`: Configuration Menu
 * `muxcredits`: Supporter Credits Screen
 * `muxcustom`: Customisation Menu
 * `muxgov`: System Governor Selector
 * `muxhdmi`: HDMI Configuration
+* `muxhistory`: Content History Menu
 * `muxinfo`: Information Menu
 * `muxlanguage`: Language Selector
 * `muxlaunch`: Main Menu
 * `muxnetprofile`: Network Profile Manager
 * `muxnetscan`: Network SSID Scanner
-* `muxnetwork`: Network Configuration 
+* `muxnetwork`: Network Configuration
 * `muxoption`: Content Explorer Options
-  * **Current Options**
-    * `muxassign`
-    * `muxgov`
-    * `muxsearch`
+    * **Current Options**
+        * `muxassign`
+        * `muxgov`
+        * `muxsearch`
 * `muxpass`: Passcode Screen
 * `muxpicker`: Customisation Package Selector
 * `muxplore`: Content Explorer
 * `muxpower`: Power Settings
 * `muxrtc`: Date and Time
 * `muxsearch`: Content Search
+* `muxsnapshot`: Save Snapshot Manager (_Work In Progress_)
 * `muxsplash`: Simple PNG Based Splash Screen
 * `muxstart`: Information and Progress Screen
 * `muxstorage`: Storage Migrate/Sync Information
