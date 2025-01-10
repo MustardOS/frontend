@@ -985,8 +985,8 @@ void delete_files_of_type(const char *dir_path, const char *extension, const cha
                         }
                     }
                 }
-            } else if (entry->d_type == DT_DIR && strcasecmp(entry->d_name, ".") != 0 &&
-                       strcasecmp(entry->d_name, "..") != 0) {
+            } else if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 &&
+                       strcmp(entry->d_name, "..") != 0) {
                 if (recursive) {
                     char sub_dir_path[PATH_MAX];
                     snprintf(sub_dir_path, PATH_MAX, "%s/%s", dir_path, entry->d_name);
@@ -1007,7 +1007,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
 
     if (dir != NULL) {
         while ((entry = readdir(dir)) != NULL) {
-            if (strcasecmp(entry->d_name, ".") == 0 || strcasecmp(entry->d_name, "..") == 0) {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
                 continue;
             }
 
@@ -1926,7 +1926,7 @@ void collect_subdirectories(const char *base_dir, char ***list, int *size, int *
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
             if (entry->d_type == DT_DIR) {
-                if (strcasecmp(entry->d_name, ".") != 0 && strcasecmp(entry->d_name, "..") != 0) {
+                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
                     snprintf(subdir_path, sizeof(subdir_path), "%s/%s", base_dir, entry->d_name);
                     const char *trimmed_path = subdir_path + trim_start_count;
                     add_directory_to_list(list, size, count, trimmed_path);
@@ -2210,10 +2210,10 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     return 0;
 }
 
-uint32_t fnv1a_hash(const char* str) {
+uint32_t fnv1a_hash(const char *str) {
     uint32_t hash = 2166136261U; // FNV offset basis
-    for (const char* p = str; *p; p++) {
-        hash ^= (uint8_t)(*p);
+    for (const char *p = str; *p; p++) {
+        hash ^= (uint8_t) (*p);
         hash *= 16777619; // FNV prime
     }
     return hash;
