@@ -370,7 +370,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
     while ((entry = readdir(dir)) != NULL) {
         char full_path[PATH_MAX];
         snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
-        if (entry->d_type == DT_DIR) {
+        if (entry->d_type == DT_DIR && at_base(sys_dir, "collection")) {
             if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
                 char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
                 snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
