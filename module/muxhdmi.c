@@ -46,7 +46,7 @@ lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
 
-int enable_original, resolution_original, space_original, depth_original,
+int enable_original, resolution_original, theme_resolution_original, space_original, depth_original,
         range_original, scan_original, audio_original;
 
 lv_group_t *ui_group;
@@ -54,7 +54,7 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 7
+#define UI_COUNT 8
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -68,6 +68,7 @@ void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblEnable,     lang.MUXHDMI.HELP.ACTIVE},
             {ui_lblResolution, lang.MUXHDMI.HELP.RESOLUTION},
+            {ui_lblThemeResolution, lang.MUXHDMI.HELP.THEME_RESOLUTION},
             {ui_lblSpace,      lang.MUXHDMI.HELP.COLOUR.SPACE},
             {ui_lblDepth,      lang.MUXHDMI.HELP.COLOUR.DEPTH},
             {ui_lblRange,      lang.MUXHDMI.HELP.COLOUR.RANGE},
@@ -105,6 +106,7 @@ void elements_events_init() {
     lv_obj_t *dropdowns[] = {
             ui_droEnable,
             ui_droResolution,
+            ui_droThemeResolution,
             ui_droSpace,
             ui_droDepth,
             ui_droRange,
@@ -120,6 +122,7 @@ void elements_events_init() {
 void init_dropdown_settings() {
     enable_original = lv_dropdown_get_selected(ui_droEnable);
     resolution_original = lv_dropdown_get_selected(ui_droResolution);
+    theme_resolution_original = lv_dropdown_get_selected(ui_droThemeResolution);
     space_original = lv_dropdown_get_selected(ui_droSpace);
     depth_original = lv_dropdown_get_selected(ui_droDepth);
     range_original = lv_dropdown_get_selected(ui_droRange);
@@ -131,6 +134,8 @@ void restore_hdmi_options() {
     lv_dropdown_set_selected(ui_droEnable, config.SETTINGS.HDMI.ENABLED);
     map_drop_down_to_index(ui_droResolution, config.SETTINGS.HDMI.RESOLUTION,
                            (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 11, 0);
+    map_drop_down_to_index(ui_droThemeResolution, config.SETTINGS.HDMI.THEME_RESOLUTION,
+                           (int[]) {0, 1, 2, 3, 4, 5}, 6, 0);
     lv_dropdown_set_selected(ui_droSpace, config.SETTINGS.HDMI.SPACE);
     lv_dropdown_set_selected(ui_droDepth, config.SETTINGS.HDMI.DEPTH);
     lv_dropdown_set_selected(ui_droRange, config.SETTINGS.HDMI.RANGE);
@@ -142,6 +147,8 @@ void save_hdmi_options() {
     int idx_enable = lv_dropdown_get_selected(ui_droEnable);
     int idx_resolution = map_drop_down_to_value(lv_dropdown_get_selected(ui_droResolution),
                                                 (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 12, 0);
+    int idx_theme_resolution = map_drop_down_to_value(lv_dropdown_get_selected(ui_droThemeResolution),
+                                                (int[]) {0, 1, 2, 3, 4, 5}, 6, 0);
     int idx_space = lv_dropdown_get_selected(ui_droSpace);
     int idx_depth = lv_dropdown_get_selected(ui_droDepth);
     int idx_range = lv_dropdown_get_selected(ui_droRange);
@@ -158,6 +165,11 @@ void save_hdmi_options() {
     if (lv_dropdown_get_selected(ui_droResolution) != resolution_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/resolution"), "w", INT, idx_resolution);
+    }
+
+    if (lv_dropdown_get_selected(ui_droThemeResolution) != theme_resolution_original) {
+        is_modified++;
+        write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/theme_resolution"), "w", INT, idx_theme_resolution);
     }
 
     if (lv_dropdown_get_selected(ui_droSpace) != space_original) {
@@ -200,6 +212,7 @@ void init_navigation_groups() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlEnable,
             ui_pnlResolution,
+            ui_pnlThemeResolution,
             ui_pnlSpace,
             ui_pnlDepth,
             ui_pnlRange,
@@ -209,15 +222,17 @@ void init_navigation_groups() {
 
     ui_objects[0] = ui_lblEnable;
     ui_objects[1] = ui_lblResolution;
-    ui_objects[2] = ui_lblSpace;
-    ui_objects[3] = ui_lblDepth;
-    ui_objects[4] = ui_lblRange;
-    ui_objects[5] = ui_lblScan;
-    ui_objects[6] = ui_lblAudio;
+    ui_objects[2] = ui_lblThemeResolution;
+    ui_objects[3] = ui_lblSpace;
+    ui_objects[4] = ui_lblDepth;
+    ui_objects[5] = ui_lblRange;
+    ui_objects[6] = ui_lblScan;
+    ui_objects[7] = ui_lblAudio;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droEnable,
             ui_droResolution,
+            ui_droThemeResolution,
             ui_droSpace,
             ui_droDepth,
             ui_droRange,
@@ -228,6 +243,7 @@ void init_navigation_groups() {
     lv_obj_t *ui_objects_glyph[] = {
             ui_icoEnable,
             ui_icoResolution,
+            ui_icoThemeResolution,
             ui_icoSpace,
             ui_icoDepth,
             ui_icoRange,
@@ -237,6 +253,7 @@ void init_navigation_groups() {
 
     apply_theme_list_panel(&theme, &device, ui_pnlEnable);
     apply_theme_list_panel(&theme, &device, ui_pnlResolution);
+    apply_theme_list_panel(&theme, &device, ui_pnlThemeResolution);
     apply_theme_list_panel(&theme, &device, ui_pnlSpace);
     apply_theme_list_panel(&theme, &device, ui_pnlDepth);
     apply_theme_list_panel(&theme, &device, ui_pnlRange);
@@ -245,6 +262,7 @@ void init_navigation_groups() {
 
     apply_theme_list_item(&theme, ui_lblEnable, lang.MUXHDMI.ACTIVE, false, true);
     apply_theme_list_item(&theme, ui_lblResolution, lang.MUXHDMI.RESOLUTION, false, true);
+    apply_theme_list_item(&theme, ui_lblThemeResolution, lang.MUXHDMI.THEME_RESOLUTION, false, true);
     apply_theme_list_item(&theme, ui_lblSpace, lang.MUXHDMI.COLOUR.SPACE, false, true);
     apply_theme_list_item(&theme, ui_lblDepth, lang.MUXHDMI.COLOUR.DEPTH, false, true);
     apply_theme_list_item(&theme, ui_lblRange, lang.MUXHDMI.COLOUR.RANGE.TITLE, false, true);
@@ -253,6 +271,7 @@ void init_navigation_groups() {
 
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_module, "enable");
     apply_theme_list_glyph(&theme, ui_icoResolution, mux_module, "resolution");
+    apply_theme_list_glyph(&theme, ui_icoThemeResolution, mux_module, "theme_resolution");
     apply_theme_list_glyph(&theme, ui_icoSpace, mux_module, "space");
     apply_theme_list_glyph(&theme, ui_icoDepth, mux_module, "depth");
     apply_theme_list_glyph(&theme, ui_icoRange, mux_module, "range");
@@ -261,6 +280,7 @@ void init_navigation_groups() {
 
     apply_theme_list_drop_down(&theme, ui_droEnable, NULL);
     apply_theme_list_drop_down(&theme, ui_droResolution, NULL);
+    apply_theme_list_drop_down(&theme, ui_droThemeResolution, NULL);
     apply_theme_list_drop_down(&theme, ui_droSpace, NULL);
 
     char *depth_string = generate_number_string(8, 16, 2, NULL, NULL, NULL, 0);
@@ -290,6 +310,14 @@ void init_navigation_groups() {
  *           "1080p + 50hz",
  *           "1080p + 60hz"}, 11);
  */
+    add_drop_down_options(ui_droThemeResolution, (char *[]) {
+            lang.MUXHDMI.SCREEN,
+            "640x480",
+            "720x480",
+            "720x576",
+            "720x720",
+            "1280x720"}, 6);
+
     add_drop_down_options(ui_droSpace, (char *[]) {
             "RGB",
             "YUV444",
@@ -343,6 +371,7 @@ void list_nav_next(int steps) {
 }
 
 int check_active_hdmi() {
+    if (lv_group_get_focused(ui_group) == ui_lblThemeResolution) return 0; //allow updating theme resolution on the fly without having to toggle hdmi
     if (current_item_index > 0) {
         if (read_int_from_file("/tmp/hdmi_in_use", 1)) {
             play_sound("error", nav_sound, 0, 1);
@@ -453,6 +482,7 @@ void init_elements() {
 
     lv_obj_set_user_data(ui_lblEnable, "enable");
     lv_obj_set_user_data(ui_lblResolution, "resolution");
+    lv_obj_set_user_data(ui_lblThemeResolution, "theme_resolution");
     lv_obj_set_user_data(ui_lblSpace, "space");
     lv_obj_set_user_data(ui_lblDepth, "depth");
     lv_obj_set_user_data(ui_lblRange, "range");

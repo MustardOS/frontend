@@ -35,6 +35,11 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     // If theme does not support device resolution fallback to default but only after factory reset
     if (!config->BOOT.FACTORY_RESET) {
+        if (config->SETTINGS.HDMI.ENABLED && read_int_from_file(device->SCREEN.HDMI, 1) && config->SETTINGS.HDMI.THEME_RESOLUTION > 0) {
+            device->MUX.WIDTH = config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH;
+            device->MUX.HEIGHT = config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT;
+        }
+
         char theme_device_folder[MAX_BUFFER_SIZE];
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
         if (!directory_exist(theme_device_folder)) {

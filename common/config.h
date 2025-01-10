@@ -62,6 +62,9 @@ struct mux_config {
         struct {
             int16_t ENABLED;
             int16_t RESOLUTION;
+            int16_t THEME_RESOLUTION;
+            int16_t THEME_RESOLUTION_WIDTH;
+            int16_t THEME_RESOLUTION_HEIGHT;
             int16_t SPACE;
             int16_t DEPTH;
             int16_t RANGE;
