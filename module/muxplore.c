@@ -449,9 +449,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
             if (entry->d_type == DT_DIR) {
-                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                    dir_count++;
-                }
+                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) dir_count++;
             } else if (entry->d_type == DT_REG) {
                 dir_count++;
             }
@@ -477,9 +475,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
             snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
             if (entry->d_type == DT_DIR) {
                 if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                    int item_dir_count = get_directory_item_count(base_dir, entry->d_name);
-
-                    if (config.VISUAL.FOLDEREMPTY || item_dir_count != 0) {
+                    if (config.VISUAL.FOLDEREMPTY || get_directory_item_count(base_dir, entry->d_name) != 0) {
                         char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
                         snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
