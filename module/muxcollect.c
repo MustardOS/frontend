@@ -344,15 +344,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     struct dirent *entry;
     int32_t dir_count = 0;
 
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_DIR) {
-            if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                dir_count++;
-            }
-        } else if (entry->d_type == DT_REG) {
-            dir_count++;
-        }
-    }
+    while ((entry = readdir(dir)) != NULL) if (entry->d_type == DT_REG) dir_count++;
 
     closedir(dir);
     return dir_count;
