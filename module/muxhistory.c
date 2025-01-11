@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <omp.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/language.h"
@@ -830,6 +831,8 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    omp_set_num_threads(omp_get_num_procs());
+
     mux_module = basename(argv[0]);
     load_device(&device);
     load_config(&config);
