@@ -101,15 +101,15 @@ void init_navigation_groups() {
     ui_icons[1] = ui_icoSystem;
     ui_icons[2] = ui_icoCredits;
 
-    apply_theme_list_panel(&theme, &device, ui_pnlTracker);
-    apply_theme_list_panel(&theme, &device, ui_pnlTester);
-    apply_theme_list_panel(&theme, &device, ui_pnlSystem);
-    apply_theme_list_panel(&theme, &device, ui_pnlCredits);
+    apply_theme_list_panel(ui_pnlTracker);
+    apply_theme_list_panel(ui_pnlTester);
+    apply_theme_list_panel(ui_pnlSystem);
+    apply_theme_list_panel(ui_pnlCredits);
 
-    //apply_theme_list_item(&theme, ui_lblTracker, lang.MUXINFO.ACTIVITY, true, false);
-    apply_theme_list_item(&theme, ui_lblTester, lang.MUXINFO.INPUT, true, false);
-    apply_theme_list_item(&theme, ui_lblSystem, lang.MUXINFO.SYSTEM, true, false);
-    apply_theme_list_item(&theme, ui_lblCredits, lang.MUXINFO.CREDIT, true, false);
+    //apply_theme_list_item(&theme, ui_lblTracker, lang.MUXINFO.ACTIVITY);
+    apply_theme_list_item(&theme, ui_lblTester, lang.MUXINFO.INPUT);
+    apply_theme_list_item(&theme, ui_lblSystem, lang.MUXINFO.SYSTEM);
+    apply_theme_list_item(&theme, ui_lblCredits, lang.MUXINFO.CREDIT);
 
     //apply_theme_list_glyph(&theme, ui_icoTracker, mux_module, "tracker");
     apply_theme_list_glyph(&theme, ui_icoTester, mux_module, "tester");
@@ -317,6 +317,14 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -353,7 +361,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXINFO.TITLE);
     ui_init(ui_pnlContent);

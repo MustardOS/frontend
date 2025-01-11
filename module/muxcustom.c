@@ -100,13 +100,13 @@ void init_navigation_groups() {
     ui_icons[1] = ui_icoCatalogue;
     ui_icons[2] = ui_icoConfig;
 
-    apply_theme_list_panel(&theme, &device, ui_pnlTheme);
-    apply_theme_list_panel(&theme, &device, ui_pnlCatalogue);
-    apply_theme_list_panel(&theme, &device, ui_pnlConfig);
+    apply_theme_list_panel(ui_pnlTheme);
+    apply_theme_list_panel(ui_pnlCatalogue);
+    apply_theme_list_panel(ui_pnlConfig);
 
-    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXCUSTOM.THEME, true, false);
-    apply_theme_list_item(&theme, ui_lblCatalogue, lang.MUXCUSTOM.CATALOGUE, true, false);
-    apply_theme_list_item(&theme, ui_lblConfig, lang.MUXCUSTOM.CONFIG, true, false);
+    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXCUSTOM.THEME);
+    apply_theme_list_item(&theme, ui_lblCatalogue, lang.MUXCUSTOM.CATALOGUE);
+    apply_theme_list_item(&theme, ui_lblConfig, lang.MUXCUSTOM.CONFIG);
 
     apply_theme_list_glyph(&theme, ui_icoTheme, mux_module, "theme");
     apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_module, "catalogue");
@@ -331,6 +331,16 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+
+    if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -367,7 +377,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXCUSTOM.TITLE);
     ui_init(ui_pnlContent);

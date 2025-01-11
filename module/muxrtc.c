@@ -246,21 +246,21 @@ void init_navigation_groups() {
             ui_icoTimezone
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlYear);
-    apply_theme_list_panel(&theme, &device, ui_pnlMonth);
-    apply_theme_list_panel(&theme, &device, ui_pnlDay);
-    apply_theme_list_panel(&theme, &device, ui_pnlHour);
-    apply_theme_list_panel(&theme, &device, ui_pnlMinute);
-    apply_theme_list_panel(&theme, &device, ui_pnlNotation);
-    apply_theme_list_panel(&theme, &device, ui_pnlTimezone);
+    apply_theme_list_panel(ui_pnlYear);
+    apply_theme_list_panel(ui_pnlMonth);
+    apply_theme_list_panel(ui_pnlDay);
+    apply_theme_list_panel(ui_pnlHour);
+    apply_theme_list_panel(ui_pnlMinute);
+    apply_theme_list_panel(ui_pnlNotation);
+    apply_theme_list_panel(ui_pnlTimezone);
 
-    apply_theme_list_item(&theme, ui_lblYear, lang.MUXRTC.YEAR, false, false);
-    apply_theme_list_item(&theme, ui_lblMonth, lang.MUXRTC.MONTH, false, false);
-    apply_theme_list_item(&theme, ui_lblDay, lang.MUXRTC.DAY, false, false);
-    apply_theme_list_item(&theme, ui_lblHour, lang.MUXRTC.HOUR, false, false);
-    apply_theme_list_item(&theme, ui_lblMinute, lang.MUXRTC.MINUTE, false, false);
-    apply_theme_list_item(&theme, ui_lblNotation, lang.MUXRTC.NOTATION, false, false);
-    apply_theme_list_item(&theme, ui_lblTimezone, lang.MUXRTC.TIMEZONE, false, false);
+    apply_theme_list_item(&theme, ui_lblYear, lang.MUXRTC.YEAR);
+    apply_theme_list_item(&theme, ui_lblMonth, lang.MUXRTC.MONTH);
+    apply_theme_list_item(&theme, ui_lblDay, lang.MUXRTC.DAY);
+    apply_theme_list_item(&theme, ui_lblHour, lang.MUXRTC.HOUR);
+    apply_theme_list_item(&theme, ui_lblMinute, lang.MUXRTC.MINUTE);
+    apply_theme_list_item(&theme, ui_lblNotation, lang.MUXRTC.NOTATION);
+    apply_theme_list_item(&theme, ui_lblTimezone, lang.MUXRTC.TIMEZONE);
 
     apply_theme_list_glyph(&theme, ui_icoYear, mux_module, "year");
     apply_theme_list_glyph(&theme, ui_icoMonth, mux_module, "month");
@@ -670,6 +670,14 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -706,7 +714,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXRTC.TITLE);
     ui_init(ui_pnlContent);

@@ -8,6 +8,16 @@
 #include "log.h"
 #include "mini/mini.h"
 
+static lv_style_t style_list_panel_default;
+static lv_style_t style_list_panel_focused;
+
+static lv_anim_t style_list_item_animation;
+static lv_style_t style_list_item_default;
+static lv_style_t style_list_item_focused;
+
+static lv_style_t style_list_glyph_default;
+static lv_style_t style_list_glyph_focused;
+
 int load_scheme(const char *theme_base, const char *mux_dimension,
                 const char *mux_name, char *scheme, size_t scheme_size) {
     return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.txt", theme_base, mux_dimension, mux_name)
@@ -35,7 +45,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     // If theme does not support device resolution fallback to default but only after factory reset
     if (!config->BOOT.FACTORY_RESET) {
-        if (config->SETTINGS.HDMI.ENABLED && read_int_from_file(device->SCREEN.HDMI, 1) && config->SETTINGS.HDMI.THEME_RESOLUTION > 0) {
+        if (config->SETTINGS.HDMI.ENABLED && read_int_from_file(device->SCREEN.HDMI, 1) &&
+            config->SETTINGS.HDMI.THEME_RESOLUTION > 0) {
             device->MUX.WIDTH = config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH;
             device->MUX.HEIGHT = config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT;
         }
@@ -514,89 +525,137 @@ void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, 
     }
 }
 
-void apply_theme_list_panel(struct theme_config *theme, struct mux_device *device, lv_obj_t *ui_pnlList) {
-    lv_obj_set_width(ui_pnlList, theme->MISC.CONTENT.WIDTH);
-    lv_obj_set_height(ui_pnlList, theme->MUX.ITEM.HEIGHT);
-    lv_obj_set_scrollbar_mode(ui_pnlList, LV_SCROLLBAR_MODE_OFF);
+void init_panel_style(struct theme_config *theme) {
+    lv_style_init(&style_list_panel_default);
+    lv_style_init(&style_list_panel_focused);
 
-    lv_obj_set_style_border_width(ui_pnlList, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_side(ui_pnlList, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_pnlList, lv_color_hex(theme->LIST_DEFAULT.BACKGROUND_GRADIENT),
-                                   LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_pnlList, lv_color_hex(theme->LIST_FOCUS.BACKGROUND_GRADIENT),
-                                   LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_main_stop(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_pnlList,
-                                 (theme->LIST_DEFAULT.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+    // List panel default style
+    lv_style_set_width(&style_list_panel_default, theme->MISC.CONTENT.WIDTH);
+    lv_style_set_height(&style_list_panel_default, theme->MUX.ITEM.HEIGHT);
 
-    lv_obj_set_style_bg_color(ui_pnlList, lv_color_hex(theme->LIST_DEFAULT.BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_pnlList, theme->LIST_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_main_stop(ui_pnlList, theme->LIST_DEFAULT.GRADIENT_START,
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(ui_pnlList, theme->LIST_DEFAULT.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_pnlList, lv_color_hex(theme->LIST_DEFAULT.INDICATOR),
-                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_pnlList, theme->LIST_DEFAULT.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlList, lv_color_hex(theme->LIST_FOCUS.BACKGROUND),
-                              LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_opa(ui_pnlList, theme->LIST_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_main_stop(ui_pnlList, theme->LIST_FOCUS.GRADIENT_START, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_grad_stop(ui_pnlList, theme->LIST_FOCUS.GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_bg_grad_dir(ui_pnlList,
-                                 (theme->LIST_FOCUS.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR,
-                                 LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_color(ui_pnlList, lv_color_hex(theme->LIST_FOCUS.INDICATOR),
-                                  LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_border_opa(ui_pnlList, theme->LIST_FOCUS.INDICATOR_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_style_set_border_width(&style_list_panel_default, 5);
+    lv_style_set_border_side(&style_list_panel_default, LV_BORDER_SIDE_LEFT);
+    lv_style_set_border_color(&style_list_panel_default, lv_color_hex(theme->LIST_DEFAULT.INDICATOR));
+    lv_style_set_border_opa(&style_list_panel_default, theme->LIST_DEFAULT.INDICATOR_ALPHA);
 
-    lv_obj_set_style_pad_left(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_pnlList, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_style_set_bg_main_stop(&style_list_panel_default, theme->LIST_DEFAULT.GRADIENT_START);
+    lv_style_set_bg_color(&style_list_panel_default, lv_color_hex(theme->LIST_DEFAULT.BACKGROUND));
+    lv_style_set_bg_opa(&style_list_panel_default, theme->LIST_DEFAULT.BACKGROUND_ALPHA);
 
-    lv_obj_set_style_radius(ui_pnlList, theme->LIST_DEFAULT.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_style_set_bg_grad_color(&style_list_panel_default, lv_color_hex(theme->LIST_DEFAULT.BACKGROUND_GRADIENT));
+    lv_style_set_bg_grad_dir(&style_list_panel_default,
+                             (theme->LIST_DEFAULT.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR);
+    lv_style_set_bg_grad_stop(&style_list_panel_default, theme->LIST_DEFAULT.GRADIENT_STOP);
+
+    lv_style_set_pad_left(&style_list_panel_default, 0);
+    lv_style_set_pad_right(&style_list_panel_default, 0);
+    lv_style_set_pad_top(&style_list_panel_default, 0);
+    lv_style_set_pad_bottom(&style_list_panel_default, 0);
+    lv_style_set_pad_row(&style_list_panel_default, 0);
+    lv_style_set_pad_column(&style_list_panel_default, 0);
+
+    lv_style_set_radius(&style_list_panel_default, theme->LIST_DEFAULT.RADIUS);
+
+    // List panel focused style
+    lv_style_set_bg_main_stop(&style_list_panel_focused, theme->LIST_FOCUS.GRADIENT_START);
+    lv_style_set_bg_color(&style_list_panel_focused, lv_color_hex(theme->LIST_FOCUS.BACKGROUND));
+    lv_style_set_bg_opa(&style_list_panel_focused, theme->LIST_FOCUS.BACKGROUND_ALPHA);
+
+    lv_style_set_bg_grad_color(&style_list_panel_focused, lv_color_hex(theme->LIST_FOCUS.BACKGROUND_GRADIENT));
+    lv_style_set_bg_grad_dir(&style_list_panel_focused,
+                             (theme->LIST_FOCUS.GRADIENT_DIRECTION == 1) ? LV_GRAD_DIR_VER : LV_GRAD_DIR_HOR);
+    lv_style_set_bg_grad_stop(&style_list_panel_focused, theme->LIST_FOCUS.GRADIENT_STOP);
 }
 
-void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text,
-                           bool enable_scrolling_text, bool is_config_menu) {
-    lv_label_set_text(ui_lblItem, item_text);
+void init_item_animation() {
+    lv_anim_init(&style_list_item_animation);
+    lv_anim_set_delay(&style_list_item_animation, 250);
+    lv_style_set_anim(&style_list_item_default, &style_list_item_animation);
+    lv_style_set_anim_speed(&style_list_item_default, 70);
+}
 
-    if (enable_scrolling_text && theme->LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) {
-        static lv_anim_t item_anim;
-        static lv_style_t item_style;
-        lv_anim_init(&item_anim);
-        lv_anim_set_delay(&item_anim, 250);
-        lv_style_init(&item_style);
-        lv_style_set_anim(&item_style, &item_anim);
-        lv_obj_add_style(ui_lblItem, &item_style, LV_PART_MAIN);
-        lv_obj_set_style_anim_speed(ui_lblItem, 70, LV_PART_MAIN);
-    }
+void init_item_style(struct theme_config *theme) {
+    lv_style_init(&style_list_item_default);
+    lv_style_init(&style_list_item_focused);
+
+    lv_style_set_width(&style_list_item_default, theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_RIGHT);
+    lv_style_set_align(&style_list_item_default, LV_ALIGN_LEFT_MID);
+
+    lv_style_set_text_color(&style_list_item_default, lv_color_hex(theme->LIST_DEFAULT.TEXT));
+    lv_style_set_text_opa(&style_list_item_default, theme->LIST_DEFAULT.TEXT_ALPHA);
+
+    lv_style_set_pad_left(&style_list_item_default, theme->FONT.LIST_PAD_LEFT);
+    lv_style_set_pad_top(&style_list_item_default, theme->FONT.LIST_PAD_TOP);
+
+    lv_style_set_text_color(&style_list_item_focused, lv_color_hex(theme->LIST_FOCUS.TEXT));
+    lv_style_set_text_opa(&style_list_item_focused, theme->LIST_FOCUS.TEXT_ALPHA);
+}
+
+void init_glyph_style(struct theme_config *theme) {
+    lv_style_init(&style_list_glyph_default);
+    lv_style_init(&style_list_glyph_focused);
+
+    lv_style_set_x(&style_list_glyph_default, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (theme->MISC.CONTENT.WIDTH / 2));
+    lv_style_set_align(&style_list_glyph_default, LV_ALIGN_CENTER);
+
+    lv_style_set_img_opa(&style_list_glyph_default, theme->LIST_DEFAULT.GLYPH_ALPHA);
+    lv_style_set_img_recolor(&style_list_glyph_default, lv_color_hex(theme->LIST_DEFAULT.GLYPH_RECOLOUR));
+    lv_style_set_img_recolor_opa(&style_list_glyph_default, theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA);
+
+    lv_style_set_pad_top(&style_list_glyph_default, theme->FONT.LIST_ICON_PAD_TOP);
+    lv_style_set_pad_bottom(&style_list_glyph_default, theme->FONT.LIST_ICON_PAD_BOTTOM);
+
+    lv_style_set_img_opa(&style_list_glyph_focused, theme->LIST_FOCUS.GLYPH_ALPHA);
+    lv_style_set_img_recolor(&style_list_glyph_focused, lv_color_hex(theme->LIST_FOCUS.GLYPH_RECOLOUR));
+    lv_style_set_img_recolor_opa(&style_list_glyph_focused, theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA);
+}
+
+void apply_theme_list_panel(lv_obj_t *ui_pnlList) {
+    lv_obj_set_scrollbar_mode(ui_pnlList, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(ui_pnlList, &style_list_panel_default, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_pnlList, &style_list_panel_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
+}
+
+void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text) {
+    lv_label_set_text(ui_lblItem, item_text);
     lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
 
-    lv_obj_set_width(ui_lblItem, theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_RIGHT);
+    lv_obj_add_style(ui_lblItem, &style_list_item_default, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_lblItem, &style_list_item_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
+
     if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) {
         lv_obj_set_height(ui_lblItem, LV_SIZE_CONTENT);
     } else {
-        const lv_font_t *font = lv_obj_get_style_text_font(ui_lblItem, LV_PART_MAIN);
-        lv_coord_t font_height = lv_font_get_line_height(font);
-        lv_obj_set_height(ui_lblItem, font_height);
+        lv_obj_set_height(ui_lblItem, lv_font_get_line_height(lv_obj_get_style_text_font(ui_lblItem, LV_PART_MAIN)));
+    }
+}
+
+void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyph,
+                            const char *screen_name, char *item_glyph) {
+    if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0 && theme->LIST_FOCUS.GLYPH_ALPHA == 0) return;
+
+    char glyph_image_path[MAX_BUFFER_SIZE];
+    char glyph_image_embed[MAX_BUFFER_SIZE];
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
+                  STORAGE_THEME, mux_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
+                  STORAGE_THEME, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
+                  INTERNAL_THEME, mux_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
+                  INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
+         file_exist(glyph_image_path))) {
+
+        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
     }
 
-    lv_obj_set_align(ui_lblItem, LV_ALIGN_LEFT_MID);
+    if (!file_exist(glyph_image_path)) return;
+    lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
 
-    lv_obj_set_style_text_color(ui_lblItem, lv_color_hex(theme->LIST_DEFAULT.TEXT),
-                                LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_lblItem, theme->LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(ui_lblItem, lv_color_hex(theme->LIST_FOCUS.TEXT),
-                                LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ui_lblItem, theme->LIST_FOCUS.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-    lv_obj_set_style_pad_left(ui_lblItem, theme->FONT.LIST_PAD_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblItem, theme->FONT.LIST_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_default, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
 }
 
 void apply_theme_list_value(struct theme_config *theme, lv_obj_t *ui_lblItemValue, char *item_text) {
@@ -666,50 +725,6 @@ void apply_theme_list_drop_down(struct theme_config *theme, lv_obj_t *ui_lblItem
     lv_obj_set_style_bg_color(lv_dropdown_get_list(ui_lblItemDropDown), lv_color_hex(0xF8E008),
                               LV_PART_SELECTED | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(lv_dropdown_get_list(ui_lblItemDropDown), 255, LV_PART_SELECTED | LV_STATE_DEFAULT);
-}
-
-void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyph,
-                            const char *screen_name, char *item_glyph) {
-    if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0 && theme->LIST_FOCUS.GLYPH_ALPHA == 0) return;
-
-    char glyph_image_path[MAX_BUFFER_SIZE];
-    char glyph_image_embed[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  STORAGE_THEME, mux_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  STORAGE_THEME, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  INTERNAL_THEME, mux_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
-         file_exist(glyph_image_path))) {
-
-        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
-    }
-
-    if (!file_exist(glyph_image_path)) return;
-
-    lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
-
-    lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (theme->MISC.CONTENT.WIDTH / 2));
-    lv_obj_set_align(ui_lblItemGlyph, LV_ALIGN_CENTER);
-
-    lv_obj_set_style_img_opa(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_opa(ui_lblItemGlyph, theme->LIST_FOCUS.GLYPH_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-    lv_obj_set_style_img_recolor(ui_lblItemGlyph, lv_color_hex(theme->LIST_DEFAULT.GLYPH_RECOLOUR),
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA,
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_img_recolor(ui_lblItemGlyph, lv_color_hex(theme->LIST_FOCUS.GLYPH_RECOLOUR),
-                                 LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_img_recolor_opa(ui_lblItemGlyph, theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA,
-                                     LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_pad_top(ui_lblItemGlyph, theme->FONT.LIST_ICON_PAD_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblItemGlyph, theme->FONT.LIST_ICON_PAD_BOTTOM, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj_t *ui_rolComboThree,

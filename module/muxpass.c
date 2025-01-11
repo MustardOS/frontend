@@ -190,6 +190,10 @@ void glyph_task() {
     update_battery_capacity(ui_staCapacity, &theme);
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+}
+
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
@@ -262,7 +266,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXPASS.TITLE);
     ui_init(ui_pnlContent);

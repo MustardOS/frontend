@@ -100,9 +100,9 @@ void show_help(lv_obj_t *element_focused) {
 
 void add_info_item(int index, char *item_text, char *glyph_name, bool add_bottom_border) {
     lv_obj_t *ui_pnlInfoItem = lv_obj_create(ui_pnlContent);
-    apply_theme_list_panel(&theme, &device, ui_pnlInfoItem);
+    apply_theme_list_panel(ui_pnlInfoItem);
     lv_obj_t *ui_lblInfoItem = lv_label_create(ui_pnlInfoItem);
-    apply_theme_list_item(&theme, ui_lblInfoItem, item_text, false, false);
+    apply_theme_list_item(&theme, ui_lblInfoItem, item_text);
     lv_obj_t *ui_icoInfoItem = lv_img_create(ui_pnlInfoItem);
     apply_theme_list_glyph(&theme, ui_icoInfoItem, mux_module, glyph_name);
 
@@ -147,13 +147,13 @@ void init_navigation_groups() {
     ui_icons[1] = ui_icoCore;
     ui_icons[2] = ui_icoGovernor;
 
-    apply_theme_list_panel(&theme, &device, ui_pnlSearch);
-    apply_theme_list_panel(&theme, &device, ui_pnlCore);
-    apply_theme_list_panel(&theme, &device, ui_pnlGovernor);
+    apply_theme_list_panel(ui_pnlSearch);
+    apply_theme_list_panel(ui_pnlCore);
+    apply_theme_list_panel(ui_pnlGovernor);
 
-    apply_theme_list_item(&theme, ui_lblSearch, lang.MUXOPTION.SEARCH, true, false);
-    apply_theme_list_item(&theme, ui_lblCore, lang.MUXOPTION.ASSIGN_CORE, true, false);
-    apply_theme_list_item(&theme, ui_lblGovernor, lang.MUXOPTION.ASSIGN_GOV, true, false);
+    apply_theme_list_item(&theme, ui_lblSearch, lang.MUXOPTION.SEARCH);
+    apply_theme_list_item(&theme, ui_lblCore, lang.MUXOPTION.ASSIGN_CORE);
+    apply_theme_list_item(&theme, ui_lblGovernor, lang.MUXOPTION.ASSIGN_GOV);
 
     apply_theme_list_glyph(&theme, ui_icoSearch, mux_module, "search");
     apply_theme_list_glyph(&theme, ui_icoCore, mux_module, "core");
@@ -380,6 +380,14 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -445,7 +453,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXOPTION.TITLE);
     ui_init(ui_pnlContent);

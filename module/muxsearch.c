@@ -135,13 +135,13 @@ void init_navigation_groups() {
             ui_icoSearchGlobal,
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlLookup);
-    apply_theme_list_panel(&theme, &device, ui_pnlSearchLocal);
-    apply_theme_list_panel(&theme, &device, ui_pnlSearchGlobal);
+    apply_theme_list_panel(ui_pnlLookup);
+    apply_theme_list_panel(ui_pnlSearchLocal);
+    apply_theme_list_panel(ui_pnlSearchGlobal);
 
-    apply_theme_list_item(&theme, ui_lblLookup, lang.MUXSEARCH.LOOKUP, false, true);
-    apply_theme_list_item(&theme, ui_lblSearchLocal, lang.MUXSEARCH.LOCAL, false, true);
-    apply_theme_list_item(&theme, ui_lblSearchGlobal, lang.MUXSEARCH.GLOBAL, false, true);
+    apply_theme_list_item(&theme, ui_lblLookup, lang.MUXSEARCH.LOOKUP);
+    apply_theme_list_item(&theme, ui_lblSearchLocal, lang.MUXSEARCH.LOCAL);
+    apply_theme_list_item(&theme, ui_lblSearchGlobal, lang.MUXSEARCH.GLOBAL);
 
     apply_theme_list_glyph(&theme, ui_icoLookup, mux_module, "lookup");
     apply_theme_list_glyph(&theme, ui_icoSearchLocal, mux_module, "local");
@@ -290,10 +290,10 @@ void image_refresh(char *image_type) {
 
 void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_value) {
     lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
-    apply_theme_list_panel(&theme, &device, ui_pnlResult);
+    apply_theme_list_panel(ui_pnlResult);
 
     lv_obj_t *ui_lblResultItem = lv_label_create(ui_pnlResult);
-    apply_theme_list_item(&theme, ui_lblResultItem, item_text, true, false);
+    apply_theme_list_item(&theme, ui_lblResultItem, item_text);
 
     lv_obj_t *ui_lblResultItemValue = lv_label_create(ui_pnlResult);
     lv_label_set_text(ui_lblResultItemValue, item_value);
@@ -980,6 +980,16 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+
+    if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
+}
+
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
@@ -1041,7 +1051,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
     ui_init(ui_screen, ui_pnlContent, &theme);

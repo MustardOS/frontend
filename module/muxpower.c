@@ -202,15 +202,15 @@ void init_navigation_groups() {
             ui_icoIdleSleep
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlShutdown);
-    apply_theme_list_panel(&theme, &device, ui_pnlBattery);
-    apply_theme_list_panel(&theme, &device, ui_pnlIdleDisplay);
-    apply_theme_list_panel(&theme, &device, ui_pnlIdleSleep);
+    apply_theme_list_panel(ui_pnlShutdown);
+    apply_theme_list_panel(ui_pnlBattery);
+    apply_theme_list_panel(ui_pnlIdleDisplay);
+    apply_theme_list_panel(ui_pnlIdleSleep);
 
-    apply_theme_list_item(&theme, ui_lblShutdown, lang.MUXPOWER.SLEEP.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblBattery, lang.MUXPOWER.LOW_BATTERY, false, true);
-    apply_theme_list_item(&theme, ui_lblIdleDisplay, lang.MUXPOWER.IDLE.DISPLAY, false, true);
-    apply_theme_list_item(&theme, ui_lblIdleSleep, lang.MUXPOWER.IDLE.SLEEP, false, true);
+    apply_theme_list_item(&theme, ui_lblShutdown, lang.MUXPOWER.SLEEP.TITLE);
+    apply_theme_list_item(&theme, ui_lblBattery, lang.MUXPOWER.LOW_BATTERY);
+    apply_theme_list_item(&theme, ui_lblIdleDisplay, lang.MUXPOWER.IDLE.DISPLAY);
+    apply_theme_list_item(&theme, ui_lblIdleSleep, lang.MUXPOWER.IDLE.SLEEP);
 
     apply_theme_list_glyph(&theme, ui_icoShutdown, mux_module, "shutdown");
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_module, "battery");
@@ -445,6 +445,14 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -481,7 +489,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXPOWER.TITLE);
     ui_init(ui_pnlContent);

@@ -523,47 +523,47 @@ void init_navigation_groups() {
             ui_icoCardMode
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlAccelerate);
-    apply_theme_list_panel(&theme, &device, ui_pnlSwap);
-    apply_theme_list_panel(&theme, &device, ui_pnlThermal);
-    apply_theme_list_panel(&theme, &device, ui_pnlFont);
-    apply_theme_list_panel(&theme, &device, ui_pnlVolume);
-    apply_theme_list_panel(&theme, &device, ui_pnlBrightness);
-    apply_theme_list_panel(&theme, &device, ui_pnlOffset);
-    apply_theme_list_panel(&theme, &device, ui_pnlPasscode);
-    apply_theme_list_panel(&theme, &device, ui_pnlLED);
-    apply_theme_list_panel(&theme, &device, ui_pnlTheme);
-    apply_theme_list_panel(&theme, &device, ui_pnlRetroWait);
-    apply_theme_list_panel(&theme, &device, ui_pnlUSBFunction);
-    apply_theme_list_panel(&theme, &device, ui_pnlState);
-    apply_theme_list_panel(&theme, &device, ui_pnlVerbose);
-    apply_theme_list_panel(&theme, &device, ui_pnlRumble);
-    apply_theme_list_panel(&theme, &device, ui_pnlUserInit);
-    apply_theme_list_panel(&theme, &device, ui_pnlDPADSwap);
-    apply_theme_list_panel(&theme, &device, ui_pnlOverdrive);
-    apply_theme_list_panel(&theme, &device, ui_pnlSwapfile);
-    apply_theme_list_panel(&theme, &device, ui_pnlCardMode);
+    apply_theme_list_panel(ui_pnlAccelerate);
+    apply_theme_list_panel(ui_pnlSwap);
+    apply_theme_list_panel(ui_pnlThermal);
+    apply_theme_list_panel(ui_pnlFont);
+    apply_theme_list_panel(ui_pnlVolume);
+    apply_theme_list_panel(ui_pnlBrightness);
+    apply_theme_list_panel(ui_pnlOffset);
+    apply_theme_list_panel(ui_pnlPasscode);
+    apply_theme_list_panel(ui_pnlLED);
+    apply_theme_list_panel(ui_pnlTheme);
+    apply_theme_list_panel(ui_pnlRetroWait);
+    apply_theme_list_panel(ui_pnlUSBFunction);
+    apply_theme_list_panel(ui_pnlState);
+    apply_theme_list_panel(ui_pnlVerbose);
+    apply_theme_list_panel(ui_pnlRumble);
+    apply_theme_list_panel(ui_pnlUserInit);
+    apply_theme_list_panel(ui_pnlDPADSwap);
+    apply_theme_list_panel(ui_pnlOverdrive);
+    apply_theme_list_panel(ui_pnlSwapfile);
+    apply_theme_list_panel(ui_pnlCardMode);
 
-    apply_theme_list_item(&theme, ui_lblAccelerate, lang.MUXTWEAKADV.SPEED, false, true);
-    apply_theme_list_item(&theme, ui_lblSwap, lang.MUXTWEAKADV.SWAP.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblThermal, lang.MUXTWEAKADV.THERMAL, false, true);
-    apply_theme_list_item(&theme, ui_lblFont, lang.MUXTWEAKADV.FONT.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblVolume, lang.MUXTWEAKADV.VOLUME.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblBrightness, lang.MUXTWEAKADV.BRIGHT.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblOffset, lang.MUXTWEAKADV.OFFSET, false, true);
-    apply_theme_list_item(&theme, ui_lblPasscode, lang.MUXTWEAKADV.LOCK, false, true);
-    apply_theme_list_item(&theme, ui_lblLED, lang.MUXTWEAKADV.LED, false, true);
-    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXTWEAKADV.RANDOM, false, true);
-    apply_theme_list_item(&theme, ui_lblRetroWait, lang.MUXTWEAKADV.NET_WAIT, false, true);
-    apply_theme_list_item(&theme, ui_lblUSBFunction, lang.MUXTWEAKADV.USB, false, true);
-    apply_theme_list_item(&theme, ui_lblState, lang.MUXTWEAKADV.STATE, false, true);
-    apply_theme_list_item(&theme, ui_lblVerbose, lang.MUXTWEAKADV.VERBOSE, false, true);
-    apply_theme_list_item(&theme, ui_lblRumble, lang.MUXTWEAKADV.RUMBLE.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXTWEAKADV.USER_INIT, false, true);
-    apply_theme_list_item(&theme, ui_lblDPADSwap, lang.MUXTWEAKADV.DPAD, false, true);
-    apply_theme_list_item(&theme, ui_lblOverdrive, lang.MUXTWEAKADV.OVERDRIVE, false, true);
-    apply_theme_list_item(&theme, ui_lblSwapfile, lang.MUXTWEAKADV.SWAPFILE, false, true);
-    apply_theme_list_item(&theme, ui_lblCardMode, lang.MUXTWEAKADV.TUNING, false, true);
+    apply_theme_list_item(&theme, ui_lblAccelerate, lang.MUXTWEAKADV.SPEED);
+    apply_theme_list_item(&theme, ui_lblSwap, lang.MUXTWEAKADV.SWAP.TITLE);
+    apply_theme_list_item(&theme, ui_lblThermal, lang.MUXTWEAKADV.THERMAL);
+    apply_theme_list_item(&theme, ui_lblFont, lang.MUXTWEAKADV.FONT.TITLE);
+    apply_theme_list_item(&theme, ui_lblVolume, lang.MUXTWEAKADV.VOLUME.TITLE);
+    apply_theme_list_item(&theme, ui_lblBrightness, lang.MUXTWEAKADV.BRIGHT.TITLE);
+    apply_theme_list_item(&theme, ui_lblOffset, lang.MUXTWEAKADV.OFFSET);
+    apply_theme_list_item(&theme, ui_lblPasscode, lang.MUXTWEAKADV.LOCK);
+    apply_theme_list_item(&theme, ui_lblLED, lang.MUXTWEAKADV.LED);
+    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXTWEAKADV.RANDOM);
+    apply_theme_list_item(&theme, ui_lblRetroWait, lang.MUXTWEAKADV.NET_WAIT);
+    apply_theme_list_item(&theme, ui_lblUSBFunction, lang.MUXTWEAKADV.USB);
+    apply_theme_list_item(&theme, ui_lblState, lang.MUXTWEAKADV.STATE);
+    apply_theme_list_item(&theme, ui_lblVerbose, lang.MUXTWEAKADV.VERBOSE);
+    apply_theme_list_item(&theme, ui_lblRumble, lang.MUXTWEAKADV.RUMBLE.TITLE);
+    apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXTWEAKADV.USER_INIT);
+    apply_theme_list_item(&theme, ui_lblDPADSwap, lang.MUXTWEAKADV.DPAD);
+    apply_theme_list_item(&theme, ui_lblOverdrive, lang.MUXTWEAKADV.OVERDRIVE);
+    apply_theme_list_item(&theme, ui_lblSwapfile, lang.MUXTWEAKADV.SWAPFILE);
+    apply_theme_list_item(&theme, ui_lblCardMode, lang.MUXTWEAKADV.TUNING);
 
     apply_theme_list_glyph(&theme, ui_icoAccelerate, mux_module, "accelerate");
     apply_theme_list_glyph(&theme, ui_icoSwap, mux_module, "swap");
@@ -885,6 +885,14 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -921,7 +929,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXTWEAKADV.TITLE);
     ui_init(ui_pnlContent);

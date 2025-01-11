@@ -139,10 +139,10 @@ void create_picker_items() {
         ui_count++;
 
         lv_obj_t *ui_pnlPicker = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(&theme, &device, ui_pnlPicker);
+        apply_theme_list_panel(ui_pnlPicker);
 
         lv_obj_t *ui_lblPickerItem = lv_label_create(ui_pnlPicker);
-        apply_theme_list_item(&theme, ui_lblPickerItem, items[i].display_name, true, false);
+        apply_theme_list_item(&theme, ui_lblPickerItem, items[i].display_name);
 
         lv_obj_t *ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
         apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module, get_last_subdir(picker_type, '/', 1));
@@ -379,6 +379,16 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+
+    if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
+}
+
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
@@ -435,7 +445,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 

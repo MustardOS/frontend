@@ -242,31 +242,31 @@ void init_navigation_groups() {
             ui_icoVoltage
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlVersion);
-    apply_theme_list_panel(&theme, &device, ui_pnlDevice);
-    apply_theme_list_panel(&theme, &device, ui_pnlKernel);
-    apply_theme_list_panel(&theme, &device, ui_pnlUptime);
-    apply_theme_list_panel(&theme, &device, ui_pnlCPU);
-    apply_theme_list_panel(&theme, &device, ui_pnlSpeed);
-    apply_theme_list_panel(&theme, &device, ui_pnlGovernor);
-    apply_theme_list_panel(&theme, &device, ui_pnlMemory);
-    apply_theme_list_panel(&theme, &device, ui_pnlTemp);
-    apply_theme_list_panel(&theme, &device, ui_pnlService);
-    apply_theme_list_panel(&theme, &device, ui_pnlBatteryCap);
-    apply_theme_list_panel(&theme, &device, ui_pnlVoltage);
+    apply_theme_list_panel(ui_pnlVersion);
+    apply_theme_list_panel(ui_pnlDevice);
+    apply_theme_list_panel(ui_pnlKernel);
+    apply_theme_list_panel(ui_pnlUptime);
+    apply_theme_list_panel(ui_pnlCPU);
+    apply_theme_list_panel(ui_pnlSpeed);
+    apply_theme_list_panel(ui_pnlGovernor);
+    apply_theme_list_panel(ui_pnlMemory);
+    apply_theme_list_panel(ui_pnlTemp);
+    apply_theme_list_panel(ui_pnlService);
+    apply_theme_list_panel(ui_pnlBatteryCap);
+    apply_theme_list_panel(ui_pnlVoltage);
 
-    apply_theme_list_item(&theme, ui_lblVersion, lang.MUXSYSINFO.VERSION, false, true);
-    apply_theme_list_item(&theme, ui_lblDevice, lang.MUXSYSINFO.DEVICE, false, true);
-    apply_theme_list_item(&theme, ui_lblKernel, lang.MUXSYSINFO.KERNEL, false, true);
-    apply_theme_list_item(&theme, ui_lblUptime, lang.MUXSYSINFO.UPTIME, false, true);
-    apply_theme_list_item(&theme, ui_lblCPU, lang.MUXSYSINFO.CPU.INFO, false, true);
-    apply_theme_list_item(&theme, ui_lblSpeed, lang.MUXSYSINFO.CPU.SPEED, false, true);
-    apply_theme_list_item(&theme, ui_lblGovernor, lang.MUXSYSINFO.CPU.GOV, false, true);
-    apply_theme_list_item(&theme, ui_lblMemory, lang.MUXSYSINFO.MEMORY, false, true);
-    apply_theme_list_item(&theme, ui_lblTemp, lang.MUXSYSINFO.TEMP, false, true);
-    apply_theme_list_item(&theme, ui_lblService, lang.MUXSYSINFO.SERVICE, false, true);
-    apply_theme_list_item(&theme, ui_lblBatteryCap, lang.MUXSYSINFO.CAPACITY, false, true);
-    apply_theme_list_item(&theme, ui_lblVoltage, lang.MUXSYSINFO.VOLTAGE, false, true);
+    apply_theme_list_item(&theme, ui_lblVersion, lang.MUXSYSINFO.VERSION);
+    apply_theme_list_item(&theme, ui_lblDevice, lang.MUXSYSINFO.DEVICE);
+    apply_theme_list_item(&theme, ui_lblKernel, lang.MUXSYSINFO.KERNEL);
+    apply_theme_list_item(&theme, ui_lblUptime, lang.MUXSYSINFO.UPTIME);
+    apply_theme_list_item(&theme, ui_lblCPU, lang.MUXSYSINFO.CPU.INFO);
+    apply_theme_list_item(&theme, ui_lblSpeed, lang.MUXSYSINFO.CPU.SPEED);
+    apply_theme_list_item(&theme, ui_lblGovernor, lang.MUXSYSINFO.CPU.GOV);
+    apply_theme_list_item(&theme, ui_lblMemory, lang.MUXSYSINFO.MEMORY);
+    apply_theme_list_item(&theme, ui_lblTemp, lang.MUXSYSINFO.TEMP);
+    apply_theme_list_item(&theme, ui_lblService, lang.MUXSYSINFO.SERVICE);
+    apply_theme_list_item(&theme, ui_lblBatteryCap, lang.MUXSYSINFO.CAPACITY);
+    apply_theme_list_item(&theme, ui_lblVoltage, lang.MUXSYSINFO.VOLTAGE);
 
     apply_theme_list_glyph(&theme, ui_icoVersion, mux_module, "version");
     apply_theme_list_glyph(&theme, ui_icoDevice, mux_module, "device");
@@ -477,6 +477,14 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -513,7 +521,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXSYSINFO.TITLE);
     ui_init(ui_pnlContent);

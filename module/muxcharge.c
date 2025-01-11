@@ -116,6 +116,10 @@ void battery_task() {
     blank++;
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -152,7 +156,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_init();
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));

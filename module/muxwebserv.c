@@ -226,21 +226,21 @@ void init_navigation_groups() {
             ui_icoTailscaled
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlSSHD);
-    apply_theme_list_panel(&theme, &device, ui_pnlSFTPGo);
-    apply_theme_list_panel(&theme, &device, ui_pnlTTYD);
-    apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
-    apply_theme_list_panel(&theme, &device, ui_pnlRSLSync);
-    apply_theme_list_panel(&theme, &device, ui_pnlNTP);
-    apply_theme_list_panel(&theme, &device, ui_pnlTailscaled);
+    apply_theme_list_panel(ui_pnlSSHD);
+    apply_theme_list_panel(ui_pnlSFTPGo);
+    apply_theme_list_panel(ui_pnlTTYD);
+    apply_theme_list_panel(ui_pnlSyncthing);
+    apply_theme_list_panel(ui_pnlRSLSync);
+    apply_theme_list_panel(ui_pnlNTP);
+    apply_theme_list_panel(ui_pnlTailscaled);
 
-    apply_theme_list_item(&theme, ui_lblSSHD, lang.MUXWEBSERV.SHELL, false, true);
-    apply_theme_list_item(&theme, ui_lblSFTPGo, lang.MUXWEBSERV.SFTP, false, true);
-    apply_theme_list_item(&theme, ui_lblTTYD, lang.MUXWEBSERV.TERMINAL, false, true);
-    apply_theme_list_item(&theme, ui_lblSyncthing, lang.MUXWEBSERV.SYNCTHING, false, true);
-    apply_theme_list_item(&theme, ui_lblRSLSync, lang.MUXWEBSERV.RESILIO, false, true);
-    apply_theme_list_item(&theme, ui_lblNTP, lang.MUXWEBSERV.NTP, false, true);
-    apply_theme_list_item(&theme, ui_lblTailscaled, lang.MUXWEBSERV.TAILSCALE, false, true);
+    apply_theme_list_item(&theme, ui_lblSSHD, lang.MUXWEBSERV.SHELL);
+    apply_theme_list_item(&theme, ui_lblSFTPGo, lang.MUXWEBSERV.SFTP);
+    apply_theme_list_item(&theme, ui_lblTTYD, lang.MUXWEBSERV.TERMINAL);
+    apply_theme_list_item(&theme, ui_lblSyncthing, lang.MUXWEBSERV.SYNCTHING);
+    apply_theme_list_item(&theme, ui_lblRSLSync, lang.MUXWEBSERV.RESILIO);
+    apply_theme_list_item(&theme, ui_lblNTP, lang.MUXWEBSERV.NTP);
+    apply_theme_list_item(&theme, ui_lblTailscaled, lang.MUXWEBSERV.TAILSCALE);
 
     apply_theme_list_glyph(&theme, ui_icoSSHD, mux_module, "sshd");
     apply_theme_list_glyph(&theme, ui_icoSFTPGo, mux_module, "sftpgo");
@@ -439,6 +439,14 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -475,7 +483,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXWEBSERV.TITLE);
     ui_init(ui_pnlContent);

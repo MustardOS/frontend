@@ -251,23 +251,23 @@ void init_navigation_groups() {
             ui_icoAudio
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlEnable);
-    apply_theme_list_panel(&theme, &device, ui_pnlResolution);
-    apply_theme_list_panel(&theme, &device, ui_pnlThemeResolution);
-    apply_theme_list_panel(&theme, &device, ui_pnlSpace);
-    apply_theme_list_panel(&theme, &device, ui_pnlDepth);
-    apply_theme_list_panel(&theme, &device, ui_pnlRange);
-    apply_theme_list_panel(&theme, &device, ui_pnlScan);
-    apply_theme_list_panel(&theme, &device, ui_pnlAudio);
+    apply_theme_list_panel(ui_pnlEnable);
+    apply_theme_list_panel(ui_pnlResolution);
+    apply_theme_list_panel(ui_pnlThemeResolution);
+    apply_theme_list_panel(ui_pnlSpace);
+    apply_theme_list_panel(ui_pnlDepth);
+    apply_theme_list_panel(ui_pnlRange);
+    apply_theme_list_panel(ui_pnlScan);
+    apply_theme_list_panel(ui_pnlAudio);
 
-    apply_theme_list_item(&theme, ui_lblEnable, lang.MUXHDMI.ACTIVE, false, true);
-    apply_theme_list_item(&theme, ui_lblResolution, lang.MUXHDMI.RESOLUTION, false, true);
-    apply_theme_list_item(&theme, ui_lblThemeResolution, lang.MUXHDMI.THEME_RESOLUTION, false, true);
-    apply_theme_list_item(&theme, ui_lblSpace, lang.MUXHDMI.COLOUR.SPACE, false, true);
-    apply_theme_list_item(&theme, ui_lblDepth, lang.MUXHDMI.COLOUR.DEPTH, false, true);
-    apply_theme_list_item(&theme, ui_lblRange, lang.MUXHDMI.COLOUR.RANGE.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblScan, lang.MUXHDMI.SCAN_SCALE.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblAudio, lang.MUXHDMI.AUDIO_OUTPUT.TITLE, false, true);
+    apply_theme_list_item(&theme, ui_lblEnable, lang.MUXHDMI.ACTIVE);
+    apply_theme_list_item(&theme, ui_lblResolution, lang.MUXHDMI.RESOLUTION);
+    apply_theme_list_item(&theme, ui_lblThemeResolution, lang.MUXHDMI.THEME_RESOLUTION);
+    apply_theme_list_item(&theme, ui_lblSpace, lang.MUXHDMI.COLOUR.SPACE);
+    apply_theme_list_item(&theme, ui_lblDepth, lang.MUXHDMI.COLOUR.DEPTH);
+    apply_theme_list_item(&theme, ui_lblRange, lang.MUXHDMI.COLOUR.RANGE.TITLE);
+    apply_theme_list_item(&theme, ui_lblScan, lang.MUXHDMI.SCAN_SCALE.TITLE);
+    apply_theme_list_item(&theme, ui_lblAudio, lang.MUXHDMI.AUDIO_OUTPUT.TITLE);
 
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_module, "enable");
     apply_theme_list_glyph(&theme, ui_icoResolution, mux_module, "resolution");
@@ -536,6 +536,14 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -572,7 +580,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXHDMI.TITLE);
     ui_init(ui_pnlContent);

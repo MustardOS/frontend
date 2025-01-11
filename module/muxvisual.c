@@ -361,43 +361,43 @@ void init_navigation_groups() {
             ui_icoBlackFade
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlBattery);
-    apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
-    apply_theme_list_panel(&theme, &device, ui_pnlBluetooth);
-    apply_theme_list_panel(&theme, &device, ui_pnlClock);
-    apply_theme_list_panel(&theme, &device, ui_pnlBoxArt);
-    apply_theme_list_panel(&theme, &device, ui_pnlBoxArtAlign);
-    apply_theme_list_panel(&theme, &device, ui_pnlName);
-    apply_theme_list_panel(&theme, &device, ui_pnlDash);
-    apply_theme_list_panel(&theme, &device, ui_pnlFriendlyFolder);
-    apply_theme_list_panel(&theme, &device, ui_pnlTheTitleFormat);
-    apply_theme_list_panel(&theme, &device, ui_pnlTitleIncludeRootDrive);
-    apply_theme_list_panel(&theme, &device, ui_pnlFolderItemCount);
-    apply_theme_list_panel(&theme, &device, ui_pnlDisplayEmptyFolder);
-    apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFolder);
-    apply_theme_list_panel(&theme, &device, ui_pnlMenuCounterFile);
-    apply_theme_list_panel(&theme, &device, ui_pnlBackgroundAnimation);
-    apply_theme_list_panel(&theme, &device, ui_pnlLaunchSplash);
-    apply_theme_list_panel(&theme, &device, ui_pnlBlackFade);
+    apply_theme_list_panel(ui_pnlBattery);
+    apply_theme_list_panel(ui_pnlNetwork);
+    apply_theme_list_panel(ui_pnlBluetooth);
+    apply_theme_list_panel(ui_pnlClock);
+    apply_theme_list_panel(ui_pnlBoxArt);
+    apply_theme_list_panel(ui_pnlBoxArtAlign);
+    apply_theme_list_panel(ui_pnlName);
+    apply_theme_list_panel(ui_pnlDash);
+    apply_theme_list_panel(ui_pnlFriendlyFolder);
+    apply_theme_list_panel(ui_pnlTheTitleFormat);
+    apply_theme_list_panel(ui_pnlTitleIncludeRootDrive);
+    apply_theme_list_panel(ui_pnlFolderItemCount);
+    apply_theme_list_panel(ui_pnlDisplayEmptyFolder);
+    apply_theme_list_panel(ui_pnlMenuCounterFolder);
+    apply_theme_list_panel(ui_pnlMenuCounterFile);
+    apply_theme_list_panel(ui_pnlBackgroundAnimation);
+    apply_theme_list_panel(ui_pnlLaunchSplash);
+    apply_theme_list_panel(ui_pnlBlackFade);
 
-    apply_theme_list_item(&theme, ui_lblBattery, lang.MUXVISUAL.BATTERY, false, true);
-    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXVISUAL.NETWORK, false, true);
-    apply_theme_list_item(&theme, ui_lblBluetooth, lang.MUXVISUAL.BLUETOOTH, false, true);
-    apply_theme_list_item(&theme, ui_lblClock, lang.MUXVISUAL.CLOCK, false, true);
-    apply_theme_list_item(&theme, ui_lblBoxArt, lang.MUXVISUAL.BOX_ART.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblBoxArtAlign, lang.MUXVISUAL.BOX_ART.ALIGN.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblName, lang.MUXVISUAL.NAME.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblDash, lang.MUXVISUAL.DASH, false, true);
-    apply_theme_list_item(&theme, ui_lblFriendlyFolder, lang.MUXVISUAL.FRIENDLY, false, true);
-    apply_theme_list_item(&theme, ui_lblTheTitleFormat, lang.MUXVISUAL.REFORMAT, false, true);
-    apply_theme_list_item(&theme, ui_lblTitleIncludeRootDrive, lang.MUXVISUAL.ROOT, false, true);
-    apply_theme_list_item(&theme, ui_lblFolderItemCount, lang.MUXVISUAL.COUNT, false, true);
-    apply_theme_list_item(&theme, ui_lblDisplayEmptyFolder, lang.MUXVISUAL.EMPTY, false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER, false, true);
-    apply_theme_list_item(&theme, ui_lblMenuCounterFile, lang.MUXVISUAL.COUNT_FILE, false, true);
-    apply_theme_list_item(&theme, ui_lblBackgroundAnimation, lang.MUXVISUAL.ANIMATION, false, true);
-    apply_theme_list_item(&theme, ui_lblLaunchSplash, lang.MUXVISUAL.SPLASH, false, true);
-    apply_theme_list_item(&theme, ui_lblBlackFade, lang.MUXVISUAL.FADE, false, true);
+    apply_theme_list_item(&theme, ui_lblBattery, lang.MUXVISUAL.BATTERY);
+    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXVISUAL.NETWORK);
+    apply_theme_list_item(&theme, ui_lblBluetooth, lang.MUXVISUAL.BLUETOOTH);
+    apply_theme_list_item(&theme, ui_lblClock, lang.MUXVISUAL.CLOCK);
+    apply_theme_list_item(&theme, ui_lblBoxArt, lang.MUXVISUAL.BOX_ART.TITLE);
+    apply_theme_list_item(&theme, ui_lblBoxArtAlign, lang.MUXVISUAL.BOX_ART.ALIGN.TITLE);
+    apply_theme_list_item(&theme, ui_lblName, lang.MUXVISUAL.NAME.TITLE);
+    apply_theme_list_item(&theme, ui_lblDash, lang.MUXVISUAL.DASH);
+    apply_theme_list_item(&theme, ui_lblFriendlyFolder, lang.MUXVISUAL.FRIENDLY);
+    apply_theme_list_item(&theme, ui_lblTheTitleFormat, lang.MUXVISUAL.REFORMAT);
+    apply_theme_list_item(&theme, ui_lblTitleIncludeRootDrive, lang.MUXVISUAL.ROOT);
+    apply_theme_list_item(&theme, ui_lblFolderItemCount, lang.MUXVISUAL.COUNT);
+    apply_theme_list_item(&theme, ui_lblDisplayEmptyFolder, lang.MUXVISUAL.EMPTY);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER);
+    apply_theme_list_item(&theme, ui_lblMenuCounterFile, lang.MUXVISUAL.COUNT_FILE);
+    apply_theme_list_item(&theme, ui_lblBackgroundAnimation, lang.MUXVISUAL.ANIMATION);
+    apply_theme_list_item(&theme, ui_lblLaunchSplash, lang.MUXVISUAL.SPLASH);
+    apply_theme_list_item(&theme, ui_lblBlackFade, lang.MUXVISUAL.FADE);
 
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_module, "battery");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
@@ -680,6 +680,14 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -716,7 +724,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXVISUAL.TITLE);
     ui_init(ui_pnlContent);

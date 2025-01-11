@@ -116,21 +116,21 @@ void init_navigation_groups() {
     ui_icons[5] = ui_icoLanguage;
     ui_icons[6] = ui_icoStorage;
 
-    apply_theme_list_panel(&theme, &device, ui_pnlTweakGeneral);
-    apply_theme_list_panel(&theme, &device, ui_pnlCustom);
-    apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
-    apply_theme_list_panel(&theme, &device, ui_pnlServices);
-    apply_theme_list_panel(&theme, &device, ui_pnlRTC);
-    apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
-    apply_theme_list_panel(&theme, &device, ui_pnlStorage);
+    apply_theme_list_panel(ui_pnlTweakGeneral);
+    apply_theme_list_panel(ui_pnlCustom);
+    apply_theme_list_panel(ui_pnlNetwork);
+    apply_theme_list_panel(ui_pnlServices);
+    apply_theme_list_panel(ui_pnlRTC);
+    apply_theme_list_panel(ui_pnlLanguage);
+    apply_theme_list_panel(ui_pnlStorage);
 
-    apply_theme_list_item(&theme, ui_lblTweakGeneral, lang.MUXCONFIG.GENERAL, true, false);
-    apply_theme_list_item(&theme, ui_lblCustom, lang.MUXCONFIG.CUSTOM, true, false);
-    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXCONFIG.WIFI, true, false);
-    apply_theme_list_item(&theme, ui_lblServices, lang.MUXCONFIG.WEB, true, false);
-    apply_theme_list_item(&theme, ui_lblRTC, lang.MUXCONFIG.DATETIME, true, false);
-    apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXCONFIG.LANGUAGE, true, false);
-    apply_theme_list_item(&theme, ui_lblStorage, lang.MUXCONFIG.STORAGE, true, false);
+    apply_theme_list_item(&theme, ui_lblTweakGeneral, lang.MUXCONFIG.GENERAL);
+    apply_theme_list_item(&theme, ui_lblCustom, lang.MUXCONFIG.CUSTOM);
+    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXCONFIG.WIFI);
+    apply_theme_list_item(&theme, ui_lblServices, lang.MUXCONFIG.WEB);
+    apply_theme_list_item(&theme, ui_lblRTC, lang.MUXCONFIG.DATETIME);
+    apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXCONFIG.LANGUAGE);
+    apply_theme_list_item(&theme, ui_lblStorage, lang.MUXCONFIG.STORAGE);
 
     apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_module, "general");
     apply_theme_list_glyph(&theme, ui_icoCustom, mux_module, "custom");
@@ -373,6 +373,16 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+
+    if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -409,7 +419,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXCONFIG.TITLE);
     ui_init(ui_pnlContent);

@@ -267,27 +267,27 @@ void init_navigation_groups() {
     ui_icons[8] = ui_icoDNS;
     ui_icons[9] = ui_icoConnect;
 
-    apply_theme_list_panel(&theme, &device, ui_pnlEnable);
-    apply_theme_list_panel(&theme, &device, ui_pnlIdentifier);
-    apply_theme_list_panel(&theme, &device, ui_pnlPassword);
-    apply_theme_list_panel(&theme, &device, ui_pnlScan);
-    apply_theme_list_panel(&theme, &device, ui_pnlType);
-    apply_theme_list_panel(&theme, &device, ui_pnlAddress);
-    apply_theme_list_panel(&theme, &device, ui_pnlSubnet);
-    apply_theme_list_panel(&theme, &device, ui_pnlGateway);
-    apply_theme_list_panel(&theme, &device, ui_pnlDNS);
-    apply_theme_list_panel(&theme, &device, ui_pnlConnect);
+    apply_theme_list_panel(ui_pnlEnable);
+    apply_theme_list_panel(ui_pnlIdentifier);
+    apply_theme_list_panel(ui_pnlPassword);
+    apply_theme_list_panel(ui_pnlScan);
+    apply_theme_list_panel(ui_pnlType);
+    apply_theme_list_panel(ui_pnlAddress);
+    apply_theme_list_panel(ui_pnlSubnet);
+    apply_theme_list_panel(ui_pnlGateway);
+    apply_theme_list_panel(ui_pnlDNS);
+    apply_theme_list_panel(ui_pnlConnect);
 
-    apply_theme_list_item(&theme, ui_lblEnable, lang.MUXNETWORK.ACTIVE, false, true);
-    apply_theme_list_item(&theme, ui_lblIdentifier, lang.MUXNETWORK.SSID, false, true);
-    apply_theme_list_item(&theme, ui_lblPassword, lang.MUXNETWORK.PASSWORD, false, true);
-    apply_theme_list_item(&theme, ui_lblScan, lang.MUXNETWORK.HIDDEN, false, true);
-    apply_theme_list_item(&theme, ui_lblType, lang.MUXNETWORK.TYPE, false, true);
-    apply_theme_list_item(&theme, ui_lblAddress, lang.MUXNETWORK.IP, false, true);
-    apply_theme_list_item(&theme, ui_lblSubnet, lang.MUXNETWORK.CIDR, false, true);
-    apply_theme_list_item(&theme, ui_lblGateway, lang.MUXNETWORK.GATEWAY, false, true);
-    apply_theme_list_item(&theme, ui_lblDNS, lang.MUXNETWORK.DNS, false, true);
-    apply_theme_list_item(&theme, ui_lblConnect, lang.MUXNETWORK.CONNECT, false, true);
+    apply_theme_list_item(&theme, ui_lblEnable, lang.MUXNETWORK.ACTIVE);
+    apply_theme_list_item(&theme, ui_lblIdentifier, lang.MUXNETWORK.SSID);
+    apply_theme_list_item(&theme, ui_lblPassword, lang.MUXNETWORK.PASSWORD);
+    apply_theme_list_item(&theme, ui_lblScan, lang.MUXNETWORK.HIDDEN);
+    apply_theme_list_item(&theme, ui_lblType, lang.MUXNETWORK.TYPE);
+    apply_theme_list_item(&theme, ui_lblAddress, lang.MUXNETWORK.IP);
+    apply_theme_list_item(&theme, ui_lblSubnet, lang.MUXNETWORK.CIDR);
+    apply_theme_list_item(&theme, ui_lblGateway, lang.MUXNETWORK.GATEWAY);
+    apply_theme_list_item(&theme, ui_lblDNS, lang.MUXNETWORK.DNS);
+    apply_theme_list_item(&theme, ui_lblConnect, lang.MUXNETWORK.CONNECT);
 
     apply_theme_list_glyph(&theme, ui_icoEnable, mux_module, "enable");
     apply_theme_list_glyph(&theme, ui_icoIdentifier, mux_module, "identifier");
@@ -1119,6 +1119,14 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -1155,7 +1163,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXNETWORK.TITLE);
     ui_init(ui_screen, ui_pnlContent, &theme);

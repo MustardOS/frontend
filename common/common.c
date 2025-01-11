@@ -493,36 +493,40 @@ char *read_text_from_file(const char *filename) {
 }
 
 char *read_line_from_file(const char *filename, size_t line_number) {
-    char *line = NULL;
-    FILE *file = fopen(filename, "r");
-
-    if (file == NULL) {
+    if (!filename || line_number == 0) {
+        fprintf(stderr, "Invalid filename or line number.\n");
         return "";
     }
 
-    line = (char *) malloc(MAX_BUFFER_SIZE);
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        return "";
+    }
 
-    if (line != NULL) {
-        size_t current_line = 0;
-        while (current_line < line_number && fgets(line, MAX_BUFFER_SIZE, file) != NULL) {
-            current_line++;
-        }
+    char *line = (char *) malloc(MAX_BUFFER_SIZE);
+    if (!line) {
+        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        fclose(file);
+        return "";
+    }
 
-        if (current_line < line_number) {
-            free(line);
-            return "";
-        } else {
+    size_t current_line = 0;
+    while (fgets(line, MAX_BUFFER_SIZE, file) != NULL) {
+        current_line++;
+        if (current_line == line_number) {
             size_t length = strlen(line);
             if (length > 0 && line[length - 1] == '\n') {
                 line[length - 1] = '\0';
             }
+            fclose(file);
+            return line;
         }
-    } else {
-        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
     }
 
+    free(line);
     fclose(file);
-    return line;
+    return "";
 }
 
 int read_int_from_file(const char *filename, size_t line_number) {
@@ -2150,7 +2154,6 @@ int at_base(char *sys_dir, char *base_name) {
 int search_for_config(const char *base_path, const char *file_name, const char *system_name) {
     struct dirent *entry;
     char full_path[PATH_MAX];
-    char sub_path[PATH_MAX];
     DIR *dir = opendir(base_path);
 
     if (!dir) {
@@ -2159,48 +2162,25 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     }
 
     while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        if (entry->d_name[0] == '.' &&
+            (entry->d_name[1] == '\0' || (entry->d_name[1] == '.' && entry->d_name[2] == '\0')))
+            continue;
+
         snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
 
-        struct stat st;
-        if (stat(full_path, &st) == -1) {
-            perror(lang.SYSTEM.FAIL_STAT);
-            continue;
-        }
-
-        if (S_ISREG(st.st_mode)) {
+        if (entry->d_type == DT_REG) {
             if (strstr(entry->d_name, file_name)) {
                 char *line = read_line_from_file(full_path, 2);
-
                 if (line && strcmp(line, system_name) == 0) {
                     closedir(dir);
                     return 1;
                 }
             }
-        } else if (S_ISDIR(st.st_mode)) {
-            DIR *sub_dir = opendir(full_path);
-            if (!sub_dir) {
-                perror(lang.SYSTEM.FAIL_DIR_OPEN);
-                continue;
+        } else if (entry->d_type == DT_DIR) {
+            if (search_for_config(full_path, file_name, system_name)) {
+                closedir(dir);
+                return 1;
             }
-
-            struct dirent *sub_entry;
-            while ((sub_entry = readdir(sub_dir)) != NULL) {
-                if (strcmp(sub_entry->d_name, ".") == 0 || strcmp(sub_entry->d_name, "..") == 0) continue;
-                snprintf(sub_path, sizeof(sub_path), "%s/%s", full_path, sub_entry->d_name);
-
-                if (strstr(sub_entry->d_name, file_name) && access(sub_path, F_OK) == 0) {
-                    char *line = read_line_from_file(sub_path, 2);
-
-                    if (line && strcmp(line, system_name) == 0) {
-                        closedir(sub_dir);
-                        closedir(dir);
-                        return 1;
-                    }
-                }
-            }
-
-            closedir(sub_dir);
         }
     }
 

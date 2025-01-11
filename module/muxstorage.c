@@ -262,43 +262,43 @@ void init_navigation_groups() {
             ui_icoUserInit
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlBIOS);
-    apply_theme_list_panel(&theme, &device, ui_pnlCatalogue);
-    apply_theme_list_panel(&theme, &device, ui_pnlName);
-    apply_theme_list_panel(&theme, &device, ui_pnlRetroArch);
-    apply_theme_list_panel(&theme, &device, ui_pnlConfig);
-    apply_theme_list_panel(&theme, &device, ui_pnlCore);
-    apply_theme_list_panel(&theme, &device, ui_pnlCollection);
-    apply_theme_list_panel(&theme, &device, ui_pnlHistory);
-    apply_theme_list_panel(&theme, &device, ui_pnlMusic);
-    apply_theme_list_panel(&theme, &device, ui_pnlSave);
-    apply_theme_list_panel(&theme, &device, ui_pnlScreenshot);
-    apply_theme_list_panel(&theme, &device, ui_pnlTheme);
-    apply_theme_list_panel(&theme, &device, ui_pnlCataloguePackage);
-    apply_theme_list_panel(&theme, &device, ui_pnlConfigPackage);
-    apply_theme_list_panel(&theme, &device, ui_pnlLanguage);
-    apply_theme_list_panel(&theme, &device, ui_pnlNetwork);
-    apply_theme_list_panel(&theme, &device, ui_pnlSyncthing);
-    apply_theme_list_panel(&theme, &device, ui_pnlUserInit);
+    apply_theme_list_panel(ui_pnlBIOS);
+    apply_theme_list_panel(ui_pnlCatalogue);
+    apply_theme_list_panel(ui_pnlName);
+    apply_theme_list_panel(ui_pnlRetroArch);
+    apply_theme_list_panel(ui_pnlConfig);
+    apply_theme_list_panel(ui_pnlCore);
+    apply_theme_list_panel(ui_pnlCollection);
+    apply_theme_list_panel(ui_pnlHistory);
+    apply_theme_list_panel(ui_pnlMusic);
+    apply_theme_list_panel(ui_pnlSave);
+    apply_theme_list_panel(ui_pnlScreenshot);
+    apply_theme_list_panel(ui_pnlTheme);
+    apply_theme_list_panel(ui_pnlCataloguePackage);
+    apply_theme_list_panel(ui_pnlConfigPackage);
+    apply_theme_list_panel(ui_pnlLanguage);
+    apply_theme_list_panel(ui_pnlNetwork);
+    apply_theme_list_panel(ui_pnlSyncthing);
+    apply_theme_list_panel(ui_pnlUserInit);
 
-    apply_theme_list_item(&theme, ui_lblBIOS, lang.MUXSTORAGE.BIOS, false, true);
-    apply_theme_list_item(&theme, ui_lblCatalogue, lang.MUXSTORAGE.CATALOGUE, false, true);
-    apply_theme_list_item(&theme, ui_lblName, lang.MUXSTORAGE.FRIENDLY, false, true);
-    apply_theme_list_item(&theme, ui_lblRetroArch, lang.MUXSTORAGE.RA_SYSTEM, false, true);
-    apply_theme_list_item(&theme, ui_lblConfig, lang.MUXSTORAGE.RA_CONFIG, false, true);
-    apply_theme_list_item(&theme, ui_lblCore, lang.MUXSTORAGE.ASSIGNED, false, true);
-    apply_theme_list_item(&theme, ui_lblCollection, lang.MUXSTORAGE.COLLECTION, false, true);
-    apply_theme_list_item(&theme, ui_lblHistory, lang.MUXSTORAGE.HISTORY, false, true);
-    apply_theme_list_item(&theme, ui_lblMusic, lang.MUXSTORAGE.MUSIC, false, true);
-    apply_theme_list_item(&theme, ui_lblSave, lang.MUXSTORAGE.SAVE, false, true);
-    apply_theme_list_item(&theme, ui_lblScreenshot, lang.MUXSTORAGE.SCREENSHOT, false, true);
-    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXSTORAGE.PACKAGE.THEME, false, true);
-    apply_theme_list_item(&theme, ui_lblCataloguePackage, lang.MUXSTORAGE.PACKAGE.CATALOGUE, false, true);
-    apply_theme_list_item(&theme, ui_lblConfigPackage, lang.MUXSTORAGE.PACKAGE.RA_CONFIG, false, true);
-    apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXSTORAGE.LANGUAGE, false, true);
-    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXSTORAGE.NET_PROFILE, false, true);
-    apply_theme_list_item(&theme, ui_lblSyncthing, lang.MUXSTORAGE.SYNCTHING, false, true);
-    apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXSTORAGE.USER_INIT, false, true);
+    apply_theme_list_item(&theme, ui_lblBIOS, lang.MUXSTORAGE.BIOS);
+    apply_theme_list_item(&theme, ui_lblCatalogue, lang.MUXSTORAGE.CATALOGUE);
+    apply_theme_list_item(&theme, ui_lblName, lang.MUXSTORAGE.FRIENDLY);
+    apply_theme_list_item(&theme, ui_lblRetroArch, lang.MUXSTORAGE.RA_SYSTEM);
+    apply_theme_list_item(&theme, ui_lblConfig, lang.MUXSTORAGE.RA_CONFIG);
+    apply_theme_list_item(&theme, ui_lblCore, lang.MUXSTORAGE.ASSIGNED);
+    apply_theme_list_item(&theme, ui_lblCollection, lang.MUXSTORAGE.COLLECTION);
+    apply_theme_list_item(&theme, ui_lblHistory, lang.MUXSTORAGE.HISTORY);
+    apply_theme_list_item(&theme, ui_lblMusic, lang.MUXSTORAGE.MUSIC);
+    apply_theme_list_item(&theme, ui_lblSave, lang.MUXSTORAGE.SAVE);
+    apply_theme_list_item(&theme, ui_lblScreenshot, lang.MUXSTORAGE.SCREENSHOT);
+    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXSTORAGE.PACKAGE.THEME);
+    apply_theme_list_item(&theme, ui_lblCataloguePackage, lang.MUXSTORAGE.PACKAGE.CATALOGUE);
+    apply_theme_list_item(&theme, ui_lblConfigPackage, lang.MUXSTORAGE.PACKAGE.RA_CONFIG);
+    apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXSTORAGE.LANGUAGE);
+    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXSTORAGE.NET_PROFILE);
+    apply_theme_list_item(&theme, ui_lblSyncthing, lang.MUXSTORAGE.SYNCTHING);
+    apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXSTORAGE.USER_INIT);
 
     apply_theme_list_glyph(&theme, ui_icoBIOS, mux_module, "bios");
     apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_module, "catalogue");
@@ -553,6 +553,14 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -589,7 +597,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXSTORAGE.TITLE);
     ui_init(ui_pnlContent);

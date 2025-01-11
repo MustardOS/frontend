@@ -346,8 +346,8 @@ void gen_label(char *item_glyph, char *item_text) {
     lv_group_add_obj(ui_group_glyph, ui_lblHistoryItemGlyph);
     lv_group_add_obj(ui_group_panel, ui_pnlHistory);
 
-    apply_theme_list_panel(&theme, &device, ui_pnlHistory);
-    apply_theme_list_item(&theme, ui_lblHistoryItem, item_text, true, false);
+    apply_theme_list_panel(ui_pnlHistory);
+    apply_theme_list_item(&theme, ui_lblHistoryItem, item_text);
     apply_theme_list_glyph(&theme, ui_lblHistoryItemGlyph, mux_module, item_glyph);
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblHistoryItem, ui_lblHistoryItemGlyph, item_text);
@@ -830,6 +830,16 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+
+    if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
+}
+
 int main(int argc, char *argv[]) {
     omp_set_num_threads(omp_get_num_procs());
 
@@ -884,7 +894,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, mux_module);
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, "");
     ui_init(ui_screen, &theme);

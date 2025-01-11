@@ -399,10 +399,9 @@ void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
 void apply_size_to_content(struct theme_config *c_theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
                            lv_obj_t *ui_lblItemGlyph, const char *item_text);
 
-void apply_theme_list_panel(struct theme_config *p_theme, struct mux_device *p_device, lv_obj_t *ui_pnlList);
+void apply_theme_list_panel(lv_obj_t *ui_pnlList);
 
-void apply_theme_list_item(struct theme_config *li_theme, lv_obj_t *ui_lblItem, const char *item_text,
-                           bool enable_scrolling_text, bool is_config_menu);
+void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text);
 
 void apply_theme_list_value(struct theme_config *lv_theme, lv_obj_t *ui_lblItemValue, char *item_text);
 
@@ -413,3 +412,11 @@ void apply_theme_list_glyph(struct theme_config *g_theme, lv_obj_t *ui_lblItemGl
 
 void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj_t *ui_rolComboThree,
                       lv_obj_t *ui_rolComboFour, lv_obj_t *ui_rolComboFive, lv_obj_t *ui_rolComboSix);
+
+void init_panel_style(struct theme_config *theme);
+
+void init_item_animation();
+
+void init_item_style(struct theme_config *theme);
+
+void init_glyph_style(struct theme_config *theme);

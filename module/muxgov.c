@@ -237,11 +237,11 @@ void create_gov_items(const char *target) {
         ui_count++;
 
         lv_obj_t *ui_pnlGov = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(&theme, &device, ui_pnlGov);
+        apply_theme_list_panel(ui_pnlGov);
         lv_obj_set_user_data(ui_pnlGov, strdup(governors[i]));
 
         lv_obj_t *ui_lblGovItem = lv_label_create(ui_pnlGov);
-        apply_theme_list_item(&theme, ui_lblGovItem, governors[i], true, false);
+        apply_theme_list_item(&theme, ui_lblGovItem, governors[i]);
 
         lv_obj_t *ui_lblGovItemGlyph = lv_img_create(ui_pnlGov);
 
@@ -451,6 +451,14 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     load_device(&device);
@@ -588,7 +596,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, "");
     init_elements();

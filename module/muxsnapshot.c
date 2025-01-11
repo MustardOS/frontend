@@ -138,10 +138,10 @@ void create_snapshot_items() {
         add_item(&items, &item_count, base_filename, snapshot_store, "snapshot", ROM);
 
         lv_obj_t *ui_pnlSnapshot = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(&theme, &device, ui_pnlSnapshot);
+        apply_theme_list_panel(ui_pnlSnapshot);
 
         lv_obj_t *ui_lblSnapshotItem = lv_label_create(ui_pnlSnapshot);
-        apply_theme_list_item(&theme, ui_lblSnapshotItem, snapshot_store, false, true);
+        apply_theme_list_item(&theme, ui_lblSnapshotItem, snapshot_store);
 
         lv_obj_t *ui_lblSnapshotItemGlyph = lv_img_create(ui_pnlSnapshot);
         apply_theme_list_glyph(&theme, ui_lblSnapshotItemGlyph, mux_module, items[i].extra_data);
@@ -355,6 +355,16 @@ void ui_refresh_task() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+
+    if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -391,7 +401,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXSNAPSHOT.TITLE);
     init_elements();

@@ -273,27 +273,27 @@ void init_navigation_groups() {
             ui_icoAdvanced
     };
 
-    apply_theme_list_panel(&theme, &device, ui_pnlHidden);
-    apply_theme_list_panel(&theme, &device, ui_pnlBGM);
-    apply_theme_list_panel(&theme, &device, ui_pnlSound);
-    apply_theme_list_panel(&theme, &device, ui_pnlStartup);
-    apply_theme_list_panel(&theme, &device, ui_pnlColour);
-    apply_theme_list_panel(&theme, &device, ui_pnlBrightness);
-    apply_theme_list_panel(&theme, &device, ui_pnlHDMI);
-    apply_theme_list_panel(&theme, &device, ui_pnlPower);
-    apply_theme_list_panel(&theme, &device, ui_pnlInterface);
-    apply_theme_list_panel(&theme, &device, ui_pnlAdvanced);
+    apply_theme_list_panel(ui_pnlHidden);
+    apply_theme_list_panel(ui_pnlBGM);
+    apply_theme_list_panel(ui_pnlSound);
+    apply_theme_list_panel(ui_pnlStartup);
+    apply_theme_list_panel(ui_pnlColour);
+    apply_theme_list_panel(ui_pnlBrightness);
+    apply_theme_list_panel(ui_pnlHDMI);
+    apply_theme_list_panel(ui_pnlPower);
+    apply_theme_list_panel(ui_pnlInterface);
+    apply_theme_list_panel(ui_pnlAdvanced);
 
-    apply_theme_list_item(&theme, ui_lblHidden, lang.MUXTWEAKGEN.HIDDEN, false, true);
-    apply_theme_list_item(&theme, ui_lblBGM, lang.MUXTWEAKGEN.MUSIC.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblSound, lang.MUXTWEAKGEN.SOUND, false, true);
-    apply_theme_list_item(&theme, ui_lblStartup, lang.MUXTWEAKGEN.STARTUP.TITLE, false, true);
-    apply_theme_list_item(&theme, ui_lblColour, lang.MUXTWEAKGEN.TEMP, false, true);
-    apply_theme_list_item(&theme, ui_lblBrightness, lang.MUXTWEAKGEN.BRIGHT, false, true);
-    apply_theme_list_item(&theme, ui_lblHDMI, lang.MUXTWEAKGEN.HDMI, false, true);
-    apply_theme_list_item(&theme, ui_lblPower, lang.MUXTWEAKGEN.POWER, false, true);
-    apply_theme_list_item(&theme, ui_lblInterface, lang.MUXTWEAKGEN.VISUAL, false, true);
-    apply_theme_list_item(&theme, ui_lblAdvanced, lang.MUXTWEAKGEN.ADVANCED, false, true);
+    apply_theme_list_item(&theme, ui_lblHidden, lang.MUXTWEAKGEN.HIDDEN);
+    apply_theme_list_item(&theme, ui_lblBGM, lang.MUXTWEAKGEN.MUSIC.TITLE);
+    apply_theme_list_item(&theme, ui_lblSound, lang.MUXTWEAKGEN.SOUND);
+    apply_theme_list_item(&theme, ui_lblStartup, lang.MUXTWEAKGEN.STARTUP.TITLE);
+    apply_theme_list_item(&theme, ui_lblColour, lang.MUXTWEAKGEN.TEMP);
+    apply_theme_list_item(&theme, ui_lblBrightness, lang.MUXTWEAKGEN.BRIGHT);
+    apply_theme_list_item(&theme, ui_lblHDMI, lang.MUXTWEAKGEN.HDMI);
+    apply_theme_list_item(&theme, ui_lblPower, lang.MUXTWEAKGEN.POWER);
+    apply_theme_list_item(&theme, ui_lblInterface, lang.MUXTWEAKGEN.VISUAL);
+    apply_theme_list_item(&theme, ui_lblAdvanced, lang.MUXTWEAKGEN.ADVANCED);
 
     apply_theme_list_glyph(&theme, ui_icoHidden, mux_module, "hidden");
     apply_theme_list_glyph(&theme, ui_icoBGM, mux_module, "bgm");
@@ -584,6 +584,14 @@ void direct_to_previous() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+
+    init_panel_style(&theme);
+    init_item_style(&theme);
+    init_glyph_style(&theme);
+}
+
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -620,7 +628,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
+    theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXTWEAKGEN.TITLE);
     ui_init(ui_pnlContent);

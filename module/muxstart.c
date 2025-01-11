@@ -53,6 +53,10 @@ void setup_background_process() {
     }
 }
 
+void theme_init() {
+    load_theme(&theme, &config, &device, mux_module);
+}
+
 int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
@@ -95,8 +99,7 @@ int main(int argc, char *argv[]) {
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
 
-    load_theme(&theme, &config, &device, basename(argv[0]));
-
+    theme_init();
     ui_init();
 
     lv_obj_set_user_data(ui_scrStart, mux_module);
