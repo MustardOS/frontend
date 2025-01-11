@@ -525,12 +525,6 @@ char *get_glyph_name(size_t index) {
     return "rom";
 }
 
-static inline long long current_time_ms() {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
-}
-
 void gen_item(char **file_names, int file_count) {
     char init_meta_dir[MAX_BUFFER_SIZE];
 
@@ -601,28 +595,17 @@ void gen_item(char **file_names, int file_count) {
         }
     }
 
-    long long start_time, end_time;
-    start_time = current_time_ms();
-
     char *glyph_icons[item_count];
 #pragma omp parallel for
     for (size_t i = 0; i < item_count; i++) {
         glyph_icons[i] = (items[i].content_type == ROM) ? get_glyph_name(i) : "unknown";
     }
 
-    end_time = current_time_ms();
-    printf("GLYPH GENERATION IN %lldms\n", end_time - start_time);
-
-    start_time = current_time_ms();
-
     for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ROM) {
             gen_label(glyph_icons[i], items[i].display_name);
         }
     }
-
-    end_time = current_time_ms();
-    printf("LABEL GENERATION IN %lldms\n", end_time - start_time);
 }
 
 char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
