@@ -43,7 +43,7 @@ LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux -lawesome_small -lgamepad \
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
         -fno-unroll-loops -fmerge-all-constants -fno-ident \
-        -ffast-math -funroll-loops -falign-functions
+        -ffast-math -funroll-loops -falign-functions -fopenmp
 
 .PHONY: all $(MODULES) prebuild clean notify
 

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <omp.h>
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/language.h"
@@ -500,17 +501,16 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
 
 void gen_label(char *item_glyph, char *item_text) {
     lv_obj_t *ui_pnlExplore = lv_obj_create(ui_pnlContent);
-    apply_theme_list_panel(&theme, &device, ui_pnlExplore);
-
     lv_obj_t *ui_lblExploreItem = lv_label_create(ui_pnlExplore);
-    apply_theme_list_item(&theme, ui_lblExploreItem, item_text, true, false);
-
     lv_obj_t *ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
-    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_module, item_glyph);
 
     lv_group_add_obj(ui_group, ui_lblExploreItem);
     lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
     lv_group_add_obj(ui_group_panel, ui_pnlExplore);
+
+    apply_theme_list_panel(&theme, &device, ui_pnlExplore);
+    apply_theme_list_item(&theme, ui_lblExploreItem, item_text, true, false);
+    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_module, item_glyph);
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, ui_lblExploreItemGlyph, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
@@ -523,6 +523,12 @@ char *get_glyph_name(size_t index) {
     if (search_for_config(INFO_COL_PATH, file_name, system_name)) return "collection";
     if (search_for_config(INFO_HIS_PATH, file_name, system_name)) return "history";
     return "rom";
+}
+
+static inline long long current_time_ms() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
 }
 
 void gen_item(char **file_names, int file_count) {
@@ -595,12 +601,28 @@ void gen_item(char **file_names, int file_count) {
         }
     }
 
+    long long start_time, end_time;
+    start_time = current_time_ms();
+
+    char *glyph_icons[item_count];
+#pragma omp parallel for
+    for (size_t i = 0; i < item_count; i++) {
+        glyph_icons[i] = (items[i].content_type == ROM) ? get_glyph_name(i) : "unknown";
+    }
+
+    end_time = current_time_ms();
+    printf("GLYPH GENERATION IN %lldms\n", end_time - start_time);
+
+    start_time = current_time_ms();
+
     for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ROM) {
-            char *glyph_icon = get_glyph_name(i);
-            gen_label(glyph_icon, items[i].display_name);
+            gen_label(glyph_icons[i], items[i].display_name);
         }
     }
+
+    end_time = current_time_ms();
+    printf("LABEL GENERATION IN %lldms\n", end_time - start_time);
 }
 
 char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
@@ -1244,6 +1266,8 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
+    omp_set_num_threads(omp_get_num_procs());
+
     mux_module = basename(argv[0]);
     load_device(&device);
     load_config(&config);

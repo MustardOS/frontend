@@ -2153,8 +2153,6 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     char sub_path[PATH_MAX];
     DIR *dir = opendir(base_path);
 
-    puts(base_path);
-
     if (!dir) {
         perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return 0;

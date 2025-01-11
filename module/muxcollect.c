@@ -386,20 +386,25 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
 
 void gen_label(char *item_glyph, char *item_text) {
     lv_obj_t *ui_pnlCollection = lv_obj_create(ui_pnlContent);
-    apply_theme_list_panel(&theme, &device, ui_pnlCollection);
-
     lv_obj_t *ui_lblCollectionItem = lv_label_create(ui_pnlCollection);
-    apply_theme_list_item(&theme, ui_lblCollectionItem, item_text, true, false);
-
     lv_obj_t *ui_lblCollectionItemGlyph = lv_img_create(ui_pnlCollection);
-    apply_theme_list_glyph(&theme, ui_lblCollectionItemGlyph, mux_module, item_glyph);
 
     lv_group_add_obj(ui_group, ui_lblCollectionItem);
     lv_group_add_obj(ui_group_glyph, ui_lblCollectionItemGlyph);
     lv_group_add_obj(ui_group_panel, ui_pnlCollection);
 
+    apply_theme_list_panel(&theme, &device, ui_pnlCollection);
+    apply_theme_list_item(&theme, ui_lblCollectionItem, item_text, true, false);
+    apply_theme_list_glyph(&theme, ui_lblCollectionItemGlyph, mux_module, item_glyph);
+
     apply_size_to_content(&theme, ui_pnlContent, ui_lblCollectionItem, ui_lblCollectionItemGlyph, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblCollectionItem, item_text);
+}
+
+static inline long long current_time_ms() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
 }
 
 void gen_item(char **file_names, int file_count) {
@@ -450,11 +455,17 @@ void gen_item(char **file_names, int file_count) {
 
     sort_items(items, item_count);
 
+    long long start_time, end_time;
+    start_time = current_time_ms();
+
     for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ROM) {
             gen_label("collection", items[i].display_name);
         }
     }
+
+    end_time = current_time_ms();
+    printf("LABEL GENERATION IN %lldms\n", end_time - start_time);
 }
 
 char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
