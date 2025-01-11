@@ -443,8 +443,6 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
         return 0;
     }
 
-    load_skip_patterns();
-
     struct dirent *entry;
     int32_t dir_count = 0;
 
@@ -472,8 +470,6 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
         perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
-
-    load_skip_patterns();
 
     while ((entry = readdir(dir)) != NULL) {
         if (!should_skip(entry->d_name)) {
@@ -1362,6 +1358,7 @@ int main(int argc, char *argv[]) {
 
     if (file_exist(MUOS_PDI_LOAD)) prev_dir = read_text_from_file(MUOS_PDI_LOAD);
 
+    load_skip_patterns();
     create_content_items();
     ui_count = dir_count > 0 || file_count > 0 ? (int) lv_group_get_obj_count(ui_group) : 0;
 
