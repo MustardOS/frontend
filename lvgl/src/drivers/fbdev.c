@@ -81,6 +81,7 @@ static struct fb_fix_screeninfo finfo;
 static char *fbp = 0;
 static long int screensize = 0;
 static int fbfd = 0;
+static bool force_refresh = false;
 
 /**********************
  *      MACROS
@@ -103,13 +104,11 @@ void fbdev_init(const char *fbdev_path) {
     }
     LV_LOG_INFO("The framebuffer device was opened successfully");
 
-#if FBDEV_DISPLAY_POWER_ON
     // Make sure that the display is on.
     if (ioctl(fbfd, FBIOBLANK, FB_BLANK_UNBLANK) != 0) {
         perror("ioctl(FBIOBLANK)");
-        return;
+        // Don't return. Some framebuffer drivers like efifb or simplefb don't implement FBIOBLANK.
     }
-#endif /* FBDEV_DISPLAY_POWER_ON */
 
 #if USE_BSD_FBDEV
     struct fbtype fb;
@@ -168,6 +167,10 @@ void fbdev_init(const char *fbdev_path) {
 
 }
 
+void fbdev_force_refresh(bool enabled) {
+    force_refresh = enabled;
+}
+
 void fbdev_exit(void) {
     close(fbfd);
 }
@@ -218,49 +221,56 @@ void fbdev_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p)
     long int byte_location = 0;
     unsigned char bit_location = 0;
 
-    //Calculate the line length manually to accomedate for resolution changes in runtime
-    uint16_t line_length = vinfo.xres * (vinfo.bits_per_pixel / 8);
-
-    /*32 or 24 bit per pixel*/
-    if (vinfo.bits_per_pixel == 32 || vinfo.bits_per_pixel == 24) {
-        uint32_t * fbp32 = (uint32_t *)
-                fbp;
+    /*32 bit per pixel*/
+    if (vinfo.bits_per_pixel == 32) {
+        uint32_t *fbp32 = (uint32_t *) fbp;
         int32_t y;
         for (y = act_y1; y <= act_y2; y++) {
-            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length / 4;
-            memcpy(&fbp32[location], (uint32_t *)
-                    color_p, (act_x2 - act_x1 + 1) * 4);
+            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * finfo.line_length / 4;
+            memcpy(&fbp32[location], (uint32_t *) color_p, (act_x2 - act_x1 + 1) * 4);
+            color_p += w;
+        }
+    }
+        /*24 bit per pixel*/
+    else if (vinfo.bits_per_pixel == 24 && LV_COLOR_DEPTH == 32) {
+        uint8_t *fbp8 = (uint8_t *) fbp;
+        lv_coord_t x;
+        int32_t y;
+        uint8_t *pixel;
+        for (y = act_y1; y <= act_y2; y++) {
+            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * finfo.line_length / 3;
+            for (x = 0; x < w; ++x) {
+                pixel = (uint8_t *) (&color_p[x]);
+                fbp8[3 * (location + x)] = pixel[0];
+                fbp8[3 * (location + x) + 1] = pixel[1];
+                fbp8[3 * (location + x) + 2] = pixel[2];
+            }
             color_p += w;
         }
     }
         /*16 bit per pixel*/
     else if (vinfo.bits_per_pixel == 16) {
-        uint16_t * fbp16 = (uint16_t *)
-                fbp;
+        uint16_t *fbp16 = (uint16_t *) fbp;
         int32_t y;
         for (y = act_y1; y <= act_y2; y++) {
-            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length / 2;
-            memcpy(&fbp16[location], (uint32_t *)
-                    color_p, (act_x2 - act_x1 + 1) * 2);
+            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * finfo.line_length / 2;
+            memcpy(&fbp16[location], (uint32_t *) color_p, (act_x2 - act_x1 + 1) * 2);
             color_p += w;
         }
     }
         /*8 bit per pixel*/
     else if (vinfo.bits_per_pixel == 8) {
-        uint8_t *fbp8 = (uint8_t *)
-                fbp;
+        uint8_t *fbp8 = (uint8_t *) fbp;
         int32_t y;
         for (y = act_y1; y <= act_y2; y++) {
-            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * line_length;
-            memcpy(&fbp8[location], (uint32_t *)
-                    color_p, (act_x2 - act_x1 + 1));
+            location = (act_x1 + vinfo.xoffset) + (y + vinfo.yoffset) * finfo.line_length;
+            memcpy(&fbp8[location], (uint32_t *) color_p, (act_x2 - act_x1 + 1));
             color_p += w;
         }
     }
         /*1 bit per pixel*/
     else if (vinfo.bits_per_pixel == 1) {
-        uint8_t *fbp8 = (uint8_t *)
-                fbp;
+        uint8_t *fbp8 = (uint8_t *) fbp;
         int32_t x;
         int32_t y;
         for (y = act_y1; y <= act_y2; y++) {
@@ -279,8 +289,12 @@ void fbdev_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p)
         /*Not supported bit per pixel*/
     }
 
-    //May be some direct update command is required
-    //ret = ioctl(state->fd, FBIO_UPDATE, (unsigned long)((uintptr_t)rect));
+    if (force_refresh) {
+        vinfo.activate |= FB_ACTIVATE_NOW | FB_ACTIVATE_FORCE;
+        if (ioctl(fbfd, FBIOPUT_VSCREENINFO, &vinfo) == -1) {
+            perror("Error setting var screen info");
+        }
+    }
 
     lv_disp_flush_ready(drv);
 }
