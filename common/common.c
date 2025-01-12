@@ -40,6 +40,10 @@ lv_anim_t animation;
 lv_obj_t *img_obj;
 const char **img_paths = NULL;
 int img_paths_count = 0;
+const char **history_items = NULL;
+int history_item_count = 0;
+const char **collection_items = NULL;
+int collection_item_count = 0;
 char current_wall[MAX_BUFFER_SIZE];
 lv_obj_t *wall_img = NULL;
 struct grid_info grid_info;
@@ -2188,6 +2192,63 @@ int search_for_config(const char *base_path, const char *file_name, const char *
     return 0;
 }
 
+void populate_items(const char *base_path, const char ***items, int *item_count) {
+    struct dirent *entry;
+    char full_path[PATH_MAX];
+    DIR *dir = opendir(base_path);
+
+    if (!dir) {
+        perror(lang.SYSTEM.FAIL_DIR_OPEN);
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
+
+        struct stat st;
+        if (stat(full_path, &st) == -1) {
+            perror(lang.SYSTEM.FAIL_STAT);
+            continue;
+        }
+
+        if (S_ISREG(st.st_mode)) {
+            if (strstr(entry->d_name, ".cfg")) {
+                *items = realloc(*items, ((*item_count) + 1) * sizeof(char *));
+                (*items)[*item_count] = strdup(read_line_from_file(full_path, 1));
+                (*item_count)++;
+            }
+        } else if (S_ISDIR(st.st_mode)) {
+            populate_items(full_path, items, item_count);
+        }
+    }
+
+    closedir(dir);
+}
+
+void populate_history_items() {
+    populate_items(INFO_HIS_PATH, &history_items, &history_item_count);
+}
+
+void populate_collection_items() {
+    populate_items(INFO_COL_PATH, &collection_items, &collection_item_count);
+}
+
+char *get_content_explorer_glyph_name(char *file_path) {
+    for (int i = 0; i < collection_item_count; i++) {
+        if (strcmp(collection_items[i], file_path) == 0) {
+            return "collection";
+        }
+    }
+
+    for (int i = 0; i < history_item_count; i++) {
+        if (strcmp(history_items[i], file_path) == 0) {
+            return "history";
+        }
+    }
+    return "rom";
+}
+
 uint32_t fnv1a_hash(const char *str) {
     uint32_t hash = 2166136261U; // FNV offset basis
     for (const char *p = str; *p; p++) {
@@ -2195,4 +2256,24 @@ uint32_t fnv1a_hash(const char *str) {
         hash *= 16777619; // FNV prime
     }
     return hash;
+}
+
+bool get_glyph_path(const char *mux_module, char *glyph_name, char *glyph_image_embed, size_t glyph_image_embed_size) {
+    char glyph_image_path[MAX_BUFFER_SIZE];
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
+                  STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
+                  STORAGE_THEME, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
+                  INTERNAL_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
+                  INTERNAL_THEME, mux_module, glyph_name) >= 0 &&
+         file_exist(glyph_image_path))) {
+        snprintf(glyph_image_embed, glyph_image_embed_size, "M:%s", glyph_image_path);
+        return true;
+    }
+
+    return false;
 }
