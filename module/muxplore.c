@@ -608,7 +608,8 @@ void gen_item(char **file_names, int file_count) {
     }
 
     if (dir_count < theme.MUX.ITEM.COUNT) {
-        for (size_t i = 0; i < theme.MUX.ITEM.COUNT - dir_count; i++) {
+        for (size_t i = 0; i < item_count; i++) {
+            if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
             if (items[i].content_type == ROM) {
                 gen_label(items[i].glyph_icon, items[i].display_name);
             }
