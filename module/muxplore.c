@@ -880,14 +880,13 @@ void list_nav_prev(int steps) {
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
 
-        if (!grid_mode_enabled) {
+        if (!grid_mode_enabled && item_count > theme.MUX.ITEM.COUNT) {
             if (current_item_index == item_count - 1) {
                 update_list_items(item_count - theme.MUX.ITEM.COUNT);
             } else {
                 // how many items should be above the currently selected item when scrolling
                 int item_distribution = (theme.MUX.ITEM.COUNT - 1) / 2;
-                if (item_count > theme.MUX.ITEM.COUNT && 
-                        current_item_index >= item_distribution && 
+                if (current_item_index >= item_distribution && 
                         current_item_index < item_count - item_distribution - 1) {
                     lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent, theme.MUX.ITEM.COUNT - 1); // Get the last child
                     lv_obj_move_to_index(last_item, 0);
@@ -924,13 +923,13 @@ void list_nav_next(int steps) {
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
 
-        if (!grid_mode_enabled) {
+        if (!grid_mode_enabled && item_count > theme.MUX.ITEM.COUNT) {
             if (current_item_index == 0) {
                 update_list_items(0);
             } else {
                 // how many items should be above the currently selected item when scrolling
                 int item_distribution = (theme.MUX.ITEM.COUNT - 1) / 2;
-                if (item_count > theme.MUX.ITEM.COUNT && current_item_index > item_distribution && 
+                if (current_item_index > item_distribution && 
                         current_item_index < item_count - item_distribution) {
                     lv_obj_t *first_item = lv_obj_get_child(ui_pnlContent, 0);
                     lv_obj_move_to_index(first_item, theme.MUX.ITEM.COUNT - 1);
