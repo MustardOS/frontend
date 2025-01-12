@@ -1,6 +1,4 @@
 #include "../lvgl/lvgl.h"
-#include "../lvgl/src/drivers/fbdev.h"
-#include "../lvgl/src/drivers/evdev.h"
 #include "ui/ui_muxcollect.h"
 #include <unistd.h>
 #include <pthread.h>
@@ -1282,13 +1280,6 @@ void ui_refresh_task() {
 }
 
 int main(int argc, char *argv[]) {
-    mux_module = basename(argv[0]);
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
-    struct screen_dimension dims = get_device_dimensions();
-
     char *cmd_help = "\nmuOS Extras - Content Collection\nUsage: %s <-adi>\n\nOptions:\n"
                      "\t-a Add mode\n"
                      "\t-d Content directory\n"
@@ -1317,32 +1308,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    lv_init();
-    fbdev_init(device.SCREEN.DEVICE);
+    mux_module = basename(argv[0]);
+    load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
 
-    static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
-
-    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
-
-    static lv_disp_drv_t disp_drv;
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.draw_buf = &disp_buf;
-    disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = dims.WIDTH;
-    disp_drv.ver_res = dims.HEIGHT;
-    disp_drv.sw_rotate = device.SCREEN.ROTATE;
-    disp_drv.rotated = device.SCREEN.ROTATE;
-    disp_drv.full_refresh = 0;
-    disp_drv.direct_mode = 0;
-    disp_drv.antialiasing = 1;
-    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
-    lv_disp_drv_register(&disp_drv);
-    lv_disp_flush_ready(&disp_drv);
-
+    mux_init();
     theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, "");
@@ -1405,26 +1376,7 @@ int main(int argc, char *argv[]) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
     }
 
-    js_fd = open(device.INPUT.EV1, O_RDONLY);
-    if (js_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY);
-        return 1;
-    }
-
-    js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
-    if (js_fd_sys < 0) {
-        perror(lang.SYSTEM.NO_JOY);
-        return 1;
-    }
-
-    lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-
-    indev_drv.type = LV_INDEV_TYPE_KEYPAD;
-    indev_drv.read_cb = evdev_read;
-    indev_drv.user_data = (void *) (intptr_t) js_fd;
-
-    lv_indev_drv_register(&indev_drv);
+    input_init(&js_fd, &js_fd_sys);
 
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count &&
@@ -1506,8 +1458,6 @@ int main(int argc, char *argv[]) {
 
     update_file_counter();
     init_osk();
-
-    refresh_screen(device.SCREEN.WAIT);
     load_kiosk(&kiosk);
 
     mux_input_options input_opts = {

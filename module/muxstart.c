@@ -1,5 +1,4 @@
 #include "../lvgl/lvgl.h"
-#include "../lvgl/src/drivers/fbdev.h"
 #include "ui/ui_muxstart.h"
 #include <unistd.h>
 #include <string.h>
@@ -58,47 +57,19 @@ void theme_init() {
 }
 
 int main(int argc, char *argv[]) {
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
-    struct screen_dimension dims = get_device_dimensions();
-
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <progress> <message>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
     mux_module = basename(argv[0]);
+    load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
 
     setup_background_process();
 
-    lv_init();
-    fbdev_init(device.SCREEN.DEVICE);
-
-    static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
-
-    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
-
-    static lv_disp_drv_t disp_drv;
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.draw_buf = &disp_buf;
-    disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = dims.WIDTH;
-    disp_drv.ver_res = dims.HEIGHT;
-    disp_drv.sw_rotate = device.SCREEN.ROTATE;
-    disp_drv.rotated = device.SCREEN.ROTATE;
-    disp_drv.full_refresh = 0;
-    disp_drv.direct_mode = 0;
-    disp_drv.antialiasing = 1;
-    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
-    lv_disp_drv_register(&disp_drv);
-    lv_disp_flush_ready(&disp_drv);
-
+    mux_init();
     theme_init();
     ui_init();
 
@@ -130,8 +101,6 @@ int main(int argc, char *argv[]) {
     if (!progress) lv_obj_set_style_bg_opa(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_bar_set_value(ui_barProgress, progress, LV_ANIM_OFF);
     lv_label_set_text(ui_lblMessage, argv[2]);
-
-    refresh_screen(device.SCREEN.WAIT);
 
     return 0;
 }

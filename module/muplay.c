@@ -48,10 +48,10 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    setup_background_process();
+
     load_device(&device);
     load_config(&config);
-
-    setup_background_process();
 
     mux_module = basename(argv[0]);
     nav_sound = init_nav_sound(mux_module);

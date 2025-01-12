@@ -1,9 +1,6 @@
 #include "../lvgl/lvgl.h"
-#include "../lvgl/src/drivers/fbdev.h"
 #include "ui/ui_muxcredits.h"
-#include <fcntl.h>
 #include <string.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include "../common/common.h"
 #include "../common/config.h"
@@ -12,8 +9,11 @@
 #include "../common/kiosk.h"
 #include "../common/theme.h"
 #include "../common/input.h"
+#include "../common/ui_common.h"
 
 char *mux_module;
+static int js_fd;
+static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -49,42 +49,11 @@ void handle_quit(void) {
     mux_input_stop();
 }
 
-void refresh(void) {
-    refresh_screen(device.SCREEN.WAIT);
-}
-
 int main() {
     load_device(&device);
     load_config(&config);
 
-    struct screen_dimension dims = get_device_dimensions();
-
-    lv_init();
-    fbdev_init(device.SCREEN.DEVICE);
-
-    static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
-
-    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
-
-    static lv_disp_drv_t disp_drv;
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.draw_buf = &disp_buf;
-    disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = dims.WIDTH;
-    disp_drv.ver_res = dims.HEIGHT;
-    disp_drv.sw_rotate = device.SCREEN.ROTATE;
-    disp_drv.rotated = device.SCREEN.ROTATE;
-    disp_drv.full_refresh = 0;
-    disp_drv.direct_mode = 0;
-    disp_drv.antialiasing = 1;
-    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
-    lv_disp_drv_register(&disp_drv);
-    lv_disp_flush_ready(&disp_drv);
-
+    mux_init();
     ui_init();
 
     animFade_Animation(ui_conStart, -1000);
@@ -96,17 +65,7 @@ int main() {
 
     lv_timer_create(timeout_task, 90000, NULL);
 
-    int js_fd = open(device.INPUT.EV1, O_RDONLY);
-    if (js_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY);
-        return 1;
-    }
-
-    int js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
-    if (js_fd_sys < 0) {
-        perror(lang.SYSTEM.NO_JOY);
-        return 1;
-    }
+    input_init(&js_fd, &js_fd_sys);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
@@ -118,7 +77,7 @@ int main() {
                             .press_handler = handle_quit,
                     },
             },
-            .idle_handler = refresh,
+            .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
 

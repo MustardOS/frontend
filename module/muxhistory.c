@@ -1,10 +1,7 @@
 #include "../lvgl/lvgl.h"
-#include "../lvgl/src/drivers/fbdev.h"
-#include "../lvgl/src/drivers/evdev.h"
 #include "ui/ui_muxhistory.h"
 #include <unistd.h>
 #include <pthread.h>
-#include <fcntl.h>
 #include <dirent.h>
 #include <string.h>
 #include <limits.h>
@@ -415,7 +412,7 @@ void gen_item(char **file_names, int file_count) {
     sort_items_time(items, item_count);
 
     char *glyph_icons[item_count];
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(glyph_icons, items, item_count)
     for (size_t i = 0; i < item_count; i++) {
         glyph_icons[i] = (items[i].content_type == ROM) ? get_glyph_name(i) : "unknown";
     }
@@ -601,6 +598,13 @@ void handle_a() {
     } else {
         return;
     }
+
+    toast_message(lang.GENERIC.LOADING, 0, 0);
+    lv_obj_move_foreground(ui_pnlMessage);
+
+    // Refresh and add a small delay to actually display the message!
+    refresh_screen(device.SCREEN.WAIT);
+    usleep(256);
 
     load_mux("history");
     mux_input_stop();
@@ -824,15 +828,6 @@ void theme_init() {
 }
 
 int main(int argc, char *argv[]) {
-    omp_set_num_threads(omp_get_num_procs());
-
-    mux_module = basename(argv[0]);
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
-    struct screen_dimension dims = get_device_dimensions();
-
     char *cmd_help = "\nmuOS Extras - Content History\nUsage: %s <-i>\n\nOptions:\n"
                      "\t-i Index of content to skip to\n\n";
 
@@ -851,32 +846,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    lv_init();
-    fbdev_init(device.SCREEN.DEVICE);
+    omp_set_num_threads(omp_get_num_procs());
 
-    static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
+    mux_module = basename(argv[0]);
+    load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
 
-    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
-
-    static lv_disp_drv_t disp_drv;
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.draw_buf = &disp_buf;
-    disp_drv.flush_cb = fbdev_flush;
-    disp_drv.hor_res = dims.WIDTH;
-    disp_drv.ver_res = dims.HEIGHT;
-    disp_drv.sw_rotate = device.SCREEN.ROTATE;
-    disp_drv.rotated = device.SCREEN.ROTATE;
-    disp_drv.full_refresh = 0;
-    disp_drv.direct_mode = 0;
-    disp_drv.antialiasing = 1;
-    disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
-    lv_disp_drv_register(&disp_drv);
-    lv_disp_flush_ready(&disp_drv);
-
+    mux_init();
     theme_init();
 
     ui_common_screen_init(&theme, &device, &lang, "");
@@ -928,26 +905,7 @@ int main(int argc, char *argv[]) {
 
     create_history_items();
 
-    js_fd = open(device.INPUT.EV1, O_RDONLY);
-    if (js_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY);
-        return 1;
-    }
-
-    js_fd_sys = open(device.INPUT.EV0, O_RDONLY);
-    if (js_fd_sys < 0) {
-        perror(lang.SYSTEM.NO_JOY);
-        return 1;
-    }
-
-    lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-
-    indev_drv.type = LV_INDEV_TYPE_KEYPAD;
-    indev_drv.read_cb = evdev_read;
-    indev_drv.user_data = (void *) (intptr_t) js_fd;
-
-    lv_indev_drv_register(&indev_drv);
+    input_init(&js_fd, &js_fd_sys);
 
     int nav_vis = 0;
     if (ui_count > 0) {
@@ -976,8 +934,6 @@ int main(int argc, char *argv[]) {
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
     update_file_counter();
-
-    refresh_screen(device.SCREEN.WAIT);
     load_kiosk(&kiosk);
 
     if (file_exist(ADD_MODE_DONE)) {

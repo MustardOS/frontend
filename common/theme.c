@@ -637,7 +637,7 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (get_glyph_path(screen_name, item_glyph, glyph_image_embed, MAX_BUFFER_SIZE)) {
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
-    } 
+    }
 
     lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_default, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
