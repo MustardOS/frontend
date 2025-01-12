@@ -853,8 +853,8 @@ void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, int index
     lv_label_set_text(ui_lblItem, items[index].display_name);
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
-    if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0 &&
-        get_glyph_path(mux_module, items[index].glyph_icon, glyph_image_embed, MAX_BUFFER_SIZE)) {
+    if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0) {
+        get_glyph_path(mux_module, items[index].glyph_icon, glyph_image_embed, MAX_BUFFER_SIZE);
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
     }
 
