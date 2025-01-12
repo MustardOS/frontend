@@ -608,7 +608,8 @@ void gen_item(char **file_names, int file_count) {
     }
 
     if (dir_count < theme.MUX.ITEM.COUNT) {
-        for (size_t i = 0; i < theme.MUX.ITEM.COUNT - dir_count; i++) {
+        for (size_t i = 0; i < item_count; i++) {
+            if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
             if (items[i].content_type == ROM) {
                 gen_label(items[i].glyph_icon, items[i].display_name);
             }
@@ -751,7 +752,7 @@ void create_content_items() {
             init_navigation_groups_grid();
         } else {
             for (int i = 0; i < dir_count; i++) {
-                gen_label(items[i].glyph_icon, items[i].display_name);
+                if (i < theme.MUX.ITEM.COUNT) gen_label(items[i].glyph_icon, items[i].display_name);
                 if (!strcasecmp(items[i].name, prev_dir)) sys_index = i;
             }
         }
@@ -853,8 +854,8 @@ void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, int index
     lv_label_set_text(ui_lblItem, items[index].display_name);
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
-    if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0 &&
-        get_glyph_path(mux_module, items[index].glyph_icon, glyph_image_embed, MAX_BUFFER_SIZE)) {
+    if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0) {
+        get_glyph_path(mux_module, items[index].glyph_icon, glyph_image_embed, MAX_BUFFER_SIZE);
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
     }
 
