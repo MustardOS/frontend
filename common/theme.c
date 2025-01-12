@@ -634,25 +634,10 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
                             const char *screen_name, char *item_glyph) {
     if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0 && theme->LIST_FOCUS.GLYPH_ALPHA == 0) return;
 
-    char glyph_image_path[MAX_BUFFER_SIZE];
     char glyph_image_embed[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-    if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  STORAGE_THEME, mux_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  STORAGE_THEME, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  INTERNAL_THEME, mux_dimension, screen_name, item_glyph) >= 0 && file_exist(glyph_image_path)) ||
-        (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  INTERNAL_THEME, screen_name, item_glyph) >= 0 &&
-         file_exist(glyph_image_path))) {
-
-        snprintf(glyph_image_embed, sizeof(glyph_image_embed), "M:%s", glyph_image_path);
-    }
-
-    if (!file_exist(glyph_image_path)) return;
-    lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
+    if (get_glyph_path(screen_name, item_glyph, glyph_image_embed, MAX_BUFFER_SIZE)) {
+        lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
+    } 
 
     lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_default, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
