@@ -751,7 +751,7 @@ void create_content_items() {
             init_navigation_groups_grid();
         } else {
             for (int i = 0; i < dir_count; i++) {
-                gen_label(items[i].glyph_icon, items[i].display_name);
+                if (i < theme.MUX.ITEM.COUNT) gen_label(items[i].glyph_icon, items[i].display_name);
                 if (!strcasecmp(items[i].name, prev_dir)) sys_index = i;
             }
         }
