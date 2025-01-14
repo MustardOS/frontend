@@ -477,13 +477,10 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_font_text(basename(argv[0]), ui_screen);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
-
+    init_fonts();
     create_app_items();
     update_footer_nav_elements();
+    nav_sound = init_nav_sound(mux_module);
 
     int ain_index = 0;
     if (file_exist(MUOS_AIN_LOAD)) {
@@ -504,8 +501,6 @@ int main(int argc, char *argv[]) {
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, APPLICATION);
-
-    nav_sound = init_nav_sound(mux_module);
 
     input_init(&js_fd, &js_fd_sys);
     timer_init(glyph_task, ui_refresh_task, NULL);

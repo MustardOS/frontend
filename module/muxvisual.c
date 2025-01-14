@@ -703,14 +703,10 @@ int main(int argc, char *argv[]) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
-    load_font_text(basename(argv[0]), ui_screen);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
-
-    nav_sound = init_nav_sound(mux_module);
+    init_fonts();
     init_navigation_groups();
     elements_events_init();
+    nav_sound = init_nav_sound(mux_module);
 
     restore_visual_options();
     init_dropdown_settings();

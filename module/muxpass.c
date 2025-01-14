@@ -256,8 +256,9 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
 
-    nav_sound = init_nav_sound(mux_module);
+    init_fonts();
     init_navigation_groups();
+    nav_sound = init_nav_sound(mux_module);
 
     input_init(&js_fd, &js_fd_sys);
     timer_init(glyph_task, NULL, NULL);

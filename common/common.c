@@ -24,6 +24,7 @@
 #include "../font/notosans_kr.h"
 #include "../font/notosans_sc.h"
 #include "../font/notosans_tc.h"
+#include "ui_common.h"
 #include "img/nothing.h"
 #include "json/json.h"
 #include "common.h"
@@ -151,6 +152,13 @@ void timer_init(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(l
         lv_timer_t *sysinfo_timer = lv_timer_create(update_system_info, UINT16_MAX / 32, NULL);
         lv_timer_ready(sysinfo_timer);
     }
+}
+
+void init_fonts() {
+    load_font_text(mux_module, ui_screen);
+    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlContent);
+    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
+    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
 }
 
 void refresh_screen(int wait) {

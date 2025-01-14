@@ -578,20 +578,16 @@ int main(int argc, char *argv[]) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
-    load_font_text(basename(argv[0]), ui_screen);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
+    init_fonts();
+    init_navigation_groups();
+    update_storage_info();
+    nav_sound = init_nav_sound(mux_module);
 
     int sin_index = 0;
     if (file_exist(MUOS_SIN_LOAD)) {
         sin_index = read_int_from_file(MUOS_SIN_LOAD, 1);
         remove(MUOS_SIN_LOAD);
     }
-
-    nav_sound = init_nav_sound(mux_module);
-    init_navigation_groups();
-    update_storage_info();
 
     if (ui_count > 0) {
         if (sin_index > -1 && sin_index <= ui_count && current_item_index < ui_count) {

@@ -174,6 +174,7 @@ int main(int argc, char *argv[]) {
 
     load_font_text(basename(argv[0]), ui_screen);
 
+    init_fonts();
     nav_sound = init_nav_sound(mux_module);
 
     input_init(&js_fd, &js_fd_sys);

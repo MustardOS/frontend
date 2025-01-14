@@ -1234,13 +1234,6 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
-void init_fonts() {
-    load_font_text(mux_module, ui_screen);
-    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
-}
-
 void glyph_task() {
     // TODO: Bluetooth connectivity!
     //update_bluetooth_status(ui_staBluetooth, &theme);
@@ -1360,11 +1353,11 @@ int main(int argc, char *argv[]) {
 
     init_fonts();
     init_elements();
+    nav_sound = init_nav_sound(mux_module);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
-    nav_sound = init_nav_sound(mux_module);
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();

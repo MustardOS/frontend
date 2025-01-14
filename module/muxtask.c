@@ -428,13 +428,9 @@ int main(int argc, char *argv[]) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, TASK);
 
-    load_font_text(basename(argv[0]), ui_screen);
-    load_font_section(basename(argv[0]), FONT_PANEL_FOLDER, ui_pnlContent);
-    load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
-    load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
-
-    nav_sound = init_nav_sound(mux_module);
+    init_fonts();
     create_task_items();
+    nav_sound = init_nav_sound(mux_module);
 
     int tin_index = 0;
     if (file_exist(MUOS_TIN_LOAD)) {
