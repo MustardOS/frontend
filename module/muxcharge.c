@@ -111,10 +111,6 @@ void battery_task() {
     blank++;
 }
 
-void theme_init() {
-    load_theme(&theme, &config, &device, mux_module);
-}
-
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -124,7 +120,7 @@ int main(int argc, char *argv[]) {
     load_lang(&lang);
 
     mux_init();
-    theme_init();
+    init_theme(0, 0);
 
     ui_init();
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));

@@ -185,10 +185,6 @@ void glyph_task() {
     update_battery_capacity(ui_staCapacity, &theme);
 }
 
-void theme_init() {
-    load_theme(&theme, &config, &device, mux_module);
-}
-
 int main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
@@ -234,7 +230,7 @@ int main(int argc, char *argv[]) {
     if (strcasecmp(p_code, "000000") == 0) return 1;
 
     mux_init();
-    theme_init();
+    init_theme(0, 0);
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXPASS.TITLE);
     ui_init(ui_pnlContent);

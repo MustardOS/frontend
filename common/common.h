@@ -90,6 +90,10 @@ void input_init(int *js_fd, int *js_fd_sys);
 void timer_init(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(lv_timer_t *),
                 void (*update_system_info)(lv_timer_t *));
 
+void init_fonts();
+
+void init_theme(int panel_init, int long_mode);
+
 void refresh_screen(int wait);
 
 int file_exist(char *filename);

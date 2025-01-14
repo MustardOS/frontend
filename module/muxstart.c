@@ -52,10 +52,6 @@ void setup_background_process() {
     }
 }
 
-void theme_init() {
-    load_theme(&theme, &config, &device, mux_module);
-}
-
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <progress> <message>\n", argv[0]);
@@ -70,7 +66,8 @@ int main(int argc, char *argv[]) {
     setup_background_process();
 
     mux_init();
-    theme_init();
+    init_theme(0, 0);
+
     ui_init();
 
     lv_obj_set_user_data(ui_scrStart, mux_module);

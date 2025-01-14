@@ -976,16 +976,6 @@ void ui_refresh_task() {
     }
 }
 
-void theme_init() {
-    load_theme(&theme, &config, &device, mux_module);
-
-    init_panel_style(&theme);
-    init_item_style(&theme);
-    init_glyph_style(&theme);
-
-    if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
-}
-
 int main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
                      "\t-d Name of directory to search\n\n";
@@ -1020,7 +1010,7 @@ int main(int argc, char *argv[]) {
     }
 
     mux_init();
-    theme_init();
+    init_theme(1, 1);
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
     ui_init(ui_screen, ui_pnlContent, &theme);

@@ -376,14 +376,6 @@ void direct_to_previous() {
     }
 }
 
-void theme_init() {
-    load_theme(&theme, &config, &device, mux_module);
-
-    init_panel_style(&theme);
-    init_item_style(&theme);
-    init_glyph_style(&theme);
-}
-
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -422,7 +414,7 @@ int main(int argc, char *argv[]) {
     }
 
     mux_init();
-    theme_init();
+    init_theme(1, 0);
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXOPTION.TITLE);
     ui_init(ui_pnlContent);

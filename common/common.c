@@ -33,6 +33,7 @@
 #include "options.h"
 #include "config.h"
 #include "device.h"
+#include "theme.h"
 #include "mini/mini.h"
 
 __thread uint64_t start_ms = 0;
@@ -159,6 +160,18 @@ void init_fonts() {
     load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlContent);
     load_font_section(mux_module, FONT_HEADER_FOLDER, ui_pnlHeader);
     load_font_section(mux_module, FONT_FOOTER_FOLDER, ui_pnlFooter);
+}
+
+void init_theme(int panel_init, int long_mode) {
+    load_theme(&theme, &config, &device, mux_module);
+
+    if (panel_init) {
+        init_panel_style(&theme);
+        init_item_style(&theme);
+        init_glyph_style(&theme);
+    }
+
+    if (long_mode && theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
 }
 
 void refresh_screen(int wait) {

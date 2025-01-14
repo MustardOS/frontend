@@ -375,16 +375,6 @@ void ui_refresh_task() {
     }
 }
 
-void theme_init() {
-    load_theme(&theme, &config, &device, mux_module);
-
-    init_panel_style(&theme);
-    init_item_style(&theme);
-    init_glyph_style(&theme);
-
-    if (theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
-}
-
 int main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Custom Picker\nUsage: %s <-m>\n\nOptions:\n"
                      "\t-m Picker module from:\n"
@@ -414,7 +404,7 @@ int main(int argc, char *argv[]) {
     load_lang(&lang);
 
     mux_init();
-    theme_init();
+    init_theme(1, 1);
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 

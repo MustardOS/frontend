@@ -146,10 +146,6 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
-void theme_init() {
-    load_theme(&theme, &config, &device, mux_module);
-}
-
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -159,7 +155,7 @@ int main(int argc, char *argv[]) {
     load_lang(&lang);
 
     mux_init();
-    theme_init();
+    init_theme(0, 0);
 
     ui_common_screen_init(&theme, &device, &lang, lang.MUXTESTER.TITLE);
     ui_init(ui_pnlContent);
