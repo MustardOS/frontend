@@ -50,6 +50,8 @@ int collection_item_count = 0;
 char current_wall[MAX_BUFFER_SIZE];
 lv_obj_t *wall_img = NULL;
 struct grid_info grid_info;
+static struct dt_task_param dt_par;
+static struct bat_task_param bat_par;
 
 uint32_t mux_tick(void) {
     struct timespec tv_now;
@@ -122,6 +124,33 @@ void input_init(int *js_fd, int *js_fd_sys) {
     indev_drv.user_data = (void *) (intptr_t) (*js_fd);
 
     lv_indev_drv_register(&indev_drv);
+}
+
+void timer_init(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(lv_timer_t *),
+                void (*update_system_info)(lv_timer_t *)) {
+    dt_par.lblDatetime = ui_lblDatetime;
+    bat_par.staCapacity = ui_staCapacity;
+
+    lv_timer_t *datetime_timer = lv_timer_create(datetime_task, UINT16_MAX / 2, &dt_par);
+    lv_timer_ready(datetime_timer);
+
+    lv_timer_t *capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
+    lv_timer_ready(capacity_timer);
+
+    if (glyph_task_func) {
+        lv_timer_t *glyph_timer = lv_timer_create(glyph_task_func, UINT16_MAX / 64, NULL);
+        lv_timer_ready(glyph_timer);
+    }
+
+    if (ui_refresh_task) {
+        lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
+        lv_timer_ready(ui_refresh_timer);
+    }
+
+    if (update_system_info) {
+        lv_timer_t *sysinfo_timer = lv_timer_create(update_system_info, UINT16_MAX / 32, NULL);
+        lv_timer_ready(sysinfo_timer);
+    }
 }
 
 void refresh_screen(int wait) {
@@ -910,22 +939,6 @@ char *get_capacity() {
 
 void capacity_task() {
     battery_capacity = read_battery_capacity();
-}
-
-void osd_task(lv_timer_t *timer) {
-    struct osd_task_param *osd_par = timer->user_data;
-    if (osd_message != NULL) {
-        lv_obj_clear_flag(osd_par->pnlMessage, LV_OBJ_FLAG_HIDDEN);
-        lv_label_set_text(osd_par->lblMessage, osd_message);
-        osd_par->count++;
-        if (osd_par->count == 3) {
-            osd_message = NULL;
-            osd_par->count = 0;
-        }
-    } else {
-        lv_label_set_text(osd_par->lblMessage, " ");
-        lv_obj_add_flag(osd_par->pnlMessage, LV_OBJ_FLAG_HIDDEN);
-    }
 }
 
 void increase_option_value(lv_obj_t *element) {

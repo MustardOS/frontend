@@ -15,10 +15,13 @@ extern int turbo_mode;
 extern int nav_sound;
 extern int bar_header;
 extern int bar_footer;
-extern char *osd_message;
 extern int progress_onscreen;
 extern struct mux_config config;
 extern char *mux_module;
+extern lv_obj_t *ui_lblDatetime;
+extern lv_obj_t *ui_staCapacity;
+extern lv_obj_t *ui_lblMessage;
+extern lv_obj_t *ui_pnlMessage;
 
 struct screen_dimension {
     int WIDTH;
@@ -69,12 +72,6 @@ struct bat_task_param {
     lv_obj_t *staCapacity;
 };
 
-struct osd_task_param {
-    lv_obj_t *lblMessage;
-    lv_obj_t *pnlMessage;
-    int count;
-};
-
 struct pattern {
     char **patterns;
     size_t count;
@@ -89,6 +86,9 @@ struct nav_flag {
 void mux_init();
 
 void input_init(int *js_fd, int *js_fd_sys);
+
+void timer_init(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(lv_timer_t *),
+                void (*update_system_info)(lv_timer_t *));
 
 void refresh_screen(int wait);
 
@@ -178,8 +178,6 @@ void datetime_task(lv_timer_t *timer);
 char *get_capacity();
 
 void capacity_task();
-
-void osd_task(lv_timer_t *timer);
 
 void increase_option_value(lv_obj_t *element);
 

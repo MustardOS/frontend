@@ -36,7 +36,6 @@ int nav_sound = 0;
 int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
-char *osd_message;
 
 struct mux_lang lang;
 struct mux_config config;
@@ -78,12 +77,6 @@ static char current_content_label[MAX_BUFFER_SIZE];
 static char box_image_previous_path[MAX_BUFFER_SIZE];
 static char preview_image_previous_path[MAX_BUFFER_SIZE];
 static char splash_image_previous_path[MAX_BUFFER_SIZE];
-
-lv_timer_t *datetime_timer;
-lv_timer_t *capacity_timer;
-lv_timer_t *osd_timer;
-lv_timer_t *glyph_timer;
-lv_timer_t *ui_refresh_timer;
 
 char *load_content_governor(char *pointer) {
     pointer = read_text_from_file(pointer);
@@ -722,7 +715,7 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblMessage, osd_message);
+    lv_label_set_text(ui_lblMessage, "");
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.OPEN);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
@@ -874,25 +867,6 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     init_fonts();
-
-    struct dt_task_param dt_par;
-    struct bat_task_param bat_par;
-
-    dt_par.lblDatetime = ui_lblDatetime;
-    bat_par.staCapacity = ui_staCapacity;
-
-    datetime_timer = lv_timer_create(datetime_task, UINT16_MAX / 2, &dt_par);
-    lv_timer_ready(datetime_timer);
-
-    capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
-    lv_timer_ready(capacity_timer);
-
-    glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
-    lv_timer_ready(glyph_timer);
-
-    ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
-    lv_timer_ready(ui_refresh_timer);
-
     init_elements();
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
@@ -906,6 +880,7 @@ int main(int argc, char *argv[]) {
     create_history_items();
 
     input_init(&js_fd, &js_fd_sys);
+    timer_init(glyph_task, ui_refresh_task, NULL);
 
     int nav_vis = 0;
     if (ui_count > 0) {

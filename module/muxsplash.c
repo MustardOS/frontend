@@ -11,7 +11,6 @@
 #include "../common/theme.h"
 
 char *mux_module;
-char *osd_message;
 int msgbox_active = 0;
 int nav_sound = 0;
 

@@ -21,7 +21,6 @@ int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
-char *osd_message;
 
 struct mux_lang lang;
 struct mux_config config;
@@ -66,6 +65,7 @@ int main() {
     lv_timer_create(timeout_task, 90000, NULL);
 
     input_init(&js_fd, &js_fd_sys);
+    timer_init(NULL, NULL, NULL);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

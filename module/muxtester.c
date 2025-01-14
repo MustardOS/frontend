@@ -14,8 +14,6 @@
 #include "../common/input.h"
 
 char *mux_module;
-char *osd_message;
-
 static int js_fd;
 static int js_fd_sys;
 
@@ -25,7 +23,6 @@ int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
-char *osd_message;
 
 struct mux_lang lang;
 struct mux_config config;
@@ -178,22 +175,9 @@ int main(int argc, char *argv[]) {
     load_font_text(basename(argv[0]), ui_screen);
 
     nav_sound = init_nav_sound(mux_module);
-    struct dt_task_param dt_par;
-    struct bat_task_param bat_par;
-
-    dt_par.lblDatetime = ui_lblDatetime;
-    bat_par.staCapacity = ui_staCapacity;
 
     input_init(&js_fd, &js_fd_sys);
-
-    lv_timer_t *datetime_timer = lv_timer_create(datetime_task, UINT16_MAX / 2, &dt_par);
-    lv_timer_ready(datetime_timer);
-
-    lv_timer_t *capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
-    lv_timer_ready(capacity_timer);
-
-    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
-    lv_timer_ready(glyph_timer);
+    timer_init(glyph_task, NULL, NULL);
 
     load_kiosk(&kiosk);
 

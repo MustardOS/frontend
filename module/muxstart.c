@@ -13,6 +13,8 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 
+char *mux_module;
+
 int turbo_mode = 0;
 int msgbox_active = 0;
 int SD2_found = 0;
@@ -20,8 +22,6 @@ int nav_sound = 0;
 int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
-char *osd_message;
-char *mux_module;
 
 struct mux_lang lang;
 struct mux_config config;

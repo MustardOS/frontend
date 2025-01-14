@@ -26,7 +26,6 @@ int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
-char *osd_message;
 
 struct mux_lang lang;
 struct mux_config config;
@@ -156,10 +155,7 @@ void handle_confirm() {
     if (msgbox_active) return;
 
     play_sound("confirm", nav_sound, 0, 1);
-
-    osd_message = lang.MUXLANGUAGE.SAVE;
-    lv_label_set_text(ui_lblMessage, osd_message);
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    toast_message(lang.MUXLANGUAGE.SAVE, 0, 0);
 
     write_text_to_file((RUN_GLOBAL_PATH "settings/general/language"), "w", CHAR,
                        items[current_item_index].name);
@@ -209,7 +205,7 @@ void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
-    lv_label_set_text(ui_lblMessage, osd_message);
+    lv_label_set_text(ui_lblMessage, "");
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
@@ -317,32 +313,8 @@ int main(int argc, char *argv[]) {
     nav_sound = init_nav_sound(mux_module);
     create_language_items();
 
-    struct dt_task_param dt_par;
-    struct bat_task_param bat_par;
-    struct osd_task_param osd_par;
-
-    dt_par.lblDatetime = ui_lblDatetime;
-    bat_par.staCapacity = ui_staCapacity;
-    osd_par.lblMessage = ui_lblMessage;
-    osd_par.pnlMessage = ui_pnlMessage;
-    osd_par.count = 0;
-
     input_init(&js_fd, &js_fd_sys);
-
-    lv_timer_t *datetime_timer = lv_timer_create(datetime_task, UINT16_MAX / 2, &dt_par);
-    lv_timer_ready(datetime_timer);
-
-    lv_timer_t *capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
-    lv_timer_ready(capacity_timer);
-
-    lv_timer_t *osd_timer = lv_timer_create(osd_task, UINT16_MAX / 32, &osd_par);
-    lv_timer_ready(osd_timer);
-
-    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
-    lv_timer_ready(glyph_timer);
-
-    lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
-    lv_timer_ready(ui_refresh_timer);
+    timer_init(glyph_task, ui_refresh_task, NULL);
 
     load_kiosk(&kiosk);
 
