@@ -83,11 +83,11 @@ struct nav_flag {
     int visible;
 };
 
-void mux_init();
+void init_display();
 
-void input_init(int *js_fd, int *js_fd_sys);
+void init_input(int *js_fd, int *js_fd_sys);
 
-void timer_init(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(lv_timer_t *),
+void init_timer(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(lv_timer_t *),
                 void (*update_system_info)(lv_timer_t *));
 
 void init_fonts();

@@ -154,11 +154,11 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    mux_init();
+    init_display();
     init_theme(0, 0);
 
-    ui_common_screen_init(&theme, &device, &lang, lang.MUXTESTER.TITLE);
-    ui_init(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXTESTER.TITLE);
+    init_mux(ui_pnlContent);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -173,8 +173,8 @@ int main(int argc, char *argv[]) {
     init_fonts();
     nav_sound = init_nav_sound(mux_module);
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, NULL, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, NULL, NULL);
 
     load_kiosk(&kiosk);
 

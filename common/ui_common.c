@@ -66,7 +66,7 @@ lv_obj_t *ui_pnlProgressVolume;
 lv_obj_t *ui_icoProgressVolume;
 lv_obj_t *ui_barProgressVolume;
 
-void ui_common_screen_init(struct theme_config *theme, struct mux_device *device,
+void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title) {
     ui_screen_container = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);

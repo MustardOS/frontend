@@ -32,7 +32,7 @@ lv_obj_t *ui_droRSLSync;
 lv_obj_t *ui_droNTP;
 lv_obj_t *ui_droTailscaled;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlSSHD = lv_obj_create(ui_pnlContent);
     ui_pnlSFTPGo = lv_obj_create(ui_pnlContent);
     ui_pnlTTYD = lv_obj_create(ui_pnlContent);

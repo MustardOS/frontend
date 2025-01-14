@@ -76,7 +76,7 @@ lv_obj_t *ui_lblNetworkValue;
 lv_obj_t *ui_lblSyncthingValue;
 lv_obj_t *ui_lblUserInitValue;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlBIOS = lv_obj_create(ui_pnlContent);
     ui_pnlCatalogue = lv_obj_create(ui_pnlContent);
     ui_pnlName = lv_obj_create(ui_pnlContent);

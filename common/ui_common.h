@@ -1,6 +1,6 @@
 #pragma once
 
-void ui_common_screen_init(struct theme_config *theme, struct mux_device *device,
+void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title);
 
 void ui_common_handle_bright();

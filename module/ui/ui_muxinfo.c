@@ -15,7 +15,7 @@ lv_obj_t *ui_icoTester;
 lv_obj_t *ui_icoSystem;
 lv_obj_t *ui_icoCredits;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlTracker = lv_obj_create(ui_pnlContent);
     ui_pnlTester = lv_obj_create(ui_pnlContent);
     ui_pnlSystem = lv_obj_create(ui_pnlContent);

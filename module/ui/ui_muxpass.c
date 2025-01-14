@@ -8,7 +8,7 @@ lv_obj_t *ui_rolComboFour;
 lv_obj_t *ui_rolComboFive;
 lv_obj_t *ui_rolComboSix;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     lv_obj_set_flex_flow(ui_pnlContent, LV_FLEX_FLOW_ROW_WRAP);
     lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 

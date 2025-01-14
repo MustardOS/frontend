@@ -50,7 +50,7 @@ lv_obj_t *ui_lblConnectValue;
 lv_obj_t *ui_pnlEntry;
 lv_obj_t *ui_txtEntry;
 
-void ui_init(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
+void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
     ui_pnlEnable = lv_obj_create(ui_pnlContent);
     ui_pnlIdentifier = lv_obj_create(ui_pnlContent);
     ui_pnlPassword = lv_obj_create(ui_pnlContent);

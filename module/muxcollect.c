@@ -1291,11 +1291,11 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    mux_init();
+    init_display();
     init_theme(1, 0);
 
-    ui_common_screen_init(&theme, &device, &lang, "");
-    ui_init(ui_screen, ui_pnlContent, &theme);
+    init_ui_common_screen(&theme, &device, &lang, "");
+    init_mux(ui_screen, ui_pnlContent, &theme);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
@@ -1335,8 +1335,8 @@ int main(int argc, char *argv[]) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
     }
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, ui_refresh_task, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, ui_refresh_task, NULL);
 
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count &&

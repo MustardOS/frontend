@@ -54,8 +54,8 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    mux_init();
-    ui_init();
+    init_display();
+    init_mux();
 
     char init_wall[MAX_BUFFER_SIZE];
     snprintf(init_wall, sizeof(init_wall), "M:%s", argv[1]);

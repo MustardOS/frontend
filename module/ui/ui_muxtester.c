@@ -7,7 +7,7 @@
 lv_obj_t *ui_lblButton;
 lv_obj_t *ui_lblFirst;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     lv_obj_set_flex_align(ui_pnlContent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     ui_lblButton = lv_label_create(ui_pnlContent);

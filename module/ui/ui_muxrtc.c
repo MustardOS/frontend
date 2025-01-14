@@ -32,7 +32,7 @@ lv_obj_t *ui_lblMinuteValue;
 lv_obj_t *ui_lblNotationValue;
 lv_obj_t *ui_lblTimezoneValue;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlYear = lv_obj_create(ui_pnlContent);
     ui_pnlMonth = lv_obj_create(ui_pnlContent);
     ui_pnlDay = lv_obj_create(ui_pnlContent);

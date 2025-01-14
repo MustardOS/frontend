@@ -1122,11 +1122,11 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    mux_init();
+    init_display();
     init_theme(1, 0);
 
-    ui_common_screen_init(&theme, &device, &lang, lang.MUXNETWORK.TITLE);
-    ui_init(ui_screen, ui_pnlContent, &theme);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXNETWORK.TITLE);
+    init_mux(ui_screen, ui_pnlContent, &theme);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -1141,8 +1141,8 @@ int main(int argc, char *argv[]) {
     restore_network_values();
     nav_sound = init_nav_sound(mux_module);
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, ui_refresh_task, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, ui_refresh_task, NULL);
 
     init_osk();
     direct_to_previous();

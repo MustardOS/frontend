@@ -12,7 +12,7 @@ lv_obj_t *ui_icoTheme;
 lv_obj_t *ui_icoCatalogue;
 lv_obj_t *ui_icoConfig;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlTheme = lv_obj_create(ui_pnlContent);
     ui_pnlCatalogue = lv_obj_create(ui_pnlContent);
     ui_pnlConfig = lv_obj_create(ui_pnlContent);

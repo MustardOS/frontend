@@ -67,7 +67,7 @@ uint32_t mux_tick(void) {
     return (uint32_t) (now_ms - start_ms);
 }
 
-void mux_init() {
+void init_display() {
     struct screen_dimension dims = get_device_dimensions();
 
     lv_init();
@@ -105,7 +105,7 @@ void mux_init() {
     fbdev_force_refresh(true);
 }
 
-void input_init(int *js_fd, int *js_fd_sys) {
+void init_input(int *js_fd, int *js_fd_sys) {
     *js_fd = open(device.INPUT.EV1, O_RDONLY);
     if (*js_fd < 0) {
         perror(lang.SYSTEM.NO_JOY);
@@ -128,7 +128,7 @@ void input_init(int *js_fd, int *js_fd_sys) {
     lv_indev_drv_register(&indev_drv);
 }
 
-void timer_init(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(lv_timer_t *),
+void init_timer(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(lv_timer_t *),
                 void (*update_system_info)(lv_timer_t *)) {
     dt_par.lblDatetime = ui_lblDatetime;
     bat_par.staCapacity = ui_staCapacity;

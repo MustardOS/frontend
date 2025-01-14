@@ -24,7 +24,7 @@ lv_obj_t *ui_icoRTC;
 lv_obj_t *ui_icoLanguage;
 lv_obj_t *ui_icoStorage;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlTweakGeneral = lv_obj_create(ui_pnlContent);
     ui_pnlCustom = lv_obj_create(ui_pnlContent);
     ui_pnlNetwork = lv_obj_create(ui_pnlContent);

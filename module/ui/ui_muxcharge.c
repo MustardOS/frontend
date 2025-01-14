@@ -16,7 +16,7 @@ lv_obj_t *ui_lblCapacity;
 lv_obj_t *ui_lblVoltage;
 lv_obj_t *ui_lblBoot;
 
-void ui_init(void) {
+void init_mux(void) {
     ui_scrCharge = lv_obj_create(NULL);
 
     lv_obj_clear_flag(ui_scrCharge, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE |

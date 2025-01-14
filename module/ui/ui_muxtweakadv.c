@@ -84,7 +84,7 @@ lv_obj_t *ui_droOverdrive;
 lv_obj_t *ui_droSwapfile;
 lv_obj_t *ui_droCardMode;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlAccelerate = lv_obj_create(ui_pnlContent);
     ui_pnlSwap = lv_obj_create(ui_pnlContent);
     ui_pnlThermal = lv_obj_create(ui_pnlContent);

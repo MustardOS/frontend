@@ -15,7 +15,7 @@ lv_obj_t *ui_lblMessage;
 
 lv_obj_t *ui_barProgress;
 
-void ui_init(void) {
+void init_mux(void) {
     ui_scrStart = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_scrStart, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE |
                                    LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);

@@ -413,11 +413,11 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    mux_init();
+    init_display();
     init_theme(1, 0);
 
-    ui_common_screen_init(&theme, &device, &lang, lang.MUXOPTION.TITLE);
-    ui_init(ui_pnlContent);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXOPTION.TITLE);
+    init_mux(ui_pnlContent);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -430,8 +430,8 @@ int main(int argc, char *argv[]) {
     init_navigation_groups();
     nav_sound = init_nav_sound(mux_module);
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, ui_refresh_task, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, ui_refresh_task, NULL);
 
     direct_to_previous();
     load_kiosk(&kiosk);

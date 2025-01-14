@@ -406,10 +406,10 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    mux_init();
+    init_display();
     init_theme(1, 1);
 
-    ui_common_screen_init(&theme, &device, &lang, lang.MUXTASK.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXTASK.TITLE);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -430,8 +430,8 @@ int main(int argc, char *argv[]) {
 
     lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, ui_refresh_task, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, ui_refresh_task, NULL);
 
     int nav_hidden = 1;
     if (ui_count > 0) {

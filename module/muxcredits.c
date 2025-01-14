@@ -52,8 +52,8 @@ int main() {
     load_device(&device);
     load_config(&config);
 
-    mux_init();
-    ui_init();
+    init_display();
+    init_mux();
 
     animFade_Animation(ui_conStart, -1000);
     animScroll_Animation(ui_conScroll, 12000);
@@ -64,8 +64,8 @@ int main() {
 
     lv_timer_create(timeout_task, 90000, NULL);
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(NULL, NULL, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(NULL, NULL, NULL);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

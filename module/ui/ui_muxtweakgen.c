@@ -44,7 +44,7 @@ lv_obj_t *ui_droPower;
 lv_obj_t *ui_droInterface;
 lv_obj_t *ui_droAdvanced;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlHidden = lv_obj_create(ui_pnlContent);
     ui_pnlBGM = lv_obj_create(ui_pnlContent);
     ui_pnlSound = lv_obj_create(ui_pnlContent);

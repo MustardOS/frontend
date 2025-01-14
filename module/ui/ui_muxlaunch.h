@@ -2,7 +2,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-void ui_init(lv_obj_t *ui_pnlContent);
+void init_mux(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlExplore;
 extern lv_obj_t *ui_pnlCollection;

@@ -169,7 +169,7 @@ void animFade_Animation(lv_obj_t *TargetObject, int delay) {
     lv_anim_start(&PropertyAnimation_3);
 }
 
-void ui_init(void) {
+void init_mux(void) {
     ui_scrCredits = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_scrCredits, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_scrCredits, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);

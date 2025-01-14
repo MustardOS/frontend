@@ -20,7 +20,7 @@ lv_obj_t *ui_droBattery;
 lv_obj_t *ui_droIdleDisplay;
 lv_obj_t *ui_droIdleSleep;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlShutdown = lv_obj_create(ui_pnlContent);
     ui_pnlBattery = lv_obj_create(ui_pnlContent);
     ui_pnlIdleDisplay = lv_obj_create(ui_pnlContent);

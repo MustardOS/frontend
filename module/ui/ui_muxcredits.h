@@ -6,7 +6,7 @@ void animScroll_Animation(lv_obj_t *TargetObject, int delay);
 
 void animFade_Animation(lv_obj_t *TargetObject, int delay);
 
-void ui_init(void);
+void init_mux(void);
 
 extern lv_obj_t *ui_scrCredits;
 

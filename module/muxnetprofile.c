@@ -474,10 +474,10 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    mux_init();
+    init_display();
     init_theme(1, 1);
 
-    ui_common_screen_init(&theme, &device, &lang, lang.MUXNETPROFILE.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXNETPROFILE.TITLE);
     init_elements();
 
     lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.LOAD);
@@ -492,8 +492,8 @@ int main(int argc, char *argv[]) {
     init_fonts();
     nav_sound = init_nav_sound(mux_module);
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, ui_refresh_task, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, ui_refresh_task, NULL);
 
     create_profile_items();
     load_kiosk(&kiosk);

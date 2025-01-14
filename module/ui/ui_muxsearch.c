@@ -22,7 +22,7 @@ lv_obj_t *ui_lblSearchGlobalValue;
 lv_obj_t *ui_pnlEntry;
 lv_obj_t *ui_txtEntry;
 
-void ui_init(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
+void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
     ui_pnlLookup = lv_obj_create(ui_pnlContent);
     ui_pnlSearchLocal = lv_obj_create(ui_pnlContent);
     ui_pnlSearchGlobal = lv_obj_create(ui_pnlContent);

@@ -76,7 +76,7 @@ lv_obj_t *ui_droBackgroundAnimation;
 lv_obj_t *ui_droLaunchSplash;
 lv_obj_t *ui_droBlackFade;
 
-void ui_init(lv_obj_t *ui_pnlContent) {
+void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlBattery = lv_obj_create(ui_pnlContent);
     ui_pnlNetwork = lv_obj_create(ui_pnlContent);
     ui_pnlBluetooth = lv_obj_create(ui_pnlContent);

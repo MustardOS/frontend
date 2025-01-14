@@ -403,22 +403,22 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    mux_init();
+    init_display();
     init_theme(1, 1);
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
     if (!strcasecmp(picker_type, "theme")) {
-        ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.THEME);
+        init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.THEME);
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.THEME);
     } else if (!strcasecmp(picker_type, "package/catalogue")) {
-        ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.CATALOGUE);
+        init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.CATALOGUE);
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CATALOGUE);
     } else if (!strcasecmp(picker_type, "package/config")) {
-        ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.CONFIG);
+        init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.CONFIG);
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CONFIG);
     } else {
-        ui_common_screen_init(&theme, &device, &lang, lang.MUXPICKER.CUSTOM);
+        init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.CUSTOM);
         lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CUSTOM);
     }
 
@@ -440,8 +440,8 @@ int main(int argc, char *argv[]) {
         remove(MUOS_PIN_LOAD);
     }
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, ui_refresh_task, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, ui_refresh_task, NULL);
 
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {

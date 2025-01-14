@@ -65,10 +65,10 @@ int main(int argc, char *argv[]) {
 
     setup_background_process();
 
-    mux_init();
+    init_display();
     init_theme(0, 0);
 
-    ui_init();
+    init_mux();
 
     lv_obj_set_user_data(ui_scrStart, mux_module);
 

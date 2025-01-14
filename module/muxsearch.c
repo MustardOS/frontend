@@ -1009,11 +1009,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    mux_init();
+    init_display();
     init_theme(1, 1);
 
-    ui_common_screen_init(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
-    ui_init(ui_screen, ui_pnlContent, &theme);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
+    init_mux(ui_screen, ui_pnlContent, &theme);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
@@ -1045,8 +1045,8 @@ int main(int argc, char *argv[]) {
         free(json_content);
     }
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, ui_refresh_task, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, ui_refresh_task, NULL);
 
     init_osk();
     load_kiosk(&kiosk);

@@ -903,10 +903,10 @@ int main(int argc, char *argv[]) {
         if (auto_assign_good) return 0;
     }
 
-    mux_init();
+    init_display();
     init_theme(1, 0);
 
-    ui_common_screen_init(&theme, &device, &lang, "");
+    init_ui_common_screen(&theme, &device, &lang, "");
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -926,8 +926,8 @@ int main(int argc, char *argv[]) {
         create_core_items(rom_system);
     }
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(glyph_task, ui_refresh_task, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(glyph_task, ui_refresh_task, NULL);
 
     if (ui_count > 0) {
         if (!strcasecmp(rom_system, "none")) {

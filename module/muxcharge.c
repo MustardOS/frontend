@@ -119,10 +119,10 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    mux_init();
+    init_display();
     init_theme(0, 0);
 
-    ui_init();
+    init_mux();
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));
 
     lv_obj_set_user_data(ui_scrCharge, mux_module);
@@ -143,8 +143,8 @@ int main(int argc, char *argv[]) {
     nav_sound = init_nav_sound(mux_module);
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);
 
-    input_init(&js_fd, &js_fd_sys);
-    timer_init(NULL, NULL, NULL);
+    init_input(&js_fd, &js_fd_sys);
+    init_timer(NULL, NULL, NULL);
 
     battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
     lv_timer_ready(battery_timer);
