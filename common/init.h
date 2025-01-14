@@ -2,16 +2,6 @@
 
 #include "../lvgl/lvgl.h"
 
-extern int battery_capacity;
-extern int msgbox_active;
-extern lv_obj_t *msgbox_element;
-extern int turbo_mode;
-extern int nav_sound;
-extern int bar_header;
-extern int bar_footer;
-extern int progress_onscreen;
-extern struct mux_config config;
-extern char *mux_module;
 extern lv_obj_t *ui_lblDatetime;
 extern lv_obj_t *ui_staCapacity;
 extern lv_obj_t *ui_lblMessage;
