@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <errno.h>
+#include <sys/sysinfo.h>
+#include <sys/utsname.h>
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/language.h"
@@ -49,10 +52,11 @@ lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 12
+#define UI_COUNT 11
 lv_obj_t *ui_objects[UI_COUNT];
-
 lv_obj_t *ui_mux_panels[5];
+
+static char hostname[32];
 
 struct help_msg {
     lv_obj_t *element;
@@ -61,18 +65,17 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblVersion,    lang.MUXSYSINFO.HELP.VERSION},
-            {ui_lblDevice,     lang.MUXSYSINFO.HELP.DEVICE},
-            {ui_lblKernel,     lang.MUXSYSINFO.HELP.KERNEL},
-            {ui_lblUptime,     lang.MUXSYSINFO.HELP.UPTIME},
-            {ui_lblCPU,        lang.MUXSYSINFO.HELP.CPU.INFO},
-            {ui_lblSpeed,      lang.MUXSYSINFO.HELP.CPU.SPEED},
-            {ui_lblGovernor,   lang.MUXSYSINFO.HELP.CPU.GOV},
-            {ui_lblMemory,     lang.MUXSYSINFO.HELP.MEMORY},
-            {ui_lblTemp,       lang.MUXSYSINFO.HELP.TEMP},
-            {ui_lblService,    lang.MUXSYSINFO.HELP.SERVICE},
-            {ui_lblBatteryCap, lang.MUXSYSINFO.HELP.CAPACITY},
-            {ui_lblVoltage,    lang.MUXSYSINFO.HELP.VOLTAGE},
+            {ui_lblVersion,  lang.MUXSYSINFO.HELP.VERSION},
+            {ui_lblDevice,   lang.MUXSYSINFO.HELP.DEVICE},
+            {ui_lblKernel,   lang.MUXSYSINFO.HELP.KERNEL},
+            {ui_lblUptime,   lang.MUXSYSINFO.HELP.UPTIME},
+            {ui_lblCPU,      lang.MUXSYSINFO.HELP.CPU.INFO},
+            {ui_lblSpeed,    lang.MUXSYSINFO.HELP.CPU.SPEED},
+            {ui_lblGovernor, lang.MUXSYSINFO.HELP.CPU.GOV},
+            {ui_lblMemory,   lang.MUXSYSINFO.HELP.MEMORY},
+            {ui_lblTemp,     lang.MUXSYSINFO.HELP.TEMP},
+            {ui_lblCapacity, lang.MUXSYSINFO.HELP.CAPACITY},
+            {ui_lblVoltage,  lang.MUXSYSINFO.HELP.VOLTAGE},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -91,92 +94,163 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-char *remove_comma(const char *str) {
-    size_t len = strlen(str);
-    char *result = malloc(len + 1);
+const char *get_cpu_model() {
+    char *result = get_execute_result("lscpu | grep 'Model name:' | awk -F: '{print $2}'");
 
-    if (result == NULL) {
-        fprintf(stderr, "Failed to allocate memory\n");
-        return NULL;
-    }
-
-    strcpy(result, str);
-    if (len > 0 && result[len - 1] == ',')
-        result[len - 1] = '\0';
+    if (result == NULL || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    while (*result == ' ') result++;
 
     return result;
 }
 
-char *format_uptime(const char *uptime) {
-    int hours = 0, minutes = 0;
+const char *get_current_frequency() {
+    static char buffer[32];
+    char *freq_str = read_text_from_file("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq");
 
-    if (sscanf(uptime, "%d:%d", &hours, &minutes) < 2) {
-        sscanf(uptime, "%d", &minutes);
-        minutes = hours;
-        hours = 0;
+    if (freq_str == NULL || freq_str[0] == '\0') {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+        free(freq_str);
+        return buffer;
     }
 
-    static char format_uptime[MAX_BUFFER_SIZE];
+    char *end;
+    double frequency = strtod(freq_str, &end);
 
-    if (hours > 0) {
-        sprintf(format_uptime, "%d %s %d %s",
-                hours, (hours == 1) ? "Hour" : "Hours",
-                minutes, (minutes == 1) ? "Minute" : "Minutes");
+    errno = 0;
+    if (errno != 0 || end == freq_str || *end != '\0') {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
     } else {
-        sprintf(format_uptime, "%d %s",
-                minutes, (minutes == 1) ? "Minute" : "Minutes");
+        snprintf(buffer, sizeof(buffer), "%.2f MHz", frequency / 1000.0);
     }
 
-    return format_uptime;
+    free(freq_str);
+    return buffer;
+}
+
+const char *get_scaling_governor() {
+    static char buffer[MAX_BUFFER_SIZE];
+    char *governor_str = read_text_from_file("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
+
+    if (governor_str == NULL || governor_str[0] == '\0') {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+        free(governor_str);
+        return buffer;
+    }
+
+    snprintf(buffer, sizeof(buffer), "%s", governor_str);
+    free(governor_str);
+    return buffer;
+}
+
+const char *get_memory_usage() {
+    char *result = get_execute_result("free -m | awk '/^Mem:/ {printf \"%.2f MB / %.2f MB\", $3, $2}'");
+    if (result == NULL || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+
+    return result;
+}
+
+const char *get_temperature() {
+    static char buffer[32];
+    char *temp_str = read_text_from_file("/sys/class/thermal/thermal_zone0/temp");
+
+    if (temp_str == NULL || temp_str[0] == '\0') {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+        free(temp_str);
+        return buffer;
+    }
+
+    char *end;
+    double temperature = strtod(temp_str, &end);
+
+    errno = 0;
+    if (errno != 0 || end == temp_str || *end != '\0') {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+    } else {
+        snprintf(buffer, sizeof(buffer), "%.2f°C", temperature / 1000.0);
+    }
+
+    free(temp_str);
+    return buffer;
+}
+
+const char *get_uptime() {
+    static char formatted_uptime[MAX_BUFFER_SIZE];
+    struct sysinfo info;
+
+    if (sysinfo(&info) == 0) {
+        long total_minutes = info.uptime / 60;
+        long days = total_minutes / (24 * 60);
+        long hours = (total_minutes % (24 * 60)) / 60;
+        long minutes = total_minutes % 60;
+
+        if (days > 0) {
+            snprintf(formatted_uptime, sizeof(formatted_uptime), "%ld %s%s %ld %s%s %ld %s%s",
+                     days, lang.MUXRTC.DAY, (days == 1) ? "" : "s",
+                     hours, lang.MUXRTC.HOUR, (hours == 1) ? "" : "s",
+                     minutes, lang.MUXRTC.MINUTE, (minutes == 1) ? "" : "s");
+        } else if (hours > 0) {
+            snprintf(formatted_uptime, sizeof(formatted_uptime), "%ld %s%s %ld %s%s",
+                     hours, lang.MUXRTC.HOUR, (hours == 1) ? "" : "s",
+                     minutes, lang.MUXRTC.MINUTE, (minutes == 1) ? "" : "s");
+        } else {
+            snprintf(formatted_uptime, sizeof(formatted_uptime), "%ld %s%s",
+                     minutes, lang.MUXRTC.MINUTE, (minutes == 1) ? "" : "s");
+        }
+    } else {
+        snprintf(formatted_uptime, sizeof(formatted_uptime), "%s", lang.GENERIC.UNKNOWN);
+    }
+
+    return formatted_uptime;
+}
+
+const char *get_battery_cap() {
+    static char battery_cap[32];
+    snprintf(battery_cap, sizeof(battery_cap), "%d%% (Offset: %d)",
+             read_battery_capacity(),
+             config.SETTINGS.ADVANCED.OFFSET - 50);
+    return battery_cap;
+}
+
+const char *get_build_version() {
+    static char build_version[32];
+    snprintf(build_version, sizeof(build_version), "%s (%s)",
+             str_replace(read_line_from_file((INTERNAL_PATH "config/version.txt"), 1), "_", " "),
+             read_line_from_file((INTERNAL_PATH "config/version.txt"), 2));
+    return build_version;
+}
+
+const char *get_device_info() {
+    static char device_info[32];
+    snprintf(device_info, sizeof(device_info), "%s",
+             read_line_from_file((INTERNAL_PATH "config/device.txt"), 1));
+    return device_info;
+}
+
+const char *get_kernel_version() {
+    static char buffer[128];
+    struct utsname sys_info;
+
+    if (uname(&sys_info) == 0) {
+        snprintf(buffer, sizeof(buffer), "%s %s (%s)", sys_info.sysname, sys_info.release, sys_info.machine);
+        snprintf(hostname, sizeof(hostname), "%s", sys_info.nodename);
+    } else {
+        snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
+    }
+
+    return buffer;
 }
 
 void update_system_info() {
-    char battery_cap[32];
-    sprintf(battery_cap, "%d%% (Offset: %d)",
-            read_battery_capacity(),
-            config.SETTINGS.ADVANCED.OFFSET - 50);
-
-    char build_version[MAX_BUFFER_SIZE];
-    sprintf(build_version, "%s (%s)",
-            str_replace(read_line_from_file((INTERNAL_PATH "config/version.txt"), 1), "_", " "),
-            read_line_from_file((INTERNAL_PATH "config/version.txt"), 2));
-
-    lv_label_set_text(ui_lblVersionValue,
-                      build_version);
-    lv_label_set_text(ui_lblDeviceValue,
-                      read_line_from_file((INTERNAL_PATH "config/device.txt"), 1));
-    lv_label_set_text(ui_lblKernelValue,
-                      get_execute_result(
-                              "uname -rs"
-                      ));
-    lv_label_set_text(ui_lblUptimeValue,
-                      format_uptime(remove_comma(get_execute_result(
-                              "uptime | awk '{print $3}'"
-                      ))));
-    lv_label_set_text(ui_lblCPUValue,
-                      get_execute_result(
-                              "lscpu | grep -i 'Model name' | awk -F: '{print $2}' | sed 's/^ *//'"));
-    lv_label_set_text(ui_lblSpeedValue,
-                      get_execute_result(
-                              "cat /sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq"
-                              " | awk '{print $1/1000}'"));
-    lv_label_set_text(ui_lblGovernorValue,
-                      get_execute_result(
-                              "cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor"));
-    lv_label_set_text(ui_lblMemoryValue,
-                      get_execute_result(
-                              "free | awk '/Mem:/ {used = $3 / 1024; total = $2 / 1024; "
-                              "printf \"%.2f MB / %.2f MB\", used, total}'"
-                      ));
-    lv_label_set_text(ui_lblTempValue,
-                      get_execute_result(
-                              "cat /sys/class/thermal/thermal_zone0/temp | awk '{printf \"%.2f\", $1/1000}'"
-                      ));
-    lv_label_set_text(ui_lblServiceValue,
-                      get_execute_result(
-                              "ps | grep -v 'COMMAND' | grep -v 'grep' | sed '/\\[/d' | wc -l"
-                      ));
-    lv_label_set_text(ui_lblBatteryCapValue, battery_cap);
+    lv_label_set_text(ui_lblVersionValue, get_build_version());
+    lv_label_set_text(ui_lblDeviceValue, get_device_info());
+    lv_label_set_text(ui_lblKernelValue, get_kernel_version());
+    lv_label_set_text(ui_lblUptimeValue, get_uptime());
+    lv_label_set_text(ui_lblCPUValue, get_cpu_model());
+    lv_label_set_text(ui_lblSpeedValue, get_current_frequency());
+    lv_label_set_text(ui_lblGovernorValue, get_scaling_governor());
+    lv_label_set_text(ui_lblMemoryValue, get_memory_usage());
+    lv_label_set_text(ui_lblTempValue, get_temperature());
+    lv_label_set_text(ui_lblCapacityValue, get_battery_cap());
     lv_label_set_text(ui_lblVoltageValue, read_battery_voltage());
 }
 
@@ -191,8 +265,7 @@ void init_navigation_groups() {
             ui_pnlGovernor,
             ui_pnlMemory,
             ui_pnlTemp,
-            ui_pnlService,
-            ui_pnlBatteryCap,
+            ui_pnlCapacity,
             ui_pnlVoltage,
     };
 
@@ -205,9 +278,8 @@ void init_navigation_groups() {
     ui_objects[6] = ui_lblGovernor;
     ui_objects[7] = ui_lblMemory;
     ui_objects[8] = ui_lblTemp;
-    ui_objects[9] = ui_lblService;
-    ui_objects[10] = ui_lblBatteryCap;
-    ui_objects[11] = ui_lblVoltage;
+    ui_objects[9] = ui_lblCapacity;
+    ui_objects[10] = ui_lblVoltage;
 
     lv_obj_t *ui_objects_value[] = {
             ui_lblVersionValue,
@@ -219,8 +291,7 @@ void init_navigation_groups() {
             ui_lblGovernorValue,
             ui_lblMemoryValue,
             ui_lblTempValue,
-            ui_lblServiceValue,
-            ui_lblBatteryCapValue,
+            ui_lblCapacityValue,
             ui_lblVoltageValue
     };
 
@@ -234,8 +305,7 @@ void init_navigation_groups() {
             ui_icoGovernor,
             ui_icoMemory,
             ui_icoTemp,
-            ui_icoService,
-            ui_icoBatteryCap,
+            ui_icoCapacity,
             ui_icoVoltage
     };
 
@@ -248,8 +318,7 @@ void init_navigation_groups() {
     apply_theme_list_panel(ui_pnlGovernor);
     apply_theme_list_panel(ui_pnlMemory);
     apply_theme_list_panel(ui_pnlTemp);
-    apply_theme_list_panel(ui_pnlService);
-    apply_theme_list_panel(ui_pnlBatteryCap);
+    apply_theme_list_panel(ui_pnlCapacity);
     apply_theme_list_panel(ui_pnlVoltage);
 
     apply_theme_list_item(&theme, ui_lblVersion, lang.MUXSYSINFO.VERSION);
@@ -259,10 +328,9 @@ void init_navigation_groups() {
     apply_theme_list_item(&theme, ui_lblCPU, lang.MUXSYSINFO.CPU.INFO);
     apply_theme_list_item(&theme, ui_lblSpeed, lang.MUXSYSINFO.CPU.SPEED);
     apply_theme_list_item(&theme, ui_lblGovernor, lang.MUXSYSINFO.CPU.GOV);
-    apply_theme_list_item(&theme, ui_lblMemory, lang.MUXSYSINFO.MEMORY);
+    apply_theme_list_item(&theme, ui_lblMemory, lang.MUXSYSINFO.MEMORY.INFO);
     apply_theme_list_item(&theme, ui_lblTemp, lang.MUXSYSINFO.TEMP);
-    apply_theme_list_item(&theme, ui_lblService, lang.MUXSYSINFO.SERVICE);
-    apply_theme_list_item(&theme, ui_lblBatteryCap, lang.MUXSYSINFO.CAPACITY);
+    apply_theme_list_item(&theme, ui_lblCapacity, lang.MUXSYSINFO.CAPACITY);
     apply_theme_list_item(&theme, ui_lblVoltage, lang.MUXSYSINFO.VOLTAGE);
 
     apply_theme_list_glyph(&theme, ui_icoVersion, mux_module, "version");
@@ -274,8 +342,7 @@ void init_navigation_groups() {
     apply_theme_list_glyph(&theme, ui_icoGovernor, mux_module, "governor");
     apply_theme_list_glyph(&theme, ui_icoMemory, mux_module, "memory");
     apply_theme_list_glyph(&theme, ui_icoTemp, mux_module, "temp");
-    apply_theme_list_glyph(&theme, ui_icoService, mux_module, "service");
-    apply_theme_list_glyph(&theme, ui_icoBatteryCap, mux_module, "capacity");
+    apply_theme_list_glyph(&theme, ui_icoCapacity, mux_module, "capacity");
     apply_theme_list_glyph(&theme, ui_icoVoltage, mux_module, "voltage");
 
     apply_theme_list_value(&theme, ui_lblVersionValue, "");
@@ -287,8 +354,7 @@ void init_navigation_groups() {
     apply_theme_list_value(&theme, ui_lblGovernorValue, "");
     apply_theme_list_value(&theme, ui_lblMemoryValue, "");
     apply_theme_list_value(&theme, ui_lblTempValue, "");
-    apply_theme_list_value(&theme, ui_lblServiceValue, "");
-    apply_theme_list_value(&theme, ui_lblBatteryCapValue, "");
+    apply_theme_list_value(&theme, ui_lblCapacityValue, "");
     apply_theme_list_value(&theme, ui_lblVoltageValue, "");
 
     ui_group = lv_group_create();
@@ -344,6 +410,15 @@ void handle_a() {
                 "\x6D\x75\x4F\x53\x21",
                 1000, 1000
         );
+    }
+
+    if (lv_group_get_focused(ui_group) == ui_lblMemory) {
+        write_text_to_file("/proc/sys/vm/drop_caches", "w", INT, 3);
+        toast_message(lang.MUXSYSINFO.MEMORY.DROP, 1000, 1000);
+    }
+
+    if (lv_group_get_focused(ui_group) == ui_lblKernel) {
+        toast_message(hostname, 1000, 1000);
     }
 }
 
@@ -423,8 +498,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblGovernor, "governor");
     lv_obj_set_user_data(ui_lblMemory, "memory");
     lv_obj_set_user_data(ui_lblTemp, "temp");
-    lv_obj_set_user_data(ui_lblService, "service");
-    lv_obj_set_user_data(ui_lblBatteryCap, "capacity");
+    lv_obj_set_user_data(ui_lblCapacity, "capacity");
     lv_obj_set_user_data(ui_lblVoltage, "voltage");
 
 #if TEST_IMAGE

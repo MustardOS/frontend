@@ -72,6 +72,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.SWITCH_IMAGE, "Switch to Preview Image");
     GENERIC_FIELD(lang->GENERIC.SWITCH_INFO, "Switch to Information");
     GENERIC_FIELD(lang->GENERIC.SYNC, "Sync to SD1");
+    GENERIC_FIELD(lang->GENERIC.UNKNOWN, "Unknown");
     GENERIC_FIELD(lang->GENERIC.USE, "Use");
 
     // muxapp
@@ -401,9 +402,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.DEVICE, "Device Type");
     SPECIFIC_FIELD(lang->MUXSYSINFO.KERNEL, "Linux Kernel");
     SPECIFIC_FIELD(lang->MUXSYSINFO.UPTIME, "System Uptime");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.MEMORY, "System Memory");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.MEMORY.INFO, "System Memory");
+    SPECIFIC_FIELD(lang->MUXSYSINFO.MEMORY.DROP, "Memory Cache Dropped");
     SPECIFIC_FIELD(lang->MUXSYSINFO.TEMP, "Temperature");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.SERVICE, "Running Services");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CAPACITY, "Battery Capacity");
     SPECIFIC_FIELD(lang->MUXSYSINFO.VOLTAGE, "Battery Voltage");
     SPECIFIC_FIELD(lang->MUXSYSINFO.CPU.INFO, "CPU Information");
@@ -415,7 +416,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.UPTIME, "The current running time of the system");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.MEMORY, "The current, and total, memory usage of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.TEMP, "The current detected temperature of the device");
-    SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.SERVICE, "The number of processes currently running on the system");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CAPACITY, "The current detected battery capacity");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.VOLTAGE, "The current detected battery voltage");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.INFO, "The detected CPU type of the device");

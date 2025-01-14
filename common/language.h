@@ -56,6 +56,7 @@ struct mux_lang {
         char SWITCH_IMAGE[MAX_BUFFER_SIZE];
         char SWITCH_INFO[MAX_BUFFER_SIZE];
         char SYNC[MAX_BUFFER_SIZE];
+        char UNKNOWN[MAX_BUFFER_SIZE];
         char USE[MAX_BUFFER_SIZE];
     } GENERIC;
 
@@ -459,9 +460,11 @@ struct mux_lang {
         char DEVICE[MAX_BUFFER_SIZE];
         char KERNEL[MAX_BUFFER_SIZE];
         char UPTIME[MAX_BUFFER_SIZE];
-        char MEMORY[MAX_BUFFER_SIZE];
+        struct {
+            char INFO[MAX_BUFFER_SIZE];
+            char DROP[MAX_BUFFER_SIZE];
+        } MEMORY;
         char TEMP[MAX_BUFFER_SIZE];
-        char SERVICE[MAX_BUFFER_SIZE];
         char CAPACITY[MAX_BUFFER_SIZE];
         char VOLTAGE[MAX_BUFFER_SIZE];
         struct {

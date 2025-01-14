@@ -13,8 +13,7 @@ extern lv_obj_t *ui_pnlSpeed;
 extern lv_obj_t *ui_pnlGovernor;
 extern lv_obj_t *ui_pnlMemory;
 extern lv_obj_t *ui_pnlTemp;
-extern lv_obj_t *ui_pnlService;
-extern lv_obj_t *ui_pnlBatteryCap;
+extern lv_obj_t *ui_pnlCapacity;
 extern lv_obj_t *ui_pnlVoltage;
 
 extern lv_obj_t *ui_lblVersion;
@@ -26,8 +25,7 @@ extern lv_obj_t *ui_lblSpeed;
 extern lv_obj_t *ui_lblGovernor;
 extern lv_obj_t *ui_lblMemory;
 extern lv_obj_t *ui_lblTemp;
-extern lv_obj_t *ui_lblService;
-extern lv_obj_t *ui_lblBatteryCap;
+extern lv_obj_t *ui_lblCapacity;
 extern lv_obj_t *ui_lblVoltage;
 
 extern lv_obj_t *ui_icoVersion;
@@ -39,8 +37,7 @@ extern lv_obj_t *ui_icoSpeed;
 extern lv_obj_t *ui_icoGovernor;
 extern lv_obj_t *ui_icoMemory;
 extern lv_obj_t *ui_icoTemp;
-extern lv_obj_t *ui_icoService;
-extern lv_obj_t *ui_icoBatteryCap;
+extern lv_obj_t *ui_icoCapacity;
 extern lv_obj_t *ui_icoVoltage;
 
 extern lv_obj_t *ui_lblVersionValue;
@@ -52,6 +49,5 @@ extern lv_obj_t *ui_lblSpeedValue;
 extern lv_obj_t *ui_lblGovernorValue;
 extern lv_obj_t *ui_lblMemoryValue;
 extern lv_obj_t *ui_lblTempValue;
-extern lv_obj_t *ui_lblServiceValue;
-extern lv_obj_t *ui_lblBatteryCapValue;
+extern lv_obj_t *ui_lblCapacityValue;
 extern lv_obj_t *ui_lblVoltageValue;
