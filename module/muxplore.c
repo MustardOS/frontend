@@ -1,16 +1,14 @@
 #include "../lvgl/lvgl.h"
-#include "../lvgl/src/drivers/fbdev.h"
-#include "../lvgl/src/drivers/evdev.h"
 #include "ui/ui_muxplore.h"
 #include <unistd.h>
 #include <pthread.h>
-#include <fcntl.h>
 #include <dirent.h>
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include "../common/init.h"
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/language.h"

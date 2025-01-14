@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include "../common/init.h"
 #include "../common/log.h"
 #include "../common/common.h"
 #include "../common/options.h"

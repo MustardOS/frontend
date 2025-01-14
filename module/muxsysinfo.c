@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
+#include "../common/init.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/language.h"

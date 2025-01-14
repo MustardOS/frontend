@@ -2,6 +2,7 @@
 #include "../font/awesome_small.h"
 #include "../font/notosans.h"
 #include "img/nothing.h"
+#include "init.h"
 #include "common.h"
 #include "language.h"
 #include "config.h"

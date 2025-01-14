@@ -18,8 +18,9 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
-#include "../../../common/device.h"
+#include "../../../common/init.h"
 #include "../../../common/common.h"
+#include "../../../common/device.h"
 
 #if USE_BSD_FBDEV
 #include <sys/fcntl.h>

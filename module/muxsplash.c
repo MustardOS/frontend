@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "../common/init.h"
 #include "../common/common.h"
 #include "../common/language.h"
 #include "../common/config.h"

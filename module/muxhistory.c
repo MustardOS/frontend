@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <libgen.h>
 #include <omp.h>
+#include "../common/init.h"
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/language.h"

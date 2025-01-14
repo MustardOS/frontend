@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <libgen.h>
+#include "../common/init.h"
 #include "../common/common.h"
 #include "../common/language.h"
 #include "../common/ui_common.h"

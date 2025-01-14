@@ -2,6 +2,7 @@
 #include "ui/ui_muxcredits.h"
 #include <string.h>
 #include <unistd.h>
+#include "../common/init.h"
 #include "../common/common.h"
 #include "../common/config.h"
 #include "../common/language.h"

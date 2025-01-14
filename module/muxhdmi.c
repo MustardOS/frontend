@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include "../common/init.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/language.h"
