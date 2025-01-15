@@ -240,28 +240,6 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
-void glyph_task() {
-    // TODO: Bluetooth connectivity!
-    //update_bluetooth_status(ui_staBluetooth, &theme);
-
-    update_network_status(ui_staNetwork, &theme);
-    update_battery_capacity(ui_staCapacity, &theme);
-
-    if (progress_onscreen > 0) {
-        progress_onscreen -= 1;
-    } else {
-        if (!lv_obj_has_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN)) {
-            lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-        }
-        if (!lv_obj_has_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN)) {
-            lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-        }
-        if (!msgbox_active) {
-            progress_onscreen = -1;
-        }
-    }
-}
-
 void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
