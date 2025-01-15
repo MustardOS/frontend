@@ -376,7 +376,7 @@ int main(int argc, char *argv[]) {
     init_navigation_sound(&nav_sound, mux_module);
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(glyph_task, ui_refresh_task, NULL);
+    init_timer(ui_refresh_task, NULL);
 
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));

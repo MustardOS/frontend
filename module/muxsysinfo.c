@@ -576,7 +576,7 @@ int main(int argc, char *argv[]) {
     update_system_info();
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(glyph_task, ui_refresh_task, update_system_info);
+    init_timer(ui_refresh_task, update_system_info);
 
     load_kiosk(&kiosk);
 

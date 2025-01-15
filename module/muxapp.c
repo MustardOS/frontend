@@ -494,7 +494,7 @@ int main(int argc, char *argv[]) {
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, APPLICATION);
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(glyph_task, ui_refresh_task, NULL);
+    init_timer(ui_refresh_task, NULL);
 
     load_kiosk(&kiosk);
 

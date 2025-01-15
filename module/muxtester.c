@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
     init_navigation_sound(&nav_sound, mux_module);
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(glyph_task, NULL, NULL);
+    init_timer(NULL, NULL);
 
     load_kiosk(&kiosk);
 

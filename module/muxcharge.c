@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(NULL, NULL, NULL);
+    init_timer(NULL, NULL);
 
     battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
     lv_timer_ready(battery_timer);

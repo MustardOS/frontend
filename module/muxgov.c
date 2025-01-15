@@ -602,7 +602,7 @@ int main(int argc, char *argv[]) {
     create_gov_items(rom_system);
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(glyph_task, ui_refresh_task, NULL);
+    init_timer(ui_refresh_task, NULL);
 
     if (ui_count > 0) {
         LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s")

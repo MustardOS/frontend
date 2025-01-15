@@ -928,7 +928,7 @@ int main(int argc, char *argv[]) {
     }
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(glyph_task, ui_refresh_task, NULL);
+    init_timer(ui_refresh_task, NULL);
 
     if (ui_count > 0) {
         if (!strcasecmp(rom_system, "none")) {

@@ -66,7 +66,7 @@ int main() {
     lv_timer_create(timeout_task, 90000, NULL);
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(NULL, NULL, NULL);
+    init_timer(NULL, NULL);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

@@ -432,7 +432,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
 
     init_input(&js_fd, &js_fd_sys);
-    init_timer(glyph_task, ui_refresh_task, NULL);
+    init_timer(ui_refresh_task, NULL);
 
     int nav_hidden = 1;
     if (ui_count > 0) {

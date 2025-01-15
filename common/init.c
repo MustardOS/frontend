@@ -101,8 +101,7 @@ void init_input(int *js_fd, int *js_fd_sys) {
     lv_indev_drv_register(&indev_drv);
 }
 
-void init_timer(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(lv_timer_t *),
-                void (*update_system_info)(lv_timer_t *)) {
+void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *)) {
     dt_par.lblDatetime = ui_lblDatetime;
     bat_par.staCapacity = ui_staCapacity;
 
@@ -112,10 +111,8 @@ void init_timer(void (*glyph_task_func)(lv_timer_t *), void (*ui_refresh_task)(l
     lv_timer_t *capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
     lv_timer_ready(capacity_timer);
 
-    if (glyph_task_func) {
-        lv_timer_t *glyph_timer = lv_timer_create(glyph_task_func, UINT16_MAX / 64, NULL);
-        lv_timer_ready(glyph_timer);
-    }
+    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
+    lv_timer_ready(glyph_timer);
 
     if (ui_refresh_task) {
         lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
@@ -145,4 +142,27 @@ void init_theme(int panel_init, int long_mode) {
     }
 
     if (long_mode && theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
+}
+
+
+void glyph_task() {
+    //update_bluetooth_status(ui_staBluetooth, &theme);
+    update_network_status(ui_staNetwork, &theme);
+    update_battery_capacity(ui_staCapacity, &theme);
+
+    if (progress_onscreen > 0) {
+        progress_onscreen -= 1;
+    } else {
+        if (!lv_obj_has_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+        }
+        
+        if (!lv_obj_has_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN)) {
+            lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+        }
+
+        if (!msgbox_active) {
+            progress_onscreen = -1;
+        }
+    }
 }
