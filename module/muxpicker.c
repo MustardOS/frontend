@@ -433,7 +433,7 @@ int main(int argc, char *argv[]) {
 
     init_fonts();
     create_picker_items();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     int sys_index = 0;
     if (file_exist(MUOS_PIN_LOAD)) {

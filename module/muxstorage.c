@@ -176,7 +176,7 @@ void update_storage_info() {
     }
 }
 
-void init_navigation_groups() {
+void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlBIOS,
             ui_pnlCatalogue,
@@ -572,9 +572,9 @@ int main(int argc, char *argv[]) {
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     init_fonts();
-    init_navigation_groups();
+    init_navigation_group();
     update_storage_info();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     int sin_index = 0;
     if (file_exist(MUOS_SIN_LOAD)) {

@@ -219,7 +219,7 @@ void save_tweak_options() {
     if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
 }
 
-void init_navigation_groups() {
+void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlHidden,
             ui_pnlBGM,
@@ -560,27 +560,6 @@ void ui_refresh_task() {
     }
 }
 
-void direct_to_previous() {
-    if (file_exist(MUOS_PDI_LOAD)) {
-        char *prev = read_text_from_file(MUOS_PDI_LOAD);
-        int text_hit = 0;
-
-        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
-            const char *u_data = lv_obj_get_user_data(ui_objects[i]);
-
-            if (strcasecmp(u_data, prev) == 0) {
-                text_hit = i;
-                break;
-            }
-        }
-
-        if (text_hit != 0) {
-            list_nav_next(text_hit - !device.DEVICE.HAS_HDMI);
-            nav_moved = 1;
-        }
-    }
-}
-
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -603,9 +582,9 @@ int main(int argc, char *argv[]) {
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     init_fonts();
-    init_navigation_groups();
+    init_navigation_group();
     init_element_events();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     restore_tweak_options();
     init_dropdown_settings();
@@ -613,8 +592,8 @@ int main(int argc, char *argv[]) {
     init_input(&js_fd, &js_fd_sys);
     init_timer(glyph_task, ui_refresh_task, NULL);
 
-    direct_to_previous();
     load_kiosk(&kiosk);
+    list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

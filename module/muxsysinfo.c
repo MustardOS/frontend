@@ -254,7 +254,7 @@ void update_system_info() {
     lv_label_set_text(ui_lblVoltageValue, read_battery_voltage());
 }
 
-void init_navigation_groups() {
+void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlVersion,
             ui_pnlDevice,
@@ -570,8 +570,8 @@ int main(int argc, char *argv[]) {
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     init_fonts();
-    init_navigation_groups();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_group();
+    init_navigation_sound(&nav_sound, mux_module);
 
     update_system_info();
 

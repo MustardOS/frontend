@@ -204,7 +204,7 @@ void save_hdmi_options() {
     }
 }
 
-void init_navigation_groups() {
+void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlEnable,
             ui_pnlResolution,
@@ -555,9 +555,9 @@ int main(int argc, char *argv[]) {
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     init_fonts();
-    init_navigation_groups();
+    init_navigation_group();
     init_element_events();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     restore_hdmi_options();
     init_dropdown_settings();

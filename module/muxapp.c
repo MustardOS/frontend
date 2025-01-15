@@ -88,7 +88,7 @@ void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
 }
 
-void init_navigation_groups_grid(const char *app_path) {
+void init_navigation_group_grid(const char *app_path) {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
@@ -201,7 +201,7 @@ void create_app_items() {
     }
 
     if (theme.GRID.ENABLED && item_count > 0) {
-        init_navigation_groups_grid(app_path);
+        init_navigation_group_grid(app_path);
         ui_count += (int) item_count;
     } else {
         for (size_t i = 0; i < item_count; i++) {
@@ -471,7 +471,7 @@ int main(int argc, char *argv[]) {
     init_fonts();
     create_app_items();
     update_footer_nav_elements();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     int ain_index = 0;
     if (file_exist(MUOS_AIN_LOAD)) {

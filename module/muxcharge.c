@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
     overlay_image = lv_img_create(ui_scrCharge);
     load_overlay_image(ui_scrCharge, overlay_image, theme.MISC.IMAGE_OVERLAY);
 
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);
 
     init_input(&js_fd, &js_fd_sys);

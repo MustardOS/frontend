@@ -273,7 +273,7 @@ void save_visual_options() {
     }
 }
 
-void init_navigation_groups() {
+void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlBattery,
             ui_pnlNetwork,
@@ -697,9 +697,9 @@ int main(int argc, char *argv[]) {
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     init_fonts();
-    init_navigation_groups();
+    init_navigation_group();
     init_element_events();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     restore_visual_options();
     init_dropdown_settings();

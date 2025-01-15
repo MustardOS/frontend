@@ -59,7 +59,7 @@ lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[2];
 
-void init_navigation_groups() {
+void init_navigation_group() {
     ui_objects[0] = ui_rolComboOne;
     ui_objects[1] = ui_rolComboTwo;
     ui_objects[2] = ui_rolComboThree;
@@ -254,8 +254,8 @@ int main(int argc, char *argv[]) {
     load_font_text(basename(argv[0]), ui_screen);
 
     init_fonts();
-    init_navigation_groups();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_group();
+    init_navigation_sound(&nav_sound, mux_module);
 
     init_input(&js_fd, &js_fd_sys);
     init_timer(glyph_task, NULL, NULL);

@@ -298,7 +298,7 @@ int main(int argc, char *argv[]) {
 
     init_fonts();
     create_language_items();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     init_input(&js_fd, &js_fd_sys);
     init_timer(glyph_task, ui_refresh_task, NULL);

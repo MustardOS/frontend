@@ -244,7 +244,7 @@ void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, i
 
 int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value);
 
-int init_nav_sound(const char *mux_module);
+void init_navigation_sound(int *nav_sound, const char *mux_module);
 
 int safe_atoi(const char *str);
 
@@ -292,3 +292,5 @@ void populate_history_items();
 void populate_collection_items();
 
 char *get_content_explorer_glyph_name(char *file_path);
+
+int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved);

@@ -107,7 +107,7 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_navigation_groups() {
+void init_navigation_group() {
     lv_obj_t *ui_panels[] = {
             ui_pnlLookup,
             ui_pnlSearchLocal,
@@ -1037,8 +1037,8 @@ int main(int argc, char *argv[]) {
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     init_fonts();
-    init_navigation_groups();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_group();
+    init_navigation_sound(&nav_sound, mux_module);
 
     if (got_results) {
         process_results(json_content);

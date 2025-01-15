@@ -497,7 +497,7 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json) {
     free(display_title);
 }
 
-void init_navigation_groups_grid() {
+void init_navigation_group_grid() {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
@@ -591,7 +591,7 @@ void create_collection_items() {
         check_for_disable_grid_file(sys_dir);
 
         if (!nogrid_file_exists && theme.GRID.ENABLED && dir_count > 0 && file_count == 0) {
-            init_navigation_groups_grid();
+            init_navigation_group_grid();
         } else {
             for (int i = 0; i < dir_count; i++) {
                 gen_label("folder", items[i].display_name);
@@ -1314,7 +1314,7 @@ int main(int argc, char *argv[]) {
 
     init_fonts();
     init_elements();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);

@@ -1956,19 +1956,19 @@ int map_drop_down_to_value(int selected_index, const int *options, int num_optio
     return def_value;
 }
 
-int init_nav_sound(const char *mux_module) {
+void init_navigation_sound(int *nav_sound, const char *mux_module) {
+    *nav_sound = 0;
+
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
             Mix_Init(0);
             Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 2048);
             LOG_SUCCESS(mux_module, "SDL Init Success")
-            return 1;
+            *nav_sound = 1;
         } else {
             LOG_ERROR(mux_module, "SDL Failed To Init")
         }
     }
-
-    return 0;
 }
 
 int safe_atoi(const char *str) {
@@ -2215,6 +2215,7 @@ char *get_content_explorer_glyph_name(char *file_path) {
             return "history";
         }
     }
+
     return "rom";
 }
 
@@ -2245,4 +2246,38 @@ bool get_glyph_path(const char *mux_module, char *glyph_name, char *glyph_image_
     }
 
     return false;
+}
+
+int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
+    if (!file_exist(MUOS_PDI_LOAD)) return 0;
+
+    char *prev = read_text_from_file(MUOS_PDI_LOAD);
+    if (!prev) return 0;
+
+    int text_hit = 0;
+    for (size_t i = 0; i < ui_count; i++) {
+        if (!strcasecmp(lv_obj_get_user_data(ui_objects[i]), prev)) {
+            text_hit = i;
+            break;
+        }
+    }
+
+    int nav_next_return = 0;
+    if (text_hit > 0) {
+        *nav_moved = 1;
+        if (!strcmp(mux_module, "muxtweakgen")) {
+            nav_next_return = text_hit - !device.DEVICE.HAS_HDMI;
+        } else if (!strcmp(mux_module, "muxtweakadv")) {
+            nav_next_return = text_hit - !device.DEVICE.HAS_NETWORK;
+        } else if (!config.NETWORK.TYPE && !strcasecmp(prev, "connect")) {
+            nav_next_return = 4;
+        } else {
+            nav_next_return = text_hit;
+        }
+    }
+
+    free(prev);
+    remove(MUOS_PDI_LOAD);
+
+    return nav_next_return;
 }

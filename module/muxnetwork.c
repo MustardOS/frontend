@@ -218,7 +218,7 @@ void save_network_config() {
     write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, lv_label_get_text(ui_lblDNSValue));
 }
 
-void init_navigation_groups() {
+void init_navigation_group() {
     ui_panels[0] = ui_pnlEnable;
     ui_panels[1] = ui_pnlIdentifier;
     ui_panels[2] = ui_pnlPassword;
@@ -1089,32 +1089,6 @@ void ui_refresh_task() {
     }
 }
 
-void direct_to_previous() {
-    if (file_exist(MUOS_PDI_LOAD)) {
-        char *prev = read_text_from_file(MUOS_PDI_LOAD);
-        int text_hit = 0;
-
-        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
-            const char *u_data = lv_obj_get_user_data(ui_objects[i]);
-
-            if (!strcasecmp(u_data, prev)) {
-                text_hit = i;
-                break;
-            }
-        }
-
-        if (!config.NETWORK.TYPE && !strcasecmp(prev, "connect")) {
-            list_nav_next(4);
-            nav_moved = 1;
-        } else {
-            if (text_hit != 0) {
-                list_nav_next(text_hit);
-                nav_moved = 1;
-            }
-        }
-    }
-}
-
 int main(int argc, char *argv[]) {
     (void) argc;
 
@@ -1138,17 +1112,17 @@ int main(int argc, char *argv[]) {
                    theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
 
     init_fonts();
-    init_navigation_groups();
+    init_navigation_group();
     restore_network_values();
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     init_input(&js_fd, &js_fd_sys);
     init_timer(glyph_task, ui_refresh_task, NULL);
 
     init_osk();
-    direct_to_previous();
     can_scan_check();
     load_kiosk(&kiosk);
+    list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

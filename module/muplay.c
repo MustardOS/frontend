@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     load_config(&config);
 
     mux_module = basename(argv[0]);
-    nav_sound = init_nav_sound(mux_module);
+    init_navigation_sound(&nav_sound, mux_module);
 
     play_sound(argv[1], nav_sound, 1, 0);
 
