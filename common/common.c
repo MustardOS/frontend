@@ -405,25 +405,6 @@ int read_battery_capacity() {
     }
 }
 
-char *read_battery_health() {
-    FILE *file = fopen(device.BATTERY.HEALTH, "r");
-
-    if (file == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
-        return strdup("Unknown");
-    }
-
-    char *health = NULL;
-    if (fscanf(file, "%m[^\n]", &health) != 1) {
-        perror(lang.SYSTEM.FAIL_FILE_READ);
-        fclose(file);
-        return strdup("Unknown");
-    }
-
-    fclose(file);
-    return health;
-}
-
 char *read_battery_voltage() {
     FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
 
@@ -654,74 +635,6 @@ void create_directories(const char *path) {
     if (mkdir(path_copy, 0777) == -1) {
         free(path_copy);
     }
-}
-
-int count_items(const char *path, enum count_type type) {
-    struct dirent *entry;
-    struct stat file_info;
-    int count = 0;
-
-    DIR *dir;
-    dir = opendir(path);
-
-    if (dir == NULL) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
-        return 0;
-    }
-
-    load_skip_patterns();
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            char full_path[PATH_MAX];
-            snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
-
-            if (stat(full_path, &file_info) == -1) {
-                perror(lang.SYSTEM.FAIL_STAT);
-                continue;
-            }
-
-            if (type == FILES_ONLY && S_ISREG(file_info.st_mode)) {
-                count++;
-            } else if (type == DIRECTORIES_ONLY && S_ISDIR(file_info.st_mode)) {
-                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                    count++;
-                }
-            } else if (type == BOTH) {
-                if (S_ISREG(file_info.st_mode) ||
-                    (S_ISDIR(file_info.st_mode) &&
-                     strcmp(entry->d_name, ".") != 0 &&
-                     strcmp(entry->d_name, "..") != 0)) {
-                    count++;
-                }
-            }
-        }
-    }
-
-    closedir(dir);
-    return count;
-}
-
-int detect_storage(const char *target) {
-    FILE *fp;
-    char line[MAX_BUFFER_SIZE];
-    int found = 0;
-
-    fp = fopen("/proc/partitions", "r");
-    if (!fp) {
-        perror(lang.SYSTEM.FAIL_PROC_PART);
-        return 0;
-    }
-
-    while (fgets(line, sizeof(line), fp)) {
-        if (strstr(line, target)) {
-            found = 1;
-            break;
-        }
-    }
-
-    fclose(fp);
-    return found;
 }
 
 void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *content_element,

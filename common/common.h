@@ -105,8 +105,6 @@ char *get_execute_result(const char *command);
 
 int read_battery_capacity();
 
-char *read_battery_health();
-
 char *read_battery_voltage();
 
 char *read_text_from_file(const char *filename);
@@ -128,10 +126,6 @@ char *format_meta_text(char *filename);
 void write_text_to_file(const char *filename, const char *mode, int type, ...);
 
 void create_directories(const char *path);
-
-int count_items(const char *path, enum count_type type);
-
-int detect_storage(const char *target);
 
 void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *content_element,
                       char *header_text, char *content_text);
