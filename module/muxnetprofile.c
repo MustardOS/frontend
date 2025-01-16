@@ -251,6 +251,7 @@ void create_profile_items() {
         closedir(pd);
     }
 
+    if (!file_names) goto none;
     qsort(file_names, file_count, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();
@@ -258,6 +259,7 @@ void create_profile_items() {
     ui_group_panel = lv_group_create();
 
     for (size_t i = 0; i < file_count; i++) {
+        if (!file_names[i]) continue;
         char *base_filename = file_names[i];
 
         static char profile_name[MAX_BUFFER_SIZE];
@@ -312,6 +314,7 @@ void create_profile_items() {
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
         list_nav_next(0);
     } else {
+        none:
         lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.NONE);
     }
 }

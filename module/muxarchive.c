@@ -115,7 +115,7 @@ void create_archive_items() {
         closedir(ad);
     }
 
-    if (file_names == NULL) return;
+    if (!file_names) return;
     qsort(file_names, file_count, sizeof(char *), str_compare);
 
     const char *prefix_map[][2] = {
@@ -131,7 +131,7 @@ void create_archive_items() {
 
     for (size_t i = 0; i < file_count; i++) {
         char *base_filename = file_names[i];
-        if (base_filename == NULL) continue;
+        if (!file_names[i]) continue;
 
         const char *prefix = NULL;
         for (size_t j = 0; j < sizeof(mount_points) / sizeof(mount_points[0]); ++j) {

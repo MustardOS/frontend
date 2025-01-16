@@ -356,6 +356,8 @@ void create_system_items() {
     }
 
     closedir(ad);
+
+    if (!file_names) return;
     qsort(file_names, file_count, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();
@@ -365,6 +367,8 @@ void create_system_items() {
     if (file_count > 0) {
         for (size_t i = 0; i < file_count; i++) {
             char *base_filename = file_names[i];
+            if (!file_names[i]) continue;
+
             ui_count++;
 
             lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
@@ -385,6 +389,7 @@ void create_system_items() {
             apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, base_filename);
             apply_text_long_dot(&theme, ui_pnlContent, ui_lblCoreItem, base_filename);
         }
+
         if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     }
 }

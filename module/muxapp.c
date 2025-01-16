@@ -72,8 +72,6 @@ void init_elements();
 
 void update_footer_nav_elements();
 
-void glyph_task();
-
 void ui_refresh_task();
 
 void show_help() {
@@ -179,6 +177,7 @@ void create_app_items() {
         closedir(ad);
     }
 
+    if (!file_names) return;
     qsort(file_names, file_count, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();
@@ -186,6 +185,7 @@ void create_app_items() {
     ui_group_panel = lv_group_create();
 
     for (size_t i = 0; i < file_count; i++) {
+        if (!file_names[i]) continue;
         char *base_filename = file_names[i];
 
         char app_name[MAX_BUFFER_SIZE];
