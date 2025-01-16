@@ -842,6 +842,8 @@ void toast_message(const char *msg, uint32_t delay, uint32_t fade_duration) {
     lv_obj_set_style_opa(ui_pnlMessage, LV_OPA_COVER, 0);
 
     if (delay <= 0 || fade_duration <= 0) return;
+
+    lv_anim_del(ui_pnlMessage, NULL);
     lv_obj_fade_out(ui_pnlMessage, fade_duration, delay);
 }
 
