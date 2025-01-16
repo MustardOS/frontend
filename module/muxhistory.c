@@ -312,7 +312,7 @@ void add_file_names(const char *base_dir, char ***file_names) {
         return;
     }
 
-    while ((entry = readdir(dir)) != NULL) {
+    while ((entry = readdir(dir))) {
         char full_path[PATH_MAX];
         snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
         if (entry->d_type == DT_REG) {
@@ -475,7 +475,7 @@ int load_content(const char *content_name) {
 
     char *assigned_gov = NULL;
     assigned_gov = load_content_governor(pointer_file);
-    if (assigned_gov == NULL) assigned_gov = device.CPU.DEFAULT;
+    if (!assigned_gov) assigned_gov = device.CPU.DEFAULT;
 
     char cache_file[MAX_BUFFER_SIZE];
     snprintf(cache_file, sizeof(cache_file), "%s",
@@ -854,7 +854,6 @@ int main(int argc, char *argv[]) {
         nav_moved = 1;
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXHISTORY.NONE);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     struct nav_flag nav_e[] = {

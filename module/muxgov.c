@@ -78,7 +78,7 @@ void assign_gov_single(char *core_dir, const char *gov, char *rom) {
     if (file_exist(rom_path)) remove(rom_path);
 
     FILE *rom_file = fopen(rom_path, "w");
-    if (rom_file == NULL) {
+    if (!rom_file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
@@ -98,7 +98,7 @@ void assign_gov_directory(char *core_dir, const char *gov, int purge) {
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
     FILE *file = fopen(core_file, "w");
-    if (file == NULL) {
+    if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
@@ -111,15 +111,15 @@ void assign_gov_parent(char *core_dir, const char *gov) {
     assign_gov_directory(core_dir, gov, 1);
 
     char **subdirs = get_subdirectories(rom_dir);
-    if (subdirs != NULL) {
-        for (int i = 0; subdirs[i] != NULL; i++) {
+    if (subdirs) {
+        for (int i = 0; subdirs[i]; i++) {
             char subdir_file[MAX_BUFFER_SIZE];
             snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.gov", core_dir, subdirs[i]);
 
             create_directories(strip_dir(subdir_file));
 
             FILE *subdir_file_handle = fopen(subdir_file, "w");
-            if (subdir_file_handle == NULL) {
+            if (!subdir_file_handle) {
                 perror(lang.SYSTEM.FAIL_FILE_OPEN);
                 continue;
             }
@@ -161,13 +161,13 @@ void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type method)
 
 char **read_available_governors(const char *filename, int *count) {
     FILE *file = fopen(filename, "r");
-    if (file == NULL) {
+    if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return NULL;
     }
 
     char **governors = (char **) malloc(MAX_BUFFER_SIZE * sizeof(char *));
-    if (governors == NULL) {
+    if (!governors) {
         perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
         fclose(file);
         return NULL;
@@ -178,9 +178,9 @@ char **read_available_governors(const char *filename, int *count) {
 
     if (fgets(line, sizeof(line), file)) {
         char *token = strtok(line, " \n");
-        while (token != NULL) {
+        while (token) {
             governors[*count] = (char *) malloc((strlen(token) + 1) * sizeof(char));
-            if (governors[*count] == NULL) {
+            if (!governors[*count]) {
                 perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                 for (int i = 0; i < *count; i++) {
                     free(governors[i]);
@@ -207,10 +207,7 @@ void create_gov_items(const char *target) {
     int governor_count;
     char **governors = read_available_governors("/sys/devices/system/cpu/cpu0/cpufreq/"
                                                 "scaling_available_governors", &governor_count);
-    if (governors == NULL) {
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
+    if (!governors) return;
 
     char *assign_default = NULL;
     mini_t *assign_ini = mini_try_load(filename);
@@ -454,7 +451,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (auto_assign == NULL || rom_name == NULL || rom_dir == NULL || rom_system == NULL) {
+    if (!auto_assign || !rom_name || !rom_dir || !rom_system) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
@@ -549,8 +546,6 @@ int main(int argc, char *argv[]) {
     init_fonts();
     init_navigation_sound(&nav_sound, mux_module);
 
-    lv_label_set_text(ui_lblScreenMessage, lang.MUXGOV.NONE);
-
     if (!strcasecmp(rom_system, "none")) {
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
@@ -589,7 +584,7 @@ int main(int argc, char *argv[]) {
         list_nav_next(0);
     } else {
         LOG_ERROR(mux_module, "No Governors Detected!")
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXGOV.NONE);
     }
 
     load_kiosk(&kiosk);

@@ -71,7 +71,7 @@ void populate_languages() {
         return;
     }
 
-    while ((entry = readdir(dir)) != NULL) {
+    while ((entry = readdir(dir))) {
         if (entry->d_type == DT_REG) {
             size_t len = strlen(entry->d_name);
             if (len > 5 && !strcasecmp(entry->d_name + len - 5, ".json")) {
@@ -142,13 +142,6 @@ void create_language_items() {
 
         apply_size_to_content(&theme, ui_pnlContent, ui_lblLanguageItem, ui_lblLanguageGlyph, items[i].name);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblLanguageItem, items[i].display_name);
-    }
-    if (ui_count > 0) {
-        list_nav_next(0);
-        lv_obj_update_layout(ui_pnlContent);
-    } else if (!ui_count) {
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXLANGUAGE.NONE);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -274,11 +267,19 @@ int main(int argc, char *argv[]) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     init_fonts();
-    create_language_items();
     init_navigation_sound(&nav_sound, mux_module);
 
     init_input(&js_fd, &js_fd_sys);
     init_timer(ui_refresh_task, NULL);
+
+    create_language_items();
+
+    if (ui_count > 0) {
+        list_nav_next(0);
+        lv_obj_update_layout(ui_pnlContent);
+    } else if (!ui_count) {
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXLANGUAGE.NONE);
+    }
 
     load_kiosk(&kiosk);
 

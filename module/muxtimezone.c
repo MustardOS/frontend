@@ -255,10 +255,7 @@ int main(int argc, char *argv[]) {
     init_input(&js_fd, &js_fd_sys);
     init_timer(ui_refresh_task, NULL);
 
-    if (!ui_count) {
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-    }
+    if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXTIMEZONE.NONE);
 
     load_kiosk(&kiosk);
 

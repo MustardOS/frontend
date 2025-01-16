@@ -336,7 +336,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     struct dirent *entry;
     int32_t dir_count = 0;
 
-    while ((entry = readdir(dir)) != NULL) if (entry->d_type == DT_REG) dir_count++;
+    while ((entry = readdir(dir))) if (entry->d_type == DT_REG) dir_count++;
 
     closedir(dir);
     return dir_count;
@@ -351,7 +351,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
         return;
     }
 
-    while ((entry = readdir(dir)) != NULL) {
+    while ((entry = readdir(dir))) {
         char full_path[PATH_MAX];
         snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
         if (entry->d_type == DT_DIR && at_base(sys_dir, "collection")) {
@@ -619,7 +619,7 @@ int load_content(const char *content_name) {
 
     char *assigned_gov = NULL;
     assigned_gov = load_content_governor(cache_file);
-    if (assigned_gov == NULL) assigned_gov = device.CPU.DEFAULT;
+    if (!assigned_gov) assigned_gov = device.CPU.DEFAULT;
 
     if (file_exist(cache_file)) {
         char *assigned_core = read_line_from_file(cache_file, 2);
@@ -855,14 +855,14 @@ void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    if (sys_dir != NULL) {
+    if (sys_dir) {
         if (at_base(sys_dir, "collection")) {
             if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
             if (add_mode) write_text_to_file(ADD_MODE_DONE, "w", CHAR, "CANCEL");
             if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
         } else {
             char *base_dir = strrchr(sys_dir, '/');
-            if (base_dir != NULL) write_text_to_file(COLLECTION_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
+            if (base_dir) write_text_to_file(COLLECTION_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
         }
     }
 
@@ -1305,10 +1305,7 @@ int main(int argc, char *argv[]) {
     create_collection_items();
     ui_count = dir_count > 0 || file_count > 0 ? (int) lv_group_get_obj_count(ui_group) : 0;
 
-    if (sys_dir != NULL) {
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
-    }
-
+    if (sys_dir) write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
     if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "ROMS") == 0) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
     }
@@ -1326,7 +1323,6 @@ int main(int argc, char *argv[]) {
         nav_moved = 1;
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXCOLLECT.NONE);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     struct nav_flag nav_e[] = {

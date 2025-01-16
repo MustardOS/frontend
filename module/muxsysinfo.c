@@ -97,7 +97,7 @@ void show_help(lv_obj_t *element_focused) {
 const char *get_cpu_model() {
     char *result = get_execute_result("lscpu | grep 'Model name:' | awk -F: '{print $2}'");
 
-    if (result == NULL || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
     while (*result == ' ') result++;
 
     return result;
@@ -107,7 +107,7 @@ const char *get_current_frequency() {
     static char buffer[32];
     char *freq_str = read_text_from_file("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq");
 
-    if (freq_str == NULL || freq_str[0] == '\0') {
+    if (!freq_str || freq_str[0] == '\0') {
         snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
         free(freq_str);
         return buffer;
@@ -131,7 +131,7 @@ const char *get_scaling_governor() {
     static char buffer[MAX_BUFFER_SIZE];
     char *governor_str = read_text_from_file("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
 
-    if (governor_str == NULL || governor_str[0] == '\0') {
+    if (!governor_str || governor_str[0] == '\0') {
         snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
         free(governor_str);
         return buffer;
@@ -144,7 +144,7 @@ const char *get_scaling_governor() {
 
 const char *get_memory_usage() {
     char *result = get_execute_result("free -m | awk '/^Mem:/ {printf \"%.2f MB / %.2f MB\", $3, $2}'");
-    if (result == NULL || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
 
     return result;
 }
@@ -153,7 +153,7 @@ const char *get_temperature() {
     static char buffer[32];
     char *temp_str = read_text_from_file("/sys/class/thermal/thermal_zone0/temp");
 
-    if (temp_str == NULL || temp_str[0] == '\0') {
+    if (!temp_str || temp_str[0] == '\0') {
         snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
         free(temp_str);
         return buffer;

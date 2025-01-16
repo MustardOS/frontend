@@ -106,10 +106,7 @@ void create_picker_items() {
     snprintf(picker_dir, sizeof(picker_dir), (RUN_STORAGE_PATH "%s"), picker_type);
 
     td = opendir(picker_dir);
-    if (td == NULL) {
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
+    if (!td) return;
 
     while ((tf = readdir(td))) {
         if (tf->d_type == DT_REG) {
@@ -117,7 +114,7 @@ void create_picker_items() {
             snprintf(filename, sizeof(filename), "%s/%s", picker_dir, tf->d_name);
 
             char *last_dot = strrchr(tf->d_name, '.');
-            if (last_dot != NULL && !strcasecmp(last_dot, ".zip")) {
+            if (last_dot && !strcasecmp(last_dot, ".zip")) {
                 *last_dot = '\0';
 
                 add_item(&items, &item_count, tf->d_name, tf->d_name, "", ROM);
@@ -372,7 +369,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (picker_type == NULL) {
+    if (!picker_type) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
@@ -387,19 +384,17 @@ int main(int argc, char *argv[]) {
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
+    const char *picker_type = NULL;
     if (!strcasecmp(picker_type, "theme")) {
-        init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.THEME);
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.THEME);
+        picker_type = lang.MUXPICKER.THEME;
     } else if (!strcasecmp(picker_type, "package/catalogue")) {
-        init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.CATALOGUE);
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CATALOGUE);
+        picker_type = lang.MUXPICKER.CATALOGUE;
     } else if (!strcasecmp(picker_type, "package/config")) {
-        init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.CONFIG);
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CONFIG);
+        picker_type = lang.MUXPICKER.CONFIG;
     } else {
-        init_ui_common_screen(&theme, &device, &lang, lang.MUXPICKER.CUSTOM);
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXPICKER.NONE.CUSTOM);
+        picker_type = lang.MUXPICKER.CUSTOM;
     }
+    init_ui_common_screen(&theme, &device, &lang, picker_type);
 
     init_elements();
 
@@ -422,15 +417,24 @@ int main(int argc, char *argv[]) {
     init_timer(ui_refresh_task, NULL);
 
     if (ui_count > 0) {
-        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(sys_index);
-        }
+        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) list_nav_next(sys_index);
     } else {
         lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+
+        const char *message_text = NULL;
+        if (!strcasecmp(picker_type, "theme")) {
+            message_text = lang.MUXPICKER.NONE.THEME;
+        } else if (!strcasecmp(picker_type, "package/catalogue")) {
+            message_text = lang.MUXPICKER.NONE.CATALOGUE;
+        } else if (!strcasecmp(picker_type, "package/config")) {
+            message_text = lang.MUXPICKER.NONE.CONFIG;
+        } else {
+            message_text = lang.MUXPICKER.NONE.CUSTOM;
+        }
+        lv_label_set_text(ui_lblScreenMessage, message_text);
     }
 
     load_kiosk(&kiosk);

@@ -95,14 +95,14 @@ void restore_clock_settings() {
 
     while (attempts < RTC_MAX_RETRIES) {
         fp = popen(command, "r");
-        if (fp == NULL) {
+        if (!fp) {
             perror(lang.SYSTEM.FAIL_RUN_COMMAND);
             attempts++;
             sleep(RTC_RETRY_DELAY);
             continue;
         }
 
-        if (fgets(date_output, sizeof(date_output) - 1, fp) != NULL) {
+        if (fgets(date_output, sizeof(date_output) - 1, fp)) {
             pclose(fp);
             break;
         } else {
@@ -162,7 +162,7 @@ void save_clock_settings(int year, int month, int day, int hour, int minute) {
 
     while (attempts < RTC_MAX_RETRIES) {
         fp = popen(command, "r");
-        if (fp == NULL) {
+        if (!fp) {
             perror(lang.SYSTEM.FAIL_RUN_COMMAND);
             attempts++;
             sleep(RTC_RETRY_DELAY);

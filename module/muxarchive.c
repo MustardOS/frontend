@@ -83,7 +83,7 @@ void create_archive_items() {
 
     for (size_t dir_index = 0; dir_index < sizeof(archive_directories) / sizeof(archive_directories[0]); ++dir_index) {
         DIR *ad = opendir(archive_directories[dir_index]);
-        if (ad == NULL) continue;
+        if (!ad) continue;
 
         struct dirent *af;
         while ((af = readdir(ad))) {
@@ -390,12 +390,9 @@ int main(int argc, char *argv[]) {
     int nav_hidden = 1;
     if (ui_count > 0) {
         nav_hidden = 0;
-        if (arc_index > -1 && arc_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(arc_index);
-        }
+        if (arc_index > -1 && arc_index <= ui_count && current_item_index < ui_count) list_nav_next(arc_index);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXARCHIVE.NONE);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     struct nav_flag nav_e[] = {

@@ -82,15 +82,15 @@ void create_snapshot_items() {
         snprintf(snapshot_dir, sizeof(snapshot_dir), "%s/", snapshot_directories[dir_index]);
 
         DIR *ad = opendir(snapshot_dir);
-        if (ad == NULL) continue;
+        if (!ad) continue;
 
         struct dirent *af;
         while ((af = readdir(ad))) {
             if (af->d_type == DT_REG) {
                 char *last_dot = strrchr(af->d_name, '.');
-                if (last_dot != NULL && strcasecmp(last_dot, ".zip") == 0) {
+                if (last_dot && strcasecmp(last_dot, ".zip") == 0) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    if (temp == NULL) {
+                    if (!temp) {
                         perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                         free(file_names);
                         closedir(ad);
@@ -101,7 +101,7 @@ void create_snapshot_items() {
                     char full_app_name[MAX_BUFFER_SIZE];
                     snprintf(full_app_name, sizeof(full_app_name), "%s%s", snapshot_dir, af->d_name);
                     file_names[file_count] = strdup(full_app_name);
-                    if (file_names[file_count] == NULL) {
+                    if (!file_names[file_count]) {
                         perror(lang.SYSTEM.FAIL_DUP_STRING);
                         free(file_names);
                         closedir(ad);
@@ -367,12 +367,9 @@ int main(int argc, char *argv[]) {
     init_timer(ui_refresh_task, NULL);
 
     if (ui_count > 0) {
-        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(sys_index);
-        }
+        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) list_nav_next(sys_index);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXSNAPSHOT.NONE);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     load_kiosk(&kiosk);

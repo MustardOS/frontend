@@ -81,7 +81,7 @@ void free_lines(char *lines[], int line_count) {
 void modify_cfg_file(const char *filename, const char *core, const char *sys, const char *cache) {
     printf("Updating file: %s\n", filename);
     FILE *file = fopen(filename, "r");
-    if (file == NULL) {
+    if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
@@ -124,7 +124,7 @@ void modify_cfg_file(const char *filename, const char *core, const char *sys, co
     }
 
     FILE *new_file = fopen(filename, "w");
-    if (new_file == NULL) {
+    if (!new_file) {
         perror(lang.SYSTEM.FAIL_CREATE_FILE);
         free_lines(lines, line_count);
         return;
@@ -144,13 +144,13 @@ void update_cfg_files(const char *dirpath, const char *core, const char *sys, co
     snprintf(cache_char, sizeof(cache_char), "%d", cache);
 
     DIR *dir = opendir(dirpath);
-    if (dir == NULL) {
+    if (!dir) {
         perror(lang.SYSTEM.FAIL_DIR_OPEN);
         return;
     }
 
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
+    while ((entry = readdir(dir))) {
         if (strstr(entry->d_name, ".cfg") && strcmp(entry->d_name, "core.cfg") != 0) {
             char filepath[PATH_MAX];
             snprintf(filepath, sizeof(filepath), "%s/%s", dirpath, entry->d_name);
@@ -169,7 +169,7 @@ void assign_core_single(char *core_dir, const char *core, char *sys, char *rom, 
     if (file_exist(rom_path)) remove(rom_path);
 
     FILE *rom_file = fopen(rom_path, "w");
-    if (rom_file == NULL) {
+    if (!rom_file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
@@ -201,7 +201,7 @@ void assign_core_directory(char *core_dir, const char *core, char *sys, int cach
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
     FILE *file = fopen(core_file, "w");
-    if (file == NULL) {
+    if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
@@ -222,15 +222,15 @@ void assign_core_parent(char *core_dir, const char *core, char *sys, int cache) 
     assign_core_directory(core_dir, core, sys, cache, 1);
 
     char **subdirs = get_subdirectories(rom_dir);
-    if (subdirs != NULL) {
-        for (int i = 0; subdirs[i] != NULL; i++) {
+    if (subdirs) {
+        for (int i = 0; subdirs[i]; i++) {
             char subdir_file[MAX_BUFFER_SIZE];
             snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.cfg", core_dir, subdirs[i]);
 
             create_directories(strip_dir(subdir_file));
 
             FILE *subdir_file_handle = fopen(subdir_file, "w");
-            if (subdir_file_handle == NULL) {
+            if (!subdir_file_handle) {
                 perror(lang.SYSTEM.FAIL_FILE_OPEN);
                 continue;
             }
@@ -290,13 +290,13 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
 
 char **read_assign_ini(const char *filename, int *cores) {
     FILE *file = fopen(filename, "r");
-    if (file == NULL) {
+    if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return NULL;
     }
 
     char **headers = (char **) malloc(MAX_BUFFER_SIZE * sizeof(char *));
-    if (headers == NULL) {
+    if (!headers) {
         perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
         fclose(file);
         return NULL;
@@ -308,7 +308,7 @@ char **read_assign_ini(const char *filename, int *cores) {
         if (line[0] == '[') {
             char *start = strstr(line, "[");
             char *end = strstr(line, "]");
-            if (start != NULL && end != NULL && start < end) {
+            if (start && end && start < end) {
                 size_t len = end - start - 1;
                 headers[*cores] = (char *) malloc((len + 1) * sizeof(char));
                 strncpy(headers[*cores], start + 1, len);
@@ -331,10 +331,7 @@ void create_system_items() {
              device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
 
     ad = opendir(assign_dir);
-    if (ad == NULL) {
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
+    if (!ad) return;
 
     char **file_names = NULL;
     size_t file_count = 0;
@@ -345,12 +342,33 @@ void create_system_items() {
             snprintf(filename, sizeof(filename), "%s/%s", assign_dir, af->d_name);
 
             char *last_dot = strrchr(af->d_name, '.');
-            if (last_dot != NULL) {
-                *last_dot = '\0';
+            if (last_dot) *last_dot = '\0';
+
+            char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
+            if (!temp) {
+                if (file_names) {
+                    for (size_t i = 0; i < file_count; i++) {
+                        if (!file_names[i]) continue;
+                        free(file_names[i]);
+                    }
+                    free(file_names);
+                    file_names = NULL;
+                }
+                break;
             }
 
-            file_names = realloc(file_names, (file_count + 1) * sizeof(char *));
+            file_names = temp;
             file_names[file_count] = strdup(af->d_name);
+            if (!file_names[file_count]) {
+                for (size_t i = 0; i < file_count; i++) {
+                    if (!file_names[i]) continue;
+                    free(file_names[i]);
+                }
+                free(file_names);
+                file_names = NULL;
+                break;
+            }
+
             file_count++;
         }
     }
@@ -366,8 +384,8 @@ void create_system_items() {
 
     if (file_count > 0) {
         for (size_t i = 0; i < file_count; i++) {
-            char *base_filename = file_names[i];
             if (!file_names[i]) continue;
+            char *base_filename = file_names[i];
 
             ui_count++;
 
@@ -422,10 +440,7 @@ void create_core_items(const char *target) {
 
     int cores;
     char **core_headers = read_assign_ini(filename, &cores);
-    if (core_headers == NULL) {
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
+    if (!core_headers) return;
 
     char *assign_default = NULL;
     mini_t *assign_ini = mini_try_load(filename);
@@ -796,7 +811,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (auto_assign == NULL || rom_name == NULL || rom_dir == NULL || rom_system == NULL) {
+    if (!auto_assign || !rom_name || !rom_dir || !rom_system) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
@@ -901,8 +916,6 @@ int main(int argc, char *argv[]) {
     init_fonts();
     init_navigation_sound(&nav_sound, mux_module);
 
-    lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
-
     if (!strcasecmp(rom_system, "none")) {
         create_system_items();
     } else {
@@ -924,7 +937,7 @@ int main(int argc, char *argv[]) {
         list_nav_next(0);
     } else {
         LOG_ERROR(mux_module, "No Cores Detected - Check Directory!")
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
     }
 
     load_kiosk(&kiosk);

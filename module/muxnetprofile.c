@@ -219,15 +219,15 @@ void create_profile_items() {
         snprintf(profile_dir, sizeof(profile_dir), "%s/", profile_directories[dir_index]);
 
         DIR *pd = opendir(profile_dir);
-        if (pd == NULL) continue;
+        if (!pd) continue;
 
         struct dirent *pf;
         while ((pf = readdir(pd))) {
             if (pf->d_type == DT_REG) {
                 char *last_dot = strrchr(pf->d_name, '.');
-                if (last_dot != NULL && !strcasecmp(last_dot, ".ini")) {
+                if (last_dot && !strcasecmp(last_dot, ".ini")) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    if (temp == NULL) {
+                    if (!temp) {
                         perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                         free(file_names);
                         closedir(pd);
@@ -238,7 +238,7 @@ void create_profile_items() {
                     char full_app_name[MAX_BUFFER_SIZE];
                     snprintf(full_app_name, sizeof(full_app_name), "%s%s", profile_dir, pf->d_name);
                     file_names[file_count] = strdup(full_app_name);
-                    if (file_names[file_count] == NULL) {
+                    if (!file_names[file_count]) {
                         perror(lang.SYSTEM.FAIL_DUP_STRING);
                         free(file_names);
                         closedir(pd);
@@ -251,7 +251,7 @@ void create_profile_items() {
         closedir(pd);
     }
 
-    if (!file_names) goto none;
+    if (!file_names) return;
     qsort(file_names, file_count, sizeof(char *), str_compare);
 
     ui_group = lv_group_create();
@@ -299,8 +299,6 @@ void create_profile_items() {
         lv_obj_update_layout(ui_pnlContent);
         free(file_names);
 
-        lv_label_set_text(ui_lblScreenMessage, "");
-
         if (!is_network_connected()) {
             lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
@@ -313,9 +311,6 @@ void create_profile_items() {
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
         list_nav_next(0);
-    } else {
-        none:
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.NONE);
     }
 }
 
@@ -462,9 +457,6 @@ int main(int argc, char *argv[]) {
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETPROFILE.TITLE);
     init_elements();
 
-    lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.LOAD);
-    lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
@@ -477,6 +469,8 @@ int main(int argc, char *argv[]) {
     init_timer(ui_refresh_task, NULL);
 
     create_profile_items();
+    if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.NONE);
+
     load_kiosk(&kiosk);
 
     mux_input_options input_opts = {

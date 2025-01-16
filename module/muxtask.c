@@ -103,15 +103,15 @@ void create_task_items() {
         snprintf(task_dir, sizeof(task_dir), "%s/", task_directories[dir_index]);
 
         DIR *ad = opendir(task_dir);
-        if (ad == NULL) continue;
+        if (!ad) continue;
 
         struct dirent *tf;
         while ((tf = readdir(ad))) {
             if (tf->d_type == DT_REG) {
                 char *last_dot = strrchr(tf->d_name, '.');
-                if (last_dot != NULL && strcasecmp(last_dot, ".sh") == 0) {
+                if (last_dot && strcasecmp(last_dot, ".sh") == 0) {
                     char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    if (temp == NULL) {
+                    if (!temp) {
                         perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
                         free(file_names);
                         closedir(ad);
@@ -122,7 +122,7 @@ void create_task_items() {
                     char full_task_name[MAX_BUFFER_SIZE];
                     snprintf(full_task_name, sizeof(full_task_name), "%s%s", task_dir, tf->d_name);
                     file_names[file_count] = strdup(full_task_name);
-                    if (file_names[file_count] == NULL) {
+                    if (!file_names[file_count]) {
                         perror(lang.SYSTEM.FAIL_DUP_STRING);
                         free(file_names);
                         closedir(ad);
@@ -413,12 +413,9 @@ int main(int argc, char *argv[]) {
     int nav_hidden = 1;
     if (ui_count > 0) {
         nav_hidden = 0;
-        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(tin_index);
-        }
+        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) list_nav_next(tin_index);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXTASK.NONE);
-        lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
     }
 
     struct nav_flag nav_e[] = {

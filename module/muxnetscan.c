@@ -107,18 +107,7 @@ void create_network_items() {
 
     char *scan_file = "/tmp/net_scan";
     FILE *file = fopen(scan_file, "r");
-    if (file == NULL) {
-        fprintf(stderr, "Error opening file %s\n", scan_file);
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.NONE);
-        return;
-    }
-
-    if (strcmp(read_line_from_file(scan_file, 1), "[!]") == 0) {
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.NONE);
-        return;
-    }
-
-    lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
+    if (!file || strcmp(read_line_from_file(scan_file, 1), "[!]") == 0) return;
 
     char ssid[40];
     while (fgets(ssid, sizeof(ssid), file)) {
@@ -269,9 +258,6 @@ int main(int argc, char *argv[]) {
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETSCAN.TITLE);
     init_elements();
 
-    lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.SCAN);
-    lv_obj_clear_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
-
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
@@ -284,11 +270,11 @@ int main(int argc, char *argv[]) {
     init_timer(ui_refresh_task, NULL);
 
     pthread_create(&scan_networks_thread, NULL, scan_networks, NULL);
-    while (pthread_tryjoin_np(scan_networks_thread, NULL) != 0) {
-        usleep(device.SCREEN.WAIT);
-    }
+    while (pthread_tryjoin_np(scan_networks_thread, NULL) != 0) usleep(device.SCREEN.WAIT);
 
     create_network_items();
+    if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.NONE);
+
     load_kiosk(&kiosk);
 
     mux_input_options input_opts = {

@@ -319,10 +319,11 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblNavMenu = create_footer_text(ui_pnlFooter, theme, theme->NAV.MENU.TEXT, theme->NAV.MENU.TEXT_ALPHA);
 
     ui_lblScreenMessage = lv_label_create(ui_screen);
+    lv_label_set_text(ui_lblScreenMessage, "");
     lv_obj_set_width(ui_lblScreenMessage, device->MUX.WIDTH);
     lv_obj_set_height(ui_lblScreenMessage, 28);
     lv_obj_set_align(ui_lblScreenMessage, LV_ALIGN_LEFT_MID);
-    lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_FLOATING);
     lv_obj_set_scroll_dir(ui_lblScreenMessage, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblScreenMessage, lv_color_hex(theme->LIST_DEFAULT.TEXT),
                                 LV_PART_MAIN | LV_STATE_DEFAULT);

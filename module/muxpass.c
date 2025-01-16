@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (p_type == NULL) {
+    if (!p_type) {
         fprintf(stderr, cmd_help, argv[0]);
         return 2;
     }
