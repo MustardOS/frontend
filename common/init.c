@@ -144,7 +144,6 @@ void init_theme(int panel_init, int long_mode) {
     if (long_mode && theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
 }
 
-
 void glyph_task() {
     //update_bluetooth_status(ui_staBluetooth, &theme);
     update_network_status(ui_staNetwork, &theme);

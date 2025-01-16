@@ -100,5 +100,7 @@ int main(int argc, char *argv[]) {
     lv_bar_set_value(ui_barProgress, progress, LV_ANIM_OFF);
     lv_label_set_text(ui_lblMessage, argv[2]);
 
+    refresh_screen(device.SCREEN.WAIT);
+
     return 0;
 }
