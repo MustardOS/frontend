@@ -1130,26 +1130,10 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_r1,
             },
             .combo = {
-                    {
-                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                            .press_handler = ui_common_handle_bright,
-                            .hold_handler = ui_common_handle_bright,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                            .press_handler = ui_common_handle_bright,
-                            .hold_handler = ui_common_handle_bright,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_VOL_UP),
-                            .press_handler = ui_common_handle_vol,
-                            .hold_handler = ui_common_handle_vol,
-                    },
-                    {
-                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                            .press_handler = ui_common_handle_vol,
-                            .hold_handler = ui_common_handle_vol,
-                    },
+                    COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP)),
+                    COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN)),
+                    COMBO_VOLUME(BIT(MUX_INPUT_VOL_UP)),
+                    COMBO_VOLUME(BIT(MUX_INPUT_VOL_DOWN)),
             },
             .idle_handler = ui_common_handle_idle,
     };
