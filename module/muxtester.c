@@ -166,8 +166,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblFirst, lang.MUXTESTER.ANY);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     load_font_text(basename(argv[0]), ui_screen);
 

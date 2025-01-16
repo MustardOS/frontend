@@ -82,8 +82,7 @@ int main(int argc, char *argv[]) {
                  INTERNAL_THEME, mux_dimension);
         lv_img_set_src(ui_imgWall, strdup(init_wall));
     } else {
-        load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                       theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
+        load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, GENERAL);
     }
 
     load_font_text(basename(argv[0]), ui_scrStart);

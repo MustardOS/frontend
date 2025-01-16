@@ -467,9 +467,7 @@ int main(int argc, char *argv[]) {
     }
 
     lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
-
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, APPLICATION);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, APPLICATION);
 
     init_input(&js_fd, &js_fd_sys);
     init_timer(ui_refresh_task, NULL);

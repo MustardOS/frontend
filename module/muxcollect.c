@@ -1294,8 +1294,7 @@ int main(int argc, char *argv[]) {
     init_elements();
     init_navigation_sound(&nav_sound, mux_module);
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();

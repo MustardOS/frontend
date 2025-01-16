@@ -129,9 +129,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_scrCharge, mux_module);
     lv_label_set_text(ui_lblBoot, lang.MUXCHARGE.POWER);
 
-    load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
-
+    load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, GENERAL);
     load_font_text(basename(argv[0]), ui_scrCharge);
 
 #if TEST_IMAGE

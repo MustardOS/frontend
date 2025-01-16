@@ -248,8 +248,7 @@ int main(int argc, char *argv[]) {
     apply_pass_theme(ui_rolComboOne, ui_rolComboTwo, ui_rolComboThree,
                      ui_rolComboFour, ui_rolComboFive, ui_rolComboSix);
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                   theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, GENERAL);
+    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     load_font_text(basename(argv[0]), ui_screen);
 

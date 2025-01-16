@@ -859,8 +859,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
         snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", INTERNAL_THEME, mux_dimension);
         lv_img_set_src(ui_imgWall, init_wall);
     } else {
-        load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, theme.MISC.ANIMATED_BACKGROUND,
-                       theme.ANIMATION.ANIMATION_DELAY, theme.MISC.RANDOM_BACKGROUND, wall_type);
+        load_wallpaper(ui_screen, ui_group, ui_pnlWall, ui_imgWall, wall_type);
     }
 
     static char static_image[MAX_BUFFER_SIZE];

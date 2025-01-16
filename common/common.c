@@ -1022,25 +1022,25 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     return "";
 }
 
-void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall, lv_obj_t *ui_imgWall,
-                    int animated, int animation_delay, int random, int wall_type) {
+void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlWall,
+                    lv_obj_t *ui_imgWall, int wall_type) {
     static char new_wall[MAX_BUFFER_SIZE];
     snprintf(new_wall, sizeof(new_wall), "%s", get_wallpaper_path(
-            ui_screen, ui_group, animated, random, wall_type));
+            ui_screen, ui_group, theme.MISC.ANIMATED_BACKGROUND, theme.MISC.RANDOM_BACKGROUND, wall_type));
 
     if (strcasecmp(new_wall, current_wall) != 0) {
         snprintf(current_wall, sizeof(current_wall), "%s", new_wall);
         if (strlen(new_wall) > 3) {
-            if (random) {
+            if (theme.MISC.RANDOM_BACKGROUND) {
                 load_image_random(ui_imgWall, new_wall);
             } else {
-                switch (animated) {
+                switch (theme.MISC.ANIMATED_BACKGROUND) {
                     case 1:
                         wall_img = lv_gif_create(ui_pnlWall);
                         lv_gif_set_src(wall_img, new_wall);
                         break;
                     case 2:
-                        load_image_animation(ui_imgWall, animation_delay, new_wall);
+                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, new_wall);
                         break;
                     default:
                         lv_img_set_src(ui_imgWall, new_wall);
