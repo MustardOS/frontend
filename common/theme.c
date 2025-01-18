@@ -265,6 +265,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_DEFAULT.GRADIENT_START = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_START", 0);
     theme->LIST_DEFAULT.GRADIENT_STOP = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_STOP", 200);
     theme->LIST_DEFAULT.GRADIENT_DIRECTION = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_DIRECTION", 0);
+    theme->LIST_DEFAULT.BORDER_WIDTH = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BORDER_WIDTH", 5);
+    theme->LIST_DEFAULT.BORDER_SIDE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BORDER_SIDE", LV_BORDER_SIDE_LEFT);
     theme->LIST_DEFAULT.INDICATOR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_INDICATOR");
     theme->LIST_DEFAULT.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_INDICATOR_ALPHA", 255);
     theme->LIST_DEFAULT.TEXT = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_TEXT");
@@ -286,6 +288,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->LIST_FOCUS.GRADIENT_START = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_START", 0);
     theme->LIST_FOCUS.GRADIENT_STOP = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_STOP", 200);
     theme->LIST_FOCUS.GRADIENT_DIRECTION = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_DIRECTION", 0);
+    theme->LIST_FOCUS.BORDER_WIDTH = get_ini_int(muos_theme, "list", "LIST_FOCUS_BORDER_WIDTH", 5);
+    theme->LIST_FOCUS.BORDER_SIDE = get_ini_int(muos_theme, "list", "LIST_FOCUS_BORDER_SIDE", LV_BORDER_SIDE_LEFT);
     theme->LIST_FOCUS.INDICATOR = get_ini_hex(muos_theme, "list", "LIST_FOCUS_INDICATOR");
     theme->LIST_FOCUS.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_INDICATOR_ALPHA", 255);
     theme->LIST_FOCUS.TEXT = get_ini_hex(muos_theme, "list", "LIST_FOCUS_TEXT");
@@ -482,7 +486,7 @@ void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
     lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
                                                   LV_TEXT_FLAG_EXPAND);
     int max_item_width = theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_LEFT - theme->FONT.LIST_PAD_RIGHT -
-                         10; //compensate for 5 pixel border
+                         (theme->LIST_DEFAULT.BORDER_WIDTH * 2);
 
     if (act_line_length > max_item_width) {
         int len = strlen(item_text);
@@ -515,13 +519,13 @@ void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, 
         lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
                                                       LV_TEXT_FLAG_EXPAND);
         int item_width = LV_MIN(theme->FONT.LIST_PAD_LEFT + act_line_length + theme->FONT.LIST_PAD_RIGHT,
-                                theme->MISC.CONTENT.WIDTH - 10); //-10: compensate for 5 pixel border
+                                theme->MISC.CONTENT.WIDTH - (theme->LIST_DEFAULT.BORDER_WIDTH * 2));
         // When using size to content right padding needs to be zero to prevent text from wrapping.
         // The overall width of the control will include the right padding
         lv_obj_set_style_pad_right(ui_lblItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_width(ui_lblItem, item_width);
         lv_obj_set_x(ui_lblItemGlyph, theme->LIST_DEFAULT.GLYPH_PADDING_LEFT - (item_width / 2) -
-                                      5); // - 5 at end to compensate for border width
+                                      theme->LIST_DEFAULT.BORDER_WIDTH);
     }
 }
 
@@ -533,8 +537,8 @@ void init_panel_style(struct theme_config *theme) {
     lv_style_set_width(&style_list_panel_default, theme->MISC.CONTENT.WIDTH);
     lv_style_set_height(&style_list_panel_default, theme->MUX.ITEM.HEIGHT);
 
-    lv_style_set_border_width(&style_list_panel_default, 5);
-    lv_style_set_border_side(&style_list_panel_default, LV_BORDER_SIDE_LEFT);
+    lv_style_set_border_width(&style_list_panel_default, theme->LIST_DEFAULT.BORDER_WIDTH);
+    lv_style_set_border_side(&style_list_panel_default, theme->LIST_DEFAULT.BORDER_SIDE);
     lv_style_set_border_color(&style_list_panel_default, lv_color_hex(theme->LIST_DEFAULT.INDICATOR));
     lv_style_set_border_opa(&style_list_panel_default, theme->LIST_DEFAULT.INDICATOR_ALPHA);
 
@@ -557,6 +561,11 @@ void init_panel_style(struct theme_config *theme) {
     lv_style_set_radius(&style_list_panel_default, theme->LIST_DEFAULT.RADIUS);
 
     // List panel focused style
+    lv_style_set_border_width(&style_list_panel_focused, theme->LIST_FOCUS.BORDER_WIDTH);
+    lv_style_set_border_side(&style_list_panel_focused, theme->LIST_FOCUS.BORDER_SIDE);
+    lv_style_set_border_color(&style_list_panel_focused, lv_color_hex(theme->LIST_FOCUS.INDICATOR));
+    lv_style_set_border_opa(&style_list_panel_focused, theme->LIST_FOCUS.INDICATOR_ALPHA);
+
     lv_style_set_bg_main_stop(&style_list_panel_focused, theme->LIST_FOCUS.GRADIENT_START);
     lv_style_set_bg_color(&style_list_panel_focused, lv_color_hex(theme->LIST_FOCUS.BACKGROUND));
     lv_style_set_bg_opa(&style_list_panel_focused, theme->LIST_FOCUS.BACKGROUND_ALPHA);
