@@ -261,7 +261,7 @@ static void LV_ATTRIBUTE_FAST_MEM draw_letter_normal(lv_draw_ctx_t *draw_ctx, co
 
     lv_coord_t hor_res = lv_disp_get_hor_res(_lv_refr_get_disp_refreshing());
     uint32_t mask_buf_size = box_w * box_h > hor_res ? hor_res : box_w * box_h;
-    lv_opa_t * mask_buf = lv_mem_buf_get(mask_buf_size);
+    lv_opa_t *mask_buf = lv_mem_buf_get(mask_buf_size);
     blend_dsc.mask_buf = mask_buf;
     int32_t mask_p = 0;
 
@@ -414,13 +414,13 @@ static void draw_letter_subpx(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t
 
     lv_coord_t hor_res = lv_disp_get_hor_res(_lv_refr_get_disp_refreshing());
     int32_t mask_buf_size = box_w * box_h > hor_res ? hor_res : g->box_w * g->box_h;
-    lv_opa_t * mask_buf = lv_mem_buf_get(mask_buf_size);
+    lv_opa_t *mask_buf = lv_mem_buf_get(mask_buf_size);
     int32_t mask_p = 0;
 
-    lv_color_t * color_buf = lv_mem_buf_get(mask_buf_size * sizeof(lv_color_t));
+    lv_color_t *color_buf = lv_mem_buf_get(mask_buf_size * sizeof(lv_color_t));
 
     int32_t dest_buf_stride = lv_area_get_width(draw_ctx->buf_area);
-    lv_color_t * dest_buf_tmp = draw_ctx->buf;
+    lv_color_t *dest_buf_tmp = draw_ctx->buf;
 
     /*Set a pointer on draw_buf to the first pixel of the letter*/
     dest_buf_tmp += ((pos->y - draw_ctx->buf_area->y1) * dest_buf_stride) + pos->x - draw_ctx->buf_area->x1;
@@ -463,8 +463,7 @@ static void draw_letter_subpx(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t
                     px_opa = bpp == 8 ? letter_px : bpp_opa_table[letter_px];
                 } else {
                     px_opa = bpp == 8 ? (uint32_t) ((uint32_t) letter_px * opa) >> 8
-                                      : (uint32_t) ((uint32_t)
-                                                            bpp_opa_table[letter_px] * opa) >> 8;
+                                      : (uint32_t) ((uint32_t) bpp_opa_table[letter_px] * opa) >> 8;
                 }
             } else {
                 px_opa = 0;
@@ -490,18 +489,15 @@ static void draw_letter_subpx(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t
                 res_color.ch.red = (uint32_t)((uint16_t)txt_rgb[0] * font_rgb[2] + (bg_rgb[0] * (255 - font_rgb[2]))) >> 8;
                 res_color.ch.blue = (uint32_t)((uint16_t)txt_rgb[2] * font_rgb[0] + (bg_rgb[2] * (255 - font_rgb[0]))) >> 8;
 #else
-                res_color.ch.red = (uint32_t) ((uint16_t)
-                                                       txt_rgb[0] * font_rgb[0] + (bg_rgb[0] * (255 - font_rgb[0])))
-                        >> 8;
-                res_color.ch.blue = (uint32_t) ((uint16_t)
-                                                        txt_rgb[2] * font_rgb[2] + (bg_rgb[2] * (255 - font_rgb[2])))
-                        >> 8;
+                res_color.ch.red =
+                        (uint32_t) ((uint16_t) txt_rgb[0] * font_rgb[0] + (bg_rgb[0] * (255 - font_rgb[0]))) >> 8;
+                res_color.ch.blue =
+                        (uint32_t) ((uint16_t) txt_rgb[2] * font_rgb[2] + (bg_rgb[2] * (255 - font_rgb[2]))) >> 8;
 #endif
 
 #if LV_COLOR_16_SWAP == 0
-                res_color.ch.green = (uint32_t) ((uint32_t)
-                                                         txt_rgb[1] * font_rgb[1] + (bg_rgb[1] * (255 - font_rgb[1])))
-                        >> 8;
+                res_color.ch.green =
+                        (uint32_t) ((uint32_t) txt_rgb[1] * font_rgb[1] + (bg_rgb[1] * (255 - font_rgb[1]))) >> 8;
 #else
                 uint8_t green = (uint32_t)((uint32_t)txt_rgb[1] * font_rgb[1] + (bg_rgb[1] * (255 - font_rgb[1]))) >> 8;
                 res_color.ch.green_h = green >> 3;

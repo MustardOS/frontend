@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "common.h"
 #include "options.h"
 #include "passcode.h"
@@ -6,10 +7,16 @@
 
 void load_passcode(struct mux_passcode *passcode, struct mux_device *device) {
     char pass_file[MAX_BUFFER_SIZE];
-    snprintf(pass_file, sizeof(pass_file),
-             "%s/%s/pass.ini", device->STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+    int written = snprintf(pass_file, sizeof(pass_file), "%s/%s/pass.ini",
+                           device->STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+
+    if (written < 0 || (size_t) written >= sizeof(pass_file)) exit(1);
 
     mini_t *muos_pass = mini_try_load(pass_file);
+    if (!muos_pass) {
+        fprintf(stderr, "Error: Could not load pass_file: %s\n", pass_file);
+        exit(1);
+    }
 
     strncpy(passcode->CODE.BOOT, get_ini_string(muos_pass, "code", "boot", "000000"),
             MAX_BUFFER_SIZE - 1);

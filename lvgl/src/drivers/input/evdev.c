@@ -69,7 +69,6 @@ void evdev_init(void) {
     xkb_init();
 #endif
 }
-
 /**
  * reconfigure the device file for evdev
  * @param dev_name set the evdev device filename

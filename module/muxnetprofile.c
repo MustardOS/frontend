@@ -129,7 +129,6 @@ int save_profile() {
             !p_gateway || !strlen(p_gateway) ||
             !p_dns || !strlen(p_dns)) {
             toast_message(lang.MUXNETPROFILE.INVALID_NETWORK, 1000, 1000);
-            refresh_screen(device.SCREEN.WAIT);
             return 0;
         }
     } else {

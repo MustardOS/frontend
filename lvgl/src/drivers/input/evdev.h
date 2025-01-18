@@ -18,7 +18,7 @@ extern "C" {
 #include "lv_drv_conf.h"
 #else
 
-#include "../../lv_drv_conf.h"
+#include "../../../lv_drv_conf.h"
 
 #endif
 #endif
@@ -29,7 +29,7 @@ extern "C" {
 #include "lvgl.h"
 #else
 
-#include "../../lvgl.h"
+#include "../../../../lvgl/lvgl.h"
 
 #endif
 
@@ -49,7 +49,6 @@ extern "C" {
  * Initialize the evdev
  */
 void evdev_init(void);
-
 /**
  * reconfigure the device file for evdev
  * @param dev_name set the evdev device filename

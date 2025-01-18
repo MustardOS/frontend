@@ -96,9 +96,7 @@ static lv_grad_t *next_in_cache(lv_grad_t *item) {
     size_t s = get_cache_item_size(item);
     /*Compute the size for this cache item*/
     if ((uint8_t *) item + s >= grad_cache_end) return NULL;
-    else
-        return (lv_grad_t *) ((uint8_t *)
-                                      item + s);
+    else return (lv_grad_t *) ((uint8_t *) item + s);
 }
 
 static lv_res_t iterate_cache(op_cache_t func, void *ctx, lv_grad_t **out) {
@@ -114,43 +112,35 @@ static lv_res_t iterate_cache(op_cache_t func, void *ctx, lv_grad_t **out) {
 }
 
 static lv_res_t find_oldest_item_life(lv_grad_t *c, void *ctx) {
-    uint32_t *min_life = (uint32_t *)
-            ctx;
+    uint32_t *min_life = (uint32_t *) ctx;
     if (c->life < *min_life) *min_life = c->life;
     return LV_RES_INV;
 }
 
 static void free_item(lv_grad_t *c) {
     size_t size = get_cache_item_size(c);
-    size_t
-            next_items_size = (size_t) (grad_cache_end - (uint8_t *)
-            c) - size;
+    size_t next_items_size = (size_t) (grad_cache_end - (uint8_t *) c) - size;
     grad_cache_end -= size;
     if (next_items_size) {
-        uint8_t *old = (uint8_t *)
-                c;
-        lv_memcpy(c, ((uint8_t *)
-                c) + size, next_items_size);
+        uint8_t *old = (uint8_t *) c;
+        lv_memcpy(c, ((uint8_t *) c) + size, next_items_size);
         /* Then need to fix all internal pointers too */
         while ((uint8_t *) c != grad_cache_end) {
-            c->map = (lv_color_t *) (((uint8_t *)
-                    c->map) - size);
+            c->map = (lv_color_t *) (((uint8_t *) c->map) - size);
 #if _DITHER_GRADIENT
             c->hmap = (lv_color32_t *)(((uint8_t *)c->hmap) - size);
 #if LV_DITHER_ERROR_DIFFUSION == 1
             c->error_acc = (lv_scolor24_t *)(((uint8_t *)c->error_acc) - size);
 #endif
 #endif
-            c = (lv_grad_t *) (((uint8_t *)
-                    c) + get_cache_item_size(c));
+            c = (lv_grad_t *) (((uint8_t *) c) + get_cache_item_size(c));
         }
         lv_memset_00(old + next_items_size, size);
     }
 }
 
 static lv_res_t kill_oldest_item(lv_grad_t *c, void *ctx) {
-    uint32_t *min_life = (uint32_t *)
-            ctx;
+    uint32_t *min_life = (uint32_t *) ctx;
     if (c->life == *min_life) {
         /*Found, let's kill it*/
         free_item(c);
@@ -160,8 +150,7 @@ static lv_res_t kill_oldest_item(lv_grad_t *c, void *ctx) {
 }
 
 static lv_res_t find_item(lv_grad_t *c, void *ctx) {
-    uint32_t *k = (uint32_t *)
-            ctx;
+    uint32_t *k = (uint32_t *) ctx;
     if (c->key == *k) return LV_RES_OK;
     return LV_RES_INV;
 }
@@ -210,8 +199,7 @@ static lv_grad_t *allocate_item(const lv_grad_dsc_t *g, lv_coord_t w, lv_coord_t
     item->alloc_size = map_size;
     item->size = size;
     if (item->not_cached) {
-        uint8_t *p = (uint8_t *)
-                item;
+        uint8_t *p = (uint8_t *) item;
         item->map = (lv_color_t *) (p + ALIGN(sizeof(*item)));
 #if _DITHER_GRADIENT
         item->hmap = (lv_color32_t *)(p + ALIGN(sizeof(*item)) + ALIGN(map_size * sizeof(lv_color_t)));

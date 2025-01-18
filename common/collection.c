@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <ctype.h>
+#include <limits.h>
 #include "collection.h"
 #include "common.h"
 #include "config.h"
@@ -139,7 +139,7 @@ void print_items(content_item *content_items, size_t count) {
                  i, content_items[i].name, content_items[i].display_name, content_items[i].sort_name,
                  content_items[i].content_type);
 
-        char log_location[64];
+        char log_location[PATH_MAX];
         snprintf(log_location, sizeof(log_location), "%s/MUOS/log/collection.log",
                  device.STORAGE.ROM.MOUNT);
         write_text_to_file(log_location, "a", CHAR, message);

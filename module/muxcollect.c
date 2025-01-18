@@ -80,7 +80,7 @@ int current_item_index = 0;
 int first_open = 1;
 int nav_moved = 0;
 int counter_fade = 0;
-int fade_timeout = 3;
+int fade_timeout = 7;
 int starter_image = 0;
 int splash_valid = 0;
 int nogrid_file_exists = 0;
@@ -151,7 +151,7 @@ char *load_content_description() {
 void update_file_counter() {
     if ((ui_count > 0 && file_count == 0 && config.VISUAL.COUNTERFOLDER) ||
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
-        fade_timeout = 3;
+        fade_timeout = 7;
         lv_obj_clear_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
         counter_fade = (theme.COUNTER.BORDER_ALPHA + theme.COUNTER.BACKGROUND_ALPHA + theme.COUNTER.TEXT_ALPHA);
         if (counter_fade > 255) counter_fade = 255;
@@ -803,7 +803,8 @@ void handle_a() {
 
                         for (unsigned int i = 0; i <= 255; i += 15) {
                             lv_obj_set_style_img_opa(ui_imgSplash, i, LV_PART_MAIN | LV_STATE_DEFAULT);
-                            refresh_screen(device.SCREEN.WAIT / 2);
+                            lv_task_handler();
+                            usleep(128);
                         }
 
                         sleep(1);
@@ -826,7 +827,7 @@ void handle_a() {
         lv_obj_move_foreground(ui_pnlMessage);
 
         // Refresh and add a small delay to actually display the message!
-        refresh_screen(device.SCREEN.WAIT);
+        lv_task_handler();
         usleep(256);
     }
 
@@ -1208,9 +1209,9 @@ void ui_refresh_task() {
         if (counter_fade > 0) {
             lv_obj_set_style_opa(ui_lblCounter, counter_fade - theme.COUNTER.TEXT_FADE_TIME,
                                  LV_PART_MAIN | LV_STATE_DEFAULT);
-            counter_fade -= theme.COUNTER.TEXT_FADE_TIME;
+            counter_fade -= (theme.COUNTER.TEXT_FADE_TIME + 1) / 4;
         }
-        if (counter_fade < 0) {
+        if (lv_obj_get_style_opa(ui_lblCounter, LV_PART_MAIN | LV_STATE_DEFAULT) <= 10) {
             lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
             counter_fade = 0;
         }

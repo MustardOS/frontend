@@ -546,22 +546,20 @@ void handle_confirm(void) {
                         lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.NO_PASSWORD);
                     }
 
-                    int sec = 1024;
-
                     lv_label_set_text(ui_lblPasswordValue, PASS_ENCODE);
                     lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.CONNECT_TRY);
-                    refresh_screen(sec);
+                    lv_task_handler();
 
                     run_exec(pass_args);
-                    refresh_screen(sec);
+                    lv_task_handler();
 
                     run_exec(net_args);
-                    refresh_screen(sec);
+                    lv_task_handler();
 
                     get_current_ip();
                 } else {
                     lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.DISABLED);
-                    refresh_screen(device.SCREEN.WAIT);
+                    lv_task_handler();
                 }
             } else {
                 play_sound("error", nav_sound, 0, 0);

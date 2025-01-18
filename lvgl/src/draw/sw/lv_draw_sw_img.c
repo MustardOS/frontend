@@ -106,8 +106,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_sw_img_decoded(struct _lv_draw_ctx_t *draw_ct
         lv_coord_t blend_h = lv_area_get_height(&blend_area);
         lv_coord_t blend_w = lv_area_get_width(&blend_area);
 
-        uint32_t
-                max_buf_size = MAX_BUF_SIZE;
+        uint32_t max_buf_size = MAX_BUF_SIZE;
         uint32_t blend_size = lv_area_get_size(&blend_area);
         uint32_t buf_h;
         uint32_t buf_w = blend_w;
@@ -121,8 +120,8 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_sw_img_decoded(struct _lv_draw_ctx_t *draw_ct
         /*Create buffers and masks*/
         uint32_t buf_size = buf_w * buf_h;
 
-        lv_color_t * rgb_buf = lv_mem_buf_get(buf_size * sizeof(lv_color_t));
-        lv_opa_t * mask_buf = lv_mem_buf_get(buf_size);
+        lv_color_t *rgb_buf = lv_mem_buf_get(buf_size * sizeof(lv_color_t));
+        lv_opa_t *mask_buf = lv_mem_buf_get(buf_size);
         blend_dsc.mask_buf = mask_buf;
         blend_dsc.mask_area = &blend_area;
         blend_dsc.mask_res = LV_DRAW_MASK_RES_CHANGED;
@@ -163,7 +162,7 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_sw_img_decoded(struct _lv_draw_ctx_t *draw_ct
             /*Apply the masks if any*/
             if (mask_any) {
                 lv_coord_t y;
-                lv_opa_t * mask_buf_tmp = mask_buf;
+                lv_opa_t *mask_buf_tmp = mask_buf;
                 for (y = blend_area.y1; y <= blend_area.y2; y++) {
                     lv_draw_mask_res_t mask_res_line;
                     mask_res_line = lv_draw_mask_apply(mask_buf_tmp, blend_area.x1, y, blend_w);
@@ -218,7 +217,7 @@ static void convert_cb(const lv_area_t *dest_area, const void *src_buf, lv_coord
         uint32_t dest_w_byte = dest_w * sizeof(lv_color_t);
 
         lv_coord_t src_stride_byte = src_stride * sizeof(lv_color_t);
-        lv_color_t * cbuf_tmp = cbuf;
+        lv_color_t *cbuf_tmp = cbuf;
         for (y = dest_area->y1; y <= dest_area->y2; y++) {
             lv_memcpy(cbuf_tmp, src_tmp8, dest_w_byte);
             src_tmp8 += src_stride_byte;
@@ -236,8 +235,7 @@ static void convert_cb(const lv_area_t *dest_area, const void *src_buf, lv_coord
             uint16_t * cbuf_uint = (uint16_t *)cbuf;
             uint16_t chk_v = chk.full;
 #elif LV_COLOR_DEPTH == 32
-            uint32_t * cbuf_uint = (uint32_t *)
-                    cbuf;
+            uint32_t *cbuf_uint = (uint32_t *) cbuf;
             uint32_t chk_v = chk.full;
 #endif
             for (i = 0; i < px_cnt; i++) {

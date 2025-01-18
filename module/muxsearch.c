@@ -600,7 +600,7 @@ void handle_confirm(void) {
 
         lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         lv_label_set_text(ui_lblMessage, lang.MUXSEARCH.SEARCH);
-        refresh_screen(device.SCREEN.WAIT);
+        lv_task_handler();
 
         if (element_focused == ui_lblSearchLocal) {
             run_exec((const char *[]) {

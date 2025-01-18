@@ -384,17 +384,17 @@ int main(int argc, char *argv[]) {
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
-    const char *picker_type = NULL;
+    const char *picker_title = NULL;
     if (!strcasecmp(picker_type, "theme")) {
-        picker_type = lang.MUXPICKER.THEME;
+        picker_title = lang.MUXPICKER.THEME;
     } else if (!strcasecmp(picker_type, "package/catalogue")) {
-        picker_type = lang.MUXPICKER.CATALOGUE;
+        picker_title = lang.MUXPICKER.CATALOGUE;
     } else if (!strcasecmp(picker_type, "package/config")) {
-        picker_type = lang.MUXPICKER.CONFIG;
+        picker_title = lang.MUXPICKER.CONFIG;
     } else {
-        picker_type = lang.MUXPICKER.CUSTOM;
+        picker_title = lang.MUXPICKER.CUSTOM;
     }
-    init_ui_common_screen(&theme, &device, &lang, picker_type);
+    init_ui_common_screen(&theme, &device, &lang, picker_title);
 
     init_elements();
 

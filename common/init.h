@@ -20,8 +20,6 @@ struct bat_task_param {
     lv_obj_t *staCapacity;
 };
 
-void refresh_screen(int wait);
-
 void init_display();
 
 void init_input(int *js_fd, int *js_fd_sys);
@@ -32,4 +30,10 @@ void init_fonts();
 
 void init_theme(int panel_init, int long_mode);
 
-void glyph_task();
+void status_task();
+
+void bluetooth_task();
+
+void network_task();
+
+void battery_task();

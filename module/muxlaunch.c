@@ -497,7 +497,12 @@ void handle_kiosk_purge() {
 void handle_kiosk_toggle() {
     if (current_item_index == 6) { /* reboot */
         char kiosk_storage[MAX_BUFFER_SIZE];
-        snprintf(kiosk_storage, sizeof(kiosk_storage), "%s/MUOS/kiosk.ini", device.STORAGE.ROM.MOUNT);
+
+        int kiosk_cfg = snprintf(kiosk_storage, sizeof(kiosk_storage), "%s/MUOS/kiosk.ini", device.STORAGE.ROM.MOUNT);
+        if (kiosk_cfg < 0 || kiosk_cfg >= (int) sizeof(kiosk_storage)) {
+            toast_message(lang.MUXLAUNCH.KIOSK.ERROR, 1000, 1000);
+            return;
+        }
 
         if (file_exist(KIOSK_CONFIG)) {
             run_exec((const char *[]) {"mv", KIOSK_CONFIG, kiosk_storage, NULL});

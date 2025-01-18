@@ -2,12 +2,21 @@
 
 #define TEST_IMAGE 1
 
-#define MAX_BUFFER_SIZE 512
+#define MAX_BUFFER_SIZE 1024
 
 #define RTC_MAX_RETRIES 5
 #define RTC_RETRY_DELAY 1
 
 #define IDLE_MS 16 /* ~60 FPS */
+
+#define TIMER_DATETIME  16384
+#define TIMER_CAPACITY  16384
+#define TIMER_STATUS    1024
+#define TIMER_BLUETOOTH 4096
+#define TIMER_NETWORK   4096
+#define TIMER_BATTERY   4096
+#define TIMER_REFRESH   IDLE_MS
+#define TIMER_SYSINFO   1024
 
 #define TIME_STRING_12 "%I:%M %p"
 #define TIME_STRING_24 "%H:%M"

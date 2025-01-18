@@ -77,7 +77,8 @@ void handle_power_short(void) {
 
         lv_label_set_text(ui_lblBoot, lang.MUXCHARGE.BOOT);
 
-        refresh_screen(device.SCREEN.WAIT);
+        lv_refr_now(NULL);
+        lv_task_handler();
 
         exit_status = 0;
         return;
@@ -93,7 +94,8 @@ void handle_idle(void) {
         return;
     }
 
-    refresh_screen(device.SCREEN.WAIT);
+    lv_refr_now(NULL);
+    lv_task_handler();
 }
 
 void battery_task() {

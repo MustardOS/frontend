@@ -1,17 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <time.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include "../lvgl/lvgl.h"
-#include "../lvgl/src/drivers/fbdev.h"
-#include "../lvgl/src/drivers/evdev.h"
+#include "../lvgl/src/drivers/display/sdl.h"
+#include "../lvgl/src/drivers/input/evdev.h"
 #include "init.h"
 #include "ui_common.h"
-#include "json/json.h"
 #include "common.h"
 #include "language.h"
 #include "options.h"
@@ -22,60 +19,47 @@
 __thread uint64_t start_ms = 0;
 static struct dt_task_param dt_par;
 static struct bat_task_param bat_par;
+int current_capacity = -1;
+
+lv_timer_t *bluetooth_timer;
+lv_timer_t *network_timer;
+lv_timer_t *battery_timer;
 
 uint32_t mux_tick(void) {
     struct timespec tv_now;
     clock_gettime(CLOCK_MONOTONIC, &tv_now);
 
     uint64_t now_ms = ((uint64_t) tv_now.tv_sec * 1000) + (tv_now.tv_nsec / 1000000);
-    if (!start_ms) {
-        start_ms = now_ms;
-    }
+    if (!start_ms) start_ms = now_ms;
 
     return (uint32_t) (now_ms - start_ms);
 }
 
-void refresh_screen(int wait) {
-    lv_task_handler();
-    usleep(wait);
-}
-
 void init_display() {
-    struct screen_dimension dims = get_device_dimensions();
-
     lv_init();
-    fbdev_init(device.SCREEN.DEVICE);
-
-    static lv_disp_draw_buf_t disp_buf;
-    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
-
-    lv_color_t *buf1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    lv_color_t *buf2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
-    if (!buf1 || !buf2) {
-        perror("Failed to allocate display buffers");
-        exit(EXIT_FAILURE);
-    }
-
-    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, disp_buf_size);
+    sdl_init();
 
     static lv_disp_drv_t disp_drv;
+    static lv_disp_draw_buf_t disp_buf;
+    struct screen_dimension dims = get_device_dimensions();
+
+    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
+    lv_disp_draw_buf_init(&disp_buf, (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t)), NULL, disp_buf_size);
     lv_disp_drv_init(&disp_drv);
 
     disp_drv.draw_buf = &disp_buf;
-    disp_drv.flush_cb = fbdev_flush;
+    disp_drv.flush_cb = sdl_display_flush;
     disp_drv.hor_res = dims.WIDTH;
     disp_drv.ver_res = dims.HEIGHT;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
-    disp_drv.full_refresh = 0;
-    disp_drv.direct_mode = 0;
+    disp_drv.full_refresh = 1;
+    disp_drv.direct_mode = 1;
     disp_drv.antialiasing = 1;
     disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
 
     lv_disp_drv_register(&disp_drv);
     lv_disp_flush_ready(&disp_drv);
-
-    fbdev_force_refresh(true);
 }
 
 void init_input(int *js_fd, int *js_fd_sys) {
@@ -105,24 +89,44 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
     dt_par.lblDatetime = ui_lblDatetime;
     bat_par.staCapacity = ui_staCapacity;
 
-    lv_timer_t *datetime_timer = lv_timer_create(datetime_task, UINT16_MAX / 2, &dt_par);
+    if (ui_refresh_task) {
+        lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, 0, NULL);
+        lv_timer_ready(ui_refresh_timer);
+        lv_timer_set_period(ui_refresh_timer, TIMER_REFRESH);
+
+        lv_refr_now(NULL);
+    }
+
+    lv_timer_t *datetime_timer = lv_timer_create(datetime_task, TIMER_DATETIME, &dt_par);
     lv_timer_ready(datetime_timer);
 
-    lv_timer_t *capacity_timer = lv_timer_create(capacity_task, UINT16_MAX / 2, &bat_par);
+    lv_timer_t *capacity_timer = lv_timer_create(capacity_task, TIMER_CAPACITY, &bat_par);
     lv_timer_ready(capacity_timer);
 
-    lv_timer_t *glyph_timer = lv_timer_create(glyph_task, UINT16_MAX / 64, NULL);
-    lv_timer_ready(glyph_timer);
+    lv_timer_t *status_timer = lv_timer_create(status_task, TIMER_STATUS, NULL);
+    lv_timer_ready(status_timer);
 
-    if (ui_refresh_task) {
-        lv_timer_t *ui_refresh_timer = lv_timer_create(ui_refresh_task, UINT8_MAX / 4, NULL);
-        lv_timer_ready(ui_refresh_timer);
+    if (device.DEVICE.HAS_BLUETOOTH && config.VISUAL.BLUETOOTH) {
+        bluetooth_timer = lv_timer_create(bluetooth_task, 0, NULL);
+        lv_timer_ready(bluetooth_timer);
+    }
+
+    if (device.DEVICE.HAS_NETWORK && config.VISUAL.NETWORK) {
+        network_timer = lv_timer_create(network_task, 0, NULL);
+        lv_timer_ready(network_timer);
+    }
+
+    if (config.VISUAL.BATTERY) {
+        battery_timer = lv_timer_create(battery_task, 0, NULL);
+        lv_timer_ready(battery_timer);
     }
 
     if (update_system_info) {
-        lv_timer_t *sysinfo_timer = lv_timer_create(update_system_info, UINT16_MAX / 32, NULL);
+        lv_timer_t *sysinfo_timer = lv_timer_create(update_system_info, TIMER_SYSINFO, NULL);
         lv_timer_ready(sysinfo_timer);
     }
+
+    lv_refr_now(NULL);
 }
 
 void init_fonts() {
@@ -144,11 +148,7 @@ void init_theme(int panel_init, int long_mode) {
     if (long_mode && theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
 }
 
-void glyph_task() {
-    //update_bluetooth_status(ui_staBluetooth, &theme);
-    update_network_status(ui_staNetwork, &theme);
-    update_battery_capacity(ui_staCapacity, &theme);
-
+void status_task() {
     if (progress_onscreen > 0) {
         progress_onscreen -= 1;
     } else {
@@ -163,5 +163,24 @@ void glyph_task() {
         if (!msgbox_active) {
             progress_onscreen = -1;
         }
+    }
+}
+
+void bluetooth_task() {
+    //update_bluetooth_status(ui_staBluetooth, &theme);
+    //lv_timer_set_period(bluetooth_timer, TIMER_BLUETOOTH);
+}
+
+void network_task() {
+    update_network_status(ui_staNetwork, &theme);
+    lv_timer_set_period(network_timer, TIMER_NETWORK);
+}
+
+void battery_task() {
+    int bat_cap = read_int_from_file(device.BATTERY.CHARGER, 1);
+    if (bat_cap != current_capacity) {
+        current_capacity = bat_cap;
+        update_battery_capacity(ui_staCapacity, &theme);
+        lv_timer_set_period(battery_timer, TIMER_BATTERY);
     }
 }

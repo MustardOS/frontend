@@ -981,21 +981,24 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
                 case APPLICATION:
                     if (load_image_catalogue("Application", element, "default", mux_dimensions[i], "wall",
                                              wall_image_path, sizeof(wall_image_path))) {
-                        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
                         return wall_image_embed;
                     }
                     break;
                 case ARCHIVE:
                     if (load_image_catalogue("Archive", element, "default", mux_dimensions[i], "wall",
                                              wall_image_path, sizeof(wall_image_path))) {
-                        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
                         return wall_image_embed;
                     }
                     break;
                 case TASK:
                     if (load_image_catalogue("Task", element, "default", mux_dimensions[i], "wall",
                                              wall_image_path, sizeof(wall_image_path))) {
-                        snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                        if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
                         return wall_image_embed;
                     }
                     break;
@@ -1005,7 +1008,8 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
             }
             if (load_element_image_specifics(STORAGE_THEME, mux_dimensions[i], program, "wall", element,
                                              wall_extension, wall_image_path, sizeof(wall_image_path))) {
-                snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
                 return wall_image_embed;
             }
         }
@@ -1014,7 +1018,8 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     for (int i = 0; i < 2; i++) {
         if (load_image_specifics(STORAGE_THEME, mux_dimensions[i], program, "wall",
                                  wall_extension, wall_image_path, sizeof(wall_image_path))) {
-            snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+            int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+            if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
             return wall_image_embed;
         }
     }
@@ -1073,21 +1078,27 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                 case APPLICATION:
                     if (load_image_catalogue("Application", element, "default", mux_dimensions[i], "box",
                                              static_image_path, sizeof(static_image_path))) {
-                        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
+                                               static_image_path);
+                        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
                         return static_image_embed;
                     }
                     break;
                 case ARCHIVE:
                     if (load_image_catalogue("Archive", element, "default", mux_dimensions[i], "box",
                                              static_image_path, sizeof(static_image_path))) {
-                        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
+                                               static_image_path);
+                        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
                         return static_image_embed;
                     }
                     break;
                 case TASK:
                     if (load_image_catalogue("Task", element, "default", mux_dimensions[i], "box",
                                              static_image_path, sizeof(static_image_path))) {
-                        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
+                                               static_image_path);
+                        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
                         return static_image_embed;
                     }
                     break;
@@ -1096,7 +1107,9 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                     if (load_element_image_specifics(STORAGE_THEME, mux_dimensions[i], program, "static",
                                                      element, "png", static_image_path, sizeof(static_image_path))) {
 
-                        snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
+                                               static_image_path);
+                        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
                         return static_image_embed;
                     }
             }
@@ -1121,7 +1134,8 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t ov
             load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
                                  static_image_path, sizeof(static_image_path))) {
 
-            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+            int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+            if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
 
             lv_img_set_src(overlay_image, static_image_embed);
             lv_obj_move_foreground(overlay_image);
@@ -1144,7 +1158,8 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
             load_image_specifics(STORAGE_THEME, "", program, "kiosk", "png",
                                  static_image_path, sizeof(static_image_path))) {
 
-            snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+            int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+            if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
 
             lv_img_set_src(kiosk_image, static_image_embed);
             lv_obj_move_foreground(kiosk_image);
@@ -1157,26 +1172,45 @@ static void image_anim_cb(void *var, int32_t img_idx) {
 }
 
 void build_image_array(char *base_image_path) {
-    char base_path[MAX_BUFFER_SIZE];
-    char path[MAX_BUFFER_SIZE];
-    char path_embed[MAX_BUFFER_SIZE];
+    char base_path[PATH_MAX];
+    char path[PATH_MAX];
+    size_t base_len = strlen(base_image_path) - 6;
+
+    if (base_len >= PATH_MAX) {
+        fprintf(stderr, "Error: base_path exceeds maximum allowed length\n");
+        exit(EXIT_FAILURE);
+    }
+
+    strncpy(base_path, base_image_path, base_len);
+    base_path[base_len] = '\0';
+
     int index = 0;
-
-    strncpy(base_path, base_image_path, strlen(base_image_path) - 6);
-    base_path[strlen(base_image_path) - 6] = '\0';
-
     int file_exists = 1;
+
     while (file_exists) {
         snprintf(path, sizeof(path), "%s.%d.png", base_path + 2, index);
         file_exists = file_exist(path);
+
         if (file_exists) {
+            size_t needed_size = snprintf(NULL, 0, "%s.%d.png", base_path, index) + 1;
+            char *path_embed = malloc(needed_size);
+            if (!path_embed) {
+                perror("malloc failed");
+                exit(EXIT_FAILURE);
+            }
+
+            snprintf(path_embed, needed_size, "%s.%d.png", base_path, index);
             img_paths = realloc(img_paths, (img_paths_count + 1) * sizeof(char *));
-            snprintf(path_embed, sizeof(path_embed), "%s.%d.png", base_path, index);
-            img_paths[index] = strdup(path_embed);
+            if (!img_paths) {
+                perror("realloc failed");
+                free(path_embed);
+                exit(EXIT_FAILURE);
+            }
+
+            img_paths[img_paths_count] = path_embed;
             img_paths_count++;
-        } else {
-            break;
         }
+
         index++;
     }
 }
@@ -1358,10 +1392,12 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
 
 void load_skip_patterns() {
     char skip_ini[MAX_BUFFER_SIZE];
-    snprintf(skip_ini, sizeof(skip_ini), "%s/skip.ini", INFO_CFG_PATH);
+    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/skip.ini", INFO_CFG_PATH);
+    if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
 
     if (!file_exist(skip_ini)) {
-        snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+        written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+        if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
     }
 
     FILE *file = fopen(skip_ini, "r");
@@ -1373,12 +1409,16 @@ void load_skip_patterns() {
     for (size_t i = 0; i < skip_pattern_list.count; i++) {
         free(skip_pattern_list.patterns[i]);
     }
-
     free(skip_pattern_list.patterns);
 
     skip_pattern_list.count = 0;
     skip_pattern_list.capacity = 2;
     skip_pattern_list.patterns = malloc(skip_pattern_list.capacity * sizeof(char *));
+    if (!skip_pattern_list.patterns) {
+        perror("malloc failed");
+        fclose(file);
+        return;
+    }
 
     char line[MAX_BUFFER_SIZE];
     while (fgets(line, sizeof(line), file)) {
@@ -1391,9 +1431,19 @@ void load_skip_patterns() {
             skip_pattern_list.capacity *= 2;
             skip_pattern_list.patterns = realloc(skip_pattern_list.patterns,
                                                  skip_pattern_list.capacity * sizeof(char *));
+            if (!skip_pattern_list.patterns) {
+                perror("realloc failed");
+                fclose(file);
+                return;
+            }
         }
 
         skip_pattern_list.patterns[skip_pattern_list.count] = strdup(line);
+        if (!skip_pattern_list.patterns[skip_pattern_list.count]) {
+            perror("strdup failed");
+            fclose(file);
+            return;
+        }
         skip_pattern_list.count++;
     }
 
@@ -1603,13 +1653,23 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 
 void load_language_file(const char *module) {
     char language_file[MAX_BUFFER_SIZE];
-    snprintf(language_file, sizeof(language_file), (RUN_STORAGE_PATH "language/%s.json"),
-             config.SETTINGS.GENERAL.LANGUAGE);
 
-    if (json_valid(read_text_from_file(language_file))) {
-        translation_specific = json_object_get(json_parse(read_text_from_file(language_file)), module);
-        translation_generic = json_object_get(json_parse(read_text_from_file(language_file)), "generic");
+    int written = snprintf(language_file, sizeof(language_file), (RUN_STORAGE_PATH "language/%s.json"),
+                           config.SETTINGS.GENERAL.LANGUAGE);
+    if (written < 0 || (size_t) written >= sizeof(language_file)) return;
+
+    char *file_content = read_text_from_file(language_file);
+    if (!file_content || !json_valid(file_content)) {
+        fprintf(stderr, "Error: Invalid or missing language file: %s\n", language_file);
+        free(file_content);
+        return;
     }
+
+    struct json parsed_json = json_parse(file_content);
+    free(file_content);
+
+    translation_specific = json_object_get(parsed_json, module);
+    translation_generic = json_object_get(parsed_json, "generic");
 }
 
 char *translate_generic(char *key) {
