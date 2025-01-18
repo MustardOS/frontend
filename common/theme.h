@@ -145,6 +145,8 @@ struct theme_config {
         int16_t GRADIENT_START;
         int16_t GRADIENT_STOP;
         int16_t GRADIENT_DIRECTION;
+        int16_t BORDER_WIDTH;
+        int16_t BORDER_SIDE;
         uint32_t INDICATOR;
         int16_t INDICATOR_ALPHA;
         uint32_t TEXT;
@@ -163,6 +165,8 @@ struct theme_config {
         int16_t GRADIENT_START;
         int16_t GRADIENT_STOP;
         int16_t GRADIENT_DIRECTION;
+        int16_t BORDER_WIDTH;
+        int16_t BORDER_SIDE;
         uint32_t INDICATOR;
         int16_t INDICATOR_ALPHA;
         uint32_t TEXT;
