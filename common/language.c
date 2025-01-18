@@ -74,6 +74,8 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.SYNC, "Sync to SD1");
     GENERIC_FIELD(lang->GENERIC.UNKNOWN, "Unknown");
     GENERIC_FIELD(lang->GENERIC.USE, "Use");
+    GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting");
+    GENERIC_FIELD(lang->GENERIC.SHUTTING_DOWN, "Shutting Down");
 
     // muxapp
     SPECIFIC_FIELD(lang->MUXAPP.TITLE, "APPLICATIONS");
