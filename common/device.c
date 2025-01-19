@@ -69,6 +69,8 @@ void load_device(struct mux_device *device) {
     DEV_INT_FIELD(device->SCREEN.WAIT, "screen/wait")
     DEV_STR_FIELD(device->SCREEN.DEVICE, "screen/device")
     DEV_STR_FIELD(device->SCREEN.HDMI, "screen/hdmi")
+    DEV_INT_FIELD(device->SCREEN.WIDTH, "screen/width")
+    DEV_INT_FIELD(device->SCREEN.HEIGHT, "screen/height")
 
     DEV_INT_FIELD(device->SCREEN.INTERNAL.WIDTH, "screen/internal/width")
     DEV_INT_FIELD(device->SCREEN.INTERNAL.HEIGHT, "screen/internal/height")

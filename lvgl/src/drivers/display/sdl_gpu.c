@@ -251,13 +251,13 @@ static void window_create(monitor_t * m)
 //    SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1");
     m->window = SDL_CreateWindow("TFT Simulator",
                               SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                              device.MUX.WIDTH * SDL_ZOOM,
-                              device.MUX.HEIGHT * SDL_ZOOM, SDL_WINDOW_RESIZABLE);
+                              device.SCREEN.WIDTH * SDL_ZOOM,
+                              device.SCREEN.HEIGHT * SDL_ZOOM, SDL_WINDOW_RESIZABLE);
 
     m->drv_param.renderer = SDL_CreateRenderer(m->window, -1, SDL_RENDERER_ACCELERATED);
 
     m->texture = lv_draw_sdl_create_screen_texture(m->drv_param.renderer,
-                                                   device.MUX.WIDTH, device.MUX.HEIGHT);
+                                                   device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
     /* For first frame */
     SDL_SetRenderTarget(m->drv_param.renderer, m->texture);
 }
@@ -271,7 +271,7 @@ static void window_update(lv_disp_drv_t *disp_drv, void * buf)
 #if LV_COLOR_SCREEN_TRANSP
     SDL_SetRenderDrawColor(renderer, 0xff, 0, 0, 0xff);
     SDL_Rect r;
-    r.x = 0; r.y = 0; r.w = device.MUX.WIDTH; r.h = device.MUX.HEIGHT;
+    r.x = 0; r.y = 0; r.w = device.SCREEN.WIDTH; r.h = device.SCREEN.HEIGHT;
     SDL_RenderDrawRect(renderer, &r);
 #endif
 
