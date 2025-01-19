@@ -1283,7 +1283,7 @@ void get_mux_dimension(char *mux_dimension, size_t size) {
     snprintf(mux_dimension, size, "%dx%d/", device.MUX.WIDTH, device.MUX.HEIGHT);
 }
 
-void load_font_text(const char *program, lv_obj_t *screen) {
+void load_font_text(lv_obj_t *screen) {
     const lv_font_t *language_font = get_language_font();
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
@@ -1295,7 +1295,7 @@ void load_font_text(const char *program, lv_obj_t *screen) {
         for (int i = 0; i < 2; i++) {
             if ((snprintf(theme_font_text, sizeof(theme_font_text),
                           "%s/%sfont/%s/%s.bin", STORAGE_THEME, mux_dimensions[i],
-                          config.SETTINGS.GENERAL.LANGUAGE, program) >= 0 &&
+                          config.SETTINGS.GENERAL.LANGUAGE, mux_module) >= 0 &&
                  file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text_default),
@@ -1304,7 +1304,7 @@ void load_font_text(const char *program, lv_obj_t *screen) {
                  0 && file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text),
-                          "%s/%sfont/%s.bin", STORAGE_THEME, mux_dimensions[i], program) >= 0 &&
+                          "%s/%sfont/%s.bin", STORAGE_THEME, mux_dimensions[i], mux_module) >= 0 &&
                  file_exist(theme_font_text)) ||
 
                 (snprintf(theme_font_text, sizeof(theme_font_text_default),
@@ -1321,7 +1321,7 @@ void load_font_text(const char *program, lv_obj_t *screen) {
     lv_obj_set_style_text_font(screen, language_font, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-void load_font_section(const char *program, const char *section, lv_obj_t *element) {
+void load_font_section(const char *section, lv_obj_t *element) {
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_section[MAX_BUFFER_SIZE];
 
@@ -1332,7 +1332,7 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
             if ((snprintf(theme_font_section, sizeof(theme_font_section),
                           "%s/%sfont/%s/%s/%s.bin", STORAGE_THEME, mux_dimensions[i],
                           config.SETTINGS.GENERAL.LANGUAGE, section,
-                          program) >= 0 && file_exist(theme_font_section)) ||
+                          mux_module) >= 0 && file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),
                           "%s/%sfont/%s/%s/default.bin", STORAGE_THEME, mux_dimensions[i],
@@ -1340,7 +1340,7 @@ void load_font_section(const char *program, const char *section, lv_obj_t *eleme
                           section) >= 0 && file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),
-                          "%s/%sfont/%s/%s.bin", STORAGE_THEME, mux_dimensions[i], section, program) >= 0 &&
+                          "%s/%sfont/%s/%s.bin", STORAGE_THEME, mux_dimensions[i], section, mux_module) >= 0 &&
                  file_exist(theme_font_section)) ||
 
                 (snprintf(theme_font_section, sizeof(theme_font_section),

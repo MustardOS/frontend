@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
         load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, GENERAL);
     }
 
-    load_font_text(basename(argv[0]), ui_scrStart);
+    load_font_text(ui_scrStart);
 
 #if TEST_IMAGE
     display_testing_message(ui_scrStart);

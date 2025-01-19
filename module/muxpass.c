@@ -249,8 +249,7 @@ int main(int argc, char *argv[]) {
                      ui_rolComboFour, ui_rolComboFive, ui_rolComboSix);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
-
-    load_font_text(basename(argv[0]), ui_screen);
+    load_font_text(ui_screen);
 
     init_fonts();
     init_navigation_group();

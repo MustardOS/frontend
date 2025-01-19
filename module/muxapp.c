@@ -90,8 +90,8 @@ void init_navigation_group_grid(const char *app_path) {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
-    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_pnlGrid);
-    load_font_section(mux_module, FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
+    load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
+    load_font_section(FONT_PANEL_FOLDER, ui_lblGridCurrentItem);
     for (size_t i = 0; i < item_count; i++) {
         uint8_t col = i % theme.GRID.COLUMN_COUNT;
         uint8_t row = i / theme.GRID.COLUMN_COUNT;

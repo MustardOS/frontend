@@ -670,7 +670,6 @@ void ui_common_handle_idle() {
         lv_refr_now(NULL);
     }
 
-    lv_tick_inc(IDLE_MS);
     lv_task_handler();
 }
 

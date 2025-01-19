@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblBoot, lang.MUXCHARGE.POWER);
 
     load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, GENERAL);
-    load_font_text(basename(argv[0]), ui_scrCharge);
+    load_font_text(ui_scrCharge);
 
 #if TEST_IMAGE
     display_testing_message(ui_scrCharge);
@@ -146,8 +146,7 @@ int main(int argc, char *argv[]) {
 
     init_input(&js_fd, &js_fd_sys);
 
-    battery_timer = lv_timer_create(battery_task, UINT16_MAX / 32, NULL);
-    lv_timer_ready(battery_timer);
+    lv_timer_create(battery_task, TIMER_BATTERY, NULL);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,

@@ -18,27 +18,26 @@ static lv_style_t style_list_item_focused;
 static lv_style_t style_list_glyph_default;
 static lv_style_t style_list_glyph_focused;
 
-int load_scheme(const char *theme_base, const char *mux_dimension,
-                const char *mux_name, char *scheme, size_t scheme_size) {
-    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.txt", theme_base, mux_dimension, mux_name)
+int load_scheme(const char *theme_base, const char *mux_dimension, char *scheme, size_t scheme_size) {
+    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.txt", theme_base, mux_dimension, mux_module)
             && file_exist(scheme)) ||
            (snprintf(scheme, scheme_size, "%s/%sscheme/default.txt", theme_base, mux_dimension)
             && file_exist(scheme)) ||
-           (snprintf(scheme, scheme_size, "%s/scheme/%s.txt", theme_base, mux_name)
+           (snprintf(scheme, scheme_size, "%s/scheme/%s.txt", theme_base, mux_module)
             && file_exist(scheme)) ||
            (snprintf(scheme, scheme_size, "%s/scheme/default.txt", theme_base)
             && file_exist(scheme)) ||
-           (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dimension, mux_name)
+           (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dimension, mux_module)
             && file_exist(scheme)) ||
            (snprintf(scheme, scheme_size, "%s/%sscheme/default.ini", theme_base, mux_dimension)
             && file_exist(scheme)) ||
-           (snprintf(scheme, scheme_size, "%s/scheme/%s.ini", theme_base, mux_name)
+           (snprintf(scheme, scheme_size, "%s/scheme/%s.ini", theme_base, mux_module)
             && file_exist(scheme)) ||
            (snprintf(scheme, scheme_size, "%s/scheme/default.ini", theme_base)
             && file_exist(scheme));
 }
 
-void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device, char *mux_name) {
+void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device) {
     char scheme[MAX_BUFFER_SIZE];
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
@@ -60,9 +59,9 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         }
     }
 
-    if (load_scheme(STORAGE_THEME, mux_dimension, mux_name, scheme, sizeof(scheme))) {
+    if (load_scheme(STORAGE_THEME, mux_dimension, scheme, sizeof(scheme))) {
         LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme)
-    } else if (load_scheme(INTERNAL_THEME, mux_dimension, mux_name, scheme, sizeof(scheme))) {
+    } else if (load_scheme(INTERNAL_THEME, mux_dimension, scheme, sizeof(scheme))) {
         LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme)
     }
 
@@ -443,7 +442,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     mini_free(muos_theme);
 
     char scheme_override[MAX_BUFFER_SIZE];
-    snprintf(scheme_override, sizeof(scheme), (RUN_STORAGE_PATH "theme/override/%s.txt"), mux_name);
+    snprintf(scheme_override, sizeof(scheme), (RUN_STORAGE_PATH "theme/override/%s.txt"), mux_module);
     if (file_exist(scheme_override)) {
         mini_t *muos_theme_overrides = mini_try_load(scheme_override);
         int16_t pad_right = get_ini_int(muos_theme_overrides, "font", "FONT_LIST_PAD_RIGHT", -1);

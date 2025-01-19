@@ -167,8 +167,7 @@ int main(int argc, char *argv[]) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
-
-    load_font_text(basename(argv[0]), ui_screen);
+    load_font_text(ui_screen);
 
     init_fonts();
     init_navigation_sound(&nav_sound, mux_module);
@@ -181,9 +180,7 @@ int main(int argc, char *argv[]) {
             .gamepad_fd = js_fd,
             .system_fd = js_fd_sys,
             .max_idle_ms = IDLE_MS,
-            .press_handler = {
-                    [MUX_INPUT_POWER_SHORT] = handle_power,
-            },
+            .press_handler = {[MUX_INPUT_POWER_SHORT] = handle_power},
             .input_handler = handle_input,
             .idle_handler = ui_common_handle_idle,
     };

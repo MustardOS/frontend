@@ -19,6 +19,12 @@
 
 #include <stdint.h>
 
+/*=======================
+   FUNCTION PROTOTYPES
+ *=======================*/
+
+extern uint32_t mux_tick(void);
+
 /*====================
    COLOR SETTINGS
  *====================*/
@@ -85,7 +91,7 @@
 
 /*Use a custom tick source that tells the elapsed time in milliseconds.
  *It removes the need to manually update the tick with `lv_tick_inc()`)*/
-#define LV_TICK_CUSTOM 0
+#define LV_TICK_CUSTOM 1
 #if LV_TICK_CUSTOM
 #define LV_TICK_CUSTOM_INCLUDE <stdint.h>         /*Header for the system time function*/
 #define LV_TICK_CUSTOM_SYS_TIME_EXPR (mux_tick())    /*Expression evaluating to current system time in ms*/
@@ -125,7 +131,7 @@
  *With complex image decoders (e.g. PNG or JPG) caching can save the continuous open/decode of images.
  *However the opened images might consume additional RAM.
  *0: to disable caching*/
-#define LV_IMG_CACHE_DEF_SIZE   0
+#define LV_IMG_CACHE_DEF_SIZE   64
 
 /*Number of stops allowed per gradient. Increase this to allow more stops.
  *This adds (sizeof(lv_color_t) + 1) bytes per additional stop*/
@@ -141,12 +147,12 @@
 /*Allow dithering the gradients (to achieve visual smooth color gradients on limited color depth display)
  *LV_DITHER_GRADIENT implies allocating one or two more lines of the object's rendering surface
  *The increase in memory consumption is (32 bits * object width) plus 24 bits * object width if using error diffusion */
-#define LV_DITHER_GRADIENT      1
+#define LV_DITHER_GRADIENT      0
 #if LV_DITHER_GRADIENT
 /*Add support for error diffusion dithering.
  *Error diffusion dithering gets a much better visual result, but implies more CPU consumption and memory when drawing.
  *The increase in memory consumption is (24 bits * object's width)*/
-#define LV_DITHER_ERROR_DIFFUSION   1
+#define LV_DITHER_ERROR_DIFFUSION   0
 #endif
 
 /*Maximum buffer size to allocate for rotation.
