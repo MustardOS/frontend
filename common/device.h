@@ -86,6 +86,8 @@ struct mux_device {
         int16_t BRIGHT;
         int16_t ROTATE;
         int16_t WAIT;
+        int16_t WIDTH;
+        int16_t HEIGHT;
         struct {
             int16_t WIDTH;
             int16_t HEIGHT;

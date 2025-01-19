@@ -134,8 +134,8 @@ void sdl_init(void) {
     window_create(&monitor2);
     int x, y;
     SDL_GetWindowPosition(monitor2.window, &x, &y);
-    SDL_SetWindowPosition(monitor.window, x + (device.MUX.WIDTH * SDL_ZOOM) / 2 + 10, y);
-    SDL_SetWindowPosition(monitor2.window, x - (device.MUX.WIDTH * SDL_ZOOM) / 2 - 10, y);
+    SDL_SetWindowPosition(monitor.window, x + (device.SCREEN.WIDTH * SDL_ZOOM) / 2 + 10, y);
+    SDL_SetWindowPosition(monitor2.window, x - (device.SCREEN.WIDTH * SDL_ZOOM) / 2 - 10, y);
 #endif
 
     //SDL_StartTextInput();
@@ -341,19 +341,19 @@ static void monitor_sdl_clean_up(void) {
 
 static void window_create(monitor_t *m) {
     m->window = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                 device.MUX.WIDTH, device.MUX.HEIGHT, SDL_WINDOW_BORDERLESS);
+                                 device.SCREEN.WIDTH, device.SCREEN.HEIGHT, SDL_WINDOW_BORDERLESS);
 
     m->renderer = SDL_CreateRenderer(m->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     m->texture = SDL_CreateTexture(m->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
-                                   device.MUX.WIDTH, device.MUX.HEIGHT);
+                                   device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
     SDL_SetTextureBlendMode(m->texture, SDL_BLENDMODE_BLEND);
 
     /*Initialize the frame buffer to gray (77 is an empirical value) */
 #if SDL_DOUBLE_BUFFERED
-    SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, device.MUX.WIDTH * sizeof(uint32_t));
+    SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, device.SCREEN.WIDTH * sizeof(uint32_t));
 #else
-    m->tft_fb = (uint32_t *) malloc(sizeof(uint32_t) * device.MUX.WIDTH * device.MUX.HEIGHT);
-    memset(m->tft_fb, 0x44, device.MUX.WIDTH * device.MUX.HEIGHT * sizeof(uint32_t));
+    m->tft_fb = (uint32_t *) malloc(sizeof(uint32_t) * device.SCREEN.WIDTH * device.SCREEN.HEIGHT);
+    memset(m->tft_fb, 0x44, device.SCREEN.WIDTH * device.SCREEN.HEIGHT * sizeof(uint32_t));
 #endif
 
     m->sdl_refr_qry = true;
@@ -361,10 +361,10 @@ static void window_create(monitor_t *m) {
 
 static void window_update(monitor_t *m) {
 #if SDL_DOUBLE_BUFFERED == 0
-    SDL_UpdateTexture(m->texture, NULL, m->tft_fb, device.MUX.WIDTH * sizeof(uint32_t));
+    SDL_UpdateTexture(m->texture, NULL, m->tft_fb, device.SCREEN.WIDTH * sizeof(uint32_t));
 #else
     if (m->tft_fb_act == NULL) return;
-    SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, device.MUX.WIDTH * sizeof(uint32_t));
+    SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, device.SCREEN.WIDTH * sizeof(uint32_t));
 #endif
     SDL_RenderClear(m->renderer);
     lv_disp_t *d = _lv_refr_get_disp_refreshing();
@@ -373,8 +373,8 @@ static void window_update(monitor_t *m) {
         SDL_Rect r;
         r.x = 0;
         r.y = 0;
-        r.w = device.MUX.WIDTH;
-        r.h = device.MUX.HEIGHT;
+        r.w = device.SCREEN.WIDTH;
+        r.h = device.SCREEN.HEIGHT;
         SDL_RenderDrawRect(m->renderer, &r);
     }
 
