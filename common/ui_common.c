@@ -2,7 +2,6 @@
 #include "../font/awesome_small.h"
 #include "../font/notosans.h"
 #include "img/nothing.h"
-#include "init.h"
 #include "common.h"
 #include "language.h"
 #include "config.h"
@@ -671,6 +670,7 @@ void ui_common_handle_idle() {
         lv_refr_now(NULL);
     }
 
+    lv_tick_inc(IDLE_MS);
     lv_task_handler();
 }
 
