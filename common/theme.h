@@ -390,7 +390,7 @@ struct theme_config {
     } TERMINAL;
 };
 
-int load_scheme(const char *theme_base, const char *mux_dimension, char *scheme, size_t scheme_size);
+int load_scheme(const char *theme_base, const char *mux_dimension, const char *file_name, char *scheme, size_t scheme_size);
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device);
 

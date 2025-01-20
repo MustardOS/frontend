@@ -529,13 +529,15 @@ const char *get_random_hex() {
     return colour_hex;
 }
 
-uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key) {
-    const char *meta = mini_get_string(ini_config, section, key, get_random_hex());
+uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, uint32_t default_value) {
+    const char *meta = mini_get_string(ini_config, section, key, "NOT FOUND");
 
     uint32_t result;
-
-    result = (uint32_t)
-            strtoul(meta, NULL, 16);
+    if (strcmp(meta, "NOT FOUND") == 0) {
+        result = default_value;
+    } else {
+        result = (uint32_t)strtoul(meta, NULL, 16);
+    }
 
     return result;
 }

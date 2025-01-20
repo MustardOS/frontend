@@ -115,7 +115,7 @@ int read_int_from_file(const char *filename, size_t line_number);
 
 const char *get_random_hex();
 
-uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key);
+uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, uint32_t default_value);
 
 int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, int16_t default_value);
 
