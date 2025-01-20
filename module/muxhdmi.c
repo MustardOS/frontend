@@ -202,6 +202,8 @@ void save_hdmi_options() {
             run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi.sh", "start", NULL});
         }
     }
+
+    run_exec((const char *[]) {(char *) "touch", "/tmp/hdmi_init_done", NULL});
 }
 
 void init_navigation_group() {
@@ -313,7 +315,6 @@ void init_navigation_group() {
             "720x576",
             "720x720",
             "1280x720"}, 6);
-
     add_drop_down_options(ui_droSpace, (char *[]) {
             "RGB",
             "YUV444",

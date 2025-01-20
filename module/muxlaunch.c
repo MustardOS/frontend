@@ -588,11 +588,6 @@ void init_elements() {
 }
 
 void ui_refresh_task() {
-    if (file_exist("/tmp/hdmi_out")) {
-        remove("/tmp/hdmi_out");
-        handle_b();
-    }
-
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -636,6 +631,11 @@ int main(int argc, char *argv[]) {
 
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
+
+    if (file_exist("/tmp/hdmi_out")) {
+        remove("/tmp/hdmi_out");
+        handle_b();
+    }
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
