@@ -1,8 +1,9 @@
 #include "../lvgl/lvgl.h"
-#include "ui/ui_muxsplash.h"
 #include <unistd.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
 #include "../common/language.h"
@@ -50,13 +51,16 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    setup_background_process();
-
+    mux_module = basename(argv[0]);
     load_device(&device);
     load_config(&config);
 
+    setup_background_process();
+
     init_display();
-    init_mux();
+
+    lv_obj_t *ui_scrSplash = lv_obj_create(NULL);
+    lv_disp_load_scr(ui_scrSplash);
 
     char init_wall[MAX_BUFFER_SIZE];
     snprintf(init_wall, sizeof(init_wall), "M:%s", argv[1]);
@@ -70,6 +74,12 @@ int main(int argc, char *argv[]) {
 
     overlay_image = lv_img_create(ui_scrSplash);
     load_overlay_image(ui_scrSplash, overlay_image, theme.MISC.IMAGE_OVERLAY);
+
+    for (int r = 0; r < 3; r++) { /* again 3 is the magic number... */
+        lv_obj_invalidate(ui_scrSplash);
+        lv_refr_now(NULL);
+        lv_task_handler();
+    }
 
     return 0;
 }
