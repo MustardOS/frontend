@@ -99,8 +99,11 @@ int main(int argc, char *argv[]) {
     lv_bar_set_value(ui_barProgress, progress, LV_ANIM_OFF);
     lv_label_set_text(ui_lblMessage, argv[2]);
 
-    lv_refr_now(NULL);
-    lv_task_handler();
+    for (int r = 0; r < 3; r++) { /* again 3 is the magic number... */
+        lv_obj_invalidate(ui_scrStart);
+        lv_refr_now(NULL);
+        lv_task_handler();
+    }
 
     return 0;
 }
