@@ -39,11 +39,11 @@ MUXLIB = $(CFLAGS) -I./module/ui -I./font -I./lookup -I./common \
 
 LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux -lawesome_small -lgamepad \
           -lnotosans -lnotosans_big -lnotosans_jp -lnotosans_kr -lnotosans_sc -lnotosans_tc \
-          -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s -Wl,-rpath,'./lib'
+          -lSDL2 -lSDL2_mixer -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
         -fno-unroll-loops -fmerge-all-constants -fno-ident -ffast-math \
-        -funroll-loops -falign-functions -fopenmp
+        -funroll-loops -falign-functions
 
 .PHONY: all $(MODULES) prebuild clean notify
 

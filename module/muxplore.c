@@ -1,7 +1,6 @@
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxplore.h"
 #include <unistd.h>
-#include <pthread.h>
 #include <dirent.h>
 #include <string.h>
 #include <limits.h>

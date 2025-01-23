@@ -1,7 +1,6 @@
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcollect.h"
 #include <unistd.h>
-#include <pthread.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <string.h>

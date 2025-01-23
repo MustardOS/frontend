@@ -1,14 +1,12 @@
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxhistory.h"
 #include <unistd.h>
-#include <pthread.h>
 #include <dirent.h>
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <libgen.h>
-#include <omp.h>
 #include "../common/init.h"
 #include "../common/img/nothing.h"
 #include "../common/common.h"
@@ -404,7 +402,6 @@ void gen_item(char **file_names, int file_count) {
     sort_items_time(items, item_count);
 
     char *glyph_icons[item_count];
-#pragma omp parallel for default(none) shared(glyph_icons, items, item_count)
     for (size_t i = 0; i < item_count; i++) {
         glyph_icons[i] = (items[i].content_type == ROM) ? get_glyph_name(i) : "unknown";
     }
@@ -799,8 +796,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
     }
-
-    omp_set_num_threads(omp_get_num_procs());
 
     mux_module = basename(argv[0]);
     setup_background_process();
