@@ -34,6 +34,7 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->SYSTEM.BACKGROUND_ALPHA = 255;
 
     theme->ANIMATION.ANIMATION_DELAY = 100;
+    theme->ANIMATION.ANIMATION_REPEAT = 0;
 
     theme->FONT.HEADER_PAD_TOP = 0;
     theme->FONT.HEADER_PAD_BOTTOM = 0;
@@ -377,6 +378,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 
     theme->ANIMATION.ANIMATION_DELAY = get_ini_int(muos_theme, "animation", "ANIMATION_DELAY", theme->ANIMATION.ANIMATION_DELAY);
     if (theme->ANIMATION.ANIMATION_DELAY < 10) theme->ANIMATION.ANIMATION_DELAY = 10;
+    theme->ANIMATION.ANIMATION_REPEAT = get_ini_int(muos_theme, "animation", "ANIMATION_REPEAT", theme->ANIMATION.ANIMATION_REPEAT);
 
     theme->FONT.HEADER_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_TOP", theme->FONT.HEADER_PAD_TOP);
     theme->FONT.HEADER_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_BOTTOM", theme->FONT.HEADER_PAD_BOTTOM);

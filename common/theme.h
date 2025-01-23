@@ -32,6 +32,7 @@ struct theme_config {
 
     struct {
         int16_t ANIMATION_DELAY;
+        int16_t ANIMATION_REPEAT;
     } ANIMATION;
 
     struct {
