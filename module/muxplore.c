@@ -34,9 +34,7 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int SD2_found = 0;
 int nav_sound = 0;
-int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 
@@ -140,7 +138,7 @@ char *load_content_core(int force, int run_quit) {
     }
 
     load_assign(items[current_item_index].name, sys_dir, "none", force);
-    if (run_quit) safe_quit = 1;
+    if (run_quit) mux_input_stop();
 
     LOG_INFO(mux_module, "No core detected")
     return NULL;
@@ -180,7 +178,7 @@ char *load_content_governor(int force, int run_quit) {
     }
 
     load_gov(items[current_item_index].name, sys_dir, "none", force);
-    if (run_quit) safe_quit = 1;
+    if (run_quit) mux_input_stop();
 
     LOG_INFO(mux_module, "No governor detected")
     return NULL;
@@ -1103,10 +1101,7 @@ void handle_select() {
         write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
 
         load_content_core(1, 0);
-        if (safe_quit) mux_input_stop();
-
         load_content_governor(1, 0);
-        if (safe_quit) mux_input_stop();
 
         load_mux("option");
     } else {
@@ -1292,6 +1287,8 @@ int main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
+    setup_background_process();
+
     load_device(&device);
     load_config(&config);
     load_lang(&lang);
@@ -1418,6 +1415,7 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
+    safe_quit();
 
     free_items(items, item_count);
     close(js_fd);

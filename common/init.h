@@ -20,6 +20,10 @@ struct bat_task_param {
     lv_obj_t *staCapacity;
 };
 
+void setup_background_process();
+
+void safe_quit();
+
 void init_display();
 
 void init_input(int *js_fd, int *js_fd_sys);

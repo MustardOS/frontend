@@ -1,6 +1,5 @@
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxstart.h"
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,9 +17,7 @@ char *mux_module;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int SD2_found = 0;
 int nav_sound = 0;
-int safe_quit = 0;
 int bar_header = 0;
 int bar_footer = 0;
 
@@ -42,17 +39,6 @@ void list_nav_prev(void) {}
 
 void list_nav_next(void) {}
 
-void setup_background_process() {
-    pid_t pid = fork();
-
-    if (pid == -1) {
-        perror(lang.SYSTEM.FAIL_FORK);
-        exit(1);
-    } else if (pid > 0) {
-        exit(0);
-    }
-}
-
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <progress> <message>\n", argv[0]);
@@ -60,11 +46,11 @@ int main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
+    setup_background_process();
+
     load_device(&device);
     load_config(&config);
     load_lang(&lang);
-
-    setup_background_process();
 
     init_display();
     init_theme(0, 0);
@@ -105,5 +91,6 @@ int main(int argc, char *argv[]) {
         lv_task_handler();
     }
 
+    safe_quit();
     return 0;
 }

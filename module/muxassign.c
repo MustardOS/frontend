@@ -27,7 +27,6 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
@@ -279,13 +278,9 @@ void create_core_assignment(const char *core, char *sys, char *rom, int cache, e
 
     char pico8_splore[MAX_BUFFER_SIZE];
     snprintf(pico8_splore, sizeof(pico8_splore), "%s/Splore.p8", rom_dir);
-    if (!strcasecmp(core, "ext-pico8") && !file_exist(pico8_splore)) {
-        run_exec((const char *[]) {"touch", pico8_splore, NULL});
-    }
+    if (!strcasecmp(core, "ext-pico8") && !file_exist(pico8_splore)) write_text_to_file(pico8_splore, "w", CHAR, "");
 
-    if (file_exist(MUOS_SAA_LOAD)) {
-        remove(MUOS_SAA_LOAD);
-    }
+    if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
 }
 
 char **read_assign_ini(const char *filename, int *cores) {
@@ -555,7 +550,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_confirm() {
+void handle_a() {
     if (msgbox_active) return;
 
     const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
@@ -588,6 +583,28 @@ void handle_confirm() {
         mini_free(chosen_core);
     }
 
+    mux_input_stop();
+}
+
+void handle_b() {
+    if (msgbox_active) {
+        play_sound("confirm", nav_sound, 0, 0);
+        msgbox_active = 0;
+        progress_onscreen = 0;
+        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    play_sound("back", nav_sound, 0, 1);
+    if (!strcasecmp(rom_system, "none")) {
+        FILE *file = fopen(MUOS_SYS_LOAD, "w");
+        fprintf(file, "%s", "");
+        fclose(file);
+    } else {
+        load_assign(rom_name, rom_dir, "none", 0);
+    }
+
+    remove(MUOS_SAA_LOAD);
     mux_input_stop();
 }
 
@@ -659,28 +676,6 @@ void handle_y() {
 
         mux_input_stop();
     }
-}
-
-void handle_back() {
-    if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
-
-    play_sound("back", nav_sound, 0, 1);
-    if (!strcasecmp(rom_system, "none")) {
-        FILE *file = fopen(MUOS_SYS_LOAD, "w");
-        fprintf(file, "%s", "");
-        fclose(file);
-    } else {
-        load_assign(rom_name, rom_dir, "none", 0);
-    }
-
-    remove(MUOS_SAA_LOAD);
-    mux_input_stop();
 }
 
 void handle_help() {
@@ -817,6 +812,8 @@ int main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
+    setup_background_process();
+
     load_device(&device);
     load_config(&config);
     load_lang(&lang);
@@ -833,9 +830,9 @@ int main(int argc, char *argv[]) {
                  INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
+            safe_quit();
             return 0;
         }
-
         int auto_assign_good = 0;
 
         char assign_file[MAX_BUFFER_SIZE];
@@ -895,11 +892,17 @@ int main(int argc, char *argv[]) {
 
                 mini_free(core_config_ini);
             } else {
-                if (!strcmp(rom_system, "none")) return 0;
+                if (!strcmp(rom_system, "none")) {
+                    safe_quit();
+                    return 0;
+                }
             }
         }
 
-        if (auto_assign_good) return 0;
+        if (auto_assign_good) {
+            safe_quit();
+            return 0;
+        }
     }
 
     init_display();
@@ -950,8 +953,8 @@ int main(int argc, char *argv[]) {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,
             .press_handler = {
-                    [MUX_INPUT_A] = handle_confirm,
-                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
@@ -975,11 +978,10 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
+    safe_quit();
 
     close(js_fd);
     close(js_fd_sys);
-
-    LOG_SUCCESS(mux_module, "Safe Quit!")
 
     return 0;
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <time.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -31,6 +32,21 @@ uint32_t mux_tick(void) {
     return (uint32_t) (now_ms - start_ms);
 }
 
+void setup_background_process() {
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror(lang.SYSTEM.FAIL_FORK);
+        exit(1);
+    } else if (pid > 0) {
+        exit(0);
+    }
+}
+
+void safe_quit() {
+    write_text_to_file("/tmp/safe_quit", "w", CHAR, "");
+}
+
 void init_display() {
     lv_init();
     sdl_init();
@@ -47,6 +63,10 @@ void init_display() {
     disp_drv.flush_cb = sdl_display_flush;
     disp_drv.hor_res = dims.WIDTH;
     disp_drv.ver_res = dims.HEIGHT;
+    disp_drv.physical_hor_res = -1;
+    disp_drv.physical_ver_res = -1;
+    disp_drv.offset_x = 0;
+    disp_drv.offset_y = 0;
     disp_drv.sw_rotate = device.SCREEN.ROTATE;
     disp_drv.rotated = device.SCREEN.ROTATE;
     disp_drv.full_refresh = 1;

@@ -34,17 +34,6 @@ void list_nav_prev(void) {}
 
 void list_nav_next(void) {}
 
-void setup_background_process() {
-    pid_t pid = fork();
-
-    if (pid == -1) {
-        perror(lang.SYSTEM.FAIL_FORK);
-        exit(1);
-    } else if (pid > 0) {
-        exit(0);
-    }
-}
-
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <full path to PNG image>\n", argv[0]);
@@ -52,10 +41,10 @@ int main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
+    setup_background_process();
+
     load_device(&device);
     load_config(&config);
-
-    setup_background_process();
 
     init_display();
 
@@ -81,5 +70,6 @@ int main(int argc, char *argv[]) {
         lv_task_handler();
     }
 
+    safe_quit();
     return 0;
 }

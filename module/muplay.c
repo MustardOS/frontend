@@ -31,29 +31,18 @@ void list_nav_prev(void) {}
 
 void list_nav_next(void) {}
 
-void setup_background_process() {
-    pid_t pid = fork();
-
-    if (pid == -1) {
-        perror(lang.SYSTEM.FAIL_FORK);
-        exit(1);
-    } else if (pid > 0) {
-        exit(0);
-    }
-}
-
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <WAV sound in theme structure>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
+    mux_module = basename(argv[0]);
     setup_background_process();
 
     load_device(&device);
     load_config(&config);
 
-    mux_module = basename(argv[0]);
     init_navigation_sound(&nav_sound, mux_module);
 
     play_sound(argv[1], nav_sound, 1, 0);

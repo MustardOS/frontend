@@ -25,7 +25,6 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
@@ -294,7 +293,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_confirm() {
+void handle_a() {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Single Governor Assignment Triggered")
@@ -302,6 +301,20 @@ void handle_confirm() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, SINGLE);
 
+    mux_input_stop();
+}
+
+void handle_b() {
+    if (msgbox_active) {
+        play_sound("confirm", nav_sound, 0, 0);
+        msgbox_active = 0;
+        progress_onscreen = 0;
+        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+
+    play_sound("back", nav_sound, 0, 1);
+    remove(MUOS_SAG_LOAD);
     mux_input_stop();
 }
 
@@ -324,20 +337,6 @@ void handle_y() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, PARENT);
 
-    mux_input_stop();
-}
-
-void handle_back() {
-    if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
-        msgbox_active = 0;
-        progress_onscreen = 0;
-        lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
-
-    play_sound("back", nav_sound, 0, 1);
-    remove(MUOS_SAG_LOAD);
     mux_input_stop();
 }
 
@@ -457,6 +456,8 @@ int main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
+    setup_background_process();
+
     load_device(&device);
     load_config(&config);
     load_lang(&lang);
@@ -473,6 +474,7 @@ int main(int argc, char *argv[]) {
                  INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
+            safe_quit();
             return 0;
         }
 
@@ -523,10 +525,14 @@ int main(int argc, char *argv[]) {
                 }
 
                 mini_free(core_config_ini);
+
+                safe_quit();
                 return 0;
             } else {
                 LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
                 create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
+
+                safe_quit();
                 return 0;
             }
         }
@@ -597,8 +603,8 @@ int main(int argc, char *argv[]) {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,
             .press_handler = {
-                    [MUX_INPUT_A] = handle_confirm,
-                    [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
@@ -622,11 +628,10 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
+    safe_quit();
 
     close(js_fd);
     close(js_fd_sys);
-
-    LOG_SUCCESS(mux_module, "Safe Quit!")
 
     return 0;
 }

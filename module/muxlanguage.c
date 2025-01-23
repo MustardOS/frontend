@@ -23,7 +23,6 @@ static int js_fd_sys;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
-int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
@@ -251,6 +250,8 @@ int main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
+    setup_background_process();
+
     load_device(&device);
     load_config(&config);
     load_lang(&lang);
@@ -314,9 +315,12 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
+
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "language");
+    safe_quit();
 
     free_items(items, item_count);
+
     close(js_fd);
     close(js_fd_sys);
 

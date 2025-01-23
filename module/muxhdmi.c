@@ -21,7 +21,6 @@ static int js_fd;
 static int js_fd_sys;
 
 int msgbox_active = 0;
-int SD2_found = 0;
 int nav_sound = 0;
 int bar_header = 0;
 int bar_footer = 0;
@@ -203,7 +202,7 @@ void save_hdmi_options() {
         }
     }
 
-    run_exec((const char *[]) {(char *) "touch", "/tmp/hdmi_init_done", NULL});
+    write_text_to_file("/tmp/hdmi_init_done", "w", CHAR, "");
 }
 
 void init_navigation_group() {
@@ -516,6 +515,8 @@ int main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
+    setup_background_process();
+
     load_device(&device);
     load_config(&config);
     load_lang(&lang);
@@ -580,6 +581,7 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
+    safe_quit();
 
     close(js_fd);
     close(js_fd_sys);
