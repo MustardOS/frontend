@@ -1,8 +1,5 @@
-#define _GNU_SOURCE
-
 #include "../lvgl/lvgl.h"
 #include <unistd.h>
-#include <pthread.h>
 #include <string.h>
 #include <stdio.h>
 #include <libgen.h>
@@ -34,8 +31,6 @@ struct mux_device device;
 struct mux_kiosk kiosk;
 struct theme_config theme;
 
-pthread_t scan_networks_thread;
-
 int nav_moved = 1;
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
@@ -58,9 +53,13 @@ void show_help() {
                      lang.MUXNETSCAN.TITLE, lang.MUXNETSCAN.HELP);
 }
 
-void *scan_networks() {
+void scan_networks() {
+    lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.SCAN);
+
+    lv_obj_invalidate(ui_screen);
+    lv_refr_now(NULL);
+
     run_exec((const char *[]) {(INTERNAL_PATH "script/web/ssid.sh"), NULL});
-    return NULL;
 }
 
 void list_nav_prev(int steps) {
@@ -270,12 +269,10 @@ int main(int argc, char *argv[]) {
     init_input(&js_fd, &js_fd_sys);
     init_timer(ui_refresh_task, NULL);
 
-    pthread_create(&scan_networks_thread, NULL, scan_networks, NULL);
-    while (pthread_tryjoin_np(scan_networks_thread, NULL) != 0) usleep(device.SCREEN.WAIT);
-
+    scan_networks();
     create_network_items();
-    if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.NONE);
 
+    lv_label_set_text(ui_lblScreenMessage, !ui_count ? lang.MUXNETSCAN.NONE : "");
     load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
