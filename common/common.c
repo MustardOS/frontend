@@ -1657,23 +1657,13 @@ void update_scroll_position(int mux_item_count, int mux_item_panel, int ui_count
 
 void load_language_file(const char *module) {
     char language_file[MAX_BUFFER_SIZE];
+    snprintf(language_file, sizeof(language_file), (RUN_STORAGE_PATH "language/%s.json"),
+             config.SETTINGS.GENERAL.LANGUAGE);
 
-    int written = snprintf(language_file, sizeof(language_file), (RUN_STORAGE_PATH "language/%s.json"),
-                           config.SETTINGS.GENERAL.LANGUAGE);
-    if (written < 0 || (size_t) written >= sizeof(language_file)) return;
-
-    char *file_content = read_text_from_file(language_file);
-    if (!file_content || !json_valid(file_content)) {
-        fprintf(stderr, "Error: Invalid or missing language file: %s\n", language_file);
-        free(file_content);
-        return;
+    if (json_valid(read_text_from_file(language_file))) {
+        translation_specific = json_object_get(json_parse(read_text_from_file(language_file)), module);
+        translation_generic = json_object_get(json_parse(read_text_from_file(language_file)), "generic");
     }
-
-    struct json parsed_json = json_parse(file_content);
-    free(file_content);
-
-    translation_specific = json_object_get(parsed_json, module);
-    translation_generic = json_object_get(parsed_json, "generic");
 }
 
 char *translate_generic(char *key) {
