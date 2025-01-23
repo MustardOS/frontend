@@ -179,7 +179,7 @@ int load_element_image_specifics(const char *theme_base, const char *mux_dimensi
 
 void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
 
-void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *current_wall);
+void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_count, char *current_wall);
 
 void unload_image_animation();
 

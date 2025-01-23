@@ -1047,7 +1047,9 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
                         lv_gif_set_src(wall_img, new_wall);
                         break;
                     case 2:
-                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, new_wall);
+                        load_image_animation(ui_imgWall, theme.ANIMATION.ANIMATION_DELAY, 
+                          theme.ANIMATION.ANIMATION_REPEAT > 0 ? theme.ANIMATION.ANIMATION_REPEAT : LV_ANIM_REPEAT_INFINITE, 
+                          new_wall);
                         break;
                     default:
                         lv_img_set_src(ui_imgWall, new_wall);
@@ -1231,7 +1233,7 @@ void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path) {
     }
 }
 
-void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *base_image_path) {
+void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_count, char *base_image_path) {
     printf("Load Image Animation: %s\n", base_image_path);
     img_paths_count = 0;
     build_image_array(base_image_path);
@@ -1246,7 +1248,7 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, char *base_i
         lv_anim_set_values(&animation, 0, img_paths_count - 1);
         lv_anim_set_exec_cb(&animation, (lv_anim_exec_xcb_t) image_anim_cb);
         lv_anim_set_time(&animation, animation_time * img_paths_count);
-        lv_anim_set_repeat_count(&animation, LV_ANIM_REPEAT_INFINITE);
+        lv_anim_set_repeat_count(&animation, repeat_count);
 
         lv_anim_start(&animation);
     } else {
