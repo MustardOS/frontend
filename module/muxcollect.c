@@ -239,12 +239,9 @@ void image_refresh(char *image_type) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
                      STORAGE_THEME, image_type);
         }
-        snprintf(image_path, sizeof(image_path), "M:%s", image);
     } else {
-        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                 INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
-        snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                 INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
+        load_image_catalogue(h_core_artwork, h_file_name, "default", mux_dimension, image_type,
+                            image, sizeof(image));
     }
     snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
 
@@ -252,11 +249,6 @@ void image_refresh(char *image_type) {
 
     if (strcasecmp(image_type, "preview") == 0) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
-            if (!file_exist(image)) {
-                snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-            }
-
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
                         image, LV_ALIGN_CENTER,
@@ -273,13 +265,9 @@ void image_refresh(char *image_type) {
         }
     } else if (strcasecmp(image_type, "splash") == 0) {
         if (strcasecmp(splash_image_previous_path, image) != 0) {
-            if (!file_exist(image)) {
-                snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-            }
-
             if (file_exist(image)) {
                 splash_valid = 1;
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
                 lv_img_set_src(ui_imgSplash, image_path);
                 snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "%s", image);
             } else {
@@ -302,13 +290,9 @@ void image_refresh(char *image_type) {
                 viewport_refresh(artwork_config_path, h_core_artwork, h_file_name);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
-                if (!file_exist(image)) {
-                    snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
-                    snprintf(image_path, sizeof(image_path), "M:%s", image);
-                }
-
                 if (file_exist(image)) {
                     starter_image = 1;
+                    snprintf(image_path, sizeof(image_path), "M:%s", image);
                     lv_img_set_src(ui_imgBox, image_path);
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
                 } else {
@@ -515,21 +499,15 @@ void init_navigation_group_grid() {
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
         char grid_image[MAX_BUFFER_SIZE];
-        if (!load_image_catalogue("Collection", strip_ext(items[i].name), "default", mux_dimension, "grid",
-                                  grid_image, sizeof(grid_image))) {
-            load_image_catalogue("Collection", strip_ext(items[i].name), "default", "", "grid",
-                                 grid_image, sizeof(grid_image));
-        }
+        load_image_catalogue("Collection", strip_ext(items[i].name), "default", mux_dimension, "grid",
+                                  grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
 
         char grid_image_focused[MAX_BUFFER_SIZE];
-        if (!load_image_catalogue("Collection", glyph_name_focused, "default_focused", mux_dimension, "grid",
-                                  grid_image_focused, sizeof(grid_image_focused))) {
-            load_image_catalogue("Collection", glyph_name_focused, "default_focused", "", "grid",
-                                 grid_image_focused, sizeof(grid_image_focused));
-        }
+        load_image_catalogue("Collection", glyph_name_focused, "default_focused", mux_dimension, "grid",
+                                  grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, grid_image_focused, items[i].display_name);
