@@ -43,6 +43,14 @@ void setup_background_process() {
     }
 }
 
+void refresh_screen(lv_obj_t *screen) {
+    for (int r = 0; r < 3; r++) { /* three is the magic number... */
+        lv_obj_invalidate(screen);
+        lv_refr_now(NULL);
+        lv_task_handler();
+    }
+}
+
 void safe_quit() {
     write_text_to_file("/tmp/safe_quit", "w", CHAR, "");
 }

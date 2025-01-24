@@ -78,8 +78,7 @@ void handle_power_short(void) {
 
         lv_label_set_text(ui_lblBoot, lang.MUXCHARGE.BOOT);
 
-        lv_refr_now(NULL);
-        lv_task_handler();
+        refresh_screen(ui_scrCharge);
 
         exit_status = 0;
         return;
@@ -96,8 +95,7 @@ void handle_idle(void) {
         return;
     }
 
-    lv_refr_now(NULL);
-    lv_task_handler();
+    refresh_screen(ui_scrCharge);
 }
 
 void battery_task() {

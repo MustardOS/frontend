@@ -64,11 +64,7 @@ int main(int argc, char *argv[]) {
     overlay_image = lv_img_create(ui_scrSplash);
     load_overlay_image(ui_scrSplash, overlay_image, theme.MISC.IMAGE_OVERLAY);
 
-    for (int r = 0; r < 3; r++) { /* again 3 is the magic number... */
-        lv_obj_invalidate(ui_scrSplash);
-        lv_refr_now(NULL);
-        lv_task_handler();
-    }
+    refresh_screen(ui_scrSplash);
 
     safe_quit();
     return 0;

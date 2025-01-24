@@ -22,6 +22,8 @@ struct bat_task_param {
 
 void setup_background_process();
 
+void refresh_screen(lv_obj_t *screen);
+
 void safe_quit();
 
 void init_display();
