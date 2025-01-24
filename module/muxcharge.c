@@ -50,6 +50,8 @@ char voltage_info[MAX_BUFFER_SIZE];
 
 lv_timer_t *battery_timer;
 
+#define CHARGER_EXIT "/tmp/charger_exit"
+
 void check_for_cable() {
     if (file_exist(device.BATTERY.CHARGER)) {
         if (read_int_from_file(device.BATTERY.CHARGER, 1) == 0) {
@@ -65,7 +67,7 @@ void set_brightness(int brightness) {
 }
 
 void handle_power_short(void) {
-    if (blank < 5) {
+    if (blank < 3) {
         lv_timer_pause(battery_timer);
 
         lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_HIDDEN);
@@ -89,6 +91,7 @@ void handle_power_short(void) {
 
 void handle_idle(void) {
     if (exit_status >= 0) {
+        write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
         mux_input_stop();
         return;
     }
@@ -104,12 +107,8 @@ void battery_task() {
     lv_label_set_text(ui_lblCapacity, capacity_info);
     lv_label_set_text(ui_lblVoltage, voltage_info);
 
-    if (blank == 5) {
-        set_brightness(0);
-    }
-
+    if (blank == 3) set_brightness(0);
     check_for_cable();
-
     blank++;
 }
 
@@ -117,6 +116,7 @@ int main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
+    setup_background_process();
 
     load_device(&device);
     load_config(&config);
@@ -146,7 +146,8 @@ int main(int argc, char *argv[]) {
 
     init_input(&js_fd, &js_fd_sys);
 
-    lv_timer_create(battery_task, TIMER_BATTERY, NULL);
+    battery_task();
+    battery_timer = lv_timer_create(battery_task, TIMER_BATTERY, NULL);
 
     mux_input_options input_opts = {
             .gamepad_fd = js_fd,
@@ -158,9 +159,10 @@ int main(int argc, char *argv[]) {
             .idle_handler = handle_idle,
     };
     mux_input_task(&input_opts);
+    safe_quit();
 
     close(js_fd);
     close(js_fd_sys);
 
-    return exit_status;
+    return 0;
 }
