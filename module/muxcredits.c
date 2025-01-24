@@ -62,13 +62,14 @@ int main(int argc, char *argv[]) {
     init_mux();
 
     animFade_Animation(ui_conStart, -1000);
-    animScroll_Animation(ui_conScroll, 12000);
-    animFade_Animation(ui_conSpecial, 65000);
-    animFade_Animation(ui_conKofi, 75000);
+    animScroll_Animation(ui_conScroll, 10000);
+    animFade_Animation(ui_conSpecial, 70000);
+    animFade_Animation(ui_conKofi, 80000);
+    animFade_Animation(ui_conMusic, 90000);
 
     if (!config.BOOT.FACTORY_RESET) write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
 
-    lv_timer_create(timeout_task, 90000, NULL);
+    lv_timer_create(timeout_task, 105000, NULL);
 
     init_input(&js_fd, &js_fd_sys);
 

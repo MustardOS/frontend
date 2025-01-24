@@ -15,6 +15,7 @@ extern lv_obj_t *ui_conStart;
 extern lv_obj_t *ui_conScroll;
 extern lv_obj_t *ui_conSpecial;
 extern lv_obj_t *ui_conKofi;
+extern lv_obj_t *ui_conMusic;
 
 extern lv_obj_t *ui_imgKofi;
 
@@ -24,22 +25,19 @@ extern lv_obj_t *ui_lblStartMessage;
 extern lv_obj_t *ui_lblOfficialTitle;
 
 extern lv_obj_t *ui_lblCommanderTitle;
-extern lv_obj_t *ui_lblCommanderPeople;
+extern lv_obj_t *ui_lblCommanderCrew;
 
 extern lv_obj_t *ui_lblEnforcerTitle;
-extern lv_obj_t *ui_lblEnforcerPeople;
+extern lv_obj_t *ui_lblEnforcerCrew;
 
 extern lv_obj_t *ui_lblWizardTitle;
-extern lv_obj_t *ui_lblWizardLeft;
-extern lv_obj_t *ui_lblWizardRight;
+extern lv_obj_t *ui_lblWizardCrew;
 
 extern lv_obj_t *ui_lblHeroTitle;
-extern lv_obj_t *ui_lblHeroLeft;
-extern lv_obj_t *ui_lblHeroRight;
+extern lv_obj_t *ui_lblHeroCrew;
 
 extern lv_obj_t *ui_lblKnightTitle;
-extern lv_obj_t *ui_lblKnightLeft;
-extern lv_obj_t *ui_lblKnightRight;
+extern lv_obj_t *ui_lblKnightCrew;
 
 extern lv_obj_t *ui_lblSpecialTitle;
 extern lv_obj_t *ui_lblSpecialMid;
@@ -51,6 +49,8 @@ extern lv_obj_t *ui_lblKofiTitle;
 extern lv_obj_t *ui_lblKofiMessageOne;
 extern lv_obj_t *ui_lblKofiMessageTwo;
 
+extern lv_obj_t *ui_lblMusicTitle;
+extern lv_obj_t *ui_lblMusicMessage;
 
 LV_IMG_DECLARE(ui_image_Kofi)
 LV_IMG_DECLARE(ui_image_Nothing)
