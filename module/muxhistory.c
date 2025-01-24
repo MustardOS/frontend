@@ -218,12 +218,9 @@ void image_refresh(char *image_type) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
                      STORAGE_THEME, image_type);
         }
-        snprintf(image_path, sizeof(image_path), "M:%s", image);
     } else {
-        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                 INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
-        snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                 INFO_CAT_PATH, h_core_artwork, image_type, h_file_name);
+        load_image_catalogue(h_core_artwork, h_file_name, "default", mux_dimension, image_type,
+                            image, sizeof(image));
     }
     snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
 
@@ -231,11 +228,6 @@ void image_refresh(char *image_type) {
 
     if (strcasecmp(image_type, "preview") == 0) {
         if (strcasecmp(preview_image_previous_path, image) != 0) {
-            if (!file_exist(image)) {
-                snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-            }
-
             if (file_exist(image)) {
                 struct ImageSettings image_settings = {
                         image, LV_ALIGN_CENTER,
@@ -252,13 +244,9 @@ void image_refresh(char *image_type) {
         }
     } else if (strcasecmp(image_type, "splash") == 0) {
         if (strcasecmp(splash_image_previous_path, image) != 0) {
-            if (!file_exist(image)) {
-                snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-            }
-
             if (file_exist(image)) {
                 splash_valid = 1;
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
                 lv_img_set_src(ui_imgSplash, image_path);
                 snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "%s", image);
             } else {
@@ -281,13 +269,9 @@ void image_refresh(char *image_type) {
                 viewport_refresh(artwork_config_path, core_artwork, h_file_name);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
-                if (!file_exist(image)) {
-                    snprintf(image, sizeof(image), "%s/default.png", strip_dir(image));
-                    snprintf(image_path, sizeof(image_path), "M:%s", image);
-                }
-
                 if (file_exist(image)) {
                     starter_image = 1;
+                    snprintf(image_path, sizeof(image_path), "M:%s", image);
                     lv_img_set_src(ui_imgBox, image_path);
                     snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
                 } else {

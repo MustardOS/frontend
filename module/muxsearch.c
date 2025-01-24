@@ -249,12 +249,9 @@ void image_refresh(char *image_type) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
                      STORAGE_THEME, image_type);
         }
-        snprintf(image_path, sizeof(image_path), "M:%s", image);
     } else {
-        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                 INFO_CAT_PATH, core_artwork, image_type, last_dir);
-        snprintf(image_path, sizeof(image_path), "M:%s/%s/%s/%s.png",
-                 INFO_CAT_PATH, core_artwork, image_type, last_dir);
+        load_image_catalogue(core_artwork, last_dir, "default", mux_dimension, image_type,
+                            image, sizeof(image));
     }
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
@@ -274,6 +271,7 @@ void image_refresh(char *image_type) {
         } else {
             if (file_exist(image)) {
                 starter_image = 1;
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
                 lv_img_set_src(ui_imgBox, image_path);
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {

@@ -103,20 +103,14 @@ void init_navigation_group_grid(const char *app_path) {
         char mux_dimension[15];
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char grid_image[MAX_BUFFER_SIZE];
-        if (!load_image_catalogue("Application", glyph_name, "default", mux_dimension, "grid",
-                                  grid_image, sizeof(grid_image))) {
-            load_image_catalogue("Application", glyph_name, "default", "", "grid",
-                                 grid_image, sizeof(grid_image));
-        }
+        load_image_catalogue("Application", glyph_name, "default", mux_dimension, "grid",
+                                  grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_name);
         char grid_image_focused[MAX_BUFFER_SIZE];
-        if (!load_image_catalogue("Application", glyph_name_focused, "default_focused", mux_dimension, "grid",
-                                  grid_image_focused, sizeof(grid_image_focused))) {
-            load_image_catalogue("Application", glyph_name_focused, "default_focused", "", "grid",
-                                 grid_image_focused, sizeof(grid_image_focused));
-        }
+        load_image_catalogue("Application", glyph_name_focused, "default_focused", mux_dimension, "grid",
+                                  grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, grid_image_focused, items[i].display_name);

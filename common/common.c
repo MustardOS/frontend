@@ -953,20 +953,27 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
 
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size) {
-    if (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
-                 image_type, mux_dimension, program) >= 0 &&
-        file_exist(image_path))
-        return 1;
+    if ((snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
+                 image_type, mux_dimension, program) >= 0 && file_exist(image_path)) ||
 
-    return (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
-                     image_type, mux_dimension, program_fallback) >= 0 &&
-            file_exist(image_path));
+        (snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
+                     image_type, mux_dimension, program_fallback) >= 0 && file_exist(image_path)) ||
+
+        (snprintf(image_path, path_size, "%s/%s/%s/%s.png", INFO_CAT_PATH, catalogue_name,
+                 image_type, program) >= 0 && file_exist(image_path)) ||
+
+        (snprintf(image_path, path_size, "%s/%s/%s/%s.png", INFO_CAT_PATH, catalogue_name,
+                     image_type, program_fallback) >= 0 && file_exist(image_path))) {
+        printf("found catalogue image: %s\n", image_path);
+        return 1;
+    }
+
+    return 0;
 }
 
 char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random, int wall_type) {
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-    char *mux_dimensions[15] = {mux_dimension, ""};
 
     const char *program = lv_obj_get_user_data(ui_screen);
 
@@ -978,52 +985,48 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     if (ui_group != NULL && lv_group_get_obj_count(ui_group) > 0) {
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
         const char *element = lv_obj_get_user_data(element_focused);
-        for (int i = 0; i < 2; i++) {
-            switch (wall_type) {
-                case APPLICATION:
-                    if (load_image_catalogue("Application", element, "default", mux_dimensions[i], "wall",
-                                             wall_image_path, sizeof(wall_image_path))) {
-                        int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-                        if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
-                        return wall_image_embed;
-                    }
-                    break;
-                case ARCHIVE:
-                    if (load_image_catalogue("Archive", element, "default", mux_dimensions[i], "wall",
-                                             wall_image_path, sizeof(wall_image_path))) {
-                        int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-                        if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
-                        return wall_image_embed;
-                    }
-                    break;
-                case TASK:
-                    if (load_image_catalogue("Task", element, "default", mux_dimensions[i], "wall",
-                                             wall_image_path, sizeof(wall_image_path))) {
-                        int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-                        if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
-                        return wall_image_embed;
-                    }
-                    break;
-                case GENERAL:
-                default:
-                    break;
-            }
-            if (load_element_image_specifics(STORAGE_THEME, mux_dimensions[i], program, "wall", element,
-                                             wall_extension, wall_image_path, sizeof(wall_image_path))) {
-                int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
-                if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
-                return wall_image_embed;
-            }
+        switch (wall_type) {
+            case APPLICATION:
+                if (load_image_catalogue("Application", element, "default", mux_dimension, "wall",
+                                            wall_image_path, sizeof(wall_image_path))) {
+                    int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                    if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
+                    return wall_image_embed;
+                }
+                break;
+            case ARCHIVE:
+                if (load_image_catalogue("Archive", element, "default", mux_dimension, "wall",
+                                            wall_image_path, sizeof(wall_image_path))) {
+                    int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                    if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
+                    return wall_image_embed;
+                }
+                break;
+            case TASK:
+                if (load_image_catalogue("Task", element, "default", mux_dimension, "wall",
+                                            wall_image_path, sizeof(wall_image_path))) {
+                    int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+                    if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
+                    return wall_image_embed;
+                }
+                break;
+            case GENERAL:
+            default:
+                break;
         }
-    }
-
-    for (int i = 0; i < 2; i++) {
-        if (load_image_specifics(STORAGE_THEME, mux_dimensions[i], program, "wall",
-                                 wall_extension, wall_image_path, sizeof(wall_image_path))) {
+        if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall", element,
+                                            wall_extension, wall_image_path, sizeof(wall_image_path))) {
             int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
             if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
             return wall_image_embed;
         }
+    }
+
+    if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
+                                wall_extension, wall_image_path, sizeof(wall_image_path))) {
+        int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
+        if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
+        return wall_image_embed;
     }
 
     return "";
@@ -1066,7 +1069,6 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type) {
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-    char *mux_dimensions[15] = {mux_dimension, ""};
 
     const char *program = lv_obj_get_user_data(ui_screen);
 
@@ -1077,47 +1079,46 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
         const char *element = lv_obj_get_user_data(element_focused);
 
-        for (int i = 0; i < 2; i++) {
-            switch (wall_type) {
-                case APPLICATION:
-                    if (load_image_catalogue("Application", element, "default", mux_dimensions[i], "box",
-                                             static_image_path, sizeof(static_image_path))) {
-                        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
-                                               static_image_path);
-                        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
-                        return static_image_embed;
-                    }
-                    break;
-                case ARCHIVE:
-                    if (load_image_catalogue("Archive", element, "default", mux_dimensions[i], "box",
-                                             static_image_path, sizeof(static_image_path))) {
-                        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
-                                               static_image_path);
-                        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
-                        return static_image_embed;
-                    }
-                    break;
-                case TASK:
-                    if (load_image_catalogue("Task", element, "default", mux_dimensions[i], "box",
-                                             static_image_path, sizeof(static_image_path))) {
-                        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
-                                               static_image_path);
-                        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
-                        return static_image_embed;
-                    }
-                    break;
-                case GENERAL:
-                default:
-                    if (load_element_image_specifics(STORAGE_THEME, mux_dimensions[i], program, "static",
-                                                     element, "png", static_image_path, sizeof(static_image_path))) {
+        switch (wall_type) {
+            case APPLICATION:
+                if (load_image_catalogue("Application", element, "default", mux_dimension, "box",
+                                            static_image_path, sizeof(static_image_path))) {
+                    int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
+                                            static_image_path);
+                    if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
+                    return static_image_embed;
+                }
+                break;
+            case ARCHIVE:
+                if (load_image_catalogue("Archive", element, "default", mux_dimension, "box",
+                                            static_image_path, sizeof(static_image_path))) {
+                    int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
+                                            static_image_path);
+                    if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
+                    return static_image_embed;
+                }
+                break;
+            case TASK:
+                if (load_image_catalogue("Task", element, "default", mux_dimension, "box",
+                                            static_image_path, sizeof(static_image_path))) {
+                    int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
+                                            static_image_path);
+                    if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
+                    return static_image_embed;
+                }
+                break;
+            case GENERAL:
+            default:
+                if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
+                                                    element, "png", static_image_path, sizeof(static_image_path))) {
 
-                        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
-                                               static_image_path);
-                        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
-                        return static_image_embed;
-                    }
-            }
+                    int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
+                                            static_image_path);
+                    if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return "";
+                    return static_image_embed;
+                }
         }
+
     }
 
     return "";
