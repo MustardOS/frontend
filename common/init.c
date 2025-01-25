@@ -75,8 +75,6 @@ void init_display() {
     disp_drv.physical_ver_res = -1;
     disp_drv.offset_x = 0;
     disp_drv.offset_y = 0;
-    disp_drv.sw_rotate = device.SCREEN.ROTATE;
-    disp_drv.rotated = device.SCREEN.ROTATE;
     disp_drv.full_refresh = 1;
     disp_drv.direct_mode = 1;
     disp_drv.antialiasing = 1;
