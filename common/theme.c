@@ -746,6 +746,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
             config->SETTINGS.HDMI.THEME_RESOLUTION > 0) {
             device->MUX.WIDTH = config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH;
             device->MUX.HEIGHT = config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT;
+            get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         }
 
         char theme_device_folder[MAX_BUFFER_SIZE];
