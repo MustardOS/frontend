@@ -256,7 +256,7 @@ char *kiosk_nope();
 
 void run_exec(const char *args[]);
 
-char *get_directory_core(char *rom_dir);
+char *get_directory_core(char *rom_dir, size_t line_number);
 
 char *get_file_core(char *rom_dir, char *rom_name);
 

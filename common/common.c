@@ -2011,12 +2011,12 @@ void run_exec(const char *args[]) {
     }
 }
 
-char *get_directory_core(char *rom_dir) {
+char *get_directory_core(char *rom_dir, size_t line_number) {
     char content_core[MAX_BUFFER_SIZE];
     snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
     if (file_exist(content_core)) {
-        return read_line_from_file(content_core, 1);
+        return read_line_from_file(content_core, line_number);
     }
     return "";
 }
