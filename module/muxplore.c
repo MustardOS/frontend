@@ -10,6 +10,7 @@
 #include "../common/init.h"
 #include "../common/img/nothing.h"
 #include "../common/common.h"
+#include "../common/common_core.h"
 #include "../common/language.h"
 #include "../common/ui_common.h"
 #include "../common/config.h"
@@ -190,19 +191,7 @@ char *load_content_description() {
     char *desc_name = strip_ext(items[current_item_index].name);
 
     char core_desc[MAX_BUFFER_SIZE];
-    char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s/%s.cfg",
-             INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4), strip_ext(content_label));
-
-    if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-                 INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4));
-        snprintf(core_desc, sizeof(core_desc), "%s",
-                 read_line_from_file(core_file, 2));
-    } else {
-        snprintf(core_desc, sizeof(core_desc), "%s",
-                 read_line_from_file(core_file, 3));
-    }
+    get_catalogue_name(sys_dir, content_label, core_desc, sizeof(core_desc));
 
     if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) return lang.GENERIC.NO_INFO;
 
@@ -304,21 +293,8 @@ void image_refresh(char *image_type) {
     } else {
         char *file_name = strip_ext(items[current_item_index].name);
 
-        char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "%s/%s/%s.cfg",
-                 INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4), strip_ext(content_label));
-
-        LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
-
-        if (!file_exist(core_file)) {
-            snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-                     INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4));
-            snprintf(core_artwork, sizeof(core_artwork), "%s",
-                     read_line_from_file(core_file, 2));
-        } else {
-            snprintf(core_artwork, sizeof(core_artwork), "%s",
-                     read_line_from_file(core_file, 3));
-        }
+        char core_artwork[MAX_BUFFER_SIZE];
+        get_catalogue_name(sys_dir, content_label, core_artwork, sizeof(core_artwork));
 
         if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
             snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
@@ -329,7 +305,10 @@ void image_refresh(char *image_type) {
             }
         } else {
             if (items[current_item_index].content_type == FOLDER) {
-                load_image_catalogue("Folder", strip_ext(items[current_item_index].name), "default", mux_dimension, image_type,
+                char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
+                if (!load_image_catalogue("Folder", strip_ext(items[current_item_index].name), catalogue_name, mux_dimension, image_type,
+                                  image, sizeof(image)))
+                    load_image_catalogue("Folder", strip_ext(items[current_item_index].name), "default", mux_dimension, image_type,
                                   image, sizeof(image));
             } else {
                 load_image_catalogue(core_artwork, strip_ext(items[current_item_index].name), "default", mux_dimension, image_type,
@@ -640,15 +619,23 @@ void init_navigation_group_grid() {
         char mux_dimension[15];
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
+        char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[i].name);
+
         char grid_image[MAX_BUFFER_SIZE];
-        load_image_catalogue("Folder", strip_ext(items[i].name), "default", mux_dimension, "grid",
+        if (!load_image_catalogue("Folder", strip_ext(items[i].name), catalogue_name, mux_dimension, "grid",
+                                  grid_image, sizeof(grid_image)))
+            load_image_catalogue("Folder", strip_ext(items[i].name), "default", mux_dimension, "grid",
                                   grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
+        char catalogue_name_focused[MAX_BUFFER_SIZE];
+        snprintf(catalogue_name_focused, sizeof(catalogue_name_focused), "%s_focused", catalogue_name);
 
         char grid_image_focused[MAX_BUFFER_SIZE];
-        load_image_catalogue("Folder", glyph_name_focused, "default_focused", mux_dimension, "grid",
+        if (!load_image_catalogue("Folder", glyph_name_focused, catalogue_name_focused, mux_dimension, "grid",
+                                  grid_image_focused, sizeof(grid_image_focused)))
+            load_image_catalogue("Folder", glyph_name_focused, "default_focused", mux_dimension, "grid",
                                   grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
@@ -679,7 +666,7 @@ void create_content_items() {
         char *file_content = read_text_from_file(folder_name_file);
         if (file_content && json_valid(file_content)) {
             fn_valid = 1;
-            fn_json = json_parse(file_content);
+            fn_json = json_parse(strdup(file_content));
         }
 
         free(file_content);
@@ -690,7 +677,10 @@ void create_content_items() {
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {
             char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
-
+            
+            char rom_dir[MAX_BUFFER_SIZE];
+            snprintf(rom_dir, sizeof(rom_dir), "%s/%s", sys_dir, dir_names[i]);
+            automatic_assign_core(rom_dir);
             content_item *new_item = add_item(&items, &item_count, dir_names[i], friendly_folder_name, "", FOLDER);
             new_item->glyph_icon = "folder";
             adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
@@ -745,7 +735,7 @@ void add_to_collection(char *filename, const char *pointer) {
 
 int load_content(int add_collection) {
     char *assigned_core = load_content_core(0, 1);
-    if (assigned_core && strcasestr(assigned_core, "(null)")) return 0;
+    if (assigned_core == NULL || strcasestr(assigned_core, "(null)")) return 0;
     LOG_INFO(mux_module, "Assigned Core: %s", str_replace(assigned_core, "\n", "|"))
 
     char *assigned_gov = load_content_governor(0, 1);

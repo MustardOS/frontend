@@ -78,7 +78,7 @@ void show_help(lv_obj_t *element_focused) {
         snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s",
                  lang.MUXOPTION.HELP.ASSIGN_CORE,
                  lang.MUXOPTION.CURRENT,
-                 lang.MUXOPTION.DIRECTORY, get_directory_core(rom_dir),
+                 lang.MUXOPTION.DIRECTORY, get_directory_core(rom_dir, 1),
                  lang.MUXOPTION.INDIVIDUAL, get_file_core(rom_dir, rom_name));
     } else if (element_focused == help_messages[2].element) {
         snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s",
@@ -366,7 +366,8 @@ int main(int argc, char *argv[]) {
 
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);
-        LOG_INFO(mux_module, "Skipping Options Module - Not Required...")
+        LOG_INFO(mux_module, "Skipping Options Module - Not Required...");
+        safe_quit();
         return 0;
     }
 

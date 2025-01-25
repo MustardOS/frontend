@@ -964,7 +964,6 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 
         (snprintf(image_path, path_size, "%s/%s/%s/%s.png", INFO_CAT_PATH, catalogue_name,
                      image_type, program_fallback) >= 0 && file_exist(image_path))) {
-        printf("found catalogue image: %s\n", image_path);
         return 1;
     }
 
@@ -2011,12 +2010,12 @@ void run_exec(const char *args[]) {
     }
 }
 
-char *get_directory_core(char *rom_dir) {
+char *get_directory_core(char *rom_dir, size_t line_number) {
     char content_core[MAX_BUFFER_SIZE];
     snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
     if (file_exist(content_core)) {
-        return read_line_from_file(content_core, 1);
+        return read_line_from_file(content_core, line_number);
     }
     return "";
 }
