@@ -666,7 +666,7 @@ void create_content_items() {
         char *file_content = read_text_from_file(folder_name_file);
         if (file_content && json_valid(file_content)) {
             fn_valid = 1;
-            fn_json = json_parse(file_content);
+            fn_json = json_parse(strdup(file_content));
         }
 
         free(file_content);

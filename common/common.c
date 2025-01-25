@@ -964,7 +964,6 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 
         (snprintf(image_path, path_size, "%s/%s/%s/%s.png", INFO_CAT_PATH, catalogue_name,
                      image_type, program_fallback) >= 0 && file_exist(image_path))) {
-        printf("found catalogue image: %s\n", image_path);
         return 1;
     }
 
