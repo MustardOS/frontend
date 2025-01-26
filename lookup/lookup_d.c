@@ -137,6 +137,7 @@ static const LookupName lookup_table[] = {
         {"ddonpacha",     "DoDonPachi (Arrange Ver. 1.1) (trap15, hack)"},
         {"ddonpachj",     "DoDonPachi (Japan, 1997 2/ 5 Master Ver.)"},
         {"ddonpchj",      "DoDonPachi (Japan)"},
+        {"ddp2",          "DoDonPachi II - Bee Storm (World, ver. 102)"},
         {"ddp3",          "DoDonPachi Dai-Ou-Jou"},
         {"ddp3a",         "DoDonPachi Dai-Ou-Jou (V100, second revision)"},
         {"ddp3b",         "DoDonPachi Dai-Ou-Jou (V100, first revision)"},
