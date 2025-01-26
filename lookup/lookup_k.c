@@ -220,6 +220,7 @@ static const LookupName lookup_table[] = {
         {"kof98k",       "The King of Fighters '98 - The Slugfest / King of Fighters '98 - dream match never ends (Korean board)"},
         {"kof98ka",      "The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (Korean board, set 2)"},
         {"kof98n",       "The King of Fighters '98 - The Slugfest - King of Fighters '98 / Dream Match Never Ends (Decrypted)"},
+        {"kof98ult",     "The King of Fighters '98 - The Slugfest / King of Fighters '98 - Dream Match Never Ends (Ultimate Match, Hack)"},
         {"kof98umh",     "The King of Fighters '98: Ultimate Match HERO (China, V100, 09-08-23)"},
         {"kof99",        "The King of Fighters '99 - Millennium Battle (set 1)"},
         {"kof99a",       "The King of Fighters '99 - Millennium Battle (set 2)"},

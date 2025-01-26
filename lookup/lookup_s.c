@@ -78,6 +78,7 @@ static const LookupName lookup_table[] = {
         {"samsho5a",     "Samurai Shodown V / Samurai Spirits Zero (NGM-2700, set 2)"},
         {"samsho5b",     "Samurai Shodown V / Samurai Spirits Zero (bootleg)"},
         {"samsho5h",     "Samurai Shodown V / Samurai Spirits Zero (NGH-2700)"},
+        {"samsh5pf",     "Samurai Shodown V Perfect / Samurai Spirits Zero Perfect (bootleg, hack)"},
         {"samshoh",      "Samurai Shodown / Samurai Spirits (NGH-045)"},
         {"samsptk",      "Samurai Spirits Tenkaichi Kenkakuden"},
         {"samurai",      "Samurai"},

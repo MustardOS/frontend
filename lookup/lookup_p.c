@@ -306,7 +306,6 @@ static const LookupName lookup_table[] = {
         {"pgalvipa",    "Pocket Gals V.I.P (set 2)"},
         {"pgear",       "Powered Gear: Strategic Variant Armor Equipment (Japan 941024)"},
         {"pgearr1",     "Powered Gear: Strategic Variant Armor Equipment (Japan 940916)"},
-        {"pgm",         "PGM (Polygame Master) System BIOS"},
         {"pgoal",       "Pleasure Goal / Futsal - 5 on 5 Mini Soccer"},
         {"phantasm",    "Phantasm (Japan)"},
         {"phantom2",    "Phantom II"},
