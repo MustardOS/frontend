@@ -353,7 +353,6 @@ static const LookupName lookup_table[] = {
         {"midresbj",     "Midnight Resistance (joystick hack bootleg)"},
         {"midresj",      "Midnight Resistance (Japan)"},
         {"midresu",      "Midnight Resistance (US)"},
-        {"midssio",      "Midway SSIO Sound Board Internal pROM"},
         {"miexchng",     "Money Puzzle Exchanger / Money Idol Exchanger"},
         {"mightguy",     "Mighty Guy"},
         {"mightybj",     "Vs. Mighty Bomb Jack (Japan)"},

@@ -100,7 +100,6 @@ static const LookupName lookup_table[] = {
         {"neobombe",       "Neo Bomberman"},
         {"neocup98",       "Neo-Geo Cup '98 - The Road to the Victory"},
         {"neodrift",       "Neo Drift Out - New Technology"},
-        {"neogeo",         "Neo-Geo"},
         {"neomrdo",        "Neo Mr. Do!"},
         {"netmerc",        "Sega NetMerc"},
         {"nettoqc",        "Nettoh Quiz Champion (Japan)"},
