@@ -242,6 +242,9 @@ void image_refresh(char *image_type) {
     } else {
         load_image_catalogue(h_core_artwork, h_file_name, "default", mux_dimension, image_type,
                             image, sizeof(image));
+        if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
+            snprintf(image, sizeof(image), "%s/splash.png", INFO_CAT_PATH);
+        }
     }
     snprintf(core_artwork, sizeof(core_artwork), "%s", h_core_artwork);
 

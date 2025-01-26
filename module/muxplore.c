@@ -314,6 +314,9 @@ void image_refresh(char *image_type) {
                 load_image_catalogue(core_artwork, strip_ext(items[current_item_index].name), "default", mux_dimension, image_type,
                                   image, sizeof(image));
             }
+            if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
+                snprintf(image, sizeof(image), "%s/splash.png", INFO_CAT_PATH);
+            } 
         }
     }
 
@@ -339,6 +342,7 @@ void image_refresh(char *image_type) {
         if (strcasecmp(splash_image_previous_path, image) != 0) {
             if (file_exist(image)) {
                 splash_valid = 1;
+                snprintf(image_path, sizeof(image_path), "M:%s", image);
                 lv_img_set_src(ui_imgSplash, image_path);
                 snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "%s", image);
             } else {
