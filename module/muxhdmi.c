@@ -191,18 +191,6 @@ void save_hdmi_options() {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/audio"), "w", INT, idx_audio);
     }
-
-    if (idx_enable == 0) {
-        if (lv_dropdown_get_selected(ui_droEnable) != enable_original) {
-            run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi.sh", "stop", NULL});
-        }
-    } else {
-        if (is_modified > 0) {
-            run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/script/hdmi.sh", "start", NULL});
-        }
-    }
-
-    write_text_to_file("/tmp/hdmi_init_done", "w", CHAR, "");
 }
 
 void init_navigation_group() {
