@@ -1396,7 +1396,7 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
 
 void load_skip_patterns() {
     char skip_ini[MAX_BUFFER_SIZE];
-    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/skip.ini", INFO_CFG_PATH);
+    int written = snprintf(skip_ini, sizeof(skip_ini), "/mnt/sdcard/%s/skip.ini", MUOS_INFO_PATH);
     if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
 
     if (!file_exist(skip_ini)) {
