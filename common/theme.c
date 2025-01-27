@@ -759,30 +759,27 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     }
 
     init_theme_config(theme, device);
+    const char *schemes[] = {"global", "default", mux_module};
+    int scheme_loaded = 0;
 
-    bool scheme_loaded = false;
-
-    if (load_scheme(STORAGE_THEME, mux_dimension, "global", scheme, sizeof(scheme))) {
-        LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme);
-        scheme_loaded = true;
-        load_theme_from_scheme(scheme, theme, device);
+    if (theme_compat()) {
+        for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
+            if (load_scheme(STORAGE_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
+                LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme);
+                scheme_loaded = 1;
+                load_theme_from_scheme(scheme, theme, device);
+                break;
+            }
+        }
     }
 
-    if (load_scheme(STORAGE_THEME, mux_dimension, "default", scheme, sizeof(scheme))) {
-        LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme);
-        scheme_loaded = true;
-        load_theme_from_scheme(scheme, theme, device);
-    } 
-
-    if (load_scheme(STORAGE_THEME, mux_dimension, mux_module, scheme, sizeof(scheme))) {
-        LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme);
-        scheme_loaded = true;
-        load_theme_from_scheme(scheme, theme, device);
-    } 
-
-    if (!scheme_loaded && load_scheme(INTERNAL_THEME, mux_dimension, "default", scheme, sizeof(scheme))) {
-        LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme);
-        load_theme_from_scheme(scheme, theme, device);
+    if (!scheme_loaded) {
+        for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
+            if (load_scheme(INTERNAL_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
+                LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme)
+                load_theme_from_scheme(scheme, theme, device);
+            }
+        }
     }
 
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
