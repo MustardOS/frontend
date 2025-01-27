@@ -285,6 +285,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPICKER.CATALOGUE, "CATALOGUE PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.CONFIG, "CONFIG PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.THEME, "THEME PICKER");
+    SPECIFIC_FIELD(lang->MUXPICKER.INVALID, "Incompatible Theme Detected");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CREDIT, "There are no attributed credits!");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CUSTOM, "No Custom Packages Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CATALOGUE, "No Catalogue Packages Found");

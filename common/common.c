@@ -1895,19 +1895,19 @@ int extract_file_from_zip(const char *zip_path, const char *file_name, const cha
     memset(&zip, 0, sizeof(zip));
 
     if (!mz_zip_reader_init_file(&zip, zip_path, 0)) {
-        printf("Error: Could not open archive '%s' - Corrupt?\n", zip_path);
+        LOG_ERROR(mux_module, "Could not open archive '%s' - Corrupt?", zip_path)
         return 1;
     }
 
     int file_index = mz_zip_reader_locate_file(&zip, file_name, NULL, 0);
     if (file_index == -1) {
-        printf("Error: '%s' not found in archive\n", file_name);
+        LOG_ERROR(mux_module, "File '%s' not found in archive", file_name)
         mz_zip_reader_end(&zip);
         return 1;
     }
 
     if (!mz_zip_reader_extract_to_file(&zip, file_index, output_path, 0)) {
-        printf("Error: Could not extract '%s'\n", file_name);
+        LOG_ERROR(mux_module, "File '%s' could not be extracted", file_name)
         mz_zip_reader_end(&zip);
         return 1;
     }

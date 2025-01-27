@@ -74,6 +74,14 @@ void show_help() {
                      TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits));
 }
 
+int version_check() {
+    char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
+    char picker_archive[MAX_BUFFER_SIZE];
+
+    snprintf(picker_archive, sizeof(picker_archive), (RUN_STORAGE_PATH "%s/%s.zip"), picker_type, picker_name);
+    return !extract_file_from_zip(picker_archive, "version.txt", "/tmp/version.txt");
+}
+
 void image_refresh() {
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
@@ -193,8 +201,13 @@ void list_nav_next(int steps) {
 void handle_confirm() {
     if (msgbox_active || ui_count <= 0) return;
 
+    if (!strcasecmp(picker_type, "theme") && !version_check()) {
+        play_sound("error", nav_sound, 0, 1);
+        toast_message(lang.MUXPICKER.INVALID, 1000, 1000);
+        return;
+    }
+
     play_sound("confirm", nav_sound, 0, 1);
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
     static char picker_script[MAX_BUFFER_SIZE];
     snprintf(picker_script, sizeof(picker_script),
@@ -243,7 +256,6 @@ void handle_save() {
     if (msgbox_active) return;
 
     play_sound("confirm", nav_sound, 0, 1);
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
 
     static char picker_script[MAX_BUFFER_SIZE];
     snprintf(picker_script, sizeof(picker_script),

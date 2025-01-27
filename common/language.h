@@ -318,6 +318,7 @@ struct mux_lang {
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
+        char INVALID[MAX_BUFFER_SIZE];
         struct {
             char CREDIT[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];
