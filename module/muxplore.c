@@ -315,7 +315,7 @@ void image_refresh(char *image_type) {
                                   image, sizeof(image));
             }
             if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
-                snprintf(image, sizeof(image), "%s/splash.png", INFO_CAT_PATH);
+                load_splash_image_fallback(mux_dimension, image, sizeof(image));
             } 
         }
     }
