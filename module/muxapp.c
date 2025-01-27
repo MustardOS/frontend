@@ -297,9 +297,7 @@ void handle_a() {
         }
 
         play_sound("confirm", nav_sound, 0, 1);
-
-        lv_label_set_text(ui_lblMessage, lang.MUXAPP.LOAD_APP);
-        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+        toast_message(lang.MUXAPP.LOAD_APP, 0, 0);
 
         static char command[MAX_BUFFER_SIZE];
         snprintf(command, sizeof(command), "%s/%s/%s.sh",

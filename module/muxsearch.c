@@ -595,9 +595,7 @@ void handle_confirm(void) {
             return;
         }
 
-        lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-        lv_label_set_text(ui_lblMessage, lang.MUXSEARCH.SEARCH);
-        lv_task_handler();
+        toast_message(lang.MUXSEARCH.SEARCH, 0, 0);
 
         if (element_focused == ui_lblSearchLocal) {
             run_exec((const char *[]) {
