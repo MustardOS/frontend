@@ -951,6 +951,14 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
              file_exist(image_path));
 }
 
+void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size) {
+    if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist(image)) return;
+
+    if (snprintf(image, image_size, "%s/%simage/splash.png", STORAGE_THEME, mux_dimension) >= 0 && file_exist(image)) return;
+
+    snprintf(image, image_size, "%s/image/splash.png", STORAGE_THEME);
+}
+
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size) {
     if ((snprintf(image_path, path_size, "%s/%s/%s/%s%s.png", INFO_CAT_PATH, catalogue_name,
