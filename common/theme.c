@@ -768,7 +768,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
                 LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme);
                 scheme_loaded = 1;
                 load_theme_from_scheme(scheme, theme, device);
-                break;
             }
         }
     }
