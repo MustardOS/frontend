@@ -94,28 +94,28 @@ void init_navigation_group_grid(char *item_labels[], char *glyph_names[]) {
         char mux_dimension[15];
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char grid_image[MAX_BUFFER_SIZE];
-        if (!load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
+        if (!load_element_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, mux_module, "grid", glyph_names[i],
                                           "png", grid_image, sizeof(grid_image)) &&
-            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_names[i],
+            !load_element_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, mux_module, "grid", "default",
                                           "png", grid_image, sizeof(grid_image)) &&
-            !load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", "default",
+            !load_element_image_specifics(theme.THEME_PATH_SHARED, "", mux_module, "grid", glyph_names[i],
                                           "png", grid_image, sizeof(grid_image))) {
 
-            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "default",
-                                         "png", grid_image, sizeof(grid_image));
+            load_element_image_specifics(theme.THEME_PATH_SHARED, "", mux_module, "grid", "default",
+                                          "png", grid_image, sizeof(grid_image));
         }
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);
         char grid_image_focused[MAX_BUFFER_SIZE];
-        if (!load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_name_focused,
+        if (!load_element_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, mux_module, "grid", glyph_name_focused,
                                           "png", grid_image_focused, sizeof(grid_image_focused)) &&
-            !load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", glyph_name_focused,
-                                          "png", grid_image_focused, sizeof(grid_image_focused)) &&
-            !load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", "default_focused",
+            !load_element_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, mux_module, "grid", "default_focused",
+                                         "png", grid_image_focused, sizeof(grid_image_focused)) &&
+            !load_element_image_specifics(theme.THEME_PATH_SHARED, "", mux_module, "grid", glyph_name_focused,
                                           "png", grid_image_focused, sizeof(grid_image_focused))) {
 
-            load_element_image_specifics(STORAGE_THEME, "", mux_module, "grid", "default_focused",
+            load_element_image_specifics(theme.THEME_PATH_SHARED, "", mux_module, "grid", "default_focused",
                                          "png", grid_image_focused, sizeof(grid_image_focused));
         }
 

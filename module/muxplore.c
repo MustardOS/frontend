@@ -298,10 +298,10 @@ void image_refresh(char *image_type) {
 
         if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
             snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                     STORAGE_THEME, mux_dimension, image_type);
+                     theme.THEME_PATH_ACTIVE, mux_dimension, image_type);
             if (!file_exist(image)) {
                 snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                         STORAGE_THEME, image_type);
+                         theme.THEME_PATH_SHARED, image_type);
             }
         } else {
             if (items[current_item_index].content_type == FOLDER) {
