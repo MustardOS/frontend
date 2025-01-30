@@ -234,10 +234,10 @@ void image_refresh(char *image_type) {
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
-                 theme.THEME_PATH_ACTIVE, mux_dimension, image_type);
+                 STORAGE_THEME, mux_dimension, image_type);
         if (!file_exist(image)) {
             snprintf(image, sizeof(image), "%s/image/none_%s.png",
-                     theme.THEME_PATH_SHARED, image_type);
+                     STORAGE_THEME, image_type);
         }
     } else {
         load_image_catalogue(h_core_artwork, h_file_name, "default", mux_dimension, image_type,

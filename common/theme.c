@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
 #include "common.h"
-#include "language.h"
 #include "options.h"
 #include "theme.h"
 #include "config.h"
@@ -19,6 +17,17 @@ static lv_style_t style_list_item_focused;
 
 static lv_style_t style_list_glyph_default;
 static lv_style_t style_list_glyph_focused;
+
+int load_scheme(const char *theme_base, const char *mux_dimension, const char *file_name, char *scheme, size_t scheme_size) {
+    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.txt", theme_base, mux_dimension, file_name)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/scheme/%s.txt", theme_base, file_name)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dimension, file_name)
+            && file_exist(scheme)) ||
+           (snprintf(scheme, scheme_size, "%s/scheme/%s.ini", theme_base, file_name)
+            && file_exist(scheme));
+}
 
 void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->SYSTEM.BACKGROUND = 0xC69200;
@@ -726,35 +735,8 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     mini_free(muos_theme);
 }
 
-void load_active_theme(const char *theme_base, struct theme_config *theme) {
-    snprintf(theme->THEME_PATH_SHARED, MAX_BUFFER_SIZE, "%s/shared", theme_base);
-
-    char active_path[MAX_BUFFER_SIZE];
-    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_base);
-
-    if (file_exist(active_path)) {
-        snprintf(theme->THEME_PATH_ACTIVE, MAX_BUFFER_SIZE, "%s/%s", theme_base, read_line_from_file(active_path, 1));
-    } else {
-        DIR *dir = opendir(theme_base);
-        if (!dir) {
-            perror(lang.SYSTEM.FAIL_DIR_OPEN);
-            return;
-        }
-
-        struct dirent *entry;
-
-        while ((entry = readdir(dir))) {
-            if (entry->d_type == DT_DIR) {
-                if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, "shared") != 0)
-                    snprintf(theme->THEME_PATH_ACTIVE, MAX_BUFFER_SIZE, "%s/%s", theme_base, entry->d_name);
-            }
-        }
-
-        closedir(dir);
-    }
-}
-
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device) {
+    char scheme[MAX_BUFFER_SIZE];
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
@@ -767,12 +749,9 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
             get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         }
 
-        load_active_theme(STORAGE_THEME, theme);
         char theme_device_folder[MAX_BUFFER_SIZE];
-        char theme_device_fallback_folder[MAX_BUFFER_SIZE];
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", theme->THEME_PATH_ACTIVE, mux_dimension);
-        snprintf(theme_device_fallback_folder, sizeof(theme_device_fallback_folder), "%s/640x480", theme->THEME_PATH_ACTIVE, mux_dimension);
-        if (!directory_exist(theme_device_folder) && directory_exist(theme_device_fallback_folder)) {
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
+        if (!directory_exist(theme_device_folder)) {
             device->MUX.WIDTH = 640;
             device->MUX.HEIGHT = 480;
             get_mux_dimension(mux_dimension, sizeof(mux_dimension));
@@ -780,36 +759,24 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     }
 
     init_theme_config(theme, device);
+    const char *schemes[] = {"global", "default", mux_module};
     int scheme_loaded = 0;
 
-    char global_ini_path[MAX_BUFFER_SIZE];
-    char default_ini_path[MAX_BUFFER_SIZE];
-    char muxmodule_ini_path[MAX_BUFFER_SIZE];
-
     if (theme_compat()) {
-        snprintf(global_ini_path, sizeof(global_ini_path), "%s/scheme/global.ini", theme->THEME_PATH_SHARED);
-        snprintf(default_ini_path, sizeof(default_ini_path), "%s/%sscheme/default.ini", theme->THEME_PATH_ACTIVE, mux_dimension);
-        snprintf(muxmodule_ini_path, sizeof(muxmodule_ini_path), "%s/%sscheme/%s.ini", theme->THEME_PATH_ACTIVE, mux_dimension, mux_module);
-        char *schemes[] = {global_ini_path, default_ini_path, muxmodule_ini_path};
         for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
-            if (file_exist(schemes[i])) {
-                LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", schemes[i]);
+            if (load_scheme(STORAGE_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
+                LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme);
                 scheme_loaded = 1;
-                load_theme_from_scheme(schemes[i], theme, device);
+                load_theme_from_scheme(scheme, theme, device);
             }
         }
     }
 
-    if (!scheme_loaded || !theme_compat()) {
-        load_active_theme(INTERNAL_THEME, theme);
-        snprintf(global_ini_path, sizeof(global_ini_path), "%s/scheme/global.ini", theme->THEME_PATH_SHARED);
-        snprintf(default_ini_path, sizeof(default_ini_path), "%s/%sscheme/default.ini", theme->THEME_PATH_ACTIVE, mux_dimension);
-        snprintf(muxmodule_ini_path, sizeof(muxmodule_ini_path), "%s/%sscheme/%s.ini", theme->THEME_PATH_ACTIVE, mux_dimension, mux_module);
-        char *schemes[] = {global_ini_path, default_ini_path, muxmodule_ini_path};
+    if (!scheme_loaded) {
         for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
-            if (file_exist(schemes[i])) {
-                LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", schemes[i])
-                load_theme_from_scheme(schemes[i], theme, device);
+            if (load_scheme(INTERNAL_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
+                LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme)
+                load_theme_from_scheme(scheme, theme, device);
             }
         }
     }

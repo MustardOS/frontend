@@ -696,16 +696,16 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
     if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
-                  theme->THEME_PATH_ACTIVE, mux_dimension, glyph_name) >= 0 &&
+                  STORAGE_THEME, mux_dimension, glyph_name) >= 0 &&
          file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
-                  theme->THEME_PATH_SHARED, glyph_name) >= 0 &&
+                  STORAGE_THEME, glyph_name) >= 0 &&
          file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
-                  INTERNAL_THEME_ACTIVE, mux_dimension, glyph_name) >= 0 &&
+                  INTERNAL_THEME, mux_dimension, glyph_name) >= 0 &&
          file_exist(footer_image_path)) ||
         (snprintf(footer_image_path, sizeof(footer_image_path), "%s/glyph/footer/%s.png",
-                  INTERNAL_THEME_SHARED, glyph_name) >= 0 &&
+                  INTERNAL_THEME, glyph_name) >= 0 &&
          file_exist(footer_image_path))) {
 
         int written = snprintf(footer_image_embed, sizeof(footer_image_embed), "M:%s", footer_image_path);
@@ -795,13 +795,9 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
                                          LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    if (generate_image_embed(theme->THEME_PATH_ACTIVE, mux_dimension, battery_glyph_name, image_path,
+    if (generate_image_embed(STORAGE_THEME, mux_dimension, battery_glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(theme->THEME_PATH_SHARED, "", battery_glyph_name, image_path,
-                             sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME_ACTIVE, mux_dimension, battery_glyph_name, image_path,
-                             sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME_SHARED, "", battery_glyph_name, image_path,
+        generate_image_embed(INTERNAL_THEME, mux_dimension, battery_glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
         if (file_exist(image_path)) {
             lv_img_set_src(ui_staCapacity, image_embed);
@@ -816,13 +812,9 @@ void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *the
 
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-    if (generate_image_embed(theme->THEME_PATH_ACTIVE, mux_dimension, "bluetooth", image_path,
+    if (generate_image_embed(STORAGE_THEME, mux_dimension, "bluetooth", image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(theme->THEME_PATH_SHARED, "", "bluetooth", image_path,
-                             sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME_ACTIVE, mux_dimension, "bluetooth", image_path,
-                             sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME_SHARED, "", "bluetooth", image_path,
+        generate_image_embed(INTERNAL_THEME, mux_dimension, "bluetooth", image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
         if (file_exist(image_path)) {
             lv_img_set_src(ui_staBluetooth, image_embed);
@@ -854,13 +846,9 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) 
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", network_status);
 
-    if (generate_image_embed(theme->THEME_PATH_ACTIVE, mux_dimension, network_status_filename, image_path,
+    if (generate_image_embed(STORAGE_THEME, mux_dimension, network_status_filename, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(theme->THEME_PATH_SHARED, "", network_status_filename, image_path,
-                             sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME_ACTIVE, mux_dimension, network_status_filename, image_path,
-                             sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME_SHARED, "", network_status_filename, image_path,
+        generate_image_embed(INTERNAL_THEME, mux_dimension, network_status_filename, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
         if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
     }

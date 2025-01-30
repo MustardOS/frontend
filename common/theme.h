@@ -25,9 +25,6 @@ struct footer_glyph {
 };
 
 struct theme_config {
-    char THEME_PATH_ACTIVE[MAX_BUFFER_SIZE];
-    char THEME_PATH_SHARED[MAX_BUFFER_SIZE];
-
     struct {
         uint32_t BACKGROUND;
         int16_t BACKGROUND_ALPHA;

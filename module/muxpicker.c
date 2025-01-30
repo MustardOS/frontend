@@ -91,20 +91,13 @@ void image_refresh() {
 
     snprintf(picker_archive, sizeof(picker_archive), (RUN_STORAGE_PATH "%s/%s.zip"), picker_type, picker_name);
 
-    char active_path[MAX_BUFFER_SIZE];
-    if (extract_file_from_zip(picker_archive, "active.txt", "/tmp/theme_active.txt")) {
-        snprintf(active_path, sizeof(active_path), "%s", read_line_from_file("/tmp/theme_active.txt", 1));
-    }
-    if (active_path == NULL || active_path[0] == '\0')
-        snprintf(active_path, sizeof(active_path), "default");
-
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     char device_preview[PATH_MAX];
-    snprintf(device_preview, sizeof(device_preview), "%s/%spreview.png", active_path, mux_dimension);
+    snprintf(device_preview, sizeof(device_preview), "%spreview.png", mux_dimension);
 
     if (extract_file_from_zip(picker_archive, device_preview, "/tmp/preview.png") &&
-        extract_file_from_zip(picker_archive, "shared/preview.png", "/tmp/preview.png")) {
+        extract_file_from_zip(picker_archive, "preview.png", "/tmp/preview.png")) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         return;
     }
