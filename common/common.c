@@ -813,7 +813,7 @@ void play_sound(const char *sound, int enabled, int wait, int background) {
     if (!enabled) return;
 
     char ns_file[MAX_BUFFER_SIZE];
-    snprintf(ns_file, sizeof(ns_file), "%s/sound/%s.wav", theme.THEME_PATH_SHARED, sound);
+    snprintf(ns_file, sizeof(ns_file), "%s/sound/%s.wav", STORAGE_THEME, sound);
 
     if (!file_exist(ns_file)) {
         LOG_ERROR(mux_module, "Sound file not found: %s", ns_file)
@@ -923,6 +923,8 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
 int load_element_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
                                  const char *image_type, const char *element, const char *image_extension,
                                  char *image_path, size_t path_size) {
+    const char *theme = theme_compat() ? theme_base : INTERNAL_THEME;
+
     const char *paths[] = {
             "%s/%simage/%s/%s/%s/%s.%s",
             "%s/%simage/%s/%s/%s.%s"
@@ -933,13 +935,13 @@ int load_element_image_specifics(const char *theme_base, const char *mux_dimensi
 
         switch (i) {
             case 0:
-                written = snprintf(image_path, path_size, paths[i], theme_base, mux_dimension,
-                                config.SETTINGS.GENERAL.LANGUAGE, image_type, program, element, image_extension);
+                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension,
+                                   config.SETTINGS.GENERAL.LANGUAGE, image_type, program, element, image_extension);
                 break;
             case 1:
             default:
-                written = snprintf(image_path, path_size, paths[i], theme_base, mux_dimension,
-                                image_type, program, element, image_extension);
+                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension,
+                                   image_type, program, element, image_extension);
                 break;
         }
 
@@ -951,6 +953,8 @@ int load_element_image_specifics(const char *theme_base, const char *mux_dimensi
 
 int load_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
                          const char *image_type, const char *image_extension, char *image_path, size_t path_size) {
+    const char *theme = theme_compat() ? theme_base : INTERNAL_THEME;
+
     const char *paths[] = {
             "%s/%simage/%s.%s",
             "%s/%simage/%s/%s/%s.%s",
@@ -964,23 +968,23 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
 
         switch (i) {
             case 0:
-                written = snprintf(image_path, path_size, paths[i], theme_base, mux_dimension, image_type, image_extension);
+                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension, image_type, image_extension);
                 break;
             case 1:
-                written = snprintf(image_path, path_size, paths[i], theme_base, mux_dimension,
-                                config.SETTINGS.GENERAL.LANGUAGE, image_type, program, image_extension);
+                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension,
+                                   config.SETTINGS.GENERAL.LANGUAGE, image_type, program, image_extension);
                 break;
             case 2:
-                written = snprintf(image_path, path_size, paths[i], theme_base, mux_dimension, image_type, program,
-                                image_extension);
+                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension, image_type, program,
+                                   image_extension);
                 break;
             case 3:
-                written = snprintf(image_path, path_size, paths[i], theme_base, mux_dimension,
-                                config.SETTINGS.GENERAL.LANGUAGE, image_type, image_extension);
+                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension,
+                                   config.SETTINGS.GENERAL.LANGUAGE, image_type, image_extension);
                 break;
             case 4:
             default:
-                written = snprintf(image_path, path_size, paths[i], theme_base, mux_dimension, image_type, image_extension);
+                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension, image_type, image_extension);
                 break;
         }
 
@@ -993,9 +997,10 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
 void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size) {
     if (snprintf(image, image_size, "%s/splash.png", INFO_CAT_PATH) >= 0 && file_exist(image)) return;
 
-    if (snprintf(image, image_size, "%s/%simage/splash.png", theme.THEME_PATH_ACTIVE, mux_dimension) >= 0 && file_exist(image)) return;
+    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+    if (snprintf(image, image_size, "%s/%simage/splash.png", theme, mux_dimension) >= 0 && file_exist(image)) return;
 
-    snprintf(image, image_size, "%s/image/splash.png", theme.THEME_PATH_SHARED);
+    snprintf(image, image_size, "%s/image/splash.png", theme);
 }
 
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
@@ -1071,9 +1076,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
             default:
                 break;
         }
-        if (load_element_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, program, "wall", element,
-                                         wall_extension, wall_image_path, sizeof(wall_image_path)) ||
-            load_element_image_specifics(theme.THEME_PATH_SHARED, "", program, "wall", element,
+        if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall", element,
                                          wall_extension, wall_image_path, sizeof(wall_image_path))) {
             int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
             if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
@@ -1081,9 +1084,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
         }
     }
 
-    if (load_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, program, "wall",
-                             wall_extension, wall_image_path, sizeof(wall_image_path)) ||
-        load_image_specifics(theme.THEME_PATH_SHARED, "", program, "wall",
+    if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
                              wall_extension, wall_image_path, sizeof(wall_image_path))) {
         int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
         if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
@@ -1169,9 +1170,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                 break;
             case GENERAL:
             default:
-                if (load_element_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, program, "static",
-                                                 element, "png", static_image_path, sizeof(static_image_path)) ||
-                    load_element_image_specifics(theme.THEME_PATH_SHARED, "", program, "static",
+                if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
                                                  element, "png", static_image_path, sizeof(static_image_path))) {
 
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
@@ -1195,9 +1194,9 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t ov
         static char static_image_path[MAX_BUFFER_SIZE];
         static char static_image_embed[MAX_BUFFER_SIZE];
 
-        if (load_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, program, "overlay", "png",
+        if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "overlay", "png",
                                  static_image_path, sizeof(static_image_path)) ||
-            load_image_specifics(theme.THEME_PATH_SHARED, "", program, "overlay", "png",
+            load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
                                  static_image_path, sizeof(static_image_path))) {
 
             int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
@@ -1219,9 +1218,9 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
         static char static_image_path[MAX_BUFFER_SIZE];
         static char static_image_embed[MAX_BUFFER_SIZE];
 
-        if (load_image_specifics(theme.THEME_PATH_ACTIVE, mux_dimension, program, "kiosk", "png",
+        if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "kiosk", "png",
                                  static_image_path, sizeof(static_image_path)) ||
-            load_image_specifics(theme.THEME_PATH_SHARED, "", program, "kiosk", "png",
+            load_image_specifics(STORAGE_THEME, "", program, "kiosk", "png",
                                  static_image_path, sizeof(static_image_path))) {
 
             int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
@@ -1359,26 +1358,25 @@ void load_font_text(lv_obj_t *screen) {
         char mux_dimension[15];
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char *mux_dimensions[15] = {mux_dimension, ""};
-        char *theme_paths[MAX_BUFFER_SIZE] = {theme.THEME_PATH_ACTIVE, theme.THEME_PATH_SHARED};
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
                 if ((snprintf(theme_font_text, sizeof(theme_font_text),
-                              "%s/%sfont/%s/%s.bin", theme_paths[i], mux_dimensions[i],
+                              "%s/%sfont/%s/%s.bin", STORAGE_THEME, mux_dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE, mux_module) >= 0 &&
                      file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                              "%s/%sfont/%s/default.bin", theme_paths[i], mux_dimensions[i],
+                              "%s/%sfont/%s/default.bin", STORAGE_THEME, mux_dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE) >=
                      0 && file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text),
-                              "%s/%sfont/%s.bin", theme_paths[i], mux_dimensions[i], mux_module) >= 0 &&
+                              "%s/%sfont/%s.bin", STORAGE_THEME, mux_dimensions[i], mux_module) >= 0 &&
                      file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                              "%s/%sfont/default.bin", theme_paths[i], mux_dimensions[i]) >= 0 &&
+                              "%s/%sfont/default.bin", STORAGE_THEME, mux_dimensions[i]) >= 0 &&
                      file_exist(theme_font_text))) {
 
                     LOG_INFO(mux_module, "Loading Main Theme Font: %s", theme_font_text)
@@ -1400,26 +1398,25 @@ void load_font_section(const char *section, lv_obj_t *element) {
         char mux_dimension[15];
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char *mux_dimensions[15] = {mux_dimension, ""};
-        char *theme_paths[MAX_BUFFER_SIZE] = {theme.THEME_PATH_ACTIVE, theme.THEME_PATH_SHARED};
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
                 if ((snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s/%s.bin", theme_paths[i], mux_dimensions[i],
+                              "%s/%sfont/%s/%s/%s.bin", STORAGE_THEME, mux_dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE, section,
                               mux_module) >= 0 && file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s/default.bin", theme_paths[i], mux_dimensions[i],
+                              "%s/%sfont/%s/%s/default.bin", STORAGE_THEME, mux_dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE,
                               section) >= 0 && file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s.bin", theme_paths[i], mux_dimensions[i], section, mux_module) >= 0 &&
+                              "%s/%sfont/%s/%s.bin", STORAGE_THEME, mux_dimensions[i], section, mux_module) >= 0 &&
                      file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/default.bin", theme_paths[i], mux_dimensions[i], section) >= 0 &&
+                              "%s/%sfont/%s/default.bin", STORAGE_THEME, mux_dimensions[i], section) >= 0 &&
                      file_exist(theme_font_section))) {
 
                     LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, theme_font_section)
@@ -2275,13 +2272,13 @@ get_glyph_path(const char *mux_module, char *glyph_name, char *glyph_image_embed
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  theme.THEME_PATH_ACTIVE, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  theme.THEME_PATH_SHARED, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  STORAGE_THEME, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
-                  INTERNAL_THEME_ACTIVE, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
+                  INTERNAL_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
-                  INTERNAL_THEME_SHARED, mux_module, glyph_name) >= 0 &&
+                  INTERNAL_THEME, mux_module, glyph_name) >= 0 &&
          file_exist(glyph_image_path))) {
         snprintf(glyph_image_embed, glyph_image_embed_size, "M:%s", glyph_image_path);
         return true;

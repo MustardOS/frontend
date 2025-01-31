@@ -31,8 +31,6 @@
 
 #define INTERNAL_PATH  "/opt/muos/"
 #define INTERNAL_THEME INTERNAL_PATH "default/MUOS/theme/active"
-#define INTERNAL_THEME_ACTIVE INTERNAL_THEME "/default"
-#define INTERNAL_THEME_SHARED INTERNAL_THEME "/shared"
 
 #define KIOSK_CONFIG   INTERNAL_PATH "config/kiosk.ini"
 #define LAST_PLAY_FILE INTERNAL_PATH "config/lastplay.txt"
