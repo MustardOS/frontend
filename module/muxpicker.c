@@ -20,6 +20,9 @@
 #include "../common/input.h"
 #include "../common/input/list_nav.h"
 
+#define EXPLORE_DIR "/tmp/explore_dir"
+#define EXPLORE_NAME "/tmp/explore_name"
+
 char *mux_module;
 static int js_fd;
 static int js_fd_sys;
@@ -42,6 +45,8 @@ int ui_count = 0;
 int current_item_index = 0;
 int first_open = 1;
 
+char base_dir[PATH_MAX];
+char sys_dir[PATH_MAX];
 char *picker_type;
 
 lv_obj_t *msgbox_element = NULL;
@@ -58,10 +63,12 @@ lv_group_t *ui_group_panel;
 lv_obj_t *ui_mux_panels[5];
 
 void show_help() {
+    if (items[current_item_index].content_type == FOLDER) return;
+
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(picker_archive, sizeof(picker_archive), (RUN_STORAGE_PATH "%s/%s.zip"), picker_type, picker_name);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.zip", sys_dir, picker_name);
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(picker_archive, "credits.txt", "/tmp/credits.txt")) {
@@ -78,18 +85,20 @@ int version_check() {
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(picker_archive, sizeof(picker_archive), (RUN_STORAGE_PATH "%s/%s.zip"), picker_type, picker_name);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.zip", sys_dir, picker_name);
     return !extract_file_from_zip(picker_archive, "version.txt", "/tmp/version.txt");
 }
 
 void image_refresh() {
+    if (items[current_item_index].content_type == FOLDER) return;
+
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(picker_archive, sizeof(picker_archive), (RUN_STORAGE_PATH "%s/%s.zip"), picker_type, picker_name);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.zip", sys_dir, picker_name);
 
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
@@ -109,16 +118,17 @@ void create_picker_items() {
     DIR *td;
     struct dirent *tf;
 
-    char picker_dir[PATH_MAX];
-    snprintf(picker_dir, sizeof(picker_dir), (RUN_STORAGE_PATH "%s"), picker_type);
-
-    td = opendir(picker_dir);
+    td = opendir(sys_dir);
     if (!td) return;
 
     while ((tf = readdir(td))) {
-        if (tf->d_type == DT_REG) {
+        if (tf->d_type == DT_DIR) {
+            if (strcasecmp(tf->d_name, "active") == 0 || 
+                strcasecmp(tf->d_name, "override") == 0) continue;
+            add_item(&items, &item_count, tf->d_name, tf->d_name, "", FOLDER);
+        } else if (tf->d_type == DT_REG) {
             char filename[FILENAME_MAX];
-            snprintf(filename, sizeof(filename), "%s/%s", picker_dir, tf->d_name);
+            snprintf(filename, sizeof(filename), "%s/%s", sys_dir, tf->d_name);
 
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot && !strcasecmp(last_dot, ".zip")) {
@@ -146,7 +156,7 @@ void create_picker_items() {
         apply_theme_list_item(&theme, ui_lblPickerItem, items[i].display_name);
 
         lv_obj_t *ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
-        apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module, get_last_subdir(picker_type, '/', 1));
+        apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module, items[i].content_type == FOLDER ? "folder" : get_last_subdir(picker_type, '/', 1));
 
         lv_group_add_obj(ui_group, ui_lblPickerItem);
         lv_group_add_obj(ui_group_glyph, ui_lblPickerItemGlyph);
@@ -201,38 +211,56 @@ void list_nav_next(int steps) {
 void handle_confirm() {
     if (msgbox_active || ui_count <= 0) return;
 
-    if (!strcasecmp(picker_type, "theme") && !version_check()) {
-        play_sound("error", nav_sound, 0, 1);
-        toast_message(lang.MUXPICKER.INVALID, 1000, 1000);
-        return;
-    }
-
     play_sound("confirm", nav_sound, 0, 1);
+    
+    if (items[current_item_index].content_type == FOLDER) {
+        char n_dir[MAX_BUFFER_SIZE];
+        snprintf(n_dir, sizeof(n_dir), "%s/%s",
+                 sys_dir, items[current_item_index].name);
 
-    static char picker_script[MAX_BUFFER_SIZE];
-    snprintf(picker_script, sizeof(picker_script),
-             "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
-
-    const char *focused_label = lv_label_get_text(lv_group_get_focused(ui_group));
-    const char *args[] = {
-            (INTERNAL_PATH "bin/fbpad"),
-            "-bg", (char *) theme.TERMINAL.BACKGROUND,
-            "-fg", (char *) theme.TERMINAL.FOREGROUND,
-            picker_script, "install", focused_label,
-            NULL
-    };
-
-    setenv("TERM", "xterm-256color", 1);
-
-    if (config.VISUAL.BLACKFADE) {
-        fade_to_black(ui_screen);
+        write_text_to_file(EXPLORE_DIR, "w", CHAR, n_dir);
     } else {
-        unload_image_animation();
+        if (!strcasecmp(picker_type, "theme") && !version_check()) {
+            play_sound("error", nav_sound, 0, 1);
+            toast_message(lang.MUXPICKER.INVALID, 1000, 1000);
+            return;
+        }
+
+        static char picker_script[MAX_BUFFER_SIZE];
+        snprintf(picker_script, sizeof(picker_script),
+                "%sscript/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
+
+        char relative_zip_path[PATH_MAX];
+        if (strcasecmp(base_dir, sys_dir) == 0) {
+            snprintf(relative_zip_path, sizeof(relative_zip_path), "%s", 
+                lv_label_get_text(lv_group_get_focused(ui_group)));
+        } else {
+            char *relative_path = sys_dir + strlen(base_dir);
+            if (*relative_path == '/') relative_path++;
+            snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s", 
+                relative_path, lv_label_get_text(lv_group_get_focused(ui_group)));
+        }
+
+        const char *args[] = {
+                (INTERNAL_PATH "bin/fbpad"),
+                "-bg", (char *) theme.TERMINAL.BACKGROUND,
+                "-fg", (char *) theme.TERMINAL.FOREGROUND,
+                picker_script, "install", relative_zip_path,
+                NULL
+        };
+
+        setenv("TERM", "xterm-256color", 1);
+
+        if (config.VISUAL.BLACKFADE) {
+            fade_to_black(ui_screen);
+        } else {
+            unload_image_animation();
+        }
+
+        run_exec(args);
+
+        write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
     }
-
-    run_exec(args);
-
-    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
     load_mux("picker");
     mux_input_stop();
@@ -248,7 +276,18 @@ void handle_back() {
     }
 
     play_sound("back", nav_sound, 0, 1);
-    load_mux("custom");
+    if (sys_dir) {
+        if (strcasecmp(base_dir, sys_dir) == 0) {
+            remove(EXPLORE_DIR);
+            load_mux("custom");
+        } else {
+            char *base_dir = strrchr(sys_dir, '/');
+            if (base_dir) write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
+            write_text_to_file(EXPLORE_NAME, "w", CHAR, get_last_subdir(sys_dir, '/', 5));
+            load_mux("picker");
+        }
+    }
+    
     mux_input_stop();
 }
 
@@ -370,15 +409,19 @@ int main(int argc, char *argv[]) {
                      "\t\tpackage/config\n\n";
 
     int opt;
-    while ((opt = getopt(argc, argv, "m:")) != -1) {
-        if (opt == 'm') {
+    while ((opt = getopt(argc, argv, "m:d:")) != -1) {
+        if (opt == 'd') {
+            snprintf(sys_dir, sizeof(sys_dir), "%s", optarg);
+        } else if (opt == 'm') {
             picker_type = optarg;
         } else {
             fprintf(stderr, cmd_help, argv[0]);
             return 1;
-
         }
     }
+    snprintf(base_dir, sizeof(base_dir), (RUN_STORAGE_PATH "%s"), picker_type);
+    if (!strlen(sys_dir))
+        snprintf(sys_dir, sizeof(sys_dir), (RUN_STORAGE_PATH "%s"), picker_type);
 
     if (!picker_type) {
         fprintf(stderr, cmd_help, argv[0]);
@@ -424,6 +467,16 @@ int main(int argc, char *argv[]) {
     if (file_exist(MUOS_PIN_LOAD)) {
         sys_index = read_int_from_file(MUOS_PIN_LOAD, 1);
         remove(MUOS_PIN_LOAD);
+    }
+    char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_from_file(EXPLORE_NAME, 1) : NULL;
+    if (e_name_line) {
+        for (size_t i = 0; i < item_count; i++) {
+            if (!strcasecmp(items[i].name, e_name_line)) {
+                sys_index = (int) i;
+                remove(EXPLORE_NAME);
+                break;
+            }
+        }
     }
 
     init_input(&js_fd, &js_fd_sys);
