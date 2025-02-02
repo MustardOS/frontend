@@ -32,6 +32,10 @@ int load_scheme(const char *theme_base, const char *mux_dimension, const char *f
 void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->SYSTEM.BACKGROUND = 0xC69200;
     theme->SYSTEM.BACKGROUND_ALPHA = 255;
+    theme->SYSTEM.BACKGROUND_GRADIENT_COLOR = 0xC69200;
+    theme->SYSTEM.BACKGROUND_GRADIENT_START = 0;
+    theme->SYSTEM.BACKGROUND_GRADIENT_STOP = 200;
+    theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION = 0;
 
     theme->ANIMATION.ANIMATION_DELAY = 100;
     theme->ANIMATION.ANIMATION_REPEAT = 0;
@@ -192,6 +196,10 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
 
     theme->GRID.CELL_DEFAULT.BACKGROUND = 0xC69200;
     theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA = 255;
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR = 0xC69200;
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START = 0;
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP = 200;
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION = 0;
     theme->GRID.CELL_DEFAULT.BORDER = 0xC69200;
     theme->GRID.CELL_DEFAULT.BORDER_ALPHA = 255;
     theme->GRID.CELL_DEFAULT.IMAGE_ALPHA = 255;
@@ -202,6 +210,10 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
 
     theme->GRID.CELL_FOCUS.BACKGROUND = 0xF7E318;
     theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA = 255;
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR = 0xF7E318;
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START = 0;
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP = 200;
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION = 0;
     theme->GRID.CELL_FOCUS.BORDER = 0xF7E318;
     theme->GRID.CELL_FOCUS.BORDER_ALPHA = 255;
     theme->GRID.CELL_FOCUS.IMAGE_ALPHA = 255;
@@ -375,6 +387,10 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 
     theme->SYSTEM.BACKGROUND = get_ini_hex(muos_theme, "background", "BACKGROUND", theme->SYSTEM.BACKGROUND);
     theme->SYSTEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "background", "BACKGROUND_ALPHA", theme->SYSTEM.BACKGROUND_ALPHA);
+    theme->SYSTEM.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "background", "BACKGROUND_GRADIENT_COLOR", theme->SYSTEM.BACKGROUND_GRADIENT_COLOR);
+    theme->SYSTEM.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_START", theme->SYSTEM.BACKGROUND_GRADIENT_START);
+    theme->SYSTEM.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_STOP", theme->SYSTEM.BACKGROUND_GRADIENT_STOP);
+    theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_DIRECTION", theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION);
 
     theme->ANIMATION.ANIMATION_DELAY = get_ini_int(muos_theme, "animation", "ANIMATION_DELAY", theme->ANIMATION.ANIMATION_DELAY);
     if (theme->ANIMATION.ANIMATION_DELAY < 10) theme->ANIMATION.ANIMATION_DELAY = 10;
@@ -546,6 +562,10 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 
     theme->GRID.CELL_DEFAULT.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND", theme->GRID.CELL_DEFAULT.BACKGROUND);
     theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_ALPHA", theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_COLOR", theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_START", theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_STOP", theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_DIRECTION", theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION);
     theme->GRID.CELL_DEFAULT.BORDER = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BORDER", theme->GRID.CELL_DEFAULT.BORDER);
     theme->GRID.CELL_DEFAULT.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BORDER_ALPHA", theme->GRID.CELL_DEFAULT.BORDER_ALPHA);
     theme->GRID.CELL_DEFAULT.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_ALPHA", theme->GRID.CELL_DEFAULT.IMAGE_ALPHA);
@@ -557,6 +577,10 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 
     theme->GRID.CELL_FOCUS.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BACKGROUND", theme->GRID.CELL_FOCUS.BACKGROUND);
     theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_ALPHA", theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA);
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_COLOR", theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR);
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_START", theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START);
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_STOP", theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP);
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_DIRECTION", theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION);
     theme->GRID.CELL_FOCUS.BORDER = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BORDER", theme->GRID.CELL_FOCUS.BORDER);
     theme->GRID.CELL_FOCUS.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BORDER_ALPHA", theme->GRID.CELL_FOCUS.BORDER_ALPHA);
     theme->GRID.CELL_FOCUS.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_ALPHA", theme->GRID.CELL_FOCUS.IMAGE_ALPHA);

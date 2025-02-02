@@ -28,6 +28,10 @@ struct theme_config {
     struct {
         uint32_t BACKGROUND;
         int16_t BACKGROUND_ALPHA;
+        uint32_t BACKGROUND_GRADIENT_COLOR;
+        int16_t BACKGROUND_GRADIENT_START;
+        int16_t BACKGROUND_GRADIENT_STOP;
+        int16_t BACKGROUND_GRADIENT_DIRECTION;
     } SYSTEM;
 
     struct {
@@ -227,6 +231,10 @@ struct theme_config {
         struct {
             uint32_t BACKGROUND;
             int16_t BACKGROUND_ALPHA;
+            uint32_t BACKGROUND_GRADIENT_COLOR;
+            int16_t BACKGROUND_GRADIENT_START;
+            int16_t BACKGROUND_GRADIENT_STOP;
+            int16_t BACKGROUND_GRADIENT_DIRECTION;
             uint32_t BORDER;
             int16_t BORDER_ALPHA;
             uint32_t TEXT;
@@ -238,6 +246,10 @@ struct theme_config {
         struct {
             uint32_t BACKGROUND;
             int16_t BACKGROUND_ALPHA;
+            uint32_t BACKGROUND_GRADIENT_COLOR;
+            int16_t BACKGROUND_GRADIENT_START;
+            int16_t BACKGROUND_GRADIENT_STOP;
+            int16_t BACKGROUND_GRADIENT_DIRECTION;
             uint32_t BORDER;
             int16_t BORDER_ALPHA;
             uint32_t TEXT;
