@@ -23,8 +23,10 @@ void load_lang(struct mux_lang *lang) {
         field[MAX_BUFFER_SIZE - 1] = '\0'
 
     // system language
-    GENERIC_FIELD(lang->SYSTEM.NO_JOY, "Failed to open joystick device");
-    GENERIC_FIELD(lang->SYSTEM.NO_JOY_ALT, "Failed to open alternative joystick device");
+    GENERIC_FIELD(lang->SYSTEM.NO_JOY_GENERAL, "Failed to open GENERAL joystick device");
+    GENERIC_FIELD(lang->SYSTEM.NO_JOY_POWER, "Failed to open POWER joystick device");
+    GENERIC_FIELD(lang->SYSTEM.NO_JOY_VOLUME, "Failed to open VOLUME joystick device");
+    GENERIC_FIELD(lang->SYSTEM.NO_JOY_EXTRA, "Failed to open EXTRA joystick device");
     GENERIC_FIELD(lang->SYSTEM.FAIL_ALLOCATE_MEM, "Failed to allocate memory");
     GENERIC_FIELD(lang->SYSTEM.FAIL_DUP_STRING, "Failed to duplicate string");
     GENERIC_FIELD(lang->SYSTEM.FAIL_DIR_OPEN, "Failed to open directory");

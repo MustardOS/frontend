@@ -28,7 +28,7 @@ void safe_quit();
 
 void init_display();
 
-void init_input(int *js_fd, int *js_fd_sys);
+void init_input(int *joy_general, int *joy_power, int *joy_volume, int *joy_extra);
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *));
 

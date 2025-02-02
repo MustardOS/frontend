@@ -64,14 +64,23 @@ static void process_key(const mux_input_options *opts, const struct input_event 
         type = MUX_INPUT_SELECT;
     } else if (event->code == device.RAW_INPUT.BUTTON.START) {
         type = MUX_INPUT_START;
-    } else if (event->code == device.RAW_INPUT.BUTTON.VOLUME_UP) {
-        type = MUX_INPUT_VOL_UP;
-    } else if (event->code == device.RAW_INPUT.BUTTON.VOLUME_DOWN) {
-        type = MUX_INPUT_VOL_DOWN;
     } else if (event->code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
         type = MUX_INPUT_MENU_SHORT;
     } else if (event->code == device.RAW_INPUT.BUTTON.MENU_LONG) {
         type = MUX_INPUT_MENU_LONG;
+    } else {
+        return;
+    }
+    pressed = (event->value == 1) ? (pressed | BIT(type)) : (pressed & ~BIT(type));
+}
+
+// Processes volume buttons.
+static void process_volume(const mux_input_options *opts, const struct input_event *event) {
+    mux_input_type type;
+    if (event->code == device.RAW_INPUT.BUTTON.VOLUME_UP) {
+        type = MUX_INPUT_VOL_UP;
+    } else if (event->code == device.RAW_INPUT.BUTTON.VOLUME_DOWN) {
+        type = MUX_INPUT_VOL_DOWN;
     } else {
         return;
     }
@@ -546,16 +555,30 @@ void mux_input_task(const mux_input_options *opts) {
     struct epoll_event epoll_event[device.DEVICE.EVENT];
 
     epoll_event[0].events = EPOLLIN;
-    epoll_event[0].data.fd = opts->gamepad_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->gamepad_fd, &epoll_event[0]) == -1) {
-        LOG_ERROR("input", "epoll control error - gamepad_fd")
+    epoll_event[0].data.fd = opts->general_fd;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->general_fd, &epoll_event[0]) == -1) {
+        LOG_ERROR("input", "epoll control error - general_fd")
         return;
     }
 
     epoll_event[0].events = EPOLLIN;
-    epoll_event[0].data.fd = opts->system_fd;
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->system_fd, &epoll_event[0]) == -1) {
-        LOG_ERROR("input", "epoll control error - system_fd")
+    epoll_event[0].data.fd = opts->power_fd;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->power_fd, &epoll_event[0]) == -1) {
+        LOG_ERROR("input", "epoll control error - power_fd")
+        return;
+    }
+
+    epoll_event[0].events = EPOLLIN;
+    epoll_event[0].data.fd = opts->volume_fd;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->volume_fd, &epoll_event[0]) == -1) {
+        LOG_ERROR("input", "epoll control error - volume_fd")
+        return;
+    }
+
+    epoll_event[0].events = EPOLLIN;
+    epoll_event[0].data.fd = opts->extra_fd;
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, opts->extra_fd, &epoll_event[0]) == -1) {
+        LOG_ERROR("input", "epoll control error - extra_fd")
         return;
     }
 
@@ -598,14 +621,18 @@ void mux_input_task(const mux_input_options *opts) {
                 continue;
             }
 
-            if (epoll_event[i].data.fd == opts->gamepad_fd) {
+            if (epoll_event[i].data.fd == opts->general_fd) {
                 if (event.type == EV_KEY) {
                     process_key(opts, &event);
                 } else if (event.type == EV_ABS) {
                     process_abs(opts, &event);
                 }
-            } else if (epoll_event[i].data.fd == opts->system_fd) {
+            } else if (epoll_event[i].data.fd == opts->power_fd) {
                 process_sys(opts, &event);
+            } else if (epoll_event[i].data.fd == opts->volume_fd) {
+                process_volume(opts, &event);
+            } else if (epoll_event[i].data.fd == opts->extra_fd) {
+                // TODO: Add extra input functions to do, something?
             }
         }
 

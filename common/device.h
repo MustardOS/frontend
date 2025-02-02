@@ -111,8 +111,10 @@ struct mux_device {
     } BATTERY;
 
     struct {
-        char EV0[MAX_BUFFER_SIZE];
-        char EV1[MAX_BUFFER_SIZE];
+        char JOY_GENERAL[MAX_BUFFER_SIZE];
+        char JOY_POWER[MAX_BUFFER_SIZE];
+        char JOY_VOLUME[MAX_BUFFER_SIZE];
+        char JOY_EXTRA[MAX_BUFFER_SIZE];
         int32_t AXIS;
     } INPUT;
 

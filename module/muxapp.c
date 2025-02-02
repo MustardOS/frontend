@@ -19,8 +19,11 @@
 #include "../common/input/list_nav.h"
 
 char *mux_module;
-static int js_fd;
-static int js_fd_sys;
+
+static int joy_general;
+static int joy_power;
+static int joy_volume;
+static int joy_extra;
 
 int turbo_mode = 0;
 int msgbox_active = 0;
@@ -453,7 +456,7 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, APPLICATION);
 
-    init_input(&js_fd, &js_fd_sys);
+    init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
     init_timer(ui_refresh_task, NULL);
 
     if (ui_count > 0) {
@@ -465,8 +468,10 @@ int main(int argc, char *argv[]) {
     load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
-            .gamepad_fd = js_fd,
-            .system_fd = js_fd_sys,
+            .general_fd = joy_general,
+            .power_fd = joy_power,
+            .volume_fd = joy_volume,
+            .extra_fd = joy_extra,
             .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
@@ -503,8 +508,8 @@ int main(int argc, char *argv[]) {
     safe_quit();
 
     free_items(items, item_count);
-    close(js_fd);
-    close(js_fd_sys);
+    close(joy_general);
+    close(joy_power);
 
     return 0;
 }

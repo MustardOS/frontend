@@ -86,8 +86,10 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->BATTERY.CHARGER, "battery/charger")
 
     DEV_INT_FIELD(device->INPUT.AXIS, "input/axis")
-    DEV_STR_FIELD(device->INPUT.EV0, "input/ev0")
-    DEV_STR_FIELD(device->INPUT.EV1, "input/ev1")
+    DEV_STR_FIELD(device->INPUT.JOY_GENERAL, "input/general")
+    DEV_STR_FIELD(device->INPUT.JOY_POWER, "input/power")
+    DEV_STR_FIELD(device->INPUT.JOY_VOLUME, "input/volume")
+    DEV_STR_FIELD(device->INPUT.JOY_EXTRA, "input/extra")
 
     DEV_INT_FIELD(device->RAW_INPUT.DPAD.UP, "input/code/dpad/up")
     DEV_INT_FIELD(device->RAW_INPUT.DPAD.DOWN, "input/code/dpad/down")

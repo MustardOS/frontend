@@ -6,8 +6,10 @@ extern struct mux_lang lang;
 
 struct mux_lang {
     struct {
-        char NO_JOY[MAX_BUFFER_SIZE];
-        char NO_JOY_ALT[MAX_BUFFER_SIZE];
+        char NO_JOY_GENERAL[MAX_BUFFER_SIZE];
+        char NO_JOY_POWER[MAX_BUFFER_SIZE];
+        char NO_JOY_VOLUME[MAX_BUFFER_SIZE];
+        char NO_JOY_EXTRA[MAX_BUFFER_SIZE];
         char FAIL_ALLOCATE_MEM[MAX_BUFFER_SIZE];
         char FAIL_DUP_STRING[MAX_BUFFER_SIZE];
         char FAIL_DIR_OPEN[MAX_BUFFER_SIZE];

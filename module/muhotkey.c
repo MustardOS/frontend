@@ -340,15 +340,27 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    input_opts.gamepad_fd = open(device.INPUT.EV1, O_RDONLY);
-    if (input_opts.gamepad_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY);
+    input_opts.general_fd = open(device.INPUT.JOY_GENERAL, O_RDONLY);
+    if (input_opts.general_fd < 0) {
+        perror(lang.SYSTEM.NO_JOY_GENERAL);
         return 1;
     }
 
-    input_opts.system_fd = open(device.INPUT.EV0, O_RDONLY);
-    if (input_opts.system_fd < 0) {
-        perror(lang.SYSTEM.NO_JOY_ALT);
+    input_opts.power_fd = open(device.INPUT.JOY_POWER, O_RDONLY);
+    if (input_opts.power_fd < 0) {
+        perror(lang.SYSTEM.NO_JOY_POWER);
+        return 1;
+    }
+
+    input_opts.volume_fd = open(device.INPUT.JOY_VOLUME, O_RDONLY);
+    if (input_opts.volume_fd < 0) {
+        perror(lang.SYSTEM.NO_JOY_VOLUME);
+        return 1;
+    }
+
+    input_opts.extra_fd = open(device.INPUT.JOY_EXTRA, O_RDONLY);
+    if (input_opts.extra_fd < 0) {
+        perror(lang.SYSTEM.NO_JOY_EXTRA);
         return 1;
     }
 
@@ -405,8 +417,10 @@ int main(int argc, char *argv[]) {
         free(combo[i].name);
     }
 
-    close(input_opts.system_fd);
-    close(input_opts.gamepad_fd);
+    close(input_opts.general_fd);
+    close(input_opts.power_fd);
+    close(input_opts.volume_fd);
+    close(input_opts.extra_fd);
 
     return 0;
 }

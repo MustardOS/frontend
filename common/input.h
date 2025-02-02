@@ -93,8 +93,10 @@ typedef struct {
 // Configuration for the muOS input subsystem.
 typedef struct {
     // File descriptors for the underlying evdev devices.
-    int gamepad_fd;
-    int system_fd;
+    int general_fd;
+    int power_fd;
+    int volume_fd;
+    int extra_fd;
 
     // If nonzero, the longest delay allowed without an input before the idle_handler is called.
     // (The idle_handler may still be called more frequently at times.)
