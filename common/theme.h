@@ -28,6 +28,10 @@ struct theme_config {
     struct {
         uint32_t BACKGROUND;
         int16_t BACKGROUND_ALPHA;
+        uint32_t BACKGROUND_GRADIENT_COLOR;
+        int16_t BACKGROUND_GRADIENT_START;
+        int16_t BACKGROUND_GRADIENT_STOP;
+        int16_t BACKGROUND_GRADIENT_DIRECTION;
     } SYSTEM;
 
     struct {
@@ -220,6 +224,10 @@ struct theme_config {
             int16_t RADIUS;
             int16_t BORDER_WIDTH;
             int16_t IMAGE_PADDING_TOP;
+            uint32_t SHADOW;
+            int16_t SHADOW_WIDTH;
+            int16_t SHADOW_X_OFFSET;
+            int16_t SHADOW_Y_OFFSET;
             int16_t TEXT_PADDING_SIDE;
             int16_t TEXT_PADDING_BOTTOM;
             int16_t TEXT_LINE_SPACING;
@@ -227,6 +235,10 @@ struct theme_config {
         struct {
             uint32_t BACKGROUND;
             int16_t BACKGROUND_ALPHA;
+            uint32_t BACKGROUND_GRADIENT_COLOR;
+            int16_t BACKGROUND_GRADIENT_START;
+            int16_t BACKGROUND_GRADIENT_STOP;
+            int16_t BACKGROUND_GRADIENT_DIRECTION;
             uint32_t BORDER;
             int16_t BORDER_ALPHA;
             uint32_t TEXT;
@@ -238,6 +250,10 @@ struct theme_config {
         struct {
             uint32_t BACKGROUND;
             int16_t BACKGROUND_ALPHA;
+            uint32_t BACKGROUND_GRADIENT_COLOR;
+            int16_t BACKGROUND_GRADIENT_START;
+            int16_t BACKGROUND_GRADIENT_STOP;
+            int16_t BACKGROUND_GRADIENT_DIRECTION;
             uint32_t BORDER;
             int16_t BORDER_ALPHA;
             uint32_t TEXT;

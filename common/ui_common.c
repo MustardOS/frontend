@@ -76,6 +76,11 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_screen, theme->SYSTEM.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND_GRADIENT_COLOR), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_START, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_STOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     lv_obj_set_style_text_font(ui_screen, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_width(ui_screen, device->MUX.WIDTH);
     lv_obj_set_height(ui_screen, device->MUX.HEIGHT);
@@ -1047,9 +1052,21 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    static lv_style_t style;
+    lv_style_init(&style);
+    lv_style_set_shadow_width(&style, theme->GRID.CELL.SHADOW_WIDTH);
+    lv_style_set_shadow_color(&style, lv_color_hex(theme->GRID.CELL.SHADOW));
+    lv_style_set_shadow_ofs_x(&style, theme->GRID.CELL.SHADOW_X_OFFSET);
+    lv_style_set_shadow_ofs_y(&style, theme->GRID.CELL.SHADOW_Y_OFFSET);
+    lv_obj_add_style(cell_pnl, &style, 0);
+
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND),
                               LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BORDER),
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1072,6 +1089,11 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BORDER),
                                   LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    lv_obj_set_style_bg_grad_color(cell_pnl, lv_color_hex(theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_main_stop(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_grad_stop(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_bg_grad_dir(cell_pnl, theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION, LV_PART_MAIN | LV_STATE_FOCUSED);
     lv_obj_set_style_border_opa(cell_pnl, theme->GRID.CELL_FOCUS.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_FOCUSED);
 
     lv_obj_set_style_text_color(cell_label, lv_color_hex(theme->GRID.CELL_FOCUS.TEXT),
