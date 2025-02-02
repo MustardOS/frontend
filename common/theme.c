@@ -190,6 +190,10 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->GRID.CELL.RADIUS = 10;
     theme->GRID.CELL.BORDER_WIDTH = 5;
     theme->GRID.CELL.IMAGE_PADDING_TOP = 5;
+    theme->GRID.CELL.SHADOW = 0x000000;
+    theme->GRID.CELL.SHADOW_WIDTH = 0;
+    theme->GRID.CELL.SHADOW_X_OFFSET = 10;
+    theme->GRID.CELL.SHADOW_Y_OFFSET = 10;
     theme->GRID.CELL.TEXT_PADDING_BOTTOM = 5;
     theme->GRID.CELL.TEXT_PADDING_SIDE = 5;
     theme->GRID.CELL.TEXT_LINE_SPACING = 0;
@@ -559,6 +563,10 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.CELL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_BOTTOM", theme->GRID.CELL.TEXT_PADDING_BOTTOM);
     theme->GRID.CELL.TEXT_PADDING_SIDE = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_SIDE", theme->GRID.CELL.TEXT_PADDING_SIDE);
     theme->GRID.CELL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid", "CELL_TEXT_LINE_SPACING", theme->GRID.CELL.TEXT_LINE_SPACING);
+    theme->GRID.CELL.SHADOW = get_ini_hex(muos_theme, "grid", "CELL_SHADOW", theme->GRID.CELL.SHADOW);
+    theme->GRID.CELL.SHADOW_WIDTH = get_ini_int(muos_theme, "grid", "CELL_SHADOW_WIDTH", theme->GRID.CELL.SHADOW_WIDTH);
+    theme->GRID.CELL.SHADOW_X_OFFSET = get_ini_int(muos_theme, "grid", "CELL_SHADOW_X_OFFSET", theme->GRID.CELL.SHADOW_X_OFFSET);
+    theme->GRID.CELL.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "grid", "CELL_SHADOW_Y_OFFSET", theme->GRID.CELL.SHADOW_Y_OFFSET);
 
     theme->GRID.CELL_DEFAULT.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND", theme->GRID.CELL_DEFAULT.BACKGROUND);
     theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_ALPHA", theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA);

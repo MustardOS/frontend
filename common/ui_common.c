@@ -1052,6 +1052,14 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(cell_pnl, theme->GRID.CELL.BORDER_WIDTH, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    static lv_style_t style;
+    lv_style_init(&style);
+    lv_style_set_shadow_width(&style, theme->GRID.CELL.SHADOW_WIDTH);
+    lv_style_set_shadow_color(&style, lv_color_hex(theme->GRID.CELL.SHADOW));
+    lv_style_set_shadow_ofs_x(&style, theme->GRID.CELL.SHADOW_X_OFFSET);
+    lv_style_set_shadow_ofs_y(&style, theme->GRID.CELL.SHADOW_Y_OFFSET);
+    lv_obj_add_style(cell_pnl, &style, 0);
+
     lv_obj_set_style_bg_color(cell_pnl, lv_color_hex(theme->GRID.CELL_DEFAULT.BACKGROUND),
                               LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(cell_pnl, theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);

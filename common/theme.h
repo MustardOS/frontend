@@ -224,6 +224,10 @@ struct theme_config {
             int16_t RADIUS;
             int16_t BORDER_WIDTH;
             int16_t IMAGE_PADDING_TOP;
+            uint32_t SHADOW;
+            int16_t SHADOW_WIDTH;
+            int16_t SHADOW_X_OFFSET;
+            int16_t SHADOW_Y_OFFSET;
             int16_t TEXT_PADDING_SIDE;
             int16_t TEXT_PADDING_BOTTOM;
             int16_t TEXT_LINE_SPACING;
