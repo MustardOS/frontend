@@ -62,6 +62,16 @@ void show_help() {
                      lang.MUXNETPROFILE.TITLE, lang.MUXNETPROFILE.HELP);
 }
 
+void sanitize_ssid_name(char *dest, const char *src, size_t max_len) {
+    size_t j = 0;
+    while (*src && j < max_len - 1) {
+        // replace any slashes with underscores, to prevent some valid SSID names leading to invalid profile file names
+        dest[j++] = (*src == '/' || *src == '\\') ? '_' : *src;
+        src++;
+    }
+    dest[j] = '\0';
+}
+
 int remove_profile(char *name) {
     static char profile_file[MAX_BUFFER_SIZE];
     snprintf(profile_file, sizeof(profile_file),
@@ -143,12 +153,15 @@ int save_profile() {
     static char profile_file[MAX_BUFFER_SIZE];
     int counter = 1;
 
+    char sanitized_ssid[MAX_BUFFER_SIZE];
+    sanitize_ssid_name(sanitized_ssid, p_ssid, sizeof(sanitized_ssid));
+
     snprintf(profile_file, sizeof(profile_file),
-             (RUN_STORAGE_PATH "network/%s.ini"), p_ssid);
+             (RUN_STORAGE_PATH "network/%s.ini"), sanitized_ssid);
 
     while (file_exist(profile_file)) {
         snprintf(profile_file, sizeof(profile_file),
-                 (RUN_STORAGE_PATH "network/%s - %d.ini"), p_ssid, ++counter);
+                 (RUN_STORAGE_PATH "network/%s - %d.ini"), sanitized_ssid, ++counter);
     }
 
     mini_t *net_profile = mini_try_load(profile_file);
