@@ -58,8 +58,7 @@ int main(int argc, char *argv[]) {
     char init_wall[MAX_BUFFER_SIZE];
     snprintf(init_wall, sizeof(init_wall), "M:%s", argv[1]);
 
-    lv_obj_t *img = lv_img_create(ui_screen);
-    lv_img_set_src(img, init_wall);
+    lv_img_set_src(ui_imgWall, init_wall);
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
