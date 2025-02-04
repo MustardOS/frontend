@@ -6,6 +6,7 @@
 #include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
+#include "../common/ui_common.h"
 #include "../common/language.h"
 #include "../common/config.h"
 #include "../common/device.h"
@@ -45,26 +46,29 @@ int main(int argc, char *argv[]) {
 
     load_device(&device);
     load_config(&config);
+    load_lang(&lang);
 
     init_display();
+    init_theme(0, 0);
 
-    lv_obj_t *ui_scrSplash = lv_obj_create(NULL);
-    lv_disp_load_scr(ui_scrSplash);
+    init_ui_common_screen(&theme, &device, &lang, "");
+    lv_obj_add_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
 
     char init_wall[MAX_BUFFER_SIZE];
     snprintf(init_wall, sizeof(init_wall), "M:%s", argv[1]);
 
-    lv_obj_t *img = lv_img_create(ui_scrSplash);
+    lv_obj_t *img = lv_img_create(ui_screen);
     lv_img_set_src(img, init_wall);
 
 #if TEST_IMAGE
-    display_testing_message(ui_scrSplash);
+    display_testing_message(ui_screen);
 #endif
 
-    overlay_image = lv_img_create(ui_scrSplash);
-    load_overlay_image(ui_scrSplash, overlay_image, theme.MISC.IMAGE_OVERLAY);
+    overlay_image = lv_img_create(ui_screen);
+    load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 
-    refresh_screen(ui_scrSplash);
+    refresh_screen(ui_screen);
 
     safe_quit();
     return 0;
