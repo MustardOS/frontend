@@ -119,7 +119,7 @@ void init_dropdown_settings() {
 
 void restore_tweak_options() {
     map_drop_down_to_index(ui_droShutdown, config.SETTINGS.POWER.SHUTDOWN,
-                           (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600}, 11, 0);
+                           (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600, 43200, 86400}, 13, 0);
 
     map_drop_down_to_index(ui_droBattery, config.SETTINGS.POWER.LOW_BATTERY,
                            (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 5);
@@ -133,7 +133,7 @@ void restore_tweak_options() {
 
 void save_tweak_options() {
     int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown),
-                                              (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800, 3600}, 12, -2);
+                                              (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800, 3600, 43200, 86400}, 14, -2);
 
     int idx_battery = map_drop_down_to_value(lv_dropdown_get_selected(ui_droBattery),
                                              (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 25);
@@ -229,9 +229,10 @@ void init_navigation_group() {
             lang.GENERIC.DISABLED, lang.MUXPOWER.SLEEP.SUSPEND, lang.MUXPOWER.SLEEP.INSTANT,
             lang.MUXPOWER.SLEEP.t10s, lang.MUXPOWER.SLEEP.t30s, lang.MUXPOWER.SLEEP.t60s,
             lang.MUXPOWER.SLEEP.t2m, lang.MUXPOWER.SLEEP.t5m, lang.MUXPOWER.SLEEP.t10m,
-            lang.MUXPOWER.SLEEP.t15m, lang.MUXPOWER.SLEEP.t30m, lang.MUXPOWER.SLEEP.t60m
+            lang.MUXPOWER.SLEEP.t15m, lang.MUXPOWER.SLEEP.t30m, lang.MUXPOWER.SLEEP.t60m,
+            lang.MUXPOWER.SLEEP.t12h, lang.MUXPOWER.SLEEP.t24h
     };
-    add_drop_down_options(ui_droShutdown, sleep_timer, 11);
+    add_drop_down_options(ui_droShutdown, sleep_timer, 13);
 
     char *idle_timer[] = {
             lang.GENERIC.DISABLED, lang.MUXPOWER.IDLE.t10s, lang.MUXPOWER.IDLE.t30s,

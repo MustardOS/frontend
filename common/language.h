@@ -370,6 +370,8 @@ struct mux_lang {
             char t15m[MAX_BUFFER_SIZE];
             char t30m[MAX_BUFFER_SIZE];
             char t60m[MAX_BUFFER_SIZE];
+            char t12h[MAX_BUFFER_SIZE];
+            char t24h[MAX_BUFFER_SIZE];
         } SLEEP;
         struct {
             char IDLE_DISPLAY[MAX_BUFFER_SIZE];

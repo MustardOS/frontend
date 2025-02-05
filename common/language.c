@@ -328,6 +328,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t15m, "Sleep 15m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t30m, "Sleep 30m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t60m, "Sleep 60m + Shutdown");
+    SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t12h, "Sleep 12h + Shutdown");
+    SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t24h, "Sleep 24h + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_SLEEP, "Configure the time the device will sleep when no input is detected");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_DISPLAY, "Configure the time the screen will dim when no input is detected");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.LOW_BATTERY, "Configure when the red LED will display based on the current capacity percentage");
