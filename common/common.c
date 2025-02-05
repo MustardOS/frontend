@@ -1085,6 +1085,8 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
     }
 
     if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
+                             wall_extension, wall_image_path, sizeof(wall_image_path)) ||
+        load_image_specifics(STORAGE_THEME, "", program, "wall",
                              wall_extension, wall_image_path, sizeof(wall_image_path))) {
         int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
         if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";

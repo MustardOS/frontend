@@ -22,8 +22,12 @@ void init_mux(void) {
     lv_obj_clear_flag(ui_scrCharge, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE |
                                     LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
     lv_obj_set_scrollbar_mode(ui_scrCharge, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_set_style_bg_color(ui_scrCharge, lv_color_hex(theme.CHARGER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_scrCharge, theme.CHARGER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_scrCharge, lv_color_hex(theme.SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_scrCharge, theme.SYSTEM.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(ui_scrCharge, lv_color_hex(theme.SYSTEM.BACKGROUND_GRADIENT_COLOR), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_main_stop(ui_scrCharge, theme.SYSTEM.BACKGROUND_GRADIENT_START, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_stop(ui_scrCharge, theme.SYSTEM.BACKGROUND_GRADIENT_STOP, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(ui_scrCharge, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_scrCharge, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlWall = lv_obj_create(ui_scrCharge);
@@ -37,8 +41,6 @@ void init_mux(void) {
 
     ui_imgWall = lv_img_create(ui_pnlWall);
     lv_img_set_src(ui_imgWall, &ui_image_Nothing);
-    lv_obj_set_width(ui_imgWall, device.MUX.WIDTH);
-    lv_obj_set_height(ui_imgWall, device.MUX.HEIGHT);
     lv_obj_set_align(ui_imgWall, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_imgWall, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
