@@ -309,17 +309,20 @@ void image_refresh(char *image_type) {
         } else {
             if (items[current_item_index].content_type == FOLDER) {
                 char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
-                if (!load_image_catalogue("Folder", strip_ext(items[current_item_index].name), catalogue_name, mux_dimension, image_type,
-                                  image, sizeof(image)))
-                    load_image_catalogue("Folder", strip_ext(items[current_item_index].name), "default", mux_dimension, image_type,
-                                  image, sizeof(image));
+                if (!load_image_catalogue("Folder", strip_ext(items[current_item_index].name), catalogue_name,
+                                          mux_dimension, image_type,
+                                          image, sizeof(image)))
+                    load_image_catalogue("Folder", strip_ext(items[current_item_index].name), "default", mux_dimension,
+                                         image_type,
+                                         image, sizeof(image));
             } else {
-                load_image_catalogue(core_artwork, strip_ext(items[current_item_index].name), "default", mux_dimension, image_type,
-                                  image, sizeof(image));
+                load_image_catalogue(core_artwork, strip_ext(items[current_item_index].name), "default", mux_dimension,
+                                     image_type,
+                                     image, sizeof(image));
             }
             if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
                 load_splash_image_fallback(mux_dimension, image, sizeof(image));
-            } 
+            }
         }
     }
 
@@ -632,7 +635,7 @@ void init_navigation_group_grid() {
         if (!load_image_catalogue("Folder", strip_ext(items[i].name), catalogue_name, mux_dimension, "grid",
                                   grid_image, sizeof(grid_image)))
             load_image_catalogue("Folder", strip_ext(items[i].name), "default", mux_dimension, "grid",
-                                  grid_image, sizeof(grid_image));
+                                 grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
@@ -643,7 +646,7 @@ void init_navigation_group_grid() {
         if (!load_image_catalogue("Folder", glyph_name_focused, catalogue_name_focused, mux_dimension, "grid",
                                   grid_image_focused, sizeof(grid_image_focused)))
             load_image_catalogue("Folder", glyph_name_focused, "default_focused", mux_dimension, "grid",
-                                  grid_image_focused, sizeof(grid_image_focused));
+                                 grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, grid_image_focused, items[i].display_name);
@@ -684,7 +687,7 @@ void create_content_items() {
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {
             char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
-            
+
             char rom_dir[MAX_BUFFER_SIZE];
             snprintf(rom_dir, sizeof(rom_dir), "%s/%s", sys_dir, dir_names[i]);
             automatic_assign_core(rom_dir);
@@ -746,7 +749,7 @@ int load_content(int add_collection) {
     LOG_INFO(mux_module, "Assigned Core: %s", str_replace(assigned_core, "\n", "|"))
 
     char *assigned_gov = load_content_governor(0, 1);
-    if (assigned_core && strcasestr(assigned_core, "(null)")) {
+    if (assigned_gov == NULL && strcasestr(assigned_gov, "(null)")) {
         LOG_INFO(mux_module, "Using Default Governor: %s", device.CPU.DEFAULT)
         assigned_gov = strdup(device.CPU.DEFAULT);
     } else {
@@ -793,7 +796,7 @@ int load_content(int add_collection) {
         } else {
             snprintf(content, sizeof(content), "%s/%s-%08X.cfg", INFO_HIS_PATH, content_name, fnv1a_hash(cache_file));
             write_text_to_file(content, "w", CHAR, pointer);
-            write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_from_file(pointer, 1));
+            write_text_to_file(LAST_PLAY_FILE, "w", CHAR, cache_file);
             write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(content_loader_file));
         }
