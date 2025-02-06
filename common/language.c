@@ -253,12 +253,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETWORK.GATEWAY, "Gateway IP");
     SPECIFIC_FIELD(lang->MUXNETWORK.HIDDEN, "Hidden Network");
     SPECIFIC_FIELD(lang->MUXNETWORK.SSID, "Identifier");
-    SPECIFIC_FIELD(lang->MUXNETWORK.ACTIVE, "Network Active");
     SPECIFIC_FIELD(lang->MUXNETWORK.DISABLED, "Network Disabled");
     SPECIFIC_FIELD(lang->MUXNETWORK.TYPE, "Network Type");
     SPECIFIC_FIELD(lang->MUXNETWORK.CHECK, "Please check network settings");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.TYPE, "Toggle between DHCP and Static network types");
-    SPECIFIC_FIELD(lang->MUXNETWORK.HELP.ACTIVE, "Toggle the Wi-Fi network on and off");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.HIDDEN, "Toggle whether or not to try and connect to a hidden SSID broadcast");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.PASSWORD, "Enter the network password here (optional)");
     SPECIFIC_FIELD(lang->MUXNETWORK.HELP.SSID, "Enter the network identifier (SSID) here");

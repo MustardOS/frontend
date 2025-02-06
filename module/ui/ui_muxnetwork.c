@@ -3,7 +3,6 @@
 
 lv_obj_t *ui_scrNetwork;
 
-lv_obj_t *ui_pnlEnable;
 lv_obj_t *ui_pnlIdentifier;
 lv_obj_t *ui_pnlPassword;
 lv_obj_t *ui_pnlScan;
@@ -14,7 +13,6 @@ lv_obj_t *ui_pnlGateway;
 lv_obj_t *ui_pnlDNS;
 lv_obj_t *ui_pnlConnect;
 
-lv_obj_t *ui_lblEnable;
 lv_obj_t *ui_lblIdentifier;
 lv_obj_t *ui_lblPassword;
 lv_obj_t *ui_lblScan;
@@ -25,7 +23,6 @@ lv_obj_t *ui_lblGateway;
 lv_obj_t *ui_lblDNS;
 lv_obj_t *ui_lblConnect;
 
-lv_obj_t *ui_icoEnable;
 lv_obj_t *ui_icoIdentifier;
 lv_obj_t *ui_icoPassword;
 lv_obj_t *ui_icoScan;
@@ -36,7 +33,6 @@ lv_obj_t *ui_icoGateway;
 lv_obj_t *ui_icoDNS;
 lv_obj_t *ui_icoConnect;
 
-lv_obj_t *ui_lblEnableValue;
 lv_obj_t *ui_lblIdentifierValue;
 lv_obj_t *ui_lblPasswordValue;
 lv_obj_t *ui_lblScanValue;
@@ -51,7 +47,6 @@ lv_obj_t *ui_pnlEntry;
 lv_obj_t *ui_txtEntry;
 
 void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
-    ui_pnlEnable = lv_obj_create(ui_pnlContent);
     ui_pnlIdentifier = lv_obj_create(ui_pnlContent);
     ui_pnlPassword = lv_obj_create(ui_pnlContent);
     ui_pnlScan = lv_obj_create(ui_pnlContent);
@@ -62,7 +57,6 @@ void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config 
     ui_pnlDNS = lv_obj_create(ui_pnlContent);
     ui_pnlConnect = lv_obj_create(ui_pnlContent);
 
-    ui_lblEnable = lv_label_create(ui_pnlEnable);
     ui_lblIdentifier = lv_label_create(ui_pnlIdentifier);
     ui_lblPassword = lv_label_create(ui_pnlPassword);
     ui_lblScan = lv_label_create(ui_pnlScan);
@@ -73,7 +67,6 @@ void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config 
     ui_lblDNS = lv_label_create(ui_pnlDNS);
     ui_lblConnect = lv_label_create(ui_pnlConnect);
 
-    ui_icoEnable = lv_img_create(ui_pnlEnable);
     ui_icoIdentifier = lv_img_create(ui_pnlIdentifier);
     ui_icoPassword = lv_img_create(ui_pnlPassword);
     ui_icoScan = lv_img_create(ui_pnlScan);
@@ -84,7 +77,6 @@ void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config 
     ui_icoDNS = lv_img_create(ui_pnlDNS);
     ui_icoConnect = lv_img_create(ui_pnlConnect);
 
-    ui_lblEnableValue = lv_label_create(ui_pnlEnable);
     ui_lblIdentifierValue = lv_label_create(ui_pnlIdentifier);
     ui_lblPasswordValue = lv_label_create(ui_pnlPassword);
     ui_lblScanValue = lv_label_create(ui_pnlScan);

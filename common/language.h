@@ -279,13 +279,11 @@ struct mux_lang {
         char GATEWAY[MAX_BUFFER_SIZE];
         char HIDDEN[MAX_BUFFER_SIZE];
         char SSID[MAX_BUFFER_SIZE];
-        char ACTIVE[MAX_BUFFER_SIZE];
         char DISABLED[MAX_BUFFER_SIZE];
         char TYPE[MAX_BUFFER_SIZE];
         char CHECK[MAX_BUFFER_SIZE];
         struct {
             char TYPE[MAX_BUFFER_SIZE];
-            char ACTIVE[MAX_BUFFER_SIZE];
             char HIDDEN[MAX_BUFFER_SIZE];
             char PASSWORD[MAX_BUFFER_SIZE];
             char SSID[MAX_BUFFER_SIZE];
