@@ -366,7 +366,7 @@ static void window_update(monitor_t *m) {
     if (m->tft_fb_act == NULL) return;
     SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, device.SCREEN.WIDTH * sizeof(uint32_t));
 #endif
-    SDL_RenderClear(m->renderer);
+    //SDL_RenderClear(m->renderer);
     lv_disp_t *d = _lv_refr_get_disp_refreshing();
     if (d->driver->screen_transp) {
         SDL_SetRenderDrawColor(m->renderer, 0xff, 0, 0, 0xff);
