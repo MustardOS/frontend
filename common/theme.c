@@ -767,6 +767,16 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     mini_free(muos_theme);
 }
 
+int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size){
+    char active_path[MAX_BUFFER_SIZE];
+    snprintf(active_path, sizeof(active_path), "%s/active.txt", STORAGE_THEME);
+    if (file_exist(active_path)) {
+        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", STORAGE_THEME, str_replace(read_line_from_file(active_path, 1), "\r", ""));
+        return file_exist(alt_scheme_path);
+    }
+    return 0;
+}
+
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device) {
     char scheme[MAX_BUFFER_SIZE];
     char mux_dimension[15];
@@ -800,6 +810,12 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
                 LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme);
                 scheme_loaded = 1;
                 load_theme_from_scheme(scheme, theme, device);
+            }
+        }
+        if (scheme_loaded) {
+            char alternate_scheme_path[MAX_BUFFER_SIZE];
+            if (get_alt_scheme_path(alternate_scheme_path, sizeof(alternate_scheme_path))) {
+                load_theme_from_scheme(alternate_scheme_path, theme, device);
             }
         }
     }
