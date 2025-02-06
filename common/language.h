@@ -128,6 +128,7 @@ struct mux_lang {
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
+        char THEME_ALTERNATE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
         struct {
             char CATALOGUE[MAX_BUFFER_SIZE];
