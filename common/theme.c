@@ -520,7 +520,6 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.LOCATION_Y = get_ini_int(muos_theme, "grid", "LOCATION_Y", theme->GRID.LOCATION_Y);
     theme->GRID.COLUMN_COUNT = get_ini_int(muos_theme, "grid", "COLUMN_COUNT", theme->GRID.COLUMN_COUNT);
     theme->GRID.ROW_COUNT = get_ini_int(muos_theme, "grid", "ROW_COUNT", theme->GRID.ROW_COUNT);
-    theme->GRID.ENABLED = (theme->GRID.COLUMN_COUNT > 0 && theme->GRID.ROW_COUNT > 0);
 
     theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_ALIGNMENT",
                                                            theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT);
@@ -829,6 +828,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         }
     }
 
+    theme->GRID.ENABLED = (theme->GRID.COLUMN_COUNT > 0 && theme->GRID.ROW_COUNT > 0);
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
     if (theme->MUX.ITEM.HEIGHT > 0) {
