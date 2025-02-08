@@ -83,6 +83,15 @@ void create_archive_items() {
     char **file_names = NULL;
     size_t file_count = 0;
 
+    const char *ext_map[][2] = {
+            {".muxupd", "UPD"},
+            {".muxapp", "APP"},
+            {".muxzip", "ZIP"},
+            {".muxthm", "THM"},
+            {".muxcat", "CAT"},
+            {".muxcfg", "CFG"}
+    };
+
     for (size_t dir_index = 0; dir_index < sizeof(archive_directories) / sizeof(archive_directories[0]); ++dir_index) {
         DIR *ad = opendir(archive_directories[dir_index]);
         if (!ad) continue;
@@ -91,26 +100,40 @@ void create_archive_items() {
         while ((af = readdir(ad))) {
             if (af->d_type == DT_REG) {
                 const char *last_dot = strrchr(af->d_name, '.');
-                if (last_dot && strcasecmp(last_dot, ".zip") == 0) {
-                    char full_app_name[MAX_BUFFER_SIZE];
-                    snprintf(full_app_name, sizeof(full_app_name), "%s/%s", archive_directories[dir_index], af->d_name);
+                if (!last_dot) continue;
 
-                    char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    if (!temp) {
-                        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
-                        free(file_names);
-                        closedir(ad);
-                        return;
+                const char *prefix = NULL;
+                for (size_t i = 0; i < sizeof(ext_map) / sizeof(ext_map[0]); ++i) {
+                    if (strcasecmp(last_dot, ext_map[i][0]) == 0) {
+                        prefix = ext_map[i][1];
+                        break;
                     }
+                }
 
-                    file_names = temp;
-                    file_names[file_count] = strdup(full_app_name);
-                    if (!file_names[file_count++]) {
-                        perror(lang.SYSTEM.FAIL_DUP_STRING);
-                        free(file_names);
-                        closedir(ad);
-                        return;
-                    }
+                if (!prefix) continue;
+
+                char base_name[MAX_BUFFER_SIZE];
+                strncpy(base_name, af->d_name, last_dot - af->d_name);
+                base_name[last_dot - af->d_name] = '\0';
+
+                char full_app_name[MAX_BUFFER_SIZE];
+                snprintf(full_app_name, sizeof(full_app_name), "%s/%s", archive_directories[dir_index], af->d_name);
+
+                char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
+                if (!temp) {
+                    perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+                    free(file_names);
+                    closedir(ad);
+                    return;
+                }
+
+                file_names = temp;
+                file_names[file_count] = strdup(full_app_name);
+                if (!file_names[file_count++]) {
+                    perror(lang.SYSTEM.FAIL_DUP_STRING);
+                    free(file_names);
+                    closedir(ad);
+                    return;
                 }
             }
         }
@@ -119,12 +142,6 @@ void create_archive_items() {
 
     if (!file_names) return;
     qsort(file_names, file_count, sizeof(char *), str_compare);
-
-    const char *prefix_map[][2] = {
-            {subdirs[0], "[%s-U]"},
-            {subdirs[1], "[%s-B]"},
-            {subdirs[2], "[%s-A]"}
-    };
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -137,20 +154,26 @@ void create_archive_items() {
 
         const char *prefix = NULL;
         for (size_t j = 0; j < sizeof(mount_points) / sizeof(mount_points[0]); ++j) {
-            for (size_t k = 0; k < sizeof(prefix_map) / sizeof(prefix_map[0]); ++k) {
-                char full_path[MAX_BUFFER_SIZE];
-                snprintf(full_path, sizeof(full_path), "%s%s", mount_points[j], prefix_map[k][0]);
+            if (strstr(base_filename, mount_points[j])) {
+                static char storage_prefix[MAX_BUFFER_SIZE];
 
-                if (strstr(base_filename, full_path)) {
-                    static char storage_prefix[MAX_BUFFER_SIZE];
-                    snprintf(storage_prefix, sizeof(storage_prefix), prefix_map[k][1],
-                             j == 0 ? "SD1" : (j == 1 ? "SD2" : "USB"));
-                    prefix = storage_prefix;
-                    break;
+                const char *file_extension = strrchr(base_filename, '.');
+                const char *ext_type = NULL;
+                if (file_extension) {
+                    for (size_t i = 0; i < sizeof(ext_map) / sizeof(ext_map[0]); ++i) {
+                        if (strcasecmp(file_extension, ext_map[i][0]) == 0) {
+                            ext_type = ext_map[i][1];
+                            break;
+                        }
+                    }
                 }
-            }
+                if (!ext_type) ext_type = "UNK";
 
-            if (prefix) break;
+                snprintf(storage_prefix, sizeof(storage_prefix), "[%s-%s]",
+                         j == 0 ? "SD1" : (j == 1 ? "SD2" : "USB"), ext_type);
+                prefix = storage_prefix;
+                break;
+            }
         }
 
         if (!prefix) continue;
@@ -179,7 +202,7 @@ void create_archive_items() {
         apply_theme_list_panel(ui_pnlArchive);
 
         lv_obj_t *ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
-        apply_theme_list_item(&theme, ui_lblArchiveItem, archive_store);
+        apply_theme_list_item(&theme, ui_lblArchiveItem, strip_ext(archive_store));
 
         lv_obj_t *ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
         apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, is_installed ? lang.MUXARCHIVE.INSTALLED : "");
