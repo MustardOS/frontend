@@ -51,6 +51,7 @@ int first_open = 1;
 char base_dir[PATH_MAX];
 char sys_dir[PATH_MAX];
 char *picker_type;
+char *picker_extension;
 
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
@@ -71,7 +72,7 @@ void show_help() {
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.zip", sys_dir, picker_name);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s", sys_dir, picker_name, picker_extension);
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(picker_archive, "credits.txt", "/tmp/credits.txt")) {
@@ -88,7 +89,7 @@ int version_check() {
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.zip", sys_dir, picker_name);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s", sys_dir, picker_name, picker_extension);
     return !extract_file_from_zip(picker_archive, "version.txt", "/tmp/version.txt");
 }
 
@@ -101,7 +102,7 @@ void image_refresh() {
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
     char picker_archive[MAX_BUFFER_SIZE];
 
-    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.zip", sys_dir, picker_name);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s", sys_dir, picker_name, picker_extension);
 
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
@@ -133,10 +134,12 @@ void create_picker_items() {
             char filename[FILENAME_MAX];
             snprintf(filename, sizeof(filename), "%s/%s", sys_dir, tf->d_name);
 
-            char *last_dot = strrchr(tf->d_name, '.');
-            if (last_dot && !strcasecmp(last_dot, ".zip")) {
-                *last_dot = '\0';
+            char file_ext[FILENAME_MAX];
+            snprintf(file_ext, sizeof(file_ext), ".%s", picker_extension);
 
+            char *last_dot = strrchr(tf->d_name, '.');
+            if (last_dot && !strcasecmp(last_dot, file_ext)) {
+                *last_dot = '\0';
                 add_item(&items, &item_count, tf->d_name, tf->d_name, "", ROM);
             }
         }
@@ -445,12 +448,16 @@ int main(int argc, char *argv[]) {
 
     const char *picker_title = NULL;
     if (!strcasecmp(picker_type, "theme")) {
+        picker_extension = "muxthm";
         picker_title = lang.MUXPICKER.THEME;
     } else if (!strcasecmp(picker_type, "package/catalogue")) {
+        picker_extension = "muxcat";
         picker_title = lang.MUXPICKER.CATALOGUE;
     } else if (!strcasecmp(picker_type, "package/config")) {
+        picker_extension = "muxcfg";
         picker_title = lang.MUXPICKER.CONFIG;
     } else {
+        picker_extension = "muxcus";
         picker_title = lang.MUXPICKER.CUSTOM;
     }
     init_ui_common_screen(&theme, &device, &lang, picker_title);
