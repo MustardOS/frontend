@@ -414,9 +414,9 @@ int main(int argc, char *argv[]) {
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
     init_timer(ui_refresh_task, NULL);
 
-    int nav_hidden = 1;
+    int nav_hidden = 0;
     if (ui_count > 0) {
-        nav_hidden = 0;
+        nav_hidden = 1;
         if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) list_nav_next(tin_index);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXTASK.NONE);

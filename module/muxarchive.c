@@ -310,12 +310,13 @@ void init_elements() {
     lv_label_set_text(ui_lblMessage, "");
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.EXTRACT);
-    lv_label_set_text(ui_lblNavX, lang.GENERIC.REMOVE);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavCGlyph,
             ui_lblNavC,
+            ui_lblNavXGlyph,
+            ui_lblNavX,
             ui_lblNavYGlyph,
             ui_lblNavY,
             ui_lblNavZGlyph,
@@ -391,9 +392,9 @@ int main(int argc, char *argv[]) {
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
     init_timer(ui_refresh_task, NULL);
 
-    int nav_hidden = 1;
+    int nav_hidden = 0;
     if (ui_count > 0) {
-        nav_hidden = 0;
+        nav_hidden = 1;
         if (arc_index > -1 && arc_index <= ui_count && current_item_index < ui_count) list_nav_next(arc_index);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXARCHIVE.NONE);
@@ -401,9 +402,7 @@ int main(int argc, char *argv[]) {
 
     struct nav_flag nav_e[] = {
             {ui_lblNavA,      nav_hidden},
-            {ui_lblNavAGlyph, nav_hidden},
-            {ui_lblNavX,      nav_hidden},
-            {ui_lblNavXGlyph, nav_hidden}
+            {ui_lblNavAGlyph, nav_hidden}
     };
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
