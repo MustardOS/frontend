@@ -647,7 +647,8 @@ int main(int argc, char *argv[]) {
             .extra_fd = joy_extra,
             .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE >= 1 && theme.MISC.NAVIGATION_TYPE <= 5),
+            .swap_axis = (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5) ||
+                        (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE >= 1 && theme.MISC.NAVIGATION_TYPE <= 5),
             .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,

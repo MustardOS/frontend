@@ -10,6 +10,7 @@
 #include "../common/language.h"
 #include "../common/theme.h"
 #include "../common/ui_common.h"
+#include "../common/collection.h"
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
@@ -99,7 +100,9 @@ void populate_theme_alternates() {
     if (dir == NULL) {
         perror("Unable to open directory");
     } else {
-        int drop_down_index = 0;
+        size_t item_count = 0;
+        content_item *items = NULL;
+
         while ((entry = readdir(dir)) != NULL) {
             char *filename = entry->d_name;
             size_t len = strlen(filename);
@@ -108,12 +111,16 @@ void populate_theme_alternates() {
                 char name_without_ext[MAX_BUFFER_SIZE];
                 strncpy(name_without_ext, filename, len - 4);
                 name_without_ext[len - 4] = '\0';
-                lv_dropdown_add_option(ui_droThemeAlternate, name_without_ext, drop_down_index);
-                drop_down_index++;
+                add_item(&items, &item_count, "", name_without_ext, "", ROM);
             }
         }
 
         closedir(dir);
+        sort_items(items, item_count);
+        for (int i = 0; i < item_count; i++) {
+            lv_dropdown_add_option(ui_droThemeAlternate, items[i].display_name, LV_DROPDOWN_POS_LAST);
+        }
+        free_items(items, item_count);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droThemeAlternate) == 0) {
