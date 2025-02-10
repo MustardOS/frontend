@@ -58,6 +58,13 @@ lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
 
+static const int shutdown_values[] = {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800, 3600};
+static const int battery_values[] = {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
+static const int idle_values[] = {0, 10, 30, 60, 120, 300, 600, 900, 1800};
+#define SHUTDOWN_COUNT 12
+#define BATTERY_COUNT 11
+#define IDLE_COUNT 9
+
 struct help_msg {
     lv_obj_t *element;
     char *message;
@@ -118,31 +125,42 @@ void init_dropdown_settings() {
 }
 
 void restore_tweak_options() {
-    map_drop_down_to_index(ui_droShutdown, config.SETTINGS.POWER.SHUTDOWN,
-                           (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 1800, 3600}, 11, 0);
+    lv_obj_t *ui_droIdle[2] = {ui_droIdleDisplay, ui_droIdleSleep};
+    int16_t *config_values[2] = {&config.SETTINGS.POWER.IDLE_DISPLAY, &config.SETTINGS.POWER.IDLE_SLEEP};
 
-    map_drop_down_to_index(ui_droBattery, config.SETTINGS.POWER.LOW_BATTERY,
-                           (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 5);
+    map_drop_down_to_index(ui_droShutdown, config.SETTINGS.POWER.SHUTDOWN, shutdown_values, SHUTDOWN_COUNT, 0);
+    map_drop_down_to_index(ui_droBattery, config.SETTINGS.POWER.LOW_BATTERY, battery_values, BATTERY_COUNT, 5);
 
-    map_drop_down_to_index(ui_droIdleDisplay, config.SETTINGS.POWER.IDLE_DISPLAY,
-                           (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
+    for (int i = 0; i < 2; i++) {
+        int is_custom = 1;
+        for (size_t j = 0; j < sizeof(idle_values) / sizeof(idle_values[0]); j++) {
+            if (*config_values[i] == idle_values[j]) {
+                is_custom = 0;
+                break;
+            }
+        }
 
-    map_drop_down_to_index(ui_droIdleSleep, config.SETTINGS.POWER.IDLE_SLEEP,
-                           (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
+        if (is_custom) {
+            lv_dropdown_clear_options(ui_droIdle[i]);
+            lv_dropdown_add_option(ui_droIdle[i], lang.GENERIC.USER_DEFINED, 0);
+        } else {
+            map_drop_down_to_index(ui_droIdle[i], *config_values[i], idle_values, 10, 0);
+        }
+    }
 }
 
 void save_tweak_options() {
     int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown),
-                                              (int[]) {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800, 3600}, 12, -2);
+                                              shutdown_values, SHUTDOWN_COUNT, -2);
 
     int idx_battery = map_drop_down_to_value(lv_dropdown_get_selected(ui_droBattery),
-                                             (int[]) {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50}, 11, 25);
+                                             battery_values, BATTERY_COUNT, 25);
 
     int idx_idle_display = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleDisplay),
-                                                  (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
+                                                  idle_values, IDLE_COUNT, 0);
 
     int idx_idle_sleep = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleSleep),
-                                                (int[]) {0, 10, 30, 60, 120, 300, 600, 900, 1800}, 9, 0);
+                                                idle_values, IDLE_COUNT, 0);
 
     int is_modified = 0;
 
@@ -156,12 +174,14 @@ void save_tweak_options() {
         write_text_to_file((RUN_GLOBAL_PATH "settings/power/low_battery"), "w", INT, idx_battery);
     }
 
-    if (lv_dropdown_get_selected(ui_droIdleDisplay) != idle_display_original) {
+    if (lv_dropdown_get_option_cnt(ui_droIdleDisplay) > 1 &&
+        lv_dropdown_get_selected(ui_droIdleDisplay) != idle_display_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/power/idle_display"), "w", INT, idx_idle_display);
     }
 
-    if (lv_dropdown_get_selected(ui_droIdleSleep) != idle_sleep_original) {
+    if (lv_dropdown_get_option_cnt(ui_droIdleSleep) > 1 &&
+        lv_dropdown_get_selected(ui_droIdleSleep) != idle_sleep_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/power/idle_sleep"), "w", INT, idx_idle_sleep);
     }
@@ -231,15 +251,15 @@ void init_navigation_group() {
             lang.MUXPOWER.SLEEP.t2m, lang.MUXPOWER.SLEEP.t5m, lang.MUXPOWER.SLEEP.t10m,
             lang.MUXPOWER.SLEEP.t15m, lang.MUXPOWER.SLEEP.t30m, lang.MUXPOWER.SLEEP.t60m
     };
-    add_drop_down_options(ui_droShutdown, sleep_timer, 11);
+    add_drop_down_options(ui_droShutdown, sleep_timer, SHUTDOWN_COUNT);
 
     char *idle_timer[] = {
             lang.GENERIC.DISABLED, lang.MUXPOWER.IDLE.t10s, lang.MUXPOWER.IDLE.t30s,
             lang.MUXPOWER.IDLE.t60s, lang.MUXPOWER.IDLE.t2m, lang.MUXPOWER.IDLE.t5m,
             lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t15m, lang.MUXPOWER.IDLE.t30m
     };
-    add_drop_down_options(ui_droIdleDisplay, idle_timer, 9);
-    add_drop_down_options(ui_droIdleSleep, idle_timer, 9);
+    add_drop_down_options(ui_droIdleDisplay, idle_timer, IDLE_COUNT);
+    add_drop_down_options(ui_droIdleSleep, idle_timer, IDLE_COUNT);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

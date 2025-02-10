@@ -60,6 +60,7 @@ struct mux_lang {
         char SYNC[MAX_BUFFER_SIZE];
         char UNKNOWN[MAX_BUFFER_SIZE];
         char USE[MAX_BUFFER_SIZE];
+        char USER_DEFINED[MAX_BUFFER_SIZE];
         char REBOOTING[MAX_BUFFER_SIZE];
         char SHUTTING_DOWN[MAX_BUFFER_SIZE];
     } GENERIC;
