@@ -449,10 +449,10 @@ void gen_item(char **file_names, int file_count) {
 
 char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
     char *friendly_folder_name = (char *) malloc(MAX_BUFFER_SIZE);
-    strcpy(friendly_folder_name, str_tolower(folder_name));
+    strcpy(friendly_folder_name, folder_name);
     if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
 
-    struct json good_name_json = json_object_get(fn_json, str_tolower(folder_name));
+    struct json good_name_json = json_object_get(fn_json, str_tolower(strdup(folder_name)));
     if (json_exists(good_name_json)) json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
 
     return friendly_folder_name;
