@@ -340,25 +340,25 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    input_opts.general_fd = open(device.INPUT.JOY_GENERAL, O_RDONLY);
+    input_opts.general_fd = open(device.INPUT_EVENT.JOY_GENERAL, O_RDONLY);
     if (input_opts.general_fd < 0) {
         perror(lang.SYSTEM.NO_JOY_GENERAL);
         return 1;
     }
 
-    input_opts.power_fd = open(device.INPUT.JOY_POWER, O_RDONLY);
+    input_opts.power_fd = open(device.INPUT_EVENT.JOY_POWER, O_RDONLY);
     if (input_opts.power_fd < 0) {
         perror(lang.SYSTEM.NO_JOY_POWER);
         return 1;
     }
 
-    input_opts.volume_fd = open(device.INPUT.JOY_VOLUME, O_RDONLY);
+    input_opts.volume_fd = open(device.INPUT_EVENT.JOY_VOLUME, O_RDONLY);
     if (input_opts.volume_fd < 0) {
         perror(lang.SYSTEM.NO_JOY_VOLUME);
         return 1;
     }
 
-    input_opts.extra_fd = open(device.INPUT.JOY_EXTRA, O_RDONLY);
+    input_opts.extra_fd = open(device.INPUT_EVENT.JOY_EXTRA, O_RDONLY);
     if (input_opts.extra_fd < 0) {
         perror(lang.SYSTEM.NO_JOY_EXTRA);
         return 1;

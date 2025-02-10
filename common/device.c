@@ -27,12 +27,40 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->STORAGE.field.TYPE,      "storage/" path "/type" ); \
     DEV_STR_FIELD(device->STORAGE.field.LABEL,     "storage/" path "/label");
 
-#define DEV_ALG_FIELD(field, path)                                                           \
-    DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.UP,    "input/code/analog/" path "/up"   ); \
-    DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.DOWN,  "input/code/analog/" path "/down" ); \
-    DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.LEFT,  "input/code/analog/" path "/left" ); \
-    DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.RIGHT, "input/code/analog/" path "/right"); \
-    DEV_INT_FIELD(device->RAW_INPUT.ANALOG.field.CLICK, "input/code/analog/" path "/click");
+#define DEV_ALG_FIELD(input, field, method, path)                                              \
+    DEV_INT_FIELD(device->input.ANALOG.field.UP,    "input/" method "/analog/" path "/up"   ); \
+    DEV_INT_FIELD(device->input.ANALOG.field.DOWN,  "input/" method "/analog/" path "/down" ); \
+    DEV_INT_FIELD(device->input.ANALOG.field.LEFT,  "input/" method "/analog/" path "/left" ); \
+    DEV_INT_FIELD(device->input.ANALOG.field.RIGHT, "input/" method "/analog/" path "/right"); \
+    DEV_INT_FIELD(device->input.ANALOG.field.CLICK, "input/" method "/analog/" path "/click");
+
+#define DEV_DPA_FIELD(input, method)                                        \
+    DEV_INT_FIELD(device->input.DPAD.UP,    "input/" method "/dpad/up"   ); \
+    DEV_INT_FIELD(device->input.DPAD.DOWN,  "input/" method "/dpad/down" ); \
+    DEV_INT_FIELD(device->input.DPAD.LEFT,  "input/" method "/dpad/left" ); \
+    DEV_INT_FIELD(device->input.DPAD.RIGHT, "input/" method "/dpad/right");
+
+#define DEV_BTN_FIELD(input, method)                                                        \
+    DEV_INT_FIELD(device->input.BUTTON.A,           "input/" method "/button/a"          ); \
+    DEV_INT_FIELD(device->input.BUTTON.B,           "input/" method "/button/b"          ); \
+    DEV_INT_FIELD(device->input.BUTTON.C,           "input/" method "/button/c"          ); \
+    DEV_INT_FIELD(device->input.BUTTON.X,           "input/" method "/button/x"          ); \
+    DEV_INT_FIELD(device->input.BUTTON.Y,           "input/" method "/button/y"          ); \
+    DEV_INT_FIELD(device->input.BUTTON.Z,           "input/" method "/button/z"          ); \
+    DEV_INT_FIELD(device->input.BUTTON.L1,          "input/" method "/button/l1"         ); \
+    DEV_INT_FIELD(device->input.BUTTON.L2,          "input/" method "/button/l2"         ); \
+    DEV_INT_FIELD(device->input.BUTTON.L3,          "input/" method "/button/l3"         ); \
+    DEV_INT_FIELD(device->input.BUTTON.R1,          "input/" method "/button/r1"         ); \
+    DEV_INT_FIELD(device->input.BUTTON.R2,          "input/" method "/button/r2"         ); \
+    DEV_INT_FIELD(device->input.BUTTON.R3,          "input/" method "/button/r3"         ); \
+    DEV_INT_FIELD(device->input.BUTTON.MENU_SHORT,  "input/" method "/button/menu_short" ); \
+    DEV_INT_FIELD(device->input.BUTTON.MENU_LONG,   "input/" method "/button/menu_long"  ); \
+    DEV_INT_FIELD(device->input.BUTTON.SELECT,      "input/" method "/button/select"     ); \
+    DEV_INT_FIELD(device->input.BUTTON.START,       "input/" method "/button/start"      ); \
+    DEV_INT_FIELD(device->input.BUTTON.POWER_SHORT, "input/" method "/button/power_short"); \
+    DEV_INT_FIELD(device->input.BUTTON.POWER_LONG,  "input/" method "/button/power_long" ); \
+    DEV_INT_FIELD(device->input.BUTTON.VOLUME_UP,   "input/" method "/button/vol_up"     ); \
+    DEV_INT_FIELD(device->input.BUTTON.VOLUME_DOWN, "input/" method "/button/vol_down"   );
 
     DEV_INT_FIELD(device->DEVICE.HAS_NETWORK, "board/network")
     DEV_INT_FIELD(device->DEVICE.HAS_BLUETOOTH, "board/bluetooth")
@@ -85,43 +113,33 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->BATTERY.VOLTAGE, "battery/voltage")
     DEV_STR_FIELD(device->BATTERY.CHARGER, "battery/charger")
 
-    DEV_INT_FIELD(device->INPUT.AXIS, "input/axis")
-    DEV_STR_FIELD(device->INPUT.JOY_GENERAL, "input/general")
-    DEV_STR_FIELD(device->INPUT.JOY_POWER, "input/power")
-    DEV_STR_FIELD(device->INPUT.JOY_VOLUME, "input/volume")
-    DEV_STR_FIELD(device->INPUT.JOY_EXTRA, "input/extra")
+    DEV_INT_FIELD(device->INPUT_EVENT.AXIS, "input/axis")
+    DEV_STR_FIELD(device->INPUT_EVENT.JOY_GENERAL, "input/general")
+    DEV_STR_FIELD(device->INPUT_EVENT.JOY_POWER, "input/power")
+    DEV_STR_FIELD(device->INPUT_EVENT.JOY_VOLUME, "input/volume")
+    DEV_STR_FIELD(device->INPUT_EVENT.JOY_EXTRA, "input/extra")
 
-    DEV_INT_FIELD(device->RAW_INPUT.DPAD.UP, "input/code/dpad/up")
-    DEV_INT_FIELD(device->RAW_INPUT.DPAD.DOWN, "input/code/dpad/down")
-    DEV_INT_FIELD(device->RAW_INPUT.DPAD.LEFT, "input/code/dpad/left")
-    DEV_INT_FIELD(device->RAW_INPUT.DPAD.RIGHT, "input/code/dpad/right")
+    DEV_INT_FIELD(device->INPUT_CODE.DPAD.UP, "input/code/dpad/up")
+    DEV_INT_FIELD(device->INPUT_CODE.DPAD.DOWN, "input/code/dpad/down")
+    DEV_INT_FIELD(device->INPUT_CODE.DPAD.LEFT, "input/code/dpad/left")
+    DEV_INT_FIELD(device->INPUT_CODE.DPAD.RIGHT, "input/code/dpad/right")
 
-    DEV_ALG_FIELD(LEFT, "left")
-    DEV_ALG_FIELD(RIGHT, "right")
+    DEV_ALG_FIELD(INPUT_CODE, LEFT, "code", "left")
+    DEV_ALG_FIELD(INPUT_CODE, RIGHT, "code", "right")
 
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.A, "input/code/button/a")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.B, "input/code/button/b")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.C, "input/code/button/c")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.X, "input/code/button/x")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.Y, "input/code/button/y")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.Z, "input/code/button/z")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L1, "input/code/button/l1")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L2, "input/code/button/l2")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.L3, "input/code/button/l3")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R1, "input/code/button/r1")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R2, "input/code/button/r2")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.R3, "input/code/button/r3")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.MENU_SHORT, "input/code/button/menu_short")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.MENU_LONG, "input/code/button/menu_long")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.SELECT, "input/code/button/select")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.START, "input/code/button/start")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.POWER_SHORT, "input/code/button/power_short")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.POWER_LONG, "input/code/button/power_long")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.VOLUME_UP, "input/code/button/vol_up")
-    DEV_INT_FIELD(device->RAW_INPUT.BUTTON.VOLUME_DOWN, "input/code/button/vol_down")
+    DEV_DPA_FIELD(INPUT_CODE, "code")
+    DEV_BTN_FIELD(INPUT_CODE, "code")
+
+    DEV_ALG_FIELD(INPUT_TYPE, LEFT, "type", "left")
+    DEV_ALG_FIELD(INPUT_TYPE, RIGHT, "type", "right")
+
+    DEV_DPA_FIELD(INPUT_TYPE, "type")
+    DEV_BTN_FIELD(INPUT_TYPE, "type")
 
 #undef DEV_INT_FIELD
 #undef DEV_STR_FIELD
 #undef DEV_MNT_FIELD
 #undef DEV_ALG_FIELD
+#undef DEV_DPA_FIELD
+#undef DEV_BTN_FIELD
 }

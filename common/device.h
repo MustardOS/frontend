@@ -116,7 +116,7 @@ struct mux_device {
         char JOY_VOLUME[MAX_BUFFER_SIZE];
         char JOY_EXTRA[MAX_BUFFER_SIZE];
         int32_t AXIS;
-    } INPUT;
+    } INPUT_EVENT;
 
     struct {
         struct {
@@ -163,7 +163,54 @@ struct mux_device {
             int16_t VOLUME_UP;
             int16_t VOLUME_DOWN;
         } BUTTON;
-    } RAW_INPUT;
+    } INPUT_CODE;
+
+    struct {
+        struct {
+            int16_t UP;
+            int16_t DOWN;
+            int16_t LEFT;
+            int16_t RIGHT;
+        } DPAD;
+        struct {
+            struct {
+                int16_t UP;
+                int16_t DOWN;
+                int16_t LEFT;
+                int16_t RIGHT;
+                int16_t CLICK;
+            } LEFT;
+            struct {
+                int16_t UP;
+                int16_t DOWN;
+                int16_t LEFT;
+                int16_t RIGHT;
+                int16_t CLICK;
+            } RIGHT;
+        } ANALOG;
+        struct {
+            int16_t A;
+            int16_t B;
+            int16_t C;
+            int16_t X;
+            int16_t Y;
+            int16_t Z;
+            int16_t L1;
+            int16_t L2;
+            int16_t L3;
+            int16_t R1;
+            int16_t R2;
+            int16_t R3;
+            int16_t MENU_SHORT;
+            int16_t MENU_LONG;
+            int16_t SELECT;
+            int16_t START;
+            int16_t POWER_SHORT;
+            int16_t POWER_LONG;
+            int16_t VOLUME_UP;
+            int16_t VOLUME_DOWN;
+        } BUTTON;
+    } INPUT_TYPE;
 
 };
 

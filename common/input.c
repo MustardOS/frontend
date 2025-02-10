@@ -27,91 +27,115 @@ static bool stop = false;
 // System clock tick at the start of this iteration of the event loop.
 static uint32_t tick = 0;
 
-// Bitmask of input types that are currently active.
+// Bitmask of input mux_types that are currently active.
 static uint64_t pressed = 0;
 
-// Bitmask of input types that were active during the previous iteration of the event loop.
+// Bitmask of input mux_types that were active during the previous iteration of the event loop.
 static uint64_t held = 0;
 
 // Processes gamepad buttons.
 static void process_key(const mux_input_options *opts, const struct input_event *event) {
-    mux_input_type type;
-    if (event->code == device.RAW_INPUT.BUTTON.A) {
-        type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
-    } else if (event->code == device.RAW_INPUT.BUTTON.B) {
-        type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
-    } else if (event->code == device.RAW_INPUT.BUTTON.C) {
-        type = MUX_INPUT_C;
-    } else if (event->code == device.RAW_INPUT.BUTTON.X) {
-        type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
-    } else if (event->code == device.RAW_INPUT.BUTTON.Y) {
-        type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
-    } else if (event->code == device.RAW_INPUT.BUTTON.Z) {
-        type = MUX_INPUT_Z;
-    } else if (event->code == device.RAW_INPUT.BUTTON.L1) {
-        type = MUX_INPUT_L1;
-    } else if (event->code == device.RAW_INPUT.BUTTON.L2) {
-        type = MUX_INPUT_L2;
-    } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.CLICK) {
-        type = MUX_INPUT_L3;
-    } else if (event->code == device.RAW_INPUT.BUTTON.R1) {
-        type = MUX_INPUT_R1;
-    } else if (event->code == device.RAW_INPUT.BUTTON.R2) {
-        type = MUX_INPUT_R2;
-    } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.CLICK) {
-        type = MUX_INPUT_R3;
-    } else if (event->code == device.RAW_INPUT.BUTTON.SELECT) {
-        type = MUX_INPUT_SELECT;
-    } else if (event->code == device.RAW_INPUT.BUTTON.START) {
-        type = MUX_INPUT_START;
-    } else if (event->code == device.RAW_INPUT.BUTTON.MENU_SHORT) {
-        type = MUX_INPUT_MENU_SHORT;
-    } else if (event->code == device.RAW_INPUT.BUTTON.MENU_LONG) {
-        type = MUX_INPUT_MENU_LONG;
+    mux_input_type mux_type;
+    if (event->type == device.INPUT_TYPE.BUTTON.A &&
+        event->code == device.INPUT_CODE.BUTTON.A) {
+        mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.B &&
+               event->code == device.INPUT_CODE.BUTTON.B) {
+        mux_type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.C &&
+               event->code == device.INPUT_CODE.BUTTON.C) {
+        mux_type = MUX_INPUT_C;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.X &&
+               event->code == device.INPUT_CODE.BUTTON.X) {
+        mux_type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.Y &&
+               event->code == device.INPUT_CODE.BUTTON.Y) {
+        mux_type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.Z &&
+               event->code == device.INPUT_CODE.BUTTON.Z) {
+        mux_type = MUX_INPUT_Z;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.L1 &&
+               event->code == device.INPUT_CODE.BUTTON.L1) {
+        mux_type = MUX_INPUT_L1;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.L2 &&
+               event->code == device.INPUT_CODE.BUTTON.L2) {
+        mux_type = MUX_INPUT_L2;
+    } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.CLICK &&
+               event->code == device.INPUT_CODE.ANALOG.LEFT.CLICK) {
+        mux_type = MUX_INPUT_L3;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.R1 &&
+               event->code == device.INPUT_CODE.BUTTON.R1) {
+        mux_type = MUX_INPUT_R1;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.R2 &&
+               event->code == device.INPUT_CODE.BUTTON.R2) {
+        mux_type = MUX_INPUT_R2;
+    } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.CLICK &&
+               event->code == device.INPUT_CODE.ANALOG.RIGHT.CLICK) {
+        mux_type = MUX_INPUT_R3;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.SELECT &&
+               event->code == device.INPUT_CODE.BUTTON.SELECT) {
+        mux_type = MUX_INPUT_SELECT;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.START &&
+               event->code == device.INPUT_CODE.BUTTON.START) {
+        mux_type = MUX_INPUT_START;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.MENU_SHORT &&
+               event->code == device.INPUT_CODE.BUTTON.MENU_SHORT) {
+        mux_type = MUX_INPUT_MENU_SHORT;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.MENU_LONG &&
+               event->code == device.INPUT_CODE.BUTTON.MENU_LONG) {
+        mux_type = MUX_INPUT_MENU_LONG;
     } else {
         return;
     }
-    pressed = (event->value == 1) ? (pressed | BIT(type)) : (pressed & ~BIT(type));
+    pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
 // Processes volume buttons.
 static void process_volume(const mux_input_options *opts, const struct input_event *event) {
-    mux_input_type type;
-    if (event->code == device.RAW_INPUT.BUTTON.VOLUME_UP) {
-        type = MUX_INPUT_VOL_UP;
-    } else if (event->code == device.RAW_INPUT.BUTTON.VOLUME_DOWN) {
-        type = MUX_INPUT_VOL_DOWN;
+    mux_input_type mux_type;
+    if (event->type == device.INPUT_TYPE.BUTTON.VOLUME_UP &&
+        event->code == device.INPUT_CODE.BUTTON.VOLUME_UP) {
+        mux_type = MUX_INPUT_VOL_UP;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.VOLUME_DOWN &&
+               event->code == device.INPUT_CODE.BUTTON.VOLUME_DOWN) {
+        mux_type = MUX_INPUT_VOL_DOWN;
     } else {
         return;
     }
-    pressed = (event->value == 1) ? (pressed | BIT(type)) : (pressed & ~BIT(type));
+    pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
 // Processes gamepad axes (D-pad and the sticks).
 static void process_abs(const mux_input_options *opts, const struct input_event *event) {
     int axis;
     bool analog;
-    if (event->code == device.RAW_INPUT.DPAD.UP) {
+    if (event->type == device.INPUT_TYPE.DPAD.UP &&
+        event->code == device.INPUT_CODE.DPAD.UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
         analog = false;
-    } else if (event->code == device.RAW_INPUT.DPAD.LEFT) {
+    } else if (event->type == device.INPUT_TYPE.DPAD.LEFT &&
+               event->code == device.INPUT_CODE.DPAD.LEFT) {
         // Axis: D-pad horizontal
         axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
         analog = false;
-    } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.UP) {
+    } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.UP &&
+               event->code == device.INPUT_CODE.ANALOG.LEFT.UP) {
         // Axis: left stick vertical
         axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
         analog = true;
-    } else if (event->code == device.RAW_INPUT.ANALOG.LEFT.LEFT) {
+    } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.LEFT &&
+               event->code == device.INPUT_CODE.ANALOG.LEFT.LEFT) {
         // Axis: left stick horizontal
         axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
         analog = true;
-    } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.UP) {
+    } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.UP &&
+               event->code == device.INPUT_CODE.ANALOG.RIGHT.UP) {
         // Axis: right stick vertical
         axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
         analog = true;
-    } else if (event->code == device.RAW_INPUT.ANALOG.RIGHT.LEFT) {
+    } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.LEFT &&
+               event->code == device.INPUT_CODE.ANALOG.RIGHT.LEFT) {
         // Axis: right stick horizontal
         axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
         analog = true;
@@ -124,11 +148,11 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     //
     // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
     // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
-    if ((analog && event->value <= -device.INPUT.AXIS + device.INPUT.AXIS / 5) ||
+    if ((analog && event->value <= -device.INPUT_EVENT.AXIS + device.INPUT_EVENT.AXIS / 5) ||
         (!analog && event->value == -1)) {
         // Direction: up/left
         pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
-    } else if ((analog && event->value >= device.INPUT.AXIS - device.INPUT.AXIS / 5) ||
+    } else if ((analog && event->value >= device.INPUT_EVENT.AXIS - device.INPUT_EVENT.AXIS / 5) ||
                (!analog && event->value == 1)) {
         // Direction: down/right
         pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
@@ -140,7 +164,7 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
 
 // Process system buttons.
 static void process_sys(const mux_input_options *opts, const struct input_event *event) {
-    if (event->code == device.RAW_INPUT.BUTTON.POWER_SHORT) {
+    if (event->type == device.INPUT_TYPE.BUTTON.POWER_SHORT && event->code == device.INPUT_CODE.BUTTON.POWER_SHORT) {
         switch (event->value) {
             case 1:
                 // Power button: short press
@@ -160,37 +184,37 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad buttons.
 static void process_usb_key(const mux_input_options *opts, struct js_event js) {
-    mux_input_type type;
+    mux_input_type mux_type;
     if (js.number == controller.BUTTON.A) {
-        type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
+        mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
     } else if (js.number == controller.BUTTON.B) {
-        type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
+        mux_type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
     } else if (js.number == controller.BUTTON.X) {
-        type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
+        mux_type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
     } else if (js.number == controller.BUTTON.Y) {
-        type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
+        mux_type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
     } else if (js.number == controller.BUTTON.L1) {
-        type = MUX_INPUT_L1;
+        mux_type = MUX_INPUT_L1;
     } else if (js.number == controller.BUTTON.L2) {
-        type = MUX_INPUT_L2;
+        mux_type = MUX_INPUT_L2;
     } else if (js.number == controller.BUTTON.L3) {
-        type = MUX_INPUT_L3;
+        mux_type = MUX_INPUT_L3;
     } else if (js.number == controller.BUTTON.R1) {
-        type = MUX_INPUT_R1;
+        mux_type = MUX_INPUT_R1;
     } else if (js.number == controller.BUTTON.R2) {
-        type = MUX_INPUT_R2;
+        mux_type = MUX_INPUT_R2;
     } else if (js.number == controller.BUTTON.R3) {
-        type = MUX_INPUT_R3;
+        mux_type = MUX_INPUT_R3;
     } else if (js.number == controller.BUTTON.SELECT) {
-        type = MUX_INPUT_SELECT;
+        mux_type = MUX_INPUT_SELECT;
     } else if (js.number == controller.BUTTON.START) {
-        type = MUX_INPUT_START;
+        mux_type = MUX_INPUT_START;
     } else if (js.number == controller.BUTTON.MENU) {
-        type = MUX_INPUT_MENU_SHORT;
+        mux_type = MUX_INPUT_MENU_SHORT;
     } else {
         return;
     }
-    pressed = (js.value == 1) ? (pressed | BIT(type)) : (pressed & ~BIT(type));
+    pressed = (js.value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
 }
 
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad axes (D-pad and the sticks).
@@ -294,25 +318,25 @@ static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js
     }
 }
 
-// Invokes the relevant handler(s) for a particular input type and action.
+// Invokes the relevant handler(s) for a particular input mux_type and action.
 static void dispatch_input(const mux_input_options *opts,
-                           mux_input_type type,
+                           mux_input_type mux_type,
                            mux_input_action action) {
-    // Remap input types when using left stick as D-pad. (We still track pressed and held status for
+    // Remap input mux_types when using left stick as D-pad. (We still track pressed and held status for
     // the stick and D-pad inputs separately to avoid unintuitive hold behavior.)
     if (opts->stick_nav) {
-        switch (type) {
+        switch (mux_type) {
             case MUX_INPUT_LS_UP:
-                type = MUX_INPUT_DPAD_UP;
+                mux_type = MUX_INPUT_DPAD_UP;
                 break;
             case MUX_INPUT_LS_DOWN:
-                type = MUX_INPUT_DPAD_DOWN;
+                mux_type = MUX_INPUT_DPAD_DOWN;
                 break;
             case MUX_INPUT_LS_LEFT:
-                type = MUX_INPUT_DPAD_LEFT;
+                mux_type = MUX_INPUT_DPAD_LEFT;
                 break;
             case MUX_INPUT_LS_RIGHT:
-                type = MUX_INPUT_DPAD_RIGHT;
+                mux_type = MUX_INPUT_DPAD_RIGHT;
                 break;
             default:
                 break;
@@ -322,24 +346,24 @@ static void dispatch_input(const mux_input_options *opts,
     mux_input_handler handler = NULL;
     switch (action) {
         case MUX_INPUT_PRESS:
-            handler = opts->press_handler[type];
+            handler = opts->press_handler[mux_type];
             break;
         case MUX_INPUT_HOLD:
-            handler = opts->hold_handler[type];
+            handler = opts->hold_handler[mux_type];
             break;
         case MUX_INPUT_RELEASE:
-            handler = opts->release_handler[type];
+            handler = opts->release_handler[mux_type];
             break;
     }
 
-    // First invoke specific handler (if one was registered for this input type and action).
+    // First invoke specific handler (if one was registered for this input mux_type and action).
     if (handler) {
         handler();
     }
 
     // Then invoke generic handler (if a catchall handler was registered).
     if (opts->input_handler) {
-        opts->input_handler(type, action);
+        opts->input_handler(mux_type, action);
     }
 }
 
@@ -507,7 +531,7 @@ char *get_unique_controller_id(int usb_fd) {
 }
 
 void *joystick_handler(void *arg) {
-    // Cast the argument back to the correct type
+    // Cast the argument back to the correct mux_type
     const mux_input_options *opts = (const mux_input_options *) arg;
     // Open USB controller
     int usb_fd = open("/dev/input/js1", O_RDONLY);
@@ -528,7 +552,7 @@ void *joystick_handler(void *arg) {
         }
 
         if (js.type & JS_EVENT_INIT) continue;
-        LOG_INFO("input", "Joystick Event: type=%u number=%u value=%d", js.type, js.number, js.value)
+        LOG_INFO("input", "Joystick Event: mux_type=%u number=%u value=%d", js.type, js.number, js.value)
 
         if (js.type & JS_EVENT_BUTTON) {
             if (js.number == controller.BUTTON.UP || js.number == controller.BUTTON.DOWN ||
@@ -655,8 +679,8 @@ uint32_t mux_input_tick(void) {
     return tick;
 }
 
-bool mux_input_pressed(mux_input_type type) {
-    return pressed & BIT(type);
+bool mux_input_pressed(mux_input_type mux_type) {
+    return pressed & BIT(mux_type);
 }
 
 void mux_input_stop(void) {

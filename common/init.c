@@ -94,10 +94,10 @@ int open_input(const char *path, const char *error_message) {
 }
 
 void init_input(int *joy_general, int *joy_power, int *joy_volume, int *joy_extra) {
-    *joy_general = open_input(device.INPUT.JOY_GENERAL, lang.SYSTEM.NO_JOY_GENERAL);
-    *joy_power = open_input(device.INPUT.JOY_POWER, lang.SYSTEM.NO_JOY_POWER);
-    *joy_volume = open_input(device.INPUT.JOY_VOLUME, lang.SYSTEM.NO_JOY_VOLUME);
-    *joy_extra = open_input(device.INPUT.JOY_EXTRA, lang.SYSTEM.NO_JOY_EXTRA);
+    *joy_general = open_input(device.INPUT_EVENT.JOY_GENERAL, lang.SYSTEM.NO_JOY_GENERAL);
+    *joy_power = open_input(device.INPUT_EVENT.JOY_POWER, lang.SYSTEM.NO_JOY_POWER);
+    *joy_volume = open_input(device.INPUT_EVENT.JOY_VOLUME, lang.SYSTEM.NO_JOY_VOLUME);
+    *joy_extra = open_input(device.INPUT_EVENT.JOY_EXTRA, lang.SYSTEM.NO_JOY_EXTRA);
 
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
