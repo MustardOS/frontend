@@ -165,6 +165,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_LEFT, "Top Left");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_MID, "Top Middle");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_RIGHT, "Top Right");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.TITLE, "Interface Font Type");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.LANG, "Language");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
@@ -173,6 +176,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ART, "Change the display priority of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
@@ -493,9 +497,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.TITLE, "Button Swap");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.RETRO, "Retro");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.MODERN, "Modern");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.FONT.TITLE, "Interface Font Type");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.FONT.LANG, "Language");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.FONT.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.TITLE, "Volume On Boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.QUIET, "Quiet");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.LOUD, "Loud");
@@ -528,7 +529,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STATE, "Switch between system sleep suspend states");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT, "Change the default brightness level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAP, "Change how the device buttons work globally");
 
     // muxtweakgen

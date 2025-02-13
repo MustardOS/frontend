@@ -168,6 +168,11 @@ struct mux_lang {
             } ALIGN;
         } BOX_ART;
         struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char LANG[MAX_BUFFER_SIZE];
+            char THEME[MAX_BUFFER_SIZE];
+        } FONT;
+        struct {
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
@@ -176,6 +181,7 @@ struct mux_lang {
             char BOX_ALIGN[MAX_BUFFER_SIZE];
             char FADE[MAX_BUFFER_SIZE];
             char SPLASH[MAX_BUFFER_SIZE];
+            char FONT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCUSTOM;
 
@@ -577,11 +583,6 @@ struct mux_lang {
         } SWAP;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
-            char LANG[MAX_BUFFER_SIZE];
-            char THEME[MAX_BUFFER_SIZE];
-        } FONT;
-        struct {
-            char TITLE[MAX_BUFFER_SIZE];
             char QUIET[MAX_BUFFER_SIZE];
             char LOUD[MAX_BUFFER_SIZE];
         } VOLUME;
@@ -617,7 +618,6 @@ struct mux_lang {
             char STATE[MAX_BUFFER_SIZE];
             char BRIGHT[MAX_BUFFER_SIZE];
             char VOLUME[MAX_BUFFER_SIZE];
-            char FONT[MAX_BUFFER_SIZE];
             char SWAP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKADV;
