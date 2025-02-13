@@ -106,24 +106,38 @@ struct mux_lang {
     } MUXCOLLECT;
 
     struct {
+        char CONNECTIVITY[MAX_BUFFER_SIZE];
         char CUSTOM[MAX_BUFFER_SIZE];
         char DATETIME[MAX_BUFFER_SIZE];
         char GENERAL[MAX_BUFFER_SIZE];
         char LANGUAGE[MAX_BUFFER_SIZE];
         char STORAGE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
-        char WEB[MAX_BUFFER_SIZE];
-        char WIFI[MAX_BUFFER_SIZE];
+        char POWER[MAX_BUFFER_SIZE];
+        char VISUAL[MAX_BUFFER_SIZE];
         struct {
+            char CONNECTIVITY[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];
             char DATETIME[MAX_BUFFER_SIZE];
             char GENERAL[MAX_BUFFER_SIZE];
             char LANGUAGE[MAX_BUFFER_SIZE];
             char STORAGE[MAX_BUFFER_SIZE];
-            char WEB[MAX_BUFFER_SIZE];
-            char WIFI[MAX_BUFFER_SIZE];
+            char POWER[MAX_BUFFER_SIZE];
+            char VISUAL[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCONFIG;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char WEB[MAX_BUFFER_SIZE];
+        char USB[MAX_BUFFER_SIZE];
+        char WIFI[MAX_BUFFER_SIZE];
+        struct {
+            char WEB[MAX_BUFFER_SIZE];
+            char USB[MAX_BUFFER_SIZE];
+            char WIFI[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXCONNECT;
 
     struct {
         char CATALOGUE[MAX_BUFFER_SIZE];
