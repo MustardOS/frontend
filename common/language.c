@@ -115,20 +115,31 @@ void load_lang(struct mux_lang *lang) {
 
     // muxconfig
     SPECIFIC_FIELD(lang->MUXCONFIG.TITLE, "CONFIGURATION");
+    SPECIFIC_FIELD(lang->MUXCONFIG.CONNECTIVITY, "Connectivity");
     SPECIFIC_FIELD(lang->MUXCONFIG.CUSTOM, "Customisation");
     SPECIFIC_FIELD(lang->MUXCONFIG.DATETIME, "Date and Time");
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
+    SPECIFIC_FIELD(lang->MUXCONFIG.POWER, "Power Settings");
+    SPECIFIC_FIELD(lang->MUXCONFIG.VISUAL, "Interface Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage");
-    SPECIFIC_FIELD(lang->MUXCONFIG.WEB, "Web Services");
-    SPECIFIC_FIELD(lang->MUXCONFIG.WIFI, "Wi-Fi Network");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECTIVITY, "");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your muOS setup with user created packages");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.DATETIME, "Change your current date, time, and timezone");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and muOS frontend settings can be found here");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.LANGUAGE, "Select your preferred language");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.STORAGE, "Find out what storage device core settings and configurations are mounted");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.POWER, "Settings to change the power features of the device");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.VISUAL, "Settings to change the visual aspects of the frontend");
+
+    // muxconnect
+    SPECIFIC_FIELD(lang->MUXCONNECT.TITLE, "CONNECTIVITY");
+    SPECIFIC_FIELD(lang->MUXCONNECT.USB, "USB Function");
+    SPECIFIC_FIELD(lang->MUXCONNECT.WEB, "Web Services");
+    SPECIFIC_FIELD(lang->MUXCONNECT.WIFI, "Wi-Fi Network");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USB, "Toggle between ADB and MTP USB functionality");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
 
     // muxcustom
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");

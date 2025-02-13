@@ -13,6 +13,7 @@ struct mux_kiosk {
     struct {
         int16_t CUSTOMISATION;
         int16_t LANGUAGE;
+        int16_t CONNECTIVITY;
         int16_t NETWORK;
         int16_t STORAGE;
         int16_t WEB_SERVICES;
