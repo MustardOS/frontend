@@ -4,8 +4,6 @@ lv_obj_t *ui_pnlBattery;
 lv_obj_t *ui_pnlNetwork;
 lv_obj_t *ui_pnlBluetooth;
 lv_obj_t *ui_pnlClock;
-lv_obj_t *ui_pnlBoxArt;
-lv_obj_t *ui_pnlBoxArtAlign;
 lv_obj_t *ui_pnlName;
 lv_obj_t *ui_pnlDash;
 lv_obj_t *ui_pnlFriendlyFolder;
@@ -15,16 +13,11 @@ lv_obj_t *ui_pnlFolderItemCount;
 lv_obj_t *ui_pnlDisplayEmptyFolder;
 lv_obj_t *ui_pnlMenuCounterFolder;
 lv_obj_t *ui_pnlMenuCounterFile;
-lv_obj_t *ui_pnlBackgroundAnimation;
-lv_obj_t *ui_pnlLaunchSplash;
-lv_obj_t *ui_pnlBlackFade;
 
 lv_obj_t *ui_lblBattery;
 lv_obj_t *ui_lblNetwork;
 lv_obj_t *ui_lblBluetooth;
 lv_obj_t *ui_lblClock;
-lv_obj_t *ui_lblBoxArt;
-lv_obj_t *ui_lblBoxArtAlign;
 lv_obj_t *ui_lblName;
 lv_obj_t *ui_lblDash;
 lv_obj_t *ui_lblFriendlyFolder;
@@ -34,16 +27,11 @@ lv_obj_t *ui_lblFolderItemCount;
 lv_obj_t *ui_lblDisplayEmptyFolder;
 lv_obj_t *ui_lblMenuCounterFolder;
 lv_obj_t *ui_lblMenuCounterFile;
-lv_obj_t *ui_lblBackgroundAnimation;
-lv_obj_t *ui_lblLaunchSplash;
-lv_obj_t *ui_lblBlackFade;
 
 lv_obj_t *ui_icoBattery;
 lv_obj_t *ui_icoNetwork;
 lv_obj_t *ui_icoBluetooth;
 lv_obj_t *ui_icoClock;
-lv_obj_t *ui_icoBoxArt;
-lv_obj_t *ui_icoBoxArtAlign;
 lv_obj_t *ui_icoName;
 lv_obj_t *ui_icoDash;
 lv_obj_t *ui_icoFriendlyFolder;
@@ -53,16 +41,11 @@ lv_obj_t *ui_icoFolderItemCount;
 lv_obj_t *ui_icoDisplayEmptyFolder;
 lv_obj_t *ui_icoMenuCounterFolder;
 lv_obj_t *ui_icoMenuCounterFile;
-lv_obj_t *ui_icoBackgroundAnimation;
-lv_obj_t *ui_icoLaunchSplash;
-lv_obj_t *ui_icoBlackFade;
 
 lv_obj_t *ui_droBattery;
 lv_obj_t *ui_droNetwork;
 lv_obj_t *ui_droBluetooth;
 lv_obj_t *ui_droClock;
-lv_obj_t *ui_droBoxArt;
-lv_obj_t *ui_droBoxArtAlign;
 lv_obj_t *ui_droName;
 lv_obj_t *ui_droDash;
 lv_obj_t *ui_droFriendlyFolder;
@@ -72,9 +55,6 @@ lv_obj_t *ui_droFolderItemCount;
 lv_obj_t *ui_droDisplayEmptyFolder;
 lv_obj_t *ui_droMenuCounterFolder;
 lv_obj_t *ui_droMenuCounterFile;
-lv_obj_t *ui_droBackgroundAnimation;
-lv_obj_t *ui_droLaunchSplash;
-lv_obj_t *ui_droBlackFade;
 
 void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlBattery = lv_obj_create(ui_pnlContent);
@@ -82,8 +62,6 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlBluetooth = lv_obj_create(ui_pnlContent);
     lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
     ui_pnlClock = lv_obj_create(ui_pnlContent);
-    ui_pnlBoxArt = lv_obj_create(ui_pnlContent);
-    ui_pnlBoxArtAlign = lv_obj_create(ui_pnlContent);
     ui_pnlName = lv_obj_create(ui_pnlContent);
     ui_pnlDash = lv_obj_create(ui_pnlContent);
     ui_pnlFriendlyFolder = lv_obj_create(ui_pnlContent);
@@ -93,16 +71,11 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlDisplayEmptyFolder = lv_obj_create(ui_pnlContent);
     ui_pnlMenuCounterFolder = lv_obj_create(ui_pnlContent);
     ui_pnlMenuCounterFile = lv_obj_create(ui_pnlContent);
-    ui_pnlBackgroundAnimation = lv_obj_create(ui_pnlContent);
-    ui_pnlLaunchSplash = lv_obj_create(ui_pnlContent);
-    ui_pnlBlackFade = lv_obj_create(ui_pnlContent);
 
     ui_lblBattery = lv_label_create(ui_pnlBattery);
     ui_lblNetwork = lv_label_create(ui_pnlNetwork);
     ui_lblBluetooth = lv_label_create(ui_pnlBluetooth);
     ui_lblClock = lv_label_create(ui_pnlClock);
-    ui_lblBoxArt = lv_label_create(ui_pnlBoxArt);
-    ui_lblBoxArtAlign = lv_label_create(ui_pnlBoxArtAlign);
     ui_lblName = lv_label_create(ui_pnlName);
     ui_lblDash = lv_label_create(ui_pnlDash);
     ui_lblFriendlyFolder = lv_label_create(ui_pnlFriendlyFolder);
@@ -112,16 +85,12 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_lblDisplayEmptyFolder = lv_label_create(ui_pnlDisplayEmptyFolder);
     ui_lblMenuCounterFolder = lv_label_create(ui_pnlMenuCounterFolder);
     ui_lblMenuCounterFile = lv_label_create(ui_pnlMenuCounterFile);
-    ui_lblBackgroundAnimation = lv_label_create(ui_pnlBackgroundAnimation);
-    ui_lblLaunchSplash = lv_label_create(ui_pnlLaunchSplash);
-    ui_lblBlackFade = lv_label_create(ui_pnlBlackFade);
 
     ui_icoBattery = lv_img_create(ui_pnlBattery);
     ui_icoNetwork = lv_img_create(ui_pnlNetwork);
     ui_icoBluetooth = lv_img_create(ui_pnlBluetooth);
     ui_icoClock = lv_img_create(ui_pnlClock);
-    ui_icoBoxArt = lv_img_create(ui_pnlBoxArt);
-    ui_icoBoxArtAlign = lv_img_create(ui_pnlBoxArtAlign);
+
     ui_icoName = lv_img_create(ui_pnlName);
     ui_icoDash = lv_img_create(ui_pnlDash);
     ui_icoFriendlyFolder = lv_img_create(ui_pnlFriendlyFolder);
@@ -131,16 +100,11 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_icoDisplayEmptyFolder = lv_img_create(ui_pnlDisplayEmptyFolder);
     ui_icoMenuCounterFolder = lv_img_create(ui_pnlMenuCounterFolder);
     ui_icoMenuCounterFile = lv_img_create(ui_pnlMenuCounterFile);
-    ui_icoBackgroundAnimation = lv_img_create(ui_pnlBackgroundAnimation);
-    ui_icoLaunchSplash = lv_img_create(ui_pnlLaunchSplash);
-    ui_icoBlackFade = lv_img_create(ui_pnlBlackFade);
 
     ui_droBattery = lv_dropdown_create(ui_pnlBattery);
     ui_droNetwork = lv_dropdown_create(ui_pnlNetwork);
     ui_droBluetooth = lv_dropdown_create(ui_pnlBluetooth);
     ui_droClock = lv_dropdown_create(ui_pnlClock);
-    ui_droBoxArt = lv_dropdown_create(ui_pnlBoxArt);
-    ui_droBoxArtAlign = lv_dropdown_create(ui_pnlBoxArtAlign);
     ui_droName = lv_dropdown_create(ui_pnlName);
     ui_droDash = lv_dropdown_create(ui_pnlDash);
     ui_droFriendlyFolder = lv_dropdown_create(ui_pnlFriendlyFolder);
@@ -150,7 +114,4 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_droDisplayEmptyFolder = lv_dropdown_create(ui_pnlDisplayEmptyFolder);
     ui_droMenuCounterFolder = lv_dropdown_create(ui_pnlMenuCounterFolder);
     ui_droMenuCounterFile = lv_dropdown_create(ui_pnlMenuCounterFile);
-    ui_droBackgroundAnimation = lv_dropdown_create(ui_pnlBackgroundAnimation);
-    ui_droLaunchSplash = lv_dropdown_create(ui_pnlLaunchSplash);
-    ui_droBlackFade = lv_dropdown_create(ui_pnlBlackFade);
 }

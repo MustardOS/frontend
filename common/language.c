@@ -147,9 +147,32 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "muOS Themes");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_ALTERNATE, "Theme Alternates");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SPLASH, "Content Launch Splash");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FADE, "Black Fade Animation");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.ANIMATION, "Background Animation");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.TITLE, "Content Box Art");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.BEHIND, "Behind");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FRONT, "Front");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FS_BEHIND, "Fullscreen + Behind");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FS_FRONT, "Fullscreen + Front");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.TITLE, "Content Box Art Alignment");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.B_LEFT, "Bottom Left");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.B_MID, "Bottom Middle");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.B_RIGHT, "Bottom Right");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.M_LEFT, "Middle Left");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.M_MID, "Center");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.M_RIGHT, "Middle Right");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_LEFT, "Top Left");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_MID, "Top Middle");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_RIGHT, "Top Right");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SPLASH, "Toggle the splash image on content launching");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FADE, "Toggle the fade to black animation on content launching");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ART, "Change the display priority of the content images");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
@@ -479,7 +502,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.TITLE, "Brightness On Boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.LOW, "Low");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.HIGH, "High");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.USB, "USB Function");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.STATE, "Suspend Power State");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.TITLE, "Device Rumble");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.ST, "Startup");
@@ -504,7 +526,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TUNING, "Switch between different storage tuning options");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RUMBLE, "Toggle vibration for device startup, sleep, and shutdown");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STATE, "Switch between system sleep suspend states");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USB, "Toggle between ADB and MTP USB functionality");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT, "Change the default brightness level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
@@ -551,28 +572,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.FRIENDLY, "Friendly Folder Names");
     SPECIFIC_FIELD(lang->MUXVISUAL.REFORMAT, "Display Title Reformatting");
     SPECIFIC_FIELD(lang->MUXVISUAL.ROOT, "Title Include Root Drive");
-    SPECIFIC_FIELD(lang->MUXVISUAL.SPLASH, "Content Launch Splash");
-    SPECIFIC_FIELD(lang->MUXVISUAL.FADE, "Black Fade Animation");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT, "Folder Item Count");
     SPECIFIC_FIELD(lang->MUXVISUAL.EMPTY, "Display Empty Folder");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT_FOLDER, "Menu Counter Folder");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT_FILE, "Menu Counter File");
-    SPECIFIC_FIELD(lang->MUXVISUAL.ANIMATION, "Background Animation");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.TITLE, "Content Box Art");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.BEHIND, "Behind");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.FRONT, "Front");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.FS_BEHIND, "Fullscreen + Behind");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.FS_FRONT, "Fullscreen + Front");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.TITLE, "Content Box Art Alignment");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.B_LEFT, "Bottom Left");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.B_MID, "Bottom Middle");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.B_RIGHT, "Bottom Right");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.M_LEFT, "Middle Left");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.M_MID, "Center");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.M_RIGHT, "Middle Right");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.T_LEFT, "Top Left");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.T_MID, "Top Middle");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.T_RIGHT, "Top Right");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.TITLE, "Content Name Scheme");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.FULL, "Full Name");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_SQ, "Remove [ ]");
@@ -586,15 +589,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FRIENDLY, "Replaces the label of shortened content folders to more appropriately named labels");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.REFORMAT, "Rearranges the label of content to move the 'The' label to the front - For example, 'Batman and Robin, The' to 'The Batman and Robin'");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.ROOT, "Changes the top title label in Explore Content to show current storage device along with folder name");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.SPLASH, "Toggle the splash image on content launching");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FADE, "Toggle the fade to black animation on content launching");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT, "Toggle the visibility of the item count within folders in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.EMPTY, "Toggle the visibility of empty folders in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FOLDER, "Toggle the visibility of currently selected folder along with total in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FILE, "Toggle the visibility of currently selected file along with total in Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BOX_ART, "Change the display priority of the content images");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAME, "Remove extra information from content labels - This does NOT rename your files it only changes how it is displayed");
 
     // muxwebserv
