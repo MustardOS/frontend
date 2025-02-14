@@ -168,6 +168,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.TITLE, "Interface Font Type");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.LANG, "Language");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.THEME, "Theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND, "Navigation Sound");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.TITLE, "Background Music");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.GLOBAL, "Global");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
@@ -177,6 +181,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ART, "Change the display priority of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend - This will stop if content is launched");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend if the current theme supports it");
+
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
@@ -534,16 +541,12 @@ void load_lang(struct mux_lang *lang) {
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HIDDEN, "Show Hidden Content");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.SOUND, "Navigation Sound");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TEMP, "Colour Temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHT, "Brightness");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HDMI, "HDMI Output");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.VISUAL, "Interface Options");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.ADVANCED, "Advanced Settings");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.MUSIC.TITLE, "Background Music");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.MUSIC.GLOBAL, "Global");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.MUSIC.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.TITLE, "Device Startup");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.MENU, "Main Menu");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.EXPLORE, "Content Explorer");
@@ -552,8 +555,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.LAST, "Last Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.RESUME, "Resume Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.MUSIC, "Toggle the background music of the frontend - This will stop if content is launched");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.SOUND, "Toggle the navigation sound of the frontend if the current theme supports it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.TEMP, "Change the colour temperature of the display if the device supports it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.BRIGHT, "Change the brightness of the device to a specific level");
