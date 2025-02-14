@@ -77,24 +77,24 @@ lv_obj_t *ui_droSwapfile;
 lv_obj_t *ui_droCardMode;
 
 void init_mux(lv_obj_t *ui_pnlContent) {
-    ui_pnlAccelerate = lv_obj_create(ui_pnlContent);
     ui_pnlSwap = lv_obj_create(ui_pnlContent);
-    ui_pnlThermal = lv_obj_create(ui_pnlContent);
-    ui_pnlVolume = lv_obj_create(ui_pnlContent);
-    ui_pnlBrightness = lv_obj_create(ui_pnlContent);
+    ui_pnlOverdrive = lv_obj_create(ui_pnlContent);
     ui_pnlOffset = lv_obj_create(ui_pnlContent);
-    ui_pnlPasscode = lv_obj_create(ui_pnlContent);
+    ui_pnlBrightness = lv_obj_create(ui_pnlContent);
+    ui_pnlRumble = lv_obj_create(ui_pnlContent);
+    ui_pnlCardMode = lv_obj_create(ui_pnlContent);
+    ui_pnlDPADSwap = lv_obj_create(ui_pnlContent);
     ui_pnlLED = lv_obj_create(ui_pnlContent);
+    ui_pnlAccelerate = lv_obj_create(ui_pnlContent);
+    ui_pnlThermal = lv_obj_create(ui_pnlContent);
+    ui_pnlPasscode = lv_obj_create(ui_pnlContent);
     ui_pnlTheme = lv_obj_create(ui_pnlContent);
     ui_pnlRetroWait = lv_obj_create(ui_pnlContent);
     ui_pnlState = lv_obj_create(ui_pnlContent);
-    ui_pnlVerbose = lv_obj_create(ui_pnlContent);
-    ui_pnlRumble = lv_obj_create(ui_pnlContent);
-    ui_pnlUserInit = lv_obj_create(ui_pnlContent);
-    ui_pnlDPADSwap = lv_obj_create(ui_pnlContent);
-    ui_pnlOverdrive = lv_obj_create(ui_pnlContent);
     ui_pnlSwapfile = lv_obj_create(ui_pnlContent);
-    ui_pnlCardMode = lv_obj_create(ui_pnlContent);
+    ui_pnlUserInit = lv_obj_create(ui_pnlContent);
+    ui_pnlVerbose = lv_obj_create(ui_pnlContent);
+    ui_pnlVolume = lv_obj_create(ui_pnlContent);
 
     ui_lblAccelerate = lv_label_create(ui_pnlAccelerate);
     ui_lblSwap = lv_label_create(ui_pnlSwap);

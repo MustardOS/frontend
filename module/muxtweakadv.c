@@ -392,85 +392,85 @@ void save_tweak_options() {
 
 void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlAccelerate,
             ui_pnlSwap,
-            ui_pnlThermal,
-            ui_pnlVolume,
-            ui_pnlBrightness,
+            ui_pnlOverdrive,
             ui_pnlOffset,
-            ui_pnlPasscode,
+            ui_pnlBrightness,
+            ui_pnlRumble,
+            ui_pnlCardMode,
+            ui_pnlDPADSwap,
             ui_pnlLED,
+            ui_pnlAccelerate,
+            ui_pnlThermal,
+            ui_pnlPasscode,
             ui_pnlTheme,
             ui_pnlRetroWait,
             ui_pnlState,
-            ui_pnlVerbose,
-            ui_pnlRumble,
-            ui_pnlUserInit,
-            ui_pnlDPADSwap,
-            ui_pnlOverdrive,
             ui_pnlSwapfile,
-            ui_pnlCardMode
+            ui_pnlUserInit,
+            ui_pnlVerbose,
+            ui_pnlVolume
     };
 
-    ui_objects[0] = ui_lblAccelerate;
-    ui_objects[1] = ui_lblSwap;
-    ui_objects[2] = ui_lblThermal;
-    ui_objects[3] = ui_lblVolume;
-    ui_objects[4] = ui_lblBrightness;
-    ui_objects[5] = ui_lblOffset;
-    ui_objects[6] = ui_lblPasscode;
-    ui_objects[7] = ui_lblLED;
-    ui_objects[8] = ui_lblTheme;
-    ui_objects[9] = ui_lblRetroWait;
-    ui_objects[10] = ui_lblState;
-    ui_objects[11] = ui_lblVerbose;
-    ui_objects[12] = ui_lblRumble;
-    ui_objects[13] = ui_lblUserInit;
-    ui_objects[14] = ui_lblDPADSwap;
-    ui_objects[15] = ui_lblOverdrive;
-    ui_objects[16] = ui_lblSwapfile;
-    ui_objects[17] = ui_lblCardMode;
+    ui_objects[0] =  ui_lblSwap;
+    ui_objects[1] =  ui_lblOverdrive;
+    ui_objects[2] =  ui_lblOffset;
+    ui_objects[3] =  ui_lblBrightness;
+    ui_objects[4] =  ui_lblRumble;
+    ui_objects[5] =  ui_lblCardMode;
+    ui_objects[6] =  ui_lblDPADSwap;
+    ui_objects[7] =  ui_lblLED;
+    ui_objects[8] =  ui_lblAccelerate;
+    ui_objects[9] =  ui_lblThermal;
+    ui_objects[10] = ui_lblPasscode;
+    ui_objects[11] = ui_lblTheme;
+    ui_objects[12] = ui_lblRetroWait;
+    ui_objects[13] = ui_lblState;
+    ui_objects[14] = ui_lblSwapfile;
+    ui_objects[15] = ui_lblUserInit;
+    ui_objects[16] = ui_lblVerbose;
+    ui_objects[17] = ui_lblVolume;
 
     lv_obj_t *ui_objects_value[] = {
-            ui_droAccelerate,
             ui_droSwap,
-            ui_droThermal,
-            ui_droVolume,
-            ui_droBrightness,
+            ui_droOverdrive,
             ui_droOffset,
-            ui_droPasscode,
+            ui_droBrightness,
+            ui_droRumble,
+            ui_droCardMode,
+            ui_droDPADSwap,
             ui_droLED,
+            ui_droAccelerate,
+            ui_droThermal,
+            ui_droPasscode,
             ui_droTheme,
             ui_droRetroWait,
             ui_droState,
-            ui_droVerbose,
-            ui_droRumble,
-            ui_droUserInit,
-            ui_droDPADSwap,
-            ui_droOverdrive,
             ui_droSwapfile,
-            ui_droCardMode
+            ui_droUserInit,
+            ui_droVerbose,
+            ui_droVolume
     };
 
     lv_obj_t *ui_objects_glyph[] = {
-            ui_icoAccelerate,
             ui_icoSwap,
-            ui_icoThermal,
-            ui_icoVolume,
-            ui_icoBrightness,
+            ui_icoOverdrive,
             ui_icoOffset,
-            ui_icoPasscode,
+            ui_icoBrightness,
+            ui_icoRumble,
+            ui_icoCardMode,
+            ui_icoDPADSwap,
             ui_icoLED,
+            ui_icoAccelerate,
+            ui_icoThermal,
+            ui_icoPasscode,
             ui_icoTheme,
             ui_icoRetroWait,
             ui_icoState,
-            ui_icoVerbose,
-            ui_icoRumble,
-            ui_icoUserInit,
-            ui_icoDPADSwap,
-            ui_icoOverdrive,
             ui_icoSwapfile,
-            ui_icoCardMode
+            ui_icoUserInit,
+            ui_icoVerbose,
+            ui_icoVolume
     };
 
     apply_theme_list_panel(ui_pnlAccelerate);
