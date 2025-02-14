@@ -37,12 +37,12 @@ lv_obj_t *ui_droInterface;
 lv_obj_t *ui_droAdvanced;
 
 void init_mux(lv_obj_t *ui_pnlContent) {
-    ui_pnlBrightness = lv_obj_create(ui_pnlContent);
-    ui_pnlColour = lv_obj_create(ui_pnlContent);
     ui_pnlRTC = lv_obj_create(ui_pnlContent);
-    ui_pnlStartup = lv_obj_create(ui_pnlContent);
     ui_pnlHDMI = lv_obj_create(ui_pnlContent);
     ui_pnlAdvanced = lv_obj_create(ui_pnlContent);
+    ui_pnlBrightness = lv_obj_create(ui_pnlContent);
+    ui_pnlColour = lv_obj_create(ui_pnlContent);
+    ui_pnlStartup = lv_obj_create(ui_pnlContent);
 
     ui_lblStartup = lv_label_create(ui_pnlStartup);
     ui_lblColour = lv_label_create(ui_pnlColour);

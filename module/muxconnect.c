@@ -154,19 +154,21 @@ void init_navigation_group() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
     
-    ui_objects[0] = ui_lblBluetooth;
-    ui_objects[1] = ui_lblServices;
-    ui_objects[2] = ui_lblUSBFunction;
-    ui_objects[3] = ui_lblNetwork;
+
+    ui_objects[0] = ui_lblServices;
+    ui_objects[1] = ui_lblNetwork;
+    ui_objects[2] = ui_lblBluetooth;
+    ui_objects[3] = ui_lblUSBFunction;
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
 
     char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
-    add_item(ui_pnlBluetooth, ui_lblBluetooth, ui_icoBluetooth, ui_droBluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth");
-    add_drop_down_options(ui_droBluetooth, disabled_enabled, 2);
+
     add_item(ui_pnlServices, ui_lblServices, ui_icoServices, ui_droServices, lang.MUXCONNECT.WEB, "service");
+    add_item(ui_pnlNetwork, ui_lblNetwork, ui_icoNetwork, ui_droNetwork, lang.MUXCONNECT.WIFI, "network");
     add_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB, "usbfunction");
     add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
-    add_item(ui_pnlNetwork, ui_lblNetwork, ui_icoNetwork, ui_droNetwork, lang.MUXCONNECT.WIFI, "network");
+    add_item(ui_pnlBluetooth, ui_lblBluetooth, ui_icoBluetooth, ui_droBluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth");
+    add_drop_down_options(ui_droBluetooth, disabled_enabled, 2);
 
     if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
         lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
@@ -389,10 +391,7 @@ int main(int argc, char *argv[]) {
     init_timer(ui_refresh_task, NULL);
 
     load_kiosk(&kiosk);
-    int prev_index = direct_to_previous(ui_objects, UI_COUNT, &nav_moved);
-    //TODO: remove true when bluetooth is implemented
-    if (prev_index > lv_obj_get_index(ui_pnlBluetooth) && (!device.DEVICE.HAS_BLUETOOTH || true)) prev_index--;
-    list_nav_next(prev_index);
+    list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
 
     mux_input_options input_opts = {
             .general_fd = joy_general,

@@ -152,58 +152,58 @@ void init_dropdown_settings() {
 
 void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
+            ui_pnlCatalogue,
+            ui_pnlTheme,
+            ui_pnlConfig,
             ui_pnlBackgroundAnimation,
             ui_pnlBGM,
             ui_pnlBlackFade,
-            ui_pnlCatalogue,
             ui_pnlBoxArt,
             ui_pnlBoxArtAlign,
             ui_pnlLaunchSplash,
             ui_pnlFont,
-            ui_pnlTheme,
             ui_pnlThemeAlternate,
-            ui_pnlSound,
-            ui_pnlConfig
+            ui_pnlSound
     };
 
-    ui_objects[0] = ui_lblBackgroundAnimation;
-    ui_objects[1] = ui_lblBGM;
-    ui_objects[2] = ui_lblBlackFade;
-    ui_objects[3] = ui_lblCatalogue;
-    ui_objects[4] = ui_lblBoxArt;
-    ui_objects[5] = ui_lblBoxArtAlign;
-    ui_objects[6] = ui_lblLaunchSplash;
-    ui_objects[7] = ui_lblFont;
-    ui_objects[8] = ui_lblTheme;
-    ui_objects[9] = ui_lblThemeAlternate;
-    ui_objects[10] = ui_lblSound;
-    ui_objects[11] = ui_lblConfig;
+    ui_objects[0] =  ui_lblCatalogue;
+    ui_objects[1] =  ui_lblTheme;
+    ui_objects[2] =  ui_lblConfig;
+    ui_objects[3] =  ui_lblBackgroundAnimation;
+    ui_objects[4] =  ui_lblBGM;
+    ui_objects[5] =  ui_lblBlackFade;
+    ui_objects[6] =  ui_lblBoxArt;
+    ui_objects[7] =  ui_lblBoxArtAlign;
+    ui_objects[8] =  ui_lblLaunchSplash;
+    ui_objects[9] =  ui_lblFont;
+    ui_objects[10] = ui_lblThemeAlternate;
+    ui_objects[11] = ui_lblSound;
 
-    ui_icons[0] = ui_icoBackgroundAnimation;
-    ui_icons[1] = ui_icoBGM;
-    ui_icons[2] = ui_icoBlackFade;
-    ui_icons[3] = ui_icoCatalogue;
-    ui_icons[4] = ui_icoBoxArt;
-    ui_icons[5] = ui_icoBoxArtAlign;
-    ui_icons[6] = ui_icoLaunchSplash;
-    ui_icons[7] = ui_icoFont;
-    ui_icons[8] = ui_icoTheme;
-    ui_icons[9] = ui_icoThemeAlternate;
-    ui_icons[10] = ui_icoSound;
-    ui_icons[11] = ui_icoConfig;
+    ui_icons[0] =  ui_icoCatalogue;
+    ui_icons[1] =  ui_icoTheme;
+    ui_icons[2] =  ui_icoConfig;
+    ui_icons[3] =  ui_icoBackgroundAnimation;
+    ui_icons[4] =  ui_icoBGM;
+    ui_icons[5] =  ui_icoBlackFade;
+    ui_icons[6] =  ui_icoBoxArt;
+    ui_icons[7] =  ui_icoBoxArtAlign;
+    ui_icons[8] =  ui_icoLaunchSplash;
+    ui_icons[9] =  ui_icoFont;
+    ui_icons[10] = ui_icoThemeAlternate;
+    ui_icons[11] = ui_icoSound;
 
-    ui_objects_value[0] = ui_droBackgroundAnimation;
-    ui_objects_value[1] = ui_droBGM;
-    ui_objects_value[2] = ui_droBlackFade;
-    ui_objects_value[3] = ui_droCatalogue;
-    ui_objects_value[4] = ui_droBoxArt;
-    ui_objects_value[5] = ui_droBoxArtAlign;
-    ui_objects_value[6] = ui_droLaunchSplash;
-    ui_objects_value[7] = ui_droFont;
-    ui_objects_value[8] = ui_droTheme;
-    ui_objects_value[9] = ui_droThemeAlternate;
-    ui_objects_value[10] = ui_droSound;
-    ui_objects_value[11] = ui_droConfig;
+    ui_objects_value[0] =  ui_droCatalogue;
+    ui_objects_value[1] =  ui_droTheme;
+    ui_objects_value[2] =  ui_droConfig;
+    ui_objects_value[3] =  ui_droBackgroundAnimation;
+    ui_objects_value[4] =  ui_droBGM;
+    ui_objects_value[5] =  ui_droBlackFade;
+    ui_objects_value[6] =  ui_droBoxArt;
+    ui_objects_value[7] =  ui_droBoxArtAlign;
+    ui_objects_value[8] =  ui_droLaunchSplash;
+    ui_objects_value[9] =  ui_droFont;
+    ui_objects_value[10] = ui_droThemeAlternate;
+    ui_objects_value[11] = ui_droSound;
 
     apply_theme_list_panel(ui_pnlBackgroundAnimation);
     apply_theme_list_panel(ui_pnlBGM);
@@ -604,9 +604,7 @@ int main(int argc, char *argv[]) {
     init_timer(ui_refresh_task, NULL);
 
     load_kiosk(&kiosk);
-    int prev_index = direct_to_previous(ui_objects, UI_COUNT, &nav_moved);
-    if (prev_index > lv_obj_get_index(ui_pnlTheme) && lv_dropdown_get_option_cnt(ui_droThemeAlternate) == 0) prev_index--;
-    list_nav_next(prev_index);
+    list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
 
     mux_input_options input_opts = {
             .general_fd = joy_general,

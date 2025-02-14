@@ -21,10 +21,10 @@ lv_obj_t *ui_droNetwork;
 lv_obj_t *ui_droUSBFunction;
 
 void init_mux(lv_obj_t *ui_pnlContent) {
-    ui_pnlBluetooth = lv_obj_create(ui_pnlContent);
     ui_pnlServices = lv_obj_create(ui_pnlContent);
-    ui_pnlUSBFunction = lv_obj_create(ui_pnlContent);
     ui_pnlNetwork = lv_obj_create(ui_pnlContent);
+    ui_pnlBluetooth = lv_obj_create(ui_pnlContent);
+    ui_pnlUSBFunction = lv_obj_create(ui_pnlContent);
 
     ui_lblBluetooth = lv_label_create(ui_pnlBluetooth);
     ui_lblServices = lv_label_create(ui_pnlServices);

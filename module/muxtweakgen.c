@@ -192,37 +192,37 @@ void save_tweak_options() {
 
 void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
+            ui_pnlRTC,
+            ui_pnlHDMI,
+            ui_pnlAdvanced,
             ui_pnlBrightness,
             ui_pnlColour,
-            ui_pnlRTC,
-            ui_pnlStartup,
-            ui_pnlHDMI,
-            ui_pnlAdvanced
+            ui_pnlStartup
     };
 
-    ui_objects[0] = ui_lblBrightness;
-    ui_objects[1] = ui_lblColour;
-    ui_objects[2] = ui_lblRTC;
-    ui_objects[3] = ui_lblStartup;
-    ui_objects[4] = ui_lblHDMI;
-    ui_objects[5] = ui_lblAdvanced;
+    ui_objects[0] = ui_lblRTC;
+    ui_objects[1] = ui_lblHDMI;
+    ui_objects[2] = ui_lblAdvanced;
+    ui_objects[3] = ui_lblBrightness;
+    ui_objects[4] = ui_lblColour;
+    ui_objects[5] = ui_lblStartup;
 
     lv_obj_t *ui_objects_value[] = {
+            ui_droRTC,
+            ui_droHDMI,
+            ui_droAdvanced,
             ui_droBrightness,
             ui_droColour,
-            ui_droRTC,
-            ui_droStartup,
-            ui_droHDMI,
-            ui_droAdvanced
+            ui_droStartup
     };
 
     lv_obj_t *ui_objects_glyph[] = {
+            ui_icoRTC,
+            ui_icoHDMI,
+            ui_icoAdvanced,
             ui_icoBrightness,
             ui_icoColour,
-            ui_icoRTC,
-            ui_icoStartup,
-            ui_icoHDMI,
-            ui_icoAdvanced
+            ui_icoStartup
     };
 
     apply_theme_list_panel(ui_pnlStartup);
