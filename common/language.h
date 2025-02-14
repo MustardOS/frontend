@@ -108,7 +108,6 @@ struct mux_lang {
     struct {
         char CONNECTIVITY[MAX_BUFFER_SIZE];
         char CUSTOM[MAX_BUFFER_SIZE];
-        char DATETIME[MAX_BUFFER_SIZE];
         char GENERAL[MAX_BUFFER_SIZE];
         char LANGUAGE[MAX_BUFFER_SIZE];
         char STORAGE[MAX_BUFFER_SIZE];
@@ -118,7 +117,6 @@ struct mux_lang {
         struct {
             char CONNECTIVITY[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];
-            char DATETIME[MAX_BUFFER_SIZE];
             char GENERAL[MAX_BUFFER_SIZE];
             char LANGUAGE[MAX_BUFFER_SIZE];
             char STORAGE[MAX_BUFFER_SIZE];
@@ -632,12 +630,10 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char HIDDEN[MAX_BUFFER_SIZE];
         char TEMP[MAX_BUFFER_SIZE];
+        char DATETIME[MAX_BUFFER_SIZE];
         char BRIGHT[MAX_BUFFER_SIZE];
         char HDMI[MAX_BUFFER_SIZE];
-        char POWER[MAX_BUFFER_SIZE];
-        char VISUAL[MAX_BUFFER_SIZE];
         char ADVANCED[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
@@ -650,13 +646,11 @@ struct mux_lang {
         } STARTUP;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
-            char HIDDEN[MAX_BUFFER_SIZE];
+            char DATETIME[MAX_BUFFER_SIZE];
             char STARTUP[MAX_BUFFER_SIZE];
             char TEMP[MAX_BUFFER_SIZE];
             char BRIGHT[MAX_BUFFER_SIZE];
             char HDMI[MAX_BUFFER_SIZE];
-            char POWER[MAX_BUFFER_SIZE];
-            char VISUAL[MAX_BUFFER_SIZE];
             char ADVANCED[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKGEN;
@@ -675,6 +669,7 @@ struct mux_lang {
         char EMPTY[MAX_BUFFER_SIZE];
         char COUNT_FOLDER[MAX_BUFFER_SIZE];
         char COUNT_FILE[MAX_BUFFER_SIZE];
+        char HIDDEN[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char FULL[MAX_BUFFER_SIZE];
@@ -696,6 +691,7 @@ struct mux_lang {
             char COUNT_FOLDER[MAX_BUFFER_SIZE];
             char COUNT_FILE[MAX_BUFFER_SIZE];
             char NAME[MAX_BUFFER_SIZE];
+            char HIDDEN[MAX_BUFFER_SIZE];
         } HELP;
     } MUXVISUAL;
 

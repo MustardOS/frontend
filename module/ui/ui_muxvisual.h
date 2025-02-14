@@ -17,6 +17,7 @@ extern lv_obj_t *ui_pnlFolderItemCount;
 extern lv_obj_t *ui_pnlDisplayEmptyFolder;
 extern lv_obj_t *ui_pnlMenuCounterFolder;
 extern lv_obj_t *ui_pnlMenuCounterFile;
+extern lv_obj_t *ui_pnlHidden;
 
 extern lv_obj_t *ui_lblBattery;
 extern lv_obj_t *ui_lblNetwork;
@@ -31,6 +32,7 @@ extern lv_obj_t *ui_lblFolderItemCount;
 extern lv_obj_t *ui_lblDisplayEmptyFolder;
 extern lv_obj_t *ui_lblMenuCounterFolder;
 extern lv_obj_t *ui_lblMenuCounterFile;
+extern lv_obj_t *ui_lblHidden;
 
 extern lv_obj_t *ui_icoBattery;
 extern lv_obj_t *ui_icoNetwork;
@@ -45,6 +47,7 @@ extern lv_obj_t *ui_icoFolderItemCount;
 extern lv_obj_t *ui_icoDisplayEmptyFolder;
 extern lv_obj_t *ui_icoMenuCounterFolder;
 extern lv_obj_t *ui_icoMenuCounterFile;
+extern lv_obj_t *ui_icoHidden;
 
 extern lv_obj_t *ui_droBattery;
 extern lv_obj_t *ui_droNetwork;
@@ -59,3 +62,4 @@ extern lv_obj_t *ui_droFolderItemCount;
 extern lv_obj_t *ui_droDisplayEmptyFolder;
 extern lv_obj_t *ui_droMenuCounterFolder;
 extern lv_obj_t *ui_droMenuCounterFile;
+extern lv_obj_t *ui_droHidden;

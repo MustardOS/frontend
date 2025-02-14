@@ -117,7 +117,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.TITLE, "CONFIGURATION");
     SPECIFIC_FIELD(lang->MUXCONFIG.CONNECTIVITY, "Connectivity");
     SPECIFIC_FIELD(lang->MUXCONFIG.CUSTOM, "Customisation");
-    SPECIFIC_FIELD(lang->MUXCONFIG.DATETIME, "Date and Time");
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.POWER, "Power Settings");
     SPECIFIC_FIELD(lang->MUXCONFIG.VISUAL, "Interface Options");
@@ -125,7 +124,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECTIVITY, "");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your muOS setup with user created packages");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.DATETIME, "Change your current date, time, and timezone");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and muOS frontend settings can be found here");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.LANGUAGE, "Select your preferred language");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.STORAGE, "Find out what storage device core settings and configurations are mounted");
@@ -540,12 +538,10 @@ void load_lang(struct mux_lang *lang) {
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HIDDEN, "Show Hidden Content");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.DATETIME, "Date and Time");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TEMP, "Colour Temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHT, "Brightness");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HDMI, "HDMI Output");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.POWER, "Power Settings");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.VISUAL, "Interface Options");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.ADVANCED, "Advanced Settings");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.TITLE, "Device Startup");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.MENU, "Main Menu");
@@ -554,14 +550,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.LAST, "Last Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.RESUME, "Resume Game");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.TEMP, "Change the colour temperature of the display if the device supports it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.BRIGHT, "Change the brightness of the device to a specific level");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HDMI, "Settings to change the HDMI output of the device");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.POWER, "Settings to change the power features of the device");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.VISUAL, "Settings to change the visual aspects of the frontend");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.ADVANCED, "Settings that should only be changed by those who know what they are doing!");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.DATETIME, "Change your current date, time, and timezone");
 
     // muxvisual
     SPECIFIC_FIELD(lang->MUXVISUAL.TITLE, "INTERFACE OPTIONS");
@@ -582,6 +576,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_SQ, "Remove [ ]");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_PA, "Remove ( )");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_SQPA, "Remove [ ] and ( )");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HIDDEN, "Show Hidden Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BATTERY, "Toggle the visibility of the battery glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NETWORK, "Toggle the visibility of the network glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
@@ -595,6 +590,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FOLDER, "Toggle the visibility of currently selected folder along with total in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FILE, "Toggle the visibility of currently selected file along with total in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAME, "Remove extra information from content labels - This does NOT rename your files it only changes how it is displayed");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");

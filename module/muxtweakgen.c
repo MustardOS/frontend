@@ -46,14 +46,14 @@ lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
 
-int hidden_original, startup_original, colour_original, brightness_original;
+int startup_original, colour_original, brightness_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 8
+#define UI_COUNT 6
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -65,13 +65,11 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblHidden,     lang.MUXTWEAKGEN.HELP.HIDDEN},
             {ui_lblStartup,    lang.MUXTWEAKGEN.HELP.STARTUP},
             {ui_lblColour,     lang.MUXTWEAKGEN.HELP.TEMP},
+            {ui_lblRTC,        lang.MUXTWEAKGEN.HELP.DATETIME},
             {ui_lblBrightness, lang.MUXTWEAKGEN.HELP.BRIGHT},
             {ui_lblHDMI,       lang.MUXTWEAKGEN.HELP.HDMI},
-            {ui_lblPower,      lang.MUXTWEAKGEN.HELP.POWER},
-            {ui_lblInterface,  lang.MUXTWEAKGEN.HELP.VISUAL},
             {ui_lblAdvanced,   lang.MUXTWEAKGEN.HELP.ADVANCED},
     };
 
@@ -103,7 +101,6 @@ static void dropdown_event_handler(lv_event_t *e) {
 
 void init_element_events() {
     lv_obj_t *dropdowns[] = {
-            ui_droHidden,
             ui_droStartup,
             ui_droColour,
             ui_droBrightness
@@ -115,14 +112,12 @@ void init_element_events() {
 }
 
 void init_dropdown_settings() {
-    hidden_original = lv_dropdown_get_selected(ui_droHidden);
     startup_original = lv_dropdown_get_selected(ui_droStartup);
     colour_original = lv_dropdown_get_selected(ui_droColour);
     brightness_original = lv_dropdown_get_selected(ui_droBrightness);
 }
 
 void restore_tweak_options() {
-    lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
     lv_dropdown_set_selected(ui_droBrightness, config.SETTINGS.GENERAL.BRIGHTNESS + 1);
     lv_dropdown_set_selected(ui_droColour, config.SETTINGS.GENERAL.COLOUR + 255);
 
@@ -168,16 +163,10 @@ void save_tweak_options() {
             break;
     }
 
-    int idx_hidden = lv_dropdown_get_selected(ui_droHidden);
     int idx_brightness = lv_dropdown_get_selected(ui_droBrightness);
     int idx_colour = lv_dropdown_get_selected(ui_droColour) - 255;
 
     int is_modified = 0;
-
-    if (lv_dropdown_get_selected(ui_droHidden) != hidden_original) {
-        is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/hidden"), "w", INT, idx_hidden);
-    }
 
     if (lv_dropdown_get_selected(ui_droStartup) != startup_original) {
         is_modified++;
@@ -203,75 +192,60 @@ void save_tweak_options() {
 
 void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlHidden,
-            ui_pnlStartup,
-            ui_pnlColour,
             ui_pnlBrightness,
+            ui_pnlColour,
+            ui_pnlRTC,
+            ui_pnlStartup,
             ui_pnlHDMI,
-            ui_pnlPower,
-            ui_pnlInterface,
-            ui_pnlAdvanced,
+            ui_pnlAdvanced
     };
 
-    ui_objects[0] = ui_lblHidden;
-    ui_objects[1] = ui_lblStartup;
-    ui_objects[2] = ui_lblColour;
-    ui_objects[3] = ui_lblBrightness;
+    ui_objects[0] = ui_lblBrightness;
+    ui_objects[1] = ui_lblColour;
+    ui_objects[2] = ui_lblRTC;
+    ui_objects[3] = ui_lblStartup;
     ui_objects[4] = ui_lblHDMI;
-    ui_objects[5] = ui_lblPower;
-    ui_objects[6] = ui_lblInterface;
-    ui_objects[7] = ui_lblAdvanced;
+    ui_objects[5] = ui_lblAdvanced;
 
     lv_obj_t *ui_objects_value[] = {
-            ui_droHidden,
-            ui_droStartup,
-            ui_droColour,
             ui_droBrightness,
+            ui_droColour,
+            ui_droRTC,
+            ui_droStartup,
             ui_droHDMI,
-            ui_droPower,
-            ui_droInterface,
             ui_droAdvanced
     };
 
     lv_obj_t *ui_objects_glyph[] = {
-            ui_icoHidden,
-            ui_icoStartup,
-            ui_icoColour,
             ui_icoBrightness,
+            ui_icoColour,
+            ui_icoRTC,
+            ui_icoStartup,
             ui_icoHDMI,
-            ui_icoPower,
-            ui_icoInterface,
             ui_icoAdvanced
     };
 
-    apply_theme_list_panel(ui_pnlHidden);
     apply_theme_list_panel(ui_pnlStartup);
     apply_theme_list_panel(ui_pnlColour);
+    apply_theme_list_panel(ui_pnlRTC);
     apply_theme_list_panel(ui_pnlBrightness);
     apply_theme_list_panel(ui_pnlHDMI);
-    apply_theme_list_panel(ui_pnlPower);
-    apply_theme_list_panel(ui_pnlInterface);
     apply_theme_list_panel(ui_pnlAdvanced);
 
-    apply_theme_list_item(&theme, ui_lblHidden, lang.MUXTWEAKGEN.HIDDEN);
     apply_theme_list_item(&theme, ui_lblStartup, lang.MUXTWEAKGEN.STARTUP.TITLE);
     apply_theme_list_item(&theme, ui_lblColour, lang.MUXTWEAKGEN.TEMP);
+    apply_theme_list_item(&theme, ui_lblRTC, lang.MUXTWEAKGEN.DATETIME);
     apply_theme_list_item(&theme, ui_lblBrightness, lang.MUXTWEAKGEN.BRIGHT);
     apply_theme_list_item(&theme, ui_lblHDMI, lang.MUXTWEAKGEN.HDMI);
-    apply_theme_list_item(&theme, ui_lblPower, lang.MUXTWEAKGEN.POWER);
-    apply_theme_list_item(&theme, ui_lblInterface, lang.MUXTWEAKGEN.VISUAL);
     apply_theme_list_item(&theme, ui_lblAdvanced, lang.MUXTWEAKGEN.ADVANCED);
 
-    apply_theme_list_glyph(&theme, ui_icoHidden, mux_module, "hidden");
     apply_theme_list_glyph(&theme, ui_icoStartup, mux_module, "startup");
     apply_theme_list_glyph(&theme, ui_icoColour, mux_module, "colour");
+    apply_theme_list_glyph(&theme, ui_icoRTC, mux_module, "clock");
     apply_theme_list_glyph(&theme, ui_icoBrightness, mux_module, "brightness");
     apply_theme_list_glyph(&theme, ui_icoHDMI, mux_module, "hdmi");
-    apply_theme_list_glyph(&theme, ui_icoPower, mux_module, "power");
-    apply_theme_list_glyph(&theme, ui_icoInterface, mux_module, "interface");
     apply_theme_list_glyph(&theme, ui_icoAdvanced, mux_module, "advanced");
 
-    apply_theme_list_drop_down(&theme, ui_droHidden, NULL);
     apply_theme_list_drop_down(&theme, ui_droStartup, NULL);
     apply_theme_list_drop_down(&theme, ui_droColour, NULL);
 
@@ -283,13 +257,11 @@ void init_navigation_group() {
     apply_theme_list_drop_down(&theme, ui_droColour, colour_string);
     free(colour_string);
 
+    apply_theme_list_drop_down(&theme, ui_droRTC, "");
     apply_theme_list_drop_down(&theme, ui_droHDMI, "");
-    apply_theme_list_drop_down(&theme, ui_droPower, "");
-    apply_theme_list_drop_down(&theme, ui_droInterface, "");
     apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
 
     char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
-    add_drop_down_options(ui_droHidden, disabled_enabled, 2);
     add_drop_down_options(ui_droStartup, (char *[]) {
             lang.MUXTWEAKGEN.STARTUP.MENU, lang.MUXTWEAKGEN.STARTUP.EXPLORE, lang.MUXTWEAKGEN.STARTUP.COLLECTION,
             lang.MUXTWEAKGEN.STARTUP.HISTORY, lang.MUXTWEAKGEN.STARTUP.LAST, lang.MUXTWEAKGEN.STARTUP.RESUME}, 6);
@@ -356,9 +328,8 @@ void handle_confirm(void) {
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
+            {"clock",     "rtc",      &kiosk.DATETIME.CLOCK},
             {"hdmi",      "hdmi",     &kiosk.SETTING.HDMI},
-            {"power",     "power",    &kiosk.SETTING.POWER},
-            {"interface", "visual",   &kiosk.SETTING.VISUAL},
             {"advanced",  "tweakadv", &kiosk.SETTING.ADVANCED}
     };
 
@@ -453,13 +424,11 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblHidden, "hidden");
     lv_obj_set_user_data(ui_lblStartup, "startup");
     lv_obj_set_user_data(ui_lblColour, "colour");
+    lv_obj_set_user_data(ui_lblRTC, "clock");
     lv_obj_set_user_data(ui_lblBrightness, "brightness");
     lv_obj_set_user_data(ui_lblHDMI, "hdmi");
-    lv_obj_set_user_data(ui_lblPower, "power");
-    lv_obj_set_user_data(ui_lblInterface, "interface");
     lv_obj_set_user_data(ui_lblAdvanced, "advanced");
 
     if (!device.DEVICE.HAS_HDMI) {
