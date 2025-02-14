@@ -44,12 +44,12 @@ lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
 
-int battery_original, network_original, bluetooth_original, mux_clock_original, 
+int battery_original, network_original, mux_clock_original, 
         name_original, dash_original, friendlyfolder_original, thetitleformat_original,
         titleincluderootdrive_original, folderitemcount_original, menu_counter_folder_original,
         display_empty_folder_original, menu_counter_file_original, hidden_original;
 
-#define UI_COUNT 14
+#define UI_COUNT 13
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -68,7 +68,6 @@ void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblBattery,               lang.MUXVISUAL.HELP.BATTERY},
             {ui_lblNetwork,               lang.MUXVISUAL.HELP.NETWORK},
-            {ui_lblBluetooth,             lang.MUXVISUAL.HELP.BLUETOOTH},
             {ui_lblClock,                 lang.MUXVISUAL.HELP.CLOCK},
             {ui_lblName,                  lang.MUXVISUAL.HELP.NAME},
             {ui_lblDash,                  lang.MUXVISUAL.HELP.DASH},
@@ -112,7 +111,6 @@ void init_element_events() {
     lv_obj_t *dropdowns[] = {
             ui_droBattery,
             ui_droNetwork,
-            ui_droBluetooth,
             ui_droClock,
             ui_droName,
             ui_droDash,
@@ -134,7 +132,6 @@ void init_element_events() {
 void init_dropdown_settings() {
     battery_original = lv_dropdown_get_selected(ui_droBattery);
     network_original = lv_dropdown_get_selected(ui_droNetwork);
-    bluetooth_original = lv_dropdown_get_selected(ui_droBluetooth);
     mux_clock_original = lv_dropdown_get_selected(ui_droClock);
     name_original = lv_dropdown_get_selected(ui_droName);
     dash_original = lv_dropdown_get_selected(ui_droDash);
@@ -151,7 +148,6 @@ void init_dropdown_settings() {
 void restore_visual_options() {
     lv_dropdown_set_selected(ui_droBattery, config.VISUAL.BATTERY);
     lv_dropdown_set_selected(ui_droNetwork, config.VISUAL.NETWORK);
-    lv_dropdown_set_selected(ui_droBluetooth, config.VISUAL.BLUETOOTH);
     lv_dropdown_set_selected(ui_droClock, config.VISUAL.CLOCK);
     lv_dropdown_set_selected(ui_droName, config.VISUAL.NAME);
     lv_dropdown_set_selected(ui_droDash, config.VISUAL.DASH);
@@ -168,7 +164,6 @@ void restore_visual_options() {
 void save_visual_options() {
     int idx_battery = lv_dropdown_get_selected(ui_droBattery);
     int idx_network = lv_dropdown_get_selected(ui_droNetwork);
-    int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
     int idx_clock = lv_dropdown_get_selected(ui_droClock);
     int idx_name = lv_dropdown_get_selected(ui_droName);
     int idx_dash = lv_dropdown_get_selected(ui_droDash);
@@ -187,10 +182,6 @@ void save_visual_options() {
 
     if (lv_dropdown_get_selected(ui_droNetwork) != network_original) {
         write_text_to_file((RUN_GLOBAL_PATH "visual/network"), "w", INT, idx_network);
-    }
-
-    if (lv_dropdown_get_selected(ui_droBluetooth) != bluetooth_original) {
-        write_text_to_file((RUN_GLOBAL_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
     }
 
     if (lv_dropdown_get_selected(ui_droClock) != mux_clock_original) {
@@ -243,7 +234,6 @@ void init_navigation_group() {
             ui_pnlBattery,
             ui_pnlClock,
             ui_pnlNetwork,
-            ui_pnlBluetooth,
             ui_pnlDash,
             ui_pnlName,
             ui_pnlDisplayEmptyFolder,
@@ -259,24 +249,22 @@ void init_navigation_group() {
     ui_objects[0] =  ui_icoBattery;
     ui_objects[1] =  ui_icoClock;
     ui_objects[2] =  ui_icoNetwork;
-    ui_objects[3] =  ui_icoBluetooth;
-    ui_objects[4] =  ui_icoDash;
-    ui_objects[5] =  ui_icoName;
-    ui_objects[6] =  ui_icoDisplayEmptyFolder;
-    ui_objects[7] =  ui_icoTheTitleFormat;
-    ui_objects[8] =  ui_icoFolderItemCount;
-    ui_objects[9] =  ui_icoFriendlyFolder;
-    ui_objects[10] = ui_icoMenuCounterFile;
-    ui_objects[11] = ui_icoMenuCounterFolder;
-    ui_objects[12] = ui_pnlHidden;
-    ui_objects[13] = ui_icoTitleIncludeRootDrive;
+    ui_objects[3] =  ui_icoDash;
+    ui_objects[4] =  ui_icoName;
+    ui_objects[5] =  ui_icoDisplayEmptyFolder;
+    ui_objects[6] =  ui_icoTheTitleFormat;
+    ui_objects[7] =  ui_icoFolderItemCount;
+    ui_objects[8] =  ui_icoFriendlyFolder;
+    ui_objects[9] = ui_icoMenuCounterFile;
+    ui_objects[10] = ui_icoMenuCounterFolder;
+    ui_objects[11] = ui_pnlHidden;
+    ui_objects[12] = ui_icoTitleIncludeRootDrive;
 
 
     lv_obj_t *ui_objects_value[] = {
             ui_droBattery,
             ui_droClock,
             ui_droNetwork,
-            ui_droBluetooth,
             ui_droDash,
             ui_droName,
             ui_droDisplayEmptyFolder,
@@ -293,7 +281,6 @@ void init_navigation_group() {
             ui_icoBattery,
             ui_icoClock,
             ui_icoNetwork,
-            ui_icoBluetooth,
             ui_icoDash,
             ui_icoName,
             ui_icoDisplayEmptyFolder,
@@ -308,7 +295,6 @@ void init_navigation_group() {
 
     apply_theme_list_panel(ui_pnlBattery);
     apply_theme_list_panel(ui_pnlNetwork);
-    apply_theme_list_panel(ui_pnlBluetooth);
     apply_theme_list_panel(ui_pnlClock);
     apply_theme_list_panel(ui_pnlName);
     apply_theme_list_panel(ui_pnlDash);
@@ -323,7 +309,6 @@ void init_navigation_group() {
 
     apply_theme_list_item(&theme, ui_lblBattery, lang.MUXVISUAL.BATTERY);
     apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXVISUAL.NETWORK);
-    apply_theme_list_item(&theme, ui_lblBluetooth, lang.MUXVISUAL.BLUETOOTH);
     apply_theme_list_item(&theme, ui_lblClock, lang.MUXVISUAL.CLOCK);
     apply_theme_list_item(&theme, ui_lblName, lang.MUXVISUAL.NAME.TITLE);
     apply_theme_list_item(&theme, ui_lblDash, lang.MUXVISUAL.DASH);
@@ -338,7 +323,6 @@ void init_navigation_group() {
 
     apply_theme_list_glyph(&theme, ui_icoBattery, mux_module, "battery");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
-    apply_theme_list_glyph(&theme, ui_icoBluetooth, mux_module, "bluetooth");
     apply_theme_list_glyph(&theme, ui_icoClock, mux_module, "clock");
     apply_theme_list_glyph(&theme, ui_icoName, mux_module, "name");
     apply_theme_list_glyph(&theme, ui_icoDash, mux_module, "dash");
@@ -353,7 +337,6 @@ void init_navigation_group() {
 
     apply_theme_list_drop_down(&theme, ui_droBattery, NULL);
     apply_theme_list_drop_down(&theme, ui_droNetwork, NULL);
-    apply_theme_list_drop_down(&theme, ui_droBluetooth, NULL);
     apply_theme_list_drop_down(&theme, ui_droClock, NULL);
     apply_theme_list_drop_down(&theme, ui_droName, NULL);
     apply_theme_list_drop_down(&theme, ui_droDash, NULL);
@@ -369,7 +352,6 @@ void init_navigation_group() {
     char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
     add_drop_down_options(ui_droBattery, disabled_enabled, 2);
     add_drop_down_options(ui_droNetwork, disabled_enabled, 2);
-    add_drop_down_options(ui_droBluetooth, disabled_enabled, 2);
     add_drop_down_options(ui_droClock, disabled_enabled, 2);
     add_drop_down_options(ui_droHidden, disabled_enabled, 2);
 
@@ -404,12 +386,6 @@ void init_navigation_group() {
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_FLOATING);
-        ui_count -= 1;
-    }
-
-    if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
-        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_FLOATING);
         ui_count -= 1;
     }
 }
@@ -525,7 +501,6 @@ void init_elements() {
 
     lv_obj_set_user_data(ui_lblBattery, "battery");
     lv_obj_set_user_data(ui_lblNetwork, "network");
-    lv_obj_set_user_data(ui_lblBluetooth, "bluetooth");
     lv_obj_set_user_data(ui_lblClock, "clock");
     lv_obj_set_user_data(ui_lblName, "name");
     lv_obj_set_user_data(ui_lblDash, "dash");

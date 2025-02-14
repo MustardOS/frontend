@@ -127,10 +127,12 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char BLUETOOTH[MAX_BUFFER_SIZE];
         char WEB[MAX_BUFFER_SIZE];
         char USB[MAX_BUFFER_SIZE];
         char WIFI[MAX_BUFFER_SIZE];
         struct {
+            char BLUETOOTH[MAX_BUFFER_SIZE];
             char WEB[MAX_BUFFER_SIZE];
             char USB[MAX_BUFFER_SIZE];
             char WIFI[MAX_BUFFER_SIZE];
@@ -659,7 +661,6 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char BATTERY[MAX_BUFFER_SIZE];
         char NETWORK[MAX_BUFFER_SIZE];
-        char BLUETOOTH[MAX_BUFFER_SIZE];
         char CLOCK[MAX_BUFFER_SIZE];
         char DASH[MAX_BUFFER_SIZE];
         char FRIENDLY[MAX_BUFFER_SIZE];
@@ -680,7 +681,6 @@ struct mux_lang {
         struct {
             char BATTERY[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
-            char BLUETOOTH[MAX_BUFFER_SIZE];
             char CLOCK[MAX_BUFFER_SIZE];
             char DASH[MAX_BUFFER_SIZE];
             char FRIENDLY[MAX_BUFFER_SIZE];

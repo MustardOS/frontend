@@ -45,14 +45,14 @@ lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
 
-int usbfunction_original;
+int bluetooth_original, usbfunction_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 3
+#define UI_COUNT 4
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -66,6 +66,7 @@ void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblNetwork,      lang.MUXCONNECT.HELP.WIFI},
             {ui_lblUSBFunction,  lang.MUXCONNECT.HELP.USB},
+            {ui_lblBluetooth,    lang.MUXCONNECT.HELP.BLUETOOTH},
             {ui_lblServices,     lang.MUXCONNECT.HELP.WEB},
     };
 
@@ -87,6 +88,7 @@ void show_help(lv_obj_t *element_focused) {
 
 void init_dropdown_settings() {
     usbfunction_original = lv_dropdown_get_selected(ui_droUSBFunction);
+    bluetooth_original = lv_dropdown_get_selected(ui_droBluetooth);
 }
 
 void restore_options() {
@@ -98,6 +100,7 @@ void restore_options() {
     } else {
         lv_dropdown_set_selected(ui_droUSBFunction, 0);
     }
+    lv_dropdown_set_selected(ui_droBluetooth, config.VISUAL.BLUETOOTH);
 }
 
 void save_options() {
@@ -115,6 +118,11 @@ void save_options() {
     }
     
     int is_modified = 0;
+
+    int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
+    if (lv_dropdown_get_selected(ui_droBluetooth) != bluetooth_original) {
+        write_text_to_file((RUN_GLOBAL_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
+    }
 
     if (lv_dropdown_get_selected(ui_droUSBFunction) != usbfunction_original) {
         is_modified++;
@@ -146,15 +154,27 @@ void init_navigation_group() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
     
-    ui_objects[0] = ui_lblServices;
-    ui_objects[1] = ui_lblUSBFunction;
-    ui_objects[2] = ui_lblNetwork;
+    ui_objects[0] = ui_lblBluetooth;
+    ui_objects[1] = ui_lblServices;
+    ui_objects[2] = ui_lblUSBFunction;
+    ui_objects[3] = ui_lblNetwork;
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
 
+    char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
+    add_item(ui_pnlBluetooth, ui_lblBluetooth, ui_icoBluetooth, ui_droBluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth");
+    add_drop_down_options(ui_droBluetooth, disabled_enabled, 2);
     add_item(ui_pnlServices, ui_lblServices, ui_icoServices, ui_droServices, lang.MUXCONNECT.WEB, "service");
     add_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB, "usbfunction");
     add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
     add_item(ui_pnlNetwork, ui_lblNetwork, ui_icoNetwork, ui_droNetwork, lang.MUXCONNECT.WIFI, "network");
+
+    if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
+        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_HIDDEN);
+        ui_count -= 1;
+    }
 }
 
 void list_nav_prev(int steps) {
@@ -306,6 +326,7 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
+    lv_obj_set_user_data(ui_lblBluetooth, "bluetooth");
     lv_obj_set_user_data(ui_lblServices, "service");
     lv_obj_set_user_data(ui_lblUSBFunction, "usbfunction");
     lv_obj_set_user_data(ui_lblNetwork, "network");
@@ -368,7 +389,10 @@ int main(int argc, char *argv[]) {
     init_timer(ui_refresh_task, NULL);
 
     load_kiosk(&kiosk);
-    list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
+    int prev_index = direct_to_previous(ui_objects, UI_COUNT, &nav_moved);
+    //TODO: remove true when bluetooth is implemented
+    if (prev_index > lv_obj_get_index(ui_pnlBluetooth) && (!device.DEVICE.HAS_BLUETOOTH || true)) prev_index--;
+    list_nav_next(prev_index);
 
     mux_input_options input_opts = {
             .general_fd = joy_general,

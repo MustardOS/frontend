@@ -132,12 +132,14 @@ void load_lang(struct mux_lang *lang) {
 
     // muxconnect
     SPECIFIC_FIELD(lang->MUXCONNECT.TITLE, "CONNECTIVITY");
+    SPECIFIC_FIELD(lang->MUXCONNECT.BLUETOOTH, "Bluetooth");
     SPECIFIC_FIELD(lang->MUXCONNECT.USB, "USB Function");
     SPECIFIC_FIELD(lang->MUXCONNECT.WEB, "Web Services");
     SPECIFIC_FIELD(lang->MUXCONNECT.WIFI, "Wi-Fi Network");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USB, "Toggle between ADB and MTP USB functionality");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
 
     // muxcustom
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
@@ -561,7 +563,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.TITLE, "INTERFACE OPTIONS");
     SPECIFIC_FIELD(lang->MUXVISUAL.BATTERY, "Battery");
     SPECIFIC_FIELD(lang->MUXVISUAL.NETWORK, "Network");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BLUETOOTH, "Bluetooth");
     SPECIFIC_FIELD(lang->MUXVISUAL.CLOCK, "Clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.DASH, "Content Dash Replacement");
     SPECIFIC_FIELD(lang->MUXVISUAL.FRIENDLY, "Friendly Folder Names");
@@ -579,7 +580,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXVISUAL.HIDDEN, "Show Hidden Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BATTERY, "Toggle the visibility of the battery glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NETWORK, "Toggle the visibility of the network glyph");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CLOCK, "Toggle the visibility of the clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.DASH, "Replaces the dash (-) with a colon (:) for content labels");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FRIENDLY, "Replaces the label of shortened content folders to more appropriately named labels");

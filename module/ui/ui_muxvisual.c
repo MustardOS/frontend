@@ -2,7 +2,6 @@
 
 lv_obj_t *ui_pnlBattery;
 lv_obj_t *ui_pnlNetwork;
-lv_obj_t *ui_pnlBluetooth;
 lv_obj_t *ui_pnlClock;
 lv_obj_t *ui_pnlName;
 lv_obj_t *ui_pnlDash;
@@ -17,7 +16,6 @@ lv_obj_t *ui_pnlHidden;
 
 lv_obj_t *ui_lblBattery;
 lv_obj_t *ui_lblNetwork;
-lv_obj_t *ui_lblBluetooth;
 lv_obj_t *ui_lblClock;
 lv_obj_t *ui_lblName;
 lv_obj_t *ui_lblDash;
@@ -32,7 +30,6 @@ lv_obj_t *ui_lblHidden;
 
 lv_obj_t *ui_icoBattery;
 lv_obj_t *ui_icoNetwork;
-lv_obj_t *ui_icoBluetooth;
 lv_obj_t *ui_icoClock;
 lv_obj_t *ui_icoName;
 lv_obj_t *ui_icoDash;
@@ -47,7 +44,6 @@ lv_obj_t *ui_icoHidden;
 
 lv_obj_t *ui_droBattery;
 lv_obj_t *ui_droNetwork;
-lv_obj_t *ui_droBluetooth;
 lv_obj_t *ui_droClock;
 lv_obj_t *ui_droName;
 lv_obj_t *ui_droDash;
@@ -64,8 +60,6 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlBattery = lv_obj_create(ui_pnlContent);
     ui_pnlClock = lv_obj_create(ui_pnlContent);
     ui_pnlNetwork = lv_obj_create(ui_pnlContent);
-    ui_pnlBluetooth = lv_obj_create(ui_pnlContent);
-    lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
     ui_pnlDash = lv_obj_create(ui_pnlContent);
     ui_pnlName = lv_obj_create(ui_pnlContent);
     ui_pnlDisplayEmptyFolder = lv_obj_create(ui_pnlContent);
@@ -79,7 +73,6 @@ void init_mux(lv_obj_t *ui_pnlContent) {
 
     ui_lblBattery = lv_label_create(ui_pnlBattery);
     ui_lblNetwork = lv_label_create(ui_pnlNetwork);
-    ui_lblBluetooth = lv_label_create(ui_pnlBluetooth);
     ui_lblClock = lv_label_create(ui_pnlClock);
     ui_lblName = lv_label_create(ui_pnlName);
     ui_lblDash = lv_label_create(ui_pnlDash);
@@ -94,7 +87,6 @@ void init_mux(lv_obj_t *ui_pnlContent) {
 
     ui_icoBattery = lv_img_create(ui_pnlBattery);
     ui_icoNetwork = lv_img_create(ui_pnlNetwork);
-    ui_icoBluetooth = lv_img_create(ui_pnlBluetooth);
     ui_icoClock = lv_img_create(ui_pnlClock);
     ui_icoName = lv_img_create(ui_pnlName);
     ui_icoDash = lv_img_create(ui_pnlDash);
@@ -109,7 +101,6 @@ void init_mux(lv_obj_t *ui_pnlContent) {
 
     ui_droBattery = lv_dropdown_create(ui_pnlBattery);
     ui_droNetwork = lv_dropdown_create(ui_pnlNetwork);
-    ui_droBluetooth = lv_dropdown_create(ui_pnlBluetooth);
     ui_droClock = lv_dropdown_create(ui_pnlClock);
     ui_droName = lv_dropdown_create(ui_pnlName);
     ui_droDash = lv_dropdown_create(ui_pnlDash);

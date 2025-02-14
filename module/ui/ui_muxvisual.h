@@ -6,7 +6,6 @@ void init_mux(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlBattery;
 extern lv_obj_t *ui_pnlNetwork;
-extern lv_obj_t *ui_pnlBluetooth;
 extern lv_obj_t *ui_pnlClock;
 extern lv_obj_t *ui_pnlName;
 extern lv_obj_t *ui_pnlDash;
@@ -21,7 +20,6 @@ extern lv_obj_t *ui_pnlHidden;
 
 extern lv_obj_t *ui_lblBattery;
 extern lv_obj_t *ui_lblNetwork;
-extern lv_obj_t *ui_lblBluetooth;
 extern lv_obj_t *ui_lblClock;
 extern lv_obj_t *ui_lblName;
 extern lv_obj_t *ui_lblDash;
@@ -36,7 +34,6 @@ extern lv_obj_t *ui_lblHidden;
 
 extern lv_obj_t *ui_icoBattery;
 extern lv_obj_t *ui_icoNetwork;
-extern lv_obj_t *ui_icoBluetooth;
 extern lv_obj_t *ui_icoClock;
 extern lv_obj_t *ui_icoName;
 extern lv_obj_t *ui_icoDash;
@@ -51,7 +48,6 @@ extern lv_obj_t *ui_icoHidden;
 
 extern lv_obj_t *ui_droBattery;
 extern lv_obj_t *ui_droNetwork;
-extern lv_obj_t *ui_droBluetooth;
 extern lv_obj_t *ui_droClock;
 extern lv_obj_t *ui_droName;
 extern lv_obj_t *ui_droDash;
