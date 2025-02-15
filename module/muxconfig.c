@@ -115,9 +115,9 @@ void init_navigation_group() {
     ui_objects[6] = ui_lblStorage;
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
 
+    add_item(ui_pnlTweakGeneral, ui_lblTweakGeneral, ui_icoTweakGeneral, lang.MUXCONFIG.GENERAL, "general");
     add_item(ui_pnlConnect, ui_lblConnect, ui_icoConnect, lang.MUXCONFIG.CONNECTIVITY, "connect");
     add_item(ui_pnlCustom, ui_lblCustom, ui_icoCustom, lang.MUXCONFIG.CUSTOM, "custom");
-    add_item(ui_pnlTweakGeneral, ui_lblTweakGeneral, ui_icoTweakGeneral, lang.MUXCONFIG.GENERAL, "general");
     add_item(ui_pnlInterface, ui_lblInterface, ui_icoInterface, lang.MUXCONFIG.VISUAL, "interface");
     add_item(ui_pnlLanguage, ui_lblLanguage, ui_icoLanguage, lang.MUXCONFIG.LANGUAGE, "language");
     add_item(ui_pnlPower, ui_lblPower, ui_icoPower, lang.MUXCONFIG.POWER, "power");
