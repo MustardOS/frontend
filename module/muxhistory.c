@@ -908,8 +908,11 @@ int main(int argc, char *argv[]) {
     safe_quit();
 
     free_items(items, item_count);
+
     close(joy_general);
     close(joy_power);
+    close(joy_volume);
+    close(joy_extra);
 
     return 0;
 }

@@ -854,6 +854,8 @@ int main(int argc, char *argv[]) {
 
     close(joy_general);
     close(joy_power);
+    close(joy_volume);
+    close(joy_extra);
 
     return 0;
 }
