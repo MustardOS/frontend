@@ -254,11 +254,13 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char SYSTEM[MAX_BUFFER_SIZE];
         char ACTIVITY[MAX_BUFFER_SIZE];
+        char SCREENSHOT[MAX_BUFFER_SIZE];
         char INPUT[MAX_BUFFER_SIZE];
         char CREDIT[MAX_BUFFER_SIZE];
         struct {
             char SYSTEM[MAX_BUFFER_SIZE];
             char ACTIVITY[MAX_BUFFER_SIZE];
+            char SCREENSHOT[MAX_BUFFER_SIZE];
             char INPUT[MAX_BUFFER_SIZE];
             char CREDIT[MAX_BUFFER_SIZE];
         } HELP;
@@ -461,6 +463,12 @@ struct mux_lang {
             char LOOKUP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXSEARCH;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char HELP[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+    } MUXSHOT;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

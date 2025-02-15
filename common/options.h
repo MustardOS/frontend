@@ -48,6 +48,7 @@
 #define RUN_SYSTEM_PATH  RUN_PATH "system/"
 
 #define STORAGE_THEME RUN_STORAGE_PATH "theme/active"
+#define STORAGE_SHOTS RUN_STORAGE_PATH "screenshot"
 
 #define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
 #define INFO_COR_PATH RUN_STORAGE_PATH "info/core"

@@ -402,6 +402,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.LOCAL, "Search within the current selected folder and folders within");
     SPECIFIC_FIELD(lang->MUXSEARCH.HELP.LOOKUP, "Enter in the name of the content you are looking for");
 
+    // muxshot
+    SPECIFIC_FIELD(lang->MUXSHOT.TITLE, "SCREENSHOTS");
+    SPECIFIC_FIELD(lang->MUXSHOT.HELP, "View your current screenshots");
+    SPECIFIC_FIELD(lang->MUXSHOT.NONE, "No Screenshots Found");
+
     // muxsnapshot
     SPECIFIC_FIELD(lang->MUXSNAPSHOT.TITLE, "SAVE SNAPSHOT");
     SPECIFIC_FIELD(lang->MUXSNAPSHOT.HELP, "Restore your saved game progress from a previous snapshot");
