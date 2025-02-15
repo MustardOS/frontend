@@ -635,6 +635,7 @@ struct mux_lang {
         char TEMP[MAX_BUFFER_SIZE];
         char DATETIME[MAX_BUFFER_SIZE];
         char BRIGHT[MAX_BUFFER_SIZE];
+        char VOLUME[MAX_BUFFER_SIZE];
         char HDMI[MAX_BUFFER_SIZE];
         char ADVANCED[MAX_BUFFER_SIZE];
         struct {
@@ -652,6 +653,7 @@ struct mux_lang {
             char STARTUP[MAX_BUFFER_SIZE];
             char TEMP[MAX_BUFFER_SIZE];
             char BRIGHT[MAX_BUFFER_SIZE];
+            char VOLUME[MAX_BUFFER_SIZE];
             char HDMI[MAX_BUFFER_SIZE];
             char ADVANCED[MAX_BUFFER_SIZE];
         } HELP;

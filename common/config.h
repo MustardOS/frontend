@@ -57,6 +57,7 @@ struct mux_config {
             char STARTUP[MAX_BUFFER_SIZE];
             int16_t COLOUR;
             int16_t BRIGHTNESS;
+            int16_t VOLUME;
             char LANGUAGE[MAX_BUFFER_SIZE];
         } GENERAL;
         struct {

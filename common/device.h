@@ -19,6 +19,11 @@ struct mux_device {
     } DEVICE;
 
     struct {
+        int16_t MIN;
+        int16_t MAX;
+    } AUDIO;
+
+    struct {
         int16_t WIDTH;
         int16_t HEIGHT;
     } MUX;

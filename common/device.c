@@ -73,6 +73,9 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->DEVICE.RTC, "board/rtc")
     DEV_STR_FIELD(device->DEVICE.LED, "board/led")
 
+    DEV_INT_FIELD(device->AUDIO.MIN, "audio/min")
+    DEV_INT_FIELD(device->AUDIO.MAX, "audio/max")
+
     DEV_INT_FIELD(device->MUX.WIDTH, "mux/width")
     DEV_INT_FIELD(device->MUX.HEIGHT, "mux/height")
 
