@@ -257,7 +257,7 @@ bool automatic_assign_core(char *rom_dir) {
 
     char assign_file[MAX_BUFFER_SIZE];
     snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
-                device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
+                device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
     if (json_valid(read_text_from_file(assign_file))) {
         static char assign_check[MAX_BUFFER_SIZE];
@@ -277,7 +277,7 @@ bool automatic_assign_core(char *rom_dir) {
 
             char assigned_core_ini[MAX_BUFFER_SIZE];
             snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s/%s",
-                        device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, ass_config);
+                        device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config);
 
             LOG_INFO(mux_module, "<Automatic Core Assign> Obtaining Core INI: %s", assigned_core_ini)
 

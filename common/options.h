@@ -60,7 +60,6 @@
 #define MUOS_APPS_PATH "MUOS/application"
 #define MUOS_TASK_PATH "MUOS/task"
 #define MUOS_INFO_PATH "MUOS/info"
-#define MUOS_ASIN_PATH MUOS_INFO_PATH "/assign"
 
 #define STORE_LOC_BIOS "MUOS/bios"
 #define STORE_LOC_RARC "MUOS/retroarch"
@@ -74,6 +73,8 @@
 #define STORE_LOC_NETW "MUOS/network"
 #define STORE_LOC_SYCT "MUOS/syncthing"
 #define STORE_LOC_INIT "MUOS/init"
+
+#define STORE_LOC_ASIN MUOS_INFO_PATH "/assign"
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
 #define STORE_LOC_NAME MUOS_INFO_PATH "/name"
 #define STORE_LOC_CONF MUOS_INFO_PATH "/config"

@@ -204,7 +204,7 @@ char **read_available_governors(const char *filename, int *count) {
 void create_gov_items(const char *target) {
     char filename[FILENAME_MAX];
     snprintf(filename, sizeof(filename), "%s/%s/%s.ini",
-             device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, target);
+             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
 
     int governor_count;
     char **governors = read_available_governors("/sys/devices/system/cpu/cpu0/cpufreq/"
@@ -483,7 +483,7 @@ int main(int argc, char *argv[]) {
 
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
-                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
+                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
         if (json_valid(read_text_from_file(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
@@ -503,7 +503,7 @@ int main(int argc, char *argv[]) {
 
                 char assigned_core_ini[MAX_BUFFER_SIZE];
                 snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s/%s",
-                         device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, ass_config);
+                         device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config);
 
                 LOG_INFO(mux_module, "<Automatic Governor Assign> Obtaining Core INI: %s", assigned_core_ini)
 
@@ -558,7 +558,7 @@ int main(int argc, char *argv[]) {
     if (!strcasecmp(rom_system, "none")) {
         char assign_file[MAX_BUFFER_SIZE];
         snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
-                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
+                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
         if (json_valid(read_text_from_file(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];

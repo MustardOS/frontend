@@ -108,7 +108,7 @@ void create_system_items() {
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), "%s/%s",
-             device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH);
+             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
     ad = opendir(assign_dir);
     if (!ad) return;
@@ -196,7 +196,7 @@ char *get_raw_core(const char *group) {
     char chosen_core_ini[FILENAME_MAX];
     snprintf(chosen_core_ini, sizeof(chosen_core_ini),
              "%s/%s/%s.ini",
-             device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, rom_system);
+             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
 
     mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -216,7 +216,7 @@ void create_core_items(const char *target) {
     char *file_core = get_file_core(rom_dir, rom_name);
     char filename[FILENAME_MAX];
     snprintf(filename, sizeof(filename), "%s/%s/%s.ini",
-             device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, target);
+             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
 
     int cores;
     char **core_headers = read_assign_ini(filename, &cores);
@@ -349,7 +349,7 @@ void handle_a() {
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
                  "%s/%s/%s.ini",
-                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, rom_system);
+                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
         const char *raw_core = mini_get_string(
@@ -404,7 +404,7 @@ void handle_x() {
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
                  "%s/%s/%s.ini",
-                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, rom_system);
+                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
@@ -439,7 +439,7 @@ void handle_y() {
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
                  "%s/%s/%s.ini",
-                 device.STORAGE.ROM.MOUNT, MUOS_ASIN_PATH, rom_system);
+                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
 
         mini_t *chosen_core = mini_load(chosen_core_ini);
 
