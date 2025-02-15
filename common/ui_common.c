@@ -48,6 +48,7 @@ lv_obj_t *ui_lblMessage;
 lv_obj_t *ui_pnlHelp;
 lv_obj_t *ui_pnlHelpMessage;
 lv_obj_t *ui_lblHelpHeader;
+lv_obj_t *ui_pnlHelpContent;
 lv_obj_t *ui_lblHelpContent;
 lv_obj_t *ui_pnlHelpExtra;
 lv_obj_t *ui_lblPreviewHeaderGlyph;
@@ -418,10 +419,18 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_text_color(ui_lblHelpHeader, lv_color_hex(theme->HELP.TITLE), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblHelpHeader, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_lblHelpContent = lv_label_create(ui_pnlHelpMessage);
+    ui_pnlHelpContent = lv_obj_create(ui_pnlHelp);
+    lv_obj_set_align(ui_pnlHelpContent, LV_ALIGN_CENTER);
+    lv_obj_set_width(ui_pnlHelpContent, device->MUX.WIDTH * .9 - 60);
+    lv_obj_set_height(ui_pnlHelpContent, device->MUX.HEIGHT * .9 - 120);
+    lv_obj_clear_flag(ui_pnlHelpContent, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(ui_pnlHelpContent, LV_DIR_VER);
+    lv_obj_set_scroll_snap_y(ui_pnlHelpContent, LV_SCROLL_SNAP_NONE);
+
+    ui_lblHelpContent = lv_label_create(ui_pnlHelpContent);
     lv_obj_set_width(ui_lblHelpContent, device->MUX.WIDTH * .9 - 60);
-    lv_obj_set_height(ui_lblHelpContent, device->MUX.HEIGHT * .9 - 120);
-    lv_obj_set_align(ui_lblHelpContent, LV_ALIGN_CENTER);
+    lv_obj_set_height(ui_lblHelpContent, LV_SIZE_CONTENT);
+    lv_obj_set_align(ui_lblHelpContent, LV_ALIGN_TOP_LEFT);
     lv_label_set_long_mode(ui_lblHelpContent, LV_LABEL_LONG_WRAP);
     lv_label_set_text(ui_lblHelpContent, "");
     lv_obj_set_style_text_color(ui_lblHelpContent, lv_color_hex(theme->HELP.CONTENT), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1142,4 +1151,26 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_style_text_align(cell_label, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_align(cell_label, LV_ALIGN_BOTTOM_MID, 0, -theme->GRID.CELL.TEXT_PADDING_BOTTOM);
+}
+
+void scroll_help_content(int direction, bool page_down) {
+    if (lv_obj_get_content_height(ui_lblHelpContent) <= lv_obj_get_content_height(ui_pnlHelpContent)) return;
+
+    int line_height = lv_font_get_line_height(lv_obj_get_style_text_font(ui_lblHelpContent, LV_PART_MAIN));
+    int line_space = lv_obj_get_style_text_line_space(ui_lblHelpContent, LV_PART_MAIN);
+    int total_line_height = line_height + line_space;
+    if (page_down) {
+        int lines_per_page = lv_obj_get_content_height(ui_pnlHelpContent) / total_line_height;
+        total_line_height = lines_per_page * total_line_height;
+    }
+
+    int scroll_y = lv_obj_get_scroll_y(ui_pnlHelpContent);
+
+    if (scroll_y - (total_line_height * direction) < 0) {
+        lv_obj_scroll_to_y(ui_pnlHelpContent, 0, LV_ANIM_ON);
+    } else if (scroll_y - (total_line_height * direction) >= lv_obj_get_content_height(ui_lblHelpContent) - lv_obj_get_content_height(ui_pnlHelpContent)) {
+        lv_obj_scroll_to_y(ui_pnlHelpContent, lv_obj_get_content_height(ui_lblHelpContent), LV_ANIM_ON);
+    } else {
+        lv_obj_scroll_by(ui_pnlHelpContent, 0, total_line_height * direction, LV_ANIM_ON); 
+    }
 }

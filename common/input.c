@@ -20,6 +20,7 @@
 struct controller_profile controller;
 
 extern uint32_t mux_tick(void);
+bool swap_axis = false;
 
 // Whether to exit the input task before the next iteration of the event loop.
 static bool stop = false;
@@ -570,6 +571,7 @@ void *joystick_handler(void *arg) {
 }
 
 void mux_input_task(const mux_input_options *opts) {
+    swap_axis = opts->swap_axis;
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         LOG_ERROR("input", "epoll create error")

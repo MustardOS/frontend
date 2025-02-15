@@ -270,7 +270,7 @@ void handle_b() {
 
     save_options();
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "config");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "connect");
     mux_input_stop();
 }
 

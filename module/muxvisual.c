@@ -246,19 +246,19 @@ void init_navigation_group() {
             ui_pnlTitleIncludeRootDrive
     };
 
-    ui_objects[0] =  ui_icoBattery;
-    ui_objects[1] =  ui_icoClock;
-    ui_objects[2] =  ui_icoNetwork;
-    ui_objects[3] =  ui_icoDash;
-    ui_objects[4] =  ui_icoName;
-    ui_objects[5] =  ui_icoDisplayEmptyFolder;
-    ui_objects[6] =  ui_icoTheTitleFormat;
-    ui_objects[7] =  ui_icoFolderItemCount;
-    ui_objects[8] =  ui_icoFriendlyFolder;
-    ui_objects[9] = ui_icoMenuCounterFile;
-    ui_objects[10] = ui_icoMenuCounterFolder;
-    ui_objects[11] = ui_pnlHidden;
-    ui_objects[12] = ui_icoTitleIncludeRootDrive;
+    ui_objects[0] =  ui_lblBattery;
+    ui_objects[1] =  ui_lblClock;
+    ui_objects[2] =  ui_lblNetwork;
+    ui_objects[3] =  ui_lblDash;
+    ui_objects[4] =  ui_lblName;
+    ui_objects[5] =  ui_lblDisplayEmptyFolder;
+    ui_objects[6] =  ui_lblTheTitleFormat;
+    ui_objects[7] =  ui_lblFolderItemCount;
+    ui_objects[8] =  ui_lblFriendlyFolder;
+    ui_objects[9] =  ui_lblMenuCounterFile;
+    ui_objects[10] = ui_lblMenuCounterFolder;
+    ui_objects[11] = ui_lblHidden;
+    ui_objects[12] = ui_lblTitleIncludeRootDrive;
 
 
     lv_obj_t *ui_objects_value[] = {
