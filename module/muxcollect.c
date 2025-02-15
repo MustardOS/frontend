@@ -140,8 +140,7 @@ char *load_content_description() {
              INFO_CAT_PATH, h_core_artwork, h_file_name);
 
     if (file_exist(content_desc)) {
-        snprintf(current_meta_text, sizeof(current_meta_text), "%s", format_meta_text(content_desc));
-        return current_meta_text;
+        return read_text_from_file(content_desc);
     }
 
     snprintf(current_meta_text, sizeof(current_meta_text), " ");
@@ -927,15 +926,6 @@ void handle_menu() {
     lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
 
-    static lv_anim_t desc_anim;
-    static lv_style_t desc_style;
-    lv_anim_init(&desc_anim);
-    lv_anim_set_delay(&desc_anim, 2000);
-    lv_style_init(&desc_style);
-    lv_style_set_anim(&desc_style, &desc_anim);
-    lv_obj_add_style(ui_lblHelpContent, &desc_style, LV_PART_MAIN);
-    lv_obj_set_style_anim_speed(ui_lblHelpContent, 25, LV_PART_MAIN);
-
     show_rom_info(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpPreviewHeader,
                   ui_lblHelpContent,
                   items[current_item_index].display_name,
@@ -1034,8 +1024,6 @@ void handle_r1(void) {
 }
 
 void init_elements() {
-    lv_label_set_long_mode(ui_lblHelpContent, LV_LABEL_LONG_SCROLL_CIRCULAR);
-
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
     switch (config.VISUAL.BOX_ART) {

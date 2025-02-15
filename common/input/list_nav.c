@@ -3,6 +3,8 @@
 #include <sys/param.h>
 
 #include "../common.h"
+#include "../ui_common.h"
+#include "../input.h"
 #include "../theme.h"
 
 void list_nav_prev(int steps);
@@ -14,7 +16,10 @@ extern int current_item_index;
 int grid_mode_enabled = 0;
 
 void handle_list_nav_up(void) {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count) {
+        if (!swap_axis) scroll_help_content(1, false);
+        return;
+    }
 
     // Grid mode.  Wrap on Row.
     if (grid_mode_enabled &&
@@ -28,7 +33,10 @@ void handle_list_nav_up(void) {
 }
 
 void handle_list_nav_down(void) {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count) {
+        if (!swap_axis) scroll_help_content(-1, false);
+        return;
+    }
 
     // Grid Navigation.  Wrap on Row.
     if (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE == 4 &&
@@ -41,7 +49,10 @@ void handle_list_nav_down(void) {
 }
 
 void handle_list_nav_up_hold(void) {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count) {
+        if (!swap_axis) scroll_help_content(1, false);
+        return;
+    }
 
     // Don't wrap around when scrolling on hold.
     if ((grid_mode_enabled && theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) > 0) ||
@@ -52,7 +63,10 @@ void handle_list_nav_up_hold(void) {
 }
 
 void handle_list_nav_down_hold(void) {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count) {
+        if (!swap_axis) scroll_help_content(-1, false);
+        return;
+    }
 
     // Don't wrap around when scrolling on hold.
     if ((grid_mode_enabled && theme.GRID.NAVIGATION_TYPE == 4 &&
@@ -64,7 +78,10 @@ void handle_list_nav_down_hold(void) {
 }
 
 void handle_list_nav_left() {
-    if (msgbox_active) return;
+    if (msgbox_active) {
+        if (swap_axis) scroll_help_content(1, false);
+        return;
+    }
 
     // Horizontal Navigation with 2 rows of 4 items
     if (grid_mode_enabled &&
@@ -80,7 +97,10 @@ void handle_list_nav_left() {
 }
 
 void handle_list_nav_right() {
-    if (msgbox_active) return;
+    if (msgbox_active) {
+        if (swap_axis) scroll_help_content(-1, false);
+        return;
+    }
 
     // Horizontal Navigation with 2 rows of 4 items
     if (grid_mode_enabled &&
@@ -101,7 +121,10 @@ void handle_list_nav_right() {
 }
 
 void handle_list_nav_left_hold(void) {
-    if (msgbox_active) return;
+    if (msgbox_active) {
+        if (swap_axis) scroll_help_content(1, false);
+        return;
+    }
 
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
@@ -111,7 +134,10 @@ void handle_list_nav_left_hold(void) {
 }
 
 void handle_list_nav_right_hold(void) {
-    if (msgbox_active) return;
+    if (msgbox_active) {
+        if (swap_axis) scroll_help_content(-1, false);
+        return;
+    }
 
     // Don't wrap around when scrolling on hold.
     if (grid_mode_enabled && (theme.GRID.NAVIGATION_TYPE == 2 || theme.GRID.NAVIGATION_TYPE == 4) &&
@@ -121,7 +147,10 @@ void handle_list_nav_right_hold(void) {
 }
 
 void handle_list_nav_page_up(void) {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count) {
+        scroll_help_content(1, true);
+        return;
+    }
 
     // Don't wrap around when scrolling by page.
     int steps;
@@ -136,7 +165,10 @@ void handle_list_nav_page_up(void) {
 }
 
 void handle_list_nav_page_down(void) {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count) {
+        scroll_help_content(-1, true);
+        return;
+    }
 
     // Don't wrap around when scrolling by page.
     int steps;

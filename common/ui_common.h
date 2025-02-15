@@ -49,6 +49,8 @@ void create_grid_panel(struct theme_config *theme, int item_count);
 void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image,
                       int16_t col, int16_t row, char *item_image_path, char *item_image_focused_path, char *item_text);
 
+void scroll_help_content(int direction, bool page_down);
+
 extern lv_obj_t *ui_screen_container;
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;
@@ -86,6 +88,7 @@ extern lv_obj_t *ui_lblMessage;
 extern lv_obj_t *ui_pnlHelp;
 extern lv_obj_t *ui_pnlHelpMessage;
 extern lv_obj_t *ui_lblHelpHeader;
+extern lv_obj_t *ui_pnlHelpContent;
 extern lv_obj_t *ui_lblHelpContent;
 extern lv_obj_t *ui_pnlHelpExtra;
 extern lv_obj_t *ui_lblPreviewHeaderGlyph;

@@ -121,8 +121,6 @@ int16_t get_ini_int(mini_t *ini_config, const char *section, const char *key, in
 
 char *get_ini_string(mini_t *ini_config, const char *section, const char *key, char *default_value);
 
-char *format_meta_text(char *filename);
-
 void write_text_to_file(const char *filename, const char *mode, int type, ...);
 
 void create_directories(const char *path);

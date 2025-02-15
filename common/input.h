@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 extern int key_show;
+extern bool swap_axis;
 
 // Every input (button, D-pad, or stick direction) we support.
 typedef enum {

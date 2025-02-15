@@ -566,35 +566,6 @@ char *get_ini_string(mini_t *ini_config, const char *section, const char *key, c
     return meta;
 }
 
-char *format_meta_text(char *filename) {
-    char meta_cut[MAX_BUFFER_SIZE];
-    snprintf(meta_cut, sizeof(meta_cut), (INTERNAL_PATH "script/mux/metacut.sh \"%s\""), filename);
-
-    FILE *fp = popen(meta_cut, "r");
-    if (fp == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
-        return "Could not open metadata!";
-    }
-
-    char buffer[MAX_BUFFER_SIZE * 4];
-    size_t meta_size = 0;
-    char *result = NULL;
-
-    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-        size_t len = strlen(buffer);
-        result = realloc(result, meta_size + len + 1);
-        if (result == NULL) {
-            perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
-            return "Could not read metadata!";
-        }
-        strcpy(result + meta_size, buffer);
-        meta_size += len;
-    }
-
-    pclose(fp);
-    return result;
-}
-
 void write_text_to_file(const char *filename, const char *mode, int type, ...) {
     FILE *file = fopen(filename, mode);
 
@@ -658,6 +629,8 @@ void show_rom_info(lv_obj_t *panel, lv_obj_t *i_title, lv_obj_t *p_title, lv_obj
         lv_label_set_text(i_title, t_title);
         lv_label_set_text(p_title, t_title);
         lv_label_set_text(i_desc, t_desc);
+        lv_obj_t *ui_pnlItem = lv_obj_get_parent(i_desc);
+        lv_obj_scroll_to_y(ui_pnlItem, 0, LV_ANIM_OFF);
     }
 }
 
@@ -2310,7 +2283,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
             nav_next_return = text_hit - !device.DEVICE.HAS_HDMI;
         } else if (!strcmp(mux_module, "muxtweakadv")) {
             nav_next_return = text_hit - !device.DEVICE.HAS_NETWORK;
-        } else if (!config.NETWORK.TYPE && !strcasecmp(prev, "connect")) {
+        } else if (strcmp(mux_module, "muxconfig") && !config.NETWORK.TYPE && !strcasecmp(prev, "connect")) {
             nav_next_return = 4;
         } else {
             nav_next_return = text_hit;
