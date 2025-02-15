@@ -196,29 +196,30 @@ void save_tweak_options() {
 
 void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlShutdown,
             ui_pnlBattery,
             ui_pnlIdleDisplay,
-            ui_pnlIdleSleep
+            ui_pnlIdleSleep,
+            ui_pnlShutdown
     };
 
-    ui_objects[0] = ui_lblShutdown;
-    ui_objects[1] = ui_lblBattery;
-    ui_objects[2] = ui_lblIdleDisplay;
-    ui_objects[3] = ui_lblIdleSleep;
+    ui_objects[0] = ui_lblBattery;
+    ui_objects[1] = ui_lblIdleDisplay;
+    ui_objects[2] = ui_lblIdleSleep;
+    ui_objects[3] = ui_lblShutdown;
+
 
     lv_obj_t *ui_objects_value[] = {
-            ui_droShutdown,
             ui_droBattery,
             ui_droIdleDisplay,
-            ui_droIdleSleep
+            ui_droIdleSleep,
+            ui_droShutdown
     };
 
     lv_obj_t *ui_objects_glyph[] = {
-            ui_icoShutdown,
             ui_icoBattery,
             ui_icoIdleDisplay,
-            ui_icoIdleSleep
+            ui_icoIdleSleep,
+            ui_icoShutdown
     };
 
     apply_theme_list_panel(ui_pnlShutdown);

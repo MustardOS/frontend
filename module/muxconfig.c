@@ -62,12 +62,12 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblTweakGeneral, lang.MUXCONFIG.HELP.GENERAL},
+            {ui_lblConnect,      lang.MUXCONFIG.HELP.CONNECTIVITY},
             {ui_lblCustom,       lang.MUXCONFIG.HELP.CUSTOM},
-            {ui_lblNetwork,      lang.MUXCONFIG.HELP.WIFI},
-            {ui_lblServices,     lang.MUXCONFIG.HELP.WEB},
-            {ui_lblRTC,          lang.MUXCONFIG.HELP.DATETIME},
+            {ui_lblTweakGeneral, lang.MUXCONFIG.HELP.GENERAL},
+            {ui_lblInterface,    lang.MUXCONFIG.HELP.VISUAL},
             {ui_lblLanguage,     lang.MUXCONFIG.HELP.LANGUAGE},
+            {ui_lblPower,        lang.MUXCONFIG.HELP.POWER},
             {ui_lblStorage,      lang.MUXCONFIG.HELP.STORAGE},
     };
 
@@ -87,71 +87,41 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
+void add_item(lv_obj_t *ui_pnl, lv_obj_t *ui_lbl, lv_obj_t *ui_ico, char *item_text, char *glyph_name) {
+    apply_theme_list_panel(ui_pnl);
+    apply_theme_list_item(&theme, ui_lbl, item_text);
+    apply_theme_list_glyph(&theme, ui_ico, mux_module, glyph_name);
+
+    lv_obj_set_user_data(ui_pnl, strdup(item_text));
+    lv_group_add_obj(ui_group, ui_lbl);
+    lv_group_add_obj(ui_group_glyph, ui_ico);
+    lv_group_add_obj(ui_group_panel, ui_pnl);
+
+    apply_size_to_content(&theme, ui_pnlContent, ui_lbl, ui_ico, item_text);
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lbl, item_text);
+}
+
 void init_navigation_group() {
-    lv_obj_t *ui_objects_panel[] = {
-            ui_pnlTweakGeneral,
-            ui_pnlCustom,
-            ui_pnlNetwork,
-            ui_pnlServices,
-            ui_pnlRTC,
-            ui_pnlLanguage,
-            ui_pnlStorage
-    };
-
-    ui_objects[0] = ui_lblTweakGeneral;
-    ui_objects[1] = ui_lblCustom;
-    ui_objects[2] = ui_lblNetwork;
-    ui_objects[3] = ui_lblServices;
-    ui_objects[4] = ui_lblRTC;
-    ui_objects[5] = ui_lblLanguage;
-    ui_objects[6] = ui_lblStorage;
-
-    ui_icons[0] = ui_icoTweakGeneral;
-    ui_icons[1] = ui_icoCustom;
-    ui_icons[2] = ui_icoNetwork;
-    ui_icons[3] = ui_icoServices;
-    ui_icons[4] = ui_icoRTC;
-    ui_icons[5] = ui_icoLanguage;
-    ui_icons[6] = ui_icoStorage;
-
-    apply_theme_list_panel(ui_pnlTweakGeneral);
-    apply_theme_list_panel(ui_pnlCustom);
-    apply_theme_list_panel(ui_pnlNetwork);
-    apply_theme_list_panel(ui_pnlServices);
-    apply_theme_list_panel(ui_pnlRTC);
-    apply_theme_list_panel(ui_pnlLanguage);
-    apply_theme_list_panel(ui_pnlStorage);
-
-    apply_theme_list_item(&theme, ui_lblTweakGeneral, lang.MUXCONFIG.GENERAL);
-    apply_theme_list_item(&theme, ui_lblCustom, lang.MUXCONFIG.CUSTOM);
-    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXCONFIG.WIFI);
-    apply_theme_list_item(&theme, ui_lblServices, lang.MUXCONFIG.WEB);
-    apply_theme_list_item(&theme, ui_lblRTC, lang.MUXCONFIG.DATETIME);
-    apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXCONFIG.LANGUAGE);
-    apply_theme_list_item(&theme, ui_lblStorage, lang.MUXCONFIG.STORAGE);
-
-    apply_theme_list_glyph(&theme, ui_icoTweakGeneral, mux_module, "general");
-    apply_theme_list_glyph(&theme, ui_icoCustom, mux_module, "custom");
-    apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
-    apply_theme_list_glyph(&theme, ui_icoServices, mux_module, "service");
-    apply_theme_list_glyph(&theme, ui_icoRTC, mux_module, "clock");
-    apply_theme_list_glyph(&theme, ui_icoLanguage, mux_module, "language");
-    apply_theme_list_glyph(&theme, ui_icoStorage, mux_module, "storage");
-
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
+    ui_objects[0] = ui_lblConnect;
+    ui_objects[1] = ui_lblCustom;
+    ui_objects[2] = ui_lblTweakGeneral;
+    ui_objects[3] = ui_lblInterface;
+    ui_objects[4] = ui_lblLanguage;
+    ui_objects[5] = ui_lblPower;
+    ui_objects[6] = ui_lblStorage;
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
-    for (unsigned int i = 0; i < ui_count; i++) {
-        lv_obj_set_user_data(ui_objects_panel[i], strdup(lv_label_get_text(ui_objects[i])));
-        lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
-        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
-        apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], lv_label_get_text(ui_objects[i]));
-    }
+    add_item(ui_pnlConnect, ui_lblConnect, ui_icoConnect, lang.MUXCONFIG.CONNECTIVITY, "connect");
+    add_item(ui_pnlCustom, ui_lblCustom, ui_icoCustom, lang.MUXCONFIG.CUSTOM, "custom");
+    add_item(ui_pnlTweakGeneral, ui_lblTweakGeneral, ui_icoTweakGeneral, lang.MUXCONFIG.GENERAL, "general");
+    add_item(ui_pnlInterface, ui_lblInterface, ui_icoInterface, lang.MUXCONFIG.VISUAL, "interface");
+    add_item(ui_pnlLanguage, ui_lblLanguage, ui_icoLanguage, lang.MUXCONFIG.LANGUAGE, "language");
+    add_item(ui_pnlPower, ui_lblPower, ui_icoPower, lang.MUXCONFIG.POWER, "power");
+    add_item(ui_pnlStorage, ui_lblStorage, ui_icoStorage, lang.MUXCONFIG.STORAGE, "storage");
 }
 
 void list_nav_prev(int steps) {
@@ -194,12 +164,12 @@ void handle_a() {
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {"general",  "tweakgen", &kiosk.SETTING.GENERAL},
+            {"connect",  "connect",  &kiosk.CONFIG.CONNECTIVITY},    
             {"custom",   "custom",   &kiosk.CONFIG.CUSTOMISATION},
-            {"network",  "network",  &kiosk.CONFIG.NETWORK},
-            {"service",  "webserv",  &kiosk.CONFIG.WEB_SERVICES},
-            {"clock",    "rtc",      &kiosk.DATETIME.CLOCK},
+            {"general",  "tweakgen", &kiosk.SETTING.GENERAL},
+            {"interface",  "visual", &kiosk.SETTING.VISUAL},
             {"language", "language", &kiosk.CONFIG.LANGUAGE},
+            {"power",    "power",    &kiosk.SETTING.POWER},
             {"storage",  "storage",  &kiosk.CONFIG.STORAGE}
     };
 
@@ -289,21 +259,13 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblTweakGeneral, "general");
+    lv_obj_set_user_data(ui_lblConnect, "connect");
     lv_obj_set_user_data(ui_lblCustom, "custom");
-    lv_obj_set_user_data(ui_lblNetwork, "network");
-    lv_obj_set_user_data(ui_lblServices, "service");
-    lv_obj_set_user_data(ui_lblRTC, "clock");
+    lv_obj_set_user_data(ui_lblTweakGeneral, "general");
+    lv_obj_set_user_data(ui_lblInterface, "interface");
     lv_obj_set_user_data(ui_lblLanguage, "language");
+    lv_obj_set_user_data(ui_lblPower, "power");
     lv_obj_set_user_data(ui_lblStorage, "storage");
-
-    if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlServices, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlServices, LV_OBJ_FLAG_FLOATING);
-        ui_count -= 2;
-    }
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

@@ -106,24 +106,38 @@ struct mux_lang {
     } MUXCOLLECT;
 
     struct {
+        char CONNECTIVITY[MAX_BUFFER_SIZE];
         char CUSTOM[MAX_BUFFER_SIZE];
-        char DATETIME[MAX_BUFFER_SIZE];
         char GENERAL[MAX_BUFFER_SIZE];
         char LANGUAGE[MAX_BUFFER_SIZE];
         char STORAGE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
-        char WEB[MAX_BUFFER_SIZE];
-        char WIFI[MAX_BUFFER_SIZE];
+        char POWER[MAX_BUFFER_SIZE];
+        char VISUAL[MAX_BUFFER_SIZE];
         struct {
+            char CONNECTIVITY[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];
-            char DATETIME[MAX_BUFFER_SIZE];
             char GENERAL[MAX_BUFFER_SIZE];
             char LANGUAGE[MAX_BUFFER_SIZE];
             char STORAGE[MAX_BUFFER_SIZE];
-            char WEB[MAX_BUFFER_SIZE];
-            char WIFI[MAX_BUFFER_SIZE];
+            char POWER[MAX_BUFFER_SIZE];
+            char VISUAL[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCONFIG;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char BLUETOOTH[MAX_BUFFER_SIZE];
+        char WEB[MAX_BUFFER_SIZE];
+        char USB[MAX_BUFFER_SIZE];
+        char WIFI[MAX_BUFFER_SIZE];
+        struct {
+            char BLUETOOTH[MAX_BUFFER_SIZE];
+            char WEB[MAX_BUFFER_SIZE];
+            char USB[MAX_BUFFER_SIZE];
+            char WIFI[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXCONNECT;
 
     struct {
         char CATALOGUE[MAX_BUFFER_SIZE];
@@ -131,10 +145,51 @@ struct mux_lang {
         char THEME[MAX_BUFFER_SIZE];
         char THEME_ALTERNATE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
+        char ANIMATION[MAX_BUFFER_SIZE];
+        char FADE[MAX_BUFFER_SIZE];
+        char SPLASH[MAX_BUFFER_SIZE];
+        char SOUND[MAX_BUFFER_SIZE];
+        struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char BEHIND[MAX_BUFFER_SIZE];
+            char FRONT[MAX_BUFFER_SIZE];
+            char FS_BEHIND[MAX_BUFFER_SIZE];
+            char FS_FRONT[MAX_BUFFER_SIZE];
+            struct {
+                char TITLE[MAX_BUFFER_SIZE];
+                char B_LEFT[MAX_BUFFER_SIZE];
+                char B_MID[MAX_BUFFER_SIZE];
+                char B_RIGHT[MAX_BUFFER_SIZE];
+                char M_LEFT[MAX_BUFFER_SIZE];
+                char M_MID[MAX_BUFFER_SIZE];
+                char M_RIGHT[MAX_BUFFER_SIZE];
+                char T_LEFT[MAX_BUFFER_SIZE];
+                char T_MID[MAX_BUFFER_SIZE];
+                char T_RIGHT[MAX_BUFFER_SIZE];
+            } ALIGN;
+        } BOX_ART;
+        struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char LANG[MAX_BUFFER_SIZE];
+            char THEME[MAX_BUFFER_SIZE];
+        } FONT;
+        struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char GLOBAL[MAX_BUFFER_SIZE];
+            char THEME[MAX_BUFFER_SIZE];
+        } MUSIC;
         struct {
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
+            char ANIMATION[MAX_BUFFER_SIZE];
+            char BOX_ART[MAX_BUFFER_SIZE];
+            char BOX_ALIGN[MAX_BUFFER_SIZE];
+            char FADE[MAX_BUFFER_SIZE];
+            char SPLASH[MAX_BUFFER_SIZE];
+            char FONT[MAX_BUFFER_SIZE];
+            char MUSIC[MAX_BUFFER_SIZE];
+            char SOUND[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCUSTOM;
 
@@ -529,17 +584,11 @@ struct mux_lang {
         char SWAPFILE[MAX_BUFFER_SIZE];
         char STATE[MAX_BUFFER_SIZE];
         char TUNING[MAX_BUFFER_SIZE];
-        char USB[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char RETRO[MAX_BUFFER_SIZE];
             char MODERN[MAX_BUFFER_SIZE];
         } SWAP;
-        struct {
-            char TITLE[MAX_BUFFER_SIZE];
-            char LANG[MAX_BUFFER_SIZE];
-            char THEME[MAX_BUFFER_SIZE];
-        } FONT;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char QUIET[MAX_BUFFER_SIZE];
@@ -575,29 +624,19 @@ struct mux_lang {
             char TUNING[MAX_BUFFER_SIZE];
             char RUMBLE[MAX_BUFFER_SIZE];
             char STATE[MAX_BUFFER_SIZE];
-            char USB[MAX_BUFFER_SIZE];
             char BRIGHT[MAX_BUFFER_SIZE];
             char VOLUME[MAX_BUFFER_SIZE];
-            char FONT[MAX_BUFFER_SIZE];
             char SWAP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKADV;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char HIDDEN[MAX_BUFFER_SIZE];
-        char SOUND[MAX_BUFFER_SIZE];
         char TEMP[MAX_BUFFER_SIZE];
+        char DATETIME[MAX_BUFFER_SIZE];
         char BRIGHT[MAX_BUFFER_SIZE];
         char HDMI[MAX_BUFFER_SIZE];
-        char POWER[MAX_BUFFER_SIZE];
-        char VISUAL[MAX_BUFFER_SIZE];
         char ADVANCED[MAX_BUFFER_SIZE];
-        struct {
-            char TITLE[MAX_BUFFER_SIZE];
-            char GLOBAL[MAX_BUFFER_SIZE];
-            char THEME[MAX_BUFFER_SIZE];
-        } MUSIC;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char MENU[MAX_BUFFER_SIZE];
@@ -609,15 +648,11 @@ struct mux_lang {
         } STARTUP;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
-            char HIDDEN[MAX_BUFFER_SIZE];
-            char MUSIC[MAX_BUFFER_SIZE];
-            char SOUND[MAX_BUFFER_SIZE];
+            char DATETIME[MAX_BUFFER_SIZE];
             char STARTUP[MAX_BUFFER_SIZE];
             char TEMP[MAX_BUFFER_SIZE];
             char BRIGHT[MAX_BUFFER_SIZE];
             char HDMI[MAX_BUFFER_SIZE];
-            char POWER[MAX_BUFFER_SIZE];
-            char VISUAL[MAX_BUFFER_SIZE];
             char ADVANCED[MAX_BUFFER_SIZE];
         } HELP;
     } MUXTWEAKGEN;
@@ -626,38 +661,16 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char BATTERY[MAX_BUFFER_SIZE];
         char NETWORK[MAX_BUFFER_SIZE];
-        char BLUETOOTH[MAX_BUFFER_SIZE];
         char CLOCK[MAX_BUFFER_SIZE];
         char DASH[MAX_BUFFER_SIZE];
         char FRIENDLY[MAX_BUFFER_SIZE];
         char REFORMAT[MAX_BUFFER_SIZE];
         char ROOT[MAX_BUFFER_SIZE];
-        char SPLASH[MAX_BUFFER_SIZE];
-        char FADE[MAX_BUFFER_SIZE];
         char COUNT[MAX_BUFFER_SIZE];
         char EMPTY[MAX_BUFFER_SIZE];
         char COUNT_FOLDER[MAX_BUFFER_SIZE];
         char COUNT_FILE[MAX_BUFFER_SIZE];
-        char ANIMATION[MAX_BUFFER_SIZE];
-        struct {
-            char TITLE[MAX_BUFFER_SIZE];
-            char BEHIND[MAX_BUFFER_SIZE];
-            char FRONT[MAX_BUFFER_SIZE];
-            char FS_BEHIND[MAX_BUFFER_SIZE];
-            char FS_FRONT[MAX_BUFFER_SIZE];
-            struct {
-                char TITLE[MAX_BUFFER_SIZE];
-                char B_LEFT[MAX_BUFFER_SIZE];
-                char B_MID[MAX_BUFFER_SIZE];
-                char B_RIGHT[MAX_BUFFER_SIZE];
-                char M_LEFT[MAX_BUFFER_SIZE];
-                char M_MID[MAX_BUFFER_SIZE];
-                char M_RIGHT[MAX_BUFFER_SIZE];
-                char T_LEFT[MAX_BUFFER_SIZE];
-                char T_MID[MAX_BUFFER_SIZE];
-                char T_RIGHT[MAX_BUFFER_SIZE];
-            } ALIGN;
-        } BOX_ART;
+        char HIDDEN[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char FULL[MAX_BUFFER_SIZE];
@@ -668,22 +681,17 @@ struct mux_lang {
         struct {
             char BATTERY[MAX_BUFFER_SIZE];
             char NETWORK[MAX_BUFFER_SIZE];
-            char BLUETOOTH[MAX_BUFFER_SIZE];
             char CLOCK[MAX_BUFFER_SIZE];
             char DASH[MAX_BUFFER_SIZE];
             char FRIENDLY[MAX_BUFFER_SIZE];
             char REFORMAT[MAX_BUFFER_SIZE];
             char ROOT[MAX_BUFFER_SIZE];
-            char SPLASH[MAX_BUFFER_SIZE];
-            char FADE[MAX_BUFFER_SIZE];
             char COUNT[MAX_BUFFER_SIZE];
             char EMPTY[MAX_BUFFER_SIZE];
             char COUNT_FOLDER[MAX_BUFFER_SIZE];
             char COUNT_FILE[MAX_BUFFER_SIZE];
-            char ANIMATION[MAX_BUFFER_SIZE];
-            char BOX_ART[MAX_BUFFER_SIZE];
-            char BOX_ALIGN[MAX_BUFFER_SIZE];
             char NAME[MAX_BUFFER_SIZE];
+            char HIDDEN[MAX_BUFFER_SIZE];
         } HELP;
     } MUXVISUAL;
 

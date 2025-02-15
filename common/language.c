@@ -115,20 +115,31 @@ void load_lang(struct mux_lang *lang) {
 
     // muxconfig
     SPECIFIC_FIELD(lang->MUXCONFIG.TITLE, "CONFIGURATION");
+    SPECIFIC_FIELD(lang->MUXCONFIG.CONNECTIVITY, "Connectivity");
     SPECIFIC_FIELD(lang->MUXCONFIG.CUSTOM, "Customisation");
-    SPECIFIC_FIELD(lang->MUXCONFIG.DATETIME, "Date and Time");
     SPECIFIC_FIELD(lang->MUXCONFIG.GENERAL, "General Settings");
+    SPECIFIC_FIELD(lang->MUXCONFIG.POWER, "Power Settings");
+    SPECIFIC_FIELD(lang->MUXCONFIG.VISUAL, "Interface Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage");
-    SPECIFIC_FIELD(lang->MUXCONFIG.WEB, "Web Services");
-    SPECIFIC_FIELD(lang->MUXCONFIG.WIFI, "Wi-Fi Network");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECTIVITY, "");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your muOS setup with user created packages");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.DATETIME, "Change your current date, time, and timezone");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and muOS frontend settings can be found here");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.LANGUAGE, "Select your preferred language");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.STORAGE, "Find out what storage device core settings and configurations are mounted");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
-    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.POWER, "Settings to change the power features of the device");
+    SPECIFIC_FIELD(lang->MUXCONFIG.HELP.VISUAL, "Settings to change the visual aspects of the frontend");
+
+    // muxconnect
+    SPECIFIC_FIELD(lang->MUXCONNECT.TITLE, "CONNECTIVITY");
+    SPECIFIC_FIELD(lang->MUXCONNECT.BLUETOOTH, "Bluetooth");
+    SPECIFIC_FIELD(lang->MUXCONNECT.USB, "USB Function");
+    SPECIFIC_FIELD(lang->MUXCONNECT.WEB, "Web Services");
+    SPECIFIC_FIELD(lang->MUXCONNECT.WIFI, "Wi-Fi Network");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USB, "Toggle between ADB and MTP USB functionality");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
+    SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
 
     // muxcustom
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
@@ -136,9 +147,43 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "muOS Themes");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_ALTERNATE, "Theme Alternates");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SPLASH, "Content Launch Splash");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FADE, "Black Fade Animation");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.ANIMATION, "Background Animation");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.TITLE, "Content Box Art");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.BEHIND, "Behind");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FRONT, "Front");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FS_BEHIND, "Fullscreen + Behind");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FS_FRONT, "Fullscreen + Front");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.TITLE, "Content Box Art Alignment");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.B_LEFT, "Bottom Left");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.B_MID, "Bottom Middle");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.B_RIGHT, "Bottom Right");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.M_LEFT, "Middle Left");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.M_MID, "Center");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.M_RIGHT, "Middle Right");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_LEFT, "Top Left");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_MID, "Top Middle");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.ALIGN.T_RIGHT, "Top Right");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.TITLE, "Interface Font Type");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.LANG, "Language");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.THEME, "Theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND, "Navigation Sound");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.TITLE, "Background Music");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.GLOBAL, "Global");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SPLASH, "Toggle the splash image on content launching");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FADE, "Toggle the fade to black animation on content launching");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ART, "Change the display priority of the content images");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend - This will stop if content is launched");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend if the current theme supports it");
+
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
@@ -459,16 +504,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.TITLE, "Button Swap");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.RETRO, "Retro");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.SWAP.MODERN, "Modern");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.FONT.TITLE, "Interface Font Type");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.FONT.LANG, "Language");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.FONT.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.TITLE, "Volume On Boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.QUIET, "Quiet");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.VOLUME.LOUD, "Loud");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.TITLE, "Brightness On Boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.LOW, "Low");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.HIGH, "High");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.USB, "USB Function");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.STATE, "Suspend Power State");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.TITLE, "Device Rumble");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.ST, "Startup");
@@ -493,25 +534,17 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.TUNING, "Switch between different storage tuning options");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RUMBLE, "Toggle vibration for device startup, sleep, and shutdown");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STATE, "Switch between system sleep suspend states");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USB, "Toggle between ADB and MTP USB functionality");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT, "Change the default brightness level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.FONT, "Change how the font type works in the frontend - 'Theme' will ensure frontend will use fonts within themes with a fallback to language fonts - 'Language' will specifically use language based font");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAP, "Change how the device buttons work globally");
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HIDDEN, "Show Hidden Content");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.SOUND, "Navigation Sound");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.DATETIME, "Date and Time");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TEMP, "Colour Temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.BRIGHT, "Brightness");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HDMI, "HDMI Output");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.POWER, "Power Settings");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.VISUAL, "Interface Options");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.ADVANCED, "Advanced Settings");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.MUSIC.TITLE, "Background Music");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.MUSIC.GLOBAL, "Global");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.MUSIC.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.TITLE, "Device Startup");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.MENU, "Main Menu");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.EXPLORE, "Content Explorer");
@@ -519,72 +552,45 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.LAST, "Last Game");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.STARTUP.RESUME, "Resume Game");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.MUSIC, "Toggle the background music of the frontend - This will stop if content is launched");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.SOUND, "Toggle the navigation sound of the frontend if the current theme supports it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.STARTUP, "Change where the device will start up into");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.TEMP, "Change the colour temperature of the display if the device supports it");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.BRIGHT, "Change the brightness of the device to a specific level");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.HDMI, "Settings to change the HDMI output of the device");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.POWER, "Settings to change the power features of the device");
-    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.VISUAL, "Settings to change the visual aspects of the frontend");
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.ADVANCED, "Settings that should only be changed by those who know what they are doing!");
+    SPECIFIC_FIELD(lang->MUXTWEAKGEN.HELP.DATETIME, "Change your current date, time, and timezone");
 
     // muxvisual
     SPECIFIC_FIELD(lang->MUXVISUAL.TITLE, "INTERFACE OPTIONS");
     SPECIFIC_FIELD(lang->MUXVISUAL.BATTERY, "Battery");
     SPECIFIC_FIELD(lang->MUXVISUAL.NETWORK, "Network");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BLUETOOTH, "Bluetooth");
     SPECIFIC_FIELD(lang->MUXVISUAL.CLOCK, "Clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.DASH, "Content Dash Replacement");
     SPECIFIC_FIELD(lang->MUXVISUAL.FRIENDLY, "Friendly Folder Names");
     SPECIFIC_FIELD(lang->MUXVISUAL.REFORMAT, "Display Title Reformatting");
     SPECIFIC_FIELD(lang->MUXVISUAL.ROOT, "Title Include Root Drive");
-    SPECIFIC_FIELD(lang->MUXVISUAL.SPLASH, "Content Launch Splash");
-    SPECIFIC_FIELD(lang->MUXVISUAL.FADE, "Black Fade Animation");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT, "Folder Item Count");
     SPECIFIC_FIELD(lang->MUXVISUAL.EMPTY, "Display Empty Folder");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT_FOLDER, "Menu Counter Folder");
     SPECIFIC_FIELD(lang->MUXVISUAL.COUNT_FILE, "Menu Counter File");
-    SPECIFIC_FIELD(lang->MUXVISUAL.ANIMATION, "Background Animation");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.TITLE, "Content Box Art");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.BEHIND, "Behind");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.FRONT, "Front");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.FS_BEHIND, "Fullscreen + Behind");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.FS_FRONT, "Fullscreen + Front");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.TITLE, "Content Box Art Alignment");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.B_LEFT, "Bottom Left");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.B_MID, "Bottom Middle");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.B_RIGHT, "Bottom Right");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.M_LEFT, "Middle Left");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.M_MID, "Center");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.M_RIGHT, "Middle Right");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.T_LEFT, "Top Left");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.T_MID, "Top Middle");
-    SPECIFIC_FIELD(lang->MUXVISUAL.BOX_ART.ALIGN.T_RIGHT, "Top Right");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.TITLE, "Content Name Scheme");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.FULL, "Full Name");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_SQ, "Remove [ ]");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_PA, "Remove ( )");
     SPECIFIC_FIELD(lang->MUXVISUAL.NAME.REM_SQPA, "Remove [ ] and ( )");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HIDDEN, "Show Hidden Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BATTERY, "Toggle the visibility of the battery glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NETWORK, "Toggle the visibility of the network glyph");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.CLOCK, "Toggle the visibility of the clock");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.DASH, "Replaces the dash (-) with a colon (:) for content labels");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FRIENDLY, "Replaces the label of shortened content folders to more appropriately named labels");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.REFORMAT, "Rearranges the label of content to move the 'The' label to the front - For example, 'Batman and Robin, The' to 'The Batman and Robin'");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.ROOT, "Changes the top title label in Explore Content to show current storage device along with folder name");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.SPLASH, "Toggle the splash image on content launching");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.FADE, "Toggle the fade to black animation on content launching");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT, "Toggle the visibility of the item count within folders in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.EMPTY, "Toggle the visibility of empty folders in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FOLDER, "Toggle the visibility of currently selected folder along with total in Explore Content");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.COUNT_FILE, "Toggle the visibility of currently selected file along with total in Explore Content");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BOX_ART, "Change the display priority of the content images");
-    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.BOX_ALIGN, "Change the screen alignment of the content images");
     SPECIFIC_FIELD(lang->MUXVISUAL.HELP.NAME, "Remove extra information from content labels - This does NOT rename your files it only changes how it is displayed");
+    SPECIFIC_FIELD(lang->MUXVISUAL.HELP.HIDDEN, "Toggle hidden content displayed in Explore Content - Place a '.' or '_' character at the start of a file or folder name to hide it");
 
     // muxwebserv
     SPECIFIC_FIELD(lang->MUXWEBSERV.TITLE, "WEB SERVICES");
