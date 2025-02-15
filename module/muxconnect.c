@@ -2,7 +2,6 @@
 #include "ui/ui_muxconnect.h"
 #include <unistd.h>
 #include <string.h>
-#include <stdio.h>
 #include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
@@ -64,10 +63,10 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblNetwork,      lang.MUXCONNECT.HELP.WIFI},
-            {ui_lblUSBFunction,  lang.MUXCONNECT.HELP.USB},
-            {ui_lblBluetooth,    lang.MUXCONNECT.HELP.BLUETOOTH},
-            {ui_lblServices,     lang.MUXCONNECT.HELP.WEB},
+            {ui_lblNetwork,     lang.MUXCONNECT.HELP.WIFI},
+            {ui_lblServices,    lang.MUXCONNECT.HELP.WEB},
+            {ui_lblBluetooth,   lang.MUXCONNECT.HELP.BLUETOOTH},
+            {ui_lblUSBFunction, lang.MUXCONNECT.HELP.USB},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -116,7 +115,7 @@ void save_options() {
             idx_usbfunction = "none";
             break;
     }
-    
+
     int is_modified = 0;
 
     int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
@@ -153,10 +152,9 @@ void init_navigation_group() {
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
-    
 
-    ui_objects[0] = ui_lblServices;
-    ui_objects[1] = ui_lblNetwork;
+    ui_objects[0] = ui_lblNetwork;
+    ui_objects[1] = ui_lblServices;
     ui_objects[2] = ui_lblBluetooth;
     ui_objects[3] = ui_lblUSBFunction;
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
@@ -165,10 +163,10 @@ void init_navigation_group() {
 
     add_item(ui_pnlNetwork, ui_lblNetwork, ui_icoNetwork, ui_droNetwork, lang.MUXCONNECT.WIFI, "network");
     add_item(ui_pnlServices, ui_lblServices, ui_icoServices, ui_droServices, lang.MUXCONNECT.WEB, "service");
-    add_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB, "usbfunction");
-    add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
     add_item(ui_pnlBluetooth, ui_lblBluetooth, ui_icoBluetooth, ui_droBluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth");
     add_drop_down_options(ui_droBluetooth, disabled_enabled, 2);
+    add_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB, "usbfunction");
+    add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
 
     if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
         lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
@@ -235,8 +233,8 @@ void handle_a() {
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {"network",  "network",  &kiosk.CONFIG.NETWORK},
-            {"service",  "webserv",  &kiosk.CONFIG.WEB_SERVICES}
+            {"network", "network", &kiosk.CONFIG.NETWORK},
+            {"service", "webserv", &kiosk.CONFIG.WEB_SERVICES}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -328,10 +326,10 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblBluetooth, "bluetooth");
-    lv_obj_set_user_data(ui_lblServices, "service");
-    lv_obj_set_user_data(ui_lblUSBFunction, "usbfunction");
     lv_obj_set_user_data(ui_lblNetwork, "network");
+    lv_obj_set_user_data(ui_lblServices, "service");
+    lv_obj_set_user_data(ui_lblBluetooth, "bluetooth");
+    lv_obj_set_user_data(ui_lblUSBFunction, "usbfunction");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

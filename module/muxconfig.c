@@ -2,7 +2,6 @@
 #include "ui/ui_muxconfig.h"
 #include <unistd.h>
 #include <string.h>
-#include <stdio.h>
 #include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
@@ -62,9 +61,9 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
+            {ui_lblTweakGeneral, lang.MUXCONFIG.HELP.GENERAL},
             {ui_lblConnect,      lang.MUXCONFIG.HELP.CONNECTIVITY},
             {ui_lblCustom,       lang.MUXCONFIG.HELP.CUSTOM},
-            {ui_lblTweakGeneral, lang.MUXCONFIG.HELP.GENERAL},
             {ui_lblInterface,    lang.MUXCONFIG.HELP.VISUAL},
             {ui_lblLanguage,     lang.MUXCONFIG.HELP.LANGUAGE},
             {ui_lblPower,        lang.MUXCONFIG.HELP.POWER},
@@ -106,9 +105,9 @@ void init_navigation_group() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_objects[0] = ui_lblConnect;
-    ui_objects[1] = ui_lblCustom;
-    ui_objects[2] = ui_lblTweakGeneral;
+    ui_objects[0] = ui_lblTweakGeneral;
+    ui_objects[1] = ui_lblConnect;
+    ui_objects[2] = ui_lblCustom;
     ui_objects[3] = ui_lblInterface;
     ui_objects[4] = ui_lblLanguage;
     ui_objects[5] = ui_lblPower;
@@ -164,13 +163,13 @@ void handle_a() {
         const char *mux_name;
         int16_t *kiosk_flag;
     } elements[] = {
-            {"connect",  "connect",  &kiosk.CONFIG.CONNECTIVITY},    
-            {"custom",   "custom",   &kiosk.CONFIG.CUSTOMISATION},
-            {"general",  "tweakgen", &kiosk.SETTING.GENERAL},
-            {"interface",  "visual", &kiosk.SETTING.VISUAL},
-            {"language", "language", &kiosk.CONFIG.LANGUAGE},
-            {"power",    "power",    &kiosk.SETTING.POWER},
-            {"storage",  "storage",  &kiosk.CONFIG.STORAGE}
+            {"general",   "tweakgen", &kiosk.SETTING.GENERAL},
+            {"connect",   "connect",  &kiosk.CONFIG.CONNECTIVITY},
+            {"custom",    "custom",   &kiosk.CONFIG.CUSTOMISATION},
+            {"interface", "visual",   &kiosk.SETTING.VISUAL},
+            {"language",  "language", &kiosk.CONFIG.LANGUAGE},
+            {"power",     "power",    &kiosk.SETTING.POWER},
+            {"storage",   "storage",  &kiosk.CONFIG.STORAGE}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -259,9 +258,9 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
+    lv_obj_set_user_data(ui_lblTweakGeneral, "general");
     lv_obj_set_user_data(ui_lblConnect, "connect");
     lv_obj_set_user_data(ui_lblCustom, "custom");
-    lv_obj_set_user_data(ui_lblTweakGeneral, "general");
     lv_obj_set_user_data(ui_lblInterface, "interface");
     lv_obj_set_user_data(ui_lblLanguage, "language");
     lv_obj_set_user_data(ui_lblPower, "power");
