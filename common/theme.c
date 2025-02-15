@@ -19,11 +19,7 @@ static lv_style_t style_list_glyph_default;
 static lv_style_t style_list_glyph_focused;
 
 int load_scheme(const char *theme_base, const char *mux_dimension, const char *file_name, char *scheme, size_t scheme_size) {
-    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.txt", theme_base, mux_dimension, file_name)
-            && file_exist(scheme)) ||
-           (snprintf(scheme, scheme_size, "%s/scheme/%s.txt", theme_base, file_name)
-            && file_exist(scheme)) ||
-           (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dimension, file_name)
+    return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dimension, file_name)
             && file_exist(scheme)) ||
            (snprintf(scheme, scheme_size, "%s/scheme/%s.ini", theme_base, file_name)
             && file_exist(scheme));
@@ -828,6 +824,12 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         }
     }
 
+    char scheme_override[MAX_BUFFER_SIZE];
+    snprintf(scheme_override, sizeof(scheme_override), (RUN_STORAGE_PATH "theme/override/%s.ini"), mux_module);
+    if (file_exist(scheme_override)) {
+        load_theme_from_scheme(scheme_override, theme, device);
+    }
+
     theme->GRID.ENABLED = (theme->GRID.COLUMN_COUNT > 0 && theme->GRID.ROW_COUNT > 0);
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
@@ -841,25 +843,6 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     // Adjusts height if user picks a height that is not evenly divisible by item count.
     // Prevents seeing a few pixels of the next game.
     theme->MISC.CONTENT.HEIGHT = theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT;
-
-    char scheme_override[MAX_BUFFER_SIZE];
-    snprintf(scheme_override, sizeof(scheme_override), (RUN_STORAGE_PATH "theme/override/%s.txt"), mux_module);
-    if (file_exist(scheme_override)) {
-        mini_t *muos_theme_overrides = mini_try_load(scheme_override);
-        int16_t pad_right = get_ini_int(muos_theme_overrides, "font", "FONT_LIST_PAD_RIGHT", -1);
-        int16_t list_default_radius = get_ini_int(muos_theme_overrides, "list", "LIST_DEFAULT_RADIUS", -1);
-        int16_t content_width = get_ini_int(muos_theme_overrides, "misc", "CONTENT_WIDTH", -1);
-        int16_t size_to_content = get_ini_int(muos_theme_overrides, "misc", "CONTENT_SIZE_TO_CONTENT", -1);
-        int16_t content_left_padding = get_ini_int(muos_theme_overrides, "misc", "CONTENT_PADDING_LEFT", -1);
-
-        if (pad_right > -1) theme->FONT.LIST_PAD_RIGHT = pad_right;
-        if (list_default_radius > -1) theme->LIST_DEFAULT.RADIUS = list_default_radius;
-        if (content_width > -1) theme->MISC.CONTENT.WIDTH = content_width;
-        if (size_to_content > -1) theme->MISC.CONTENT.SIZE_TO_CONTENT = size_to_content;
-        if (content_left_padding > -1) theme->MISC.CONTENT.PADDING_LEFT = content_left_padding;
-
-        mini_free(muos_theme_overrides);
-    }
 }
 
 void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, char *item_text) {
