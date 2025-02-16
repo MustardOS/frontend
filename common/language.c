@@ -230,11 +230,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.SYSTEM, "System Details");
     SPECIFIC_FIELD(lang->MUXINFO.ACTIVITY, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXINFO.SCREENSHOT, "Screenshots");
+    SPECIFIC_FIELD(lang->MUXINFO.SPACE, "Storage Space");
     SPECIFIC_FIELD(lang->MUXINFO.INPUT, "Input Tester");
     SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SYSTEM, "Access version information and system details");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.ACTIVITY, "Access statistics of played content and other activity");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SCREENSHOT, "View all of the screenshots taken on the device");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.SPACE, "View the current used space of the mounted storage devices");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.INPUT, "Test the controls of the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.CREDIT, "View all of the current muOS supporters");
 
@@ -413,6 +415,10 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSNAPSHOT.TITLE, "SAVE SNAPSHOT");
     SPECIFIC_FIELD(lang->MUXSNAPSHOT.HELP, "Restore your saved game progress from a previous snapshot");
     SPECIFIC_FIELD(lang->MUXSNAPSHOT.NONE, "No Save Snapshots Found");
+
+    // muxspace
+    SPECIFIC_FIELD(lang->MUXSPACE.TITLE, "STORAGE SPACE");
+    SPECIFIC_FIELD(lang->MUXSPACE.HELP, "View the current used space of the mounted storage devices");
 
     // muxstorage
     SPECIFIC_FIELD(lang->MUXSTORAGE.TITLE, "STORAGE");

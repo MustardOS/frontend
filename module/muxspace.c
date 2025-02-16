@@ -1,8 +1,10 @@
 #include "../lvgl/lvgl.h"
-#include "ui/ui_muxinfo.h"
+#include "ui/ui_muxspace.h"
 #include <unistd.h>
 #include <string.h>
+#include <stdio.h>
 #include <libgen.h>
+#include <sys/statvfs.h>
 #include "../common/init.h"
 #include "../common/common.h"
 #include "../common/options.h"
@@ -45,13 +47,12 @@ lv_obj_t *kiosk_image = NULL;
 int progress_onscreen = -1;
 
 lv_group_t *ui_group;
+lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 5
+#define UI_COUNT 4
 lv_obj_t *ui_objects[UI_COUNT];
-lv_obj_t *ui_icons[UI_COUNT];
-
 lv_obj_t *ui_mux_panels[5];
 
 struct help_msg {
@@ -59,141 +60,187 @@ struct help_msg {
     char *message;
 };
 
+struct mount {
+    lv_obj_t *value_panel;
+    lv_obj_t *bar_panel;
+    lv_obj_t *value;
+    lv_obj_t *bar;
+    const char *partition;
+};
+
 void show_help(lv_obj_t *element_focused) {
-    struct help_msg help_messages[] = {
-            {ui_lblTracker,    lang.MUXINFO.HELP.ACTIVITY},
-            {ui_lblScreenshot, lang.MUXINFO.HELP.SCREENSHOT},
-            {ui_lblSpace,      lang.MUXINFO.HELP.SPACE},
-            {ui_lblTester,     lang.MUXINFO.HELP.INPUT},
-            {ui_lblSystem,     lang.MUXINFO.HELP.SYSTEM},
-            {ui_lblCredits,    lang.MUXINFO.HELP.CREDIT},
-    };
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
+                     TS(lv_label_get_text(element_focused)), lang.MUXSPACE.HELP);
+}
 
-    char *message = lang.GENERIC.NO_HELP;
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
+int is_partition_mounted(const char *partition) {
+    if (strcmp(partition, "/") == 0) return 1; // this is rootfs so I mean it should always be mounted
 
-    for (int i = 0; i < num_messages; i++) {
-        if (element_focused == help_messages[i].element) {
-            message = help_messages[i].message;
+    FILE *fp = fopen("/proc/mounts", "r");
+    if (!fp) {
+        perror("fopen /proc/mounts");
+        return 0;
+    }
+
+    char line[MAX_BUFFER_SIZE];
+    int mounted = 0;
+
+    while (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, partition)) {
+            mounted = 1;
             break;
         }
     }
 
-    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
+    fclose(fp);
+    return mounted;
+}
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), message);
+void get_storage_info(const char *partition, double *total, double *free, double *used) {
+    struct statvfs stat;
+
+    if (!is_partition_mounted(partition)) {
+        *total = 0.0;
+        *free = 0.0;
+        *used = 0.0;
+        return;
+    }
+
+    if (statvfs(partition, &stat) != 0) {
+        perror("statvfs");
+        *total = 0.0;
+        *free = 0.0;
+        *used = 0.0;
+        return;
+    }
+
+    *total = (double) (stat.f_blocks * stat.f_frsize) / (1024 * 1024 * 1024);
+    *free = (double) (stat.f_bavail * stat.f_frsize) / (1024 * 1024 * 1024);
+    *used = *total - *free;
+}
+
+void update_storage_info() {
+    struct mount storage_info[] = {
+            {ui_pnlSD1, ui_pnlSD1Bar, ui_lblSD1Value, ui_barSD1, device.STORAGE.ROM.MOUNT},
+            {ui_pnlSD2, ui_pnlSD2Bar, ui_lblSD2Value, ui_barSD2, device.STORAGE.SDCARD.MOUNT},
+            {ui_pnlUSB, ui_pnlUSBBar, ui_lblUSBValue, ui_barUSB, device.STORAGE.USB.MOUNT},
+            {ui_pnlRFS, ui_pnlRFSBar, ui_lblRFSValue, ui_barRFS, device.STORAGE.ROOT.MOUNT}
+    };
+
+    for (size_t i = 0; i < sizeof(storage_info) / sizeof(storage_info[0]); i++) {
+        double total_space, free_space, used_space;
+        get_storage_info(storage_info[i].partition, &total_space, &free_space, &used_space);
+
+        if (total_space > 0) {
+            lv_obj_clear_flag(storage_info[i].value_panel, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(storage_info[i].bar_panel, LV_OBJ_FLAG_HIDDEN);
+
+            int percentage = (total_space > 0) ? (int) ((used_space * 100) / total_space) : 0;
+            lv_bar_set_value(storage_info[i].bar, percentage, LV_ANIM_ON);
+
+            char space_info[32];
+            snprintf(space_info, sizeof(space_info), "%.2f GB / %.2f GB (%d%%)",
+                     used_space, total_space, percentage);
+            lv_label_set_text(storage_info[i].value, space_info);
+
+            if (percentage >= 90) {
+                lv_obj_set_style_bg_color(storage_info[i].bar, lv_color_hex(0xEE3F3F),
+                                          LV_PART_INDICATOR | LV_STATE_DEFAULT);
+                lv_obj_set_style_bg_opa(storage_info[i].bar, 255,
+                                        LV_PART_INDICATOR | LV_STATE_DEFAULT);
+            }
+        } else {
+            lv_obj_add_flag(storage_info[i].value_panel, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(storage_info[i].bar_panel, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
 }
 
 void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlScreenshot,
-            ui_pnlSpace,
-            ui_pnlTester,
-            ui_pnlSystem,
-            ui_pnlCredits,
+            ui_pnlSD1,
+            ui_pnlSD2,
+            ui_pnlUSB,
+            ui_pnlRFS
     };
 
-    ui_objects[0] = ui_lblScreenshot;
-    ui_objects[1] = ui_lblSpace;
-    ui_objects[2] = ui_lblTester;
-    ui_objects[3] = ui_lblSystem;
-    ui_objects[4] = ui_lblCredits;
+    ui_objects[0] = ui_lblSD1;
+    ui_objects[1] = ui_lblSD2;
+    ui_objects[2] = ui_lblUSB;
+    ui_objects[3] = ui_lblRFS;
 
-    ui_icons[0] = ui_icoScreenshot;
-    ui_icons[1] = ui_icoSpace;
-    ui_icons[2] = ui_icoTester;
-    ui_icons[3] = ui_icoSystem;
-    ui_icons[4] = ui_icoCredits;
+    lv_obj_t *ui_objects_value[] = {
+            ui_lblSD1Value,
+            ui_lblSD2Value,
+            ui_lblUSBValue,
+            ui_lblRFSValue
+    };
 
-    apply_theme_list_panel(ui_pnlTracker);
-    apply_theme_list_panel(ui_pnlScreenshot);
-    apply_theme_list_panel(ui_pnlSpace);
-    apply_theme_list_panel(ui_pnlTester);
-    apply_theme_list_panel(ui_pnlSystem);
-    apply_theme_list_panel(ui_pnlCredits);
+    lv_obj_t *ui_objects_glyph[] = {
+            ui_icoSD1,
+            ui_icoSD2,
+            ui_icoUSB,
+            ui_icoRFS
+    };
 
-    //apply_theme_list_item(&theme, ui_lblTracker, lang.MUXINFO.ACTIVITY);
-    apply_theme_list_item(&theme, ui_lblScreenshot, lang.MUXINFO.SCREENSHOT);
-    apply_theme_list_item(&theme, ui_lblSpace, lang.MUXINFO.SPACE);
-    apply_theme_list_item(&theme, ui_lblTester, lang.MUXINFO.INPUT);
-    apply_theme_list_item(&theme, ui_lblSystem, lang.MUXINFO.SYSTEM);
-    apply_theme_list_item(&theme, ui_lblCredits, lang.MUXINFO.CREDIT);
+    apply_theme_list_panel(ui_pnlSD1);
+    apply_theme_list_panel(ui_pnlSD2);
+    apply_theme_list_panel(ui_pnlUSB);
+    apply_theme_list_panel(ui_pnlRFS);
 
-    //apply_theme_list_glyph(&theme, ui_icoTracker, mux_module, "tracker");
-    apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_module, "screenshot");
-    apply_theme_list_glyph(&theme, ui_icoSpace, mux_module, "space");
-    apply_theme_list_glyph(&theme, ui_icoTester, mux_module, "tester");
-    apply_theme_list_glyph(&theme, ui_icoSystem, mux_module, "system");
-    apply_theme_list_glyph(&theme, ui_icoCredits, mux_module, "credit");
+    apply_theme_list_item(&theme, ui_lblSD1, "SD1");
+    apply_theme_list_item(&theme, ui_lblSD2, "SD2");
+    apply_theme_list_item(&theme, ui_lblUSB, "USB");
+    apply_theme_list_item(&theme, ui_lblRFS, "ROOTFS");
+
+    apply_theme_list_glyph(&theme, ui_icoSD1, mux_module, "sd1");
+    apply_theme_list_glyph(&theme, ui_icoSD2, mux_module, "sd2");
+    apply_theme_list_glyph(&theme, ui_icoUSB, mux_module, "usb");
+    apply_theme_list_glyph(&theme, ui_icoRFS, mux_module, "rfs");
+
+    apply_theme_list_value(&theme, ui_lblSD1Value, "");
+    apply_theme_list_value(&theme, ui_lblSD2Value, "");
+    apply_theme_list_value(&theme, ui_lblUSBValue, "");
+    apply_theme_list_value(&theme, ui_lblRFSValue, "");
 
     ui_group = lv_group_create();
+    ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
-        lv_obj_set_user_data(ui_objects_panel[i], strdup(lv_label_get_text(ui_objects[i])));
         lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
+        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
+        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-
-        apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
-        apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], lv_label_get_text(ui_objects[i]));
     }
 }
 
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        current_item_index = (!current_item_index) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
+        nav_prev(ui_group_value, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
 void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
+        nav_next(ui_group_value, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
-}
-
-void handle_a() {
-    if (msgbox_active) return;
-
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-
-    play_sound("confirm", nav_sound, 0, 1);
-
-    if (element_focused == ui_lblScreenshot) {
-        load_mux("screenshot");
-    } else if (element_focused == ui_lblSpace) {
-        load_mux("space");
-    } else if (element_focused == ui_lblTester) {
-        load_mux("tester");
-    } else if (element_focused == ui_lblSystem) {
-        load_mux("system");
-    } else if (element_focused == ui_lblCredits) {
-        load_mux("credits");
-    }
-    mux_input_stop();
 }
 
 void handle_b() {
@@ -206,7 +253,7 @@ void handle_b() {
     }
 
     play_sound("back", nav_sound, 0, 1);
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "info");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "space");
     mux_input_stop();
 }
 
@@ -241,10 +288,11 @@ void init_elements() {
 
     lv_label_set_text(ui_lblMessage, "");
 
-    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
+            ui_lblNavAGlyph,
+            ui_lblNavA,
             ui_lblNavCGlyph,
             ui_lblNavC,
             ui_lblNavXGlyph,
@@ -254,7 +302,7 @@ void init_elements() {
             ui_lblNavZGlyph,
             ui_lblNavZ,
             ui_lblNavMenuGlyph,
-            ui_lblNavMenu
+            ui_lblNavMenu,
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
@@ -262,12 +310,10 @@ void init_elements() {
         lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblTracker, "tracker");
-    lv_obj_set_user_data(ui_lblScreenshot, "screenshot");
-    lv_obj_set_user_data(ui_lblSpace, "space");
-    lv_obj_set_user_data(ui_lblTester, "tester");
-    lv_obj_set_user_data(ui_lblSystem, "system");
-    lv_obj_set_user_data(ui_lblCredits, "credit");
+    lv_obj_set_user_data(ui_lblSD1, "sd1");
+    lv_obj_set_user_data(ui_lblSD2, "sd2");
+    lv_obj_set_user_data(ui_lblUSB, "usb");
+    lv_obj_set_user_data(ui_lblRFS, "rfs");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -307,7 +353,7 @@ int main(int argc, char *argv[]) {
     init_display();
     init_theme(1, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXINFO.TITLE);
+    init_ui_common_screen(&theme, &device, &lang, lang.MUXSPACE.TITLE);
     init_mux(ui_pnlContent);
     init_elements();
 
@@ -320,11 +366,12 @@ int main(int argc, char *argv[]) {
     init_navigation_group();
     init_navigation_sound(&nav_sound, mux_module);
 
+    update_storage_info();
+
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_refresh_task, update_storage_info);
 
     load_kiosk(&kiosk);
-    list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
 
     mux_input_options input_opts = {
             .general_fd = joy_general,
@@ -336,7 +383,6 @@ int main(int argc, char *argv[]) {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .stick_nav = true,
             .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_MENU_SHORT] = handle_menu,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
