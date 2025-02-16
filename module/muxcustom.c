@@ -448,7 +448,8 @@ void handle_confirm() {
         if (strcasecmp(u_data, "themealternate") == 0) {
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themealternate");
             load_mux("custom");
-            break;
+            mux_input_stop();
+            return;
         } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 toast_message(kiosk_nope(), 1000, 1000);
@@ -460,11 +461,12 @@ void handle_confirm() {
 
             play_sound("confirm", nav_sound, 0, 1);
             load_mux("picker");
+            mux_input_stop();
             break;
         }
     }
-
-    mux_input_stop();
+    
+    handle_option_next();
 }
 
 void handle_back() {

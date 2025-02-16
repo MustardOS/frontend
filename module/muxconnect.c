@@ -249,11 +249,12 @@ void handle_a() {
 
             play_sound("confirm", nav_sound, 0, 1);
             load_mux(elements[i].mux_name);
+            mux_input_stop();
             break;
         }
     }
 
-    mux_input_stop();
+    handle_option_next();
 }
 
 
