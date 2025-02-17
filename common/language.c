@@ -145,8 +145,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CATALOGUE, "Catalogue Sets");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "muOS Themes");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_ALTERNATE, "Theme Alternates");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "Theme Picker");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_ALTERNATE, "Alternative Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SPLASH, "Content Launch Splash");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FADE, "Black Fade Animation");
     SPECIFIC_FIELD(lang->MUXCUSTOM.ANIMATION, "Background Animation");

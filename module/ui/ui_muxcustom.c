@@ -54,8 +54,9 @@ lv_obj_t *ui_droConfig;
 
 void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlCatalogue = lv_obj_create(ui_pnlContent);
-    ui_pnlTheme = lv_obj_create(ui_pnlContent);
     ui_pnlConfig = lv_obj_create(ui_pnlContent);
+    ui_pnlTheme = lv_obj_create(ui_pnlContent);
+    ui_pnlThemeAlternate = lv_obj_create(ui_pnlContent);
     ui_pnlBackgroundAnimation = lv_obj_create(ui_pnlContent);
     ui_pnlBGM = lv_obj_create(ui_pnlContent);
     ui_pnlBlackFade = lv_obj_create(ui_pnlContent);
@@ -63,7 +64,6 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlBoxArtAlign = lv_obj_create(ui_pnlContent);
     ui_pnlLaunchSplash = lv_obj_create(ui_pnlContent);
     ui_pnlFont = lv_obj_create(ui_pnlContent);
-    ui_pnlThemeAlternate = lv_obj_create(ui_pnlContent);
     ui_pnlSound = lv_obj_create(ui_pnlContent);
 
     ui_lblBackgroundAnimation = lv_label_create(ui_pnlBackgroundAnimation);
