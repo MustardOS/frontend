@@ -248,7 +248,7 @@ int get_grid_column_index(int current_item_index);
 
 int get_grid_row_item_count(int current_item_index);
 
-char *get_var_from_file(const char *storage_path, const char *item_name, const char *item_var, char *item_default);
+char *get_var_from_file(const char *storage_path, const char *script_file, const char *item_var, char *item_default);
 
 char *kiosk_nope();
 

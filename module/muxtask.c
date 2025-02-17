@@ -157,7 +157,7 @@ void create_task_items() {
 
         ui_count++;
 
-        add_item(&items, &item_count, task_store, TS(task_store), "", ROM);
+        add_item(&items, &item_count, task_store, TS(task_store), file_names[i], ROM);
 
         lv_obj_t *ui_pnlTask = lv_obj_create(ui_pnlContent);
         if (ui_pnlTask) {
@@ -170,7 +170,7 @@ void create_task_items() {
             lv_obj_t *ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
             if (ui_lblTaskItemGlyph) {
                 apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module,
-                                       get_var_from_file(task_path, items[i].name, "ICON", "task"));
+                                       get_var_from_file(task_path, items[i].extra_data, "ICON", "task"));
             }
 
             lv_group_add_obj(ui_group, ui_lblTaskItem);
