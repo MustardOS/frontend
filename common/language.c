@@ -256,6 +256,14 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXLAUNCH.EXPLORE, "Explore Content");
     SPECIFIC_FIELD(lang->MUXLAUNCH.SHUTDOWN, "Shutdown");
     SPECIFIC_FIELD(lang->MUXLAUNCH.REBOOT, "Reboot");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.APP, "Apps");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.CONFIG, "Config");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.INFO, "Info");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.COLLECTION, "Collection");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.HISTORY, "History");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.EXPLORE, "Content");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.SHUTDOWN, "Shutdown");
+    SPECIFIC_FIELD(lang->MUXLAUNCH.SHORT.REBOOT, "Reboot");
     SPECIFIC_FIELD(lang->MUXLAUNCH.KIOSK.ERROR, "Kiosk configuration not found");
     SPECIFIC_FIELD(lang->MUXLAUNCH.KIOSK.PROCESS, "Processing kiosk configuration");
     SPECIFIC_FIELD(lang->MUXLAUNCH.HELP.APP, "Various applications can be found and launched here");

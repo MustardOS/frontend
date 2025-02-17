@@ -140,12 +140,19 @@ void init_navigation_group() {
                            lang.MUXLAUNCH.APP, lang.MUXLAUNCH.INFO, lang.MUXLAUNCH.CONFIG,
                            lang.MUXLAUNCH.REBOOT, lang.MUXLAUNCH.SHUTDOWN};
 
+    char *item_labels_short[] = {lang.MUXLAUNCH.SHORT.EXPLORE, lang.MUXLAUNCH.SHORT.COLLECTION,
+                                 lang.MUXLAUNCH.SHORT.HISTORY, lang.MUXLAUNCH.SHORT.APP,
+                                 lang.MUXLAUNCH.SHORT.INFO, lang.MUXLAUNCH.SHORT.CONFIG,
+                                 lang.MUXLAUNCH.SHORT.REBOOT, lang.MUXLAUNCH.SHORT.SHUTDOWN};
+
     char *glyph_names[] = {"explore", "collection", "history",
                            "apps", "info", "config",
                            "reboot", "shutdown"};
 
     if (theme.GRID.ENABLED) {
-        init_navigation_group_grid(item_labels, glyph_names);
+        init_navigation_group_grid(item_labels_short, glyph_names);
+        lv_label_set_text(ui_lblGridCurrentItem, item_labels_short[0]);
+        set_label_long_mode(&theme, ui_objects[0], item_labels_short[0]);
     } else {
         lv_obj_t *ui_objects_panel[] = {
                 ui_pnlExplore,
@@ -189,9 +196,10 @@ void init_navigation_group() {
             apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], item_labels[i]);
             apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], item_labels[i]);
         }
+
+        lv_label_set_text(ui_lblGridCurrentItem, item_labels[0]);
+        set_label_long_mode(&theme, ui_objects[0], item_labels[0]);
     }
-    lv_label_set_text(ui_lblGridCurrentItem, item_labels[0]);
-    set_label_long_mode(&theme, ui_objects[0], item_labels[0]);
 }
 
 void list_nav_prev(int steps) {
@@ -648,7 +656,7 @@ int main(int argc, char *argv[]) {
             .max_idle_ms = IDLE_MS,
             .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5) ||
-                        (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE >= 1 && theme.MISC.NAVIGATION_TYPE <= 5),
+                         (!theme.GRID.ENABLED && theme.MISC.NAVIGATION_TYPE >= 1 && theme.MISC.NAVIGATION_TYPE <= 5),
             .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,

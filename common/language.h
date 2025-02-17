@@ -286,6 +286,16 @@ struct mux_lang {
         char SHUTDOWN[MAX_BUFFER_SIZE];
         char REBOOT[MAX_BUFFER_SIZE];
         struct {
+            char APP[MAX_BUFFER_SIZE];
+            char CONFIG[MAX_BUFFER_SIZE];
+            char INFO[MAX_BUFFER_SIZE];
+            char COLLECTION[MAX_BUFFER_SIZE];
+            char HISTORY[MAX_BUFFER_SIZE];
+            char EXPLORE[MAX_BUFFER_SIZE];
+            char SHUTDOWN[MAX_BUFFER_SIZE];
+            char REBOOT[MAX_BUFFER_SIZE];
+        } SHORT;
+        struct {
             char ERROR[MAX_BUFFER_SIZE];
             char PROCESS[MAX_BUFFER_SIZE];
         } KIOSK;
