@@ -47,8 +47,8 @@ lv_obj_t *kiosk_image = NULL;
 int progress_onscreen = -1;
 
 char theme_alt_original[MAX_BUFFER_SIZE];
-int boxart_original, bgm_original, sound_original, boxartalign_original, background_animation_original, 
-    font_original, launch_splash_original, black_fade_original;
+int boxart_original, bgm_original, sound_original, boxartalign_original, background_animation_original,
+        font_original, launch_splash_original, black_fade_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
@@ -104,7 +104,7 @@ void populate_theme_alternates() {
     char alt_path[MAX_BUFFER_SIZE];
     snprintf(alt_path, sizeof(alt_path), "%s/alternate", STORAGE_THEME);
 
-   struct dirent *entry;
+    struct dirent *entry;
     DIR *dir = opendir(alt_path);
 
     if (dir == NULL) {
@@ -153,8 +153,9 @@ void init_dropdown_settings() {
 void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlCatalogue,
-            ui_pnlTheme,
             ui_pnlConfig,
+            ui_pnlTheme,
+            ui_pnlThemeAlternate,
             ui_pnlBackgroundAnimation,
             ui_pnlBGM,
             ui_pnlBlackFade,
@@ -162,49 +163,49 @@ void init_navigation_group() {
             ui_pnlBoxArtAlign,
             ui_pnlLaunchSplash,
             ui_pnlFont,
-            ui_pnlThemeAlternate,
             ui_pnlSound
     };
 
-    ui_objects[0] =  ui_lblCatalogue;
-    ui_objects[1] =  ui_lblTheme;
-    ui_objects[2] =  ui_lblConfig;
-    ui_objects[3] =  ui_lblBackgroundAnimation;
-    ui_objects[4] =  ui_lblBGM;
-    ui_objects[5] =  ui_lblBlackFade;
-    ui_objects[6] =  ui_lblBoxArt;
-    ui_objects[7] =  ui_lblBoxArtAlign;
-    ui_objects[8] =  ui_lblLaunchSplash;
-    ui_objects[9] =  ui_lblFont;
-    ui_objects[10] = ui_lblThemeAlternate;
+    ui_objects[0] = ui_lblCatalogue;
+    ui_objects[1] = ui_lblConfig;
+    ui_objects[2] = ui_lblTheme;
+    ui_objects[3] = ui_lblThemeAlternate;
+    ui_objects[4] = ui_lblBackgroundAnimation;
+    ui_objects[5] = ui_lblBGM;
+    ui_objects[6] = ui_lblBlackFade;
+    ui_objects[7] = ui_lblBoxArt;
+    ui_objects[8] = ui_lblBoxArtAlign;
+    ui_objects[9] = ui_lblLaunchSplash;
+    ui_objects[10] = ui_lblFont;
     ui_objects[11] = ui_lblSound;
 
-    ui_icons[0] =  ui_icoCatalogue;
-    ui_icons[1] =  ui_icoTheme;
-    ui_icons[2] =  ui_icoConfig;
-    ui_icons[3] =  ui_icoBackgroundAnimation;
-    ui_icons[4] =  ui_icoBGM;
-    ui_icons[5] =  ui_icoBlackFade;
-    ui_icons[6] =  ui_icoBoxArt;
-    ui_icons[7] =  ui_icoBoxArtAlign;
-    ui_icons[8] =  ui_icoLaunchSplash;
-    ui_icons[9] =  ui_icoFont;
-    ui_icons[10] = ui_icoThemeAlternate;
+    ui_icons[0] = ui_icoCatalogue;
+    ui_icons[1] = ui_icoConfig;
+    ui_icons[2] = ui_icoTheme;
+    ui_icons[3] = ui_icoThemeAlternate;
+    ui_icons[4] = ui_icoBackgroundAnimation;
+    ui_icons[5] = ui_icoBGM;
+    ui_icons[6] = ui_icoBlackFade;
+    ui_icons[7] = ui_icoBoxArt;
+    ui_icons[8] = ui_icoBoxArtAlign;
+    ui_icons[9] = ui_icoLaunchSplash;
+    ui_icons[10] = ui_icoFont;
     ui_icons[11] = ui_icoSound;
 
-    ui_objects_value[0] =  ui_droCatalogue;
-    ui_objects_value[1] =  ui_droTheme;
-    ui_objects_value[2] =  ui_droConfig;
-    ui_objects_value[3] =  ui_droBackgroundAnimation;
-    ui_objects_value[4] =  ui_droBGM;
-    ui_objects_value[5] =  ui_droBlackFade;
-    ui_objects_value[6] =  ui_droBoxArt;
-    ui_objects_value[7] =  ui_droBoxArtAlign;
-    ui_objects_value[8] =  ui_droLaunchSplash;
-    ui_objects_value[9] =  ui_droFont;
-    ui_objects_value[10] = ui_droThemeAlternate;
+    ui_objects_value[0] = ui_droCatalogue;
+    ui_objects_value[1] = ui_droConfig;
+    ui_objects_value[2] = ui_droTheme;
+    ui_objects_value[3] = ui_droThemeAlternate;
+    ui_objects_value[4] = ui_droBackgroundAnimation;
+    ui_objects_value[5] = ui_droBGM;
+    ui_objects_value[6] = ui_droBlackFade;
+    ui_objects_value[7] = ui_droBoxArt;
+    ui_objects_value[8] = ui_droBoxArtAlign;
+    ui_objects_value[9] = ui_droLaunchSplash;
+    ui_objects_value[10] = ui_droFont;
     ui_objects_value[11] = ui_droSound;
 
+    apply_theme_list_panel(ui_pnlThemeAlternate);
     apply_theme_list_panel(ui_pnlBackgroundAnimation);
     apply_theme_list_panel(ui_pnlBGM);
     apply_theme_list_panel(ui_pnlBlackFade);
@@ -214,7 +215,6 @@ void init_navigation_group() {
     apply_theme_list_panel(ui_pnlLaunchSplash);
     apply_theme_list_panel(ui_pnlFont);
     apply_theme_list_panel(ui_pnlTheme);
-    apply_theme_list_panel(ui_pnlThemeAlternate);
     apply_theme_list_panel(ui_pnlSound);
     apply_theme_list_panel(ui_pnlConfig);
 
@@ -258,29 +258,29 @@ void init_navigation_group() {
     apply_theme_list_drop_down(&theme, ui_droConfig, "");
 
     add_drop_down_options(ui_droBGM, (char *[]) {
-        lang.GENERIC.DISABLED, lang.MUXCUSTOM.MUSIC.GLOBAL, lang.MUXCUSTOM.MUSIC.THEME}, 3);
+            lang.GENERIC.DISABLED, lang.MUXCUSTOM.MUSIC.GLOBAL, lang.MUXCUSTOM.MUSIC.THEME}, 3);
 
     add_drop_down_options(ui_droBoxArt, (char *[]) {
-        lang.MUXCUSTOM.BOX_ART.BEHIND,
-        lang.MUXCUSTOM.BOX_ART.FRONT,
-        lang.MUXCUSTOM.BOX_ART.FS_BEHIND,
-        lang.MUXCUSTOM.BOX_ART.FS_FRONT,
-        lang.GENERIC.DISABLED}, 5);
+            lang.MUXCUSTOM.BOX_ART.BEHIND,
+            lang.MUXCUSTOM.BOX_ART.FRONT,
+            lang.MUXCUSTOM.BOX_ART.FS_BEHIND,
+            lang.MUXCUSTOM.BOX_ART.FS_FRONT,
+            lang.GENERIC.DISABLED}, 5);
 
     add_drop_down_options(ui_droBoxArtAlign, (char *[]) {
-        lang.MUXCUSTOM.BOX_ART.ALIGN.T_LEFT,
-        lang.MUXCUSTOM.BOX_ART.ALIGN.T_MID,
-        lang.MUXCUSTOM.BOX_ART.ALIGN.T_RIGHT,
-        lang.MUXCUSTOM.BOX_ART.ALIGN.B_LEFT,
-        lang.MUXCUSTOM.BOX_ART.ALIGN.B_MID,
-        lang.MUXCUSTOM.BOX_ART.ALIGN.B_RIGHT,
-        lang.MUXCUSTOM.BOX_ART.ALIGN.M_LEFT,
-        lang.MUXCUSTOM.BOX_ART.ALIGN.M_RIGHT,
-        lang.MUXCUSTOM.BOX_ART.ALIGN.M_MID}, 9);
+            lang.MUXCUSTOM.BOX_ART.ALIGN.T_LEFT,
+            lang.MUXCUSTOM.BOX_ART.ALIGN.T_MID,
+            lang.MUXCUSTOM.BOX_ART.ALIGN.T_RIGHT,
+            lang.MUXCUSTOM.BOX_ART.ALIGN.B_LEFT,
+            lang.MUXCUSTOM.BOX_ART.ALIGN.B_MID,
+            lang.MUXCUSTOM.BOX_ART.ALIGN.B_RIGHT,
+            lang.MUXCUSTOM.BOX_ART.ALIGN.M_LEFT,
+            lang.MUXCUSTOM.BOX_ART.ALIGN.M_RIGHT,
+            lang.MUXCUSTOM.BOX_ART.ALIGN.M_MID}, 9);
 
     add_drop_down_options(ui_droFont, (char *[]) {
-        lang.MUXCUSTOM.FONT.LANG,
-        lang.MUXCUSTOM.FONT.THEME}, 2);
+            lang.MUXCUSTOM.FONT.LANG,
+            lang.MUXCUSTOM.FONT.THEME}, 2);
 
     char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
     add_drop_down_options(ui_droBackgroundAnimation, disabled_enabled, 2);
@@ -304,6 +304,7 @@ void init_navigation_group() {
         apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
         apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], lv_label_get_text(ui_objects[i]));
     }
+
     populate_theme_alternates();
 }
 
@@ -356,9 +357,10 @@ void handle_option_next(void) {
 }
 
 void restore_options() {
-    snprintf(theme_alt_original, sizeof(theme_alt_original), "%s", str_replace(read_line_from_file((STORAGE_THEME "/active.txt"),1), "\r", ""));
+    snprintf(theme_alt_original, sizeof(theme_alt_original), "%s",
+             str_replace(read_line_from_file((STORAGE_THEME "/active.txt"), 1), "\r", ""));
     int32_t option_index = lv_dropdown_get_option_index(ui_droThemeAlternate, theme_alt_original);
-    if (option_index > 0) 
+    if (option_index > 0)
         lv_dropdown_set_selected(ui_droThemeAlternate, option_index);
     lv_dropdown_set_selected(ui_droBoxArt, config.VISUAL.BOX_ART);
     lv_dropdown_set_selected(ui_droBoxArtAlign, config.VISUAL.BOX_ART_ALIGN - 1);
@@ -465,7 +467,7 @@ void handle_confirm() {
             break;
         }
     }
-    
+
     handle_option_next();
 }
 
