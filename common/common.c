@@ -2031,12 +2031,9 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
-char *get_var_from_file(const char *storage_path, const char *item_name, const char *item_var, char *item_default) {
-    char script_file[MAX_BUFFER_SIZE];
-    snprintf(script_file, sizeof(script_file), "%s/%s.sh", storage_path, item_name);
-
+char *get_var_from_file(const char *storage_path, const char *script_file, const char *item_var, char *item_default) {
     char *item_value = get_script_value(script_file, item_var);
-    if (!item_value) return item_default;
+    if (!item_value || item_value[0] == '\0') return item_default;
 
     return item_value;
 }

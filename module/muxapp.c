@@ -102,7 +102,7 @@ void init_navigation_group_grid(const char *app_path) {
         lv_obj_t *cell_image = lv_img_create(cell_panel);
         lv_obj_t *cell_label = lv_label_create(cell_panel);
 
-        char *glyph_name = get_var_from_file(app_path, items[i].name, "ICON", "app");
+        char *glyph_name = get_var_from_file(app_path, items[i].extra_data, "ICON", "app");
         char mux_dimension[15];
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char grid_image[MAX_BUFFER_SIZE];
@@ -185,10 +185,10 @@ void create_app_items() {
         char *base_filename = file_names[i];
 
         char *standard_app_name = strip_ext(str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
-        char *app_name_for_grid = get_var_from_file(app_path, standard_app_name, "GRID", standard_app_name);
+        char *app_name_for_grid = get_var_from_file(app_path, base_filename, "GRID", standard_app_name);
 
         char app_store[MAX_BUFFER_SIZE];
-        snprintf(app_store, sizeof(app_store), "%s", app_name_for_grid);
+        snprintf(app_store, sizeof(app_store), "%s", theme.GRID.ENABLED ? app_name_for_grid : standard_app_name);
 
         add_item(&items, &item_count, app_store, TS(app_store), file_names[i], ROM);
 
@@ -210,7 +210,7 @@ void create_app_items() {
                 lv_obj_t *ui_lblAppItemGlyph = lv_img_create(ui_pnlApp);
                 if (ui_lblAppItemGlyph) {
                     apply_theme_list_glyph(&theme, ui_lblAppItemGlyph, mux_module,
-                                           get_var_from_file(app_path, items[i].name, "ICON", "app"));
+                                           get_var_from_file(app_path, items[i].extra_data, "ICON", "app"));
                 }
 
                 lv_group_add_obj(ui_group, ui_lblAppItem);
@@ -301,10 +301,7 @@ void handle_a() {
         play_sound("confirm", nav_sound, 0, 1);
         toast_message(lang.MUXAPP.LOAD_APP, 0, 0);
 
-        static char command[MAX_BUFFER_SIZE];
-        snprintf(command, sizeof(command), "%s/%s/%s.sh",
-                 device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, items[current_item_index].name);
-        write_text_to_file(MUOS_APP_LOAD, "w", CHAR, command);
+        write_text_to_file(MUOS_APP_LOAD, "w", CHAR, items[current_item_index].extra_data);
 
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
