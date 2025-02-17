@@ -2033,7 +2033,7 @@ int get_grid_row_item_count(int current_item_index) {
 
 char *get_var_from_file(const char *storage_path, const char *script_file, const char *item_var, char *item_default) {
     char *item_value = get_script_value(script_file, item_var);
-    if (!item_value) return item_default;
+    if (!item_value || item_value[0] == '\0') return item_default;
 
     return item_value;
 }

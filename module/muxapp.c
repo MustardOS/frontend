@@ -301,10 +301,7 @@ void handle_a() {
         play_sound("confirm", nav_sound, 0, 1);
         toast_message(lang.MUXAPP.LOAD_APP, 0, 0);
 
-        static char command[MAX_BUFFER_SIZE];
-        snprintf(command, sizeof(command), "%s/%s/%s.sh",
-                 device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, items[current_item_index].name);
-        write_text_to_file(MUOS_APP_LOAD, "w", CHAR, command);
+        write_text_to_file(MUOS_APP_LOAD, "w", CHAR, items[current_item_index].extra_data);
 
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
