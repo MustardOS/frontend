@@ -170,7 +170,7 @@ void create_task_items() {
             lv_obj_t *ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
             if (ui_lblTaskItemGlyph) {
                 apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module,
-                                       get_glyph_from_file(task_path, items[i].name, "task"));
+                                       get_var_from_file(task_path, items[i].name, "ICON", "task"));
             }
 
             lv_group_add_obj(ui_group, ui_lblTaskItem);

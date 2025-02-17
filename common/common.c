@@ -2031,15 +2031,14 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
-char *get_glyph_from_file(const char *storage_path, const char *item_name, char *item_default) {
-    char get_icon[MAX_BUFFER_SIZE];
-    snprintf(get_icon, sizeof(get_icon),
-             "%s/%s.sh", storage_path, item_name);
+char *get_var_from_file(const char *storage_path, const char *item_name, const char *item_var, char *item_default) {
+    char script_file[MAX_BUFFER_SIZE];
+    snprintf(script_file, sizeof(script_file), "%s/%s.sh", storage_path, item_name);
 
-    char *item_glyph = get_script_value(get_icon, "ICON");
-    if (!item_glyph || strlen(item_glyph) <= 1) return item_default;
+    char *item_value = get_script_value(script_file, item_var);
+    if (!item_value) return item_default;
 
-    return item_glyph;
+    return item_value;
 }
 
 char *kiosk_nope() {
