@@ -616,12 +616,14 @@ struct mux_lang {
         } SWAP;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
-            char QUIET[MAX_BUFFER_SIZE];
+            char SILENT[MAX_BUFFER_SIZE];
+            char SOFT[MAX_BUFFER_SIZE];
             char LOUD[MAX_BUFFER_SIZE];
         } VOLUME;
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char LOW[MAX_BUFFER_SIZE];
+            char MEDIUM[MAX_BUFFER_SIZE];
             char HIGH[MAX_BUFFER_SIZE];
         } BRIGHT;
         struct {

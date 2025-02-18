@@ -173,10 +173,12 @@ void restore_tweak_options() {
     int volume_index = 0;
     if (!strcasecmp(volume_type, "previous")) {
         volume_index = 0;
-    } else if (!strcasecmp(volume_type, "quiet")) {
+    } else if (!strcasecmp(volume_type, "silent")) {
         volume_index = 1;
-    } else if (!strcasecmp(volume_type, "loud")) {
+    } else if (!strcasecmp(volume_type, "soft")) {
         volume_index = 2;
+    } else if (!strcasecmp(volume_type, "loud")) {
+        volume_index = 3;
     }
     lv_dropdown_set_selected(ui_droVolume, volume_index);
 
@@ -186,8 +188,10 @@ void restore_tweak_options() {
         brightness_index = 0;
     } else if (!strcasecmp(brightness_type, "low")) {
         brightness_index = 1;
-    } else if (!strcasecmp(brightness_type, "high")) {
+    } else if (!strcasecmp(brightness_type, "medium")) {
         brightness_index = 2;
+    } else if (!strcasecmp(brightness_type, "high")) {
+        brightness_index = 3;
     }
     lv_dropdown_set_selected(ui_droBrightness, brightness_index);
 
@@ -233,9 +237,12 @@ void save_tweak_options() {
             idx_volume = "previous";
             break;
         case 1:
-            idx_volume = "quiet";
+            idx_volume = "silent";
             break;
         case 2:
+            idx_volume = "soft";
+            break;
+        case 3:
             idx_volume = "loud";
             break;
         default:
@@ -252,6 +259,9 @@ void save_tweak_options() {
             idx_brightness = "low";
             break;
         case 2:
+            idx_brightness = "medium";
+            break;
+        case 3:
             idx_brightness = "high";
             break;
         default:
@@ -569,12 +579,14 @@ void init_navigation_group() {
 
     add_drop_down_options(ui_droVolume, (char *[]) {
             lang.GENERIC.PREVIOUS,
-            lang.MUXTWEAKADV.VOLUME.QUIET,
+            lang.MUXTWEAKADV.VOLUME.SILENT,
+            lang.MUXTWEAKADV.VOLUME.SOFT,
             lang.MUXTWEAKADV.VOLUME.LOUD}, 3);
 
     add_drop_down_options(ui_droBrightness, (char *[]) {
             lang.GENERIC.PREVIOUS,
             lang.MUXTWEAKADV.BRIGHT.LOW,
+            lang.MUXTWEAKADV.BRIGHT.MEDIUM,
             lang.MUXTWEAKADV.BRIGHT.HIGH}, 3);
 
     add_drop_down_options(ui_droPasscode, disabled_enabled, 2);
