@@ -433,6 +433,7 @@ int main(int argc, char *argv[]) {
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXAPP.TITLE);
+    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -453,7 +454,6 @@ int main(int argc, char *argv[]) {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, APPLICATION);
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-    init_timer(ui_refresh_task, NULL);
 
     if (ui_count > 0) {
         if (ain_index > -1 && ain_index <= ui_count && current_item_index < ui_count) list_nav_next(ain_index);

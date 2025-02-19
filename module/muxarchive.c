@@ -396,6 +396,7 @@ int main(int argc, char *argv[]) {
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXARCHIVE.TITLE);
+    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -413,7 +414,6 @@ int main(int argc, char *argv[]) {
     }
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-    init_timer(ui_refresh_task, NULL);
 
     int nav_hidden = 0;
     if (ui_count > 0) {

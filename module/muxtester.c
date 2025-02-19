@@ -162,6 +162,7 @@ int main(int argc, char *argv[]) {
     init_theme(0, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTESTER.TITLE);
+    init_timer(NULL, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -172,8 +173,6 @@ int main(int argc, char *argv[]) {
 
     init_fonts();
     init_navigation_sound(&nav_sound, mux_module);
-
-    refresh_screen(ui_screen);
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
 

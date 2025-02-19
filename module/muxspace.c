@@ -355,6 +355,7 @@ int main(int argc, char *argv[]) {
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSPACE.TITLE);
     init_mux(ui_pnlContent);
+    init_timer(ui_refresh_task, update_storage_info);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -369,7 +370,6 @@ int main(int argc, char *argv[]) {
     update_storage_info();
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-    init_timer(ui_refresh_task, update_storage_info);
 
     load_kiosk(&kiosk);
 

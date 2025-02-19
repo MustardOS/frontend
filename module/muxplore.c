@@ -1258,6 +1258,7 @@ int main(int argc, char *argv[]) {
 
     init_ui_common_screen(&theme, &device, &lang, "");
     init_mux(ui_screen, &theme);
+    init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
@@ -1295,7 +1296,6 @@ int main(int argc, char *argv[]) {
     }
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-    init_timer(ui_refresh_task, NULL);
 
     int nav_vis = 0;
     if (ui_count > 0) {
