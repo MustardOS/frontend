@@ -370,7 +370,7 @@ int main(int argc, char *argv[]) {
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);
         LOG_INFO(mux_module, "Skipping Options Module - Not Required...");
-        safe_quit();
+        safe_quit(0);
         return 0;
     }
 
@@ -429,7 +429,7 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
-    safe_quit();
+    safe_quit(0);
 
     close(joy_general);
     close(joy_power);

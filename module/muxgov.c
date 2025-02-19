@@ -477,7 +477,7 @@ int main(int argc, char *argv[]) {
                  INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
-            safe_quit();
+            safe_quit(0);
             return 0;
         }
 
@@ -529,13 +529,13 @@ int main(int argc, char *argv[]) {
 
                 mini_free(core_config_ini);
 
-                safe_quit();
+                safe_quit(0);
                 return 0;
             } else {
                 LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
                 create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
 
-                safe_quit();
+                safe_quit(0);
                 return 0;
             }
         }
@@ -633,7 +633,7 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
-    safe_quit();
+    safe_quit(0);
 
     close(joy_general);
     close(joy_power);

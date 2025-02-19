@@ -24,7 +24,7 @@ void setup_background_process();
 
 void refresh_screen(lv_obj_t *screen);
 
-void safe_quit();
+void safe_quit(int exit_status);
 
 void init_display();
 

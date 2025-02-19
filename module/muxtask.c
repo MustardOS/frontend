@@ -463,7 +463,7 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
-    safe_quit();
+    safe_quit(0);
 
     free_items(items, item_count);
 
