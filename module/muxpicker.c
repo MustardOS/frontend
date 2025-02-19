@@ -461,7 +461,7 @@ int main(int argc, char *argv[]) {
         picker_title = lang.MUXPICKER.CUSTOM;
     }
     init_ui_common_screen(&theme, &device, &lang, picker_title);
-
+    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -490,7 +490,6 @@ int main(int argc, char *argv[]) {
     }
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-    init_timer(ui_refresh_task, NULL);
 
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) list_nav_next(sys_index);

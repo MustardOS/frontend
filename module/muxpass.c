@@ -235,6 +235,7 @@ int main(int argc, char *argv[]) {
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPASS.TITLE);
     init_mux(ui_pnlContent);
+    init_timer(NULL, NULL);
     init_elements();
 
     if (strlen(p_msg) > 1) toast_message(p_msg, 0, 0);
@@ -253,7 +254,6 @@ int main(int argc, char *argv[]) {
     init_navigation_sound(&nav_sound, mux_module);
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-    init_timer(NULL, NULL);
 
     load_kiosk(&kiosk);
 
