@@ -180,14 +180,6 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
 }
 
-void glyph_task() {
-    // TODO: Bluetooth connectivity!
-    //update_bluetooth_status(ui_staBluetooth, &theme);
-
-    update_network_status(ui_staNetwork, &theme);
-    update_battery_capacity(ui_staCapacity, &theme);
-}
-
 int main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
