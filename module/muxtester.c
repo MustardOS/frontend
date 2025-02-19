@@ -1,5 +1,4 @@
 #include "../lvgl/lvgl.h"
-#include "ui/ui_muxtester.h"
 #include <unistd.h>
 #include <string.h>
 #include <libgen.h>
@@ -13,6 +12,7 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 #include "../common/input.h"
+#include "../../font/gamepad.h"
 
 char *mux_module;
 
@@ -40,6 +40,8 @@ int current_item_index = 0;
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
 lv_obj_t *kiosk_image = NULL;
+
+lv_obj_t *ui_lblButton;
 
 // Stubs to appease the compiler!
 void list_nav_prev(void) {}
@@ -94,7 +96,7 @@ void handle_input(mux_input_type type, mux_input_action action) {
     switch (action) {
         case MUX_INPUT_PRESS:
             if (glyph[type]) {
-                lv_obj_add_flag(ui_lblFirst, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(ui_lblButton, LV_OBJ_FLAG_HIDDEN);
                 lv_label_set_text(ui_lblButton, glyph[type]);
             }
@@ -112,22 +114,19 @@ void handle_power() {
     mux_input_stop();
 }
 
-void glyph_task() {
-    // TODO: Bluetooth connectivity!
-    //update_bluetooth_status(ui_staBluetooth, &theme);
-
-    update_network_status(ui_staNetwork, &theme);
-    update_battery_capacity(ui_staCapacity, &theme);
-}
-
 void init_elements() {
-    lv_label_set_text(ui_lblMessage, lang.MUXTESTER.POWER);
-    lv_obj_set_y(ui_pnlMessage, -5);
-    lv_obj_set_height(ui_pnlFooter, 0);
-    lv_obj_move_foreground(ui_pnlHeader);
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_set_style_border_width(ui_pnlMessage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_lblButton = lv_label_create(ui_screen);
+    lv_obj_set_align(ui_lblButton, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_lblButton, "");
+    lv_obj_set_style_text_color(ui_lblButton, lv_color_hex(theme.LIST_DEFAULT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_lblButton, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_lblButton, &ui_font_Gamepad, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    lv_label_set_text(ui_lblMessage, lang.MUXTESTER.POWER);
+    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_y(ui_pnlMessage, -12);
+
+    lv_obj_add_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
@@ -163,18 +162,18 @@ int main(int argc, char *argv[]) {
     init_theme(0, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTESTER.TITLE);
-    init_mux(ui_pnlContent);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-    lv_label_set_text(ui_lblFirst, lang.MUXTESTER.ANY);
+    lv_label_set_text(ui_lblScreenMessage, lang.MUXTESTER.ANY);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
-    load_font_text(ui_screen);
 
     init_fonts();
     init_navigation_sound(&nav_sound, mux_module);
+
+    refresh_screen(ui_screen);
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
 
