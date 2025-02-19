@@ -322,7 +322,7 @@ int main(int argc, char *argv[]) {
     mux_input_task(&input_opts);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "language");
-    safe_quit();
+    safe_quit(0);
 
     free_items(items, item_count);
 

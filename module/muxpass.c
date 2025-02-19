@@ -229,10 +229,14 @@ int main(int argc, char *argv[]) {
         p_msg = passcode.MESSAGE.SETTING;
     } else {
         fprintf(stderr, cmd_help, argv[0]);
+        safe_quit(2);
         return 2;
     }
 
-    if (strcasecmp(p_code, "000000") == 0) return 1;
+    if (strcasecmp(p_code, "000000") == 0) {
+        safe_quit(1);
+        return 1;
+    }
 
     init_display();
     init_theme(0, 0);
@@ -293,7 +297,7 @@ int main(int argc, char *argv[]) {
             .idle_handler = ui_common_handle_idle,
     };
     mux_input_task(&input_opts);
-    safe_quit();
+    safe_quit(exit_status);
 
     close(joy_general);
     close(joy_power);

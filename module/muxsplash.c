@@ -69,6 +69,6 @@ int main(int argc, char *argv[]) {
 
     refresh_screen(ui_screen);
 
-    safe_quit();
+    safe_quit(0);
     return 0;
 }
