@@ -64,9 +64,17 @@ int main(int argc, char *argv[]) {
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/muxstart.png",
+        snprintf(init_wall, sizeof(init_wall), "%s/%simage/wall/muxstart.png",
                  INTERNAL_THEME, mux_dimension);
-        lv_img_set_src(ui_imgWall, strdup(init_wall));
+        if (!file_exist(init_wall)) {
+            snprintf(init_wall, sizeof(init_wall), "%s/image/wall/muxstart.png",
+                     INTERNAL_THEME);
+        }
+
+        char lv_wall[MAX_BUFFER_SIZE];
+        snprintf(lv_wall, sizeof(lv_wall), "M:%s", init_wall);
+
+        lv_img_set_src(ui_imgWall, strdup(lv_wall));
     } else {
         load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, GENERAL);
     }

@@ -38,8 +38,6 @@ void init_mux(void) {
 
     ui_imgWall = lv_img_create(ui_pnlWall);
     lv_img_set_src(ui_imgWall, &ui_image_Nothing);
-    lv_obj_set_width(ui_imgWall, device.MUX.WIDTH);
-    lv_obj_set_height(ui_imgWall, device.MUX.HEIGHT);
     lv_obj_set_align(ui_imgWall, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_imgWall, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(ui_imgWall, LV_OBJ_FLAG_SCROLLABLE);
