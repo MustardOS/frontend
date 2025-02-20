@@ -763,10 +763,17 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 }
 
 int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size){
+    char *theme_path;
+    if (config.BOOT.FACTORY_RESET) {
+        theme_path = INTERNAL_THEME;
+    } else {
+        theme_path = STORAGE_THEME;
+    }
+
     char active_path[MAX_BUFFER_SIZE];
-    snprintf(active_path, sizeof(active_path), "%s/active.txt", STORAGE_THEME);
+    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_path);
     if (file_exist(active_path)) {
-        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", STORAGE_THEME, str_replace(read_line_from_file(active_path, 1), "\r", ""));
+        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_path, str_replace(read_line_from_file(active_path, 1), "\r", ""));
         return file_exist(alt_scheme_path);
     }
     return 0;
@@ -819,7 +826,14 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
             if (load_scheme(INTERNAL_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
                 LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme)
+                scheme_loaded = 1;
                 load_theme_from_scheme(scheme, theme, device);
+            }
+        }
+        if (scheme_loaded) {
+            char alternate_scheme_path[MAX_BUFFER_SIZE];
+            if (get_alt_scheme_path(alternate_scheme_path, sizeof(alternate_scheme_path))) {
+                load_theme_from_scheme(alternate_scheme_path, theme, device);
             }
         }
     }
