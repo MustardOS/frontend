@@ -340,46 +340,49 @@ static void monitor_sdl_clean_up(void) {
 }
 
 static void window_create(monitor_t *m) {
-    m->window = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                 device.SCREEN.WIDTH, device.SCREEN.HEIGHT, SDL_WINDOW_BORDERLESS);
-
+    m->window = SDL_CreateWindow("",
+                            SDL_WINDOWPOS_UNDEFINED,
+                            SDL_WINDOWPOS_UNDEFINED,
+                            640,    // Back to physical width
+                            480,    // Physical height
+                            SDL_WINDOW_BORDERLESS);
     m->renderer = SDL_CreateRenderer(m->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    m->texture = SDL_CreateTexture(m->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
-                                   device.SCREEN.WIDTH, device.SCREEN.HEIGHT);
-    SDL_SetTextureBlendMode(m->texture, SDL_BLENDMODE_BLEND);
-
-    /*Initialize the frame buffer to gray (77 is an empirical value) */
+    m->texture = SDL_CreateTexture(m->renderer,
+                             SDL_PIXELFORMAT_ARGB8888,
+                             SDL_TEXTUREACCESS_STREAMING,
+                             640,
+                             480);
+    SDL_RenderSetScale(m->renderer, 1.0f, 1.0f);  // Add explicit scale
+    SDL_SetRenderDrawBlendMode(m->renderer, SDL_BLENDMODE_BLEND);
 #if SDL_DOUBLE_BUFFERED
-    SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, device.SCREEN.WIDTH * sizeof(uint32_t));
+    SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, 2560);
 #else
-    m->tft_fb = (uint32_t *) malloc(sizeof(uint32_t) * device.SCREEN.WIDTH * device.SCREEN.HEIGHT);
-    memset(m->tft_fb, 0x44, device.SCREEN.WIDTH * device.SCREEN.HEIGHT * sizeof(uint32_t));
+    m->tft_fb = (uint32_t *) malloc(sizeof(uint32_t) * 640 * 480);
+    memset(m->tft_fb, 0x44, 640 * 480 * sizeof(uint32_t));
 #endif
-
     m->sdl_refr_qry = true;
 }
 
 static void window_update(monitor_t *m) {
 #if SDL_DOUBLE_BUFFERED == 0
-    SDL_UpdateTexture(m->texture, NULL, m->tft_fb, device.SCREEN.WIDTH * sizeof(uint32_t));
+    SDL_UpdateTexture(m->texture, NULL, m->tft_fb, 640 * 4);
 #else
     if (m->tft_fb_act == NULL) return;
-    SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, device.SCREEN.WIDTH * sizeof(uint32_t));
+    SDL_UpdateTexture(m->texture, NULL, m->tft_fb_act, 640 * 4);
 #endif
-    //SDL_RenderClear(m->renderer);
-    lv_disp_t *d = _lv_refr_get_disp_refreshing();
-    if (d->driver->screen_transp) {
-        SDL_SetRenderDrawColor(m->renderer, 0xff, 0, 0, 0xff);
-        SDL_Rect r;
-        r.x = 0;
-        r.y = 0;
-        r.w = device.SCREEN.WIDTH;
-        r.h = device.SCREEN.HEIGHT;
-        SDL_RenderDrawRect(m->renderer, &r);
-    }
-
-    /*Update the renderer with the texture containing the rendered image*/
-    SDL_RenderCopy(m->renderer, m->texture, NULL, NULL);
+    SDL_RenderClear(m->renderer);
+    SDL_Rect srcRect = { 0, 0, 640, 480 }; // Use the entire texture as source
+    SDL_Rect dstRect = { -80, 0, 640, 480 }; // Destination rectangle to match window
+    SDL_Point center = { 240, 320 };
+    SDL_RenderCopyEx(
+        m->renderer,
+        m->texture,
+        &srcRect,
+        &dstRect,
+        90.0, // Set rotation to 0.0 degrees - no rotation in SDL
+        &center,
+        SDL_FLIP_NONE
+    );
     SDL_RenderPresent(m->renderer);
 }
 
