@@ -85,12 +85,41 @@ static void process_key(const mux_input_options *opts, const struct input_event 
     } else if (event->type == device.INPUT_TYPE.BUTTON.MENU_LONG &&
                event->code == device.INPUT_CODE.BUTTON.MENU_LONG) {
         mux_type = MUX_INPUT_MENU_LONG;
+    // D-pad handling
+    } else if (event->code == KEY_UP) {    // 103
+        type = MUX_INPUT_DPAD_UP;
+    } else if (event->code == KEY_DOWN) {  // 108
+        type = MUX_INPUT_DPAD_DOWN;
+    } else if (event->code == KEY_LEFT) {  // 105
+        type = MUX_INPUT_DPAD_LEFT;
+    } else if (event->code == KEY_RIGHT) { // 106
+        type = MUX_INPUT_DPAD_RIGHT;
     } else {
         return;
     }
-    pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
-}
 
+    // If axis swapping is enabled, swap the input type after determining direction
+    if (opts->swap_axis && !key_show) {
+        switch (type) {
+            case MUX_INPUT_DPAD_UP:
+                type = MUX_INPUT_DPAD_LEFT;
+                break;
+            case MUX_INPUT_DPAD_DOWN:
+                type = MUX_INPUT_DPAD_RIGHT;
+                break;
+            case MUX_INPUT_DPAD_LEFT:
+                type = MUX_INPUT_DPAD_UP;
+                break;
+            case MUX_INPUT_DPAD_RIGHT:
+                type = MUX_INPUT_DPAD_DOWN;
+                break;
+            default:
+                break;
+        }
+    }
+
+    pressed = (event->value == 1) ? (pressed | BIT(type)) : (pressed & ~BIT(type));
+}
 // Processes volume buttons.
 static void process_volume(const mux_input_options *opts, const struct input_event *event) {
     mux_input_type mux_type;

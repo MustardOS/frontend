@@ -63,18 +63,20 @@ void init_display() {
     static lv_disp_draw_buf_t disp_buf;
     struct screen_dimension dims = get_device_dimensions();
 
-    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
+    // Account for virtual height
+    uint32_t disp_buf_size = dims.WIDTH * 1280;  // Use virtual height
     lv_disp_draw_buf_init(&disp_buf, (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t)), NULL, disp_buf_size);
     lv_disp_drv_init(&disp_drv);
-
+    
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = sdl_display_flush;
-    disp_drv.hor_res = dims.WIDTH;
-    disp_drv.ver_res = dims.HEIGHT;
-    disp_drv.physical_hor_res = -1;
-    disp_drv.physical_ver_res = -1;
+    disp_drv.hor_res = device.SCREEN.WIDTH;
+    disp_drv.ver_res = device.SCREEN.HEIGHT;
+    disp_drv.physical_hor_res = 480;  // Add these explicit values
+    disp_drv.physical_ver_res = 1280; // Use virtual height
     disp_drv.offset_x = 0;
     disp_drv.offset_y = 0;
+    disp_drv.rotated = LV_DISP_ROT_90;
     disp_drv.full_refresh = 1;
     disp_drv.direct_mode = 1;
     disp_drv.antialiasing = 1;
