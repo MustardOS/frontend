@@ -1,4 +1,3 @@
-CSRCS += display/sdl_common.c
 CSRCS += display/sdl.c
 CSRCS += input/evdev.c
 
