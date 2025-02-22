@@ -586,8 +586,8 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    init_display();
     init_theme(1, 1);
+    init_display();
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCUSTOM.TITLE);
     init_mux(ui_pnlContent);

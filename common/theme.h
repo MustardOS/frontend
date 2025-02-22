@@ -399,6 +399,7 @@ struct theme_config {
             int16_t HEIGHT;
             int16_t WIDTH;
         } CONTENT;
+        int16_t ANTIALIASING;
     } MISC;
 
     struct {

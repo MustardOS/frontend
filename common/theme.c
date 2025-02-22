@@ -375,6 +375,7 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->MISC.RANDOM_BACKGROUND = 0;
     theme->MISC.IMAGE_OVERLAY = 0;
     theme->MISC.NAVIGATION_TYPE = 0;
+    theme->MISC.ANTIALIASING = 1;
 
     strncpy(theme->TERMINAL.FOREGROUND, "FFFFFF", MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
@@ -751,6 +752,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.RANDOM_BACKGROUND = get_ini_int(muos_theme, "misc", "RANDOM_BACKGROUND", theme->MISC.RANDOM_BACKGROUND);
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", theme->MISC.IMAGE_OVERLAY);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", theme->MISC.NAVIGATION_TYPE);
+    theme->MISC.ANTIALIASING = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->MISC.ANTIALIASING);
 
     strncpy(theme->TERMINAL.FOREGROUND, get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND),
             MAX_BUFFER_SIZE - 1);

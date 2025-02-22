@@ -80,7 +80,7 @@ void init_display() {
     disp_drv.offset_y = 0;
     disp_drv.full_refresh = 1;
     disp_drv.direct_mode = 1;
-    disp_drv.antialiasing = 1;
+    disp_drv.antialiasing = theme.MISC.ANTIALIASING;
     disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
 
     lv_disp_drv_register(&disp_drv);

@@ -48,8 +48,8 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    init_display();
     init_theme(0, 0);
+    init_display();
 
     init_ui_common_screen(&theme, &device, &lang, "");
     lv_obj_add_flag(ui_pnlHeader, LV_OBJ_FLAG_HIDDEN);

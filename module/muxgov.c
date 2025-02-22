@@ -541,8 +541,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    init_display();
     init_theme(1, 0);
+    init_display();
 
     init_ui_common_screen(&theme, &device, &lang, "");
     init_timer(ui_refresh_task, NULL);

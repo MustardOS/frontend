@@ -230,8 +230,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    init_display();
     init_theme(0, 0);
+    init_display();
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPASS.TITLE);
     init_mux(ui_pnlContent);

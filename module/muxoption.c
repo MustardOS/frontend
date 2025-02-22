@@ -374,8 +374,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    init_display();
     init_theme(1, 0);
+    init_display();
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXOPTION.TITLE);
     init_mux(ui_pnlContent);

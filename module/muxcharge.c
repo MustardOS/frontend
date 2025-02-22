@@ -123,8 +123,8 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    init_display();
     init_theme(0, 0);
+    init_display();
 
     init_mux();
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));

@@ -429,8 +429,8 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    init_display();
     init_theme(1, 1);
+    init_display();
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXAPP.TITLE);
     init_timer(ui_refresh_task, NULL);
