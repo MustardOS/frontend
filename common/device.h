@@ -93,6 +93,7 @@ struct mux_device {
         int16_t WAIT;
         int16_t WIDTH;
         int16_t HEIGHT;
+        float ZOOM;
         struct {
             int16_t WIDTH;
             int16_t HEIGHT;

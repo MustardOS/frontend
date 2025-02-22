@@ -71,7 +71,7 @@ void init_display() {
     lv_disp_drv_init(&disp_drv);
 
     disp_drv.draw_buf = &disp_buf;
-    disp_drv.flush_cb = sdl_display_flush;
+    disp_drv.flush_cb = display_flush;
     disp_drv.hor_res = dims.WIDTH;
     disp_drv.ver_res = dims.HEIGHT;
     disp_drv.physical_hor_res = -1;

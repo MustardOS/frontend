@@ -14,6 +14,14 @@ void load_device(struct mux_device *device) {
         *ep ? 0 : val;                                              \
     });
 
+#define DEV_FLO_FIELD(field, path)                                   \
+    snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path);  \
+    field = (float)({                                                \
+        char *ep;                                                    \
+        double val = strtod(read_text_from_file(buffer), &ep);       \
+        *ep ? 1.0 : val;                                             \
+    });
+
 #define DEV_STR_FIELD(field, path)                                    \
     snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path);   \
     strncpy(field, read_text_from_file(buffer), MAX_BUFFER_SIZE - 1); \
@@ -102,6 +110,7 @@ void load_device(struct mux_device *device) {
     DEV_STR_FIELD(device->SCREEN.HDMI, "screen/hdmi")
     DEV_INT_FIELD(device->SCREEN.WIDTH, "screen/width")
     DEV_INT_FIELD(device->SCREEN.HEIGHT, "screen/height")
+    DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/zoom")
 
     DEV_INT_FIELD(device->SCREEN.INTERNAL.WIDTH, "screen/internal/width")
     DEV_INT_FIELD(device->SCREEN.INTERNAL.HEIGHT, "screen/internal/height")
