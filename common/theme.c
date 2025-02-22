@@ -518,35 +518,25 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.COLUMN_COUNT = get_ini_int(muos_theme, "grid", "COLUMN_COUNT", theme->GRID.COLUMN_COUNT);
     theme->GRID.ROW_COUNT = get_ini_int(muos_theme, "grid", "ROW_COUNT", theme->GRID.ROW_COUNT);
 
-    theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_ALIGNMENT",
-                                                           theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT);
-    theme->GRID.CURRENT_ITEM_LABEL.WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_WIDTH",
-                                                       theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
+    theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_ALIGNMENT", theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT);
+    theme->GRID.CURRENT_ITEM_LABEL.WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_WIDTH", theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
     theme->GRID.CURRENT_ITEM_LABEL.HEIGHT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_HEIGHT", theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
     theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_X", theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X);
-    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_Y",
-                                                          theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
+    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_Y", theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
     theme->GRID.CURRENT_ITEM_LABEL.RADIUS = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_RADIUS", theme->GRID.CURRENT_ITEM_LABEL.RADIUS);
     theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_WIDTH", theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH);
     theme->GRID.CURRENT_ITEM_LABEL.BORDER = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER", theme->GRID.CURRENT_ITEM_LABEL.BORDER);
     theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_ALPHA", theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA);
     theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND", theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND);
-    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid",
-                                                                  "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA", theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA);
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA", theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA);
     theme->GRID.CURRENT_ITEM_LABEL.TEXT = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT", theme->GRID.CURRENT_ITEM_LABEL.TEXT);
     theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA", theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALIGNMENT",
-                                                                theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid",
-                                                                   "CURRENT_ITEM_LABEL_TEXT_LINE_SPACING", theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid",
-                                                                     "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT = get_ini_int(muos_theme, "grid",
-                                                                   "CURRENT_ITEM_LABEL_TEXT_PADDING_LEFT", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT = get_ini_int(muos_theme, "grid",
-                                                                    "CURRENT_ITEM_LABEL_TEXT_PADDING_RIGHT", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP = get_ini_int(muos_theme, "grid",
-                                                                  "CURRENT_ITEM_LABEL_TEXT_PADDING_TOP", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALIGNMENT", theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_LINE_SPACING", theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_LEFT", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_RIGHT", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_TOP", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP);
 
     theme->GRID.ROW_HEIGHT = get_ini_int(muos_theme, "grid", "ROW_HEIGHT", theme->GRID.ROW_HEIGHT);
     theme->GRID.COLUMN_WIDTH = get_ini_int(muos_theme, "grid", "COLUMN_WIDTH", theme->GRID.COLUMN_WIDTH);
@@ -574,8 +564,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.CELL_DEFAULT.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BORDER_ALPHA", theme->GRID.CELL_DEFAULT.BORDER_ALPHA);
     theme->GRID.CELL_DEFAULT.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_ALPHA", theme->GRID.CELL_DEFAULT.IMAGE_ALPHA);
     theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR", theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR);
-    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid",
-                                                                "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA);
+    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA);
     theme->GRID.CELL_DEFAULT.TEXT = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_TEXT", theme->GRID.CELL_DEFAULT.TEXT);
     theme->GRID.CELL_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_TEXT_ALPHA", theme->GRID.CELL_DEFAULT.TEXT_ALPHA);
 
@@ -605,14 +594,12 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->LIST_DEFAULT.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_INDICATOR_ALPHA", theme->LIST_DEFAULT.INDICATOR_ALPHA);
     theme->LIST_DEFAULT.TEXT = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_TEXT", theme->LIST_DEFAULT.TEXT);
     theme->LIST_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_TEXT_ALPHA", theme->LIST_DEFAULT.TEXT_ALPHA);
-    theme->LIST_DEFAULT.BACKGROUND_GRADIENT = (theme->LIST_DEFAULT.GRADIENT_START == 255)
-                                              ? theme->LIST_DEFAULT.BACKGROUND : theme->SYSTEM.BACKGROUND;
+    theme->LIST_DEFAULT.BACKGROUND_GRADIENT = (theme->LIST_DEFAULT.GRADIENT_START == 255) ? theme->LIST_DEFAULT.BACKGROUND : theme->SYSTEM.BACKGROUND;
     theme->LIST_DEFAULT.GLYPH_PADDING_LEFT = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_PAD_LEFT", theme->LIST_DEFAULT.GLYPH_PADDING_LEFT);
     theme->LIST_DEFAULT.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_ALPHA", theme->LIST_DEFAULT.GLYPH_ALPHA);
     theme->LIST_DEFAULT.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR", theme->LIST_DEFAULT.GLYPH_RECOLOUR);
     theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA);
-    theme->LIST_DEFAULT.LABEL_LONG_MODE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE",
-                                                      theme->LIST_DEFAULT.LABEL_LONG_MODE);
+    theme->LIST_DEFAULT.LABEL_LONG_MODE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE", theme->LIST_DEFAULT.LABEL_LONG_MODE);
 
     theme->LIST_DISABLED.TEXT = get_ini_hex(muos_theme, "list", "LIST_DISABLED_TEXT", theme->LIST_DISABLED.TEXT);
     theme->LIST_DISABLED.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DISABLED_TEXT_ALPHA", theme->LIST_DISABLED.TEXT_ALPHA);
@@ -628,8 +615,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->LIST_FOCUS.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_INDICATOR_ALPHA", theme->LIST_FOCUS.INDICATOR_ALPHA);
     theme->LIST_FOCUS.TEXT = get_ini_hex(muos_theme, "list", "LIST_FOCUS_TEXT", theme->LIST_FOCUS.TEXT);
     theme->LIST_FOCUS.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_TEXT_ALPHA", theme->LIST_FOCUS.TEXT_ALPHA);
-    theme->LIST_FOCUS.BACKGROUND_GRADIENT = (theme->LIST_FOCUS.GRADIENT_START == 255) ? theme->LIST_FOCUS.BACKGROUND
-                                                                                      : theme->SYSTEM.BACKGROUND;
+    theme->LIST_FOCUS.BACKGROUND_GRADIENT = (theme->LIST_FOCUS.GRADIENT_START == 255) ? theme->LIST_FOCUS.BACKGROUND : theme->SYSTEM.BACKGROUND;
     theme->LIST_FOCUS.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_ALPHA", theme->LIST_FOCUS.GLYPH_ALPHA);
     theme->LIST_FOCUS.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR", theme->LIST_FOCUS.GLYPH_RECOLOUR);
     theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR_ALPHA", theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA);
@@ -672,8 +658,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->OSK.ITEM.BACKGROUND = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND", theme->OSK.ITEM.BACKGROUND);
     theme->OSK.ITEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_ALPHA", theme->OSK.ITEM.BACKGROUND_ALPHA);
     theme->OSK.ITEM.BACKGROUND_FOCUS = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS", theme->OSK.ITEM.BACKGROUND_FOCUS);
-    theme->OSK.ITEM.BACKGROUND_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS_ALPHA",
-                                                         theme->OSK.ITEM.BACKGROUND_FOCUS_ALPHA);
+    theme->OSK.ITEM.BACKGROUND_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS_ALPHA", theme->OSK.ITEM.BACKGROUND_FOCUS_ALPHA);
     theme->OSK.ITEM.BORDER = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BORDER", theme->OSK.ITEM.BORDER);
     theme->OSK.ITEM.BORDER_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BORDER_ALPHA", theme->OSK.ITEM.BORDER_ALPHA);
     theme->OSK.ITEM.BORDER_FOCUS = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BORDER_FOCUS", theme->OSK.ITEM.BORDER_FOCUS);
@@ -695,14 +680,12 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->BAR.PANEL_BORDER = get_ini_hex(muos_theme, "bar", "BAR_BORDER", theme->BAR.PANEL_BORDER);
     theme->BAR.PANEL_BORDER_ALPHA = get_ini_int(muos_theme, "bar", "BAR_BORDER_ALPHA", theme->BAR.PANEL_BORDER_ALPHA);
     theme->BAR.PANEL_BORDER_RADIUS = get_ini_int(muos_theme, "bar", "BAR_RADIUS", theme->BAR.PANEL_BORDER_RADIUS);
-    theme->BAR.PROGRESS_WIDTH = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_WIDTH",
-                                            theme->BAR.PROGRESS_WIDTH);
+    theme->BAR.PROGRESS_WIDTH = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_WIDTH", theme->BAR.PROGRESS_WIDTH);
     theme->BAR.PROGRESS_HEIGHT = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_HEIGHT", theme->BAR.PROGRESS_HEIGHT);
     theme->BAR.PROGRESS_MAIN_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND", theme->BAR.PROGRESS_MAIN_BACKGROUND);
     theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND_ALPHA", theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA);
     theme->BAR.PROGRESS_ACTIVE_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND", theme->BAR.PROGRESS_ACTIVE_BACKGROUND);
-    theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND_ALPHA",
-                                                              theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA);
+    theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND_ALPHA", theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA);
     theme->BAR.PROGRESS_RADIUS = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_RADIUS", theme->BAR.PROGRESS_RADIUS);
     theme->BAR.ICON = get_ini_hex(muos_theme, "bar", "BAR_ICON", theme->BAR.ICON);
     theme->BAR.ICON_ALPHA = get_ini_int(muos_theme, "bar", "BAR_ICON_ALPHA", theme->BAR.ICON_ALPHA);
@@ -735,8 +718,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->COUNTER.TEXT = get_ini_hex(muos_theme, "counter", "COUNTER_TEXT", theme->COUNTER.TEXT);
     theme->COUNTER.TEXT_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_ALPHA", theme->COUNTER.TEXT_ALPHA);
     theme->COUNTER.TEXT_FADE_TIME = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_FADE_TIME", theme->COUNTER.TEXT_FADE_TIME);
-    strncpy(theme->COUNTER.TEXT_SEPARATOR, get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", theme->COUNTER.TEXT_SEPARATOR),
-            MAX_BUFFER_SIZE - 1);
+    strncpy(theme->COUNTER.TEXT_SEPARATOR, get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", theme->COUNTER.TEXT_SEPARATOR), MAX_BUFFER_SIZE - 1);
     theme->COUNTER.TEXT_SEPARATOR[MAX_BUFFER_SIZE - 1] = '\0';
 
     theme->MISC.STATIC_ALIGNMENT = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", theme->MISC.STATIC_ALIGNMENT);
@@ -754,11 +736,9 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", theme->MISC.NAVIGATION_TYPE);
     theme->MISC.ANTIALIASING = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->MISC.ANTIALIASING);
 
-    strncpy(theme->TERMINAL.FOREGROUND, get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND),
-            MAX_BUFFER_SIZE - 1);
+    strncpy(theme->TERMINAL.FOREGROUND, get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND), MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(theme->TERMINAL.BACKGROUND, get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->TERMINAL.BACKGROUND),
-            MAX_BUFFER_SIZE - 1);
+    strncpy(theme->TERMINAL.BACKGROUND, get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->TERMINAL.BACKGROUND), MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.BACKGROUND[MAX_BUFFER_SIZE - 1] = '\0';
 
     mini_free(muos_theme);
