@@ -67,6 +67,157 @@ lv_obj_t *ui_pnlProgressVolume;
 lv_obj_t *ui_icoProgressVolume;
 lv_obj_t *ui_barProgressVolume;
 
+// Global buffer for the canvas
+static lv_color_t *cbuf;
+
+// 4x4 Bayer Ordered Dithering Matrix (Normalized to 0-16)
+const int bayerMatrix[4][4] = {
+    {  0,  8,  2, 10 },
+    { 12,  4, 14,  6 },
+    {  3, 11,  1,  9 },
+    { 15,  7, 13,  5 }
+};
+
+// Improved dithering function using Bayer matrix
+static lv_color_t dither_color(lv_color_t color, int x, int y) {
+    // Get matrix value (normalized to range -4 to +4)
+    int bayerValue = bayerMatrix[y % 4][x % 4] - 7;
+    
+    int r = LV_COLOR_GET_R(color) + bayerValue;
+    int g = LV_COLOR_GET_G(color) + bayerValue;
+    int b = LV_COLOR_GET_B(color) + bayerValue;
+
+    // Clamp values
+    r = LV_CLAMP(0, r, 255);
+    g = LV_CLAMP(0, g, 255);
+    b = LV_CLAMP(0, b, 255);
+
+    return lv_color_make(r, g, b);
+}
+
+void blur_gradient(lv_color_t *buf, int width, int height, int blur_strength) {
+    for (int pass = 0; pass < blur_strength; pass++) {
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
+                // Use a 3×3 box blur (increases smoothness)
+                int r = (
+                    LV_COLOR_GET_R(buf[(y-1) * width + (x-1)]) +
+                    LV_COLOR_GET_R(buf[(y-1) * width + x]) +
+                    LV_COLOR_GET_R(buf[(y-1) * width + (x+1)]) +
+                    LV_COLOR_GET_R(buf[y * width + (x-1)]) +
+                    LV_COLOR_GET_R(buf[y * width + x]) +
+                    LV_COLOR_GET_R(buf[y * width + (x+1)]) +
+                    LV_COLOR_GET_R(buf[(y+1) * width + (x-1)]) +
+                    LV_COLOR_GET_R(buf[(y+1) * width + x]) +
+                    LV_COLOR_GET_R(buf[(y+1) * width + (x+1)])
+                ) / 9;  // Average 9 surrounding pixels
+
+                int g = (
+                    LV_COLOR_GET_G(buf[(y-1) * width + (x-1)]) +
+                    LV_COLOR_GET_G(buf[(y-1) * width + x]) +
+                    LV_COLOR_GET_G(buf[(y-1) * width + (x+1)]) +
+                    LV_COLOR_GET_G(buf[y * width + (x-1)]) +
+                    LV_COLOR_GET_G(buf[y * width + x]) +
+                    LV_COLOR_GET_G(buf[y * width + (x+1)]) +
+                    LV_COLOR_GET_G(buf[(y+1) * width + (x-1)]) +
+                    LV_COLOR_GET_G(buf[(y+1) * width + x]) +
+                    LV_COLOR_GET_G(buf[(y+1) * width + (x+1)])
+                ) / 9;
+
+                int b = (
+                    LV_COLOR_GET_B(buf[(y-1) * width + (x-1)]) +
+                    LV_COLOR_GET_B(buf[(y-1) * width + x]) +
+                    LV_COLOR_GET_B(buf[(y-1) * width + (x+1)]) +
+                    LV_COLOR_GET_B(buf[y * width + (x-1)]) +
+                    LV_COLOR_GET_B(buf[y * width + x]) +
+                    LV_COLOR_GET_B(buf[y * width + (x+1)]) +
+                    LV_COLOR_GET_B(buf[(y+1) * width + (x-1)]) +
+                    LV_COLOR_GET_B(buf[(y+1) * width + x]) +
+                    LV_COLOR_GET_B(buf[(y+1) * width + (x+1)])
+                ) / 9;
+
+                buf[y * width + x] = lv_color_make(r, g, b);
+            }
+        }
+    }
+}
+
+void generate_gradient_with_bayer_dither(lv_color_t *buf, int width, int height, 
+                                         lv_color_t start_color, lv_color_t end_color, 
+                                         bool apply_dither, bool vertical, 
+                                         uint8_t main_stop, uint8_t grad_stop) {
+    // Convert gradient stop values (0-255) to pixel positions
+    int start_pos = (main_stop / 255.0) * (vertical ? height : width);
+    int end_pos = (grad_stop / 255.0) * (vertical ? height : width);
+
+    // Prevent invalid cases where start is beyond end
+    if (start_pos >= end_pos) {
+        start_pos = 0;
+        end_pos = vertical ? height : width;
+    }
+
+    // Iterate over each pixel
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            // Determine pixel position in gradient
+            int pos = vertical ? y : x;
+
+            // Normalize position within gradient stops
+            float ratio = (float)(pos - start_pos) / (float)(end_pos - start_pos);
+            ratio = LV_CLAMP(0.0f, ratio, 1.0f); // Ensure within valid range
+
+            // Compute interpolated color values
+            uint8_t r = (uint8_t)((1.0f - ratio) * LV_COLOR_GET_R(start_color) + ratio * LV_COLOR_GET_R(end_color));
+            uint8_t g = (uint8_t)((1.0f - ratio) * LV_COLOR_GET_G(start_color) + ratio * LV_COLOR_GET_G(end_color));
+            uint8_t b = (uint8_t)((1.0f - ratio) * LV_COLOR_GET_B(start_color) + ratio * LV_COLOR_GET_B(end_color));
+
+            // Ensure valid LVGL color format
+            lv_color_t final_color = lv_color_make(r, g, b);
+
+            // Apply Bayer dithering if enabled
+            if (apply_dither) {
+                final_color = dither_color(final_color, x, y);
+            }
+
+            // Assign the final color to the buffer
+            buf[y * width + x] = final_color;
+        }
+    }
+}
+
+void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme, struct mux_device *device) {
+    if (theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE) return;
+
+    // Allocate memory for the canvas buffer
+    cbuf = lv_mem_alloc(device->MUX.WIDTH * device->MUX.HEIGHT * sizeof(lv_color_t));
+
+    if (!cbuf) {
+        LV_LOG_ERROR("Failed to allocate memory for canvas buffer!");
+        return;
+    }
+
+    // Create a canvas
+    lv_obj_t *canvas = lv_canvas_create(ui_screen);
+    lv_canvas_set_buffer(canvas, cbuf, device->MUX.WIDTH, device->MUX.HEIGHT, LV_IMG_CF_TRUE_COLOR);
+
+    // Set size and position to cover the full screen
+    lv_obj_set_size(canvas, device->MUX.WIDTH, device->MUX.HEIGHT);
+    lv_obj_align(canvas, LV_ALIGN_CENTER, 0, 0);  // Center on the screen
+
+    // Define gradient colors
+    lv_color_t start_color = lv_color_hex(theme->SYSTEM.BACKGROUND); // Black
+    lv_color_t end_color = lv_color_hex(theme->SYSTEM.BACKGROUND_GRADIENT_COLOR);   // Dark Gray
+
+    // Generate the gradient with dithering
+    generate_gradient_with_bayer_dither(cbuf, device->MUX.WIDTH, device->MUX.HEIGHT, start_color, end_color,
+        theme->SYSTEM.BACKGROUND_GRADIENT_DITHER == 1, theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_VER,
+        theme->SYSTEM.BACKGROUND_GRADIENT_START, theme->SYSTEM.BACKGROUND_GRADIENT_STOP);
+    blur_gradient(cbuf, device->MUX.WIDTH, device->MUX.HEIGHT, theme->SYSTEM.BACKGROUND_GRADIENT_BLUR);
+
+    // Refresh the canvas
+    lv_obj_invalidate(canvas);
+}
+
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title) {
     ui_screen_container = lv_obj_create(NULL);
@@ -77,10 +228,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_screen, theme->SYSTEM.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND_GRADIENT_COLOR), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_main_stop(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_START, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_stop(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_STOP, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_dir(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION, LV_PART_MAIN | LV_STATE_DEFAULT);
+    apply_gradient_to_ui_screen(ui_screen, theme, device);
 
     lv_obj_set_style_text_font(ui_screen, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_width(ui_screen, device->MUX.WIDTH);
