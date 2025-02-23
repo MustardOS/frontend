@@ -61,18 +61,24 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
+    init_theme(0, 0);
     init_display();
     init_mux();
 
     animFade_Animation(ui_conStart, -1000);
-    animScroll_Animation(ui_conScroll, 10000);
-    animFade_Animation(ui_conSpecial, 70000);
-    animFade_Animation(ui_conKofi, 80000);
-    animFade_Animation(ui_conMusic, 90000);
+    animFade_Animation(ui_conOfficial, 8000);
+    animFade_Animation(ui_conWizard, 17000);
+    animFade_Animation(ui_conHeroOne, 26000);
+    animFade_Animation(ui_conHeroTwo, 35000);
+    animFade_Animation(ui_conKnightOne, 44000);
+    animFade_Animation(ui_conKnightTwo, 53000);
+    animFade_Animation(ui_conSpecial, 62000);
+    animFade_Animation(ui_conKofi, 71000);
+    animFade_Animation(ui_conMusic, 80000);
 
     if (!config.BOOT.FACTORY_RESET) write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
 
-    lv_timer_create(timeout_task, 105000, NULL);
+    lv_timer_create(timeout_task, 100000, NULL);
 
     init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
 
