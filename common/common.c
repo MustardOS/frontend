@@ -1146,7 +1146,9 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
             case GENERAL:
             default:
                 if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
-                                                 element, "png", static_image_path, sizeof(static_image_path))) {
+                                                 element, "png", static_image_path, sizeof(static_image_path)) ||
+                    load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
+                                                 "default", "png", static_image_path, sizeof(static_image_path))) {
 
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
                                            static_image_path);
@@ -1154,15 +1156,6 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                     return static_image_embed;
                 }
         }
-    }
-
-    if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
-                             "png", static_image_path, sizeof(static_image_path)) ||
-        load_image_specifics(STORAGE_THEME, "", program, "static",
-                             "png", static_image_path, sizeof(static_image_path))) {
-        int written = snprintf(static_image_path, sizeof(static_image_path), "M:%s", static_image_path);
-        if (written < 0 || (size_t) written >= sizeof(static_image_path)) return "";
-        return static_image_path;
     }
 
     return "";

@@ -224,11 +224,13 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(ui_screen_container, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    apply_gradient_to_ui_screen(ui_screen_container, theme, device);
+
     ui_screen = lv_obj_create(ui_screen_container);
     lv_obj_clear_flag(ui_screen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_screen, lv_color_hex(theme->SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_screen, theme->SYSTEM.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    apply_gradient_to_ui_screen(ui_screen, theme, device);
+    lv_obj_set_style_bg_opa(ui_screen, theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE ? theme->SYSTEM.BACKGROUND_ALPHA : 0,
+        LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_set_style_text_font(ui_screen, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_width(ui_screen, device->MUX.WIDTH);
