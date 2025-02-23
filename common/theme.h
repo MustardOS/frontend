@@ -32,6 +32,8 @@ struct theme_config {
         int16_t BACKGROUND_GRADIENT_START;
         int16_t BACKGROUND_GRADIENT_STOP;
         int16_t BACKGROUND_GRADIENT_DIRECTION;
+        int16_t BACKGROUND_GRADIENT_DITHER;
+        int16_t BACKGROUND_GRADIENT_BLUR;
     } SYSTEM;
 
     struct {

@@ -32,6 +32,8 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->SYSTEM.BACKGROUND_GRADIENT_START = 0;
     theme->SYSTEM.BACKGROUND_GRADIENT_STOP = 200;
     theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION = 0;
+    theme->SYSTEM.BACKGROUND_GRADIENT_DITHER = 0;
+    theme->SYSTEM.BACKGROUND_GRADIENT_BLUR = 0;
 
     theme->ANIMATION.ANIMATION_DELAY = 100;
     theme->ANIMATION.ANIMATION_REPEAT = 0;
@@ -392,6 +394,8 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->SYSTEM.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_START", theme->SYSTEM.BACKGROUND_GRADIENT_START);
     theme->SYSTEM.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_STOP", theme->SYSTEM.BACKGROUND_GRADIENT_STOP);
     theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_DIRECTION", theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION);
+    theme->SYSTEM.BACKGROUND_GRADIENT_DITHER = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_DITHER", theme->SYSTEM.BACKGROUND_GRADIENT_DITHER);
+    theme->SYSTEM.BACKGROUND_GRADIENT_BLUR = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_BLUR", theme->SYSTEM.BACKGROUND_GRADIENT_BLUR);
 
     theme->ANIMATION.ANIMATION_DELAY = get_ini_int(muos_theme, "animation", "ANIMATION_DELAY", theme->ANIMATION.ANIMATION_DELAY);
     if (theme->ANIMATION.ANIMATION_DELAY < 10) theme->ANIMATION.ANIMATION_DELAY = 10;
