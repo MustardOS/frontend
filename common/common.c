@@ -894,31 +894,37 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
 }
 
 int load_element_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
-                                 const char *image_type, const char *element, const char *image_extension,
-                                 char *image_path, size_t path_size) {
+                                 const char *image_type, const char *element, const char *element_fallback, 
+                                 const char *image_extension, char *image_path, size_t path_size) {
     const char *theme = theme_compat() ? theme_base : INTERNAL_THEME;
 
     const char *paths[] = {
             "%s/%simage/%s/%s/%s/%s.%s",
             "%s/%simage/%s/%s/%s.%s"
     };
+    const char *dimensions[] = {mux_dimension, ""};
+    const char *elements[] = {element, element_fallback};
 
-    for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); ++i) {
-        int written = 0;
+    for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); ++i) {    
+        for (size_t j = 0; j < sizeof(paths) / sizeof(paths[0]); ++j) {
+            for (size_t k = 0; k < sizeof(elements) / sizeof(elements[0]); ++k) {
+                int written = 0;
 
-        switch (i) {
-            case 0:
-                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension,
-                                   config.SETTINGS.GENERAL.LANGUAGE, image_type, program, element, image_extension);
-                break;
-            case 1:
-            default:
-                written = snprintf(image_path, path_size, paths[i], theme, mux_dimension,
-                                   image_type, program, element, image_extension);
-                break;
+                switch (j) {
+                    case 0:
+                        written = snprintf(image_path, path_size, paths[j], theme, dimensions[i],
+                                        config.SETTINGS.GENERAL.LANGUAGE, image_type, program, elements[k], image_extension);
+                        break;
+                    case 1:
+                    default:
+                        written = snprintf(image_path, path_size, paths[j], theme, dimensions[i],
+                                        image_type, program, elements[k], image_extension);
+                        break;
+                }
+
+                if (written >= 0 && file_exist(image_path)) return 1;
+            }
         }
-
-        if (written >= 0 && file_exist(image_path)) return 1;
     }
 
     return 0;
@@ -1050,7 +1056,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
                 break;
         }
         if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall", element,
-                                         wall_extension, wall_image_path, sizeof(wall_image_path))) {
+                                         "default", wall_extension, wall_image_path, sizeof(wall_image_path))) {
             int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
             if (written < 0 || (size_t) written >= sizeof(wall_image_embed)) return "";
             return wall_image_embed;
@@ -1146,9 +1152,7 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
             case GENERAL:
             default:
                 if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
-                                                 element, "png", static_image_path, sizeof(static_image_path)) ||
-                    load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
-                                                 "default", "png", static_image_path, sizeof(static_image_path))) {
+                                                 element, "default", "png", static_image_path, sizeof(static_image_path))) {
 
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
                                            static_image_path);
