@@ -823,6 +823,8 @@ void ui_common_handle_vol() {
 }
 
 void ui_common_handle_idle() {
+    if (!read_int_from_file("/run/muos/global/settings/general/brightness", 1)) return;
+
     if (file_exist("/tmp/hdmi_do_refresh")) {
         remove("/tmp/hdmi_do_refresh");
 
