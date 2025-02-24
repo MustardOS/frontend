@@ -172,8 +172,8 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
                          const char *image_type, const char *image_extension, char *image_path, size_t path_size);
 
 int load_element_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
-                                 const char *image_type, const char *element, const char *image_extension,
-                                 char *image_path, size_t path_size);
+                                 const char *image_type, const char *element, const char *element_fallback, 
+                                 const char *image_extension, char *image_path, size_t path_size);
 
 void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
 
