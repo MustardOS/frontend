@@ -448,8 +448,8 @@ void process_results(const char *json_results) {
 
                 for (size_t i = 0; i < folder_item_count; i++) {
                     if (folder_items[i].content_type == ROM) {
-                        add_item(&t_all_items, &t_all_item_count, folder_items[i].extra_data,
-                                 folder_items[i].extra_data, folder_items[i].extra_data, ROM);
+                        add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
+                                 folder_items[i].display_name, folder_items[i].extra_data, ROM);
                         gen_label("content", strip_ext(folder_items[i].display_name),
                                   "content", folder_items[i].extra_data);
                     }
