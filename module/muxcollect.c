@@ -763,12 +763,12 @@ void handle_a() {
 
         write_text_to_file(COLLECTION_DIR, "w", CHAR, n_dir);
     } else {
-        write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
         load_message = 0;
         if (add_mode) {
             add_collection_item();
             goto acq;
         } else {
+            write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
             char f_content[MAX_BUFFER_SIZE];
             snprintf(f_content, sizeof(f_content), "%s.cfg",
                      strip_ext(items[current_item_index].name));
