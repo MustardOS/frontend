@@ -846,14 +846,15 @@ void list_nav_prev(int steps) {
                 update_list_items((int) item_count - theme.MUX.ITEM.COUNT);
             } else {
                 // how many items should be above the currently selected item when scrolling
-                int item_distribution = (theme.MUX.ITEM.COUNT - 1) / 2;
-                if (current_item_index >= item_distribution &&
-                    current_item_index < item_count - item_distribution - 1) {
+                int items_before_selected = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
+                int items_after_selected = (theme.MUX.ITEM.COUNT - 1) / 2;
+                if (current_item_index >= items_before_selected &&
+                    current_item_index < item_count - items_after_selected - 1) {
                     lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent,
                                                            theme.MUX.ITEM.COUNT - 1); // Get the last child
                     lv_obj_move_to_index(last_item, 0);
                     update_list_item(lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1),
-                                     current_item_index - item_distribution);
+                                     current_item_index - items_before_selected);
                 }
             }
         }
@@ -891,13 +892,14 @@ void list_nav_next(int steps) {
                 update_list_items(0);
             } else {
                 // how many items should be above the currently selected item when scrolling
-                int item_distribution = (theme.MUX.ITEM.COUNT - 1) / 2;
-                if (current_item_index > item_distribution &&
-                    current_item_index < item_count - item_distribution) {
+                int items_before_selected = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
+                int items_after_selected = (theme.MUX.ITEM.COUNT - 1) / 2;
+                if (current_item_index > items_before_selected &&
+                    current_item_index < item_count - items_after_selected) {
                     lv_obj_t *first_item = lv_obj_get_child(ui_pnlContent, 0);
                     lv_obj_move_to_index(first_item, theme.MUX.ITEM.COUNT - 1);
                     update_list_item(lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1),
-                                     current_item_index + item_distribution);
+                                     current_item_index + items_after_selected);
                 }
             }
         }
