@@ -66,6 +66,9 @@ lv_group_t *ui_group_panel;
 
 lv_obj_t *ui_mux_panels[5];
 
+#define TEMP_PREVIEW "/tmp/preview.png"
+#define TEMP_VERSION "/tmp/version.txt"
+
 void show_help() {
     if (items[current_item_index].content_type == FOLDER) return;
 
@@ -76,9 +79,9 @@ void show_help() {
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(picker_archive, "credits.txt", "/tmp/credits.txt")) {
-        strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
-    } else {
         strcpy(credits, read_text_from_file("/tmp/credits.txt"));
+    } else {
+        strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
     }
 
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
@@ -87,10 +90,16 @@ void show_help() {
 
 int version_check() {
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
-    char picker_archive[MAX_BUFFER_SIZE];
 
+    char picker_archive[MAX_BUFFER_SIZE];
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s", sys_dir, picker_name, picker_extension);
-    return !extract_file_from_zip(picker_archive, "version.txt", "/tmp/version.txt");
+    if (!extract_file_from_zip(picker_archive, "version.txt", TEMP_VERSION)) return 0;
+
+    char muos_version[MAX_BUFFER_SIZE];
+    snprintf(muos_version, sizeof(muos_version), "%s", read_line_from_file(MUOS_VERSION, 1));
+    if (str_startswith(muos_version, read_line_from_file(TEMP_VERSION, 1))) return 1;
+
+    return 0;
 }
 
 void image_refresh() {
@@ -109,13 +118,13 @@ void image_refresh() {
     char device_preview[PATH_MAX];
     snprintf(device_preview, sizeof(device_preview), "%spreview.png", mux_dimension);
 
-    if (extract_file_from_zip(picker_archive, device_preview, "/tmp/preview.png") &&
-        extract_file_from_zip(picker_archive, "preview.png", "/tmp/preview.png")) {
+    if (!extract_file_from_zip(picker_archive, device_preview, TEMP_PREVIEW) &&
+        !extract_file_from_zip(picker_archive, "preview.png", TEMP_PREVIEW)) {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         return;
     }
 
-    lv_img_set_src(ui_imgBox, "M:/tmp/preview.png");
+    lv_img_set_src(ui_imgBox, "M:" TEMP_PREVIEW);
 }
 
 void create_picker_items() {
@@ -127,8 +136,9 @@ void create_picker_items() {
 
     while ((tf = readdir(td))) {
         if (tf->d_type == DT_DIR) {
-            if (strcasecmp(tf->d_name, "active") == 0 || 
-                strcasecmp(tf->d_name, "override") == 0) continue;
+            if (strcasecmp(tf->d_name, "active") == 0 ||
+                strcasecmp(tf->d_name, "override") == 0)
+                continue;
             add_item(&items, &item_count, tf->d_name, tf->d_name, "", FOLDER);
         } else if (tf->d_type == DT_REG) {
             char filename[FILENAME_MAX];
@@ -162,7 +172,8 @@ void create_picker_items() {
         apply_theme_list_item(&theme, ui_lblPickerItem, items[i].display_name);
 
         lv_obj_t *ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
-        apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module, items[i].content_type == FOLDER ? "folder" : get_last_subdir(picker_type, '/', 1));
+        apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module,
+                               items[i].content_type == FOLDER ? "folder" : get_last_subdir(picker_type, '/', 1));
 
         lv_group_add_obj(ui_group, ui_lblPickerItem);
         lv_group_add_obj(ui_group_glyph, ui_lblPickerItemGlyph);
@@ -218,7 +229,7 @@ void handle_confirm() {
     if (msgbox_active || ui_count <= 0) return;
 
     play_sound("confirm", nav_sound, 0, 1);
-    
+
     if (items[current_item_index].content_type == FOLDER) {
         char n_dir[MAX_BUFFER_SIZE];
         snprintf(n_dir, sizeof(n_dir), "%s/%s",
@@ -234,17 +245,17 @@ void handle_confirm() {
 
         static char picker_script[MAX_BUFFER_SIZE];
         snprintf(picker_script, sizeof(picker_script),
-                "%sscript/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
+                 "%sscript/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
         char relative_zip_path[PATH_MAX];
         if (strcasecmp(base_dir, sys_dir) == 0) {
-            snprintf(relative_zip_path, sizeof(relative_zip_path), "%s", 
-                lv_label_get_text(lv_group_get_focused(ui_group)));
+            snprintf(relative_zip_path, sizeof(relative_zip_path), "%s",
+                     lv_label_get_text(lv_group_get_focused(ui_group)));
         } else {
             char *relative_path = sys_dir + strlen(base_dir);
             if (*relative_path == '/') relative_path++;
-            snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s", 
-                relative_path, lv_label_get_text(lv_group_get_focused(ui_group)));
+            snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s",
+                     relative_path, lv_label_get_text(lv_group_get_focused(ui_group)));
         }
 
         const char *args[] = {
@@ -293,7 +304,7 @@ void handle_back() {
             load_mux("picker");
         }
     }
-    
+
     mux_input_stop();
 }
 

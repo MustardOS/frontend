@@ -34,6 +34,7 @@
 
 #define KIOSK_CONFIG   INTERNAL_PATH "config/kiosk.ini"
 #define LAST_PLAY_FILE INTERNAL_PATH "config/lastplay.txt"
+#define MUOS_VERSION   INTERNAL_PATH "config/version.txt"
 
 #define RUN_PATH "/run/muos/"
 
