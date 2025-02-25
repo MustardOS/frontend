@@ -423,6 +423,11 @@ void save_options() {
         printf("attempt updating file: %s\n", (STORAGE_THEME "/active.txt"));
         if (strcasecmp(theme_alt, theme_alt_original) != 0) {
             write_text_to_file((STORAGE_THEME "/active.txt"), "w", CHAR, theme_alt);
+
+            static char rgb_script[MAX_BUFFER_SIZE];
+            snprintf(rgb_script, sizeof(rgb_script),
+                     "%s/alternate/rgb/%s/rgbconf.sh", STORAGE_THEME, theme_alt);
+            if (file_exist(rgb_script)) run_exec((const char *[]) {rgb_script, NULL});
         }
     }
 
