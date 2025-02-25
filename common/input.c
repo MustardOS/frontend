@@ -647,8 +647,6 @@ void mux_input_task(const mux_input_options *opts) {
                 continue;
             }
 
-            if (!read_int_from_file("/run/muos/global/settings/general/brightness", 1)) continue;
-
             if (epoll_event[i].data.fd == opts->general_fd) {
                 if (event.type == EV_KEY) {
                     process_key(opts, &event);
