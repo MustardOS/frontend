@@ -1877,24 +1877,24 @@ int extract_file_from_zip(const char *zip_path, const char *file_name, const cha
 
     if (!mz_zip_reader_init_file(&zip, zip_path, 0)) {
         LOG_ERROR(mux_module, "Could not open archive '%s' - Corrupt?", zip_path)
-        return 1;
+        return 0;
     }
 
     int file_index = mz_zip_reader_locate_file(&zip, file_name, NULL, 0);
     if (file_index == -1) {
         LOG_ERROR(mux_module, "File '%s' not found in archive", file_name)
         mz_zip_reader_end(&zip);
-        return 1;
+        return 0;
     }
 
     if (!mz_zip_reader_extract_to_file(&zip, file_index, output_path, 0)) {
         LOG_ERROR(mux_module, "File '%s' could not be extracted", file_name)
         mz_zip_reader_end(&zip);
-        return 1;
+        return 0;
     }
 
     mz_zip_reader_end(&zip);
-    return 0;
+    return 1;
 }
 
 void add_directory_to_list(char ***list, int *size, int *count, const char *dir) {
