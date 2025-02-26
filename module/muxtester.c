@@ -71,6 +71,8 @@ void handle_input(mux_input_type type, mux_input_action action) {
             [MUX_INPUT_R3] = "btn_r3",
             [MUX_INPUT_SELECT] = "btn_select",
             [MUX_INPUT_START] = "btn_start",
+            [MUX_INPUT_MENU_SHORT] = "btn_menu",
+            [MUX_INPUT_MENU_LONG] = "btn_menu",
 
             // D-pad:
             [MUX_INPUT_DPAD_UP] = "dpad_up",
