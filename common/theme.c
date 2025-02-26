@@ -183,6 +183,8 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->GRID.ROW_HEIGHT = 0;
     theme->GRID.COLUMN_WIDTH = 0;
 
+    theme->GRID.CELL.COLUMN_ALIGN = LV_GRID_ALIGN_CENTER;
+    theme->GRID.CELL.ROW_ALIGN = LV_GRID_ALIGN_CENTER;
     theme->GRID.CELL.WIDTH = 200;
     theme->GRID.CELL.HEIGHT = 200;
     theme->GRID.CELL.RADIUS = 10;
@@ -545,6 +547,8 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.ROW_HEIGHT = get_ini_int(muos_theme, "grid", "ROW_HEIGHT", theme->GRID.ROW_HEIGHT);
     theme->GRID.COLUMN_WIDTH = get_ini_int(muos_theme, "grid", "COLUMN_WIDTH", theme->GRID.COLUMN_WIDTH);
 
+    theme->GRID.CELL.COLUMN_ALIGN = get_ini_int(muos_theme, "grid", "CELL_COLUMN_ALIGN", theme->GRID.CELL.COLUMN_ALIGN);
+    theme->GRID.CELL.ROW_ALIGN = get_ini_int(muos_theme, "grid", "CELL_ROW_ALIGN", theme->GRID.CELL.ROW_ALIGN);
     theme->GRID.CELL.WIDTH = get_ini_int(muos_theme, "grid", "CELL_WIDTH", theme->GRID.CELL.WIDTH);
     theme->GRID.CELL.HEIGHT = get_ini_int(muos_theme, "grid", "CELL_HEIGHT", theme->GRID.CELL.HEIGHT);
     theme->GRID.CELL.RADIUS = get_ini_int(muos_theme, "grid", "CELL_RADIUS", theme->GRID.CELL.RADIUS);

@@ -1261,7 +1261,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA,
                                      LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    lv_obj_set_grid_cell(cell_pnl, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
+    lv_obj_set_grid_cell(cell_pnl, theme->GRID.CELL.COLUMN_ALIGN, col, 1, theme->GRID.CELL.ROW_ALIGN, row, 1);
 
     if (file_exist(item_image_path)) {
         char grid_image[MAX_BUFFER_SIZE];
