@@ -28,6 +28,9 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
 int load_header_glyph(const char *theme_base, const char *mux_dimension, const char *glyph_name,
                       char *image_path, size_t image_size);
 
+int generate_image_embed(const char *base_path, const char *dimension, const char *glyph_folder, const char *glyph_name,
+                         char *image_path, size_t path_size, char *image_embed, size_t embed_size);
+
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme);
 
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme);
