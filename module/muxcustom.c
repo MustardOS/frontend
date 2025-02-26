@@ -427,7 +427,13 @@ void save_options() {
             static char rgb_script[MAX_BUFFER_SIZE];
             snprintf(rgb_script, sizeof(rgb_script),
                      "%s/alternate/rgb/%s/rgbconf.sh", STORAGE_THEME, theme_alt);
-            if (file_exist(rgb_script)) run_exec((const char *[]) {rgb_script, NULL});
+            if (file_exist(rgb_script)) {
+                run_exec((const char *[]) {rgb_script, NULL});
+                static char rgb_script_dest[MAX_BUFFER_SIZE];
+                snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", STORAGE_THEME);
+                create_directories(strip_dir(rgb_script_dest));
+                write_text_to_file(rgb_script_dest, "w", CHAR, read_text_from_file(rgb_script));
+            }
         }
     }
 
