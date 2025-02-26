@@ -51,6 +51,8 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 
 void scroll_help_content(int direction, bool page_down);
 
+void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name);
+
 extern lv_obj_t *ui_screen_container;
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;

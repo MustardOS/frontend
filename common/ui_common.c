@@ -703,23 +703,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_pnlProgressBrightness, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlProgressBrightness, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    // TODO: Swap out this for a proper image glyph at some stage - reduces the requirement for an additional font!
-    ui_icoProgressBrightness = lv_label_create(ui_pnlProgressBrightness);
-    lv_obj_set_width(ui_icoProgressBrightness, 18);
-    lv_obj_set_height(ui_icoProgressBrightness, 28);
-    lv_obj_set_x(ui_icoProgressBrightness, -220);
-    lv_obj_set_y(ui_icoProgressBrightness, -205);
+    ui_icoProgressBrightness = lv_img_create(ui_pnlProgressBrightness);
     lv_obj_set_align(ui_icoProgressBrightness, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_icoProgressBrightness, "\uF185");
-    lv_label_set_recolor(ui_icoProgressBrightness, "true");
-    lv_obj_set_style_text_color(ui_icoProgressBrightness, lv_color_hex(theme->BAR.ICON),
+    lv_obj_set_style_img_recolor (ui_icoProgressBrightness, lv_color_hex(theme->BAR.ICON),
                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_icoProgressBrightness, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_icoProgressBrightness, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_icoProgressBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_icoProgressBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_icoProgressBrightness, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_icoProgressBrightness, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_icoProgressBrightness, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    update_glyph(ui_icoProgressBrightness, "bar", "brightness");
 
     ui_barProgressBrightness = lv_bar_create(ui_pnlProgressBrightness);
     lv_bar_set_value(ui_barProgressBrightness, 0, LV_ANIM_ON);
@@ -758,22 +747,12 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_border_width(ui_pnlProgressVolume, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_side(ui_pnlProgressVolume, LV_BORDER_SIDE_FULL, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    // TODO: Swap out this for a proper image glyph at some stage - reduces the requirement for an additional font!
-    ui_icoProgressVolume = lv_label_create(ui_pnlProgressVolume);
-    lv_obj_set_width(ui_icoProgressVolume, 18);
-    lv_obj_set_height(ui_icoProgressVolume, 28);
-    lv_obj_set_x(ui_icoProgressVolume, -220);
-    lv_obj_set_y(ui_icoProgressVolume, -205);
+    ui_icoProgressVolume = lv_img_create(ui_pnlProgressVolume);
     lv_obj_set_align(ui_icoProgressVolume, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_icoProgressVolume, "");
-    lv_label_set_recolor(ui_icoProgressVolume, "true");
-    lv_obj_set_style_text_color(ui_icoProgressVolume, lv_color_hex(theme->BAR.ICON), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_icoProgressVolume, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_icoProgressVolume, &ui_font_AwesomeSmall, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_icoProgressVolume, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_icoProgressVolume, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_icoProgressVolume, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_icoProgressVolume, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor (ui_icoProgressVolume, lv_color_hex(theme->BAR.ICON),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_icoProgressVolume, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    update_glyph(ui_icoProgressVolume, "bar", "volume_0");
 
     ui_barProgressVolume = lv_bar_create(ui_pnlProgressVolume);
     lv_bar_set_value(ui_barProgressVolume, 0, LV_ANIM_ON);
@@ -914,24 +893,39 @@ lv_obj_t *create_footer_text(lv_obj_t *parent, struct theme_config *theme, uint3
     return ui_lblNavText;
 }
 
-int load_header_glyph(const char *theme_base, const char *mux_dimension, const char *glyph_name,
-                      char *image_path, size_t image_size) {
-    return (snprintf(image_path, image_size, "%s/%sglyph/header/%s.png", theme_base,
-                     mux_dimension, glyph_name) >= 0 &&
+int load_glyph(const char *theme_base, const char *mux_dimension, const char *glyph_folder,
+                      const char *glyph_name, char *image_path, size_t image_size) {
+    return (snprintf(image_path, image_size, "%s/%sglyph/%s/%s.png", theme_base,
+                     mux_dimension, glyph_folder, glyph_name) >= 0 &&
             file_exist(image_path)) ||
-           (snprintf(image_path, image_size, "%s/glyph/header/%s.png", theme_base,
-                     glyph_name) >= 0 &&
+           (snprintf(image_path, image_size, "%s/glyph/%s/%s.png", theme_base,
+                    glyph_folder, glyph_name) >= 0 &&
             file_exist(image_path));
 }
 
-int generate_image_embed(const char *base_path, const char *dimension, const char *glyph_name,
+int generate_image_embed(const char *base_path, const char *dimension, const char *glyph_folder, const char *glyph_name,
                          char *image_path, size_t path_size, char *image_embed, size_t embed_size) {
-    if (load_header_glyph(base_path, dimension, glyph_name, image_path, path_size)) {
+    if (load_glyph(base_path, dimension, glyph_folder, glyph_name, image_path, path_size)) {
         int written = snprintf(image_embed, embed_size, "M:%s", image_path);
         if (written < 0 || (size_t) written >= embed_size) return 0;
         return 1;
     }
     return 0;
+}
+
+void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name) {
+    char image_path[MAX_BUFFER_SIZE];
+    char image_embed[MAX_BUFFER_SIZE];
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+    if (generate_image_embed(STORAGE_THEME, mux_dimension, glyph_folder, glyph_name, image_path,
+                             sizeof(image_path), image_embed, sizeof(image_embed)) ||
+        generate_image_embed(INTERNAL_THEME, mux_dimension, glyph_folder, glyph_name, image_path,
+                             sizeof(image_path), image_embed, sizeof(image_embed))) {
+        if (file_exist(image_path)) {
+            lv_img_set_src(ui_img, image_embed);
+        }
+    }
 }
 
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme) {
@@ -959,9 +953,9 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
                                          LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-    if (generate_image_embed(STORAGE_THEME, mux_dimension, battery_glyph_name, image_path,
+    if (generate_image_embed(STORAGE_THEME, mux_dimension, "header", battery_glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME, mux_dimension, battery_glyph_name, image_path,
+        generate_image_embed(INTERNAL_THEME, mux_dimension, "header", battery_glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
         if (file_exist(image_path)) {
             lv_img_set_src(ui_staCapacity, image_embed);
@@ -976,9 +970,9 @@ void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *the
 
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-    if (generate_image_embed(STORAGE_THEME, mux_dimension, "bluetooth", image_path,
+    if (generate_image_embed(STORAGE_THEME, mux_dimension, "header", "bluetooth", image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME, mux_dimension, "bluetooth", image_path,
+        generate_image_embed(INTERNAL_THEME, mux_dimension, "header", "bluetooth", image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
         if (file_exist(image_path)) {
             lv_img_set_src(ui_staBluetooth, image_embed);
@@ -1010,9 +1004,9 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) 
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", network_status);
 
-    if (generate_image_embed(STORAGE_THEME, mux_dimension, network_status_filename, image_path,
+    if (generate_image_embed(STORAGE_THEME, mux_dimension, "header", network_status_filename, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME, mux_dimension, network_status_filename, image_path,
+        generate_image_embed(INTERNAL_THEME, mux_dimension, "header", network_status_filename, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed))) {
         if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
     }
@@ -1267,7 +1261,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
     lv_obj_set_style_img_recolor_opa(cell_image, theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA,
                                      LV_PART_MAIN | LV_STATE_FOCUSED);
 
-    lv_obj_set_grid_cell(cell_pnl, LV_GRID_ALIGN_CENTER, col, 1, LV_GRID_ALIGN_CENTER, row, 1);
+    lv_obj_set_grid_cell(cell_pnl, theme->GRID.CELL.COLUMN_ALIGN, col, 1, theme->GRID.CELL.ROW_ALIGN, row, 1);
 
     if (file_exist(item_image_path)) {
         char grid_image[MAX_BUFFER_SIZE];

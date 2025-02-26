@@ -221,6 +221,8 @@ struct theme_config {
             int16_t TEXT_PADDING_BOTTOM;
         } CURRENT_ITEM_LABEL;
         struct {
+            int16_t COLUMN_ALIGN;
+            int16_t ROW_ALIGN;
             int16_t WIDTH;
             int16_t HEIGHT;
             int16_t RADIUS;

@@ -26,6 +26,7 @@
 #include "json/json.h"
 #include "init.h"
 #include "common.h"
+#include "ui_common.h"
 #include "language.h"
 #include "log.h"
 #include "options.h"
@@ -1840,32 +1841,32 @@ void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar, lv_obj_t *volume_ic
         switch (volume) {
             default:
             case 0:
-                lv_label_set_text(volume_icon, "\uF6A9");
+                update_glyph(volume_icon, "bar", "volume_0");
                 break;
             case 1 ... 71:
-                lv_label_set_text(volume_icon, "\uF026");
+                update_glyph(volume_icon, "bar", "volume_1");
                 break;
             case 72 ... 141:
-                lv_label_set_text(volume_icon, "\uF027");
+                update_glyph(volume_icon, "bar", "volume_2");
                 break;
             case 142 ... 200:
-                lv_label_set_text(volume_icon, "\uF028");
+                update_glyph(volume_icon, "bar", "volume_3");
                 break;
         }
     } else {
         switch (volume) {
             default:
             case 0:
-                lv_label_set_text(volume_icon, "\uF6A9");
+                update_glyph(volume_icon, "bar", "volume_0");
                 break;
             case 1 ... 46:
-                lv_label_set_text(volume_icon, "\uF026");
+                update_glyph(volume_icon, "bar", "volume_1");
                 break;
             case 47 ... 71:
-                lv_label_set_text(volume_icon, "\uF027");
+                update_glyph(volume_icon, "bar", "volume_2");
                 break;
             case 72 ... 100:
-                lv_label_set_text(volume_icon, "\uF028");
+                update_glyph(volume_icon, "bar", "volume_3");
                 break;
         }
     }
