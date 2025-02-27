@@ -324,7 +324,20 @@ int main(int argc, char *argv[]) {
     create_screenshot_items();
     init_navigation_sound(&nav_sound, mux_module);
 
-    if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXSHOT.NONE);
+    int nav_hidden = 0;
+    if (ui_count > 0) {
+        nav_hidden = 1;
+    } else {
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXSHOT.NONE);
+    }
+
+    struct nav_flag nav_e[] = {
+            {ui_lblNavA,      nav_hidden},
+            {ui_lblNavAGlyph, nav_hidden},
+            {ui_lblNavX,      nav_hidden},
+            {ui_lblNavXGlyph, nav_hidden}
+    };
+    set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
     load_kiosk(&kiosk);
 
