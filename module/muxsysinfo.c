@@ -51,6 +51,7 @@ lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_mux_panels[5];
 
 static char hostname[32];
+int tap_count = 0;
 
 struct help_msg {
     lv_obj_t *element;
@@ -396,14 +397,97 @@ void handle_a() {
 
     if (lv_group_get_focused(ui_group) == ui_lblVersion) {
         play_sound("muos", nav_sound, 0, 0);
-        toast_message( /* :) */
-                "\x54\x68\x61\x6E\x6B"
-                "\x20\x79\x6F\x75\x20"
-                "\x66\x6F\x72\x20\x75"
-                "\x73\x69\x6E\x67\x20"
-                "\x6D\x75\x4F\x53\x21",
-                1000, 1000
-        );
+
+        switch (tap_count) {
+            case 5:
+                toast_message(
+                        "\x57\x68\x61\x74\x20"
+                        "\x64\x6F\x20\x79\x6F"
+                        "\x75\x20\x77\x61\x6E"
+                        "\x74\x3F",
+                        1000, 1000
+                );
+                break;
+            case 10:
+                toast_message(
+                        "\x59\x6F\x75\x20\x73"
+                        "\x75\x72\x65\x20\x61"
+                        "\x72\x65\x20\x70\x65"
+                        "\x72\x73\x69\x73\x74"
+                        "\x65\x6E\x74\x21",
+                        1000, 1000
+                );
+                break;
+            case 20:
+                toast_message(
+                        "\x57\x68\x61\x74\x20"
+                        "\x61\x72\x65\x20\x79"
+                        "\x6F\x75\x20\x65\x78"
+                        "\x70\x65\x63\x74\x69"
+                        "\x6E\x67\x3F",
+                        1000, 1000
+                );
+                break;
+            case 30:
+                toast_message(
+                        "\x4F\x6B\x61\x79\x20"
+                        "\x6C\x69\x73\x74\x65"
+                        "\x6E\x20\x68\x65\x72"
+                        "\x65\x20\x79\x6F\x75"
+                        "\x2E\x2E\x2E",
+                        1000, 1000
+                );
+                break;
+            case 40:
+                toast_message(
+                        "\x54\x68\x69\x73\x20"
+                        "\x69\x73\x20\x79\x6F"
+                        "\x75\x72\x20\x6C\x61"
+                        "\x73\x74\x20\x77\x61"
+                        "\x72\x6E\x69\x6E\x67"
+                        "\x21",
+                        1000, 1000
+                );
+                break;
+            case 50:
+                toast_message(
+                        "\x4F\x6B\x61\x79\x20"
+                        "\x77\x65\x6C\x6C\x20"
+                        "\x79\x6F\x75\x20\x61"
+                        "\x73\x6B\x65\x64\x20"
+                        "\x66\x6F\x72\x20\x69"
+                        "\x74",
+                        1000, 1000
+                );
+                break;
+            default:
+                toast_message(
+                        "\x54\x68\x61\x6E\x6B"
+                        "\x20\x79\x6F\x75\x20"
+                        "\x66\x6F\x72\x20\x75"
+                        "\x73\x69\x6E\x67\x20"
+                        "\x6D\x75\x4F\x53\x21",
+                        1000, 1000
+                );
+                break;
+        }
+
+        if (tap_count > 50) {
+            srandom(time(NULL));
+
+            char s_rotate_str[8], s_zoom_str[8];
+            snprintf(s_rotate_str, sizeof(s_rotate_str), "%d",
+                     (int) (random() % 181) + 35);
+            snprintf(s_zoom_str, sizeof(s_zoom_str), "%.2f",
+                     (float) ((float[]) {0.45f, 0.50f, 0.55f, 0.60f, 0.65f, 0.70f, 0.75f})[random() % 7]);
+
+            write_text_to_file("/run/muos/device/screen/s_rotate", "w", CHAR, s_rotate_str);
+            write_text_to_file("/run/muos/device/screen/s_zoom", "w", CHAR, s_zoom_str);
+
+            mux_input_stop();
+        }
+
+        tap_count++;
     }
 
     if (lv_group_get_focused(ui_group) == ui_lblMemory) {
