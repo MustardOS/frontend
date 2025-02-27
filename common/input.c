@@ -1,4 +1,5 @@
 #include "input.h"
+#include <dirent.h>
 #include <pthread.h>
 #include <linux/input.h>
 #include <linux/joystick.h>
@@ -16,6 +17,33 @@
 #include "controller_profile.h"
 #include "device.h"
 #include "log.h"
+
+#define INPUT_PATH "/dev/input/by-id/"
+
+int find_keyboard_devices(int *fds, int max_fds) {
+    struct dirent *entry;
+    DIR *dir = opendir(INPUT_PATH);
+    if (!dir) {
+        perror("Failed to open input directory");
+        return 0;
+    }
+
+    static char device_path[256];
+    int count = 0;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strstr(entry->d_name, "usb") && (strstr(entry->d_name, "-event-kbd") || strstr(entry->d_name, "-event-mouse"))) {
+            snprintf(device_path, sizeof(device_path), "%s%s", INPUT_PATH, entry->d_name);
+            int fd = open(device_path, O_RDONLY | O_NONBLOCK);
+            if (fd != -1) {
+                printf("Listening on keyboard: %s (fd: %d)\n", entry->d_name, fd);
+                fds[count++] = fd;
+            }
+        }
+    }
+
+    closedir(dir);
+    return count;
+}
 
 struct controller_profile controller;
 
@@ -319,6 +347,69 @@ static void process_usb_dpad_as_buttons(const mux_input_options *opts, struct js
     }
 }
 
+static void process_usb_keyboard_keys(const mux_input_options *opts, struct input_event event) {
+    mux_input_type mux_type;
+    if (event.code == KEY_ENTER || event.code == KEY_A) {
+        mux_type = !opts->swap_btn ? MUX_INPUT_A : MUX_INPUT_B;
+    } else if (event.code == KEY_BACKSPACE || event.code == KEY_B) {
+        mux_type = !opts->swap_btn ? MUX_INPUT_B : MUX_INPUT_A;
+    } else if (event.code == KEY_X) {
+        mux_type = !opts->swap_btn ? MUX_INPUT_X : MUX_INPUT_Y;
+    } else if (event.code == KEY_Y) {
+        mux_type = !opts->swap_btn ? MUX_INPUT_Y : MUX_INPUT_X;
+    } else if (event.code == KEY_PAGEUP) {
+        mux_type = MUX_INPUT_L1;
+    } else if (event.code == KEY_PAGEDOWN) {
+        mux_type = MUX_INPUT_R1;
+    } else if (event.code == KEY_SPACE) {
+        mux_type = MUX_INPUT_R2;
+    } else if (event.code == KEY_LEFTSHIFT) {
+        mux_type = MUX_INPUT_SELECT;
+    } else if (event.code == KEY_RIGHTSHIFT) {
+        mux_type = MUX_INPUT_START;
+    } else if (event.code == KEY_ESC) {
+        mux_type = MUX_INPUT_MENU_SHORT;
+    } else {
+        return;
+    }
+    pressed = (event.value > 0) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
+}
+
+static void process_usb_keyboard_arrow_keys(const mux_input_options *opts, struct input_event event) {
+    int axis;
+    int direction;
+    if (event.code == KEY_UP) {
+        // Axis: D-pad vertical
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        direction = -event.value;
+    } else if (event.code == KEY_LEFT) {
+        // Axis: D-pad horizontal
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        direction = -event.value;
+    } else if (event.code == KEY_DOWN) {
+        // Axis: D-pad vertical
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        direction = event.value;
+    } else if (event.code == KEY_RIGHT) {
+        // Axis: D-pad horizontal
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        direction = event.value;
+    } else {
+        return;
+    }
+
+    if (direction < 0) {
+        // Direction: up/left
+        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+    } else if (direction > 0) {
+        // Direction: down/right
+        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+    } else {
+        // Direction: center
+        pressed &= ~(BIT(axis) | BIT(axis + 1));
+    }
+}
+
 // Invokes the relevant handler(s) for a particular input mux_type and action.
 static void dispatch_input(const mux_input_options *opts,
                            mux_input_type mux_type,
@@ -531,6 +622,63 @@ char *get_unique_controller_id(int usb_fd) {
     return result;
 }
 
+void *keyboard_handler(void *arg) {
+    // Cast the argument back to the correct mux_type
+    const mux_input_options *opts = (const mux_input_options *) arg;
+    
+    int max_devices = 10;
+    int max_events = 10;
+    int keyboard_mouse_fds[max_devices];
+    int num_fds = find_keyboard_devices(keyboard_mouse_fds, max_devices);
+
+    if (num_fds == 0) {
+        printf("No keyboard devices found!\n");
+        return NULL;
+    }
+
+    int epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1) {
+        perror("Failed to create epoll instance");
+        return NULL;
+    }
+
+    struct epoll_event event;
+    struct epoll_event events[max_events];
+
+    for (int i = 0; i < num_fds; i++) {
+        event.events = EPOLLIN;
+        event.data.fd = keyboard_mouse_fds[i];
+        if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, keyboard_mouse_fds[i], &event) == -1) {
+            perror("Failed to add keyboard device to epoll");
+            close(keyboard_mouse_fds[i]);
+        }
+    }
+
+    printf("Listening for keyboard events...\n");
+
+    while (!stop) {
+        int event_count = epoll_wait(epoll_fd, events, max_events, -1);
+        for (int i = 0; i < event_count; i++) {
+            if (events[i].events & EPOLLIN) {
+                struct input_event ev;
+                if (read(events[i].data.fd, &ev, sizeof(struct input_event)) > 0) {
+                    if (ev.type == EV_KEY) {
+                        if (ev.code == KEY_UP || ev.code == KEY_DOWN || ev.code == KEY_LEFT || ev.code == KEY_RIGHT) {
+                            process_usb_keyboard_arrow_keys(opts, ev);
+                        } else {
+                            process_usb_keyboard_keys(opts, ev);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < num_fds; i++) close(keyboard_mouse_fds[i]);
+    close(epoll_fd);
+    return NULL;
+}
+
 void *joystick_handler(void *arg) {
     // Cast the argument back to the correct mux_type
     const mux_input_options *opts = (const mux_input_options *) arg;
@@ -611,6 +759,10 @@ void mux_input_task(const mux_input_options *opts) {
     pthread_t joystick_thread;
     mux_input_options joystick_opts = *opts;
     pthread_create(&joystick_thread, NULL, joystick_handler, &joystick_opts);
+
+    pthread_t keyboard_thread;
+    mux_input_options keyboard_opts = *opts;
+    pthread_create(&keyboard_thread, NULL, keyboard_handler, &keyboard_opts);
 
     // Delay (millis) to wait for input before timing out. This determines the rate at which the
     // hold_handlers and idle_handler are called. To save CPU, we want to wait as long as possible.
