@@ -38,7 +38,7 @@ MUXLIB = $(CFLAGS) -I./module/ui -I./font -I./lookup -I./common \
          -I./common/img -I./common/input -I./common/json \
          -I./common/mini -I./common/miniz
 
-LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux -lawesome_small -lgamepad \
+LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux \
           -lnotosans -lnotosans_big -lnotosans_jp -lnotosans_kr -lnotosans_sc -lnotosans_tc \
           -lSDL2 -lSDL2_mixer -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 
