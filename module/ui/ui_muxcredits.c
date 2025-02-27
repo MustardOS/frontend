@@ -1,4 +1,5 @@
 #include "ui_muxcredits.h"
+#include "../../common/config.h"
 #include "../../font/notosans.h"
 #include "../../font/notosans_big.h"
 
@@ -585,6 +586,7 @@ void init_mux(void) {
                       "luccapucca   "
                       "jimmycrackedcorn_4711   "
                       ".aviorxk   "
+                      "opinion_panda   "
     );
     lv_obj_set_scroll_dir(ui_lblHeroCrewOne, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroCrewOne, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -659,7 +661,6 @@ void init_mux(void) {
     lv_obj_set_height(ui_lblHeroCrewTwo, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblHeroCrewTwo, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblHeroCrewTwo,
-                      "opinion_panda   "
                       "hueykablooey   "
                       "spartan_029   "
                       "mrwhistles   "
@@ -698,6 +699,8 @@ void init_mux(void) {
                       "gustav0524   "
                       "andromalandro   "
                       "existentialrose   "
+                      "kaelidric   "
+                      "kazy   "
     );
     lv_obj_set_scroll_dir(ui_lblHeroCrewTwo, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblHeroCrewTwo, lv_color_hex(0xFFDD22), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1233,10 +1236,16 @@ void init_mux(void) {
     lv_obj_set_x(ui_lblMusicMessage, 0);
     lv_obj_set_y(ui_lblMusicMessage, 30);
     lv_obj_set_align(ui_lblMusicMessage, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblMusicMessage,
-                      "\nTrack - Final Frontier"
-                      "\nComposer - Nimn One"
-                      "\n\n\nYour device will now reboot...");
+    if (config.BOOT.FACTORY_RESET) {
+        lv_label_set_text(ui_lblMusicMessage,
+                          "\nTrack - Final Frontier"
+                          "\nComposer - Nimn One"
+                          "\n\n\nYour device will now reboot...");
+    } else {
+        lv_label_set_text(ui_lblMusicMessage,
+                          "\nTrack - Final Frontier"
+                          "\nComposer - Nimn One");
+    }
     lv_obj_set_scroll_dir(ui_lblMusicMessage, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblMusicMessage, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblMusicMessage, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
