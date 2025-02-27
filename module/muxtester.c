@@ -1,5 +1,4 @@
 #include "../lvgl/lvgl.h"
-#include <unistd.h>
 #include <string.h>
 #include <libgen.h>
 #include "../common/init.h"
@@ -12,16 +11,9 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
-#include "../common/input.h"
 
 char *mux_module;
 
-static int joy_general;
-static int joy_power;
-static int joy_volume;
-static int joy_extra;
-
-int turbo_mode = 0;
 int msgbox_active = 0;
 int nav_sound = 0;
 int bar_header = 0;
@@ -185,27 +177,15 @@ int main(int argc, char *argv[]) {
     init_fonts();
     init_navigation_sound(&nav_sound, mux_module);
 
-    init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-
     load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
-            .general_fd = joy_general,
-            .power_fd = joy_power,
-            .volume_fd = joy_volume,
-            .extra_fd = joy_extra,
-            .max_idle_ms = IDLE_MS,
             .press_handler = {[MUX_INPUT_POWER_SHORT] = handle_power},
             .input_handler = handle_input,
-            .idle_handler = ui_common_handle_idle,
     };
+    init_input(&input_opts);
     mux_input_task(&input_opts);
+
     safe_quit(0);
-
-    close(joy_general);
-    close(joy_power);
-    close(joy_volume);
-    close(joy_extra);
-
     return 0;
 }

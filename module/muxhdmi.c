@@ -1,6 +1,5 @@
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxhdmi.h"
-#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <libgen.h>
@@ -13,15 +12,9 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
-#include "../common/input.h"
 #include "../common/input/list_nav.h"
 
 char *mux_module;
-
-static int joy_general;
-static int joy_power;
-static int joy_volume;
-static int joy_extra;
 
 int msgbox_active = 0;
 int nav_sound = 0;
@@ -153,45 +146,35 @@ void save_hdmi_options() {
     int idx_scan = lv_dropdown_get_selected(ui_droScan);
     int idx_audio = lv_dropdown_get_selected(ui_droAudio);
 
-    int is_modified = 0;
-
     if (lv_dropdown_get_selected(ui_droEnable) != enable_original) {
-        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/enabled"), "w", INT, idx_enable);
     }
 
     if (lv_dropdown_get_selected(ui_droResolution) != resolution_original) {
-        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/resolution"), "w", INT, idx_resolution);
     }
 
     if (lv_dropdown_get_selected(ui_droThemeResolution) != theme_resolution_original) {
-        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/theme_resolution"), "w", INT, idx_theme_resolution);
     }
 
     if (lv_dropdown_get_selected(ui_droSpace) != space_original) {
-        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/space"), "w", INT, idx_space);
     }
 
     if (lv_dropdown_get_selected(ui_droDepth) != depth_original) {
-        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/depth"), "w", INT, idx_depth);
     }
 
     if (lv_dropdown_get_selected(ui_droRange) != range_original) {
-        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/range"), "w", INT, idx_range);
     }
 
     if (lv_dropdown_get_selected(ui_droScan) != scan_original) {
-        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/scan"), "w", INT, idx_scan);
     }
 
     if (lv_dropdown_get_selected(ui_droAudio) != audio_original) {
-        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/audio"), "w", INT, idx_audio);
     }
 }
@@ -533,19 +516,10 @@ int main(int argc, char *argv[]) {
     restore_hdmi_options();
     init_dropdown_settings();
 
-    init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-
     load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
-            .general_fd = joy_general,
-            .power_fd = joy_power,
-            .volume_fd = joy_volume,
-            .extra_fd = joy_extra,
-            .max_idle_ms = IDLE_MS,
-            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_A] = handle_confirm,
                     [MUX_INPUT_B] = handle_back,
@@ -570,16 +544,11 @@ int main(int argc, char *argv[]) {
                     COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN)),
                     COMBO_VOLUME(BIT(MUX_INPUT_VOL_UP)),
                     COMBO_VOLUME(BIT(MUX_INPUT_VOL_DOWN)),
-            },
-            .idle_handler = ui_common_handle_idle,
+            }
     };
+    init_input(&input_opts);
     mux_input_task(&input_opts);
+
     safe_quit(0);
-
-    close(joy_general);
-    close(joy_power);
-    close(joy_volume);
-    close(joy_extra);
-
     return 0;
 }

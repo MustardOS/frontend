@@ -15,7 +15,6 @@
 
 char *mux_module;
 
-int turbo_mode = 0;
 int msgbox_active = 0;
 int nav_sound = 0;
 int bar_header = 0;

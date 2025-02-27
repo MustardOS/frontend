@@ -17,7 +17,6 @@
 #include "../common/kiosk.h"
 #include "../common/collection.h"
 #include "../common/json/json.h"
-#include "../common/input.h"
 #include "../common/input/list_nav.h"
 #include "../common/log.h"
 #include "../lookup/lookup.h"
@@ -26,12 +25,6 @@ struct theme_config theme;
 
 char *mux_module;
 
-static int joy_general;
-static int joy_power;
-static int joy_volume;
-static int joy_extra;
-
-int turbo_mode = 0;
 int msgbox_active = 0;
 int nav_sound = 0;
 int bar_header = 0;
@@ -815,8 +808,6 @@ int main(int argc, char *argv[]) {
 
     create_history_items();
 
-    init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-
     int nav_vis = 0;
     if (ui_count > 0) {
         nav_vis = 1;
@@ -853,14 +844,7 @@ int main(int argc, char *argv[]) {
     }
 
     mux_input_options input_opts = {
-            .general_fd = joy_general,
-            .power_fd = joy_power,
-            .volume_fd = joy_volume,
-            .extra_fd = joy_extra,
-            .max_idle_ms = IDLE_MS,
-            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
@@ -889,18 +873,13 @@ int main(int argc, char *argv[]) {
                     COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN)),
                     COMBO_VOLUME(BIT(MUX_INPUT_VOL_UP)),
                     COMBO_VOLUME(BIT(MUX_INPUT_VOL_DOWN)),
-            },
-            .idle_handler = ui_common_handle_idle,
+            }
     };
+    init_input(&input_opts);
     mux_input_task(&input_opts);
-    safe_quit(0);
 
     free_items(items, item_count);
 
-    close(joy_general);
-    close(joy_power);
-    close(joy_volume);
-    close(joy_extra);
-
+    safe_quit(0);
     return 0;
 }

@@ -1,5 +1,4 @@
 #include "../lvgl/lvgl.h"
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +13,7 @@
 #include "../common/theme.h"
 
 char *mux_module;
+
 int msgbox_active = 0;
 int nav_sound = 0;
 

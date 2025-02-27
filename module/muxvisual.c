@@ -1,6 +1,5 @@
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxvisual.h"
-#include <unistd.h>
 #include <string.h>
 #include <libgen.h>
 #include "../common/init.h"
@@ -12,17 +11,10 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
-#include "../common/input.h"
 #include "../common/input/list_nav.h"
 
 char *mux_module;
 
-static int joy_general;
-static int joy_power;
-static int joy_volume;
-static int joy_extra;
-
-int turbo_mode = 0;
 int msgbox_active = 0;
 int nav_sound = 0;
 int bar_header = 0;
@@ -44,7 +36,7 @@ lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
 
-int battery_original, network_original, mux_clock_original, 
+int battery_original, network_original, mux_clock_original,
         name_original, dash_original, friendlyfolder_original, thetitleformat_original,
         titleincluderootdrive_original, folderitemcount_original, menu_counter_folder_original,
         display_empty_folder_original, menu_counter_file_original, hidden_original;
@@ -246,16 +238,16 @@ void init_navigation_group() {
             ui_pnlTitleIncludeRootDrive
     };
 
-    ui_objects[0] =  ui_lblBattery;
-    ui_objects[1] =  ui_lblClock;
-    ui_objects[2] =  ui_lblNetwork;
-    ui_objects[3] =  ui_lblDash;
-    ui_objects[4] =  ui_lblName;
-    ui_objects[5] =  ui_lblDisplayEmptyFolder;
-    ui_objects[6] =  ui_lblTheTitleFormat;
-    ui_objects[7] =  ui_lblFolderItemCount;
-    ui_objects[8] =  ui_lblFriendlyFolder;
-    ui_objects[9] =  ui_lblMenuCounterFile;
+    ui_objects[0] = ui_lblBattery;
+    ui_objects[1] = ui_lblClock;
+    ui_objects[2] = ui_lblNetwork;
+    ui_objects[3] = ui_lblDash;
+    ui_objects[4] = ui_lblName;
+    ui_objects[5] = ui_lblDisplayEmptyFolder;
+    ui_objects[6] = ui_lblTheTitleFormat;
+    ui_objects[7] = ui_lblFolderItemCount;
+    ui_objects[8] = ui_lblFriendlyFolder;
+    ui_objects[9] = ui_lblMenuCounterFile;
     ui_objects[10] = ui_lblMenuCounterFolder;
     ui_objects[11] = ui_lblHidden;
     ui_objects[12] = ui_lblTitleIncludeRootDrive;
@@ -569,19 +561,10 @@ int main(int argc, char *argv[]) {
     restore_visual_options();
     init_dropdown_settings();
 
-    init_input(&joy_general, &joy_power, &joy_volume, &joy_extra);
-
     load_kiosk(&kiosk);
 
     mux_input_options input_opts = {
-            .general_fd = joy_general,
-            .power_fd = joy_power,
-            .volume_fd = joy_volume,
-            .extra_fd = joy_extra,
-            .max_idle_ms = IDLE_MS,
-            .swap_btn = config.SETTINGS.ADVANCED.SWAP,
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .stick_nav = true,
             .press_handler = {
                     [MUX_INPUT_A] = handle_option_next,
                     [MUX_INPUT_B] = handle_back,
@@ -606,16 +589,11 @@ int main(int argc, char *argv[]) {
                     COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN)),
                     COMBO_VOLUME(BIT(MUX_INPUT_VOL_UP)),
                     COMBO_VOLUME(BIT(MUX_INPUT_VOL_DOWN)),
-            },
-            .idle_handler = ui_common_handle_idle,
+            }
     };
+    init_input(&input_opts);
     mux_input_task(&input_opts);
+
     safe_quit(0);
-
-    close(joy_general);
-    close(joy_power);
-    close(joy_volume);
-    close(joy_extra);
-
     return 0;
 }

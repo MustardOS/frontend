@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../lvgl/lvgl.h"
+#include "input.h"
 
 extern lv_obj_t *ui_lblDatetime;
 extern lv_obj_t *ui_staCapacity;
@@ -28,7 +29,7 @@ void safe_quit(int exit_status);
 
 void init_display();
 
-void init_input(int *joy_general, int *joy_power, int *joy_volume, int *joy_extra);
+void init_input(mux_input_options *opts);
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *));
 

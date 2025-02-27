@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <linux/fb.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -8,6 +7,7 @@
 #include <getopt.h>
 #include <sys/mman.h>
 #include "../common/init.h"
+#include "../common/common.h"
 #include "../common/language.h"
 #include "../common/config.h"
 #include "../common/device.h"
@@ -15,6 +15,7 @@
 #include "../common/theme.h"
 
 char *mux_module;
+
 int msgbox_active = 0;
 int nav_sound = 0;
 
@@ -170,19 +171,19 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt_long(argc, argv, "w:h:d:x:y:imcH", long_options, NULL)) != -1) {
         switch (opt) {
             case 'w':
-                width = atoi(optarg);
+                width = safe_atoi(optarg);
                 break;
             case 'h':
-                height = atoi(optarg);
+                height = safe_atoi(optarg);
                 break;
             case 'd':
-                depth = atoi(optarg);
+                depth = safe_atoi(optarg);
                 break;
             case 'x':
-                hsync_len = atoi(optarg);
+                hsync_len = safe_atoi(optarg);
                 break;
             case 'y':
-                vsync_len = atoi(optarg);
+                vsync_len = safe_atoi(optarg);
                 break;
             case 'i':
                 ignore_dh = 1;

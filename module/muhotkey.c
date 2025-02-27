@@ -12,10 +12,10 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 #include "../common/theme.h"
-#include "../common/input.h"
 #include "../common/json/json.h"
 
 char *mux_module;
+
 int msgbox_active = 0;
 int nav_sound = 0;
 

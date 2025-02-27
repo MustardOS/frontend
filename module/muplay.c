@@ -11,6 +11,7 @@
 #include "../common/kiosk.h"
 
 char *mux_module;
+
 int msgbox_active = 0;
 int nav_sound = 0;
 

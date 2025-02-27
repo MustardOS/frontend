@@ -9,8 +9,9 @@
 #include "../lvgl/src/drivers/display/sdl.h"
 #include "../lvgl/src/drivers/input/evdev.h"
 #include "init.h"
-#include "ui_common.h"
+#include "input.h"
 #include "common.h"
+#include "ui_common.h"
 #include "language.h"
 #include "options.h"
 #include "config.h"
@@ -21,6 +22,11 @@ __thread uint64_t start_ms = 0;
 static struct dt_task_param dt_par;
 static struct bat_task_param bat_par;
 int current_capacity = -1;
+
+static int joy_general;
+static int joy_power;
+static int joy_volume;
+static int joy_extra;
 
 uint32_t mux_tick(void) {
     struct timespec tv_now;
@@ -52,6 +58,11 @@ void refresh_screen(lv_obj_t *screen) {
 }
 
 void safe_quit(int exit_status) {
+    close(joy_general);
+    close(joy_power);
+    close(joy_volume);
+    close(joy_extra);
+
     write_text_to_file("/tmp/safe_quit", "w", INT, exit_status);
 }
 
@@ -96,20 +107,32 @@ int open_input(const char *path, const char *error_message) {
     return fd;
 }
 
-void init_input(int *joy_general, int *joy_power, int *joy_volume, int *joy_extra) {
-    *joy_general = open_input(device.INPUT_EVENT.JOY_GENERAL, lang.SYSTEM.NO_JOY_GENERAL);
-    *joy_power = open_input(device.INPUT_EVENT.JOY_POWER, lang.SYSTEM.NO_JOY_POWER);
-    *joy_volume = open_input(device.INPUT_EVENT.JOY_VOLUME, lang.SYSTEM.NO_JOY_VOLUME);
-    *joy_extra = open_input(device.INPUT_EVENT.JOY_EXTRA, lang.SYSTEM.NO_JOY_EXTRA);
+void init_input(mux_input_options *opts) {
+    if (!opts) return;
+
+    joy_general = open_input(device.INPUT_EVENT.JOY_GENERAL, lang.SYSTEM.NO_JOY_GENERAL);
+    joy_power = open_input(device.INPUT_EVENT.JOY_POWER, lang.SYSTEM.NO_JOY_POWER);
+    joy_volume = open_input(device.INPUT_EVENT.JOY_VOLUME, lang.SYSTEM.NO_JOY_VOLUME);
+    joy_extra = open_input(device.INPUT_EVENT.JOY_EXTRA, lang.SYSTEM.NO_JOY_EXTRA);
+
+    opts->general_fd = joy_general;
+    opts->power_fd = joy_power;
+    opts->volume_fd = joy_volume;
+    opts->extra_fd = joy_extra;
 
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
 
     indev_drv.type = LV_INDEV_TYPE_KEYPAD;
     indev_drv.read_cb = evdev_read;
-    indev_drv.user_data = (void *) (intptr_t) (*joy_general);
+    indev_drv.user_data = (void *) (intptr_t) opts->general_fd;
 
     lv_indev_drv_register(&indev_drv);
+
+    opts->max_idle_ms = IDLE_MS;
+    opts->swap_btn = config.SETTINGS.ADVANCED.SWAP;
+    opts->stick_nav = true;
+    if (opts->idle_handler == NULL) opts->idle_handler = ui_common_handle_idle;
 }
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *)) {
