@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
             .press_handler = {[MUX_INPUT_POWER_SHORT] = handle_power},
             .input_handler = handle_input,
     };
-    init_input(&input_opts);
+    init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
     safe_quit(0);

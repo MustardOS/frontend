@@ -5,10 +5,6 @@ struct mux_device;
 struct mux_lang;
 struct footer_glyph;
 
-#define COMBO_ENTRY(mask, handler) { .type_mask = (mask), .press_handler = (handler), .hold_handler = (handler) }
-#define COMBO_VOLUME(mask) COMBO_ENTRY(mask, ui_common_handle_vol)
-#define COMBO_BRIGHT(mask) COMBO_ENTRY(mask, ui_common_handle_bright)
-
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title);
 

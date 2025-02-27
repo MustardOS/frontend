@@ -650,13 +650,29 @@ int main(int argc, char *argv[]) {
                             .press_handler = handle_kiosk_toggle,
                             .hold_handler = handle_kiosk_toggle,
                     },
-                    COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP)),
-                    COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN)),
-                    COMBO_VOLUME(BIT(MUX_INPUT_VOL_UP)),
-                    COMBO_VOLUME(BIT(MUX_INPUT_VOL_DOWN)),
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright,
+                            .hold_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright,
+                            .hold_handler = ui_common_handle_bright,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_vol,
+                            .hold_handler = ui_common_handle_vol,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_vol,
+                            .hold_handler = ui_common_handle_vol,
+                    },
             }
     };
-    init_input(&input_opts);
+    init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
     safe_quit(0);

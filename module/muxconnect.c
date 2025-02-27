@@ -402,15 +402,9 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
-            },
-            .combo = {
-                    COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP)),
-                    COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN)),
-                    COMBO_VOLUME(BIT(MUX_INPUT_VOL_UP)),
-                    COMBO_VOLUME(BIT(MUX_INPUT_VOL_DOWN)),
             }
     };
-    init_input(&input_opts);
+    init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
     safe_quit(0);

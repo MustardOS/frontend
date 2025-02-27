@@ -263,15 +263,9 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_DPAD_DOWN] = handle_down,
                     [MUX_INPUT_DPAD_LEFT] = handle_left,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right,
-            },
-            .combo = {
-                    COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP)),
-                    COMBO_BRIGHT(BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN)),
-                    COMBO_VOLUME(BIT(MUX_INPUT_VOL_UP)),
-                    COMBO_VOLUME(BIT(MUX_INPUT_VOL_DOWN)),
             }
     };
-    init_input(&input_opts);
+    init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
     safe_quit(exit_status);

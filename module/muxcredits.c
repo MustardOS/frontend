@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
                     },
             }
     };
-    init_input(&input_opts);
+    init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
     safe_quit(0);

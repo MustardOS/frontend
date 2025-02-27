@@ -107,7 +107,7 @@ int open_input(const char *path, const char *error_message) {
     return fd;
 }
 
-void init_input(mux_input_options *opts) {
+void init_input(mux_input_options *opts, int def_combo) {
     if (!opts) return;
 
     joy_general = open_input(device.INPUT_EVENT.JOY_GENERAL, lang.SYSTEM.NO_JOY_GENERAL);
@@ -132,6 +132,30 @@ void init_input(mux_input_options *opts) {
     opts->max_idle_ms = IDLE_MS;
     opts->swap_btn = config.SETTINGS.ADVANCED.SWAP;
     opts->stick_nav = true;
+
+    if (def_combo) {
+        opts->combo[0] = (mux_input_combo) {
+                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                .press_handler = ui_common_handle_bright,
+                .hold_handler = ui_common_handle_bright
+        };
+        opts->combo[1] = (mux_input_combo) {
+                .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                .press_handler = ui_common_handle_bright,
+                .hold_handler = ui_common_handle_bright
+        };
+        opts->combo[2] = (mux_input_combo) {
+                .type_mask = BIT(MUX_INPUT_VOL_UP),
+                .press_handler = ui_common_handle_vol,
+                .hold_handler = ui_common_handle_vol
+        };
+        opts->combo[3] = (mux_input_combo) {
+                .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                .press_handler = ui_common_handle_vol,
+                .hold_handler = ui_common_handle_vol
+        };
+    }
+
     if (opts->idle_handler == NULL) opts->idle_handler = ui_common_handle_idle;
 }
 
