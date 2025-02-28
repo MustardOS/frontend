@@ -43,8 +43,6 @@ lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-lv_group_t *ui_group_installed;
-
 int ui_count = 0;
 int current_item_index = 0;
 int first_open = 1;
@@ -138,7 +136,6 @@ void create_archive_items() {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
-    ui_group_installed = lv_group_create();
 
     for (size_t i = 0; i < file_count; i++) {
         char *base_filename = file_names[i];
@@ -196,16 +193,15 @@ void create_archive_items() {
         lv_obj_t *ui_lblArchiveItem = lv_label_create(ui_pnlArchive);
         apply_theme_list_item(&theme, ui_lblArchiveItem, strip_ext(archive_store));
 
-        lv_obj_t *ui_lblArchiveItemInstalled = lv_label_create(ui_pnlArchive);
-        apply_theme_list_value(&theme, ui_lblArchiveItemInstalled, is_installed ? lang.MUXARCHIVE.INSTALLED : "");
-
         lv_obj_t *ui_lblArchiveItemGlyph = lv_img_create(ui_pnlArchive);
         apply_theme_list_glyph(&theme, ui_lblArchiveItemGlyph, mux_module, items[i].extra_data);
 
         lv_group_add_obj(ui_group, ui_lblArchiveItem);
         lv_group_add_obj(ui_group_glyph, ui_lblArchiveItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlArchive);
-        lv_group_add_obj(ui_group_installed, ui_lblArchiveItemInstalled);
+
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblArchiveItem, ui_lblArchiveItemGlyph, items[i].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblArchiveItem, items[i].display_name);
 
         free(base_filename);
     }
@@ -217,13 +213,15 @@ void create_archive_items() {
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            items[current_item_index].display_name);
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         nav_prev(ui_group, 1);
         nav_prev(ui_group_glyph, 1);
         nav_prev(ui_group_panel, 1);
-        nav_prev(ui_group_installed, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
     nav_moved = 1;
 }
 
@@ -234,13 +232,15 @@ void list_nav_next(int steps) {
         play_sound("navigate", nav_sound, 0, 0);
     }
     for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            items[current_item_index].display_name);
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
         nav_next(ui_group, 1);
         nav_next(ui_group_glyph, 1);
         nav_next(ui_group_panel, 1);
-        nav_next(ui_group_installed, 1);
     }
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
     nav_moved = 1;
 }
 
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     load_lang(&lang);
 
-    init_theme(1, 0);
+    init_theme(1, 1);
     init_display();
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXARCHIVE.TITLE);
