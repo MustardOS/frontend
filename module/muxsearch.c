@@ -538,24 +538,28 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
+void handle_keyboard_OK_press(void) {
+    key_show = 0;
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+    if (element_focused == ui_lblLookup) {
+        lv_label_set_text(ui_lblLookupValue,
+                          lv_textarea_get_text(ui_txtEntry));
+    }
+
+    reset_osk(key_entry);
+
+    lv_textarea_set_text(ui_txtEntry, "");
+    lv_group_set_focus_cb(ui_group, NULL);
+    lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
+}
+
 void handle_keyboard_press(void) {
     play_sound("navigate", nav_sound, 0, 0);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (strcasecmp(is_key, OSK_DONE) == 0) {
-        key_show = 0;
-        struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-
-        if (element_focused == ui_lblLookup) {
-            lv_label_set_text(ui_lblLookupValue,
-                              lv_textarea_get_text(ui_txtEntry));
-        }
-
-        reset_osk(key_entry);
-
-        lv_textarea_set_text(ui_txtEntry, "");
-        lv_group_set_focus_cb(ui_group, NULL);
-        lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
+        handle_keyboard_OK_press();
     } else if (strcmp(is_key, OSK_UPPER) == 0) {
         lv_btnmatrix_set_map(key_entry, key_upper_map);
     } else if (strcmp(is_key, OSK_CHAR) == 0) {
@@ -946,6 +950,16 @@ void ui_refresh_task() {
     }
 }
 
+void on_key_event(struct input_event ev) {
+    if (ev.code == KEY_ENTER && ev.value == 1) {
+        handle_keyboard_OK_press();
+    } if (ev.code == KEY_ESC && ev.value == 1) {
+        handle_b();
+    } else {
+        process_key_event(&ev, ui_txtEntry);
+    }
+}
+
 int main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
                      "\t-d Name of directory to search\n\n";
@@ -1047,6 +1061,7 @@ int main(int argc, char *argv[]) {
             }
     };
     init_input(&input_opts, true);
+    register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 
     safe_quit(0);

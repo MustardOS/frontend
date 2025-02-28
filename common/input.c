@@ -20,6 +20,8 @@
 
 #define INPUT_PATH "/dev/input/by-id/"
 
+key_event_callback event_handler = NULL;
+
 int find_keyboard_devices(int *fds, int max_fds) {
     struct dirent *entry;
     DIR *dir = opendir(INPUT_PATH);
@@ -363,9 +365,9 @@ static void process_usb_keyboard_keys(const mux_input_options *opts, struct inpu
         mux_type = MUX_INPUT_R1;
     } else if (event.code == KEY_SPACE) {
         mux_type = MUX_INPUT_R2;
-    } else if (event.code == KEY_LEFTSHIFT) {
+    } else if (event.code == KEY_LEFTCTRL || event.code == KEY_RIGHTCTRL) {
         mux_type = MUX_INPUT_SELECT;
-    } else if (event.code == KEY_RIGHTSHIFT) {
+    } else if (event.code == KEY_LEFTSHIFT || event.code == KEY_RIGHTSHIFT) {
         mux_type = MUX_INPUT_START;
     } else if (event.code == KEY_ESC) {
         mux_type = MUX_INPUT_MENU_SHORT;
@@ -663,10 +665,14 @@ void *keyboard_handler(void *arg) {
                 struct input_event ev;
                 if (read(events[i].data.fd, &ev, sizeof(struct input_event)) > 0) {
                     if (ev.type == EV_KEY) {
-                        if (ev.code == KEY_UP || ev.code == KEY_DOWN || ev.code == KEY_LEFT || ev.code == KEY_RIGHT) {
-                            process_usb_keyboard_arrow_keys(opts, ev);
+                        if (key_show) {
+                            if (event_handler) event_handler(ev);
                         } else {
-                            process_usb_keyboard_keys(opts, ev);
+                            if (ev.code == KEY_UP || ev.code == KEY_DOWN || ev.code == KEY_LEFT || ev.code == KEY_RIGHT) {
+                                process_usb_keyboard_arrow_keys(opts, ev);
+                            } else {
+                                process_usb_keyboard_keys(opts, ev);
+                            }
                         }
                     }
                 }
@@ -716,6 +722,10 @@ void *joystick_handler(void *arg) {
     }
     close(usb_fd);
     return NULL;
+}
+
+void register_key_event_callback(key_event_callback cb) {
+    event_handler = cb;
 }
 
 void mux_input_task(const mux_input_options *opts) {

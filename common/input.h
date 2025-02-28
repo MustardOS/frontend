@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <linux/input.h>
 
 extern int key_show;
 extern bool swap_axis;
@@ -161,3 +162,7 @@ bool mux_input_pressed(mux_input_type type);
 // Causes the input task to exit at the start of the next iteration of the event loop (e.g., after
 // processing currently pressed or held inputs).
 void mux_input_stop(void);
+
+typedef void (*key_event_callback)(struct input_event ev);
+
+void register_key_event_callback(key_event_callback cb);
