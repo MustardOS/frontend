@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <linux/input.h>
 
 extern int key_show;
 extern int key_curr;
@@ -30,3 +31,5 @@ void key_right();
 void key_swap();
 
 void key_backspace(lv_obj_t *entry);
+
+void process_key_event(struct input_event *ev, lv_obj_t *entry);

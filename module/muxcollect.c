@@ -675,18 +675,21 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
+void handle_keyboard_OK_press(void) {
+    key_show = 0;
+    snprintf(new_dir, sizeof(new_dir), "%s/%s",
+             sys_dir, lv_textarea_get_text(ui_txtEntry));
+    create_directories(new_dir);
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txtEntry));
+    load_mux("collection");
+    mux_input_stop();
+}
 void handle_keyboard_press(void) {
     play_sound("navigate", nav_sound, 0, 0);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (strcasecmp(is_key, OSK_DONE) == 0) {
-        key_show = 0;
-        snprintf(new_dir, sizeof(new_dir), "%s/%s",
-                 sys_dir, lv_textarea_get_text(ui_txtEntry));
-        create_directories(new_dir);
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txtEntry));
-        load_mux("collection");
-        mux_input_stop();
+        handle_keyboard_OK_press();
     } else if (strcmp(is_key, OSK_UPPER) == 0) {
         lv_btnmatrix_set_map(key_entry, key_upper_map);
     } else if (strcmp(is_key, OSK_CHAR) == 0) {
@@ -1199,6 +1202,16 @@ void ui_refresh_task() {
     }
 }
 
+void on_key_event(struct input_event ev) {
+    if (ev.code == KEY_ENTER && ev.value == 1) {
+        handle_keyboard_OK_press();
+    } if (ev.code == KEY_ESC && ev.value == 1) {
+        handle_b();
+    } else {
+        process_key_event(&ev, ui_txtEntry);
+    }
+}
+
 int main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Content Collection\nUsage: %s <-adi>\n\nOptions:\n"
                      "\t-a Add mode\n"
@@ -1385,6 +1398,7 @@ int main(int argc, char *argv[]) {
             }
     };
     init_input(&input_opts, true);
+    register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 
     free_items(items, item_count);

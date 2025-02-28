@@ -36,6 +36,91 @@ const char *key_number_map[] = {"7", "8", "9", "\n",
                                 "1", "2", "3", "\n",
                                 "0", ".", OSK_DONE, NULL};
 
+// Track modifier states
+static int shift_pressed = 0;
+static int caps_lock_active = 0;
+
+// Function to map key codes to characters
+char get_shifted_char(uint16_t key) {
+    bool alpha_shifted = (shift_pressed && !caps_lock_active) || (!shift_pressed && caps_lock_active);
+
+    switch (key) {
+        case KEY_A: return alpha_shifted ? 'A' : 'a';
+        case KEY_B: return alpha_shifted ? 'B' : 'b';
+        case KEY_C: return alpha_shifted ? 'C' : 'c';
+        case KEY_D: return alpha_shifted ? 'D' : 'd';
+        case KEY_E: return alpha_shifted ? 'E' : 'e';
+        case KEY_F: return alpha_shifted ? 'F' : 'f';
+        case KEY_G: return alpha_shifted ? 'G' : 'g';
+        case KEY_H: return alpha_shifted ? 'H' : 'h';
+        case KEY_I: return alpha_shifted ? 'I' : 'i';
+        case KEY_J: return alpha_shifted ? 'J' : 'j';
+        case KEY_K: return alpha_shifted ? 'K' : 'k';
+        case KEY_L: return alpha_shifted ? 'L' : 'l';
+        case KEY_M: return alpha_shifted ? 'M' : 'm';
+        case KEY_N: return alpha_shifted ? 'N' : 'n';
+        case KEY_O: return alpha_shifted ? 'O' : 'o';
+        case KEY_P: return alpha_shifted ? 'P' : 'p';
+        case KEY_Q: return alpha_shifted ? 'Q' : 'q';
+        case KEY_R: return alpha_shifted ? 'R' : 'r';
+        case KEY_S: return alpha_shifted ? 'S' : 's';
+        case KEY_T: return alpha_shifted ? 'T' : 't';
+        case KEY_U: return alpha_shifted ? 'U' : 'u';
+        case KEY_V: return alpha_shifted ? 'V' : 'v';
+        case KEY_W: return alpha_shifted ? 'W' : 'w';
+        case KEY_X: return alpha_shifted ? 'X' : 'x';
+        case KEY_Y: return alpha_shifted ? 'Y' : 'y';
+        case KEY_Z: return alpha_shifted ? 'Z' : 'z';
+        case KEY_1: return shift_pressed ? '!' : '1';
+        case KEY_2: return shift_pressed ? '@' : '2';
+        case KEY_3: return shift_pressed ? '#' : '3';
+        case KEY_4: return shift_pressed ? '$' : '4';
+        case KEY_5: return shift_pressed ? '%' : '5';
+        case KEY_6: return shift_pressed ? '^' : '6';
+        case KEY_7: return shift_pressed ? '&' : '7';
+        case KEY_8: return shift_pressed ? '*' : '8';
+        case KEY_9: return shift_pressed ? '(' : '9';
+        case KEY_0: return shift_pressed ? ')' : '0';
+        case KEY_MINUS: return shift_pressed ? '_' : '-';
+        case KEY_EQUAL: return shift_pressed ? '+' : '=';
+        case KEY_LEFTBRACE: return shift_pressed ? '{' : '[';
+        case KEY_RIGHTBRACE: return shift_pressed ? '}' : ']';
+        case KEY_SEMICOLON: return shift_pressed ? ':' : ';';
+        case KEY_APOSTROPHE: return shift_pressed ? '"' : '\'';
+        case KEY_GRAVE: return shift_pressed ? '~' : '`';
+        case KEY_BACKSLASH: return shift_pressed ? '|' : '\\';
+        case KEY_COMMA: return shift_pressed ? '<' : ',';
+        case KEY_DOT: return shift_pressed ? '>' : '.';
+        case KEY_SLASH: return shift_pressed ? '?' : '/';
+        case KEY_SPACE: return ' ';
+        default: return 0;
+    }
+}
+
+void process_key_event(struct input_event *ev, lv_obj_t *entry) {
+    if (ev->type == EV_KEY) {
+        if (ev->code == KEY_LEFTSHIFT || ev->code == KEY_RIGHTSHIFT) {
+            shift_pressed = (ev->value > 0);
+            return;
+        }
+
+        if (ev->code == KEY_CAPSLOCK && ev->value == 1) {
+            caps_lock_active = !caps_lock_active;
+            return;
+        }
+
+        if (ev->value > 0) {  // Key press event
+            char key_char = get_shifted_char(ev->code);
+
+            if (key_char) {
+                lv_textarea_add_char(entry, key_char);
+            } else if (ev->code == KEY_BACKSPACE) {
+                lv_textarea_del_char(entry);
+            }
+        }
+    }
+}
+
 void osk_handler(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
