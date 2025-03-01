@@ -7,7 +7,7 @@
 #include <libgen.h>
 #include <linux/limits.h>
 #include "../common/init.h"
-#include "../common/img/nothing.h"
+#include "../common/img/missing.h"
 #include "../common/common.h"
 #include "../common/options.h"
 #include "../common/language.h"
@@ -82,17 +82,27 @@ void show_help() {
 }
 
 int version_check() {
-    char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
-
     char picker_archive[MAX_BUFFER_SIZE];
-    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s", sys_dir, picker_name, picker_extension);
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
+             sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
     if (!extract_file_from_zip(picker_archive, "version.txt", TEMP_VERSION)) return 0;
 
     char muos_version[MAX_BUFFER_SIZE];
     snprintf(muos_version, sizeof(muos_version), "%s", read_line_from_file(MUOS_VERSION, 1));
-    if (str_startswith(muos_version, read_line_from_file(TEMP_VERSION, 1))) return 1;
+    return str_startswith(muos_version, read_line_from_file(TEMP_VERSION, 1));
+}
 
-    return 0;
+int resolution_check() {
+    char picker_archive[MAX_BUFFER_SIZE];
+    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
+             sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
+
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+
+    char device_preview[PATH_MAX];
+    snprintf(device_preview, sizeof(device_preview), "%spreview.png", mux_dimension);
+    return extract_file_from_zip(picker_archive, device_preview, TEMP_PREVIEW);
 }
 
 void image_refresh() {
@@ -101,23 +111,11 @@ void image_refresh() {
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
-    char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
-    char picker_archive[MAX_BUFFER_SIZE];
-
-    snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s", sys_dir, picker_name, picker_extension);
-
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-    char device_preview[PATH_MAX];
-    snprintf(device_preview, sizeof(device_preview), "%spreview.png", mux_dimension);
-
-    if (!extract_file_from_zip(picker_archive, device_preview, TEMP_PREVIEW) &&
-        !extract_file_from_zip(picker_archive, "preview.png", TEMP_PREVIEW)) {
-        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-        return;
+    if (!resolution_check()) {
+        lv_img_set_src(ui_imgBox, &ui_image_Missing);
+    } else {
+        lv_img_set_src(ui_imgBox, "M:" TEMP_PREVIEW);
     }
-
-    lv_img_set_src(ui_imgBox, "M:" TEMP_PREVIEW);
 }
 
 void create_picker_items() {
@@ -232,7 +230,13 @@ void handle_confirm() {
     } else {
         if (!strcasecmp(picker_type, "theme") && !version_check()) {
             play_sound("error", nav_sound, 0, 1);
-            toast_message(lang.MUXPICKER.INVALID, 1000, 1000);
+            toast_message(lang.MUXPICKER.INVALID_VER, 1000, 1000);
+            return;
+        }
+
+        if (!strcasecmp(picker_type, "theme") && !resolution_check()) {
+            play_sound("error", nav_sound, 0, 1);
+            toast_message(lang.MUXPICKER.INVALID_RES, 1000, 1000);
             return;
         }
 
@@ -240,15 +244,17 @@ void handle_confirm() {
         snprintf(picker_script, sizeof(picker_script),
                  "%sscript/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
+        char *selected_item = lv_label_get_text(lv_group_get_focused(ui_group));
+
         char relative_zip_path[PATH_MAX];
         if (strcasecmp(base_dir, sys_dir) == 0) {
             snprintf(relative_zip_path, sizeof(relative_zip_path), "%s",
-                     lv_label_get_text(lv_group_get_focused(ui_group)));
+                     selected_item);
         } else {
             char *relative_path = sys_dir + strlen(base_dir);
             if (*relative_path == '/') relative_path++;
             snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s",
-                     relative_path, lv_label_get_text(lv_group_get_focused(ui_group)));
+                     relative_path, selected_item);
         }
 
         const char *args[] = {
@@ -271,6 +277,56 @@ void handle_confirm() {
 
         write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
     }
+
+    load_mux("picker");
+    mux_input_stop();
+}
+
+void handle_confirm_force() {
+    if (msgbox_active || ui_count <= 0 ||
+        strcasecmp(picker_type, "theme") != 0 ||
+        items[current_item_index].content_type == FOLDER) {
+        return;
+    }
+
+    play_sound("confirm", nav_sound, 0, 1);
+
+    static char picker_script[MAX_BUFFER_SIZE];
+    snprintf(picker_script, sizeof(picker_script),
+             "%sscript/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
+
+    char *selected_item = lv_label_get_text(lv_group_get_focused(ui_group));
+
+    char relative_zip_path[PATH_MAX];
+    if (strcasecmp(base_dir, sys_dir) == 0) {
+        snprintf(relative_zip_path, sizeof(relative_zip_path), "%s",
+                 selected_item);
+    } else {
+        char *relative_path = sys_dir + strlen(base_dir);
+        if (*relative_path == '/') relative_path++;
+        snprintf(relative_zip_path, sizeof(relative_zip_path), "%s/%s",
+                 relative_path, selected_item);
+    }
+
+    const char *args[] = {
+            (INTERNAL_PATH "bin/fbpad"),
+            "-bg", (char *) theme.TERMINAL.BACKGROUND,
+            "-fg", (char *) theme.TERMINAL.FOREGROUND,
+            picker_script, "install", relative_zip_path,
+            NULL
+    };
+
+    setenv("TERM", "xterm-256color", 1);
+
+    if (config.VISUAL.BLACKFADE) {
+        fade_to_black(ui_screen);
+    } else {
+        unload_image_animation();
+    }
+
+    run_exec(args);
+
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
     load_mux("picker");
     mux_input_stop();
@@ -519,6 +575,7 @@ int main(int argc, char *argv[]) {
             .press_handler = {
                     [MUX_INPUT_A] = handle_confirm,
                     [MUX_INPUT_B] = handle_back,
+                    [MUX_INPUT_X] = handle_confirm_force,
                     [MUX_INPUT_Y] = handle_save,
                     [MUX_INPUT_MENU_SHORT] = handle_help,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
