@@ -1872,6 +1872,49 @@ void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar, lv_obj_t *volume_ic
     }
 }
 
+int resolution_check(const char *zip_filename) {
+    printf("Inspecting theme for supported resolutions: %s\n", zip_filename);
+    const char *resolutions[] = {"640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720"};
+    size_t num_resolutions = sizeof(resolutions) / sizeof(resolutions[0]);
+
+    mz_zip_archive zip;
+    mz_zip_zero_struct(&zip);
+
+    if (!mz_zip_reader_init_file(&zip, zip_filename, 0)) {
+        printf("Failed to open ZIP archive!\n");
+        return;
+    }
+
+    for (mz_uint i = 0; i < mz_zip_reader_get_num_files(&zip); i++) {
+        mz_zip_archive_file_stat file_stat;
+        if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
+
+        const char *filename = file_stat.m_filename;
+        char *slash_pos = strchr(filename, '/'); // Find first '/'
+
+        if (slash_pos && slash_pos == strrchr(filename, '/')) { // Ensure it's a root folder
+            size_t folder_length = slash_pos - filename;
+            
+            // Extract folder name
+            char folder_name[256];
+            strncpy(folder_name, filename, folder_length);
+            folder_name[folder_length] = '\0';
+
+            // Check if the folder name matches any target resolutions
+            for (size_t j = 0; j < num_resolutions; j++) {
+                if (strcmp(folder_name, resolutions[j]) == 0) {
+                    mz_zip_reader_end(&zip);
+                    printf("Found supported resolution\n");
+                    return 1;  // Found a match, exit early
+                }
+            }
+        }
+    }
+    mz_zip_reader_end(&zip);
+    printf("No supported resolutions found\n");
+    return 0;
+}
+
 int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path) {
     mz_zip_archive zip;
     memset(&zip, 0, sizeof(zip));
