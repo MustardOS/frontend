@@ -827,14 +827,22 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
     // If theme does not support device resolution fallback to default but only after factory reset
     if (!config->BOOT.FACTORY_RESET) {
+        char theme_device_folder[MAX_BUFFER_SIZE];
+
         if (config->SETTINGS.HDMI.ENABLED && read_int_from_file(device->SCREEN.HDMI, 1) &&
             config->SETTINGS.HDMI.THEME_RESOLUTION > 0) {
             device->MUX.WIDTH = config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH;
             device->MUX.HEIGHT = config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT;
             get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+            snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
+            if (directory_exist(theme_device_folder)) {
+                float scale_width = (float)device->SCREEN.EXTERNAL.WIDTH / device->MUX.WIDTH;
+                float scale_height = (float)device->SCREEN.EXTERNAL.HEIGHT / device->MUX.HEIGHT;
+                device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width : scale_height; // Ensure neither dimension exceeds target
+                printf("Calculated scale factor: %.2f\n", device->SCREEN.ZOOM);
+            }
         }
 
-        char theme_device_folder[MAX_BUFFER_SIZE];
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
         if (!directory_exist(theme_device_folder)) {
             scale_theme(device);
