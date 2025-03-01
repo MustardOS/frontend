@@ -769,6 +769,57 @@ int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size){
     return 0;
 }
 
+void scale_theme(struct mux_device *device) {
+    int16_t target_width = device->MUX.WIDTH;
+    int16_t target_height = device->MUX.HEIGHT;
+    
+    struct {
+        int16_t width;
+        int16_t height;
+    } dimensions[] = {
+            {640, 480},
+            {720, 480},
+            {720, 576},
+            {720, 720},
+            {1024, 768},
+            {1280, 720}
+    };
+
+    char theme_device_folder[MAX_BUFFER_SIZE];
+    for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); i++) {
+        if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%sx%s", STORAGE_THEME, dimensions[i].width, dimensions[i].height);
+        if (!directory_exist(theme_device_folder)) continue;
+
+        // Compare aspect ratios
+        if (target_width * dimensions[i].height == target_height * dimensions[i].width) {
+            device->MUX.WIDTH = dimensions[i].width;
+            device->MUX.HEIGHT = dimensions[i].height;
+            device->SCREEN.ZOOM = (float)target_width / dimensions[i].width;;
+            printf("Scaling resolution: %d x %d to %d x %d\n", dimensions[i].width, dimensions[i].height, target_width, target_height);
+            printf("Calculated scale factor: %.2f\n", device->SCREEN.ZOOM);
+            return;
+        }
+    }
+
+    for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); i++) {
+        if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%sx%s", STORAGE_THEME, dimensions[i].width, dimensions[i].height);
+        if (!directory_exist(theme_device_folder)) continue;
+
+        device->MUX.WIDTH = dimensions[i].width;
+        device->MUX.HEIGHT = dimensions[i].height;
+
+        // Calculate scale factor to ensure it fits within target dimensions
+        float scale_width = (float)target_width / dimensions[i].width;
+        float scale_height = (float)target_height / dimensions[i].height;
+        device->SCREEN.ZOOM = fminf(scale_width, scale_height); // Ensure neither dimension exceeds target
+        printf("Scaling resolution: %d x %d to %d x %d\n", dimensions[i].width, dimensions[i].height, target_width, target_height);
+        printf("Calculated scale factor: %.2f\n", device->SCREEN.ZOOM);
+        return;
+    }
+}
+
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device) {
     char scheme[MAX_BUFFER_SIZE];
     char mux_dimension[15];
@@ -786,8 +837,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
         char theme_device_folder[MAX_BUFFER_SIZE];
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
         if (!directory_exist(theme_device_folder)) {
-            device->MUX.WIDTH = 640;
-            device->MUX.HEIGHT = 480;
+            scale_theme(device);
             get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         }
     }
