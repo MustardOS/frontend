@@ -92,7 +92,7 @@ int version_check() {
     return str_startswith(muos_version, read_line_from_file(TEMP_VERSION, 1));
 }
 
-int resolution_check() {
+int extract_preview() {
     char picker_archive[MAX_BUFFER_SIZE];
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
@@ -111,7 +111,7 @@ void image_refresh() {
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
-    if (!resolution_check()) {
+    if (!extract_preview()) {
         lv_img_set_src(ui_imgBox, &ui_image_Missing);
     } else {
         lv_img_set_src(ui_imgBox, "M:" TEMP_PREVIEW);
@@ -233,8 +233,11 @@ void handle_confirm() {
             toast_message(lang.MUXPICKER.INVALID_VER, 1000, 1000);
             return;
         }
-
-        if (!strcasecmp(picker_type, "theme") && !resolution_check()) {
+        
+        char picker_archive[MAX_BUFFER_SIZE];
+        snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
+                sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
+        if (!strcasecmp(picker_type, "theme") && !resolution_check(picker_archive)) {
             play_sound("error", nav_sound, 0, 1);
             toast_message(lang.MUXPICKER.INVALID_RES, 1000, 1000);
             return;
