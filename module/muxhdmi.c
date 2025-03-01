@@ -55,6 +55,35 @@ struct help_msg {
     char *message;
 };
 
+struct theme_resolution {
+    char *resolution;
+    int value;
+};
+
+struct theme_resolution theme_resolutions[] = {
+    {"640x480", 1},
+    {"720x480", 2},
+    {"720x576", 3},
+    {"720x720", 4},
+    {"1024x768", 5},
+    {"1280x720", 6}
+};
+
+int get_theme_resolution_value(char *resolution) {
+    for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
+        if (strcmp(resolution, theme_resolutions[i].resolution) == 0) return theme_resolutions[i].value;
+    }
+}
+
+void restore_theme_resolution() {
+    for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
+        if (theme_resolutions[i].value == config.SETTINGS.HDMI.THEME_RESOLUTION) {
+            int index = lv_dropdown_get_option_index(ui_droThemeResolution, theme_resolutions[i].resolution);
+            lv_dropdown_set_selected(ui_droThemeResolution, index <= 0 ? 0 : index);
+        }
+    }
+}
+
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblEnable,          lang.MUXHDMI.HELP.ACTIVE},
@@ -125,8 +154,7 @@ void restore_hdmi_options() {
     lv_dropdown_set_selected(ui_droEnable, config.SETTINGS.HDMI.ENABLED);
     map_drop_down_to_index(ui_droResolution, config.SETTINGS.HDMI.RESOLUTION,
                            (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 11, 0);
-    map_drop_down_to_index(ui_droThemeResolution, config.SETTINGS.HDMI.THEME_RESOLUTION,
-                           (int[]) {0, 1, 2, 3, 4, 5, 6}, 7, 0);
+    restore_theme_resolution();
     lv_dropdown_set_selected(ui_droSpace, config.SETTINGS.HDMI.SPACE);
     lv_dropdown_set_selected(ui_droDepth, config.SETTINGS.HDMI.DEPTH);
     lv_dropdown_set_selected(ui_droRange, config.SETTINGS.HDMI.RANGE);
@@ -138,8 +166,9 @@ void save_hdmi_options() {
     int idx_enable = lv_dropdown_get_selected(ui_droEnable);
     int idx_resolution = map_drop_down_to_value(lv_dropdown_get_selected(ui_droResolution),
                                                 (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 12, 0);
-    int idx_theme_resolution = map_drop_down_to_value(lv_dropdown_get_selected(ui_droThemeResolution),
-                                                      (int[]) {0, 1, 2, 3, 4, 5, 6}, 7, 0);
+    char theme_resolution[MAX_BUFFER_SIZE];
+    lv_dropdown_get_selected_str(ui_droThemeResolution, theme_resolution, sizeof(theme_resolution));
+    int idx_theme_resolution = get_theme_resolution_value(theme_resolution);
     int idx_space = lv_dropdown_get_selected(ui_droSpace);
     int idx_depth = lv_dropdown_get_selected(ui_droDepth);
     int idx_range = lv_dropdown_get_selected(ui_droRange);
@@ -281,14 +310,15 @@ void init_navigation_group() {
  *           "1080p + 50hz",
  *           "1080p + 60hz"}, 11);
  */
-    add_drop_down_options(ui_droThemeResolution, (char *[]) {
-            lang.MUXHDMI.SCREEN,
-            "640x480",
-            "720x480",
-            "720x576",
-            "720x720",
-            "1024x768",
-            "1280x720"}, 7);
+    lv_dropdown_clear_options(ui_droThemeResolution);
+    lv_dropdown_add_option(ui_droThemeResolution, lang.MUXHDMI.SCREEN, LV_DROPDOWN_POS_LAST);
+    char theme_device_folder[MAX_BUFFER_SIZE];
+    for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, theme_resolutions[i].resolution);
+        if (directory_exist(theme_device_folder)) {
+            lv_dropdown_add_option(ui_droThemeResolution, theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
+        }
+    }
     add_drop_down_options(ui_droSpace, (char *[]) {
             "RGB",
             "YUV444",
