@@ -20,10 +20,6 @@
 #include "../draw/sdl/lv_draw_sdl.h"
 #include "../draw/sw/lv_draw_sw.h"
 
-#if LV_USE_THEME_DEFAULT
-#include "../extra/themes/default/lv_theme_default.h"
-#endif
-
 /*********************
  *      DEFINES
  *********************/
