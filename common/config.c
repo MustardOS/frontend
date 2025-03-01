@@ -91,6 +91,10 @@ void load_config(struct mux_config *config) {
             config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 720;
             break;
         case 5:
+            config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH = 1024;
+            config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 768;
+            break;
+        case 6:
             config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH = 1280;
             config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 720;
             break;

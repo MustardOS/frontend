@@ -126,7 +126,7 @@ void restore_hdmi_options() {
     map_drop_down_to_index(ui_droResolution, config.SETTINGS.HDMI.RESOLUTION,
                            (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 11, 0);
     map_drop_down_to_index(ui_droThemeResolution, config.SETTINGS.HDMI.THEME_RESOLUTION,
-                           (int[]) {0, 1, 2, 3, 4, 5}, 6, 0);
+                           (int[]) {0, 1, 2, 3, 4, 5, 6}, 7, 0);
     lv_dropdown_set_selected(ui_droSpace, config.SETTINGS.HDMI.SPACE);
     lv_dropdown_set_selected(ui_droDepth, config.SETTINGS.HDMI.DEPTH);
     lv_dropdown_set_selected(ui_droRange, config.SETTINGS.HDMI.RANGE);
@@ -139,7 +139,7 @@ void save_hdmi_options() {
     int idx_resolution = map_drop_down_to_value(lv_dropdown_get_selected(ui_droResolution),
                                                 (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 12, 0);
     int idx_theme_resolution = map_drop_down_to_value(lv_dropdown_get_selected(ui_droThemeResolution),
-                                                      (int[]) {0, 1, 2, 3, 4, 5}, 6, 0);
+                                                      (int[]) {0, 1, 2, 3, 4, 5, 6}, 7, 0);
     int idx_space = lv_dropdown_get_selected(ui_droSpace);
     int idx_depth = lv_dropdown_get_selected(ui_droDepth);
     int idx_range = lv_dropdown_get_selected(ui_droRange);
@@ -287,7 +287,8 @@ void init_navigation_group() {
             "720x480",
             "720x576",
             "720x720",
-            "1280x720"}, 6);
+            "1024x768",
+            "1280x720"}, 7);
     add_drop_down_options(ui_droSpace, (char *[]) {
             "RGB",
             "YUV444",
