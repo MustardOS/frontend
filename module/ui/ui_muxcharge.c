@@ -6,6 +6,7 @@
 #include "../../common/img/nothing.h"
 
 lv_obj_t *ui_scrCharge;
+lv_obj_t *ui_blank;
 
 lv_obj_t *ui_imgWall;
 
@@ -18,6 +19,13 @@ lv_obj_t *ui_lblBoot;
 
 void init_mux(void) {
     ui_scrCharge = lv_obj_create(NULL);
+
+    ui_blank = lv_obj_create(ui_scrCharge);
+    lv_obj_set_width(ui_blank, device.MUX.WIDTH);
+    lv_obj_set_height(ui_blank, device.MUX.HEIGHT);
+    lv_obj_set_align(ui_blank, LV_ALIGN_CENTER);
+    lv_obj_set_style_bg_color(ui_blank, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_blank, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     apply_gradient_to_ui_screen(ui_scrCharge, theme, device);
 

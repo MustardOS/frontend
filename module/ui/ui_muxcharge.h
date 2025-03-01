@@ -5,6 +5,7 @@
 void init_mux(void);
 
 extern lv_obj_t *ui_scrCharge;
+extern lv_obj_t *ui_blank;
 
 extern lv_obj_t *ui_imgWall;
 

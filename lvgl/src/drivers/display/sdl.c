@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <SDL2/SDL.h>
@@ -26,18 +27,39 @@ void sdl_init(void) {
 }
 
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
-    const lv_coord_t h_res = disp_drv->physical_hor_res == -1 ? disp_drv->hor_res : disp_drv->physical_hor_res;
-    const lv_coord_t v_res = disp_drv->physical_ver_res == -1 ? disp_drv->ver_res : disp_drv->physical_ver_res;
-
-    if (area->x2 < 0 || area->y2 < 0 || area->x1 > h_res - 1 || area->y1 > v_res - 1) {
+    if (area->x2 < 0 || area->y2 < 0 || area->x1 > device.SCREEN.WIDTH - 1 || area->y1 > device.SCREEN.HEIGHT - 1) {
         lv_disp_flush_ready(disp_drv);
         return;
     }
 
-    monitor.pixel = (uint32_t *) color_p;
+    static lv_color_t *t_buf0 = NULL;
+    static lv_color_t *t_buf1 = NULL;
+    static lv_color_t *t_buf2 = NULL;
+    static int buffers_initialized = 0;
+    if (!buffers_initialized) {
+        t_buf0 = malloc(device.SCREEN.WIDTH * device.SCREEN.HEIGHT * sizeof(lv_color_t));
+        t_buf1 = malloc(device.SCREEN.WIDTH * device.SCREEN.HEIGHT * sizeof(lv_color_t));
+        t_buf2 = malloc(device.SCREEN.WIDTH * device.SCREEN.HEIGHT * sizeof(lv_color_t));
+        buffers_initialized = 1;
+    }
+
+    static lv_color_t *t_buf[3] = {NULL, NULL, NULL};
+    if (t_buf[0] == NULL) {
+        t_buf[0] = t_buf0;
+        t_buf[1] = t_buf1;
+        t_buf[2] = t_buf2;
+    }
+
+    static int t_buf_index = 0;
+
+    lv_color_t *dest = &t_buf[t_buf_index][area->y1 * device.SCREEN.WIDTH + area->x1];
+    memcpy(dest, color_p, (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1) * sizeof(lv_color_t));
+
+    monitor.pixel = (uint32_t *) t_buf[t_buf_index];
     monitor.refresh = true;
 
     if (lv_disp_flush_is_last(disp_drv)) display_refresh();
+    t_buf_index = (t_buf_index + 1) % 3;
     lv_disp_flush_ready(disp_drv);
 }
 
@@ -114,4 +136,3 @@ static void display_update(monitor_t *m) {
     SDL_RenderCopyEx(m->renderer, m->texture, NULL, &dest_rect, angle, NULL, flip);
     SDL_RenderPresent(m->renderer);
 }
-

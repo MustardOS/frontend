@@ -84,6 +84,16 @@ void handle_power_short(void) {
 }
 
 void handle_idle(void) {
+    if (file_exist("/tmp/mux_blank")) {
+        lv_obj_set_style_bg_opa(ui_blank, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_move_foreground(ui_blank);
+    } else {
+        if (lv_obj_get_style_bg_opa(ui_blank, LV_PART_MAIN | LV_STATE_DEFAULT) > 0) {
+            lv_obj_set_style_bg_opa(ui_blank, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_move_background(ui_blank);
+        }
+    }
+
     if (exit_status >= 0) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
         mux_input_stop();
