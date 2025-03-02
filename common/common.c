@@ -1674,11 +1674,7 @@ void update_grid_scroll_position(int col_count, int row_count, int row_height,
         y_offset = cell_row_index * row_height;
     }
 
-    lv_coord_t diff = -y_offset + scroll_y;
-
-    if (diff != 0) {
-        lv_obj_scroll_by(ui_pnlGrid, 0, diff, LV_ANIM_OFF);
-    }
+    lv_obj_scroll_to_y(ui_pnlGrid, y_offset, LV_ANIM_OFF);
 }
 
 void scroll_object_to_middle(lv_obj_t *container, lv_obj_t *obj) {
