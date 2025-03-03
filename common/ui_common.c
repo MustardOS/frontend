@@ -1154,6 +1154,8 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_style_grid_row_dsc_array(ui_pnlGrid, row_dsc, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH,
                     theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
+    //add padding to the bottom to make sure grid panel scrolls correctly
+    lv_obj_set_style_pad_bottom(ui_pnlGrid, (row_count - theme->GRID.ROW_COUNT + 1) * theme->GRID.ROW_HEIGHT , LV_PART_MAIN);
     lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
     lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
     lv_obj_set_layout(ui_pnlGrid, LV_LAYOUT_GRID);
