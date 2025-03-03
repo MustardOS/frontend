@@ -74,9 +74,8 @@ void show_help() {
     char help_info[MAX_BUFFER_SIZE];
     snprintf(help_info, sizeof(help_info),
              "%s/%s/%s.sh", device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH, title);
-    char *message = get_script_value(help_info, "HELP");
 
-    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
+    char *message = get_script_value(help_info, "HELP", lang.GENERIC.NO_HELP);
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
 }
 

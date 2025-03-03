@@ -1801,7 +1801,7 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
     return number_string;
 }
 
-char *get_script_value(const char *filename, const char *key) {
+char *get_script_value(const char *filename, const char *key, const char *not_found) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file!");
@@ -1824,7 +1824,7 @@ char *get_script_value(const char *filename, const char *key) {
 
     fclose(file);
 
-    if (value == NULL) value = strdup("");
+    if (value == NULL) value = strdup(not_found);
     return value;
 }
 
@@ -2079,13 +2079,6 @@ int get_grid_row_item_count(int current_item_index) {
     } else {
         return grid_info.column_count;
     }
-}
-
-char *get_var_from_file(const char *storage_path, const char *script_file, const char *item_var, char *item_default) {
-    char *item_value = get_script_value(script_file, item_var);
-    if (!item_value || item_value[0] == '\0') return item_default;
-
-    return item_value;
 }
 
 char *kiosk_nope() {

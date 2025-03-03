@@ -221,7 +221,7 @@ void add_drop_down_options(lv_obj_t *ui_lblItemDropDown, char *options[], int co
 char *generate_number_string(int min, int max, int increment, const char *prefix, const char *infix,
                              const char *suffix, int infix_position);
 
-char *get_script_value(const char *filename, const char *key);
+char *get_script_value(const char *filename, const char *key, const char *not_found);
 
 void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar, lv_obj_t *volume_icon);
 
@@ -248,8 +248,6 @@ int get_grid_row_index(int current_item_index);
 int get_grid_column_index(int current_item_index);
 
 int get_grid_row_item_count(int current_item_index);
-
-char *get_var_from_file(const char *storage_path, const char *script_file, const char *item_var, char *item_default);
 
 char *kiosk_nope();
 

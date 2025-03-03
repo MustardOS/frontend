@@ -106,6 +106,7 @@
 #define VOLUME_PERC "/tmp/current_volume_percent"
 
 #define FRIENDLY_RESULT "/tmp/f_result.json"
+#define APP_LAUNCHER    "mux_launch.sh"
 
 #define FONT_PANEL_FOLDER  "panel"
 #define FONT_HEADER_FOLDER "header"
