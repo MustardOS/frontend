@@ -98,7 +98,7 @@ void init_navigation_group_grid(const char *app_path) {
         lv_obj_t *cell_label = lv_label_create(cell_panel);
 
         char app_launcher[MAX_BUFFER_SIZE];
-        snprintf(app_launcher, sizeof(app_launcher), "%s/%s" APP_LAUNCHER, app_path, items[i].extra_data);
+        snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER, app_path, items[i].extra_data);
 
         char *glyph_name = get_script_value(app_launcher, "ICON", "app");
 
@@ -174,7 +174,7 @@ void create_app_items() {
         if (!dir_names[i]) continue;
 
         char app_launcher[MAX_BUFFER_SIZE];
-        snprintf(app_launcher, sizeof(app_launcher), "%s/%s" APP_LAUNCHER, app_path, dir_names[i]);
+        snprintf(app_launcher, sizeof(app_launcher), "%s/%s/" APP_LAUNCHER, app_path, dir_names[i]);
         char *app_name_for_grid = get_script_value(app_launcher, "GRID", dir_names[i]);
 
         char app_store[MAX_BUFFER_SIZE];
