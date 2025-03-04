@@ -163,7 +163,7 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type);
 
-void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t overlay_enabled);
+void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image);
 
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
 

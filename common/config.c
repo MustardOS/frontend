@@ -109,6 +109,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.NETWORK, "visual/network", 0)
     CFG_INT_FIELD(config->VISUAL.BLUETOOTH, "visual/bluetooth", 0)
     CFG_INT_FIELD(config->VISUAL.CLOCK, "visual/clock", 1)
+    CFG_INT_FIELD(config->VISUAL.OVERLAY_IMAGE, "visual/overlayimage", 1)
+    CFG_INT_FIELD(config->VISUAL.OVERLAY_TRANSPARENCY, "visual/overlaytransparency", 85)
     CFG_INT_FIELD(config->VISUAL.BOX_ART, "visual/boxart", 0)
     CFG_INT_FIELD(config->VISUAL.BOX_ART_ALIGN, "visual/boxartalign", 0)
     CFG_INT_FIELD(config->VISUAL.NAME, "visual/name", 0)

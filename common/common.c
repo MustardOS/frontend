@@ -895,7 +895,7 @@ void delete_files_of_name(const char *dir_path, const char *filename) {
 }
 
 int load_element_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
-                                 const char *image_type, const char *element, const char *element_fallback, 
+                                 const char *image_type, const char *element, const char *element_fallback,
                                  const char *image_extension, char *image_path, size_t path_size) {
     const char *theme = theme_compat() ? theme_base : INTERNAL_THEME;
 
@@ -906,7 +906,7 @@ int load_element_image_specifics(const char *theme_base, const char *mux_dimensi
     const char *dimensions[] = {mux_dimension, ""};
     const char *elements[] = {element, element_fallback};
 
-    for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); ++i) {    
+    for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); ++i) {
         for (size_t j = 0; j < sizeof(paths) / sizeof(paths[0]); ++j) {
             for (size_t k = 0; k < sizeof(elements) / sizeof(elements[0]); ++k) {
                 int written = 0;
@@ -914,12 +914,13 @@ int load_element_image_specifics(const char *theme_base, const char *mux_dimensi
                 switch (j) {
                     case 0:
                         written = snprintf(image_path, path_size, paths[j], theme, dimensions[i],
-                                        config.SETTINGS.GENERAL.LANGUAGE, image_type, program, elements[k], image_extension);
+                                           config.SETTINGS.GENERAL.LANGUAGE, image_type, program, elements[k],
+                                           image_extension);
                         break;
                     case 1:
                     default:
                         written = snprintf(image_path, path_size, paths[j], theme, dimensions[i],
-                                        image_type, program, elements[k], image_extension);
+                                           image_type, program, elements[k], image_extension);
                         break;
                 }
 
@@ -1153,7 +1154,8 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
             case GENERAL:
             default:
                 if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
-                                                 element, "default", "png", static_image_path, sizeof(static_image_path))) {
+                                                 element, "default", "png", static_image_path,
+                                                 sizeof(static_image_path))) {
 
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",
                                            static_image_path);
@@ -1166,27 +1168,40 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
     return "";
 }
 
-void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image, int16_t overlay_enabled) {
-    if (overlay_enabled) {
-        const char *program = lv_obj_get_user_data(ui_screen);
+void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
+    const char *program = lv_obj_get_user_data(ui_screen);
 
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-        static char static_image_path[MAX_BUFFER_SIZE];
-        static char static_image_embed[MAX_BUFFER_SIZE];
+    static char static_image_path[MAX_BUFFER_SIZE];
+    static char static_image_embed[MAX_BUFFER_SIZE];
 
-        if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "overlay", "png",
-                                 static_image_path, sizeof(static_image_path)) ||
-            load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
-                                 static_image_path, sizeof(static_image_path))) {
+    switch (config.VISUAL.OVERLAY_IMAGE) {
+        case 0:
+            return;
+        case 1:
+            if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "overlay", "png",
+                                     static_image_path, sizeof(static_image_path)) ||
+                load_image_specifics(STORAGE_THEME, "", program, "overlay", "png",
+                                     static_image_path, sizeof(static_image_path))) {
 
+                int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+                if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
+            }
+            break;
+        default:
+            snprintf(static_image_path, sizeof(static_image_path), "%s/%d.png",
+                     INTERNAL_OVERLAY, config.VISUAL.OVERLAY_IMAGE);
             int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
             if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
+            break;
+    }
 
-            lv_img_set_src(overlay_image, static_image_embed);
-            lv_obj_move_foreground(overlay_image);
-        }
+    if (file_exist(static_image_path)) {
+        lv_img_set_src(overlay_image, static_image_embed);
+        lv_obj_set_style_img_opa(overlay_image, config.VISUAL.OVERLAY_TRANSPARENCY, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_move_foreground(overlay_image);
     }
 }
 
@@ -1878,7 +1893,7 @@ int resolution_check(const char *zip_filename) {
 
     if (!mz_zip_reader_init_file(&zip, zip_filename, 0)) {
         printf("Failed to open ZIP archive!\n");
-        return;
+        return 0;
     }
 
     for (mz_uint i = 0; i < mz_zip_reader_get_num_files(&zip); i++) {
@@ -1890,7 +1905,7 @@ int resolution_check(const char *zip_filename) {
 
         if (slash_pos && slash_pos == strrchr(filename, '/')) { // Ensure it's a root folder
             size_t folder_length = slash_pos - filename;
-            
+
             // Extract folder name
             char folder_name[256];
             strncpy(folder_name, filename, folder_length);

@@ -5,8 +5,8 @@
 void init_mux(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlBattery;
-extern lv_obj_t *ui_pnlNetwork;
 extern lv_obj_t *ui_pnlClock;
+extern lv_obj_t *ui_pnlNetwork;
 extern lv_obj_t *ui_pnlName;
 extern lv_obj_t *ui_pnlDash;
 extern lv_obj_t *ui_pnlFriendlyFolder;
@@ -17,10 +17,12 @@ extern lv_obj_t *ui_pnlDisplayEmptyFolder;
 extern lv_obj_t *ui_pnlMenuCounterFolder;
 extern lv_obj_t *ui_pnlMenuCounterFile;
 extern lv_obj_t *ui_pnlHidden;
+extern lv_obj_t *ui_pnlOverlayImage;
+extern lv_obj_t *ui_pnlOverlayTransparency;
 
 extern lv_obj_t *ui_lblBattery;
-extern lv_obj_t *ui_lblNetwork;
 extern lv_obj_t *ui_lblClock;
+extern lv_obj_t *ui_lblNetwork;
 extern lv_obj_t *ui_lblName;
 extern lv_obj_t *ui_lblDash;
 extern lv_obj_t *ui_lblFriendlyFolder;
@@ -31,10 +33,12 @@ extern lv_obj_t *ui_lblDisplayEmptyFolder;
 extern lv_obj_t *ui_lblMenuCounterFolder;
 extern lv_obj_t *ui_lblMenuCounterFile;
 extern lv_obj_t *ui_lblHidden;
+extern lv_obj_t *ui_lblOverlayImage;
+extern lv_obj_t *ui_lblOverlayTransparency;
 
 extern lv_obj_t *ui_icoBattery;
-extern lv_obj_t *ui_icoNetwork;
 extern lv_obj_t *ui_icoClock;
+extern lv_obj_t *ui_icoNetwork;
 extern lv_obj_t *ui_icoName;
 extern lv_obj_t *ui_icoDash;
 extern lv_obj_t *ui_icoFriendlyFolder;
@@ -45,10 +49,12 @@ extern lv_obj_t *ui_icoDisplayEmptyFolder;
 extern lv_obj_t *ui_icoMenuCounterFolder;
 extern lv_obj_t *ui_icoMenuCounterFile;
 extern lv_obj_t *ui_icoHidden;
+extern lv_obj_t *ui_icoOverlayImage;
+extern lv_obj_t *ui_icoOverlayTransparency;
 
 extern lv_obj_t *ui_droBattery;
-extern lv_obj_t *ui_droNetwork;
 extern lv_obj_t *ui_droClock;
+extern lv_obj_t *ui_droNetwork;
 extern lv_obj_t *ui_droName;
 extern lv_obj_t *ui_droDash;
 extern lv_obj_t *ui_droFriendlyFolder;
@@ -59,3 +65,5 @@ extern lv_obj_t *ui_droDisplayEmptyFolder;
 extern lv_obj_t *ui_droMenuCounterFolder;
 extern lv_obj_t *ui_droMenuCounterFile;
 extern lv_obj_t *ui_droHidden;
+extern lv_obj_t *ui_droOverlayImage;
+extern lv_obj_t *ui_droOverlayTransparency;

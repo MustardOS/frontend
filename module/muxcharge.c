@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     overlay_image = lv_img_create(ui_scrCharge);
-    load_overlay_image(ui_scrCharge, overlay_image, theme.MISC.IMAGE_OVERLAY);
+    load_overlay_image(ui_scrCharge, overlay_image);
 
     init_navigation_sound(&nav_sound, mux_module);
     lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);

@@ -315,7 +315,7 @@ void init_elements() {
     load_kiosk_image(ui_screen, kiosk_image);
 
     overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
+    load_overlay_image(ui_screen, overlay_image);
 }
 
 void ui_refresh_task() {

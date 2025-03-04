@@ -690,8 +690,8 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char BATTERY[MAX_BUFFER_SIZE];
-        char NETWORK[MAX_BUFFER_SIZE];
         char CLOCK[MAX_BUFFER_SIZE];
+        char NETWORK[MAX_BUFFER_SIZE];
         char DASH[MAX_BUFFER_SIZE];
         char FRIENDLY[MAX_BUFFER_SIZE];
         char REFORMAT[MAX_BUFFER_SIZE];
@@ -702,6 +702,34 @@ struct mux_lang {
         char COUNT_FILE[MAX_BUFFER_SIZE];
         char HIDDEN[MAX_BUFFER_SIZE];
         struct {
+            char IMAGE[MAX_BUFFER_SIZE];
+            char TRANSPARENCY[MAX_BUFFER_SIZE];
+            char THEME[MAX_BUFFER_SIZE];
+            struct {
+                char T1[MAX_BUFFER_SIZE];
+                char T4[MAX_BUFFER_SIZE];
+            } CHECKERBOARD;
+            struct {
+                char T1[MAX_BUFFER_SIZE];
+                char T2[MAX_BUFFER_SIZE];
+                char T4[MAX_BUFFER_SIZE];
+            } DIAGONAL;
+            struct {
+                char T1[MAX_BUFFER_SIZE];
+                char T4[MAX_BUFFER_SIZE];
+            } LATTICE;
+            struct {
+                char T1[MAX_BUFFER_SIZE];
+                char T2[MAX_BUFFER_SIZE];
+                char T4[MAX_BUFFER_SIZE];
+            } HORIZONTAL;
+            struct {
+                char T1[MAX_BUFFER_SIZE];
+                char T2[MAX_BUFFER_SIZE];
+                char T4[MAX_BUFFER_SIZE];
+            } VERTICAL;
+        } OVERLAY;
+        struct {
             char TITLE[MAX_BUFFER_SIZE];
             char FULL[MAX_BUFFER_SIZE];
             char REM_SQ[MAX_BUFFER_SIZE];
@@ -710,8 +738,8 @@ struct mux_lang {
         } NAME;
         struct {
             char BATTERY[MAX_BUFFER_SIZE];
-            char NETWORK[MAX_BUFFER_SIZE];
             char CLOCK[MAX_BUFFER_SIZE];
+            char NETWORK[MAX_BUFFER_SIZE];
             char DASH[MAX_BUFFER_SIZE];
             char FRIENDLY[MAX_BUFFER_SIZE];
             char REFORMAT[MAX_BUFFER_SIZE];
@@ -722,6 +750,8 @@ struct mux_lang {
             char COUNT_FILE[MAX_BUFFER_SIZE];
             char NAME[MAX_BUFFER_SIZE];
             char HIDDEN[MAX_BUFFER_SIZE];
+            char OVERLAY_IMAGE[MAX_BUFFER_SIZE];
+            char OVERLAY_TRANSPARENCY[MAX_BUFFER_SIZE];
         } HELP;
     } MUXVISUAL;
 

@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     overlay_image = lv_img_create(ui_scrStart);
-    load_overlay_image(ui_scrStart, overlay_image, theme.MISC.IMAGE_OVERLAY);
+    load_overlay_image(ui_scrStart, overlay_image);
 
     int progress = safe_atoi(argv[1]);
     if (!progress) lv_obj_set_style_bg_opa(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

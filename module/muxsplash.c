@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image, theme.MISC.IMAGE_OVERLAY);
+    load_overlay_image(ui_screen, overlay_image);
 
     refresh_screen(ui_screen);
 
