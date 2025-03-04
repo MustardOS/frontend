@@ -1820,7 +1820,7 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
 
     fclose(file);
 
-    if (value == NULL) value = strdup(not_found);
+    if (value == NULL || value[0] == '\0') value = strdup(not_found);
     return value;
 }
 
