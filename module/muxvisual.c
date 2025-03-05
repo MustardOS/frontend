@@ -11,6 +11,7 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
+#include "../common/overlay.h"
 #include "../common/input/list_nav.h"
 
 char *mux_module;
@@ -35,6 +36,7 @@ lv_obj_t *overlay_image = NULL;
 lv_obj_t *kiosk_image = NULL;
 
 int progress_onscreen = -1;
+int overlay_count;
 
 int battery_original, mux_clock_original, network_original, name_original,
         dash_original, friendlyfolder_original, thetitleformat_original,
@@ -159,7 +161,7 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droMenuCounterFolder, config.VISUAL.COUNTERFOLDER);
     lv_dropdown_set_selected(ui_droMenuCounterFile, config.VISUAL.COUNTERFILE);
     lv_dropdown_set_selected(ui_droHidden, config.SETTINGS.GENERAL.HIDDEN);
-    lv_dropdown_set_selected(ui_droOverlayImage, config.VISUAL.OVERLAY_IMAGE);
+    lv_dropdown_set_selected(ui_droOverlayImage, (config.VISUAL.OVERLAY_IMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAY_IMAGE);
     lv_dropdown_set_selected(ui_droOverlayTransparency, config.VISUAL.OVERLAY_TRANSPARENCY);
 }
 
@@ -397,14 +399,7 @@ void init_navigation_group() {
     add_drop_down_options(ui_droMenuCounterFolder, disabled_enabled, 2);
     add_drop_down_options(ui_droMenuCounterFile, disabled_enabled, 2);
 
-    add_drop_down_options(ui_droOverlayImage, (char *[]) {
-            lang.GENERIC.DISABLED, lang.MUXVISUAL.OVERLAY.THEME,
-            lang.MUXVISUAL.OVERLAY.CHECKERBOARD.T1, lang.MUXVISUAL.OVERLAY.CHECKERBOARD.T4,
-            lang.MUXVISUAL.OVERLAY.DIAGONAL.T1, lang.MUXVISUAL.OVERLAY.DIAGONAL.T2, lang.MUXVISUAL.OVERLAY.DIAGONAL.T4,
-            lang.MUXVISUAL.OVERLAY.LATTICE.T1, lang.MUXVISUAL.OVERLAY.LATTICE.T4,
-            lang.MUXVISUAL.OVERLAY.HORIZONTAL.T1, lang.MUXVISUAL.OVERLAY.HORIZONTAL.T2, lang.MUXVISUAL.OVERLAY.HORIZONTAL.T4,
-            lang.MUXVISUAL.OVERLAY.VERTICAL.T1, lang.MUXVISUAL.OVERLAY.VERTICAL.T2, lang.MUXVISUAL.OVERLAY.VERTICAL.T4,
-    }, 15);
+    overlay_count = load_overlay_set(ui_droOverlayImage);
 
     char *transparency_string = generate_number_string(0, 100, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droOverlayTransparency, transparency_string);
