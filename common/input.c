@@ -26,7 +26,7 @@ int find_keyboard_devices(int *fds, int max_fds) {
     struct dirent *entry;
     DIR *dir = opendir(INPUT_PATH);
     if (!dir) {
-        perror("Failed to open input directory");
+        LOG_WARN("input", "Failed to open input directory: '%s'", INPUT_PATH)
         return 0;
     }
 
@@ -37,7 +37,7 @@ int find_keyboard_devices(int *fds, int max_fds) {
             snprintf(device_path, sizeof(device_path), "%s%s", INPUT_PATH, entry->d_name);
             int fd = open(device_path, O_RDONLY | O_NONBLOCK);
             if (fd != -1) {
-                printf("Listening on keyboard: %s (fd: %d)\n", entry->d_name, fd);
+                LOG_INFO("input", "Listening on keyboard: %s (fd: %d)", entry->d_name, fd)
                 fds[count++] = fd;
             }
         }
@@ -634,13 +634,13 @@ void *keyboard_handler(void *arg) {
     int num_fds = find_keyboard_devices(keyboard_mouse_fds, max_devices);
 
     if (num_fds == 0) {
-        printf("No keyboard devices found!\n");
+        LOG_ERROR("input", "No keyboard devices found!")
         return NULL;
     }
 
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
-        perror("Failed to create epoll instance");
+        LOG_ERROR("input", "Failed to create epoll instance")
         return NULL;
     }
 
@@ -651,12 +651,12 @@ void *keyboard_handler(void *arg) {
         event.events = EPOLLIN;
         event.data.fd = keyboard_mouse_fds[i];
         if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, keyboard_mouse_fds[i], &event) == -1) {
-            perror("Failed to add keyboard device to epoll");
+            LOG_ERROR("input", "Failed to add keyboard device to epoll")
             close(keyboard_mouse_fds[i]);
         }
     }
 
-    printf("Listening for keyboard events...\n");
+    LOG_INFO("input", "Listening for keyboard events...")
 
     while (!stop) {
         int event_count = epoll_wait(epoll_fd, events, max_events, -1);

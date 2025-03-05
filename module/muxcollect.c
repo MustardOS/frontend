@@ -236,7 +236,7 @@ void image_refresh(char *image_type) {
         }
     } else {
         load_image_catalogue(h_core_artwork, h_file_name, "default", mux_dimension, image_type,
-                            image, sizeof(image));
+                             image, sizeof(image));
         if (!strcasecmp(image_type, "splash") && !file_exist(image)) {
             load_splash_image_fallback(mux_dimension, image, sizeof(image));
         }
@@ -498,14 +498,14 @@ void init_navigation_group_grid() {
 
         char grid_image[MAX_BUFFER_SIZE];
         load_image_catalogue("Collection", strip_ext(items[i].name), "default", mux_dimension, "grid",
-                                  grid_image, sizeof(grid_image));
+                             grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", strip_ext(items[i].name));
 
         char grid_image_focused[MAX_BUFFER_SIZE];
         load_image_catalogue("Collection", glyph_name_focused, "default_focused", mux_dimension, "grid",
-                                  grid_image_focused, sizeof(grid_image_focused));
+                             grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, grid_image_focused, items[i].display_name);
@@ -1215,7 +1215,9 @@ void ui_refresh_task() {
 void on_key_event(struct input_event ev) {
     if (ev.code == KEY_ENTER && ev.value == 1) {
         handle_keyboard_OK_press();
-    } if (ev.code == KEY_ESC && ev.value == 1) {
+    }
+
+    if (ev.code == KEY_ESC && ev.value == 1) {
         handle_b();
     } else {
         process_key_event(&ev, ui_txtEntry);

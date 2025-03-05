@@ -59,24 +59,24 @@ struct help_msg {
 
 void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblAccelerate,  lang.MUXTWEAKADV.HELP.SPEED},
-            {ui_lblSwap,        lang.MUXTWEAKADV.HELP.SWAP},
-            {ui_lblThermal,     lang.MUXTWEAKADV.HELP.THERMAL},
-            {ui_lblVolume,      lang.MUXTWEAKADV.HELP.VOLUME},
-            {ui_lblBrightness,  lang.MUXTWEAKADV.HELP.BRIGHT},
-            {ui_lblOffset,      lang.MUXTWEAKADV.HELP.OFFSET},
-            {ui_lblPasscode,    lang.MUXTWEAKADV.HELP.LOCK},
-            {ui_lblLED,         lang.MUXTWEAKADV.HELP.LED},
-            {ui_lblTheme,       lang.MUXTWEAKADV.HELP.RANDOM},
-            {ui_lblRetroWait,   lang.MUXTWEAKADV.HELP.NET_WAIT},
-            {ui_lblState,       lang.MUXTWEAKADV.HELP.STATE},
-            {ui_lblVerbose,     lang.MUXTWEAKADV.HELP.VERBOSE},
-            {ui_lblRumble,      lang.MUXTWEAKADV.HELP.RUMBLE},
-            {ui_lblUserInit,    lang.MUXTWEAKADV.HELP.USER_INIT},
-            {ui_lblDPADSwap,    lang.MUXTWEAKADV.HELP.DPAD},
-            {ui_lblOverdrive,   lang.MUXTWEAKADV.HELP.OVERDRIVE},
-            {ui_lblSwapfile,    lang.MUXTWEAKADV.HELP.SWAPFILE},
-            {ui_lblCardMode,    lang.MUXTWEAKADV.HELP.TUNING},
+            {ui_lblAccelerate, lang.MUXTWEAKADV.HELP.SPEED},
+            {ui_lblSwap,       lang.MUXTWEAKADV.HELP.SWAP},
+            {ui_lblThermal,    lang.MUXTWEAKADV.HELP.THERMAL},
+            {ui_lblVolume,     lang.MUXTWEAKADV.HELP.VOLUME},
+            {ui_lblBrightness, lang.MUXTWEAKADV.HELP.BRIGHT},
+            {ui_lblOffset,     lang.MUXTWEAKADV.HELP.OFFSET},
+            {ui_lblPasscode,   lang.MUXTWEAKADV.HELP.LOCK},
+            {ui_lblLED,        lang.MUXTWEAKADV.HELP.LED},
+            {ui_lblTheme,      lang.MUXTWEAKADV.HELP.RANDOM},
+            {ui_lblRetroWait,  lang.MUXTWEAKADV.HELP.NET_WAIT},
+            {ui_lblState,      lang.MUXTWEAKADV.HELP.STATE},
+            {ui_lblVerbose,    lang.MUXTWEAKADV.HELP.VERBOSE},
+            {ui_lblRumble,     lang.MUXTWEAKADV.HELP.RUMBLE},
+            {ui_lblUserInit,   lang.MUXTWEAKADV.HELP.USER_INIT},
+            {ui_lblDPADSwap,   lang.MUXTWEAKADV.HELP.DPAD},
+            {ui_lblOverdrive,  lang.MUXTWEAKADV.HELP.OVERDRIVE},
+            {ui_lblSwapfile,   lang.MUXTWEAKADV.HELP.SWAPFILE},
+            {ui_lblCardMode,   lang.MUXTWEAKADV.HELP.TUNING},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -414,16 +414,16 @@ void init_navigation_group() {
             ui_pnlVolume
     };
 
-    ui_objects[0] =  ui_lblSwap;
-    ui_objects[1] =  ui_lblOverdrive;
-    ui_objects[2] =  ui_lblOffset;
-    ui_objects[3] =  ui_lblBrightness;
-    ui_objects[4] =  ui_lblRumble;
-    ui_objects[5] =  ui_lblCardMode;
-    ui_objects[6] =  ui_lblDPADSwap;
-    ui_objects[7] =  ui_lblLED;
-    ui_objects[8] =  ui_lblAccelerate;
-    ui_objects[9] =  ui_lblThermal;
+    ui_objects[0] = ui_lblSwap;
+    ui_objects[1] = ui_lblOverdrive;
+    ui_objects[2] = ui_lblOffset;
+    ui_objects[3] = ui_lblBrightness;
+    ui_objects[4] = ui_lblRumble;
+    ui_objects[5] = ui_lblCardMode;
+    ui_objects[6] = ui_lblDPADSwap;
+    ui_objects[7] = ui_lblLED;
+    ui_objects[8] = ui_lblAccelerate;
+    ui_objects[9] = ui_lblThermal;
     ui_objects[10] = ui_lblPasscode;
     ui_objects[11] = ui_lblTheme;
     ui_objects[12] = ui_lblRetroWait;

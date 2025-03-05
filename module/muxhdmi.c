@@ -61,12 +61,12 @@ struct theme_resolution {
 };
 
 struct theme_resolution theme_resolutions[] = {
-    {"640x480", 1},
-    {"720x480", 2},
-    {"720x576", 3},
-    {"720x720", 4},
-    {"1024x768", 5},
-    {"1280x720", 6}
+        {"640x480",  1},
+        {"720x480",  2},
+        {"720x576",  3},
+        {"720x720",  4},
+        {"1024x768", 5},
+        {"1280x720", 6}
 };
 
 int get_theme_resolution_value(char *resolution) {
@@ -314,7 +314,8 @@ void init_navigation_group() {
     lv_dropdown_add_option(ui_droThemeResolution, lang.MUXHDMI.SCREEN, LV_DROPDOWN_POS_LAST);
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, theme_resolutions[i].resolution);
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME,
+                 theme_resolutions[i].resolution);
         if (directory_exist(theme_device_folder)) {
             lv_dropdown_add_option(ui_droThemeResolution, theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
         }

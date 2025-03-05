@@ -366,7 +366,7 @@ int main(int argc, char *argv[]) {
 
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);
-        LOG_INFO(mux_module, "Skipping Options Module - Not Required...");
+        LOG_INFO(mux_module, "Skipping Options Module - Not Required...")
         safe_quit(0);
         return 0;
     }

@@ -947,7 +947,8 @@ void ui_refresh_task() {
 void on_key_event(struct input_event ev) {
     if (ev.code == KEY_ENTER && ev.value == 1) {
         handle_keyboard_OK_press();
-    } if (ev.code == KEY_ESC && ev.value == 1) {
+    }
+    if (ev.code == KEY_ESC && ev.value == 1) {
         handle_b();
     } else {
         process_key_event(&ev, ui_txtEntry);

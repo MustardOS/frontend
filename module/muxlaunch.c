@@ -91,13 +91,13 @@ void init_navigation_group_grid(char *item_labels[], char *glyph_names[]) {
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char grid_image[MAX_BUFFER_SIZE];
         load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
-                                          "default", "png", grid_image, sizeof(grid_image));
+                                     "default", "png", grid_image, sizeof(grid_image));
 
         char glyph_name_focused[MAX_BUFFER_SIZE];
         snprintf(glyph_name_focused, sizeof(glyph_name_focused), "%s_focused", glyph_names[i]);
         char grid_image_focused[MAX_BUFFER_SIZE];
         load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_name_focused,
-                                          "default_focused", "png", grid_image_focused, sizeof(grid_image_focused));
+                                     "default_focused", "png", grid_image_focused, sizeof(grid_image_focused));
 
         create_grid_item(&theme, cell_panel, cell_label, cell_image, col, row,
                          grid_image, grid_image_focused, item_labels[i]);

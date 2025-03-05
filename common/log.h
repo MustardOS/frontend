@@ -24,8 +24,11 @@
     char time_buffer[20];                                \
     strftime(time_buffer, sizeof(time_buffer),           \
     "%Y-%m-%d %H:%M:%S", timeinfo);                      \
+    char truncated_module[12];                           \
+    snprintf(truncated_module, sizeof(truncated_module), \
+             "%.11s", mux_module);                       \
     fprintf(stderr, "[%s] [" symbol "] [%s]\t" msg "\n", \
-    time_buffer, mux_module, ##__VA_ARGS__);             \
+    time_buffer, truncated_module, ##__VA_ARGS__);       \
 }
 
 #define LOG_INFO(mux_module, msg, ...)    LOG(INFO,    INFO_SYMBOL,    mux_module, msg, ##__VA_ARGS__)

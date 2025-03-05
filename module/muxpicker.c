@@ -233,10 +233,10 @@ void handle_confirm() {
             toast_message(lang.MUXPICKER.INVALID_VER, 1000, 1000);
             return;
         }
-        
+
         char picker_archive[MAX_BUFFER_SIZE];
         snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
-                sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
+                 sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
         if (!strcasecmp(picker_type, "theme") && !resolution_check(picker_archive)) {
             play_sound("error", nav_sound, 0, 1);
             toast_message(lang.MUXPICKER.INVALID_RES, 1000, 1000);

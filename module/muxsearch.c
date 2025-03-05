@@ -247,7 +247,7 @@ void image_refresh(char *image_type) {
         }
     } else {
         load_image_catalogue(core_artwork, last_dir, "default", mux_dimension, image_type,
-                            image, sizeof(image));
+                             image, sizeof(image));
     }
 
     LOG_INFO(mux_module, "Loading '%s' Artwork: %s", image_type, image)
@@ -960,7 +960,9 @@ void ui_refresh_task() {
 void on_key_event(struct input_event ev) {
     if (ev.code == KEY_ENTER && ev.value == 1) {
         handle_keyboard_OK_press();
-    } if (ev.code == KEY_ESC && ev.value == 1) {
+    }
+
+    if (ev.code == KEY_ESC && ev.value == 1) {
         handle_b();
     } else {
         process_key_event(&ev, ui_txtEntry);
