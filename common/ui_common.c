@@ -1043,6 +1043,17 @@ void toast_message(const char *msg, uint32_t delay, uint32_t fade_duration) {
     lv_obj_fade_out(ui_pnlMessage, fade_duration, delay);
 }
 
+void fade_label(lv_obj_t *ui_lbl, const char *msg, uint32_t delay, uint32_t fade_duration) {
+    lv_label_set_text(ui_lbl, msg);
+    lv_obj_clear_flag(ui_lbl, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_opa(ui_lbl, LV_OPA_COVER, 0);
+
+    if (delay <= 0 || fade_duration <= 0) return;
+
+    lv_anim_del(ui_lbl, NULL);
+    lv_obj_fade_out(ui_lbl, fade_duration, delay);
+}
+
 void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels) {
     for (size_t i = 0; i < num_panels; i++) {
         lv_obj_move_foreground(panels[i]);

@@ -72,8 +72,6 @@ int dir_count = 0;
 int current_item_index = 0;
 int first_open = 1;
 int nav_moved = 0;
-int counter_fade = 0;
-int fade_timeout = 7;
 int starter_image = 0;
 int splash_valid = 0;
 int nogrid_file_exists = 0;
@@ -143,12 +141,9 @@ char *load_content_description() {
 void update_file_counter() {
     if ((ui_count > 0 && file_count == 0 && config.VISUAL.COUNTERFOLDER) ||
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
-        fade_timeout = 7;
-        lv_obj_clear_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
-        counter_fade = (theme.COUNTER.BORDER_ALPHA + theme.COUNTER.BACKGROUND_ALPHA + theme.COUNTER.TEXT_ALPHA);
-        if (counter_fade > 255) counter_fade = 255;
-        lv_obj_set_style_opa(ui_lblCounter, counter_fade, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_label_set_text_fmt(ui_lblCounter, "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
+        char counter_text[MAX_BUFFER_SIZE];
+        snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
+        fade_label(ui_lblCounter, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
     } else {
         lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
     }
@@ -1179,20 +1174,6 @@ void init_osk() {
 
 void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
-    if (!nav_moved & !fade_timeout) {
-        if (counter_fade > 0) {
-            lv_obj_set_style_opa(ui_lblCounter, counter_fade - theme.COUNTER.TEXT_FADE_TIME,
-                                 LV_PART_MAIN | LV_STATE_DEFAULT);
-            counter_fade -= (theme.COUNTER.TEXT_FADE_TIME + 1) / 4;
-        }
-        if (lv_obj_get_style_opa(ui_lblCounter, LV_PART_MAIN | LV_STATE_DEFAULT) <= 10) {
-            lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
-            counter_fade = 0;
-        }
-    } else {
-        fade_timeout--;
-    }
 
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
