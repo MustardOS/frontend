@@ -19,7 +19,6 @@ char *mux_module;
 
 int msgbox_active = 0;
 int nav_sound = 0;
-int exit_status = 2;
 int bar_header = 0;
 int bar_footer = 0;
 
@@ -86,7 +85,7 @@ void handle_confirm(void) {
     sprintf(try_code, "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
 
     if (strcasecmp(try_code, p_code) == 0) {
-        exit_status = 1;
+        safe_quit(1);
         mux_input_stop();
     }
 }
@@ -94,7 +93,7 @@ void handle_confirm(void) {
 void handle_back(void) {
     play_sound("back", nav_sound, 0, 0);
 
-    exit_status = 2;
+    safe_quit(2);
     mux_input_stop();
 }
 
@@ -268,6 +267,5 @@ int main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    safe_quit(exit_status);
-    return exit_status;
+    return 2;
 }

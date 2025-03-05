@@ -115,6 +115,8 @@ void handle_input(mux_input_type type, mux_input_action action) {
 
 void handle_power() {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -186,6 +188,5 @@ int main(int argc, char *argv[]) {
     init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
-    safe_quit(0);
     return 0;
 }

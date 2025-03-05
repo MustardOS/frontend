@@ -677,13 +677,18 @@ void list_nav_next(int steps) {
 
 void handle_keyboard_OK_press(void) {
     key_show = 0;
+
     snprintf(new_dir, sizeof(new_dir), "%s/%s",
              sys_dir, lv_textarea_get_text(ui_txtEntry));
     create_directories(new_dir);
+
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txtEntry));
     load_mux("collection");
+
+    safe_quit(0);
     mux_input_stop();
 }
+
 void handle_keyboard_press(void) {
     play_sound("navigate", nav_sound, 0, 0);
 
@@ -813,6 +818,8 @@ void handle_a() {
     } else {
         load_mux("collection");
     }
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -855,6 +862,7 @@ void handle_b() {
         }
     }
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -886,6 +894,8 @@ void handle_x() {
     }
 
     load_mux("collection");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -1403,6 +1413,5 @@ int main(int argc, char *argv[]) {
 
     free_items(items, item_count);
 
-    safe_quit(0);
     return 0;
 }

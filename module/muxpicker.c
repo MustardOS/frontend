@@ -282,6 +282,8 @@ void handle_confirm() {
     }
 
     load_mux("picker");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -332,6 +334,8 @@ void handle_confirm_force() {
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
     load_mux("picker");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -355,6 +359,7 @@ void handle_back() {
         load_mux("picker");
     }
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -388,6 +393,8 @@ void handle_save() {
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
     load_mux("picker");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -598,6 +605,5 @@ int main(int argc, char *argv[]) {
 
     free_items(items, item_count);
 
-    safe_quit(0);
     return 0;
 }

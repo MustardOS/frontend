@@ -732,6 +732,8 @@ void add_to_collection(char *filename, const char *pointer) {
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
     load_mux("collection");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -981,6 +983,7 @@ void handle_a() {
         usleep(256);
     }
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -1005,6 +1008,8 @@ void handle_b() {
     }
 
     load_mux(file_exist(EXPLORE_DIR) ? "explore" : "launcher");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -1019,6 +1024,7 @@ void handle_x() {
     write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
     load_mux("explore");
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -1044,6 +1050,7 @@ void handle_start() {
     remove(EXPLORE_DIR);
     load_mux("explore");
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -1058,6 +1065,8 @@ void handle_select() {
         if (kiosk.CONTENT.OPTION) {
             if (!kiosk.CONTENT.SEARCH) {
                 load_mux("search");
+
+                safe_quit(0);
                 mux_input_stop();
             }
             return;
@@ -1074,6 +1083,7 @@ void handle_select() {
         if (!kiosk.CONTENT.SEARCH) load_mux("search");
     }
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -1360,6 +1370,5 @@ int main(int argc, char *argv[]) {
 
     free_items(items, item_count);
 
-    safe_quit(0);
     return 0;
 }

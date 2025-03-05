@@ -58,12 +58,12 @@ void refresh_screen(lv_obj_t *screen) {
 }
 
 void safe_quit(int exit_status) {
+    write_text_to_file("/tmp/safe_quit", "w", INT, exit_status);
+
     close(joy_general);
     close(joy_power);
     close(joy_volume);
     close(joy_extra);
-
-    write_text_to_file("/tmp/safe_quit", "w", INT, exit_status);
 }
 
 void init_display() {

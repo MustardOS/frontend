@@ -327,6 +327,8 @@ void handle_confirm(void) {
 
     play_sound("confirm", nav_sound, 0, 1);
     load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -340,6 +342,8 @@ void handle_back(void) {
     }
 
     play_sound("back", nav_sound, 0, 1);
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -349,6 +353,8 @@ void handle_save(void) {
     if (save_profile()) {
         play_sound("confirm", nav_sound, 0, 1);
         load_mux("net_profile");
+
+        safe_quit(0);
         mux_input_stop();
     }
 }
@@ -361,6 +367,8 @@ void handle_remove(void) {
     if (remove_profile(lv_label_get_text(lv_group_get_focused(ui_group)))) {
         play_sound("confirm", nav_sound, 0, 1);
         load_mux("net_profile");
+
+        safe_quit(0);
         mux_input_stop();
     }
 }
@@ -502,6 +510,5 @@ int main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    safe_quit(0);
     return 0;
 }

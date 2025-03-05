@@ -297,6 +297,7 @@ void handle_a() {
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
+        safe_quit(0);
         mux_input_stop();
     }
 }
@@ -312,6 +313,8 @@ void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "apps");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -481,6 +484,5 @@ int main(int argc, char *argv[]) {
 
     free_items(items, item_count);
 
-    safe_quit(0);
     return 0;
 }

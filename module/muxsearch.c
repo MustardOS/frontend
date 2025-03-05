@@ -614,6 +614,8 @@ void handle_confirm(void) {
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
 
         load_mux("search");
+
+        safe_quit(0);
         mux_input_stop();
     } else {
         if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
@@ -621,6 +623,8 @@ void handle_confirm(void) {
                                str_replace(lv_label_get_text(lv_group_get_focused(ui_group_value)), "/./", "/"));
 
             load_mux("explore");
+
+            safe_quit(0);
             mux_input_stop();
         }
     }
@@ -641,6 +645,7 @@ void handle_back(void) {
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
     if (strlen(rom_dir) == 0 || strcasecmp(rom_dir, CONTENT_PATH) == 0 || kiosk.CONTENT.OPTION) load_mux("explore");
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -684,6 +689,8 @@ void handle_x(void) {
     if (file_exist(search_result)) remove(search_result);
 
     load_mux("search");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -1064,6 +1071,5 @@ int main(int argc, char *argv[]) {
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 
-    safe_quit(0);
     return 0;
 }

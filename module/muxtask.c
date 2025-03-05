@@ -246,6 +246,8 @@ void handle_confirm() {
     write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
 
     load_mux("task");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -259,6 +261,8 @@ void handle_back() {
     }
 
     play_sound("back", nav_sound, 0, 1);
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -442,6 +446,5 @@ int main(int argc, char *argv[]) {
 
     free_items(items, item_count);
 
-    safe_quit(0);
     return 0;
 }

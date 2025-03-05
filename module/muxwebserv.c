@@ -318,6 +318,8 @@ void handle_back(void) {
     save_web_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "service");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -465,6 +467,5 @@ int main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    safe_quit(0);
     return 0;
 }

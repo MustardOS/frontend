@@ -546,6 +546,8 @@ void handle_back(void) {
     toast_message(lang.MUXNETWORK.SAVE, 1000, 1000);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -558,6 +560,7 @@ void handle_scan(void) {
 
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_obj_get_user_data(lv_group_get_focused(ui_group)));
 
+        safe_quit(0);
         mux_input_stop();
     }
 }
@@ -572,6 +575,7 @@ void handle_profiles(void) {
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_obj_get_user_data(lv_group_get_focused(ui_group)));
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -1012,6 +1016,5 @@ int main(int argc, char *argv[]) {
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 
-    safe_quit(0);
     return 0;
 }

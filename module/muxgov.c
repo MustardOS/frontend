@@ -297,6 +297,7 @@ void handle_a() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, SINGLE);
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -311,6 +312,8 @@ void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
     remove(MUOS_SAG_LOAD);
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -322,6 +325,7 @@ void handle_x() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, DIRECTORY);
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -333,6 +337,7 @@ void handle_y() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, PARENT);
 
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -612,6 +617,5 @@ int main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    safe_quit(0);
     return 0;
 }

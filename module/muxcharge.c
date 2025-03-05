@@ -96,7 +96,10 @@ void handle_idle(void) {
 
     if (exit_status >= 0) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
+
+        safe_quit(0);
         mux_input_stop();
+
         return;
     }
 
@@ -157,6 +160,5 @@ int main(int argc, char *argv[]) {
     init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
-    safe_quit(0);
     return 0;
 }

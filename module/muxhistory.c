@@ -417,6 +417,8 @@ void remove_from_history() {
     if (file_exist(history_file)) {
         remove(history_file);
         load_mux("history");
+
+        safe_quit(0);
         mux_input_stop();
     } else {
         play_sound("error", nav_sound, 0, 0);
@@ -442,6 +444,8 @@ void add_to_collection() {
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
     load_mux("collection");
+
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -579,6 +583,7 @@ void handle_a() {
     usleep(256);
 
     load_mux("history");
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -593,6 +598,7 @@ void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -874,6 +880,5 @@ int main(int argc, char *argv[]) {
 
     free_items(items, item_count);
 
-    safe_quit(0);
     return 0;
 }

@@ -36,10 +36,7 @@ void list_nav_prev(void) {}
 void list_nav_next(void) {}
 
 void timeout_task() {
-    mux_input_stop();
-}
-
-void handle_quit(void) {
+    safe_quit(0);
     mux_input_stop();
 }
 
@@ -75,13 +72,12 @@ int main(int argc, char *argv[]) {
             .combo = {
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_START),
-                            .press_handler = handle_quit,
+                            .press_handler = timeout_task,
                     },
             }
     };
     init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
-    safe_quit(0);
     return 0;
 }
