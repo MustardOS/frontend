@@ -78,7 +78,8 @@ void load_device(struct mux_device *device) {
     DEV_INT_FIELD(device->DEVICE.EVENT, "board/event")
     DEV_INT_FIELD(device->DEVICE.DEBUGFS, "board/debugfs")
     DEV_STR_FIELD(device->DEVICE.NAME, "board/name")
-    DEV_STR_FIELD(device->DEVICE.RTC, "board/rtc")
+    DEV_STR_FIELD(device->DEVICE.RTC_CLOCK, "board/rtc_clock")
+    DEV_STR_FIELD(device->DEVICE.RTC_WAKE, "board/rtc_wake")
     DEV_STR_FIELD(device->DEVICE.LED, "board/led")
 
     DEV_INT_FIELD(device->AUDIO.MIN, "audio/min")

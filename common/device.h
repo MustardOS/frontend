@@ -14,7 +14,8 @@ struct mux_device {
         int16_t HAS_HDMI;
         int16_t EVENT;
         int16_t DEBUGFS;
-        char RTC[MAX_BUFFER_SIZE];
+        char RTC_CLOCK[MAX_BUFFER_SIZE];
+        char RTC_WAKE[MAX_BUFFER_SIZE];
         char LED[MAX_BUFFER_SIZE];
     } DEVICE;
 
