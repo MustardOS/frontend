@@ -35,6 +35,8 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme);
 
 void toast_message(const char *msg, uint32_t delay, uint32_t fade_duration);
 
+void fade_label(lv_obj_t *ui_lbl, const char *msg, uint32_t delay, uint32_t fade_duration);
+
 void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels);
 
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_type);
