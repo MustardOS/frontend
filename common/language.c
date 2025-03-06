@@ -376,7 +376,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t30m, "30m");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.TITLE, "Sleep Function");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.INSTANT, "Instant Shutdown");
-    SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.SUSPEND, "Sleep Suspend");
+    SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.SUSPEND, "Sleep Until Wake");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t10s, "Sleep 10s + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t30s, "Sleep 30s + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t60s, "Sleep 60s + Shutdown");
