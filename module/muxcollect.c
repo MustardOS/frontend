@@ -612,6 +612,11 @@ int load_content(const char *content_name) {
     return 0;
 }
 
+void update_footer_glyph() {
+    if (!add_mode) return;
+    lv_label_set_text(ui_lblNavA, items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.ADD);
+}
+
 void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
 
@@ -636,6 +641,7 @@ void list_nav_prev(int steps) {
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     image_refresh("box");
+    update_footer_glyph();
     nav_moved = 1;
 }
 
@@ -667,6 +673,7 @@ void list_nav_next(int steps) {
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     image_refresh("box");
+    update_footer_glyph();
     nav_moved = 1;
 }
 
@@ -1309,10 +1316,11 @@ int main(int argc, char *argv[]) {
     if (add_mode) {
         if (at_base(sys_dir, "collection")) {
             if (!ui_count) {
-                int hidden[] = {0, 1, 2, 3, 6, 7};
-                for (int i = 0; i < 6; ++i) {
+                int hidden[] = {2, 3, 6, 7};
+                for (int i = 0; i < 4; ++i) {
                     nav_e[hidden[i]].visible = 0;
                 }
+                lv_label_set_text(ui_lblNavA, lang.GENERIC.ADD);
             } else {
                 int hidden[] = {2, 3};
                 for (int i = 0; i < 2; ++i) {
