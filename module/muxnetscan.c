@@ -104,6 +104,7 @@ void create_network_items() {
 
     char ssid[40];
     while (fgets(ssid, sizeof(ssid), file)) {
+        if (!strlen(ssid)) continue;
         ui_count++;
 
         lv_obj_t *ui_pnlNetScan = lv_obj_create(ui_pnlContent);
