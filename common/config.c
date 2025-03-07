@@ -24,7 +24,6 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->CLOCK.NOTATION, "clock/notation", 0)
     CFG_STR_FIELD(config->CLOCK.POOL, "clock/pool", "pool.ntp.org")
 
-    CFG_INT_FIELD(config->NETWORK.ENABLED, "network/enabled", 0)
     CFG_INT_FIELD(config->NETWORK.TYPE, "network/type", 0)
     CFG_STR_FIELD(config->NETWORK.INTERFACE, "network/interface", "wlan0")
     CFG_STR_FIELD(config->NETWORK.SSID, "network/ssid", "")

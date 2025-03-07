@@ -15,7 +15,6 @@ struct mux_config {
     } CLOCK;
 
     struct {
-        int16_t ENABLED;
         char INTERFACE[MAX_BUFFER_SIZE];
         int16_t TYPE;
         char SSID[MAX_BUFFER_SIZE];
