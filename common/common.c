@@ -2152,7 +2152,7 @@ char *get_file_governor(char *rom_dir, char *rom_name) {
 
 struct screen_dimension get_device_dimensions() {
     struct screen_dimension dims;
-    if (config.SETTINGS.HDMI.ENABLED && read_int_from_file(device.SCREEN.HDMI, 1)) {
+    if (read_int_from_file(device.SCREEN.HDMI, 1)) {
         dims.WIDTH = device.SCREEN.EXTERNAL.WIDTH;
         dims.HEIGHT = device.SCREEN.EXTERNAL.HEIGHT;
     } else {

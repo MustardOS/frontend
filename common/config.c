@@ -65,7 +65,6 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, "settings/general/startup", "launcher")
     CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, "settings/general/language", "English")
 
-    CFG_INT_FIELD(config->SETTINGS.HDMI.ENABLED, "settings/hdmi/enabled", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.RESOLUTION, "settings/hdmi/resolution", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.THEME_RESOLUTION, "settings/hdmi/theme_resolution", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.SPACE, "settings/hdmi/space", 0)

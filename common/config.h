@@ -61,7 +61,6 @@ struct mux_config {
             char LANGUAGE[MAX_BUFFER_SIZE];
         } GENERAL;
         struct {
-            int16_t ENABLED;
             int16_t RESOLUTION;
             int16_t THEME_RESOLUTION;
             int16_t THEME_RESOLUTION_WIDTH;
