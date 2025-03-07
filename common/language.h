@@ -211,9 +211,6 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char NO_CABLE[MAX_BUFFER_SIZE];
-        char DENY_MODIFY[MAX_BUFFER_SIZE];
-        char ACTIVE[MAX_BUFFER_SIZE];
         char RESOLUTION[MAX_BUFFER_SIZE];
         char THEME_RESOLUTION[MAX_BUFFER_SIZE];
         char SCREEN[MAX_BUFFER_SIZE];
@@ -237,7 +234,6 @@ struct mux_lang {
             char UNDER[MAX_BUFFER_SIZE];
         } SCAN_SCALE;
         struct {
-            char ACTIVE[MAX_BUFFER_SIZE];
             char AUDIO_OUTPUT[MAX_BUFFER_SIZE];
             char RESOLUTION[MAX_BUFFER_SIZE];
             char THEME_RESOLUTION[MAX_BUFFER_SIZE];

@@ -192,9 +192,6 @@ void load_lang(struct mux_lang *lang) {
 
     // muxhdmi
     SPECIFIC_FIELD(lang->MUXHDMI.TITLE, "HDMI SETTINGS");
-    SPECIFIC_FIELD(lang->MUXHDMI.DENY_MODIFY, "Cannot modify while HDMI is active");
-    SPECIFIC_FIELD(lang->MUXHDMI.NO_CABLE, "HDMI cable is not detected");
-    SPECIFIC_FIELD(lang->MUXHDMI.ACTIVE, "HDMI Active");
     SPECIFIC_FIELD(lang->MUXHDMI.RESOLUTION, "Resolution");
     SPECIFIC_FIELD(lang->MUXHDMI.THEME_RESOLUTION, "Theme Resolution");
     SPECIFIC_FIELD(lang->MUXHDMI.SCREEN, "Screen");
@@ -209,7 +206,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.TITLE, "Scan Scaling");
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.OVER, "Over");
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.UNDER, "Under");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.ACTIVE, "Enable or disable HDMI output");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.AUDIO_OUTPUT, "Switch between device speaker or external monitor audio via HDMI connection");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.RESOLUTION, "Select the resolution for HDMI output, such as 720p or 1080p");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.THEME_RESOLUTION, "Allows for testing different theme resolutions");
