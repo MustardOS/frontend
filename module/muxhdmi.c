@@ -373,8 +373,9 @@ void list_nav_next(int steps) {
 }
 
 int check_active_hdmi() {
-    if (lv_group_get_focused(ui_group) == ui_lblThemeResolution)
-        return 0; //allow updating theme resolution on the fly without having to toggle hdmi
+    if (lv_group_get_focused(ui_group) == ui_lblThemeResolution ||
+            lv_group_get_focused(ui_group) == ui_lblScan)
+        return 0; //allow updating theme resolution/overcan on the fly without having to toggle hdmi
     if (current_item_index > 0) {
         if (read_int_from_file("/tmp/hdmi_in_use", 1)) {
             play_sound("error", nav_sound, 0, 1);

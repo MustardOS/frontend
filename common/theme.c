@@ -850,6 +850,8 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
             scale_theme(device);
             get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         }
+
+        printf("Loading Theme resolution: %d x %d\n", device->MUX.WIDTH, device->MUX.HEIGHT);
     }
 
     init_theme_config(theme, device);

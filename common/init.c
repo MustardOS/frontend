@@ -72,9 +72,8 @@ void init_display() {
 
     static lv_disp_drv_t disp_drv;
     static lv_disp_draw_buf_t disp_buf;
-    struct screen_dimension dims = get_device_dimensions();
 
-    uint32_t disp_buf_size = dims.WIDTH * dims.HEIGHT;
+    uint32_t disp_buf_size = device.MUX.WIDTH * device.MUX.HEIGHT;
     lv_color_t *disp_buf_s1 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
     lv_color_t *disp_buf_s2 = (lv_color_t *) malloc(disp_buf_size * sizeof(lv_color_t));
 
@@ -83,8 +82,8 @@ void init_display() {
 
     disp_drv.draw_buf = &disp_buf;
     disp_drv.flush_cb = display_flush;
-    disp_drv.hor_res = dims.WIDTH;
-    disp_drv.ver_res = dims.HEIGHT;
+    disp_drv.hor_res = device.MUX.WIDTH;
+    disp_drv.ver_res = device.MUX.HEIGHT;
     disp_drv.physical_hor_res = -1;
     disp_drv.physical_ver_res = -1;
     disp_drv.offset_x = 0;
