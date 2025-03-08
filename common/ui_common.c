@@ -412,7 +412,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     //update_bluetooth_status(ui_staBluetooth, theme);
 
     ui_staNetwork = create_header_glyph(ui_conGlyphs, theme);
-    update_network_status(ui_staNetwork, theme);
+    update_network_status(ui_staNetwork, theme, 0);
 
     ui_staCapacity = create_header_glyph(ui_conGlyphs, theme);
     battery_capacity = read_battery_capacity();
@@ -1000,35 +1000,40 @@ void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *the
     }
 }
 
-void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme) {
-    char *network_status;
-    if (device.DEVICE.HAS_NETWORK && is_network_connected()) {
-        network_status = "active";
-        lv_obj_set_style_img_recolor(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.ACTIVE),
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_img_recolor_opa(ui_staNetwork, theme->STATUS.NETWORK.ACTIVE_ALPHA,
-                                         LV_PART_MAIN | LV_STATE_DEFAULT);
+void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, int force_glyph) {
+    struct {
+        lv_color_t color;
+        lv_opa_t alpha;
+        const char *status;
+    } status_style;
+
+    if (force_glyph == 1 || (force_glyph == 0 && device.DEVICE.HAS_NETWORK && is_network_connected())) {
+        status_style.color = lv_color_hex(theme->STATUS.NETWORK.ACTIVE);
+        status_style.alpha = theme->STATUS.NETWORK.ACTIVE_ALPHA;
+        status_style.status = "active";
     } else {
-        network_status = "normal";
-        lv_obj_set_style_img_recolor(ui_staNetwork, lv_color_hex(theme->STATUS.NETWORK.NORMAL),
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_img_recolor_opa(ui_staNetwork, theme->STATUS.NETWORK.NORMAL_ALPHA,
-                                         LV_PART_MAIN | LV_STATE_DEFAULT);
+        status_style.color = lv_color_hex(theme->STATUS.NETWORK.NORMAL);
+        status_style.alpha = theme->STATUS.NETWORK.NORMAL_ALPHA;
+        status_style.status = "normal";
     }
+
+    lv_obj_set_style_img_recolor(ui_staNetwork, status_style.color, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_staNetwork, status_style.alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+
+    char network_status_filename[20];
+    snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", status_style.status);
 
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-    char network_status_filename[15];
-
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-    snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", network_status);
-
-    if (generate_image_embed(STORAGE_THEME, mux_dimension, "header", network_status_filename, image_path,
-                             sizeof(image_path), image_embed, sizeof(image_embed)) ||
-        generate_image_embed(INTERNAL_THEME, mux_dimension, "header", network_status_filename, image_path,
-                             sizeof(image_path), image_embed, sizeof(image_embed))) {
-        if (file_exist(image_path)) lv_img_set_src(ui_staNetwork, image_embed);
+    if ((generate_image_embed(STORAGE_THEME, mux_dimension, "header", network_status_filename, image_path,
+                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
+         generate_image_embed(INTERNAL_THEME, mux_dimension, "header", network_status_filename, image_path,
+                              sizeof(image_path), image_embed, sizeof(image_embed))) &&
+        file_exist(image_path)) {
+        lv_img_set_src(ui_staNetwork, image_embed);
     }
 }
 
@@ -1166,7 +1171,8 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
     lv_obj_set_size(ui_pnlGrid, theme->GRID.COLUMN_COUNT * theme->GRID.COLUMN_WIDTH,
                     theme->GRID.ROW_COUNT * theme->GRID.ROW_HEIGHT);
     //add padding to the bottom to make sure grid panel scrolls correctly
-    lv_obj_set_style_pad_bottom(ui_pnlGrid, (row_count - theme->GRID.ROW_COUNT + 1) * theme->GRID.ROW_HEIGHT , LV_PART_MAIN);
+    lv_obj_set_style_pad_bottom(ui_pnlGrid, (row_count - theme->GRID.ROW_COUNT + 1) * theme->GRID.ROW_HEIGHT,
+                                LV_PART_MAIN);
     lv_obj_set_x(ui_pnlGrid, theme->GRID.LOCATION_X);
     lv_obj_set_y(ui_pnlGrid, theme->GRID.LOCATION_Y);
     lv_obj_set_layout(ui_pnlGrid, LV_LAYOUT_GRID);

@@ -32,7 +32,8 @@ int first_open = 1;
 int ui_count = 0;
 
 const char *pass_args[] = {(INTERNAL_PATH "script/web/password.sh"), NULL};
-const char *net_args[] = {(INTERNAL_PATH "script/system/network.sh"), NULL};
+const char *net_c_args[] = {(INTERNAL_PATH "script/system/network.sh"), "connect", NULL};
+const char *net_d_args[] = {(INTERNAL_PATH "script/system/network.sh"), "disconnect", NULL};
 
 #define PASS_ENCODE "********"
 
@@ -59,6 +60,8 @@ lv_obj_t *ui_values[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[7];
+
+int literally_just_connected = 0;
 
 struct help_msg {
     lv_obj_t *element;
@@ -93,24 +96,29 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void can_scan_check() {
-    if (is_network_connected()) {
+void can_scan_check(int forced_disconnect) {
+    if (!forced_disconnect && is_network_connected()) {
         lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.DISCONNECT);
 
         lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
-    } else {
-        lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.CONNECT);
 
-        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
-
-        lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.NOT_CONNECTED);
+        update_network_status(ui_staNetwork, &theme, 0);
+        return;
     }
+
+    lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.CONNECT);
+
+    lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
+    lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+
+    lv_label_set_text(ui_lblConnectValue, lang.MUXNETWORK.NOT_CONNECTED);
+
+    update_network_status(ui_staNetwork, &theme, 2);
 }
 
 void get_current_ip() {
@@ -123,7 +131,7 @@ void get_current_ip() {
 
     if (strlen(curr_ip) > 1) {
         if (!strcasecmp(curr_ip, "0.0.0.0")) {
-            can_scan_check();
+            can_scan_check(1);
         } else {
             if (config.NETWORK.TYPE) {
                 snprintf(net_message, sizeof(net_message), "%s", lang.MUXNETWORK.CONNECTED);
@@ -133,13 +141,16 @@ void get_current_ip() {
                 lv_label_set_text(ui_lblConnectValue, net_message);
             }
             lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.DISCONNECT);
+
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+
+            update_network_status(ui_staNetwork, &theme, 1);
         }
     } else {
-        can_scan_check();
+        can_scan_check(1);
     }
 }
 
@@ -435,8 +446,8 @@ void handle_confirm(void) {
     if (element_focused == ui_lblConnect) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("confirm", nav_sound, 0, 0);
-            run_exec(net_args);
-            can_scan_check();
+            run_exec(net_d_args);
+            can_scan_check(1);
         } else {
             int valid_info = 0;
             const char *cv_ssid = lv_label_get_text(ui_lblIdentifierValue);
@@ -481,11 +492,11 @@ void handle_confirm(void) {
                 run_exec(pass_args);
                 lv_task_handler();
 
-                run_exec(net_args);
+                run_exec(net_c_args);
                 lv_task_handler();
 
                 get_current_ip();
-
+                literally_just_connected = 1;
             } else {
                 play_sound("error", nav_sound, 0, 0);
                 toast_message(lang.MUXNETWORK.CHECK, 1000, 1000);
@@ -542,9 +553,14 @@ void handle_confirm(void) {
 void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
 
-    save_network_config();
-    toast_message(lang.MUXNETWORK.SAVE, 1000, 1000);
+    toast_message(lang.MUXNETWORK.SAVE, 0, 0);
 
+    /* I hate doing this shit but for some reason the active network
+     * glyph completely wigs out if you don't wait until it finishes
+     * the connection checks...
+    */ if (literally_just_connected) sleep(3);
+
+    save_network_config();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
 
     safe_quit(0);
@@ -985,7 +1001,7 @@ int main(int argc, char *argv[]) {
     init_navigation_sound(&nav_sound, mux_module);
 
     init_osk();
-    can_scan_check();
+    can_scan_check(0);
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
 

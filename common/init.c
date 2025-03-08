@@ -219,7 +219,8 @@ void bluetooth_task() {
 }
 
 void network_task() {
-    update_network_status(ui_staNetwork, &theme);
+    if (!strcasecmp(mux_module, "muxnetwork")) return;
+    update_network_status(ui_staNetwork, &theme, 0);
 }
 
 void battery_task() {

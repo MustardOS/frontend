@@ -31,7 +31,7 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme);
 
-void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme);
+void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, int force_glyph);
 
 void toast_message(const char *msg, uint32_t delay, uint32_t fade_duration);
 
