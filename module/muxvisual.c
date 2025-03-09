@@ -401,7 +401,7 @@ void init_navigation_group() {
 
     overlay_count = load_overlay_set(ui_droOverlayImage);
 
-    char *transparency_string = generate_number_string(0, 100, 1, NULL, NULL, NULL, 0);
+    char *transparency_string = generate_number_string(0, 255, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droOverlayTransparency, transparency_string);
     free(transparency_string);
 
