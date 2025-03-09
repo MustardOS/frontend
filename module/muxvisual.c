@@ -75,8 +75,8 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblMenuCounterFolder,     lang.MUXVISUAL.HELP.COUNT_FOLDER},
             {ui_lblMenuCounterFile,       lang.MUXVISUAL.HELP.COUNT_FILE},
             {ui_lblHidden,                lang.MUXVISUAL.HELP.HIDDEN},
-            {ui_lblOverlayImage,          lang.MUXVISUAL.HELP.OVERLAY_TRANSPARENCY},
-            {ui_lblOverlayTransparency,   lang.MUXVISUAL.HELP.OVERLAY_IMAGE},
+            {ui_lblOverlayImage,          lang.MUXVISUAL.HELP.OVERLAY_IMAGE},
+            {ui_lblOverlayTransparency,   lang.MUXVISUAL.HELP.OVERLAY_TRANSPARENCY},
     };
 
     char *message = lang.GENERIC.NO_HELP;
