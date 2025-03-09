@@ -160,7 +160,7 @@ void init_navigation_group() {
     add_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB, "usbfunction");
     add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
 
-    if (!device.DEVICE.HAS_NETWORK || true) {
+    if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
