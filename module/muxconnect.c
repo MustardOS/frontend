@@ -160,6 +160,18 @@ void init_navigation_group() {
     add_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB, "usbfunction");
     add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
 
+    if (!device.DEVICE.HAS_NETWORK || true) {
+        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_droNetwork, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlServices, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblServices, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoServices, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_droServices, LV_OBJ_FLAG_HIDDEN);
+        ui_count -= 2;
+    }
+
     if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
         lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_HIDDEN);
