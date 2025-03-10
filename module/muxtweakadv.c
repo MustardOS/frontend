@@ -39,15 +39,15 @@ int progress_onscreen = -1;
 
 int accelerate_original, swap_original, thermal_original, volume_original, brightness_original,
         offset_original, lockdown_original, led_original, random_theme_original, retrowait_original,
-        state_original, verbose_original, rumble_original, user_init_original,
-        dpad_swap_original, overdrive_original, swapfile_original, cardmode_original;
+        state_original, verbose_original, rumble_original, user_init_original, dpad_swap_original,
+        overdrive_original, swapfile_original, zramfile_original, cardmode_original;
 
 lv_group_t *ui_group;
 lv_group_t *ui_group_value;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 
-#define UI_COUNT 18
+#define UI_COUNT 19
 lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[5];
@@ -76,6 +76,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblDPADSwap,   lang.MUXTWEAKADV.HELP.DPAD},
             {ui_lblOverdrive,  lang.MUXTWEAKADV.HELP.OVERDRIVE},
             {ui_lblSwapfile,   lang.MUXTWEAKADV.HELP.SWAPFILE},
+            {ui_lblZramfile,   lang.MUXTWEAKADV.HELP.ZRAMFILE},
             {ui_lblCardMode,   lang.MUXTWEAKADV.HELP.TUNING},
     };
 
@@ -124,6 +125,7 @@ void init_element_events() {
             ui_droDPADSwap,
             ui_droOverdrive,
             ui_droSwapfile,
+            ui_droZramfile,
             ui_droCardMode
     };
 
@@ -150,6 +152,7 @@ void init_dropdown_settings() {
     dpad_swap_original = lv_dropdown_get_selected(ui_droDPADSwap);
     overdrive_original = lv_dropdown_get_selected(ui_droOverdrive);
     swapfile_original = lv_dropdown_get_selected(ui_droSwapfile);
+    zramfile_original = lv_dropdown_get_selected(ui_droZramfile);
     cardmode_original = lv_dropdown_get_selected(ui_droCardMode);
 }
 
@@ -207,6 +210,9 @@ void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droOverdrive, config.SETTINGS.ADVANCED.OVERDRIVE);
 
     map_drop_down_to_index(ui_droSwapfile, config.SETTINGS.ADVANCED.SWAPFILE,
+                           (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
+
+    map_drop_down_to_index(ui_droZramfile, config.SETTINGS.ADVANCED.ZRAMFILE,
                            (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
 
     const char *card_type = config.SETTINGS.ADVANCED.CARDMODE;
@@ -285,6 +291,9 @@ void save_tweak_options() {
     int idx_overdrive = lv_dropdown_get_selected(ui_droOverdrive);
 
     int idx_swapfile = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSwapfile),
+                                              (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
+
+    int idx_zramfile = map_drop_down_to_value(lv_dropdown_get_selected(ui_droZramfile),
                                               (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
 
     char *idx_cardmode;
@@ -384,6 +393,11 @@ void save_tweak_options() {
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/swapfile"), "w", INT, idx_swapfile);
     }
 
+    if (lv_dropdown_get_selected(ui_droZramfile) != zramfile_original) {
+        is_modified++;
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/zramfile"), "w", INT, idx_zramfile);
+    }
+
     if (lv_dropdown_get_selected(ui_droCardMode) != cardmode_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/cardmode"), "w", CHAR, idx_cardmode);
@@ -409,6 +423,7 @@ void init_navigation_group() {
             ui_pnlRetroWait,
             ui_pnlState,
             ui_pnlSwapfile,
+            ui_pnlZramfile,
             ui_pnlUserInit,
             ui_pnlVerbose,
             ui_pnlVolume
@@ -429,9 +444,10 @@ void init_navigation_group() {
     ui_objects[12] = ui_lblRetroWait;
     ui_objects[13] = ui_lblState;
     ui_objects[14] = ui_lblSwapfile;
-    ui_objects[15] = ui_lblUserInit;
-    ui_objects[16] = ui_lblVerbose;
-    ui_objects[17] = ui_lblVolume;
+    ui_objects[15] = ui_lblZramfile;
+    ui_objects[16] = ui_lblUserInit;
+    ui_objects[17] = ui_lblVerbose;
+    ui_objects[18] = ui_lblVolume;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droSwap,
@@ -449,6 +465,7 @@ void init_navigation_group() {
             ui_droRetroWait,
             ui_droState,
             ui_droSwapfile,
+            ui_droZramfile,
             ui_droUserInit,
             ui_droVerbose,
             ui_droVolume
@@ -470,6 +487,7 @@ void init_navigation_group() {
             ui_icoRetroWait,
             ui_icoState,
             ui_icoSwapfile,
+            ui_icoZramfile,
             ui_icoUserInit,
             ui_icoVerbose,
             ui_icoVolume
@@ -492,6 +510,7 @@ void init_navigation_group() {
     apply_theme_list_panel(ui_pnlDPADSwap);
     apply_theme_list_panel(ui_pnlOverdrive);
     apply_theme_list_panel(ui_pnlSwapfile);
+    apply_theme_list_panel(ui_pnlZramfile);
     apply_theme_list_panel(ui_pnlCardMode);
 
     apply_theme_list_item(&theme, ui_lblAccelerate, lang.MUXTWEAKADV.SPEED);
@@ -511,6 +530,7 @@ void init_navigation_group() {
     apply_theme_list_item(&theme, ui_lblDPADSwap, lang.MUXTWEAKADV.DPAD);
     apply_theme_list_item(&theme, ui_lblOverdrive, lang.MUXTWEAKADV.OVERDRIVE);
     apply_theme_list_item(&theme, ui_lblSwapfile, lang.MUXTWEAKADV.SWAPFILE);
+    apply_theme_list_item(&theme, ui_lblZramfile, lang.MUXTWEAKADV.ZRAMFILE);
     apply_theme_list_item(&theme, ui_lblCardMode, lang.MUXTWEAKADV.TUNING);
 
     apply_theme_list_glyph(&theme, ui_icoAccelerate, mux_module, "accelerate");
@@ -530,6 +550,7 @@ void init_navigation_group() {
     apply_theme_list_glyph(&theme, ui_icoDPADSwap, mux_module, "dpadswap");
     apply_theme_list_glyph(&theme, ui_icoOverdrive, mux_module, "overdrive");
     apply_theme_list_glyph(&theme, ui_icoSwapfile, mux_module, "swapfile");
+    apply_theme_list_glyph(&theme, ui_icoZramfile, mux_module, "zramfile");
     apply_theme_list_glyph(&theme, ui_icoCardMode, mux_module, "cardmode");
 
     char *accelerate_string = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
@@ -559,6 +580,11 @@ void init_navigation_group() {
     char *swapfile_string = generate_number_string(64, 512, 64, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droSwapfile, swapfile_string);
     free(swapfile_string);
+
+    // We could reuse from above but just incase we want to increase it we'll do it separately!
+    char *zramfile_string = generate_number_string(64, 512, 64, lang.GENERIC.DISABLED, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droZramfile, zramfile_string);
+    free(zramfile_string);
 
     apply_theme_list_drop_down(&theme, ui_droCardMode, NULL);
 
@@ -750,6 +776,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblDPADSwap, "dpadswap");
     lv_obj_set_user_data(ui_lblOverdrive, "overdrive");
     lv_obj_set_user_data(ui_lblSwapfile, "swapfile");
+    lv_obj_set_user_data(ui_lblZramfile, "zramfile");
     lv_obj_set_user_data(ui_lblCardMode, "cardmode");
 
     if (!device.DEVICE.HAS_NETWORK) {

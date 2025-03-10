@@ -47,6 +47,7 @@ struct mux_config {
             int16_t DPADSWAP;
             int16_t OVERDRIVE;
             int16_t SWAPFILE;
+            int16_t ZRAMFILE;
             char CARDMODE[MAX_BUFFER_SIZE];
         } ADVANCED;
         struct {

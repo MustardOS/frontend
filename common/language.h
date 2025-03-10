@@ -604,6 +604,7 @@ struct mux_lang {
         char DPAD[MAX_BUFFER_SIZE];
         char OVERDRIVE[MAX_BUFFER_SIZE];
         char SWAPFILE[MAX_BUFFER_SIZE];
+        char ZRAMFILE[MAX_BUFFER_SIZE];
         char STATE[MAX_BUFFER_SIZE];
         char TUNING[MAX_BUFFER_SIZE];
         struct {
@@ -645,6 +646,7 @@ struct mux_lang {
             char DPAD[MAX_BUFFER_SIZE];
             char OVERDRIVE[MAX_BUFFER_SIZE];
             char SWAPFILE[MAX_BUFFER_SIZE];
+            char ZRAMFILE[MAX_BUFFER_SIZE];
             char TUNING[MAX_BUFFER_SIZE];
             char RUMBLE[MAX_BUFFER_SIZE];
             char STATE[MAX_BUFFER_SIZE];

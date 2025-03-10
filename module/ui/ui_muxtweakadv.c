@@ -17,6 +17,7 @@ lv_obj_t *ui_pnlUserInit;
 lv_obj_t *ui_pnlDPADSwap;
 lv_obj_t *ui_pnlOverdrive;
 lv_obj_t *ui_pnlSwapfile;
+lv_obj_t *ui_pnlZramfile;
 lv_obj_t *ui_pnlCardMode;
 
 lv_obj_t *ui_lblAccelerate;
@@ -36,6 +37,7 @@ lv_obj_t *ui_lblUserInit;
 lv_obj_t *ui_lblDPADSwap;
 lv_obj_t *ui_lblOverdrive;
 lv_obj_t *ui_lblSwapfile;
+lv_obj_t *ui_lblZramfile;
 lv_obj_t *ui_lblCardMode;
 
 lv_obj_t *ui_icoAccelerate;
@@ -55,6 +57,7 @@ lv_obj_t *ui_icoUserInit;
 lv_obj_t *ui_icoDPADSwap;
 lv_obj_t *ui_icoOverdrive;
 lv_obj_t *ui_icoSwapfile;
+lv_obj_t *ui_icoZramfile;
 lv_obj_t *ui_icoCardMode;
 
 lv_obj_t *ui_droAccelerate;
@@ -74,6 +77,7 @@ lv_obj_t *ui_droUserInit;
 lv_obj_t *ui_droDPADSwap;
 lv_obj_t *ui_droOverdrive;
 lv_obj_t *ui_droSwapfile;
+lv_obj_t *ui_droZramfile;
 lv_obj_t *ui_droCardMode;
 
 void init_mux(lv_obj_t *ui_pnlContent) {
@@ -92,6 +96,7 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlRetroWait = lv_obj_create(ui_pnlContent);
     ui_pnlState = lv_obj_create(ui_pnlContent);
     ui_pnlSwapfile = lv_obj_create(ui_pnlContent);
+    ui_pnlZramfile = lv_obj_create(ui_pnlContent);
     ui_pnlUserInit = lv_obj_create(ui_pnlContent);
     ui_pnlVerbose = lv_obj_create(ui_pnlContent);
     ui_pnlVolume = lv_obj_create(ui_pnlContent);
@@ -113,6 +118,7 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_lblDPADSwap = lv_label_create(ui_pnlDPADSwap);
     ui_lblOverdrive = lv_label_create(ui_pnlOverdrive);
     ui_lblSwapfile = lv_label_create(ui_pnlSwapfile);
+    ui_lblZramfile = lv_label_create(ui_pnlZramfile);
     ui_lblCardMode = lv_label_create(ui_pnlCardMode);
 
     ui_icoAccelerate = lv_img_create(ui_pnlAccelerate);
@@ -132,6 +138,7 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_icoDPADSwap = lv_img_create(ui_pnlDPADSwap);
     ui_icoOverdrive = lv_img_create(ui_pnlOverdrive);
     ui_icoSwapfile = lv_img_create(ui_pnlSwapfile);
+    ui_icoZramfile = lv_img_create(ui_pnlZramfile);
     ui_icoCardMode = lv_img_create(ui_pnlCardMode);
 
     ui_droAccelerate = lv_dropdown_create(ui_pnlAccelerate);
@@ -151,5 +158,6 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_droDPADSwap = lv_dropdown_create(ui_pnlDPADSwap);
     ui_droOverdrive = lv_dropdown_create(ui_pnlOverdrive);
     ui_droSwapfile = lv_dropdown_create(ui_pnlSwapfile);
+    ui_droZramfile = lv_dropdown_create(ui_pnlZramfile);
     ui_droCardMode = lv_dropdown_create(ui_pnlCardMode);
 }
