@@ -1244,7 +1244,8 @@ void init_mux(void) {
     } else {
         lv_label_set_text(ui_lblMusicMessage,
                           "\nTrack - Final Frontier"
-                          "\nComposer - Nimn One");
+                          "\nComposer - Nimn One"
+                          "\n\n\nHave a blessed day...");
     }
     lv_obj_set_scroll_dir(ui_lblMusicMessage, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblMusicMessage, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
