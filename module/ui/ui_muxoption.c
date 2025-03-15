@@ -18,8 +18,11 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlGovernor = lv_obj_create(ui_pnlContent);
 
     ui_lblSearch = lv_label_create(ui_pnlSearch);
+    lv_label_set_text(ui_lblSearch, "");
     ui_lblCore = lv_label_create(ui_pnlCore);
+    lv_label_set_text(ui_lblCore, "");
     ui_lblGovernor = lv_label_create(ui_pnlGovernor);
+    lv_label_set_text(ui_lblGovernor, "");
 
     ui_icoSearch = lv_img_create(ui_pnlSearch);
     ui_icoCore = lv_img_create(ui_pnlCore);

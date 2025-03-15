@@ -42,12 +42,19 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlTimezone = lv_obj_create(ui_pnlContent);
 
     ui_lblYear = lv_label_create(ui_pnlYear);
+    lv_label_set_text(ui_lblYear, "");
     ui_lblMonth = lv_label_create(ui_pnlMonth);
+    lv_label_set_text(ui_lblMonth, "");
     ui_lblDay = lv_label_create(ui_pnlDay);
+    lv_label_set_text(ui_lblDay, "");
     ui_lblHour = lv_label_create(ui_pnlHour);
+    lv_label_set_text(ui_lblHour, "");
     ui_lblMinute = lv_label_create(ui_pnlMinute);
+    lv_label_set_text(ui_lblMinute, "");
     ui_lblNotation = lv_label_create(ui_pnlNotation);
+    lv_label_set_text(ui_lblNotation, "");
     ui_lblTimezone = lv_label_create(ui_pnlTimezone);
+    lv_label_set_text(ui_lblTimezone, "");
 
     ui_icoYear = lv_img_create(ui_pnlYear);
     ui_icoMonth = lv_img_create(ui_pnlMonth);
@@ -58,10 +65,17 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_icoTimezone = lv_img_create(ui_pnlTimezone);
 
     ui_lblYearValue = lv_label_create(ui_pnlYear);
+    lv_label_set_text(ui_lblYearValue, "");
     ui_lblMonthValue = lv_label_create(ui_pnlMonth);
+    lv_label_set_text(ui_lblMonthValue, "");
     ui_lblDayValue = lv_label_create(ui_pnlDay);
+    lv_label_set_text(ui_lblDayValue, "");
     ui_lblHourValue = lv_label_create(ui_pnlHour);
+    lv_label_set_text(ui_lblHourValue, "");
     ui_lblMinuteValue = lv_label_create(ui_pnlMinute);
+    lv_label_set_text(ui_lblMinuteValue, "");
     ui_lblNotationValue = lv_label_create(ui_pnlNotation);
+    lv_label_set_text(ui_lblNotationValue, "");
     ui_lblTimezoneValue = lv_label_create(ui_pnlTimezone);
+    lv_label_set_text(ui_lblTimezoneValue, "");
 }

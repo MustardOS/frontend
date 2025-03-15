@@ -28,16 +28,22 @@ void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config 
     ui_pnlSearchGlobal = lv_obj_create(ui_pnlContent);
 
     ui_lblLookup = lv_label_create(ui_pnlLookup);
+    lv_label_set_text(ui_lblLookup, "");
     ui_lblSearchLocal = lv_label_create(ui_pnlSearchLocal);
+    lv_label_set_text(ui_lblSearchLocal, "");
     ui_lblSearchGlobal = lv_label_create(ui_pnlSearchGlobal);
+    lv_label_set_text(ui_lblSearchGlobal, "");
 
     ui_icoLookup = lv_img_create(ui_pnlLookup);
     ui_icoSearchLocal = lv_img_create(ui_pnlSearchLocal);
     ui_icoSearchGlobal = lv_img_create(ui_pnlSearchGlobal);
 
     ui_lblLookupValue = lv_label_create(ui_pnlLookup);
+    lv_label_set_text(ui_lblLookupValue, "");
     ui_lblSearchLocalValue = lv_label_create(ui_pnlSearchLocal);
+    lv_label_set_text(ui_lblSearchLocalValue, "");
     ui_lblSearchGlobalValue = lv_label_create(ui_pnlSearchGlobal);
+    lv_label_set_text(ui_lblSearchGlobalValue, "");
 
     ui_pnlEntry = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlEntry, device.MUX.WIDTH);

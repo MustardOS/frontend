@@ -281,9 +281,9 @@ void init_navigation_group() {
     apply_theme_list_drop_down(&theme, ui_droColour, colour_string);
     free(colour_string);
 
-    apply_theme_list_drop_down(&theme, ui_droRTC, "");
-    apply_theme_list_drop_down(&theme, ui_droHDMI, "");
-    apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
+    apply_theme_list_drop_down(&theme, ui_droRTC, NULL);
+    apply_theme_list_drop_down(&theme, ui_droHDMI, NULL);
+    apply_theme_list_drop_down(&theme, ui_droAdvanced, NULL);
 
     add_drop_down_options(ui_droStartup, (char *[]) {
             lang.MUXTWEAKGEN.STARTUP.MENU, lang.MUXTWEAKGEN.STARTUP.EXPLORE, lang.MUXTWEAKGEN.STARTUP.COLLECTION,
