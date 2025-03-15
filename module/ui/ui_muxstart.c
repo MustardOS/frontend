@@ -55,6 +55,7 @@ void init_mux(void) {
     lv_obj_set_style_border_side(ui_pnlMessage, LV_BORDER_SIDE_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblMessage = lv_label_create(ui_pnlMessage);
+    lv_label_set_text(ui_lblMessage, "");
     lv_obj_set_width(ui_lblMessage, device.MUX.WIDTH - 25);
     lv_obj_set_height(ui_lblMessage, device.MUX.HEIGHT / 4);
     lv_obj_set_align(ui_lblMessage, LV_ALIGN_CENTER);

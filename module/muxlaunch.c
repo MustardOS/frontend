@@ -538,23 +538,13 @@ void init_elements() {
     lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
 
     lv_obj_t *nav_hide[] = {
-            ui_lblNavBGlyph,
-            ui_lblNavB,
-            ui_lblNavCGlyph,
-            ui_lblNavC,
-            ui_lblNavXGlyph,
-            ui_lblNavX,
-            ui_lblNavYGlyph,
-            ui_lblNavY,
-            ui_lblNavZGlyph,
-            ui_lblNavZ,
-            ui_lblNavMenuGlyph,
-            ui_lblNavMenu
+            ui_lblNavAGlyph,
+            ui_lblNavA
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
     lv_obj_set_user_data(ui_lblContent, "explore");
