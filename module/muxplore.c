@@ -283,7 +283,6 @@ void image_refresh(char *image_type) {
     } else {
         char *file_name = strip_ext(items[current_item_index].name);
 
-        char core_artwork[MAX_BUFFER_SIZE];
         get_catalogue_name(sys_dir, content_label, core_artwork, sizeof(core_artwork));
 
         if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
