@@ -109,11 +109,12 @@ void populate_theme_alternates() {
             char *filename = entry->d_name;
             size_t len = strlen(filename);
 
-            if (len > 4 && strcmp(str_tolower(filename + len - 4), ".ini") == 0) {
-                char name_without_ext[MAX_BUFFER_SIZE];
-                strncpy(name_without_ext, filename, len - 4);
-                name_without_ext[len - 4] = '\0';
-                add_item(&items, &item_count, "", name_without_ext, "", ROM);
+            if ((len > 4 && strcmp(str_tolower(filename + len - 4), ".ini") == 0) ||
+                    (len > 7 && strcmp(str_tolower(filename + len - 7), ".muxzip") == 0)) {
+                char *name_without_ext = strip_ext(filename);
+                if (!item_exists(items, item_count, name_without_ext)) {
+                    add_item(&items, &item_count, name_without_ext, name_without_ext, "", ROM);
+                }
             }
         }
 
@@ -415,6 +416,12 @@ void save_options() {
         printf("attempt updating file: %s\n", (STORAGE_THEME "/active.txt"));
         if (strcasecmp(theme_alt, theme_alt_original) != 0) {
             write_text_to_file((STORAGE_THEME "/active.txt"), "w", CHAR, theme_alt);
+
+            char theme_alt_archive[MAX_BUFFER_SIZE];
+            snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxzip", STORAGE_THEME, theme_alt);
+            if (file_exist(theme_alt_archive)) {
+                extract_file(theme_alt_archive);
+            }
 
             static char rgb_script[MAX_BUFFER_SIZE];
             snprintf(rgb_script, sizeof(rgb_script),

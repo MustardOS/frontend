@@ -250,28 +250,7 @@ void handle_a() {
     if (ui_count > 0) {
         play_sound("confirm", nav_sound, 0, 1);
 
-        static char extract_script[MAX_BUFFER_SIZE];
-        snprintf(extract_script, sizeof(extract_script),
-                 "%s/script/mux/extract.sh", INTERNAL_PATH);
-
-        const char *args[] = {
-                (INTERNAL_PATH "bin/fbpad"),
-                "-bg", (char *) theme.TERMINAL.BACKGROUND,
-                "-fg", (char *) theme.TERMINAL.FOREGROUND,
-                extract_script,
-                items[current_item_index].name,
-                NULL
-        };
-
-        setenv("TERM", "xterm-256color", 1);
-
-        if (config.VISUAL.BLACKFADE) {
-            fade_to_black(ui_screen);
-        } else {
-            unload_image_animation();
-        }
-
-        run_exec(args);
+        extract_file(items[current_item_index].name);
 
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
