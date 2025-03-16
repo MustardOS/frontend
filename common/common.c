@@ -55,6 +55,31 @@ int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
 }
 
+void extract_file(char *filename) {
+    static char extract_script[MAX_BUFFER_SIZE];
+    snprintf(extract_script, sizeof(extract_script),
+             "%s/script/mux/extract.sh", INTERNAL_PATH);
+
+    const char *args[] = {
+            (INTERNAL_PATH "bin/fbpad"),
+            "-bg", (char *) theme.TERMINAL.BACKGROUND,
+            "-fg", (char *) theme.TERMINAL.FOREGROUND,
+            extract_script,
+            filename,
+            NULL
+    };
+
+    setenv("TERM", "xterm-256color", 1);
+
+    if (config.VISUAL.BLACKFADE) {
+        fade_to_black(ui_screen);
+    } else {
+        unload_image_animation();
+    }
+
+    run_exec(args);
+}
+
 int directory_exist(char *dirname) {
     struct stat stats;
     return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);

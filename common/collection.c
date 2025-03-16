@@ -111,6 +111,13 @@ int time_compare_for_history(const void *a, const void *b) {
     }
 }
 
+int item_exists(content_item *content_items, size_t count, const char *name) {
+    for (size_t i = 0; i < count; i++) {
+        if (strcasecmp(content_items[i].name, name) == 0) return 1;
+    }
+    return 0;
+}
+
 void sort_items(content_item *content_items, size_t count) {
     qsort(content_items, count, sizeof(content_item), content_item_compare);
 }
