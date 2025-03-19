@@ -99,7 +99,7 @@ static void display_update(monitor_t *m) {
     int scale_width = (device.MUX.WIDTH * device.SCREEN.ZOOM);
     int scale_height = (device.MUX.HEIGHT * device.SCREEN.ZOOM);
 
-    int underscan = config.SETTINGS.HDMI.SCAN == 1 ? 16 : 0;
+    int underscan = read_int_from_file(RUN_GLOBAL_PATH "boot/device_mode", 1) && config.SETTINGS.HDMI.SCAN == 1 ? 16 : 0;
 
     SDL_Rect dest_rect = {
             ((device.SCREEN.WIDTH - scale_width) / 2) + underscan,

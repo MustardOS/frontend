@@ -829,7 +829,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (!config->BOOT.FACTORY_RESET) {
         char theme_device_folder[MAX_BUFFER_SIZE];
 
-        if (read_int_from_file(device->SCREEN.HDMI, 1) &&
+        if (read_int_from_file(RUN_GLOBAL_PATH "boot/device_mode", 1) &&
             config->SETTINGS.HDMI.THEME_RESOLUTION > 0) {
             snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, 
                     config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH, config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT);
