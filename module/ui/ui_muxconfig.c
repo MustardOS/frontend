@@ -34,12 +34,19 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlStorage = lv_obj_create(ui_pnlContent);
 
     ui_lblTweakGeneral = lv_label_create(ui_pnlTweakGeneral);
+    lv_label_set_text(ui_lblTweakGeneral, "");
     ui_lblConnect = lv_label_create(ui_pnlConnect);
+    lv_label_set_text(ui_lblConnect, "");
     ui_lblCustom = lv_label_create(ui_pnlCustom);
+    lv_label_set_text(ui_lblCustom, "");
     ui_lblInterface = lv_label_create(ui_pnlInterface);
+    lv_label_set_text(ui_lblInterface, "");
     ui_lblLanguage = lv_label_create(ui_pnlLanguage);
+    lv_label_set_text(ui_lblLanguage, "");
     ui_lblPower = lv_label_create(ui_pnlPower);
+    lv_label_set_text(ui_lblPower, "");
     ui_lblStorage = lv_label_create(ui_pnlStorage);
+    lv_label_set_text(ui_lblStorage, "");
 
     ui_icoTweakGeneral = lv_img_create(ui_pnlTweakGeneral);
     ui_icoConnect = lv_img_create(ui_pnlConnect);
