@@ -570,13 +570,6 @@ void handle_a() {
         return;
     }
 
-    toast_message(lang.GENERIC.LOADING, 0, 0);
-    lv_obj_move_foreground(ui_pnlMessage);
-
-    // Refresh and add a small delay to actually display the message!
-    lv_task_handler();
-    usleep(256);
-
     load_mux("history");
     safe_quit(0);
     mux_input_stop();
