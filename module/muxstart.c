@@ -94,6 +94,5 @@ int main(int argc, char *argv[]) {
 
     refresh_screen(ui_scrStart);
 
-    safe_quit(0);
     return 0;
 }
