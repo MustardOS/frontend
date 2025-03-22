@@ -524,7 +524,7 @@ void init_navigation_group() {
     apply_theme_list_item(&theme, ui_lblTheme, lang.MUXTWEAKADV.RANDOM);
     apply_theme_list_item(&theme, ui_lblRetroWait, lang.MUXTWEAKADV.NET_WAIT);
     apply_theme_list_item(&theme, ui_lblState, lang.MUXTWEAKADV.STATE);
-    apply_theme_list_item(&theme, ui_lblVerbose, lang.MUXTWEAKADV.VERBOSE);
+    apply_theme_list_item(&theme, ui_lblVerbose, lang.MUXTWEAKADV.VERBOSE.TITLE);
     apply_theme_list_item(&theme, ui_lblRumble, lang.MUXTWEAKADV.RUMBLE.TITLE);
     apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXTWEAKADV.USER_INIT);
     apply_theme_list_item(&theme, ui_lblDPADSwap, lang.MUXTWEAKADV.DPAD);
@@ -612,7 +612,10 @@ void init_navigation_group() {
     add_drop_down_options(ui_droTheme, disabled_enabled, 2);
     add_drop_down_options(ui_droRetroWait, disabled_enabled, 2);
     add_drop_down_options(ui_droState, (char *[]) {"mem", "freeze"}, 2);
-    add_drop_down_options(ui_droVerbose, disabled_enabled, 2);
+    add_drop_down_options(ui_droVerbose, (char *[]) {
+            lang.GENERIC.DISABLED,
+            lang.MUXTWEAKADV.VERBOSE.SHORT,
+            lang.MUXTWEAKADV.VERBOSE.DETAILED}, 3);
 
     add_drop_down_options(ui_droRumble, (char *[]) {
             lang.GENERIC.DISABLED,
