@@ -18,6 +18,7 @@
 #include "../lvgl/lvgl.h"
 #include "../font/notosans.h"
 #include "../font/notosans_jp.h"
+#include "../font/notosans_ar.h"
 #include "../font/notosans_kr.h"
 #include "../font/notosans_sc.h"
 #include "../font/notosans_tc.h"
@@ -1355,6 +1356,8 @@ const lv_font_t *get_language_font() {
         return &ui_font_NotoSans_TC;
     } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0) {
         return &ui_font_NotoSans_JP;
+    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Arabic") == 0) {
+        return &ui_font_NotoSans_AR;
     } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0) {
         return &ui_font_NotoSans_KR;
     } else {
