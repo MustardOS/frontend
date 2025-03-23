@@ -599,11 +599,7 @@ struct mux_lang {
         char LED[MAX_BUFFER_SIZE];
         char RANDOM[MAX_BUFFER_SIZE];
         char NET_WAIT[MAX_BUFFER_SIZE];
-        struct {
-            char TITLE[MAX_BUFFER_SIZE];
-            char SHORT[MAX_BUFFER_SIZE];
-            char DETAILED[MAX_BUFFER_SIZE];
-        } VERBOSE;
+        char VERBOSE[MAX_BUFFER_SIZE];
         char USER_INIT[MAX_BUFFER_SIZE];
         char DPAD[MAX_BUFFER_SIZE];
         char OVERDRIVE[MAX_BUFFER_SIZE];

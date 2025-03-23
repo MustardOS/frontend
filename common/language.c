@@ -514,9 +514,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.LED, "LED During Play");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RANDOM, "Random Theme on Boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.NET_WAIT, "RetroArch Network Wait");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.VERBOSE.TITLE, "Verbose Messages");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.VERBOSE.SHORT, "Short");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.VERBOSE.DETAILED, "Detailed");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.VERBOSE, "Verbose Messages");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.USER_INIT, "User Init Scripts");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.DPAD, "DPAD Swap Function");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.OVERDRIVE, "Audio Overdrive");

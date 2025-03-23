@@ -153,6 +153,8 @@ int main(int argc, char *argv[]) {
     battery_task();
     battery_timer = lv_timer_create(battery_task, TIMER_BATTERY, NULL);
 
+    refresh_screen(ui_scrCharge);
+
     mux_input_options input_opts = {
             .press_handler = {[MUX_INPUT_POWER_SHORT] = handle_power_short},
             .idle_handler = handle_idle
