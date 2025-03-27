@@ -70,6 +70,7 @@ void init_mux(void) {
     lv_obj_set_style_text_align(ui_pnlCharge, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblCapacity = lv_label_create(ui_pnlCharge);
+    lv_label_set_text(ui_lblCapacity, "");
     lv_obj_set_height(ui_lblCapacity, LV_SIZE_CONTENT);
     lv_obj_set_width(ui_lblCapacity, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblCapacity, LV_ALIGN_CENTER);
@@ -87,6 +88,7 @@ void init_mux(void) {
     lv_obj_set_style_text_align(ui_lblCapacity, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblVoltage = lv_label_create(ui_pnlCharge);
+    lv_label_set_text(ui_lblVoltage, "");
     lv_obj_set_height(ui_lblVoltage, LV_SIZE_CONTENT);
     lv_obj_set_width(ui_lblVoltage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblVoltage, LV_ALIGN_CENTER);
@@ -103,6 +105,7 @@ void init_mux(void) {
     lv_obj_set_style_text_align(ui_lblVoltage, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_lblBoot = lv_label_create(ui_pnlCharge);
+    lv_label_set_text(ui_lblBoot, "");
     lv_obj_set_height(ui_lblBoot, LV_SIZE_CONTENT);
     lv_obj_set_width(ui_lblBoot, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblBoot, LV_ALIGN_CENTER);

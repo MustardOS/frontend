@@ -62,16 +62,27 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlVoltage = lv_obj_create(ui_pnlContent);
 
     ui_lblVersion = lv_label_create(ui_pnlVersion);
+    lv_label_set_text(ui_lblVersion, "");
     ui_lblDevice = lv_label_create(ui_pnlDevice);
+    lv_label_set_text(ui_lblDevice, "");
     ui_lblKernel = lv_label_create(ui_pnlKernel);
+    lv_label_set_text(ui_lblKernel, "");
     ui_lblUptime = lv_label_create(ui_pnlUptime);
+    lv_label_set_text(ui_lblUptime, "");
     ui_lblCPU = lv_label_create(ui_pnlCPU);
+    lv_label_set_text(ui_lblCPU, "");
     ui_lblSpeed = lv_label_create(ui_pnlSpeed);
+    lv_label_set_text(ui_lblSpeed, "");
     ui_lblGovernor = lv_label_create(ui_pnlGovernor);
+    lv_label_set_text(ui_lblGovernor, "");
     ui_lblMemory = lv_label_create(ui_pnlMemory);
+    lv_label_set_text(ui_lblMemory, "");
     ui_lblTemp = lv_label_create(ui_pnlTemp);
+    lv_label_set_text(ui_lblTemp, "");
     ui_lblCapacity = lv_label_create(ui_pnlCapacity);
+    lv_label_set_text(ui_lblCapacity, "");
     ui_lblVoltage = lv_label_create(ui_pnlVoltage);
+    lv_label_set_text(ui_lblVoltage, "");
 
     ui_icoVersion = lv_img_create(ui_pnlVersion);
     ui_icoDevice = lv_img_create(ui_pnlDevice);
@@ -86,14 +97,25 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_icoVoltage = lv_img_create(ui_pnlVoltage);
 
     ui_lblVersionValue = lv_label_create(ui_pnlVersion);
+    lv_label_set_text(ui_lblVersionValue, "");
     ui_lblDeviceValue = lv_label_create(ui_pnlDevice);
+    lv_label_set_text(ui_lblDeviceValue, "");
     ui_lblKernelValue = lv_label_create(ui_pnlKernel);
+    lv_label_set_text(ui_lblKernelValue, "");
     ui_lblUptimeValue = lv_label_create(ui_pnlUptime);
+    lv_label_set_text(ui_lblUptimeValue, "");
     ui_lblCPUValue = lv_label_create(ui_pnlCPU);
+    lv_label_set_text(ui_lblCPUValue, "");
     ui_lblSpeedValue = lv_label_create(ui_pnlSpeed);
+    lv_label_set_text(ui_lblSpeedValue, "");
     ui_lblGovernorValue = lv_label_create(ui_pnlGovernor);
+    lv_label_set_text(ui_lblGovernorValue, "");
     ui_lblMemoryValue = lv_label_create(ui_pnlMemory);
+    lv_label_set_text(ui_lblMemoryValue, "");
     ui_lblTempValue = lv_label_create(ui_pnlTemp);
+    lv_label_set_text(ui_lblTempValue, "");
     ui_lblCapacityValue = lv_label_create(ui_pnlCapacity);
+    lv_label_set_text(ui_lblCapacityValue, "");
     ui_lblVoltageValue = lv_label_create(ui_pnlVoltage);
+    lv_label_set_text(ui_lblVoltageValue, "");
 }

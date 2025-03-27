@@ -38,13 +38,21 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlShutdown = lv_obj_create(ui_pnlContent);
 
     ui_lblContent = lv_label_create(ui_pnlExplore);
+    lv_label_set_text(ui_lblContent, "");
     ui_lblCollection = lv_label_create(ui_pnlCollection);
+    lv_label_set_text(ui_lblCollection, "");
     ui_lblHistory = lv_label_create(ui_pnlHistory);
+    lv_label_set_text(ui_lblHistory, "");
     ui_lblApps = lv_label_create(ui_pnlApps);
+    lv_label_set_text(ui_lblApps, "");
     ui_lblInfo = lv_label_create(ui_pnlInfo);
+    lv_label_set_text(ui_lblInfo, "");
     ui_lblConfig = lv_label_create(ui_pnlConfig);
+    lv_label_set_text(ui_lblConfig, "");
     ui_lblReboot = lv_label_create(ui_pnlReboot);
+    lv_label_set_text(ui_lblReboot, "");
     ui_lblShutdown = lv_label_create(ui_pnlShutdown);
+    lv_label_set_text(ui_lblShutdown, "");
 
     lv_label_set_text(ui_lblContent, "");
     lv_label_set_text(ui_lblCollection, "");
