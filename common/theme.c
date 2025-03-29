@@ -897,6 +897,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     }
 
     theme->GRID.ENABLED = (theme->GRID.COLUMN_COUNT > 0 && theme->GRID.ROW_COUNT > 0);
+    if (theme->MISC.CONTENT.WIDTH == 0) theme->MISC.CONTENT.WIDTH = device->MUX.WIDTH;
     if (theme->MISC.CONTENT.HEIGHT > device->MUX.HEIGHT) theme->MISC.CONTENT.HEIGHT = device->MUX.HEIGHT;
     if (theme->MUX.ITEM.COUNT < 1) theme->MUX.ITEM.COUNT = 1;
     if (theme->MUX.ITEM.HEIGHT > 0) {
