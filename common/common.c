@@ -2391,3 +2391,21 @@ int theme_compat() {
 
     return 0;
 }
+
+void update_bootlogo() {
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+    char bootlogo_image[MAX_BUFFER_SIZE];
+    snprintf(bootlogo_image, sizeof(bootlogo_image), "%s/%simage/bootlogo.bmp", STORAGE_THEME, mux_dimension);
+    if (!file_exist(bootlogo_image)) snprintf(bootlogo_image, sizeof(bootlogo_image), "%s/image/bootlogo.bmp", STORAGE_THEME);
+    if (file_exist(bootlogo_image)) {
+        char bootlogo_dest[MAX_BUFFER_SIZE];
+        snprintf(bootlogo_dest, sizeof(bootlogo_dest), "%s/bootlogo.bmp", device.STORAGE.BOOT.MOUNT, mux_dimension);
+        char *args[] = {"cp", bootlogo_image, bootlogo_dest, NULL};
+        run_exec(args);
+        if (strcmp(device.DEVICE.NAME, "rg28xx-h") == 0) {
+            char *rotate_args[] = {"convert", bootlogo_dest, "-rotate", "270", bootlogo_dest, NULL};
+            run_exec(rotate_args);
+        }
+    }
+}
