@@ -31,11 +31,17 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     lv_obj_add_flag(ui_pnlTracker, LV_OBJ_FLAG_HIDDEN);
 
     ui_lblTracker = lv_label_create(ui_pnlTracker);
+    lv_label_set_text(ui_lblTracker, "");
     ui_lblScreenshot = lv_label_create(ui_pnlScreenshot);
+    lv_label_set_text(ui_lblScreenshot, "");
     ui_lblSpace = lv_label_create(ui_pnlSpace);
+    lv_label_set_text(ui_lblSpace, "");
     ui_lblTester = lv_label_create(ui_pnlTester);
+    lv_label_set_text(ui_lblTester, "");
     ui_lblSystem = lv_label_create(ui_pnlSystem);
+    lv_label_set_text(ui_lblSystem, "");
     ui_lblCredits = lv_label_create(ui_pnlCredits);
+    lv_label_set_text(ui_lblCredits, "");
 
     ui_icoTracker = lv_img_create(ui_pnlTracker);
     ui_icoScreenshot = lv_img_create(ui_pnlScreenshot);

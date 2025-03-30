@@ -58,14 +58,23 @@ void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config 
     ui_pnlConnect = lv_obj_create(ui_pnlContent);
 
     ui_lblIdentifier = lv_label_create(ui_pnlIdentifier);
+    lv_label_set_text(ui_lblIdentifier, "");
     ui_lblPassword = lv_label_create(ui_pnlPassword);
+    lv_label_set_text(ui_lblPassword, "");
     ui_lblScan = lv_label_create(ui_pnlScan);
+    lv_label_set_text(ui_lblScan, "");
     ui_lblType = lv_label_create(ui_pnlType);
+    lv_label_set_text(ui_lblType, "");
     ui_lblAddress = lv_label_create(ui_pnlAddress);
+    lv_label_set_text(ui_lblAddress, "");
     ui_lblSubnet = lv_label_create(ui_pnlSubnet);
+    lv_label_set_text(ui_lblSubnet, "");
     ui_lblGateway = lv_label_create(ui_pnlGateway);
+    lv_label_set_text(ui_lblGateway, "");
     ui_lblDNS = lv_label_create(ui_pnlDNS);
+    lv_label_set_text(ui_lblDNS, "");
     ui_lblConnect = lv_label_create(ui_pnlConnect);
+    lv_label_set_text(ui_lblConnect, "");
 
     ui_icoIdentifier = lv_img_create(ui_pnlIdentifier);
     ui_icoPassword = lv_img_create(ui_pnlPassword);
@@ -78,14 +87,23 @@ void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config 
     ui_icoConnect = lv_img_create(ui_pnlConnect);
 
     ui_lblIdentifierValue = lv_label_create(ui_pnlIdentifier);
+    lv_label_set_text(ui_lblIdentifierValue, "");
     ui_lblPasswordValue = lv_label_create(ui_pnlPassword);
+    lv_label_set_text(ui_lblPasswordValue, "");
     ui_lblScanValue = lv_label_create(ui_pnlScan);
+    lv_label_set_text(ui_lblScanValue, "");
     ui_lblTypeValue = lv_label_create(ui_pnlType);
+    lv_label_set_text(ui_lblTypeValue, "");
     ui_lblAddressValue = lv_label_create(ui_pnlAddress);
+    lv_label_set_text(ui_lblAddressValue, "");
     ui_lblSubnetValue = lv_label_create(ui_pnlSubnet);
+    lv_label_set_text(ui_lblSubnetValue, "");
     ui_lblGatewayValue = lv_label_create(ui_pnlGateway);
+    lv_label_set_text(ui_lblGatewayValue, "");
     ui_lblDNSValue = lv_label_create(ui_pnlDNS);
+    lv_label_set_text(ui_lblDNSValue, "");
     ui_lblConnectValue = lv_label_create(ui_pnlConnect);
+    lv_label_set_text(ui_lblConnectValue, "");
 
     ui_pnlEntry = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlEntry, device.MUX.WIDTH);

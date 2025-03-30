@@ -281,9 +281,9 @@ void init_navigation_group() {
     apply_theme_list_drop_down(&theme, ui_droColour, colour_string);
     free(colour_string);
 
-    apply_theme_list_drop_down(&theme, ui_droRTC, "");
-    apply_theme_list_drop_down(&theme, ui_droHDMI, "");
-    apply_theme_list_drop_down(&theme, ui_droAdvanced, "");
+    apply_theme_list_drop_down(&theme, ui_droRTC, NULL);
+    apply_theme_list_drop_down(&theme, ui_droHDMI, NULL);
+    apply_theme_list_drop_down(&theme, ui_droAdvanced, NULL);
 
     add_drop_down_options(ui_droStartup, (char *[]) {
             lang.MUXTWEAKGEN.STARTUP.MENU, lang.MUXTWEAKGEN.STARTUP.EXPLORE, lang.MUXTWEAKGEN.STARTUP.COLLECTION,
@@ -433,23 +433,13 @@ void init_elements() {
     lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
-            ui_lblNavAGlyph,
-            ui_lblNavA,
-            ui_lblNavCGlyph,
-            ui_lblNavC,
-            ui_lblNavXGlyph,
-            ui_lblNavX,
-            ui_lblNavYGlyph,
-            ui_lblNavY,
-            ui_lblNavZGlyph,
-            ui_lblNavZ,
-            ui_lblNavMenuGlyph,
-            ui_lblNavMenu
+            ui_lblNavBGlyph,
+            ui_lblNavB
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
     lv_obj_set_user_data(ui_lblStartup, "startup");

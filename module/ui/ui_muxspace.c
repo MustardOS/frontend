@@ -43,9 +43,13 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlRFSBar = lv_obj_create(ui_pnlContent);
 
     ui_lblSD1 = lv_label_create(ui_pnlSD1);
+    lv_label_set_text(ui_lblSD1, "");
     ui_lblSD2 = lv_label_create(ui_pnlSD2);
+    lv_label_set_text(ui_lblSD2, "");
     ui_lblUSB = lv_label_create(ui_pnlUSB);
+    lv_label_set_text(ui_lblUSB, "");
     ui_lblRFS = lv_label_create(ui_pnlRFS);
+    lv_label_set_text(ui_lblRFS, "");
 
     ui_icoSD1 = lv_img_create(ui_pnlSD1);
     ui_icoSD2 = lv_img_create(ui_pnlSD2);
@@ -53,9 +57,13 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_icoRFS = lv_img_create(ui_pnlRFS);
 
     ui_lblSD1Value = lv_label_create(ui_pnlSD1);
+    lv_label_set_text(ui_lblSD1Value, "");
     ui_lblSD2Value = lv_label_create(ui_pnlSD2);
+    lv_label_set_text(ui_lblSD2Value, "");
     ui_lblUSBValue = lv_label_create(ui_pnlUSB);
+    lv_label_set_text(ui_lblUSBValue, "");
     ui_lblRFSValue = lv_label_create(ui_pnlRFS);
+    lv_label_set_text(ui_lblRFSValue, "");
 
     ui_barSD1 = lv_bar_create(ui_pnlSD1Bar);
     ui_barSD2 = lv_bar_create(ui_pnlSD2Bar);
