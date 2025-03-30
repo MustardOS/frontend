@@ -186,6 +186,7 @@ int main(int argc, char *argv[]) {
             .input_handler = handle_input,
     };
     init_input(&input_opts, false);
+    input_opts.stick_nav = false;
     mux_input_task(&input_opts);
 
     return 0;
