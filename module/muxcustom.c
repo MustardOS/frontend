@@ -421,6 +421,7 @@ void save_options() {
             snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxzip", STORAGE_THEME, theme_alt);
             if (file_exist(theme_alt_archive)) {
                 extract_file(theme_alt_archive);
+                update_bootlogo();
             }
 
             static char rgb_script[MAX_BUFFER_SIZE];

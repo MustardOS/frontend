@@ -289,3 +289,5 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved);
 void load_splash_image_fallback(const char *mux_dimension, char *image, size_t image_size);
 
 int theme_compat();
+
+void update_bootlogo();
