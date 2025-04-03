@@ -65,6 +65,7 @@ void load_device(struct mux_device *device) {
     DEV_INT_FIELD(device->input.BUTTON.MENU_LONG,   "input/" method "/button/menu_long"  ); \
     DEV_INT_FIELD(device->input.BUTTON.SELECT,      "input/" method "/button/select"     ); \
     DEV_INT_FIELD(device->input.BUTTON.START,       "input/" method "/button/start"      ); \
+    DEV_INT_FIELD(device->input.BUTTON.SWITCH,      "input/" method "/button/switch"     ); \
     DEV_INT_FIELD(device->input.BUTTON.POWER_SHORT, "input/" method "/button/power_short"); \
     DEV_INT_FIELD(device->input.BUTTON.POWER_LONG,  "input/" method "/button/power_long" ); \
     DEV_INT_FIELD(device->input.BUTTON.VOLUME_UP,   "input/" method "/button/vol_up"     ); \

@@ -77,6 +77,7 @@ static const char *input_name[MUX_INPUT_COUNT] = {
         [MUX_INPUT_R3] = "R3",
         [MUX_INPUT_SELECT] = "SELECT",
         [MUX_INPUT_START] = "START",
+        [MUX_INPUT_SWITCH] = "SWITCH",
 
         // D-pad:
         [MUX_INPUT_DPAD_UP] = "DPAD_UP",

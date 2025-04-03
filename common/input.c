@@ -213,6 +213,17 @@ static void process_sys(const mux_input_options *opts, const struct input_event 
     }
 }
 
+// Process switch that is currently on the trim-ui devices
+static void process_sw(const mux_input_options *opts, const struct input_event *event) {
+    mux_input_type mux_type;
+    if (event->type == device.INPUT_TYPE.BUTTON.SWITCH && event->code == device.INPUT_CODE.BUTTON.SWITCH) {
+        mux_type = MUX_INPUT_SWITCH;
+    } else {
+        return;
+    }
+    pressed = (event->value == 1) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
+}
+
 // Processes 8bitdo USB Pro 2 in D-Input mode gamepad buttons.
 static void process_usb_key(const mux_input_options *opts, struct js_event js) {
     mux_input_type mux_type;
@@ -814,6 +825,8 @@ void mux_input_task(const mux_input_options *opts) {
                     process_key(opts, &event);
                 } else if (event.type == EV_ABS) {
                     process_abs(opts, &event);
+                } else if (event.type == EV_SW) {
+                    process_sw(opts, &event);
                 }
             } else if (epoll_event[i].data.fd == opts->power_fd) {
                 process_sys(opts, &event);

@@ -165,6 +165,7 @@ struct mux_device {
             int16_t MENU_LONG;
             int16_t SELECT;
             int16_t START;
+            int16_t SWITCH;
             int16_t POWER_SHORT;
             int16_t POWER_LONG;
             int16_t VOLUME_UP;
@@ -212,6 +213,7 @@ struct mux_device {
             int16_t MENU_LONG;
             int16_t SELECT;
             int16_t START;
+            int16_t SWITCH;
             int16_t POWER_SHORT;
             int16_t POWER_LONG;
             int16_t VOLUME_UP;

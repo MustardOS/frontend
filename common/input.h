@@ -24,6 +24,7 @@ typedef enum {
     MUX_INPUT_R3,
     MUX_INPUT_SELECT,
     MUX_INPUT_START,
+    MUX_INPUT_SWITCH,
 
     // D-pad:
     MUX_INPUT_DPAD_UP,
