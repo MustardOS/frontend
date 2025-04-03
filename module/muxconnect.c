@@ -135,7 +135,6 @@ void add_item(lv_obj_t *ui_pnl, lv_obj_t *ui_lbl, lv_obj_t *ui_ico, lv_obj_t *ui
     lv_group_add_obj(ui_group_glyph, ui_ico);
     lv_group_add_obj(ui_group_panel, ui_pnl);
 
-    apply_size_to_content(&theme, ui_pnlContent, ui_lbl, ui_ico, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lbl, item_text);
 }
 
