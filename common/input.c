@@ -138,6 +138,7 @@ static void process_volume(const mux_input_options *opts, const struct input_eve
 
 // Processes gamepad axes (D-pad and the sticks).
 static void process_abs(const mux_input_options *opts, const struct input_event *event) {
+    mux_input_type mux_type;
     int axis;
     bool analog;
     if (event->type == device.INPUT_TYPE.DPAD.UP &&
@@ -170,6 +171,18 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
         // Axis: right stick horizontal
         axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
         analog = true;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.L2 &&
+               event->code == device.INPUT_CODE.BUTTON.L2) {
+        // TRIM-UI DEVICE: left shoulder
+        mux_type = MUX_INPUT_L2;
+        pressed = (event->value == 255) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
+        return;
+    } else if (event->type == device.INPUT_TYPE.BUTTON.R2 &&
+               event->code == device.INPUT_CODE.BUTTON.R2) {
+        // TRIM-UI DEVICE: right shoulder
+        mux_type = MUX_INPUT_R2;
+        pressed = (event->value == 255) ? (pressed | BIT(mux_type)) : (pressed & ~BIT(mux_type));
+        return;
     } else {
         return;
     }
