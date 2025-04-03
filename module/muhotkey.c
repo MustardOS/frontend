@@ -267,7 +267,8 @@ static void parse_combos(const char *filename) {
             exit(1);
         }
 
-        c->handle_hold = json_bool(json_object_get(json, "handle_hold"));
+        struct json hold_json = json_object_get(json, "handle_hold");
+        c->handle_hold = json_exists(hold_json) && json_bool(hold_json);
 
         // Parse hotkey inputs (e.g., ["INPUT1", "INPUT2"]).
         for (struct json input = json_first(json_object_get(json, "inputs"));
