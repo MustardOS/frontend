@@ -168,7 +168,7 @@ void create_task_items() {
             lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);
             lv_group_add_obj(ui_group_panel, ui_pnlTask);
 
-            apply_size_to_content(&theme, ui_pnlContent, ui_lblTaskItem, ui_lblTaskItemGlyph, task_store);
+            apply_size_to_content(&theme, ui_pnlContent, ui_lblTaskItem, ui_lblTaskItemGlyph, TS(task_store));
             apply_text_long_dot(&theme, ui_pnlContent, ui_lblTaskItem, TS(task_store));
         }
 

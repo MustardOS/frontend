@@ -212,8 +212,8 @@ void create_app_items() {
                 lv_group_add_obj(ui_group_glyph, ui_lblAppItemGlyph);
                 lv_group_add_obj(ui_group_panel, ui_pnlApp);
 
-                apply_size_to_content(&theme, ui_pnlContent, ui_lblAppItem, ui_lblAppItemGlyph, items[i].name);
-                apply_text_long_dot(&theme, ui_pnlContent, ui_lblAppItem, items[i].name);
+                apply_size_to_content(&theme, ui_pnlContent, ui_lblAppItem, ui_lblAppItemGlyph, TS(items[i].name));
+                apply_text_long_dot(&theme, ui_pnlContent, ui_lblAppItem, TS(items[i].name));
                 ui_count++;
             }
         }
