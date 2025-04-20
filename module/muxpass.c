@@ -1,3 +1,4 @@
+#include "muxpass.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxpass.h"
 #include <unistd.h>
@@ -166,7 +167,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-int main(int argc, char *argv[]) {
+int muxpass_main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
 

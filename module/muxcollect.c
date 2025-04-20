@@ -1,3 +1,4 @@
+#include "muxcollect.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcollect.h"
 #include <unistd.h>
@@ -1218,7 +1219,7 @@ void on_key_event(struct input_event ev) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxcollect_main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Content Collection\nUsage: %s <-adi>\n\nOptions:\n"
                      "\t-a Add mode\n"
                      "\t-d Content directory\n"

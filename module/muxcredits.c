@@ -1,3 +1,4 @@
+#include "muxcredits.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcredits.h"
 #include <string.h>
@@ -40,7 +41,7 @@ void timeout_task() {
     mux_input_stop();
 }
 
-int main(int argc, char *argv[]) {
+int muxcredits_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

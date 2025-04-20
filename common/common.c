@@ -35,6 +35,7 @@
 #include "device.h"
 #include "theme.h"
 #include "mini/mini.h"
+#include "../module/muxshare.h"
 
 struct json translation_generic;
 struct json translation_specific;

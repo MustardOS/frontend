@@ -1,3 +1,4 @@
+#include "muxsearch.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxsearch.h"
 #include <unistd.h>
@@ -967,7 +968,7 @@ void on_key_event(struct input_event ev) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxsearch_main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
                      "\t-d Name of directory to search\n\n";
 

@@ -1,3 +1,4 @@
+#include "muxhistory.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxhistory.h"
 #include <unistd.h>
@@ -735,7 +736,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxhistory_main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Content History\nUsage: %s <-i>\n\nOptions:\n"
                      "\t-i Index of content to skip to\n\n";
 

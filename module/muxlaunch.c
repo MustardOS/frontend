@@ -1,3 +1,5 @@
+#include "muxshare.h"
+#include "muxlaunch.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxlaunch.h"
 #include <unistd.h>
@@ -14,40 +16,12 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int current_item_index = 0;
-int first_open = 1;
-int ui_count = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
-
 #define UI_COUNT 8
 lv_obj_t *ui_objects_panel[UI_COUNT];
 lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_icons[UI_COUNT];
 
-lv_obj_t *ui_mux_panels[5];
+static lv_obj_t *ui_mux_panels[5];
 
 void show_help(lv_obj_t *element_focused) {
     char *help_messages[UI_COUNT] = {
@@ -71,7 +45,7 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_navigation_group_grid(char *item_labels[], char *glyph_names[]) {
+static void init_navigation_group_grid(char *item_labels[], char *glyph_names[]) {
     init_grid_info(UI_COUNT, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, UI_COUNT);
     load_font_section(FONT_PANEL_FOLDER, ui_pnlGrid);
@@ -179,7 +153,7 @@ void init_navigation_group() {
     }
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -201,7 +175,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
@@ -227,7 +201,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_a() {
+static void handle_a() {
     if (msgbox_active) return;
 
     struct {
@@ -269,7 +243,7 @@ void handle_a() {
     mux_input_stop();
 }
 
-void handle_b() {
+static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -285,7 +259,7 @@ void handle_b() {
     mux_input_stop();
 }
 
-void handle_menu() {
+static void handle_menu() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -513,7 +487,7 @@ void handle_kiosk_toggle() {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -567,7 +541,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -581,21 +555,17 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxlaunch_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
 
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
+    printf("****muxlaunch_main argv[0]: %s\n", mux_module);
 
     init_theme(1, 1);
-    init_display();
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXLAUNCH.TITLE);
-    init_mux(ui_pnlContent);
+    init_muxlaunch(ui_pnlContent);
     init_timer(ui_refresh_task, NULL);
     init_elements();
 

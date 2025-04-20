@@ -1,3 +1,4 @@
+#include "muxconnect.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxconnect.h"
 #include <string.h>
@@ -359,7 +360,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxconnect_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

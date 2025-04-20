@@ -1,3 +1,4 @@
+#include "muxrtc.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxrtc.h"
 #include <unistd.h>
@@ -612,7 +613,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxrtc_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

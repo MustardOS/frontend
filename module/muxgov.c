@@ -1,3 +1,4 @@
+#include "muxgov.h"
 #include "../lvgl/lvgl.h"
 #include <unistd.h>
 #include <string.h>
@@ -425,7 +426,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxgov_main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Governor Assignment\nUsage: %s <-acds>\n\nOptions:\n"
                      "\t-a Auto assign content directory check\n"
                      "\t-c Name of content file\n"

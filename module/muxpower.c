@@ -1,3 +1,4 @@
+#include "muxpower.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxpower.h"
 #include <string.h>
@@ -406,7 +407,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxpower_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

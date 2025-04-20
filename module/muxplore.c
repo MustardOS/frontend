@@ -1,3 +1,5 @@
+#include "muxshare.h"
+#include "muxplore.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxplore.h"
 #include <unistd.h>
@@ -25,48 +27,20 @@
 #define EXPLORE_DIR "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
-struct theme_config theme;
-
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
 size_t item_count = 0;
 content_item *items = NULL;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 lv_obj_t *ui_imgSplash;
 
 lv_obj_t *ui_viewport_objects[7];
-lv_obj_t *ui_mux_panels[7];
+static lv_obj_t *ui_mux_panels[7];
 
 char *prev_dir = "";
 char *sys_dir = CONTENT_PATH;
 
-int ui_count = 0;
 int sys_index = -1;
 int file_count = 0;
 int dir_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-int nav_moved = 0;
 int starter_image = 0;
 int splash_valid = 0;
 int nogrid_file_exists = 0;
@@ -596,7 +570,7 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json) {
     free(display_title);
 }
 
-void init_navigation_group_grid() {
+static void init_navigation_group_grid() {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
@@ -819,7 +793,7 @@ void update_list_items(int start_index) {
     }
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
 
     for (int step = 0; step < steps; ++step) {
@@ -861,7 +835,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
@@ -906,7 +880,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_a() {
+static void handle_a() {
     if (!ui_count) return;
 
     if (msgbox_active) {
@@ -981,7 +955,7 @@ void handle_a() {
     mux_input_stop();
 }
 
-void handle_b() {
+static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -1081,7 +1055,7 @@ void handle_select() {
     mux_input_stop();
 }
 
-void handle_menu() {
+static void handle_menu() {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) {
         return;
     }
@@ -1108,7 +1082,7 @@ void handle_random_select() {
     !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
 }
 
-void init_elements() {
+static void init_elements() {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
     switch (config.VISUAL.BOX_ART) {
@@ -1191,7 +1165,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -1212,7 +1186,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxplore_main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Content List\nUsage: %s <-di>\n\nOptions:\n"
                      "\t-d Content directory\n"
                      "\t-i Index of content to skip to\n\n";
@@ -1232,6 +1206,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    printf("sys_dir: %s\n", sys_dir);
+    printf("sys_index: %d\n", sys_index);
+
     if (sys_index == -1) {
         fprintf(stderr, cmd_help, argv[0]);
         return 1;
@@ -1240,15 +1217,10 @@ int main(int argc, char *argv[]) {
     mux_module = basename(argv[0]);
     setup_background_process();
 
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
     init_theme(1, 1);
-    init_display();
 
     init_ui_common_screen(&theme, &device, &lang, "");
-    init_mux(ui_screen, &theme);
+    init_muxplore(ui_screen, &theme);
     init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
@@ -1351,6 +1323,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_R2] = handle_random_select,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

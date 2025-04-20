@@ -33,6 +33,8 @@ void init_input(mux_input_options *opts, int def_combo);
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *));
 
+void init_dispose();
+
 void init_fonts();
 
 void init_theme(int panel_init, int long_mode);

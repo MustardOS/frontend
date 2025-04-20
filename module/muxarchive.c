@@ -1,3 +1,4 @@
+#include "muxarchive.h"
 #include "../lvgl/lvgl.h"
 #include <dirent.h>
 #include <string.h>
@@ -351,7 +352,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxarchive_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

@@ -11,6 +11,7 @@
 #include "log.h"
 
 lv_obj_t *ui_screen_container;
+lv_obj_t *ui_screen_temp;
 lv_obj_t *ui_blank;
 lv_obj_t *ui_screen;
 lv_obj_t *ui_pnlWall;
@@ -223,6 +224,7 @@ void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title) {
     ui_screen_container = lv_obj_create(NULL);
+    if (ui_screen_temp == NULL) ui_screen_temp = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(ui_screen_container, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -413,6 +415,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     ui_staNetwork = create_header_glyph(ui_conGlyphs, theme);
     update_network_status(ui_staNetwork, theme, 0);
+    if (!config.VISUAL.NETWORK) lv_obj_add_flag(ui_staNetwork, LV_OBJ_FLAG_HIDDEN);
 
     ui_staCapacity = create_header_glyph(ui_conGlyphs, theme);
     battery_capacity = read_battery_capacity();

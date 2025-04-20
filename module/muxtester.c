@@ -1,3 +1,4 @@
+#include "muxtester.h"
 #include "../lvgl/lvgl.h"
 #include <string.h>
 #include <libgen.h>
@@ -153,7 +154,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-int main(int argc, char *argv[]) {
+int muxtester_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

@@ -1,3 +1,4 @@
+#include "muxstorage.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxstorage.h"
 #include <string.h>
@@ -520,7 +521,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxstorage_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

@@ -1,3 +1,4 @@
+#include "muxnetwork.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxnetwork.h"
 #include <unistd.h>
@@ -969,7 +970,7 @@ void on_key_event(struct input_event ev) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxnetwork_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

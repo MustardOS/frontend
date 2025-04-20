@@ -1,3 +1,4 @@
+#include "muxstart.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxstart.h"
 #include <string.h>
@@ -38,7 +39,7 @@ void list_nav_prev(void) {}
 
 void list_nav_next(void) {}
 
-int main(int argc, char *argv[]) {
+int muxstart_main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <progress> <message>\n", argv[0]);
         exit(EXIT_FAILURE);

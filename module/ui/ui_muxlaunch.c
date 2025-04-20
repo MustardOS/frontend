@@ -27,7 +27,7 @@ lv_obj_t *ui_icoConfig;
 lv_obj_t *ui_icoReboot;
 lv_obj_t *ui_icoShutdown;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxlaunch(lv_obj_t *ui_pnlContent) {
     ui_pnlExplore = lv_obj_create(ui_pnlContent);
     ui_pnlCollection = lv_obj_create(ui_pnlContent);
     ui_pnlHistory = lv_obj_create(ui_pnlContent);

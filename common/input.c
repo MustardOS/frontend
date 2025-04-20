@@ -17,10 +17,13 @@
 #include "controller_profile.h"
 #include "device.h"
 #include "log.h"
+#include <poll.h>
 
 #define INPUT_PATH "/dev/input/by-id/"
 
 key_event_callback event_handler = NULL;
+pthread_t joystick_thread;
+pthread_t keyboard_thread;
 
 int find_keyboard_devices(int *fds, int max_fds) {
     struct dirent *entry;
@@ -683,7 +686,7 @@ void *keyboard_handler(void *arg) {
     LOG_INFO("input", "Listening for keyboard events...")
 
     while (!stop) {
-        int event_count = epoll_wait(epoll_fd, events, max_events, -1);
+        int event_count = epoll_wait(epoll_fd, events, max_events, 100);
         for (int i = 0; i < event_count; i++) {
             if (events[i].events & EPOLLIN) {
                 struct input_event ev;
@@ -706,6 +709,7 @@ void *keyboard_handler(void *arg) {
 
     for (int i = 0; i < num_fds; i++) close(keyboard_mouse_fds[i]);
     close(epoll_fd);
+    printf("Exiting keyboard thread\n");
     return NULL;
 }
 
@@ -722,7 +726,16 @@ void *joystick_handler(void *arg) {
     load_controller_profile(&controller, get_unique_controller_id(usb_fd));
 
     struct js_event js;
+    struct pollfd pfd = { .fd = usb_fd, .events = POLLIN };
     while (!stop) {
+        int ret = poll(&pfd, 1, 100); // 100ms timeout
+        if (ret == -1) {
+            LOG_ERROR("input", "poll() error on joystick");
+            break;
+        } else if (ret == 0) {
+            continue; // timeout, re-check stop
+        }
+
         // Read joystick event
         ssize_t bytes = read(usb_fd, &js, sizeof(struct js_event));
         if (bytes != sizeof(struct js_event)) {
@@ -745,6 +758,7 @@ void *joystick_handler(void *arg) {
         }
     }
     close(usb_fd);
+    printf("Exiting Joysitck thread\n");
     return NULL;
 }
 
@@ -752,7 +766,14 @@ void register_key_event_callback(key_event_callback cb) {
     event_handler = cb;
 }
 
+void init_defaults(){
+    stop=false;
+    pressed = 0;
+    held = 0;
+}
+
 void mux_input_task(const mux_input_options *opts) {
+    init_defaults();
     swap_axis = opts->swap_axis;
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -790,11 +811,9 @@ void mux_input_task(const mux_input_options *opts) {
         return;
     }
 
-    pthread_t joystick_thread;
     mux_input_options joystick_opts = *opts;
     pthread_create(&joystick_thread, NULL, joystick_handler, &joystick_opts);
 
-    pthread_t keyboard_thread;
     mux_input_options keyboard_opts = *opts;
     pthread_create(&keyboard_thread, NULL, keyboard_handler, &keyboard_opts);
 
@@ -875,4 +894,6 @@ bool mux_input_pressed(mux_input_type mux_type) {
 
 void mux_input_stop(void) {
     stop = true;
+    pthread_join(joystick_thread, NULL);
+    pthread_join(keyboard_thread, NULL);
 }

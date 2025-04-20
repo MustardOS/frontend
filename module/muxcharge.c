@@ -1,3 +1,4 @@
+#include "muxcharge.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcharge.h"
 #include <string.h>
@@ -118,7 +119,7 @@ void battery_task() {
     blank++;
 }
 
-int main(int argc, char *argv[]) {
+int muxcharge_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);

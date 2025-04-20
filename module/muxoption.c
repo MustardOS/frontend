@@ -1,3 +1,4 @@
+#include "muxoption.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxoption.h"
 #include <unistd.h>
@@ -325,7 +326,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxoption_main(int argc, char *argv[]) {
     (void) argc;
 
     char *cmd_help = "\nmuOS Options\nUsage: %s <-cds>\n\nOptions:\n"

@@ -1,3 +1,4 @@
+#include "muxpicker.h"
 #include "../lvgl/lvgl.h"
 #include <unistd.h>
 #include <dirent.h>
@@ -473,7 +474,7 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int muxpicker_main(int argc, char *argv[]) {
     char *cmd_help = "\nmuOS Extras - Custom Picker\nUsage: %s <-m>\n\nOptions:\n"
                      "\t-m Picker module from:\n"
                      "\t\ttheme\n" // This might need to be changed later?

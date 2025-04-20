@@ -1,3 +1,4 @@
+#include "muxsplash.h"
 #include "../lvgl/lvgl.h"
 #include <string.h>
 #include <stdio.h>
@@ -35,7 +36,7 @@ void list_nav_prev(void) {}
 
 void list_nav_next(void) {}
 
-int main(int argc, char *argv[]) {
+int muxsplash_main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <full path to PNG image>\n", argv[0]);
         exit(EXIT_FAILURE);
