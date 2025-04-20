@@ -25,6 +25,8 @@ int TERM_COLS, TERM_ROWS, CELL_WIDTH, CELL_HEIGHT;
 int cursor_row = 0, cursor_col = 0;
 SDL_Color current_fg = {255, 255, 255, 255};
 int current_bold = 0, current_underline = 0;
+SDL_Color solid_bg = {0, 0, 0, 255};
+int use_solid_bg = 0;
 
 SDL_Color base_colors[8] = {
     {0, 0, 0, 255}, {170, 0, 0, 255}, {0, 170, 0, 255}, {170, 85, 0, 255},
@@ -36,16 +38,24 @@ SDL_Color bright_colors[8] = {
 };
 
 void print_help(const char *name) {
-    printf("Usage: %s -w <width> -h <height> -s <font size> -f <font path> <command>\n\n", name);
+    printf("Usage: %s -w <width> -h <height> -s <font size> -f <font path> [-b <image.png>] [-c RRGGBB] <command>\n\n", name);
     printf("Arguments:\n");
-    printf("  -w <width>       Width of the SDL window in pixels (required)\n");
-    printf("  -h <height>      Height of the SDL window in pixels (required)\n");
-    printf("  -s <font size>   Font size to use in points (required)\n");
-    printf("  -f <font path>   Path to a TTF font file (required and must exist)\n");
-    printf("  <command>        Shell command or script to execute (required)\n");
-    printf("\nExample:\n");
-    printf("  %s -w 640 -h 480 -s 24 -f ./font.ttf ./my_script.sh\n", name);
+    printf("  -w <width>      Window width in pixels\n");
+    printf("  -h <height>     Window height in pixels\n");
+    printf("  -s <font size>  Font size in points\n");
+    printf("  -f <font path>  Path to TTF font file\n");
+    printf("  -b image.png    Optional PNG background image\n");
+    printf("  -c RRGGBB       Optional solid background hex colour\n");
+    printf("  <command>       Shell command or script to execute\n");
     exit(0);
+}
+
+int parse_hex_colour(const char *hex, SDL_Color *out) {
+    if (strlen(hex) != 6) return 0;
+    unsigned int r, g, b;
+    if (sscanf(hex, "%02x%02x%02x", &r, &g, &b) != 3) return 0;
+    out->r = r; out->g = g; out->b = b; out->a = 255;
+    return 1;
 }
 
 void reset_cell(Cell *c) {
@@ -59,11 +69,6 @@ void clear_screen() {
     for (int r = 0; r < TERM_ROWS; r++)
         for (int c = 0; c < TERM_COLS; c++)
             reset_cell(&screen[r][c]);
-}
-
-void clear_line_from_cursor() {
-    for (int c = cursor_col; c < TERM_COLS; c++)
-        reset_cell(&screen[cursor_row][c]);
 }
 
 void set_cursor_position(int row, int col) {
@@ -107,7 +112,7 @@ void parse_ansi(const char *seq) {
     switch (cmd) {
         case 'H': set_cursor_position(params[0] ? params[0] : 1, params[1] ? params[1] : 1); break;
         case 'J': if (params[0] == 2) clear_screen(); break;
-        case 'K': clear_line_from_cursor(); break;
+        case 'K': for (int c = cursor_col; c < TERM_COLS; c++) reset_cell(&screen[cursor_row][c]); break;
         case 'm':
             for (int i = 0; i <= count; i++) {
                 int code = params[i];
@@ -152,6 +157,9 @@ void fade(SDL_Renderer *ren, TTF_Font *font, SDL_Texture *bg, int w, int h, int 
             SDL_QueryTexture(bg, NULL, NULL, &iw, &ih);
             SDL_Rect dst = {(w - iw) / 2, (h - ih) / 2, iw, ih};
             SDL_RenderCopy(ren, bg, NULL, &dst);
+        } else if (use_solid_bg) {
+            SDL_SetRenderDrawColor(ren, solid_bg.r, solid_bg.g, solid_bg.b, 255);
+            SDL_RenderFillRect(ren, &r);
         }
         render_screen(ren, font);
         SDL_SetRenderDrawColor(ren, 0, 0, 0, alpha);
@@ -164,6 +172,7 @@ void fade(SDL_Renderer *ren, TTF_Font *font, SDL_Texture *bg, int w, int h, int 
 int main(int argc, char *argv[]) {
     int win_w = 0, win_h = 0, font_size = 0;
     const char *font_path = NULL;
+    const char *bg_path = NULL;
     const char *cmd = NULL;
 
     if (argc == 2 && strcmp(argv[1], "--help") == 0) {
@@ -175,7 +184,14 @@ int main(int argc, char *argv[]) {
         else if (!strcmp(argv[i], "-h") && i + 1 < argc) win_h = atoi(argv[++i]);
         else if (!strcmp(argv[i], "-s") && i + 1 < argc) font_size = atoi(argv[++i]);
         else if (!strcmp(argv[i], "-f") && i + 1 < argc) font_path = argv[++i];
-        else if (argv[i][0] != '-') cmd = argv[i];
+        else if (!strcmp(argv[i], "-b") && i + 1 < argc) bg_path = argv[++i];
+        else if (!strcmp(argv[i], "-c") && i + 1 < argc) {
+            if (!parse_hex_colour(argv[++i], &solid_bg)) {
+                fprintf(stderr, "Error: Invalid hex colour. Use format: RRGGBB\n");
+                return 1;
+            }
+            use_solid_bg = 1;
+        } else if (argv[i][0] != '-') cmd = argv[i];
     }
 
     if (!win_w || !win_h || !font_size || !font_path || !cmd) {
@@ -206,19 +222,21 @@ int main(int argc, char *argv[]) {
     for (int r = 0; r < TERM_ROWS; r++)
         screen[r] = calloc(TERM_COLS, sizeof(Cell));
 
-    SDL_Window *win = SDL_CreateWindow("muOS Terminal", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    SDL_Window *win = SDL_CreateWindow("SDL2 Terminal", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                        TERM_COLS * CELL_WIDTH, TERM_ROWS * CELL_HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer *ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
 
     SDL_Texture *bgtex = NULL;
-    SDL_Surface *bgsurf = IMG_Load("bg.png");
-    if (bgsurf) {
-        bgtex = SDL_CreateTextureFromSurface(ren, bgsurf);
-        SDL_FreeSurface(bgsurf);
+    if (bg_path && access(bg_path, R_OK) == 0) {
+        SDL_Surface *bgsurf = IMG_Load(bg_path);
+        if (bgsurf) {
+            bgtex = SDL_CreateTextureFromSurface(ren, bgsurf);
+            SDL_FreeSurface(bgsurf);
+        }
     }
 
     clear_screen();
-    fade(ren, font, bgtex, TERM_COLS * CELL_WIDTH, TERM_ROWS * CELL_HEIGHT, 0); // fade in
+    fade(ren, font, bgtex, TERM_COLS * CELL_WIDTH, TERM_ROWS * CELL_HEIGHT, 0);
 
     int pty_fd;
     pid_t child = forkpty(&pty_fd, NULL, NULL, NULL);
@@ -265,6 +283,9 @@ int main(int argc, char *argv[]) {
                             (TERM_ROWS * CELL_HEIGHT - ih) / 2,
                             iw, ih};
             SDL_RenderCopy(ren, bgtex, NULL, &dst);
+        } else if (use_solid_bg) {
+            SDL_SetRenderDrawColor(ren, solid_bg.r, solid_bg.g, solid_bg.b, 255);
+            SDL_RenderClear(ren);
         }
         render_screen(ren, font);
         SDL_RenderPresent(ren);
@@ -291,3 +312,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
