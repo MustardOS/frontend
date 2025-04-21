@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxshot.h"
 #include "../lvgl/lvgl.h"
 #include <regex.h>
@@ -22,47 +23,17 @@
 #define EXPLORE_DIR "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int progress_onscreen = -1;
-int ui_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-size_t item_count = 0;
-content_item *items = NULL;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
-
-lv_obj_t *ui_mux_panels[5];
+static lv_obj_t *ui_mux_panels[5];
 
 lv_obj_t *ui_imgScreenshot;
-int is_fullscreen = 0;
+static int is_fullscreen = 0;
 
-void show_help() {
+static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      TS(lv_label_get_text(lv_group_get_focused(ui_group))), lang.MUXSHOT.HELP);
 }
 
-void image_refresh() {
+static void image_refresh() {
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgScreenshot));
 
@@ -79,7 +50,7 @@ void image_refresh() {
     }
 }
 
-void create_screenshot_items() {
+static void create_screenshot_items() {
     DIR *td;
     struct dirent *tf;
     regex_t regex;
@@ -135,7 +106,7 @@ void create_screenshot_items() {
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     if (ui_count <= 0) return;
 
     play_sound("navigate", nav_sound, 0, 0);
@@ -153,7 +124,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (ui_count <= 0) return;
 
     if (first_open) {
@@ -175,7 +146,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_confirm() {
+static void handle_confirm() {
     if (msgbox_active || ui_count <= 0) return;
 
     play_sound("confirm", nav_sound, 0, 1);
@@ -193,7 +164,7 @@ void handle_confirm() {
     }
 }
 
-void handle_back() {
+static void handle_back() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -206,7 +177,7 @@ void handle_back() {
     mux_input_stop();
 }
 
-void handle_remove() {
+static void handle_remove() {
     if (msgbox_active || is_fullscreen || !ui_count) return;
 
     char screenshot_file[PATH_MAX];
@@ -222,7 +193,7 @@ void handle_remove() {
     }
 }
 
-void handle_help() {
+static void handle_help() {
     if (msgbox_active || is_fullscreen) return;
 
     if (progress_onscreen == -1 && ui_count > 0) {
@@ -231,7 +202,7 @@ void handle_help() {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -287,7 +258,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (ui_count > 0 && nav_moved) {
@@ -304,15 +275,10 @@ int muxshot_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 1);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSHOT.TITLE);
     init_timer(ui_refresh_task, NULL);
     init_elements();
@@ -362,6 +328,7 @@ int muxshot_main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

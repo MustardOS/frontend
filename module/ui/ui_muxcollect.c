@@ -6,7 +6,7 @@ lv_obj_t *ui_lblCounter;
 lv_obj_t *ui_pnlEntry;
 lv_obj_t *ui_txtEntry;
 
-void init_mux(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
+void init_muxcollect(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
     ui_lblCounter = lv_label_create(ui_screen);
     lv_label_set_text(ui_lblCounter, "");
     lv_obj_set_width(ui_lblCounter, LV_SIZE_CONTENT);

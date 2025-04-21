@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxhdmi.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxhdmi.h"
@@ -15,41 +16,15 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int current_item_index = 0;
-int ui_count = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-int resolution_original, theme_resolution_original, space_original,
+static int resolution_original, theme_resolution_original, space_original,
         depth_original, range_original, scan_original, audio_original;
 
-lv_group_t *ui_group;
-lv_group_t *ui_group_value;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 #define UI_COUNT 7
-lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_objects[UI_COUNT];
 
-lv_obj_t *ui_mux_panels[5];
+static lv_obj_t *ui_mux_panels[5];
 
 struct help_msg {
     lv_obj_t *element;
@@ -70,7 +45,7 @@ struct theme_resolution theme_resolutions[] = {
         {"1280x720", 6}
 };
 
-int get_theme_resolution_value(char *resolution) {
+static int get_theme_resolution_value(char *resolution) {
     for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
         if (strcmp(resolution, theme_resolutions[i].resolution) == 0) return theme_resolutions[i].value;
     }
@@ -78,7 +53,7 @@ int get_theme_resolution_value(char *resolution) {
     return 0;
 }
 
-void restore_theme_resolution() {
+static void restore_theme_resolution() {
     for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
         if (theme_resolutions[i].value == config.SETTINGS.HDMI.THEME_RESOLUTION) {
             int index = lv_dropdown_get_option_index(ui_droThemeResolution, theme_resolutions[i].resolution);
@@ -87,7 +62,7 @@ void restore_theme_resolution() {
     }
 }
 
-void show_help(lv_obj_t *element_focused) {
+static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblResolution,      lang.MUXHDMI.HELP.RESOLUTION},
             {ui_lblThemeResolution, lang.MUXHDMI.HELP.THEME_RESOLUTION},
@@ -124,7 +99,7 @@ static void dropdown_event_handler(lv_event_t *e) {
     }
 }
 
-void init_element_events() {
+static void init_element_events() {
     lv_obj_t *dropdowns[] = {
             ui_droResolution,
             ui_droThemeResolution,
@@ -140,7 +115,7 @@ void init_element_events() {
     }
 }
 
-void init_dropdown_settings() {
+static void init_dropdown_settings() {
     resolution_original = lv_dropdown_get_selected(ui_droResolution);
     theme_resolution_original = lv_dropdown_get_selected(ui_droThemeResolution);
     space_original = lv_dropdown_get_selected(ui_droSpace);
@@ -150,7 +125,7 @@ void init_dropdown_settings() {
     audio_original = lv_dropdown_get_selected(ui_droAudio);
 }
 
-void restore_hdmi_options() {
+static void restore_hdmi_options() {
     map_drop_down_to_index(ui_droResolution, config.SETTINGS.HDMI.RESOLUTION,
                            (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 11, 0);
     restore_theme_resolution();
@@ -161,7 +136,7 @@ void restore_hdmi_options() {
     lv_dropdown_set_selected(ui_droAudio, config.SETTINGS.HDMI.AUDIO);
 }
 
-void save_hdmi_options() {
+static void save_hdmi_options() {
     int idx_resolution = map_drop_down_to_value(lv_dropdown_get_selected(ui_droResolution),
                                                 (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 12, 0);
     char theme_resolution[MAX_BUFFER_SIZE];
@@ -202,7 +177,7 @@ void save_hdmi_options() {
     }
 }
 
-void init_navigation_group() {
+static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlResolution,
             ui_pnlThemeResolution,
@@ -330,7 +305,7 @@ void init_navigation_group() {
     }
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
@@ -343,7 +318,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
@@ -356,27 +331,27 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_option_prev(void) {
+static void handle_option_prev(void) {
     if (msgbox_active) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
-void handle_option_next(void) {
+static void handle_option_next(void) {
     if (msgbox_active) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
-void handle_confirm(void) {
+static void handle_confirm(void) {
     if (msgbox_active) return;
 
     handle_option_next();
 }
 
-void handle_back(void) {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -394,7 +369,7 @@ void handle_back(void) {
     mux_input_stop();
 }
 
-void handle_help(void) {
+static void handle_help(void) {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -403,7 +378,7 @@ void handle_help(void) {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -456,7 +431,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -474,17 +449,12 @@ int muxhdmi_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXHDMI.TITLE);
-    init_mux(ui_pnlContent);
+    init_muxhdmi(ui_pnlContent);
     init_timer(ui_refresh_task, NULL);
     init_elements();
 
@@ -525,6 +495,7 @@ int muxhdmi_main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

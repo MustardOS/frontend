@@ -1,12 +1,9 @@
-#include "../lvgl/lvgl.h"
 #include "muxshare.h"
-#include "../common/theme.h"
-#include "../common/language.h"
-#include "../common/kiosk.h"
-#include "../common/config.h"
-#include "../common/device.h"
 
 char *mux_module;
+
+size_t item_count = 0;
+content_item *items = NULL;
 
 int msgbox_active = 0;
 int nav_sound;
@@ -33,3 +30,4 @@ int progress_onscreen = -1;
 lv_group_t *ui_group;
 lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
+lv_group_t *ui_group_value;

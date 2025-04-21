@@ -32,7 +32,7 @@ lv_obj_t *ui_barSD2;
 lv_obj_t *ui_barUSB;
 lv_obj_t *ui_barRFS;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxspace(lv_obj_t *ui_pnlContent) {
     ui_pnlSD1 = lv_obj_create(ui_pnlContent);
     ui_pnlSD1Bar = lv_obj_create(ui_pnlContent);
     ui_pnlSD2 = lv_obj_create(ui_pnlContent);

@@ -32,7 +32,7 @@ lv_obj_t *ui_droRange;
 lv_obj_t *ui_droScan;
 lv_obj_t *ui_droAudio;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxhdmi(lv_obj_t *ui_pnlContent) {
     ui_pnlResolution = lv_obj_create(ui_pnlContent);
     ui_pnlThemeResolution = lv_obj_create(ui_pnlContent);
     ui_pnlSpace = lv_obj_create(ui_pnlContent);

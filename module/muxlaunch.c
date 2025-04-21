@@ -18,12 +18,12 @@
 
 #define UI_COUNT 8
 lv_obj_t *ui_objects_panel[UI_COUNT];
-lv_obj_t *ui_objects[UI_COUNT];
-lv_obj_t *ui_icons[UI_COUNT];
+static lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_icons[UI_COUNT];
 
 static lv_obj_t *ui_mux_panels[5];
 
-void show_help(lv_obj_t *element_focused) {
+static void show_help(lv_obj_t *element_focused) {
     char *help_messages[UI_COUNT] = {
             lang.MUXLAUNCH.HELP.EXPLORE,
             lang.MUXLAUNCH.HELP.COLLECTION,
@@ -82,7 +82,7 @@ static void init_navigation_group_grid(char *item_labels[], char *glyph_names[])
     }
 }
 
-void init_navigation_group() {
+static void init_navigation_group() {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
@@ -268,7 +268,7 @@ static void handle_menu() {
     }
 }
 
-void handle_up() {
+static void handle_up() {
     if (msgbox_active) return;
 
     // Grid mode.  Wrap on Row.
@@ -290,7 +290,7 @@ void handle_up() {
     }
 }
 
-void handle_down() {
+static void handle_down() {
     if (msgbox_active) return;
 
     // Grid Navigation.  Wrap on Row.
@@ -312,7 +312,7 @@ void handle_down() {
     }
 }
 
-void handle_up_hold(void) {//prev
+static void handle_up_hold(void) {//prev
     if (msgbox_active) return;
 
     // Don't wrap around when scrolling on hold.
@@ -327,7 +327,7 @@ void handle_up_hold(void) {//prev
     }
 }
 
-void handle_down_hold(void) {//next
+static void handle_down_hold(void) {//next
     if (msgbox_active) return;
 
     // Don't wrap around when scrolling on hold.
@@ -344,7 +344,7 @@ void handle_down_hold(void) {//next
     }
 }
 
-void handle_left() {
+static void handle_left() {
     if (msgbox_active) return;
 
     // Horizontal Navigation with 2 rows of 4 items
@@ -377,7 +377,7 @@ void handle_left() {
     }
 }
 
-void handle_right() {
+static void handle_right() {
     if (msgbox_active) return;
 
     // Horizontal Navigation with 2 rows of 4 items
@@ -413,7 +413,7 @@ void handle_right() {
     }
 }
 
-void handle_kiosk_purge() {
+static void handle_kiosk_purge() {
     if (current_item_index == 6) { /* reboot */
         if (file_exist(KIOSK_CONFIG)) remove(KIOSK_CONFIG);
 
@@ -458,7 +458,7 @@ void handle_kiosk_purge() {
     }
 }
 
-void handle_kiosk_toggle() {
+static void handle_kiosk_toggle() {
     if (current_item_index == 6) { /* reboot */
         char kiosk_storage[MAX_BUFFER_SIZE];
 

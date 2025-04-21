@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxvisual.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxvisual.h"
@@ -15,31 +16,11 @@
 #include "../common/overlay.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
 
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
+static int overlay_count;
 
-int nav_moved = 1;
-int current_item_index = 0;
-int ui_count = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-int overlay_count;
-
-int battery_original, mux_clock_original, network_original, name_original,
+static int battery_original, mux_clock_original, network_original, name_original,
         dash_original, friendlyfolder_original, thetitleformat_original,
         titleincluderootdrive_original, folderitemcount_original,
         menu_counter_folder_original, overlayimage_original,
@@ -47,21 +28,17 @@ int battery_original, mux_clock_original, network_original, name_original,
         menu_counter_file_original, hidden_original;
 
 #define UI_COUNT 15
-lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_objects[UI_COUNT];
 
-lv_obj_t *ui_mux_panels[5];
+static lv_obj_t *ui_mux_panels[5];
 
-lv_group_t *ui_group;
-lv_group_t *ui_group_value;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 struct help_msg {
     lv_obj_t *element;
     char *message;
 };
 
-void show_help(lv_obj_t *element_focused) {
+static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblBattery,               lang.MUXVISUAL.HELP.BATTERY},
             {ui_lblClock,                 lang.MUXVISUAL.HELP.CLOCK},
@@ -106,11 +83,11 @@ static void dropdown_event_handler(lv_event_t *e) {
     }
 }
 
-void init_element_events() {
+static void init_element_events() {
     lv_obj_t *dropdowns[] = {
-            ui_droBattery,
+            ui_droBattery_visual,
             ui_droClock,
-            ui_droNetwork,
+            ui_droNetwork_visual,
             ui_droName,
             ui_droDash,
             ui_droFriendlyFolder,
@@ -130,10 +107,10 @@ void init_element_events() {
     }
 }
 
-void init_dropdown_settings() {
-    battery_original = lv_dropdown_get_selected(ui_droBattery);
+static void init_dropdown_settings() {
+    battery_original = lv_dropdown_get_selected(ui_droBattery_visual);
     mux_clock_original = lv_dropdown_get_selected(ui_droClock);
-    network_original = lv_dropdown_get_selected(ui_droNetwork);
+    network_original = lv_dropdown_get_selected(ui_droNetwork_visual);
     name_original = lv_dropdown_get_selected(ui_droName);
     dash_original = lv_dropdown_get_selected(ui_droDash);
     friendlyfolder_original = lv_dropdown_get_selected(ui_droFriendlyFolder);
@@ -148,10 +125,10 @@ void init_dropdown_settings() {
     overlaytransparency_original = lv_dropdown_get_selected(ui_droOverlayTransparency);
 }
 
-void restore_visual_options() {
-    lv_dropdown_set_selected(ui_droBattery, config.VISUAL.BATTERY);
+static void restore_visual_options() {
+    lv_dropdown_set_selected(ui_droBattery_visual, config.VISUAL.BATTERY);
     lv_dropdown_set_selected(ui_droClock, config.VISUAL.CLOCK);
-    lv_dropdown_set_selected(ui_droNetwork, config.VISUAL.NETWORK);
+    lv_dropdown_set_selected(ui_droNetwork_visual, config.VISUAL.NETWORK);
     lv_dropdown_set_selected(ui_droName, config.VISUAL.NAME);
     lv_dropdown_set_selected(ui_droDash, config.VISUAL.DASH);
     lv_dropdown_set_selected(ui_droFriendlyFolder, config.VISUAL.FRIENDLYFOLDER);
@@ -166,10 +143,10 @@ void restore_visual_options() {
     lv_dropdown_set_selected(ui_droOverlayTransparency, config.VISUAL.OVERLAY_TRANSPARENCY);
 }
 
-void save_visual_options() {
-    int idx_battery = lv_dropdown_get_selected(ui_droBattery);
+static void save_visual_options() {
+    int idx_battery = lv_dropdown_get_selected(ui_droBattery_visual);
     int idx_clock = lv_dropdown_get_selected(ui_droClock);
-    int idx_network = lv_dropdown_get_selected(ui_droNetwork);
+    int idx_network = lv_dropdown_get_selected(ui_droNetwork_visual);
     int idx_name = lv_dropdown_get_selected(ui_droName);
     int idx_dash = lv_dropdown_get_selected(ui_droDash);
     int idx_friendlyfolder = lv_dropdown_get_selected(ui_droFriendlyFolder);
@@ -183,7 +160,7 @@ void save_visual_options() {
     int idx_overlayimage = lv_dropdown_get_selected(ui_droOverlayImage);
     int idx_overlaytransparency = lv_dropdown_get_selected(ui_droOverlayTransparency);
 
-    if (lv_dropdown_get_selected(ui_droBattery) != battery_original) {
+    if (lv_dropdown_get_selected(ui_droBattery_visual) != battery_original) {
         write_text_to_file((RUN_GLOBAL_PATH "visual/battery"), "w", INT, idx_battery);
     }
 
@@ -191,7 +168,7 @@ void save_visual_options() {
         write_text_to_file((RUN_GLOBAL_PATH "visual/clock"), "w", INT, idx_clock);
     }
 
-    if (lv_dropdown_get_selected(ui_droNetwork) != network_original) {
+    if (lv_dropdown_get_selected(ui_droNetwork_visual) != network_original) {
         write_text_to_file((RUN_GLOBAL_PATH "visual/network"), "w", INT, idx_network);
     }
 
@@ -244,7 +221,7 @@ void save_visual_options() {
     }
 }
 
-void init_navigation_group() {
+static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlBattery,
             ui_pnlClock,
@@ -278,12 +255,10 @@ void init_navigation_group() {
     ui_objects[12] = ui_lblOverlayTransparency;
     ui_objects[13] = ui_lblHidden;
     ui_objects[14] = ui_lblTitleIncludeRootDrive;
-
-
     lv_obj_t *ui_objects_value[] = {
-            ui_droBattery,
+            ui_droBattery_visual,
             ui_droClock,
-            ui_droNetwork,
+            ui_droNetwork_visual,
             ui_droDash,
             ui_droName,
             ui_droDisplayEmptyFolder,
@@ -364,9 +339,9 @@ void init_navigation_group() {
     apply_theme_list_glyph(&theme, ui_icoHidden, mux_module, "hidden");
     apply_theme_list_glyph(&theme, ui_icoMenuCounterFile, mux_module, "counterfile");
 
-    apply_theme_list_drop_down(&theme, ui_droBattery, NULL);
+    apply_theme_list_drop_down(&theme, ui_droBattery_visual, NULL);
     apply_theme_list_drop_down(&theme, ui_droClock, NULL);
-    apply_theme_list_drop_down(&theme, ui_droNetwork, NULL);
+    apply_theme_list_drop_down(&theme, ui_droNetwork_visual, NULL);
     apply_theme_list_drop_down(&theme, ui_droName, NULL);
     apply_theme_list_drop_down(&theme, ui_droDash, NULL);
     apply_theme_list_drop_down(&theme, ui_droFriendlyFolder, NULL);
@@ -380,9 +355,9 @@ void init_navigation_group() {
     apply_theme_list_drop_down(&theme, ui_droMenuCounterFile, NULL);
 
     char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
-    add_drop_down_options(ui_droBattery, disabled_enabled, 2);
+    add_drop_down_options(ui_droBattery_visual, disabled_enabled, 2);
     add_drop_down_options(ui_droClock, disabled_enabled, 2);
-    add_drop_down_options(ui_droNetwork, disabled_enabled, 2);
+    add_drop_down_options(ui_droNetwork_visual, disabled_enabled, 2);
     add_drop_down_options(ui_droHidden, disabled_enabled, 2);
 
     add_drop_down_options(ui_droName, (char *[]) {
@@ -426,7 +401,7 @@ void init_navigation_group() {
     }
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (!current_item_index) ? ui_count - 1 : current_item_index - 1;
@@ -439,7 +414,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
@@ -452,21 +427,21 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_option_prev(void) {
+static void handle_option_prev(void) {
     if (msgbox_active) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
-void handle_option_next(void) {
+static void handle_option_next(void) {
     if (msgbox_active) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
-void handle_back(void) {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -483,7 +458,7 @@ void handle_back(void) {
     mux_input_stop();
 }
 
-void handle_help(void) {
+static void handle_help(void) {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -492,7 +467,7 @@ void handle_help(void) {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -553,7 +528,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -571,17 +546,12 @@ int muxvisual_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXVISUAL.TITLE);
-    init_mux(ui_pnlContent);
+    init_muxvisual(ui_pnlContent);
     init_timer(ui_refresh_task, NULL);
     init_elements();
 
@@ -622,6 +592,7 @@ int muxvisual_main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

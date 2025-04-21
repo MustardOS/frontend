@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxpicker.h"
 #include "../lvgl/lvgl.h"
 #include <unistd.h>
@@ -23,47 +24,17 @@
 #define EXPLORE_DIR "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
-char *mux_module;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int progress_onscreen = -1;
-int ui_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-
-char base_dir[PATH_MAX];
-char sys_dir[PATH_MAX];
-char *picker_type;
-char *picker_extension;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-size_t item_count = 0;
-content_item *items = NULL;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
-
-lv_obj_t *ui_mux_panels[5];
+static char base_dir[PATH_MAX];
+static char sys_dir[PATH_MAX];
+static char *picker_type;
+static char *picker_extension;
+static lv_obj_t *ui_mux_panels[5];
 
 #define TEMP_PREVIEW "/tmp/preview.png"
 #define TEMP_VERSION "/tmp/version.txt"
 
-void show_help() {
+static void show_help() {
     if (items[current_item_index].content_type == FOLDER) return;
 
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
@@ -82,7 +53,7 @@ void show_help() {
                      TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits));
 }
 
-int version_check() {
+static int version_check() {
     char picker_archive[MAX_BUFFER_SIZE];
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
@@ -93,7 +64,7 @@ int version_check() {
     return str_startswith(muos_version, read_line_from_file(TEMP_VERSION, 1));
 }
 
-int extract_preview() {
+static int extract_preview() {
     char picker_archive[MAX_BUFFER_SIZE];
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
@@ -106,7 +77,7 @@ int extract_preview() {
     return extract_file_from_zip(picker_archive, device_preview, TEMP_PREVIEW);
 }
 
-void image_refresh() {
+static void image_refresh() {
     if (items[current_item_index].content_type == FOLDER) return;
 
     // Invalidate the cache for this image path
@@ -119,7 +90,7 @@ void image_refresh() {
     }
 }
 
-void create_picker_items() {
+static void create_picker_items() {
     DIR *td;
     struct dirent *tf;
 
@@ -177,7 +148,7 @@ void create_picker_items() {
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     if (ui_count <= 0) return;
 
     play_sound("navigate", nav_sound, 0, 0);
@@ -195,7 +166,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (ui_count <= 0) return;
 
     if (first_open) {
@@ -217,7 +188,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_confirm() {
+static void handle_confirm() {
     if (msgbox_active || ui_count <= 0) return;
 
     play_sound("confirm", nav_sound, 0, 1);
@@ -288,7 +259,7 @@ void handle_confirm() {
     mux_input_stop();
 }
 
-void handle_confirm_force() {
+static void handle_confirm_force() {
     if (msgbox_active || ui_count <= 0 ||
         strcasecmp(picker_type, "theme") != 0 ||
         items[current_item_index].content_type == FOLDER) {
@@ -340,7 +311,7 @@ void handle_confirm_force() {
     mux_input_stop();
 }
 
-void handle_back() {
+static void handle_back() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -364,7 +335,7 @@ void handle_back() {
     mux_input_stop();
 }
 
-void handle_save() {
+static void handle_save() {
     if (msgbox_active) return;
 
     play_sound("confirm", nav_sound, 0, 1);
@@ -399,7 +370,7 @@ void handle_save() {
     mux_input_stop();
 }
 
-void handle_help() {
+static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1 && ui_count > 0) {
@@ -408,7 +379,7 @@ void handle_help() {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
 
     ui_mux_panels[0] = ui_pnlFooter;
@@ -461,7 +432,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (ui_count > 0 && nav_moved) {
@@ -502,15 +473,10 @@ int muxpicker_main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 1);
-    init_display();
-
+    
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
     const char *picker_title = NULL;
@@ -599,6 +565,7 @@ int muxpicker_main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

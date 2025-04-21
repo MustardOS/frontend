@@ -52,7 +52,7 @@ lv_obj_t *ui_droSound;
 lv_obj_t *ui_droCatalogue;
 lv_obj_t *ui_droConfig;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxcustom(lv_obj_t *ui_pnlContent) {
     ui_pnlCatalogue = lv_obj_create(ui_pnlContent);
     ui_pnlConfig = lv_obj_create(ui_pnlContent);
     ui_pnlTheme = lv_obj_create(ui_pnlContent);

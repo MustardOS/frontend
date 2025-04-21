@@ -16,7 +16,7 @@ lv_obj_t *ui_pnlCataloguePackage;
 lv_obj_t *ui_pnlConfigPackage;
 lv_obj_t *ui_pnlLanguage;
 lv_obj_t *ui_pnlNetwork;
-lv_obj_t *ui_pnlSyncthing;
+lv_obj_t *ui_pnlSyncthing_storage;
 lv_obj_t *ui_pnlUserInit;
 
 lv_obj_t *ui_lblBIOS;
@@ -35,7 +35,7 @@ lv_obj_t *ui_lblCataloguePackage;
 lv_obj_t *ui_lblConfigPackage;
 lv_obj_t *ui_lblLanguage;
 lv_obj_t *ui_lblNetwork;
-lv_obj_t *ui_lblSyncthing;
+lv_obj_t *ui_lblSyncthing_storage;
 lv_obj_t *ui_lblUserInit;
 
 lv_obj_t *ui_icoBIOS;
@@ -54,7 +54,7 @@ lv_obj_t *ui_icoCataloguePackage;
 lv_obj_t *ui_icoConfigPackage;
 lv_obj_t *ui_icoLanguage;
 lv_obj_t *ui_icoNetwork;
-lv_obj_t *ui_icoSyncthing;
+lv_obj_t *ui_icoSyncthing_storage;
 lv_obj_t *ui_icoUserInit;
 
 lv_obj_t *ui_lblBIOSValue;
@@ -73,10 +73,10 @@ lv_obj_t *ui_lblCataloguePackageValue;
 lv_obj_t *ui_lblConfigPackageValue;
 lv_obj_t *ui_lblLanguageValue;
 lv_obj_t *ui_lblNetworkValue;
-lv_obj_t *ui_lblSyncthingValue;
+lv_obj_t *ui_lblSyncthingValue_storage;
 lv_obj_t *ui_lblUserInitValue;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxstorage(lv_obj_t *ui_pnlContent) {
     ui_pnlBIOS = lv_obj_create(ui_pnlContent);
     ui_pnlCatalogue = lv_obj_create(ui_pnlContent);
     ui_pnlName = lv_obj_create(ui_pnlContent);
@@ -93,7 +93,7 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_pnlConfigPackage = lv_obj_create(ui_pnlContent);
     ui_pnlLanguage = lv_obj_create(ui_pnlContent);
     ui_pnlNetwork = lv_obj_create(ui_pnlContent);
-    ui_pnlSyncthing = lv_obj_create(ui_pnlContent);
+    ui_pnlSyncthing_storage = lv_obj_create(ui_pnlContent);
     ui_pnlUserInit = lv_obj_create(ui_pnlContent);
 
     ui_lblBIOS = lv_label_create(ui_pnlBIOS);
@@ -128,8 +128,8 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     lv_label_set_text(ui_lblLanguage, "");
     ui_lblNetwork = lv_label_create(ui_pnlNetwork);
     lv_label_set_text(ui_lblNetwork, "");
-    ui_lblSyncthing = lv_label_create(ui_pnlSyncthing);
-    lv_label_set_text(ui_lblSyncthing, "");
+    ui_lblSyncthing_storage = lv_label_create(ui_pnlSyncthing_storage);
+    lv_label_set_text(ui_lblSyncthing_storage, "");
     ui_lblUserInit = lv_label_create(ui_pnlUserInit);
     lv_label_set_text(ui_lblUserInit, "");
 
@@ -149,7 +149,7 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_icoConfigPackage = lv_img_create(ui_pnlConfigPackage);
     ui_icoLanguage = lv_img_create(ui_pnlLanguage);
     ui_icoNetwork = lv_img_create(ui_pnlNetwork);
-    ui_icoSyncthing = lv_img_create(ui_pnlSyncthing);
+    ui_icoSyncthing_storage = lv_img_create(ui_pnlSyncthing_storage);
     ui_icoUserInit = lv_img_create(ui_pnlUserInit);
 
     ui_lblBIOSValue = lv_label_create(ui_pnlBIOS);
@@ -184,8 +184,8 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     lv_label_set_text(ui_lblLanguageValue, "");
     ui_lblNetworkValue = lv_label_create(ui_pnlNetwork);
     lv_label_set_text(ui_lblNetworkValue, "");
-    ui_lblSyncthingValue = lv_label_create(ui_pnlSyncthing);
-    lv_label_set_text(ui_lblSyncthingValue, "");
+    ui_lblSyncthingValue_storage = lv_label_create(ui_pnlSyncthing_storage);
+    lv_label_set_text(ui_lblSyncthingValue_storage, "");
     ui_lblUserInitValue = lv_label_create(ui_pnlUserInit);
     lv_label_set_text(ui_lblUserInitValue, "");
 }

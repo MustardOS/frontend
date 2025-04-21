@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxnetwork.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxnetwork.h"
@@ -14,23 +15,6 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int current_item_index = 0;
-int first_open = 1;
-int ui_count = 0;
 
 const char *pass_args[] = {(INTERNAL_PATH "script/web/password.sh"), NULL};
 const char *net_c_args[] = {(INTERNAL_PATH "script/system/network.sh"), "connect", NULL};
@@ -38,38 +22,28 @@ const char *net_d_args[] = {(INTERNAL_PATH "script/system/network.sh"), "disconn
 
 #define PASS_ENCODE "********"
 
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
+static int key_show = 0;
+static int key_curr = 0;
 
-int progress_onscreen = -1;
-
-int key_show = 0;
-int key_curr = 0;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_value;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 #define UI_DHCP 5
 #define UI_STATIC 9
 #define UI_COUNT 9
 lv_obj_t *ui_panels[UI_COUNT];
-lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_values[UI_COUNT];
-lv_obj_t *ui_icons[UI_COUNT];
+static lv_obj_t *ui_icons[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[7];
 
-int literally_just_connected = 0;
+static int literally_just_connected = 0;
 
 struct help_msg {
     lv_obj_t *element;
     char *message;
 };
 
-void show_help(lv_obj_t *element_focused) {
+static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblIdentifier, lang.MUXNETWORK.HELP.SSID},
             {ui_lblPassword,   lang.MUXNETWORK.HELP.PASSWORD},
@@ -97,7 +71,7 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void can_scan_check(int forced_disconnect) {
+static void can_scan_check(int forced_disconnect) {
     if (!forced_disconnect && is_network_connected()) {
         lv_label_set_text(ui_lblConnect, lang.MUXNETWORK.DISCONNECT);
 
@@ -122,7 +96,7 @@ void can_scan_check(int forced_disconnect) {
     update_network_status(ui_staNetwork, &theme, 2);
 }
 
-void get_current_ip() {
+static void get_current_ip() {
     char address_file[MAX_BUFFER_SIZE];
     snprintf(address_file, sizeof(address_file),
              "%s/config/address.txt", INTERNAL_PATH);
@@ -155,7 +129,7 @@ void get_current_ip() {
     }
 }
 
-void restore_network_values() {
+static void restore_network_values() {
     if (config.NETWORK.TYPE) {
         lv_label_set_text(ui_lblTypeValue, lang.MUXNETWORK.STATIC);
         ui_count = UI_STATIC;
@@ -182,7 +156,7 @@ void restore_network_values() {
     get_current_ip();
 }
 
-void save_network_config() {
+static void save_network_config() {
     int idx_type = 0;
     int idx_scan = 0;
 
@@ -203,7 +177,7 @@ void save_network_config() {
     write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, lv_label_get_text(ui_lblDNSValue));
 }
 
-void init_navigation_group() {
+static void init_navigation_group() {
     ui_panels[0] = ui_pnlIdentifier;
     ui_panels[1] = ui_pnlPassword;
     ui_panels[2] = ui_pnlScan;
@@ -298,7 +272,7 @@ void init_navigation_group() {
     }
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
@@ -311,7 +285,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
@@ -328,7 +302,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_keyboard_OK_press(void) {
+static void handle_keyboard_OK_press(void) {
     key_show = 0;
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
@@ -361,7 +335,7 @@ void handle_keyboard_OK_press(void) {
     lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
 }
 
-void handle_keyboard_press(void) {
+static void handle_keyboard_press(void) {
     play_sound("navigate", nav_sound, 0, 0);
 
     const char *is_key;
@@ -440,7 +414,7 @@ bool handle_navigate(void) {
     return false;
 }
 
-void handle_confirm(void) {
+static void handle_confirm(void) {
     if (handle_navigate()) return;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -551,7 +525,7 @@ void handle_confirm(void) {
     }
 }
 
-void handle_back(void) {
+static void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
 
     toast_message(lang.MUXNETWORK.SAVE, 0, 0);
@@ -568,7 +542,7 @@ void handle_back(void) {
     mux_input_stop();
 }
 
-void handle_scan(void) {
+static void handle_scan(void) {
     if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
         play_sound("confirm", nav_sound, 0, 1);
 
@@ -582,7 +556,7 @@ void handle_scan(void) {
     }
 }
 
-void handle_profiles(void) {
+static void handle_profiles(void) {
     play_sound("confirm", nav_sound, 0, 1);
 
     save_network_config();
@@ -596,7 +570,7 @@ void handle_profiles(void) {
     mux_input_stop();
 }
 
-void handle_a(void) {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     if (key_show) {
@@ -607,7 +581,7 @@ void handle_a(void) {
     handle_confirm();
 }
 
-void handle_b(void) {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -628,7 +602,7 @@ void handle_b(void) {
     handle_back();
 }
 
-void handle_x(void) {
+static void handle_x(void) {
     if (msgbox_active) return;
 
     if (key_show) {
@@ -639,7 +613,7 @@ void handle_x(void) {
     handle_scan();
 }
 
-void handle_y(void) {
+static void handle_y(void) {
     if (msgbox_active) return;
 
     if (key_show) {
@@ -650,7 +624,7 @@ void handle_y(void) {
     handle_profiles();
 }
 
-void handle_help(void) {
+static void handle_help(void) {
     if (msgbox_active || key_show) {
         return;
     }
@@ -661,7 +635,7 @@ void handle_help(void) {
     }
 }
 
-void handle_up(void) {
+static void handle_up(void) {
     if (key_show) {
         key_up();
         return;
@@ -670,7 +644,7 @@ void handle_up(void) {
     handle_list_nav_up();
 }
 
-void handle_up_hold(void) {
+static void handle_up_hold(void) {
     if (key_show) {
         key_up();
         return;
@@ -679,7 +653,7 @@ void handle_up_hold(void) {
     handle_list_nav_up_hold();
 }
 
-void handle_down(void) {
+static void handle_down(void) {
     if (key_show) {
         key_down();
         return;
@@ -688,7 +662,7 @@ void handle_down(void) {
     handle_list_nav_down();
 }
 
-void handle_down_hold(void) {
+static void handle_down_hold(void) {
     if (key_show) {
         key_down();
         return;
@@ -697,7 +671,7 @@ void handle_down_hold(void) {
     handle_list_nav_down_hold();
 }
 
-void handle_left(void) {
+static void handle_left(void) {
     if (key_show) {
         key_left();
         return;
@@ -706,7 +680,7 @@ void handle_left(void) {
     handle_navigate();
 }
 
-void handle_right(void) {
+static void handle_right(void) {
     if (key_show) {
         key_right();
         return;
@@ -715,21 +689,21 @@ void handle_right(void) {
     handle_navigate();
 }
 
-void handle_left_hold(void) {
+static void handle_left_hold(void) {
     if (key_show) {
         key_left();
         return;
     }
 }
 
-void handle_right_hold(void) {
+static void handle_right_hold(void) {
     if (key_show) {
         key_right();
         return;
     }
 }
 
-void handle_l1(void) {
+static void handle_l1(void) {
     if (key_show) {
         return;
     }
@@ -737,7 +711,7 @@ void handle_l1(void) {
     handle_list_nav_page_up();
 }
 
-void handle_r1(void) {
+static void handle_r1(void) {
     if (key_show) {
         return;
     }
@@ -745,7 +719,7 @@ void handle_r1(void) {
     handle_list_nav_page_down();
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -836,7 +810,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void init_osk() {
+static void init_osk() {
     key_entry = lv_btnmatrix_create(ui_pnlEntry);
     num_entry = lv_btnmatrix_create(ui_pnlEntry);
 
@@ -945,7 +919,7 @@ void init_osk() {
     lv_obj_set_style_pad_right(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -959,7 +933,7 @@ void ui_refresh_task() {
     }
 }
 
-void on_key_event(struct input_event ev) {
+static void on_key_event(struct input_event ev) {
     if (ev.code == KEY_ENTER && ev.value == 1) {
         handle_keyboard_OK_press();
     }
@@ -974,17 +948,12 @@ int muxnetwork_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETWORK.TITLE);
-    init_mux(ui_screen, ui_pnlContent, &theme);
+    init_muxnetwork(ui_screen, ui_pnlContent, &theme);
     init_timer(ui_refresh_task, NULL);
     init_elements();
 
@@ -1028,6 +997,7 @@ int muxnetwork_main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_r1,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);

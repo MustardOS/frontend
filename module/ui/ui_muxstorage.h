@@ -2,7 +2,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_mux(lv_obj_t *ui_pnlContent);
+void init_muxstorage(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlBIOS;
 extern lv_obj_t *ui_pnlCatalogue;
@@ -20,7 +20,7 @@ extern lv_obj_t *ui_pnlCataloguePackage;
 extern lv_obj_t *ui_pnlConfigPackage;
 extern lv_obj_t *ui_pnlLanguage;
 extern lv_obj_t *ui_pnlNetwork;
-extern lv_obj_t *ui_pnlSyncthing;
+extern lv_obj_t *ui_pnlSyncthing_storage;
 extern lv_obj_t *ui_pnlUserInit;
 
 extern lv_obj_t *ui_lblBIOS;
@@ -39,7 +39,7 @@ extern lv_obj_t *ui_lblCataloguePackage;
 extern lv_obj_t *ui_lblConfigPackage;
 extern lv_obj_t *ui_lblLanguage;
 extern lv_obj_t *ui_lblNetwork;
-extern lv_obj_t *ui_lblSyncthing;
+extern lv_obj_t *ui_lblSyncthing_storage;
 extern lv_obj_t *ui_lblUserInit;
 
 extern lv_obj_t *ui_icoBIOS;
@@ -58,7 +58,7 @@ extern lv_obj_t *ui_icoCataloguePackage;
 extern lv_obj_t *ui_icoConfigPackage;
 extern lv_obj_t *ui_icoLanguage;
 extern lv_obj_t *ui_icoNetwork;
-extern lv_obj_t *ui_icoSyncthing;
+extern lv_obj_t *ui_icoSyncthing_storage;
 extern lv_obj_t *ui_icoUserInit;
 
 extern lv_obj_t *ui_lblBIOSValue;
@@ -77,5 +77,5 @@ extern lv_obj_t *ui_lblCataloguePackageValue;
 extern lv_obj_t *ui_lblConfigPackageValue;
 extern lv_obj_t *ui_lblLanguageValue;
 extern lv_obj_t *ui_lblNetworkValue;
-extern lv_obj_t *ui_lblSyncthingValue;
+extern lv_obj_t *ui_lblSyncthingValue_storage;
 extern lv_obj_t *ui_lblUserInitValue;

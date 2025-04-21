@@ -40,7 +40,7 @@ lv_obj_t *ui_droPower;
 lv_obj_t *ui_droInterface;
 lv_obj_t *ui_droAdvanced;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxtweakgen(lv_obj_t *ui_pnlContent) {
     ui_pnlRTC = lv_obj_create(ui_pnlContent);
     ui_pnlHDMI = lv_obj_create(ui_pnlContent);
     ui_pnlAdvanced = lv_obj_create(ui_pnlContent);

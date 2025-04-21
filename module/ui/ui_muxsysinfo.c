@@ -48,7 +48,7 @@ lv_obj_t *ui_lblTempValue;
 lv_obj_t *ui_lblCapacityValue;
 lv_obj_t *ui_lblVoltageValue;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxsysinfo(lv_obj_t *ui_pnlContent) {
     ui_pnlVersion = lv_obj_create(ui_pnlContent);
     ui_pnlDevice = lv_obj_create(ui_pnlContent);
     ui_pnlKernel = lv_obj_create(ui_pnlContent);

@@ -12,7 +12,7 @@ lv_obj_t *ui_icoSearch;
 lv_obj_t *ui_icoCore;
 lv_obj_t *ui_icoGovernor;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxoption(lv_obj_t *ui_pnlContent) {
     ui_pnlSearch = lv_obj_create(ui_pnlContent);
     ui_pnlCore = lv_obj_create(ui_pnlContent);
     ui_pnlGovernor = lv_obj_create(ui_pnlContent);

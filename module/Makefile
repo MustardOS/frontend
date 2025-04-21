@@ -27,13 +27,12 @@ EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fno-unroll-loops -fmerge-all-constants -fno-ident \
 	-ffast-math -funroll-loops -falign-functions
 
-# MODULES = muxapp muxarchive muxassign muxcharge muxcollect muxconfig muxconnect \
-#           muxcredits muxcustom muxgov muxhdmi muxhistory muxinfo muxlanguage \
-#           muxlaunch muxnetprofile muxnetscan muxnetwork muxoption muxpass \
-#           muxpicker muxpower muxplore muxrtc muxsearch muxshot muxsnapshot \
-#           muxspace muxsplash muxstart muxstorage muxsysinfo muxtask muxtester \
-#           muxtimezone muxtweakadv muxtweakgen muxvisual muxwebserv
-MODULES = muxinfo muxlaunch muxplore muxshare
+MODULES = muxapp muxarchive muxassign muxcharge muxcollect muxconfig muxconnect \
+          muxcredits muxcustom muxgov muxhdmi muxhistory muxinfo muxlanguage \
+          muxlaunch muxnetprofile muxnetscan muxnetwork muxoption muxpass \
+          muxpicker muxpower muxplore muxrtc muxsearch muxshot muxsnapshot \
+          muxspace muxsplash muxstart muxstorage muxsysinfo muxtask muxtester \
+          muxtimezone muxtweakadv muxtweakgen muxvisual muxwebserv
 MODULE_DIR = .
 
 SRCS := $(foreach mod,$(MODULES), \

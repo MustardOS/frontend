@@ -16,11 +16,11 @@ lv_obj_t *ui_icoIdleDisplay;
 lv_obj_t *ui_icoIdleSleep;
 
 lv_obj_t *ui_droShutdown;
-lv_obj_t *ui_droBattery;
+lv_obj_t *ui_droBattery_power;
 lv_obj_t *ui_droIdleDisplay;
 lv_obj_t *ui_droIdleSleep;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxpower(lv_obj_t *ui_pnlContent) {
     ui_pnlBattery = lv_obj_create(ui_pnlContent);
     ui_pnlIdleDisplay = lv_obj_create(ui_pnlContent);
     ui_pnlIdleSleep = lv_obj_create(ui_pnlContent);
@@ -43,9 +43,9 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_droShutdown = lv_dropdown_create(ui_pnlShutdown);
     lv_dropdown_clear_options(ui_droShutdown);
     lv_obj_set_style_text_opa(ui_droShutdown, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droBattery = lv_dropdown_create(ui_pnlBattery);
-    lv_dropdown_clear_options(ui_droBattery);
-    lv_obj_set_style_text_opa(ui_droBattery, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    ui_droBattery_power = lv_dropdown_create(ui_pnlBattery);
+    lv_dropdown_clear_options(ui_droBattery_power);
+    lv_obj_set_style_text_opa(ui_droBattery_power, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
     ui_droIdleDisplay = lv_dropdown_create(ui_pnlIdleDisplay);
     lv_dropdown_clear_options(ui_droIdleDisplay);
     lv_obj_set_style_text_opa(ui_droIdleDisplay, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);

@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxsearch.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxsearch.h"
@@ -19,29 +20,11 @@
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
+static int starter_image = 0;
+static int got_results = 0;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int current_item_index = 0;
-int first_open = 1;
-int ui_count = 0;
-int starter_image = 0;
-int progress_onscreen = -1;
-int got_results = 0;
-
-int key_show = 0;
-int key_curr = 0;
+static int key_show = 0;
+static int key_curr = 0;
 
 static char SD1[MAX_BUFFER_SIZE];
 static char SD2[MAX_BUFFER_SIZE];
@@ -56,31 +39,18 @@ struct json search_folders;
 
 size_t all_item_count = 0;
 content_item *all_items = NULL;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
 lv_obj_t *key_entry;
 
-lv_group_t *ui_group;
-lv_group_t *ui_group_value;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 lv_obj_t *ui_viewport_objects[7];
 lv_obj_t *ui_mux_panels[7];
-
-void list_nav_prev(int steps);
-
-void list_nav_next(int steps);
 
 struct help_msg {
     lv_obj_t *element;
     char *message;
 };
 
-void show_help(lv_obj_t *element_focused) {
+static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblLookup,       lang.MUXSEARCH.LOOKUP},
             {ui_lblSearchLocal,  lang.MUXSEARCH.LOCAL},
@@ -103,7 +73,7 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void init_navigation_group() {
+static void init_navigation_group() {
     lv_obj_t *ui_panels[] = {
             ui_pnlLookup,
             ui_pnlSearchLocal,
@@ -158,7 +128,7 @@ void init_navigation_group() {
     }
 }
 
-void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
+static void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);
 
     int device_width = device.MUX.WIDTH / 2;
@@ -207,7 +177,7 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
     mini_free(artwork_config_ini);
 }
 
-void image_refresh(char *image_type) {
+static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
         printf("BOX ART IS SET TO DISABLED\n");
         return;
@@ -279,7 +249,7 @@ void image_refresh(char *image_type) {
     }
 }
 
-void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_value) {
+static void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_value) {
     lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(ui_pnlResult);
 
@@ -342,7 +312,60 @@ void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_va
     }
 }
 
-void process_results(const char *json_results) {
+
+static void list_nav_prev(int steps) {
+    play_sound("navigate", nav_sound, 0, 0);
+    for (int step = 0; step < steps; ++step) {
+        if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                                all_items[current_item_index].display_name);
+        }
+        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        nav_prev(ui_group, 1);
+        nav_prev(ui_group_value, 1);
+        nav_prev(ui_group_glyph, 1);
+        nav_prev(ui_group_panel, 1);
+    }
+    scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
+    if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+        image_refresh("box");
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
+    } else {
+        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
+    }
+    nav_moved = 1;
+}
+
+static void list_nav_next(int steps) {
+    if (first_open) {
+        first_open = 0;
+    } else {
+        play_sound("navigate", nav_sound, 0, 0);
+    }
+    for (int step = 0; step < steps; ++step) {
+        if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                                all_items[current_item_index].display_name);
+        }
+        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        nav_next(ui_group, 1);
+        nav_next(ui_group_value, 1);
+        nav_next(ui_group_glyph, 1);
+        nav_next(ui_group_panel, 1);
+    }
+    scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
+    if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+        image_refresh("box");
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
+    } else {
+        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
+    }
+    nav_moved = 1;
+}
+
+static void process_results(const char *json_results) {
     if (!json_valid(json_results)) {
         LOG_ERROR(mux_module, "Invalid JSON Format")
         return;
@@ -487,59 +510,7 @@ void process_results(const char *json_results) {
     }
 }
 
-void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
-    for (int step = 0; step < steps; ++step) {
-        if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
-            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                                all_items[current_item_index].display_name);
-        }
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_value, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
-    }
-    scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
-    if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
-        image_refresh("box");
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
-    } else {
-        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
-    }
-    nav_moved = 1;
-}
-
-void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
-            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                                all_items[current_item_index].display_name);
-        }
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_value, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
-    if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
-        image_refresh("box");
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
-    } else {
-        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
-        snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
-    }
-    nav_moved = 1;
-}
-
-void handle_keyboard_OK_press(void) {
+static void handle_keyboard_OK_press(void) {
     key_show = 0;
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
@@ -555,7 +526,7 @@ void handle_keyboard_OK_press(void) {
     lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
 }
 
-void handle_keyboard_press(void) {
+static void handle_keyboard_press(void) {
     play_sound("navigate", nav_sound, 0, 0);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
@@ -572,7 +543,7 @@ void handle_keyboard_press(void) {
     }
 }
 
-void handle_confirm(void) {
+static void handle_confirm(void) {
     play_sound("confirm", nav_sound, 0, 1);
 
     if (file_exist(MUOS_SAA_LOAD)) remove(MUOS_SAA_LOAD);
@@ -631,7 +602,7 @@ void handle_confirm(void) {
     }
 }
 
-void handle_random_select() {
+static void handle_random_select() {
     if (msgbox_active || !ui_count) return;
 
     uint32_t random_select = random() % ui_count;
@@ -640,7 +611,7 @@ void handle_random_select() {
     !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
 }
 
-void handle_back(void) {
+static void handle_back(void) {
     play_sound("back", nav_sound, 0, 1);
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
@@ -650,7 +621,7 @@ void handle_back(void) {
     mux_input_stop();
 }
 
-void handle_a(void) {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     if (key_show) {
@@ -661,7 +632,7 @@ void handle_a(void) {
     handle_confirm();
 }
 
-void handle_b(void) {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -678,7 +649,7 @@ void handle_b(void) {
     handle_back();
 }
 
-void handle_x(void) {
+static void handle_x(void) {
     if (msgbox_active) return;
 
     if (key_show) {
@@ -695,7 +666,7 @@ void handle_x(void) {
     mux_input_stop();
 }
 
-void handle_y(void) {
+static void handle_y(void) {
     if (msgbox_active) return;
 
     if (key_show) {
@@ -706,7 +677,7 @@ void handle_y(void) {
     // TODO: A way to directly add the item to a collection
 }
 
-void handle_help(void) {
+static void handle_help(void) {
     if (msgbox_active || key_show) return;
 
     if (progress_onscreen == -1 && all_items[current_item_index].content_type != ROM) {
@@ -715,7 +686,7 @@ void handle_help(void) {
     }
 }
 
-void handle_up(void) {
+static void handle_up(void) {
     if (key_show) {
         key_up();
         return;
@@ -724,7 +695,7 @@ void handle_up(void) {
     handle_list_nav_up();
 }
 
-void handle_up_hold(void) {
+static void handle_up_hold(void) {
     if (key_show) {
         key_up();
         return;
@@ -733,7 +704,7 @@ void handle_up_hold(void) {
     handle_list_nav_up_hold();
 }
 
-void handle_down(void) {
+static void handle_down(void) {
     if (key_show) {
         key_down();
         return;
@@ -742,7 +713,7 @@ void handle_down(void) {
     handle_list_nav_down();
 }
 
-void handle_down_hold(void) {
+static void handle_down_hold(void) {
     if (key_show) {
         key_down();
         return;
@@ -751,45 +722,45 @@ void handle_down_hold(void) {
     handle_list_nav_down_hold();
 }
 
-void handle_left(void) {
+static void handle_left(void) {
     if (key_show) {
         key_left();
         return;
     }
 }
 
-void handle_right(void) {
+static void handle_right(void) {
     if (key_show) {
         key_right();
         return;
     }
 }
 
-void handle_left_hold(void) {
+static void handle_left_hold(void) {
     if (key_show) {
         key_left();
         return;
     }
 }
 
-void handle_right_hold(void) {
+static void handle_right_hold(void) {
     if (key_show) {
         key_right();
         return;
     }
 }
 
-void handle_l1(void) {
+static void handle_l1(void) {
     if (key_show) return;
     handle_list_nav_page_up();
 }
 
-void handle_r1(void) {
+static void handle_r1(void) {
     if (key_show) return;
     handle_list_nav_page_down();
 }
 
-void init_elements() {
+static void init_elements() {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
 
@@ -872,7 +843,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void init_osk() {
+static void init_osk() {
     key_entry = lv_btnmatrix_create(ui_pnlEntry);
 
     lv_obj_set_width(key_entry, device.MUX.WIDTH * 5 / 6);
@@ -943,7 +914,7 @@ void init_osk() {
     lv_obj_set_style_pad_right(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -956,7 +927,7 @@ void ui_refresh_task() {
     }
 }
 
-void on_key_event(struct input_event ev) {
+static void on_key_event(struct input_event ev) {
     if (ev.code == KEY_ENTER && ev.value == 1) {
         handle_keyboard_OK_press();
     }
@@ -983,12 +954,8 @@ int muxsearch_main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     snprintf(search_result, sizeof(search_result), "%s/%s/search.json",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
 
@@ -1004,10 +971,9 @@ int muxsearch_main(int argc, char *argv[]) {
     }
 
     init_theme(1, 1);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
-    init_mux(ui_screen, ui_pnlContent, &theme);
+    init_muxsearch(ui_screen, ui_pnlContent, &theme);
     init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
@@ -1068,6 +1034,7 @@ int muxsearch_main(int argc, char *argv[]) {
                     [MUX_INPUT_R2] = handle_random_select,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);

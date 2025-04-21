@@ -2,7 +2,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_mux(lv_obj_t *ui_pnlContent);
+void init_muxvisual(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlBattery;
 extern lv_obj_t *ui_pnlClock;
@@ -52,9 +52,9 @@ extern lv_obj_t *ui_icoHidden;
 extern lv_obj_t *ui_icoOverlayImage;
 extern lv_obj_t *ui_icoOverlayTransparency;
 
-extern lv_obj_t *ui_droBattery;
+extern lv_obj_t *ui_droBattery_visual;
 extern lv_obj_t *ui_droClock;
-extern lv_obj_t *ui_droNetwork;
+extern lv_obj_t *ui_droNetwork_visual;
 extern lv_obj_t *ui_droName;
 extern lv_obj_t *ui_droDash;
 extern lv_obj_t *ui_droFriendlyFolder;

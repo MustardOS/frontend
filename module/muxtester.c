@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxtester.h"
 #include "../lvgl/lvgl.h"
 #include <string.h>
@@ -13,35 +14,16 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 
-char *mux_module;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int progress_onscreen = -1;
-int ui_count = 0;
-int current_item_index = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
 
 lv_obj_t *ui_imgButton;
 
 // Stubs to appease the compiler!
-void list_nav_prev(void) {}
+static void list_nav_prev(void) {}
 
-void list_nav_next(void) {}
+static void list_nav_next(void) {}
 
-void handle_input(mux_input_type type, mux_input_action action) {
+static void handle_input(mux_input_type type, mux_input_action action) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
     char mux_dimension[15];
@@ -114,14 +96,14 @@ void handle_input(mux_input_type type, mux_input_action action) {
     }
 }
 
-void handle_power() {
+static void handle_power() {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
 
     safe_quit(0);
     mux_input_stop();
 }
 
-void init_elements() {
+static void init_elements() {
     ui_imgButton = lv_img_create(ui_screen);
     lv_obj_set_align(ui_imgButton, LV_ALIGN_CENTER);
     lv_img_set_src(ui_imgButton, &ui_image_Nothing);
@@ -158,15 +140,10 @@ int muxtester_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(0, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTESTER.TITLE);
     init_timer(NULL, NULL);
     init_elements();

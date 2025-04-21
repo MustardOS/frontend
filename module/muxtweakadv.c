@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxtweakadv.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxtweakadv.h"
@@ -15,50 +16,24 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int current_item_index = 0;
-int ui_count = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-int accelerate_original, swap_original, thermal_original, volume_original, brightness_original,
+static int accelerate_original, swap_original, thermal_original, volume_original, brightness_original,
         offset_original, lockdown_original, led_original, random_theme_original, retrowait_original,
         state_original, verbose_original, rumble_original, user_init_original, dpad_swap_original,
         overdrive_original, swapfile_original, zramfile_original, cardmode_original;
 
-lv_group_t *ui_group;
-lv_group_t *ui_group_value;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 #define UI_COUNT 19
-lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_objects[UI_COUNT];
 
-lv_obj_t *ui_mux_panels[5];
+static lv_obj_t *ui_mux_panels[5];
 
 struct help_msg {
     lv_obj_t *element;
     char *message;
 };
 
-void show_help(lv_obj_t *element_focused) {
+static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblAccelerate, lang.MUXTWEAKADV.HELP.SPEED},
             {ui_lblSwap,       lang.MUXTWEAKADV.HELP.SWAP},
@@ -107,7 +82,7 @@ static void dropdown_event_handler(lv_event_t *e) {
     }
 }
 
-void init_element_events() {
+static void init_element_events() {
     lv_obj_t *dropdowns[] = {
             ui_droAccelerate,
             ui_droSwap,
@@ -135,7 +110,7 @@ void init_element_events() {
     }
 }
 
-void init_dropdown_settings() {
+static void init_dropdown_settings() {
     accelerate_original = lv_dropdown_get_selected(ui_droAccelerate);
     swap_original = lv_dropdown_get_selected(ui_droSwap);
     thermal_original = lv_dropdown_get_selected(ui_droThermal);
@@ -157,7 +132,7 @@ void init_dropdown_settings() {
     cardmode_original = lv_dropdown_get_selected(ui_droCardMode);
 }
 
-void restore_tweak_options() {
+static void restore_tweak_options() {
     map_drop_down_to_index(ui_droAccelerate, config.SETTINGS.ADVANCED.ACCELERATE,
                            (int[]) {32767, 16, 32, 48, 64, 80, 96, 112, 128,
                                     144, 160, 176, 192, 208, 224, 240, 256}, 17, 6);
@@ -225,7 +200,7 @@ void restore_tweak_options() {
 
 }
 
-void save_tweak_options() {
+static void save_tweak_options() {
     int idx_accelerate = map_drop_down_to_value(lv_dropdown_get_selected(ui_droAccelerate),
                                                 (int[]) {32767, 16, 32, 48, 64, 80, 96, 112, 128,
                                                          144, 160, 176, 192, 208, 224, 240, 256}, 17, 6);
@@ -407,7 +382,7 @@ void save_tweak_options() {
     if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
 }
 
-void init_navigation_group() {
+static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlSwap,
             ui_pnlOverdrive,
@@ -643,7 +618,7 @@ void init_navigation_group() {
     }
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (!current_item_index) ? ui_count - 1 : current_item_index - 1;
@@ -656,7 +631,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
@@ -669,27 +644,27 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_option_prev(void) {
+static void handle_option_prev(void) {
     if (msgbox_active) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
-void handle_option_next(void) {
+static void handle_option_next(void) {
     if (msgbox_active) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
-void handle_confirm(void) {
+static void handle_confirm(void) {
     if (msgbox_active) return;
 
     handle_option_next();
 }
 
-void handle_back(void) {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -707,7 +682,7 @@ void handle_back(void) {
     mux_input_stop();
 }
 
-void handle_help(void) {
+static void handle_help(void) {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -716,7 +691,7 @@ void handle_help(void) {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -787,7 +762,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -805,17 +780,12 @@ int muxtweakadv_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTWEAKADV.TITLE);
-    init_mux(ui_pnlContent);
+    init_muxtweakadv(ui_pnlContent);
     init_timer(ui_refresh_task, NULL);
     init_elements();
 
@@ -857,6 +827,7 @@ int muxtweakadv_main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

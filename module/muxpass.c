@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxpass.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxpass.h"
@@ -16,45 +17,21 @@
 #include "../common/kiosk.h"
 #include "../common/passcode.h"
 
-char *mux_module;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
 struct mux_passcode passcode;
-
-int progress_onscreen = -1;
-int ui_count = 0;
-int current_item_index = 0;
-
-char *p_type;
-char *p_code;
-char *p_msg;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
+static char *p_type;
+static char *p_code;
+static char *p_msg;
 // Stubs to appease the compiler!
-void list_nav_prev(void) {}
+static void list_nav_prev(void) {}
 
-void list_nav_next(void) {}
-
-lv_group_t *ui_group;
-
+static void list_nav_next(void) {}
 #define UI_COUNT 6
-lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_objects[UI_COUNT];
 
 lv_obj_t *ui_mux_panels[2];
 
-void init_navigation_group() {
+static void init_navigation_group() {
     ui_objects[0] = ui_rolComboOne;
     ui_objects[1] = ui_rolComboTwo;
     ui_objects[2] = ui_rolComboThree;
@@ -69,7 +46,7 @@ void init_navigation_group() {
     }
 }
 
-void handle_confirm(void) {
+static void handle_confirm(void) {
     play_sound("confirm", nav_sound, 0, 0);
 
     char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
@@ -91,14 +68,14 @@ void handle_confirm(void) {
     }
 }
 
-void handle_back(void) {
+static void handle_back(void) {
     play_sound("back", nav_sound, 0, 0);
 
     safe_quit(2);
     mux_input_stop();
 }
 
-void handle_up(void) {
+static void handle_up(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     play_sound("navigate", nav_sound, 0, 0);
     lv_roller_set_selected(element_focused,
@@ -106,7 +83,7 @@ void handle_up(void) {
                            LV_ANIM_ON);
 }
 
-void handle_down(void) {
+static void handle_down(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     play_sound("navigate", nav_sound, 0, 0);
     lv_roller_set_selected(element_focused,
@@ -114,17 +91,17 @@ void handle_down(void) {
                            LV_ANIM_ON);
 }
 
-void handle_left(void) {
+static void handle_left(void) {
     play_sound("navigate", nav_sound, 0, 0);
     nav_prev(ui_group, 1);
 }
 
-void handle_right(void) {
+static void handle_right(void) {
     play_sound("navigate", nav_sound, 0, 0);
     nav_next(ui_group, 1);
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
 
@@ -189,12 +166,8 @@ int muxpass_main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     load_passcode(&passcode, &device);
 
     if (strcasecmp(p_type, "boot") == 0) {
@@ -218,10 +191,9 @@ int muxpass_main(int argc, char *argv[]) {
     }
 
     init_theme(0, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPASS.TITLE);
-    init_mux(ui_pnlContent);
+    init_muxpass(ui_pnlContent);
     init_timer(NULL, NULL);
     init_elements();
 

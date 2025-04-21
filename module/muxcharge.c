@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxcharge.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcharge.h"
@@ -12,43 +13,28 @@
 #include "../common/config.h"
 #include "../common/device.h"
 #include "../common/kiosk.h"
+static int msgbox_active = 0;
+static int nav_sound = 0;
+static int exit_status = -1;
+static int bar_header = 0;
+static int bar_footer = 0;
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-int exit_status = -1;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int progress_onscreen = -1;
-int ui_count = 0;
-int current_item_index = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
 
 // Stubs to appease the compiler!
-void list_nav_prev(void) {}
+static void list_nav_prev(void) {}
 
-void list_nav_next(void) {}
+static void list_nav_next(void) {}
 
-int blank = 0;
+static int blank = 0;
 
-char capacity_info[MAX_BUFFER_SIZE];
-char voltage_info[MAX_BUFFER_SIZE];
+static char capacity_info[MAX_BUFFER_SIZE];
+static char voltage_info[MAX_BUFFER_SIZE];
 
 lv_timer_t *battery_timer;
 
 #define CHARGER_EXIT "/tmp/charger_exit"
 
-void check_for_cable() {
+static void check_for_cable() {
     if (file_exist(device.BATTERY.CHARGER)) {
         if (read_int_from_file(device.BATTERY.CHARGER, 1) == 0) {
             exit_status = 1;
@@ -56,13 +42,13 @@ void check_for_cable() {
     }
 }
 
-void set_brightness(int brightness) {
+static void set_brightness(int brightness) {
     char bright_value[8];
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
     run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/input/bright.sh", bright_value, NULL});
 }
 
-void handle_power_short(void) {
+static void handle_power_short(void) {
     if (blank < 3) {
         lv_timer_pause(battery_timer);
 
@@ -84,7 +70,7 @@ void handle_power_short(void) {
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));
 }
 
-void handle_idle(void) {
+static void handle_idle(void) {
     if (file_exist("/tmp/mux_blank")) {
         lv_obj_set_style_bg_opa(ui_blank, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_move_foreground(ui_blank);
@@ -107,7 +93,7 @@ void handle_idle(void) {
     refresh_screen(ui_scrCharge);
 }
 
-void battery_task() {
+static void battery_task() {
     snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", lang.MUXCHARGE.CAPACITY, read_battery_capacity());
     snprintf(voltage_info, sizeof(voltage_info), "%s: %s", lang.MUXCHARGE.VOLTAGE, read_battery_voltage());
 
@@ -123,16 +109,11 @@ int muxcharge_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(0, 0);
-    init_display();
-
-    init_mux();
+    
+    init_muxcharge();
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));
 
     lv_obj_set_user_data(ui_scrCharge, mux_module);

@@ -5,6 +5,8 @@ struct mux_device;
 struct mux_lang;
 struct footer_glyph;
 
+void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme, struct mux_device *device);
+
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title);
 

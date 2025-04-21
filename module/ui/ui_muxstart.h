@@ -2,7 +2,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_mux(void);
+void init_muxstart(void);
 
 extern lv_obj_t *ui_scrStart;
 

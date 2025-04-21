@@ -1,5 +1,6 @@
 #include "ui_muxcharge.h"
 #include "../../common/common.h"
+#include "../../common/ui_common.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
 #include "../../font/notosans.h"
@@ -17,7 +18,7 @@ lv_obj_t *ui_lblCapacity;
 lv_obj_t *ui_lblVoltage;
 lv_obj_t *ui_lblBoot;
 
-void init_mux(void) {
+void init_muxcharge(void) {
     ui_scrCharge = lv_obj_create(NULL);
 
     ui_blank = lv_obj_create(ui_scrCharge);
@@ -27,7 +28,7 @@ void init_mux(void) {
     lv_obj_set_style_bg_color(ui_blank, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_blank, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    apply_gradient_to_ui_screen(ui_scrCharge, theme, device);
+    apply_gradient_to_ui_screen(ui_scrCharge, &theme, &device);
 
     lv_obj_clear_flag(ui_scrCharge, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE |
                                     LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);

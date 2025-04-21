@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxcollect.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcollect.h"
@@ -26,56 +27,27 @@
 
 #define COLLECTION_DIR "/tmp/collection_dir"
 
-struct theme_config theme;
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
 
 lv_obj_t *key_entry;
-
-int progress_onscreen = -1;
-
-size_t item_count = 0;
-content_item *items = NULL;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
-
 lv_obj_t *ui_imgSplash;
 
 lv_obj_t *ui_viewport_objects[7];
 lv_obj_t *ui_mux_panels[7];
 
-char *prev_dir = "";
-char *sys_dir = INFO_COL_PATH;
-char new_dir[MAX_BUFFER_SIZE];
+static char *prev_dir = "";
+static char *sys_dir = INFO_COL_PATH;
+static char new_dir[MAX_BUFFER_SIZE];
 
-int add_mode = 0;
-int key_curr = 0;
-int ui_count = 0;
-int sys_index = -1;
-int file_count = 0;
-int dir_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-int nav_moved = 0;
-int starter_image = 0;
-int splash_valid = 0;
-int nogrid_file_exists = 0;
+static int add_mode = 0;
+static int key_curr = 0;
+static int sys_index = -1;
+static int file_count = 0;
+static int dir_count = 0;
+static int nav_moved = 0;
+static int starter_image = 0;
+static int splash_valid = 0;
+static int nogrid_file_exists = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
@@ -83,13 +55,13 @@ static char box_image_previous_path[MAX_BUFFER_SIZE];
 static char preview_image_previous_path[MAX_BUFFER_SIZE];
 static char splash_image_previous_path[MAX_BUFFER_SIZE];
 
-void check_for_disable_grid_file(char *item_curr_dir) {
+static void check_for_disable_grid_file(char *item_curr_dir) {
     char no_grid_path[PATH_MAX];
     snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
     nogrid_file_exists = file_exist(no_grid_path);
 }
 
-char *load_content_governor(char *pointer) {
+static char *load_content_governor(char *pointer) {
     char content_gov[MAX_BUFFER_SIZE];
     snprintf(content_gov, sizeof(content_gov), "%s.gov",
              strip_ext(pointer));
@@ -113,7 +85,7 @@ char *load_content_governor(char *pointer) {
     return NULL;
 }
 
-char *load_content_description() {
+static char *load_content_description() {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
              sys_dir, strip_ext(items[current_item_index].name));
@@ -139,7 +111,7 @@ char *load_content_description() {
     return lang.GENERIC.NO_INFO;
 }
 
-void update_file_counter() {
+static void update_file_counter() {
     if ((ui_count > 0 && file_count == 0 && config.VISUAL.COUNTERFOLDER) ||
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
         char counter_text[MAX_BUFFER_SIZE];
@@ -150,7 +122,7 @@ void update_file_counter() {
     }
 }
 
-void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
+static void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);
 
     int device_width = device.MUX.WIDTH / 2;
@@ -199,7 +171,7 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
     mini_free(artwork_config_ini);
 }
 
-void image_refresh(char *image_type) {
+static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
     char mux_dimension[15];
@@ -298,7 +270,7 @@ void image_refresh(char *image_type) {
     }
 }
 
-int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
+static int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     char full_path[PATH_MAX];
     snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, dir_name);
 
@@ -317,7 +289,7 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name) {
     return dir_count;
 }
 
-void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
+static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
 
@@ -351,7 +323,7 @@ void add_directory_and_file_names(const char *base_dir, char ***dir_names, char 
     closedir(dir);
 }
 
-void gen_label(char *item_glyph, char *item_text) {
+static void gen_label(char *item_glyph, char *item_text) {
     lv_obj_t *ui_pnlCollection = lv_obj_create(ui_pnlContent);
     lv_obj_t *ui_lblCollectionItem = lv_label_create(ui_pnlCollection);
     lv_obj_t *ui_lblCollectionItemGlyph = lv_img_create(ui_pnlCollection);
@@ -374,7 +346,7 @@ static inline long long current_time_ms() {
     return ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
 }
 
-void gen_item(char **file_names, int file_count) {
+static void gen_item(char **file_names, int file_count) {
     char custom_lookup[MAX_BUFFER_SIZE];
     snprintf(custom_lookup, sizeof(custom_lookup), "%s/content.json",
              INFO_NAM_PATH);
@@ -435,7 +407,7 @@ void gen_item(char **file_names, int file_count) {
     printf("LABEL GENERATION IN %lldms\n", end_time - start_time);
 }
 
-char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
+static char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
     char *friendly_folder_name = (char *) malloc(MAX_BUFFER_SIZE);
     strcpy(friendly_folder_name, folder_name);
     if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
@@ -446,7 +418,7 @@ char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_j
     return friendly_folder_name;
 }
 
-void update_title(char *folder_path, int fn_valid, struct json fn_json) {
+static void update_title(char *folder_path, int fn_valid, struct json fn_json) {
     char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
     adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
 
@@ -472,7 +444,7 @@ void update_title(char *folder_path, int fn_valid, struct json fn_json) {
     free(display_title);
 }
 
-void init_navigation_group_grid() {
+static void init_navigation_group_grid() {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
@@ -512,7 +484,7 @@ void init_navigation_group_grid() {
     }
 }
 
-void create_collection_items() {
+static void create_collection_items() {
     char **dir_names = NULL;
     char **file_names = NULL;
     add_directory_and_file_names(sys_dir, &dir_names, &file_names);
@@ -577,7 +549,7 @@ void create_collection_items() {
     }
 }
 
-int load_content(const char *content_name) {
+static int load_content(const char *content_name) {
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), "%s/%s",
              sys_dir, content_name);
@@ -613,12 +585,12 @@ int load_content(const char *content_name) {
     return 0;
 }
 
-void update_footer_glyph() {
+static void update_footer_glyph() {
     if (!add_mode) return;
     lv_label_set_text(ui_lblNavA, items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.ADD);
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
 
     for (int step = 0; step < steps; ++step) {
@@ -646,7 +618,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
@@ -678,7 +650,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_keyboard_OK_press(void) {
+static void handle_keyboard_OK_press(void) {
     key_show = 0;
 
     snprintf(new_dir, sizeof(new_dir), "%s/%s",
@@ -692,7 +664,7 @@ void handle_keyboard_OK_press(void) {
     mux_input_stop();
 }
 
-void handle_keyboard_press(void) {
+static void handle_keyboard_press(void) {
     play_sound("navigate", nav_sound, 0, 0);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
@@ -709,7 +681,7 @@ void handle_keyboard_press(void) {
     }
 }
 
-void add_collection_item() {
+static void add_collection_item() {
     char *base_file_name = read_line_from_file(ADD_MODE_WORK, 1);
     char *cache_file = read_line_from_file(ADD_MODE_WORK, 2);
 
@@ -729,7 +701,7 @@ void add_collection_item() {
     if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
 }
 
-void handle_a() {
+static void handle_a() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
@@ -826,7 +798,7 @@ void handle_a() {
     mux_input_stop();
 }
 
-void handle_b() {
+static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -869,7 +841,7 @@ void handle_b() {
     mux_input_stop();
 }
 
-void handle_x() {
+static void handle_x() {
     if (key_show) {
         key_backspace(ui_txtEntry);
         return;
@@ -902,7 +874,7 @@ void handle_x() {
     mux_input_stop();
 }
 
-void handle_y() {
+static void handle_y() {
     if (msgbox_active) return;
 
     if (key_show) {
@@ -923,7 +895,7 @@ void handle_y() {
     }
 }
 
-void handle_menu() {
+static void handle_menu() {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) {
         return;
     }
@@ -941,7 +913,7 @@ void handle_menu() {
                   load_content_description());
 }
 
-void handle_random_select() {
+static void handle_random_select() {
     if (msgbox_active || !ui_count) return;
 
     uint32_t random_select = random() % MAX_BUFFER_SIZE;
@@ -950,7 +922,7 @@ void handle_random_select() {
     !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
 }
 
-void handle_up(void) {
+static void handle_up(void) {
     if (key_show) {
         key_up();
         return;
@@ -959,7 +931,7 @@ void handle_up(void) {
     handle_list_nav_up();
 }
 
-void handle_up_hold(void) {
+static void handle_up_hold(void) {
     if (key_show) {
         key_up();
         return;
@@ -968,7 +940,7 @@ void handle_up_hold(void) {
     handle_list_nav_up_hold();
 }
 
-void handle_down(void) {
+static void handle_down(void) {
     if (key_show) {
         key_down();
         return;
@@ -977,7 +949,7 @@ void handle_down(void) {
     handle_list_nav_down();
 }
 
-void handle_down_hold(void) {
+static void handle_down_hold(void) {
     if (key_show) {
         key_down();
         return;
@@ -986,7 +958,7 @@ void handle_down_hold(void) {
     handle_list_nav_down_hold();
 }
 
-void handle_left(void) {
+static void handle_left(void) {
     if (key_show) {
         key_left();
         return;
@@ -995,7 +967,7 @@ void handle_left(void) {
     handle_list_nav_left();
 }
 
-void handle_right(void) {
+static void handle_right(void) {
     if (key_show) {
         key_right();
         return;
@@ -1004,7 +976,7 @@ void handle_right(void) {
     handle_list_nav_right();
 }
 
-void handle_left_hold(void) {
+static void handle_left_hold(void) {
     if (key_show) {
         key_left();
         return;
@@ -1013,7 +985,7 @@ void handle_left_hold(void) {
     handle_list_nav_left_hold();
 }
 
-void handle_right_hold(void) {
+static void handle_right_hold(void) {
     if (key_show) {
         key_right();
         return;
@@ -1022,17 +994,17 @@ void handle_right_hold(void) {
     handle_list_nav_right_hold();
 }
 
-void handle_l1(void) {
+static void handle_l1(void) {
     if (key_show) return;
     handle_list_nav_page_up();
 }
 
-void handle_r1(void) {
+static void handle_r1(void) {
     if (key_show) return;
     handle_list_nav_page_down();
 }
 
-void init_elements() {
+static void init_elements() {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
     switch (config.VISUAL.BOX_ART) {
@@ -1115,7 +1087,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void init_osk() {
+static void init_osk() {
     key_entry = lv_btnmatrix_create(ui_pnlEntry);
 
     lv_obj_set_width(key_entry, device.MUX.WIDTH * 5 / 6);
@@ -1186,7 +1158,7 @@ void init_osk() {
     lv_obj_set_style_pad_right(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -1207,7 +1179,7 @@ void ui_refresh_task() {
     }
 }
 
-void on_key_event(struct input_event ev) {
+static void on_key_event(struct input_event ev) {
     if (ev.code == KEY_ENTER && ev.value == 1) {
         handle_keyboard_OK_press();
     }
@@ -1249,17 +1221,12 @@ int muxcollect_main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, "");
-    init_mux(ui_screen, ui_pnlContent, &theme);
+    init_muxcollect(ui_screen, ui_pnlContent, &theme);
     init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);

@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxhistory.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxhistory.h"
@@ -22,47 +23,18 @@
 #include "../common/log.h"
 #include "../lookup/lookup.h"
 
-struct theme_config theme;
-
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-size_t item_count = 0;
-content_item *items = NULL;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 lv_obj_t *ui_imgSplash;
 
 lv_obj_t *ui_viewport_objects[7];
 lv_obj_t *ui_mux_panels[7];
 
-int his_index = -1;
+static int his_index = -1;
 
-int ui_count = 0;
-int file_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-int nav_moved = 0;
-int starter_image = 0;
-int splash_valid = 0;
+static int file_count = 0;
+static int nav_moved = 0;
+static int starter_image = 0;
+static int splash_valid = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
@@ -70,7 +42,7 @@ static char box_image_previous_path[MAX_BUFFER_SIZE];
 static char preview_image_previous_path[MAX_BUFFER_SIZE];
 static char splash_image_previous_path[MAX_BUFFER_SIZE];
 
-char *load_content_governor(char *pointer) {
+static char *load_content_governor(char *pointer) {
     pointer = read_text_from_file(pointer);
 
     char content_gov[MAX_BUFFER_SIZE];
@@ -96,7 +68,7 @@ char *load_content_governor(char *pointer) {
     return NULL;
 }
 
-char *load_content_description() {
+static char *load_content_description() {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
              INFO_HIS_PATH, strip_ext(items[current_item_index].name));
@@ -118,7 +90,7 @@ char *load_content_description() {
     return lang.GENERIC.NO_INFO;
 }
 
-void update_file_counter() {
+static void update_file_counter() {
     if ((ui_count > 0 && file_count == 0 && config.VISUAL.COUNTERFOLDER) ||
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
         char counter_text[MAX_BUFFER_SIZE];
@@ -129,7 +101,7 @@ void update_file_counter() {
     }
 }
 
-void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
+static void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
     mini_t *artwork_config_ini = mini_try_load(artwork_config);
 
     int device_width = device.MUX.WIDTH / 2;
@@ -178,7 +150,7 @@ void viewport_refresh(char *artwork_config, char *catalogue_folder, char *conten
     mini_free(artwork_config_ini);
 }
 
-void image_refresh(char *image_type) {
+static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
         printf("BOX ART IS SET TO DISABLED\n");
         return;
@@ -277,7 +249,7 @@ void image_refresh(char *image_type) {
     }
 }
 
-void add_file_names(const char *base_dir, char ***file_names) {
+static void add_file_names(const char *base_dir, char ***file_names) {
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
 
@@ -302,7 +274,7 @@ void add_file_names(const char *base_dir, char ***file_names) {
     closedir(dir);
 }
 
-void gen_label(char *item_glyph, char *item_text) {
+static void gen_label(char *item_glyph, char *item_text) {
     lv_obj_t *ui_pnlHistory = lv_obj_create(ui_pnlContent);
     lv_obj_t *ui_lblHistoryItem = lv_label_create(ui_pnlHistory);
     lv_obj_t *ui_lblHistoryItemGlyph = lv_img_create(ui_pnlHistory);
@@ -319,7 +291,7 @@ void gen_label(char *item_glyph, char *item_text) {
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblHistoryItem, item_text);
 }
 
-char *get_glyph_name(size_t index) {
+static char *get_glyph_name(size_t index) {
     char history_file[PATH_MAX];
     snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
              INFO_HIS_PATH, strip_ext(items[index].name));
@@ -331,7 +303,7 @@ char *get_glyph_name(size_t index) {
     return "history";
 }
 
-void gen_item(char **file_names, int file_count) {
+static void gen_item(char **file_names, int file_count) {
     char custom_lookup[MAX_BUFFER_SIZE];
     snprintf(custom_lookup, sizeof(custom_lookup), "%s/content.json",
              INFO_NAM_PATH);
@@ -391,7 +363,7 @@ void gen_item(char **file_names, int file_count) {
     }
 }
 
-void create_history_items() {
+static void create_history_items() {
     char **file_names = NULL;
 
     lv_label_set_text(ui_lblTitle, lang.MUXHISTORY.TITLE);
@@ -405,7 +377,7 @@ void create_history_items() {
     free(file_names);
 }
 
-void remove_from_history() {
+static void remove_from_history() {
     char history_file[MAX_BUFFER_SIZE];
     snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
              INFO_HIS_PATH, strip_ext(items[current_item_index].name));
@@ -422,7 +394,7 @@ void remove_from_history() {
     }
 }
 
-void add_to_collection() {
+static void add_to_collection() {
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
              items[current_item_index].name);
@@ -445,7 +417,7 @@ void add_to_collection() {
     mux_input_stop();
 }
 
-int load_content(const char *content_name) {
+static int load_content(const char *content_name) {
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
              content_name);
@@ -481,7 +453,7 @@ int load_content(const char *content_name) {
     return 0;
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
 
     for (int step = 0; step < steps; ++step) {
@@ -500,7 +472,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
@@ -523,7 +495,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_a() {
+static void handle_a() {
     if (!ui_count) return;
 
     if (msgbox_active) {
@@ -576,7 +548,7 @@ void handle_a() {
     mux_input_stop();
 }
 
-void handle_b() {
+static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -591,21 +563,21 @@ void handle_b() {
     mux_input_stop();
 }
 
-void handle_x() {
+static void handle_x() {
     if (msgbox_active || !ui_count) return;
 
     play_sound("confirm", nav_sound, 0, 1);
     remove_from_history();
 }
 
-void handle_y() {
+static void handle_y() {
     if (msgbox_active || !ui_count) return;
 
     play_sound("confirm", nav_sound, 0, 1);
     add_to_collection();
 }
 
-void handle_menu() {
+static void handle_menu() {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) {
         return;
     }
@@ -623,7 +595,7 @@ void handle_menu() {
                   load_content_description());
 }
 
-void handle_random_select() {
+static void handle_random_select() {
     if (msgbox_active || !ui_count) return;
 
     uint32_t random_select = random() % MAX_BUFFER_SIZE;
@@ -632,7 +604,7 @@ void handle_random_select() {
     !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
 }
 
-void init_elements() {
+static void init_elements() {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
     switch (config.VISUAL.BOX_ART) {
@@ -715,7 +687,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -756,17 +728,12 @@ int muxhistory_main(int argc, char *argv[]) {
     }
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 1);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, "");
-    init_mux(ui_screen, &theme);
+    init_muxhistory(ui_screen, &theme);
     init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
@@ -856,6 +823,7 @@ int muxhistory_main(int argc, char *argv[]) {
                     [MUX_INPUT_R2] = handle_random_select,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

@@ -80,7 +80,7 @@ lv_obj_t *ui_droSwapfile;
 lv_obj_t *ui_droZramfile;
 lv_obj_t *ui_droCardMode;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxtweakadv(lv_obj_t *ui_pnlContent) {
     ui_pnlSwap = lv_obj_create(ui_pnlContent);
     ui_pnlOverdrive = lv_obj_create(ui_pnlContent);
     ui_pnlOffset = lv_obj_create(ui_pnlContent);

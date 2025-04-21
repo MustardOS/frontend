@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "muxstorage.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxstorage.h"
@@ -16,38 +17,12 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int current_item_index = 0;
-int ui_count = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_value;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 #define UI_COUNT 18
-lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_objects[UI_COUNT];
 
-lv_obj_t *ui_mux_panels[5];
+static lv_obj_t *ui_mux_panels[5];
 
 struct help_msg {
     lv_obj_t *element;
@@ -61,7 +36,7 @@ struct storage {
 
 struct storage storage_path[UI_COUNT];
 
-void show_help(lv_obj_t *element_focused) {
+static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblBIOS,             lang.MUXSTORAGE.HELP.BIOS},
             {ui_lblCatalogue,        lang.MUXSTORAGE.HELP.CATALOGUE},
@@ -79,7 +54,7 @@ void show_help(lv_obj_t *element_focused) {
             {ui_lblConfigPackage,    lang.MUXSTORAGE.HELP.PACKAGE.RA_CONFIG},
             {ui_lblLanguage,         lang.MUXSTORAGE.HELP.LANGUAGE},
             {ui_lblNetwork,          lang.MUXSTORAGE.HELP.NET_PROFILE},
-            {ui_lblSyncthing,        lang.MUXSTORAGE.HELP.SYNCTHING},
+            {ui_lblSyncthing_storage,        lang.MUXSTORAGE.HELP.SYNCTHING},
             {ui_lblUserInit,         lang.MUXSTORAGE.HELP.USER_INIT},
     };
 
@@ -99,7 +74,7 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void update_storage_info() {
+static void update_storage_info() {
     /*
      * Check for SD2 pathing, otherwise it should be on SD1.
      * If it's not on SD1 then you have bigger problems!
@@ -153,7 +128,7 @@ void update_storage_info() {
     storage_path[15].ui_label = ui_lblNetworkValue;
 
     storage_path[16].path_suffix = STORE_LOC_SYCT;
-    storage_path[16].ui_label = ui_lblSyncthingValue;
+    storage_path[16].ui_label = ui_lblSyncthingValue_storage;
 
     storage_path[17].path_suffix = STORE_LOC_INIT;
     storage_path[17].ui_label = ui_lblUserInitValue;
@@ -171,7 +146,7 @@ void update_storage_info() {
     }
 }
 
-void init_navigation_group() {
+static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlBIOS,
             ui_pnlCatalogue,
@@ -189,7 +164,7 @@ void init_navigation_group() {
             ui_pnlConfigPackage,
             ui_pnlLanguage,
             ui_pnlNetwork,
-            ui_pnlSyncthing,
+            ui_pnlSyncthing_storage,
             ui_pnlUserInit
     };
 
@@ -209,7 +184,7 @@ void init_navigation_group() {
     ui_objects[13] = ui_lblConfigPackage;
     ui_objects[14] = ui_lblLanguage;
     ui_objects[15] = ui_lblNetwork;
-    ui_objects[16] = ui_lblSyncthing;
+    ui_objects[16] = ui_lblSyncthing_storage;
     ui_objects[17] = ui_lblUserInit;
 
     lv_obj_t *ui_objects_value[] = {
@@ -229,7 +204,7 @@ void init_navigation_group() {
             ui_lblConfigPackageValue,
             ui_lblLanguageValue,
             ui_lblNetworkValue,
-            ui_lblSyncthingValue,
+            ui_lblSyncthingValue_storage,
             ui_lblUserInitValue,
     };
 
@@ -250,7 +225,7 @@ void init_navigation_group() {
             ui_icoConfigPackage,
             ui_icoLanguage,
             ui_icoNetwork,
-            ui_icoSyncthing,
+            ui_icoSyncthing_storage,
             ui_icoUserInit
     };
 
@@ -270,7 +245,7 @@ void init_navigation_group() {
     apply_theme_list_panel(ui_pnlConfigPackage);
     apply_theme_list_panel(ui_pnlLanguage);
     apply_theme_list_panel(ui_pnlNetwork);
-    apply_theme_list_panel(ui_pnlSyncthing);
+    apply_theme_list_panel(ui_pnlSyncthing_storage);
     apply_theme_list_panel(ui_pnlUserInit);
 
     apply_theme_list_item(&theme, ui_lblBIOS, lang.MUXSTORAGE.BIOS);
@@ -289,7 +264,7 @@ void init_navigation_group() {
     apply_theme_list_item(&theme, ui_lblConfigPackage, lang.MUXSTORAGE.PACKAGE.RA_CONFIG);
     apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXSTORAGE.LANGUAGE);
     apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXSTORAGE.NET_PROFILE);
-    apply_theme_list_item(&theme, ui_lblSyncthing, lang.MUXSTORAGE.SYNCTHING);
+    apply_theme_list_item(&theme, ui_lblSyncthing_storage, lang.MUXSTORAGE.SYNCTHING);
     apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXSTORAGE.USER_INIT);
 
     apply_theme_list_glyph(&theme, ui_icoBIOS, mux_module, "bios");
@@ -308,7 +283,7 @@ void init_navigation_group() {
     apply_theme_list_glyph(&theme, ui_icoConfigPackage, mux_module, "pack-config");
     apply_theme_list_glyph(&theme, ui_icoLanguage, mux_module, "language");
     apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
-    apply_theme_list_glyph(&theme, ui_icoSyncthing, mux_module, "syncthing");
+    apply_theme_list_glyph(&theme, ui_icoSyncthing_storage, mux_module, "syncthing");
     apply_theme_list_glyph(&theme, ui_icoUserInit, mux_module, "userinit");
 
     apply_theme_list_value(&theme, ui_lblBIOSValue, "");
@@ -327,7 +302,7 @@ void init_navigation_group() {
     apply_theme_list_value(&theme, ui_lblConfigPackageValue, "");
     apply_theme_list_value(&theme, ui_lblLanguageValue, "");
     apply_theme_list_value(&theme, ui_lblNetworkValue, "");
-    apply_theme_list_value(&theme, ui_lblSyncthingValue, "");
+    apply_theme_list_value(&theme, ui_lblSyncthingValue_storage, "");
     apply_theme_list_value(&theme, ui_lblUserInitValue, "");
 
     ui_group = lv_group_create();
@@ -344,7 +319,7 @@ void init_navigation_group() {
     }
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
@@ -357,7 +332,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
@@ -370,7 +345,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_back(void) {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -387,7 +362,7 @@ void handle_back(void) {
     mux_input_stop();
 }
 
-void handle_confirm(void) {
+static void handle_confirm(void) {
     if (msgbox_active) return;
 
     play_sound("confirm", nav_sound, 0, 1);
@@ -427,7 +402,7 @@ void handle_confirm(void) {
     mux_input_stop();
 }
 
-void handle_help(void) {
+static void handle_help(void) {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -436,7 +411,7 @@ void handle_help(void) {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -488,7 +463,7 @@ void init_elements() {
     lv_obj_set_user_data(ui_lblConfigPackage, "pack-config");
     lv_obj_set_user_data(ui_lblLanguage, "language");
     lv_obj_set_user_data(ui_lblNetwork, "network");
-    lv_obj_set_user_data(ui_lblSyncthing, "syncthing");
+    lv_obj_set_user_data(ui_lblSyncthing_storage, "syncthing");
     lv_obj_set_user_data(ui_lblUserInit, "userinit");
 
 #if TEST_IMAGE
@@ -502,7 +477,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -525,17 +500,12 @@ int muxstorage_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    
+            
     init_theme(1, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSTORAGE.TITLE);
-    init_mux(ui_pnlContent);
+    init_muxstorage(ui_pnlContent);
     init_timer(ui_refresh_task, NULL);
     init_elements();
 
@@ -581,6 +551,7 @@ int muxstorage_main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

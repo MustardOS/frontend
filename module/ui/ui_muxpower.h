@@ -2,7 +2,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_mux(lv_obj_t *ui_pnlContent);
+void init_muxpower(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlShutdown;
 extern lv_obj_t *ui_pnlBattery;
@@ -20,6 +20,6 @@ extern lv_obj_t *ui_icoIdleDisplay;
 extern lv_obj_t *ui_icoIdleSleep;
 
 extern lv_obj_t *ui_droShutdown;
-extern lv_obj_t *ui_droBattery;
+extern lv_obj_t *ui_droBattery_power;
 extern lv_obj_t *ui_droIdleDisplay;
 extern lv_obj_t *ui_droIdleSleep;

@@ -4,8 +4,12 @@
 #include "../common/kiosk.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/collection.h"
 
 extern char *mux_module;
+
+extern size_t item_count;
+extern content_item *items;
 
 extern int msgbox_active;
 extern int nav_sound;
@@ -32,3 +36,4 @@ extern int progress_onscreen;
 extern lv_group_t *ui_group;
 extern lv_group_t *ui_group_glyph;
 extern lv_group_t *ui_group_panel;
+extern lv_group_t *ui_group_value;

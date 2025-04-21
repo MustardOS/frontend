@@ -48,9 +48,9 @@ lv_obj_t *ui_icoHidden;
 lv_obj_t *ui_icoOverlayImage;
 lv_obj_t *ui_icoOverlayTransparency;
 
-lv_obj_t *ui_droBattery;
+lv_obj_t *ui_droBattery_visual;
 lv_obj_t *ui_droClock;
-lv_obj_t *ui_droNetwork;
+lv_obj_t *ui_droNetwork_visual;
 lv_obj_t *ui_droName;
 lv_obj_t *ui_droDash;
 lv_obj_t *ui_droFriendlyFolder;
@@ -64,7 +64,7 @@ lv_obj_t *ui_droHidden;
 lv_obj_t *ui_droOverlayImage;
 lv_obj_t *ui_droOverlayTransparency;
 
-void init_mux(lv_obj_t *ui_pnlContent) {
+void init_muxvisual(lv_obj_t *ui_pnlContent) {
     ui_pnlBattery = lv_obj_create(ui_pnlContent);
     ui_pnlClock = lv_obj_create(ui_pnlContent);
     ui_pnlNetwork = lv_obj_create(ui_pnlContent);
@@ -128,12 +128,12 @@ void init_mux(lv_obj_t *ui_pnlContent) {
     ui_icoOverlayImage = lv_img_create(ui_pnlOverlayImage);
     ui_icoOverlayTransparency = lv_img_create(ui_pnlOverlayTransparency);
 
-    ui_droBattery = lv_dropdown_create(ui_pnlBattery);
-    lv_dropdown_clear_options(ui_droBattery);
-    lv_obj_set_style_text_opa(ui_droBattery, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droNetwork = lv_dropdown_create(ui_pnlNetwork);
-    lv_dropdown_clear_options(ui_droNetwork);
-    lv_obj_set_style_text_opa(ui_droNetwork, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    ui_droBattery_visual = lv_dropdown_create(ui_pnlBattery);
+    lv_dropdown_clear_options(ui_droBattery_visual);
+    lv_obj_set_style_text_opa(ui_droBattery_visual, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    ui_droNetwork_visual = lv_dropdown_create(ui_pnlNetwork);
+    lv_dropdown_clear_options(ui_droNetwork_visual);
+    lv_obj_set_style_text_opa(ui_droNetwork_visual, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
     ui_droClock = lv_dropdown_create(ui_pnlClock);
     lv_dropdown_clear_options(ui_droClock);
     lv_obj_set_style_text_opa(ui_droClock, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
