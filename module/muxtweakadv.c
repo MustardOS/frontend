@@ -35,25 +35,25 @@ struct help_msg {
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblAccelerate, lang.MUXTWEAKADV.HELP.SPEED},
-            {ui_lblSwap,       lang.MUXTWEAKADV.HELP.SWAP},
-            {ui_lblThermal,    lang.MUXTWEAKADV.HELP.THERMAL},
-            {ui_lblVolume,     lang.MUXTWEAKADV.HELP.VOLUME},
-            {ui_lblBrightness, lang.MUXTWEAKADV.HELP.BRIGHT},
-            {ui_lblOffset,     lang.MUXTWEAKADV.HELP.OFFSET},
-            {ui_lblPasscode,   lang.MUXTWEAKADV.HELP.LOCK},
-            {ui_lblLED,        lang.MUXTWEAKADV.HELP.LED},
-            {ui_lblTheme,      lang.MUXTWEAKADV.HELP.RANDOM},
-            {ui_lblRetroWait,  lang.MUXTWEAKADV.HELP.NET_WAIT},
-            {ui_lblState,      lang.MUXTWEAKADV.HELP.STATE},
-            {ui_lblVerbose,    lang.MUXTWEAKADV.HELP.VERBOSE},
-            {ui_lblRumble,     lang.MUXTWEAKADV.HELP.RUMBLE},
-            {ui_lblUserInit,   lang.MUXTWEAKADV.HELP.USER_INIT},
-            {ui_lblDPADSwap,   lang.MUXTWEAKADV.HELP.DPAD},
-            {ui_lblOverdrive,  lang.MUXTWEAKADV.HELP.OVERDRIVE},
-            {ui_lblSwapfile,   lang.MUXTWEAKADV.HELP.SWAPFILE},
-            {ui_lblZramfile,   lang.MUXTWEAKADV.HELP.ZRAMFILE},
-            {ui_lblCardMode,   lang.MUXTWEAKADV.HELP.TUNING},
+            {ui_lblAccelerate_tweakadv, lang.MUXTWEAKADV.HELP.SPEED},
+            {ui_lblSwap_tweakadv,       lang.MUXTWEAKADV.HELP.SWAP},
+            {ui_lblThermal_tweakadv,    lang.MUXTWEAKADV.HELP.THERMAL},
+            {ui_lblVolume_tweakadv,     lang.MUXTWEAKADV.HELP.VOLUME},
+            {ui_lblBrightness_tweakadv, lang.MUXTWEAKADV.HELP.BRIGHT},
+            {ui_lblOffset_tweakadv,     lang.MUXTWEAKADV.HELP.OFFSET},
+            {ui_lblPasscode_tweakadv,   lang.MUXTWEAKADV.HELP.LOCK},
+            {ui_lblLED_tweakadv,        lang.MUXTWEAKADV.HELP.LED},
+            {ui_lblTheme_tweakadv,      lang.MUXTWEAKADV.HELP.RANDOM},
+            {ui_lblRetroWait_tweakadv,  lang.MUXTWEAKADV.HELP.NET_WAIT},
+            {ui_lblState_tweakadv,      lang.MUXTWEAKADV.HELP.STATE},
+            {ui_lblVerbose_tweakadv,    lang.MUXTWEAKADV.HELP.VERBOSE},
+            {ui_lblRumble_tweakadv,     lang.MUXTWEAKADV.HELP.RUMBLE},
+            {ui_lblUserInit_tweakadv,   lang.MUXTWEAKADV.HELP.USER_INIT},
+            {ui_lblDPADSwap_tweakadv,   lang.MUXTWEAKADV.HELP.DPAD},
+            {ui_lblOverdrive_tweakadv,  lang.MUXTWEAKADV.HELP.OVERDRIVE},
+            {ui_lblSwap_tweakadvfile,   lang.MUXTWEAKADV.HELP.SWAPFILE},
+            {ui_lblZramfile_tweakadv,   lang.MUXTWEAKADV.HELP.ZRAMFILE},
+            {ui_lblCardMode_tweakadv,   lang.MUXTWEAKADV.HELP.TUNING},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -84,25 +84,25 @@ static void dropdown_event_handler(lv_event_t *e) {
 
 static void init_element_events() {
     lv_obj_t *dropdowns[] = {
-            ui_droAccelerate,
-            ui_droSwap,
-            ui_droThermal,
-            ui_droVolume,
-            ui_droBrightness,
-            ui_droOffset,
-            ui_droPasscode,
-            ui_droLED,
-            ui_droTheme,
-            ui_droRetroWait,
-            ui_droState,
-            ui_droVerbose,
-            ui_droRumble,
-            ui_droUserInit,
-            ui_droDPADSwap,
-            ui_droOverdrive,
-            ui_droSwapfile,
-            ui_droZramfile,
-            ui_droCardMode
+            ui_droAccelerate_tweakadv,
+            ui_droSwap_tweakadv,
+            ui_droThermal_tweakadv,
+            ui_droVolume_tweakadv,
+            ui_droBrightness_tweakadv,
+            ui_droOffset_tweakadv,
+            ui_droPasscode_tweakadv,
+            ui_droLED_tweakadv,
+            ui_droTheme_tweakadv,
+            ui_droRetroWait_tweakadv,
+            ui_droState_tweakadv,
+            ui_droVerbose_tweakadv,
+            ui_droRumble_tweakadv,
+            ui_droUserInit_tweakadv,
+            ui_droDPADSwap_tweakadv,
+            ui_droOverdrive_tweakadv,
+            ui_droSwap_tweakadvfile,
+            ui_droZramfile_tweakadv,
+            ui_droCardMode_tweakadv
     };
 
     for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
@@ -111,34 +111,34 @@ static void init_element_events() {
 }
 
 static void init_dropdown_settings() {
-    accelerate_original = lv_dropdown_get_selected(ui_droAccelerate);
-    swap_original = lv_dropdown_get_selected(ui_droSwap);
-    thermal_original = lv_dropdown_get_selected(ui_droThermal);
-    volume_original = lv_dropdown_get_selected(ui_droVolume);
-    brightness_original = lv_dropdown_get_selected(ui_droBrightness);
-    offset_original = lv_dropdown_get_selected(ui_droOffset);
-    lockdown_original = lv_dropdown_get_selected(ui_droPasscode);
-    led_original = lv_dropdown_get_selected(ui_droLED);
-    random_theme_original = lv_dropdown_get_selected(ui_droTheme);
-    retrowait_original = lv_dropdown_get_selected(ui_droRetroWait);
-    state_original = lv_dropdown_get_selected(ui_droState);
-    verbose_original = lv_dropdown_get_selected(ui_droVerbose);
-    rumble_original = lv_dropdown_get_selected(ui_droRumble);
-    user_init_original = lv_dropdown_get_selected(ui_droUserInit);
-    dpad_swap_original = lv_dropdown_get_selected(ui_droDPADSwap);
-    overdrive_original = lv_dropdown_get_selected(ui_droOverdrive);
-    swapfile_original = lv_dropdown_get_selected(ui_droSwapfile);
-    zramfile_original = lv_dropdown_get_selected(ui_droZramfile);
-    cardmode_original = lv_dropdown_get_selected(ui_droCardMode);
+    accelerate_original = lv_dropdown_get_selected(ui_droAccelerate_tweakadv);
+    swap_original = lv_dropdown_get_selected(ui_droSwap_tweakadv);
+    thermal_original = lv_dropdown_get_selected(ui_droThermal_tweakadv);
+    volume_original = lv_dropdown_get_selected(ui_droVolume_tweakadv);
+    brightness_original = lv_dropdown_get_selected(ui_droBrightness_tweakadv);
+    offset_original = lv_dropdown_get_selected(ui_droOffset_tweakadv);
+    lockdown_original = lv_dropdown_get_selected(ui_droPasscode_tweakadv);
+    led_original = lv_dropdown_get_selected(ui_droLED_tweakadv);
+    random_theme_original = lv_dropdown_get_selected(ui_droTheme_tweakadv);
+    retrowait_original = lv_dropdown_get_selected(ui_droRetroWait_tweakadv);
+    state_original = lv_dropdown_get_selected(ui_droState_tweakadv);
+    verbose_original = lv_dropdown_get_selected(ui_droVerbose_tweakadv);
+    rumble_original = lv_dropdown_get_selected(ui_droRumble_tweakadv);
+    user_init_original = lv_dropdown_get_selected(ui_droUserInit_tweakadv);
+    dpad_swap_original = lv_dropdown_get_selected(ui_droDPADSwap_tweakadv);
+    overdrive_original = lv_dropdown_get_selected(ui_droOverdrive_tweakadv);
+    swapfile_original = lv_dropdown_get_selected(ui_droSwap_tweakadvfile);
+    zramfile_original = lv_dropdown_get_selected(ui_droZramfile_tweakadv);
+    cardmode_original = lv_dropdown_get_selected(ui_droCardMode_tweakadv);
 }
 
 static void restore_tweak_options() {
-    map_drop_down_to_index(ui_droAccelerate, config.SETTINGS.ADVANCED.ACCELERATE,
+    map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE,
                            (int[]) {32767, 16, 32, 48, 64, 80, 96, 112, 128,
                                     144, 160, 176, 192, 208, 224, 240, 256}, 17, 6);
 
-    lv_dropdown_set_selected(ui_droSwap, config.SETTINGS.ADVANCED.SWAP);
-    lv_dropdown_set_selected(ui_droThermal, config.SETTINGS.ADVANCED.THERMAL);
+    lv_dropdown_set_selected(ui_droSwap_tweakadv, config.SETTINGS.ADVANCED.SWAP);
+    lv_dropdown_set_selected(ui_droThermal_tweakadv, config.SETTINGS.ADVANCED.THERMAL);
 
     const char *volume_type = config.SETTINGS.ADVANCED.VOLUME;
     int volume_index = 0;
@@ -151,7 +151,7 @@ static void restore_tweak_options() {
     } else if (!strcasecmp(volume_type, "loud")) {
         volume_index = 3;
     }
-    lv_dropdown_set_selected(ui_droVolume, volume_index);
+    lv_dropdown_set_selected(ui_droVolume_tweakadv, volume_index);
 
     const char *brightness_type = config.SETTINGS.ADVANCED.BRIGHTNESS;
     int brightness_index = 0;
@@ -164,49 +164,49 @@ static void restore_tweak_options() {
     } else if (!strcasecmp(brightness_type, "high")) {
         brightness_index = 3;
     }
-    lv_dropdown_set_selected(ui_droBrightness, brightness_index);
+    lv_dropdown_set_selected(ui_droBrightness_tweakadv, brightness_index);
 
-    lv_dropdown_set_selected(ui_droOffset, config.SETTINGS.ADVANCED.OFFSET);
-    lv_dropdown_set_selected(ui_droPasscode, config.SETTINGS.ADVANCED.LOCK);
-    lv_dropdown_set_selected(ui_droLED, config.SETTINGS.ADVANCED.LED);
-    lv_dropdown_set_selected(ui_droTheme, config.SETTINGS.ADVANCED.THEME);
-    lv_dropdown_set_selected(ui_droRetroWait, config.SETTINGS.ADVANCED.RETROWAIT);
+    lv_dropdown_set_selected(ui_droOffset_tweakadv, config.SETTINGS.ADVANCED.OFFSET);
+    lv_dropdown_set_selected(ui_droPasscode_tweakadv, config.SETTINGS.ADVANCED.LOCK);
+    lv_dropdown_set_selected(ui_droLED_tweakadv, config.SETTINGS.ADVANCED.LED);
+    lv_dropdown_set_selected(ui_droTheme_tweakadv, config.SETTINGS.ADVANCED.THEME);
+    lv_dropdown_set_selected(ui_droRetroWait_tweakadv, config.SETTINGS.ADVANCED.RETROWAIT);
 
     const char *state_type = config.SETTINGS.ADVANCED.STATE;
     if (!strcasecmp(state_type, "freeze")) {
-        lv_dropdown_set_selected(ui_droState, 1);
+        lv_dropdown_set_selected(ui_droState_tweakadv, 1);
     } else {
-        lv_dropdown_set_selected(ui_droState, 0);
+        lv_dropdown_set_selected(ui_droState_tweakadv, 0);
     }
 
-    lv_dropdown_set_selected(ui_droVerbose, config.SETTINGS.ADVANCED.VERBOSE);
-    lv_dropdown_set_selected(ui_droRumble, config.SETTINGS.ADVANCED.RUMBLE);
-    lv_dropdown_set_selected(ui_droUserInit, config.SETTINGS.ADVANCED.USERINIT);
-    lv_dropdown_set_selected(ui_droDPADSwap, config.SETTINGS.ADVANCED.DPADSWAP);
-    lv_dropdown_set_selected(ui_droOverdrive, config.SETTINGS.ADVANCED.OVERDRIVE);
+    lv_dropdown_set_selected(ui_droVerbose_tweakadv, config.SETTINGS.ADVANCED.VERBOSE);
+    lv_dropdown_set_selected(ui_droRumble_tweakadv, config.SETTINGS.ADVANCED.RUMBLE);
+    lv_dropdown_set_selected(ui_droUserInit_tweakadv, config.SETTINGS.ADVANCED.USERINIT);
+    lv_dropdown_set_selected(ui_droDPADSwap_tweakadv, config.SETTINGS.ADVANCED.DPADSWAP);
+    lv_dropdown_set_selected(ui_droOverdrive_tweakadv, config.SETTINGS.ADVANCED.OVERDRIVE);
 
-    map_drop_down_to_index(ui_droSwapfile, config.SETTINGS.ADVANCED.SWAPFILE,
+    map_drop_down_to_index(ui_droSwap_tweakadvfile, config.SETTINGS.ADVANCED.SWAPFILE,
                            (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
 
-    map_drop_down_to_index(ui_droZramfile, config.SETTINGS.ADVANCED.ZRAMFILE,
+    map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE,
                            (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
 
     const char *card_type = config.SETTINGS.ADVANCED.CARDMODE;
     if (!strcasecmp(card_type, "noop")) {
-        lv_dropdown_set_selected(ui_droCardMode, 1);
+        lv_dropdown_set_selected(ui_droCardMode_tweakadv, 1);
     } else {
-        lv_dropdown_set_selected(ui_droCardMode, 0);
+        lv_dropdown_set_selected(ui_droCardMode_tweakadv, 0);
     }
 
 }
 
 static void save_tweak_options() {
-    int idx_accelerate = map_drop_down_to_value(lv_dropdown_get_selected(ui_droAccelerate),
+    int idx_accelerate = map_drop_down_to_value(lv_dropdown_get_selected(ui_droAccelerate_tweakadv),
                                                 (int[]) {32767, 16, 32, 48, 64, 80, 96, 112, 128,
                                                          144, 160, 176, 192, 208, 224, 240, 256}, 17, 6);
 
     char *idx_volume;
-    switch (lv_dropdown_get_selected(ui_droVolume)) {
+    switch (lv_dropdown_get_selected(ui_droVolume_tweakadv)) {
         case 0:
             idx_volume = "previous";
             break;
@@ -225,7 +225,7 @@ static void save_tweak_options() {
     }
 
     char *idx_brightness;
-    switch (lv_dropdown_get_selected(ui_droBrightness)) {
+    switch (lv_dropdown_get_selected(ui_droBrightness_tweakadv)) {
         case 0:
             idx_brightness = "previous";
             break;
@@ -244,7 +244,7 @@ static void save_tweak_options() {
     }
 
     char *idx_state;
-    switch (lv_dropdown_get_selected(ui_droState)) {
+    switch (lv_dropdown_get_selected(ui_droState_tweakadv)) {
         case 1:
             idx_state = "freeze";
             break;
@@ -253,27 +253,27 @@ static void save_tweak_options() {
             break;
     }
 
-    int idx_swap = lv_dropdown_get_selected(ui_droSwap);
-    int idx_thermal = lv_dropdown_get_selected(ui_droThermal);
-    int idx_offset = lv_dropdown_get_selected(ui_droOffset);
-    int idx_lockdown = lv_dropdown_get_selected(ui_droPasscode);
-    int idx_led = lv_dropdown_get_selected(ui_droLED);
-    int idx_random_theme = lv_dropdown_get_selected(ui_droTheme);
-    int idx_retrowait = lv_dropdown_get_selected(ui_droRetroWait);
-    int idx_verbose = lv_dropdown_get_selected(ui_droVerbose);
-    int idx_rumble = lv_dropdown_get_selected(ui_droRumble);
-    int idx_user_init = lv_dropdown_get_selected(ui_droUserInit);
-    int idx_dpad_swap = lv_dropdown_get_selected(ui_droDPADSwap);
-    int idx_overdrive = lv_dropdown_get_selected(ui_droOverdrive);
+    int idx_swap = lv_dropdown_get_selected(ui_droSwap_tweakadv);
+    int idx_thermal = lv_dropdown_get_selected(ui_droThermal_tweakadv);
+    int idx_offset = lv_dropdown_get_selected(ui_droOffset_tweakadv);
+    int idx_lockdown = lv_dropdown_get_selected(ui_droPasscode_tweakadv);
+    int idx_led = lv_dropdown_get_selected(ui_droLED_tweakadv);
+    int idx_random_theme = lv_dropdown_get_selected(ui_droTheme_tweakadv);
+    int idx_retrowait = lv_dropdown_get_selected(ui_droRetroWait_tweakadv);
+    int idx_verbose = lv_dropdown_get_selected(ui_droVerbose_tweakadv);
+    int idx_rumble = lv_dropdown_get_selected(ui_droRumble_tweakadv);
+    int idx_user_init = lv_dropdown_get_selected(ui_droUserInit_tweakadv);
+    int idx_dpad_swap = lv_dropdown_get_selected(ui_droDPADSwap_tweakadv);
+    int idx_overdrive = lv_dropdown_get_selected(ui_droOverdrive_tweakadv);
 
-    int idx_swapfile = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSwapfile),
+    int idx_swapfile = map_drop_down_to_value(lv_dropdown_get_selected(ui_droSwap_tweakadvfile),
                                               (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
 
-    int idx_zramfile = map_drop_down_to_value(lv_dropdown_get_selected(ui_droZramfile),
+    int idx_zramfile = map_drop_down_to_value(lv_dropdown_get_selected(ui_droZramfile_tweakadv),
                                               (int[]) {0, 64, 128, 192, 256, 320, 384, 448, 512}, 9, 0);
 
     char *idx_cardmode;
-    switch (lv_dropdown_get_selected(ui_droCardMode)) {
+    switch (lv_dropdown_get_selected(ui_droCardMode_tweakadv)) {
         case 1:
             idx_cardmode = "noop";
             break;
@@ -284,97 +284,97 @@ static void save_tweak_options() {
 
     int is_modified = 0;
 
-    if (lv_dropdown_get_selected(ui_droAccelerate) != accelerate_original) {
+    if (lv_dropdown_get_selected(ui_droAccelerate_tweakadv) != accelerate_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/accelerate"), "w", INT, idx_accelerate);
     }
 
-    if (lv_dropdown_get_selected(ui_droSwap) != swap_original) {
+    if (lv_dropdown_get_selected(ui_droSwap_tweakadv) != swap_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/swap"), "w", INT, idx_swap);
     }
 
-    if (lv_dropdown_get_selected(ui_droThermal) != thermal_original) {
+    if (lv_dropdown_get_selected(ui_droThermal_tweakadv) != thermal_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/thermal"), "w", INT, idx_thermal);
     }
 
-    if (lv_dropdown_get_selected(ui_droVolume) != volume_original) {
+    if (lv_dropdown_get_selected(ui_droVolume_tweakadv) != volume_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/volume"), "w", CHAR, idx_volume);
     }
 
-    if (lv_dropdown_get_selected(ui_droBrightness) != brightness_original) {
+    if (lv_dropdown_get_selected(ui_droBrightness_tweakadv) != brightness_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/brightness"), "w", CHAR, idx_brightness);
     }
 
-    if (lv_dropdown_get_selected(ui_droOffset) != offset_original) {
+    if (lv_dropdown_get_selected(ui_droOffset_tweakadv) != offset_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/offset"), "w", INT, idx_offset);
     }
 
-    if (lv_dropdown_get_selected(ui_droPasscode) != lockdown_original) {
+    if (lv_dropdown_get_selected(ui_droPasscode_tweakadv) != lockdown_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/lock"), "w", INT, idx_lockdown);
     }
 
-    if (lv_dropdown_get_selected(ui_droLED) != led_original) {
+    if (lv_dropdown_get_selected(ui_droLED_tweakadv) != led_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/led"), "w", INT, idx_led);
     }
 
-    if (lv_dropdown_get_selected(ui_droTheme) != random_theme_original) {
+    if (lv_dropdown_get_selected(ui_droTheme_tweakadv) != random_theme_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/random_theme"), "w", INT, idx_random_theme);
     }
 
-    if (lv_dropdown_get_selected(ui_droRetroWait) != retrowait_original) {
+    if (lv_dropdown_get_selected(ui_droRetroWait_tweakadv) != retrowait_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/retrowait"), "w", INT, idx_retrowait);
     }
 
-    if (lv_dropdown_get_selected(ui_droState) != state_original) {
+    if (lv_dropdown_get_selected(ui_droState_tweakadv) != state_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/state"), "w", CHAR, idx_state);
     }
 
-    if (lv_dropdown_get_selected(ui_droVerbose) != verbose_original) {
+    if (lv_dropdown_get_selected(ui_droVerbose_tweakadv) != verbose_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/verbose"), "w", INT, idx_verbose);
     }
 
-    if (lv_dropdown_get_selected(ui_droRumble) != rumble_original) {
+    if (lv_dropdown_get_selected(ui_droRumble_tweakadv) != rumble_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/rumble"), "w", INT, idx_rumble);
     }
 
-    if (lv_dropdown_get_selected(ui_droUserInit) != user_init_original) {
+    if (lv_dropdown_get_selected(ui_droUserInit_tweakadv) != user_init_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/user_init"), "w", INT, idx_user_init);
     }
 
-    if (lv_dropdown_get_selected(ui_droDPADSwap) != dpad_swap_original) {
+    if (lv_dropdown_get_selected(ui_droDPADSwap_tweakadv) != dpad_swap_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/dpad_swap"), "w", INT, idx_dpad_swap);
     }
 
-    if (lv_dropdown_get_selected(ui_droOverdrive) != overdrive_original) {
+    if (lv_dropdown_get_selected(ui_droOverdrive_tweakadv) != overdrive_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/overdrive"), "w", INT, idx_overdrive);
     }
 
-    if (lv_dropdown_get_selected(ui_droSwapfile) != swapfile_original) {
+    if (lv_dropdown_get_selected(ui_droSwap_tweakadvfile) != swapfile_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/swapfile"), "w", INT, idx_swapfile);
     }
 
-    if (lv_dropdown_get_selected(ui_droZramfile) != zramfile_original) {
+    if (lv_dropdown_get_selected(ui_droZramfile_tweakadv) != zramfile_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/zramfile"), "w", INT, idx_zramfile);
     }
 
-    if (lv_dropdown_get_selected(ui_droCardMode) != cardmode_original) {
+    if (lv_dropdown_get_selected(ui_droCardMode_tweakadv) != cardmode_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/cardmode"), "w", CHAR, idx_cardmode);
     }
@@ -384,213 +384,213 @@ static void save_tweak_options() {
 
 static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlSwap,
-            ui_pnlOverdrive,
-            ui_pnlOffset,
-            ui_pnlBrightness,
-            ui_pnlRumble,
-            ui_pnlCardMode,
-            ui_pnlDPADSwap,
-            ui_pnlLED,
-            ui_pnlAccelerate,
-            ui_pnlThermal,
-            ui_pnlPasscode,
-            ui_pnlTheme,
-            ui_pnlRetroWait,
-            ui_pnlState,
-            ui_pnlSwapfile,
-            ui_pnlZramfile,
-            ui_pnlUserInit,
-            ui_pnlVerbose,
-            ui_pnlVolume
+            ui_pnlSwap_tweakadv,
+            ui_pnlOverdrive_tweakadv,
+            ui_pnlOffset_tweakadv,
+            ui_pnlBrightness_tweakadv,
+            ui_pnlRumble_tweakadv,
+            ui_pnlCardMode_tweakadv,
+            ui_pnlDPADSwap_tweakadv,
+            ui_pnlLED_tweakadv,
+            ui_pnlAccelerate_tweakadv,
+            ui_pnlThermal_tweakadv,
+            ui_pnlPasscode_tweakadv,
+            ui_pnlTheme_tweakadv,
+            ui_pnlRetroWait_tweakadv,
+            ui_pnlState_tweakadv,
+            ui_pnlSwap_tweakadvfile,
+            ui_pnlZramfile_tweakadv,
+            ui_pnlUserInit_tweakadv,
+            ui_pnlVerbose_tweakadv,
+            ui_pnlVolume_tweakadv
     };
 
-    ui_objects[0] = ui_lblSwap;
-    ui_objects[1] = ui_lblOverdrive;
-    ui_objects[2] = ui_lblOffset;
-    ui_objects[3] = ui_lblBrightness;
-    ui_objects[4] = ui_lblRumble;
-    ui_objects[5] = ui_lblCardMode;
-    ui_objects[6] = ui_lblDPADSwap;
-    ui_objects[7] = ui_lblLED;
-    ui_objects[8] = ui_lblAccelerate;
-    ui_objects[9] = ui_lblThermal;
-    ui_objects[10] = ui_lblPasscode;
-    ui_objects[11] = ui_lblTheme;
-    ui_objects[12] = ui_lblRetroWait;
-    ui_objects[13] = ui_lblState;
-    ui_objects[14] = ui_lblSwapfile;
-    ui_objects[15] = ui_lblZramfile;
-    ui_objects[16] = ui_lblUserInit;
-    ui_objects[17] = ui_lblVerbose;
-    ui_objects[18] = ui_lblVolume;
+    ui_objects[0] = ui_lblSwap_tweakadv;
+    ui_objects[1] = ui_lblOverdrive_tweakadv;
+    ui_objects[2] = ui_lblOffset_tweakadv;
+    ui_objects[3] = ui_lblBrightness_tweakadv;
+    ui_objects[4] = ui_lblRumble_tweakadv;
+    ui_objects[5] = ui_lblCardMode_tweakadv;
+    ui_objects[6] = ui_lblDPADSwap_tweakadv;
+    ui_objects[7] = ui_lblLED_tweakadv;
+    ui_objects[8] = ui_lblAccelerate_tweakadv;
+    ui_objects[9] = ui_lblThermal_tweakadv;
+    ui_objects[10] = ui_lblPasscode_tweakadv;
+    ui_objects[11] = ui_lblTheme_tweakadv;
+    ui_objects[12] = ui_lblRetroWait_tweakadv;
+    ui_objects[13] = ui_lblState_tweakadv;
+    ui_objects[14] = ui_lblSwap_tweakadvfile;
+    ui_objects[15] = ui_lblZramfile_tweakadv;
+    ui_objects[16] = ui_lblUserInit_tweakadv;
+    ui_objects[17] = ui_lblVerbose_tweakadv;
+    ui_objects[18] = ui_lblVolume_tweakadv;
 
     lv_obj_t *ui_objects_value[] = {
-            ui_droSwap,
-            ui_droOverdrive,
-            ui_droOffset,
-            ui_droBrightness,
-            ui_droRumble,
-            ui_droCardMode,
-            ui_droDPADSwap,
-            ui_droLED,
-            ui_droAccelerate,
-            ui_droThermal,
-            ui_droPasscode,
-            ui_droTheme,
-            ui_droRetroWait,
-            ui_droState,
-            ui_droSwapfile,
-            ui_droZramfile,
-            ui_droUserInit,
-            ui_droVerbose,
-            ui_droVolume
+            ui_droSwap_tweakadv,
+            ui_droOverdrive_tweakadv,
+            ui_droOffset_tweakadv,
+            ui_droBrightness_tweakadv,
+            ui_droRumble_tweakadv,
+            ui_droCardMode_tweakadv,
+            ui_droDPADSwap_tweakadv,
+            ui_droLED_tweakadv,
+            ui_droAccelerate_tweakadv,
+            ui_droThermal_tweakadv,
+            ui_droPasscode_tweakadv,
+            ui_droTheme_tweakadv,
+            ui_droRetroWait_tweakadv,
+            ui_droState_tweakadv,
+            ui_droSwap_tweakadvfile,
+            ui_droZramfile_tweakadv,
+            ui_droUserInit_tweakadv,
+            ui_droVerbose_tweakadv,
+            ui_droVolume_tweakadv
     };
 
     lv_obj_t *ui_objects_glyph[] = {
-            ui_icoSwap,
-            ui_icoOverdrive,
-            ui_icoOffset,
-            ui_icoBrightness,
-            ui_icoRumble,
-            ui_icoCardMode,
-            ui_icoDPADSwap,
-            ui_icoLED,
-            ui_icoAccelerate,
-            ui_icoThermal,
-            ui_icoPasscode,
-            ui_icoTheme,
-            ui_icoRetroWait,
-            ui_icoState,
-            ui_icoSwapfile,
-            ui_icoZramfile,
-            ui_icoUserInit,
-            ui_icoVerbose,
-            ui_icoVolume
+            ui_icoSwap_tweakadv,
+            ui_icoOverdrive_tweakadv,
+            ui_icoOffset_tweakadv,
+            ui_icoBrightness_tweakadv,
+            ui_icoRumble_tweakadv,
+            ui_icoCardMode_tweakadv,
+            ui_icoDPADSwap_tweakadv,
+            ui_icoLED_tweakadv,
+            ui_icoAccelerate_tweakadv,
+            ui_icoThermal_tweakadv,
+            ui_icoPasscode_tweakadv,
+            ui_icoTheme_tweakadv,
+            ui_icoRetroWait_tweakadv,
+            ui_icoState_tweakadv,
+            ui_icoSwap_tweakadvfile,
+            ui_icoZramfile_tweakadv,
+            ui_icoUserInit_tweakadv,
+            ui_icoVerbose_tweakadv,
+            ui_icoVolume_tweakadv
     };
 
-    apply_theme_list_panel(ui_pnlAccelerate);
-    apply_theme_list_panel(ui_pnlSwap);
-    apply_theme_list_panel(ui_pnlThermal);
-    apply_theme_list_panel(ui_pnlVolume);
-    apply_theme_list_panel(ui_pnlBrightness);
-    apply_theme_list_panel(ui_pnlOffset);
-    apply_theme_list_panel(ui_pnlPasscode);
-    apply_theme_list_panel(ui_pnlLED);
-    apply_theme_list_panel(ui_pnlTheme);
-    apply_theme_list_panel(ui_pnlRetroWait);
-    apply_theme_list_panel(ui_pnlState);
-    apply_theme_list_panel(ui_pnlVerbose);
-    apply_theme_list_panel(ui_pnlRumble);
-    apply_theme_list_panel(ui_pnlUserInit);
-    apply_theme_list_panel(ui_pnlDPADSwap);
-    apply_theme_list_panel(ui_pnlOverdrive);
-    apply_theme_list_panel(ui_pnlSwapfile);
-    apply_theme_list_panel(ui_pnlZramfile);
-    apply_theme_list_panel(ui_pnlCardMode);
+    apply_theme_list_panel(ui_pnlAccelerate_tweakadv);
+    apply_theme_list_panel(ui_pnlSwap_tweakadv);
+    apply_theme_list_panel(ui_pnlThermal_tweakadv);
+    apply_theme_list_panel(ui_pnlVolume_tweakadv);
+    apply_theme_list_panel(ui_pnlBrightness_tweakadv);
+    apply_theme_list_panel(ui_pnlOffset_tweakadv);
+    apply_theme_list_panel(ui_pnlPasscode_tweakadv);
+    apply_theme_list_panel(ui_pnlLED_tweakadv);
+    apply_theme_list_panel(ui_pnlTheme_tweakadv);
+    apply_theme_list_panel(ui_pnlRetroWait_tweakadv);
+    apply_theme_list_panel(ui_pnlState_tweakadv);
+    apply_theme_list_panel(ui_pnlVerbose_tweakadv);
+    apply_theme_list_panel(ui_pnlRumble_tweakadv);
+    apply_theme_list_panel(ui_pnlUserInit_tweakadv);
+    apply_theme_list_panel(ui_pnlDPADSwap_tweakadv);
+    apply_theme_list_panel(ui_pnlOverdrive_tweakadv);
+    apply_theme_list_panel(ui_pnlSwap_tweakadvfile);
+    apply_theme_list_panel(ui_pnlZramfile_tweakadv);
+    apply_theme_list_panel(ui_pnlCardMode_tweakadv);
 
-    apply_theme_list_item(&theme, ui_lblAccelerate, lang.MUXTWEAKADV.SPEED);
-    apply_theme_list_item(&theme, ui_lblSwap, lang.MUXTWEAKADV.SWAP.TITLE);
-    apply_theme_list_item(&theme, ui_lblThermal, lang.MUXTWEAKADV.THERMAL);
-    apply_theme_list_item(&theme, ui_lblVolume, lang.MUXTWEAKADV.VOLUME.TITLE);
-    apply_theme_list_item(&theme, ui_lblBrightness, lang.MUXTWEAKADV.BRIGHT.TITLE);
-    apply_theme_list_item(&theme, ui_lblOffset, lang.MUXTWEAKADV.OFFSET);
-    apply_theme_list_item(&theme, ui_lblPasscode, lang.MUXTWEAKADV.LOCK);
-    apply_theme_list_item(&theme, ui_lblLED, lang.MUXTWEAKADV.LED);
-    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXTWEAKADV.RANDOM);
-    apply_theme_list_item(&theme, ui_lblRetroWait, lang.MUXTWEAKADV.NET_WAIT);
-    apply_theme_list_item(&theme, ui_lblState, lang.MUXTWEAKADV.STATE);
-    apply_theme_list_item(&theme, ui_lblVerbose, lang.MUXTWEAKADV.VERBOSE);
-    apply_theme_list_item(&theme, ui_lblRumble, lang.MUXTWEAKADV.RUMBLE.TITLE);
-    apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXTWEAKADV.USER_INIT);
-    apply_theme_list_item(&theme, ui_lblDPADSwap, lang.MUXTWEAKADV.DPAD);
-    apply_theme_list_item(&theme, ui_lblOverdrive, lang.MUXTWEAKADV.OVERDRIVE);
-    apply_theme_list_item(&theme, ui_lblSwapfile, lang.MUXTWEAKADV.SWAPFILE);
-    apply_theme_list_item(&theme, ui_lblZramfile, lang.MUXTWEAKADV.ZRAMFILE);
-    apply_theme_list_item(&theme, ui_lblCardMode, lang.MUXTWEAKADV.TUNING);
+    apply_theme_list_item(&theme, ui_lblAccelerate_tweakadv, lang.MUXTWEAKADV.SPEED);
+    apply_theme_list_item(&theme, ui_lblSwap_tweakadv, lang.MUXTWEAKADV.SWAP.TITLE);
+    apply_theme_list_item(&theme, ui_lblThermal_tweakadv, lang.MUXTWEAKADV.THERMAL);
+    apply_theme_list_item(&theme, ui_lblVolume_tweakadv, lang.MUXTWEAKADV.VOLUME.TITLE);
+    apply_theme_list_item(&theme, ui_lblBrightness_tweakadv, lang.MUXTWEAKADV.BRIGHT.TITLE);
+    apply_theme_list_item(&theme, ui_lblOffset_tweakadv, lang.MUXTWEAKADV.OFFSET);
+    apply_theme_list_item(&theme, ui_lblPasscode_tweakadv, lang.MUXTWEAKADV.LOCK);
+    apply_theme_list_item(&theme, ui_lblLED_tweakadv, lang.MUXTWEAKADV.LED);
+    apply_theme_list_item(&theme, ui_lblTheme_tweakadv, lang.MUXTWEAKADV.RANDOM);
+    apply_theme_list_item(&theme, ui_lblRetroWait_tweakadv, lang.MUXTWEAKADV.NET_WAIT);
+    apply_theme_list_item(&theme, ui_lblState_tweakadv, lang.MUXTWEAKADV.STATE);
+    apply_theme_list_item(&theme, ui_lblVerbose_tweakadv, lang.MUXTWEAKADV.VERBOSE);
+    apply_theme_list_item(&theme, ui_lblRumble_tweakadv, lang.MUXTWEAKADV.RUMBLE.TITLE);
+    apply_theme_list_item(&theme, ui_lblUserInit_tweakadv, lang.MUXTWEAKADV.USER_INIT);
+    apply_theme_list_item(&theme, ui_lblDPADSwap_tweakadv, lang.MUXTWEAKADV.DPAD);
+    apply_theme_list_item(&theme, ui_lblOverdrive_tweakadv, lang.MUXTWEAKADV.OVERDRIVE);
+    apply_theme_list_item(&theme, ui_lblSwap_tweakadvfile, lang.MUXTWEAKADV.SWAPFILE);
+    apply_theme_list_item(&theme, ui_lblZramfile_tweakadv, lang.MUXTWEAKADV.ZRAMFILE);
+    apply_theme_list_item(&theme, ui_lblCardMode_tweakadv, lang.MUXTWEAKADV.TUNING);
 
-    apply_theme_list_glyph(&theme, ui_icoAccelerate, mux_module, "accelerate");
-    apply_theme_list_glyph(&theme, ui_icoSwap, mux_module, "swap");
-    apply_theme_list_glyph(&theme, ui_icoThermal, mux_module, "thermal");
-    apply_theme_list_glyph(&theme, ui_icoVolume, mux_module, "volume");
-    apply_theme_list_glyph(&theme, ui_icoBrightness, mux_module, "brightness");
-    apply_theme_list_glyph(&theme, ui_icoOffset, mux_module, "offset");
-    apply_theme_list_glyph(&theme, ui_icoPasscode, mux_module, "lock");
-    apply_theme_list_glyph(&theme, ui_icoLED, mux_module, "led");
-    apply_theme_list_glyph(&theme, ui_icoTheme, mux_module, "theme");
-    apply_theme_list_glyph(&theme, ui_icoRetroWait, mux_module, "retrowait");
-    apply_theme_list_glyph(&theme, ui_icoState, mux_module, "state");
-    apply_theme_list_glyph(&theme, ui_icoVerbose, mux_module, "verbose");
-    apply_theme_list_glyph(&theme, ui_icoRumble, mux_module, "rumble");
-    apply_theme_list_glyph(&theme, ui_icoUserInit, mux_module, "userinit");
-    apply_theme_list_glyph(&theme, ui_icoDPADSwap, mux_module, "dpadswap");
-    apply_theme_list_glyph(&theme, ui_icoOverdrive, mux_module, "overdrive");
-    apply_theme_list_glyph(&theme, ui_icoSwapfile, mux_module, "swapfile");
-    apply_theme_list_glyph(&theme, ui_icoZramfile, mux_module, "zramfile");
-    apply_theme_list_glyph(&theme, ui_icoCardMode, mux_module, "cardmode");
+    apply_theme_list_glyph(&theme, ui_icoAccelerate_tweakadv, mux_module, "accelerate");
+    apply_theme_list_glyph(&theme, ui_icoSwap_tweakadv, mux_module, "swap");
+    apply_theme_list_glyph(&theme, ui_icoThermal_tweakadv, mux_module, "thermal");
+    apply_theme_list_glyph(&theme, ui_icoVolume_tweakadv, mux_module, "volume");
+    apply_theme_list_glyph(&theme, ui_icoBrightness_tweakadv, mux_module, "brightness");
+    apply_theme_list_glyph(&theme, ui_icoOffset_tweakadv, mux_module, "offset");
+    apply_theme_list_glyph(&theme, ui_icoPasscode_tweakadv, mux_module, "lock");
+    apply_theme_list_glyph(&theme, ui_icoLED_tweakadv, mux_module, "led");
+    apply_theme_list_glyph(&theme, ui_icoTheme_tweakadv, mux_module, "theme");
+    apply_theme_list_glyph(&theme, ui_icoRetroWait_tweakadv, mux_module, "retrowait");
+    apply_theme_list_glyph(&theme, ui_icoState_tweakadv, mux_module, "state");
+    apply_theme_list_glyph(&theme, ui_icoVerbose_tweakadv, mux_module, "verbose");
+    apply_theme_list_glyph(&theme, ui_icoRumble_tweakadv, mux_module, "rumble");
+    apply_theme_list_glyph(&theme, ui_icoUserInit_tweakadv, mux_module, "userinit");
+    apply_theme_list_glyph(&theme, ui_icoDPADSwap_tweakadv, mux_module, "dpadswap");
+    apply_theme_list_glyph(&theme, ui_icoOverdrive_tweakadv, mux_module, "overdrive");
+    apply_theme_list_glyph(&theme, ui_icoSwap_tweakadvfile, mux_module, "swapfile");
+    apply_theme_list_glyph(&theme, ui_icoZramfile_tweakadv, mux_module, "zramfile");
+    apply_theme_list_glyph(&theme, ui_icoCardMode_tweakadv, mux_module, "cardmode");
 
     char *accelerate_string = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droAccelerate, accelerate_string);
+    apply_theme_list_drop_down(&theme, ui_droAccelerate_tweakadv, accelerate_string);
     free(accelerate_string);
 
-    apply_theme_list_drop_down(&theme, ui_droSwap, NULL);
-    apply_theme_list_drop_down(&theme, ui_droThermal, NULL);
-    apply_theme_list_drop_down(&theme, ui_droVolume, NULL);
-    apply_theme_list_drop_down(&theme, ui_droBrightness, NULL);
+    apply_theme_list_drop_down(&theme, ui_droSwap_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droThermal_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droVolume_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droBrightness_tweakadv, NULL);
 
     char *offset_string = generate_number_string(-50, 50, 1, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droOffset, offset_string);
+    apply_theme_list_drop_down(&theme, ui_droOffset_tweakadv, offset_string);
     free(offset_string);
 
-    apply_theme_list_drop_down(&theme, ui_droPasscode, NULL);
-    apply_theme_list_drop_down(&theme, ui_droLED, NULL);
-    apply_theme_list_drop_down(&theme, ui_droTheme, NULL);
-    apply_theme_list_drop_down(&theme, ui_droRetroWait, NULL);
-    apply_theme_list_drop_down(&theme, ui_droState, NULL);
-    apply_theme_list_drop_down(&theme, ui_droVerbose, NULL);
-    apply_theme_list_drop_down(&theme, ui_droRumble, NULL);
-    apply_theme_list_drop_down(&theme, ui_droUserInit, NULL);
-    apply_theme_list_drop_down(&theme, ui_droDPADSwap, NULL);
-    apply_theme_list_drop_down(&theme, ui_droOverdrive, NULL);
+    apply_theme_list_drop_down(&theme, ui_droPasscode_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droLED_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droTheme_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droRetroWait_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droState_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droVerbose_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droRumble_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droUserInit_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droDPADSwap_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droOverdrive_tweakadv, NULL);
 
     char *swapfile_string = generate_number_string(64, 512, 64, lang.GENERIC.DISABLED, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droSwapfile, swapfile_string);
+    apply_theme_list_drop_down(&theme, ui_droSwap_tweakadvfile, swapfile_string);
     free(swapfile_string);
 
     // We could reuse from above but just incase we want to increase it we'll do it separately!
     char *zramfile_string = generate_number_string(64, 512, 64, lang.GENERIC.DISABLED, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droZramfile, zramfile_string);
+    apply_theme_list_drop_down(&theme, ui_droZramfile_tweakadv, zramfile_string);
     free(zramfile_string);
 
-    apply_theme_list_drop_down(&theme, ui_droCardMode, NULL);
+    apply_theme_list_drop_down(&theme, ui_droCardMode_tweakadv, NULL);
 
     char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
-    add_drop_down_options(ui_droSwap, (char *[]) {
+    add_drop_down_options(ui_droSwap_tweakadv, (char *[]) {
             lang.MUXTWEAKADV.SWAP.RETRO,
             lang.MUXTWEAKADV.SWAP.MODERN}, 2);
 
-    add_drop_down_options(ui_droThermal, disabled_enabled, 2);
+    add_drop_down_options(ui_droThermal_tweakadv, disabled_enabled, 2);
 
-    add_drop_down_options(ui_droVolume, (char *[]) {
+    add_drop_down_options(ui_droVolume_tweakadv, (char *[]) {
             lang.GENERIC.PREVIOUS,
             lang.MUXTWEAKADV.VOLUME.SILENT,
             lang.MUXTWEAKADV.VOLUME.SOFT,
             lang.MUXTWEAKADV.VOLUME.LOUD}, 3);
 
-    add_drop_down_options(ui_droBrightness, (char *[]) {
+    add_drop_down_options(ui_droBrightness_tweakadv, (char *[]) {
             lang.GENERIC.PREVIOUS,
             lang.MUXTWEAKADV.BRIGHT.LOW,
             lang.MUXTWEAKADV.BRIGHT.MEDIUM,
             lang.MUXTWEAKADV.BRIGHT.HIGH}, 3);
 
-    add_drop_down_options(ui_droPasscode, disabled_enabled, 2);
-    add_drop_down_options(ui_droLED, disabled_enabled, 2);
-    add_drop_down_options(ui_droTheme, disabled_enabled, 2);
-    add_drop_down_options(ui_droRetroWait, disabled_enabled, 2);
-    add_drop_down_options(ui_droState, (char *[]) {"mem", "freeze"}, 2);
-    add_drop_down_options(ui_droVerbose, disabled_enabled, 2);
+    add_drop_down_options(ui_droPasscode_tweakadv, disabled_enabled, 2);
+    add_drop_down_options(ui_droLED_tweakadv, disabled_enabled, 2);
+    add_drop_down_options(ui_droTheme_tweakadv, disabled_enabled, 2);
+    add_drop_down_options(ui_droRetroWait_tweakadv, disabled_enabled, 2);
+    add_drop_down_options(ui_droState_tweakadv, (char *[]) {"mem", "freeze"}, 2);
+    add_drop_down_options(ui_droVerbose_tweakadv, disabled_enabled, 2);
 
-    add_drop_down_options(ui_droRumble, (char *[]) {
+    add_drop_down_options(ui_droRumble_tweakadv, (char *[]) {
             lang.GENERIC.DISABLED,
             lang.MUXTWEAKADV.RUMBLE.ST,
             lang.MUXTWEAKADV.RUMBLE.SH,
@@ -599,10 +599,10 @@ static void init_navigation_group() {
             lang.MUXTWEAKADV.RUMBLE.STSL,
             lang.MUXTWEAKADV.RUMBLE.SHSL}, 7);
 
-    add_drop_down_options(ui_droUserInit, disabled_enabled, 2);
-    add_drop_down_options(ui_droDPADSwap, disabled_enabled, 2);
-    add_drop_down_options(ui_droOverdrive, disabled_enabled, 2);
-    add_drop_down_options(ui_droCardMode, (char *[]) {"deadline", "noop"}, 2);
+    add_drop_down_options(ui_droUserInit_tweakadv, disabled_enabled, 2);
+    add_drop_down_options(ui_droDPADSwap_tweakadv, disabled_enabled, 2);
+    add_drop_down_options(ui_droOverdrive_tweakadv, disabled_enabled, 2);
+    add_drop_down_options(ui_droCardMode_tweakadv, (char *[]) {"deadline", "noop"}, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -725,29 +725,29 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblAccelerate, "accelerate");
-    lv_obj_set_user_data(ui_lblSwap, "swap");
-    lv_obj_set_user_data(ui_lblThermal, "thermal");
-    lv_obj_set_user_data(ui_lblVolume, "volume");
-    lv_obj_set_user_data(ui_lblBrightness, "brightness");
-    lv_obj_set_user_data(ui_lblOffset, "offset");
-    lv_obj_set_user_data(ui_lblPasscode, "lock");
-    lv_obj_set_user_data(ui_lblLED, "led");
-    lv_obj_set_user_data(ui_lblTheme, "theme");
-    lv_obj_set_user_data(ui_lblRetroWait, "retrowait");
-    lv_obj_set_user_data(ui_lblState, "state");
-    lv_obj_set_user_data(ui_lblVerbose, "verbose");
-    lv_obj_set_user_data(ui_lblRumble, "rumble");
-    lv_obj_set_user_data(ui_lblUserInit, "userinit");
-    lv_obj_set_user_data(ui_lblDPADSwap, "dpadswap");
-    lv_obj_set_user_data(ui_lblOverdrive, "overdrive");
-    lv_obj_set_user_data(ui_lblSwapfile, "swapfile");
-    lv_obj_set_user_data(ui_lblZramfile, "zramfile");
-    lv_obj_set_user_data(ui_lblCardMode, "cardmode");
+    lv_obj_set_user_data(ui_lblAccelerate_tweakadv, "accelerate");
+    lv_obj_set_user_data(ui_lblSwap_tweakadv, "swap");
+    lv_obj_set_user_data(ui_lblThermal_tweakadv, "thermal");
+    lv_obj_set_user_data(ui_lblVolume_tweakadv, "volume");
+    lv_obj_set_user_data(ui_lblBrightness_tweakadv, "brightness");
+    lv_obj_set_user_data(ui_lblOffset_tweakadv, "offset");
+    lv_obj_set_user_data(ui_lblPasscode_tweakadv, "lock");
+    lv_obj_set_user_data(ui_lblLED_tweakadv, "led");
+    lv_obj_set_user_data(ui_lblTheme_tweakadv, "theme");
+    lv_obj_set_user_data(ui_lblRetroWait_tweakadv, "retrowait");
+    lv_obj_set_user_data(ui_lblState_tweakadv, "state");
+    lv_obj_set_user_data(ui_lblVerbose_tweakadv, "verbose");
+    lv_obj_set_user_data(ui_lblRumble_tweakadv, "rumble");
+    lv_obj_set_user_data(ui_lblUserInit_tweakadv, "userinit");
+    lv_obj_set_user_data(ui_lblDPADSwap_tweakadv, "dpadswap");
+    lv_obj_set_user_data(ui_lblOverdrive_tweakadv, "overdrive");
+    lv_obj_set_user_data(ui_lblSwap_tweakadvfile, "swapfile");
+    lv_obj_set_user_data(ui_lblZramfile_tweakadv, "zramfile");
+    lv_obj_set_user_data(ui_lblCardMode_tweakadv, "cardmode");
 
     if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlRetroWait, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlRetroWait_tweakadv, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlRetroWait_tweakadv, LV_OBJ_FLAG_FLOATING);
         ui_count--;
     }
 
@@ -786,7 +786,6 @@ int muxtweakadv_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTWEAKADV.TITLE);
     init_muxtweakadv(ui_pnlContent);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -804,6 +803,8 @@ int muxtweakadv_main(int argc, char *argv[]) {
 
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

@@ -37,9 +37,9 @@ struct help_msg {
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblSearch,   lang.MUXOPTION.HELP.SEARCH},
-            {ui_lblCore,     lang.MUXOPTION.HELP.ASSIGN_CORE},
-            {ui_lblGovernor, lang.MUXOPTION.HELP.ASSIGN_GOV},
+            {ui_lblSearch_option,   lang.MUXOPTION.HELP.SEARCH},
+            {ui_lblCore_option,     lang.MUXOPTION.HELP.ASSIGN_CORE},
+            {ui_lblGovernor_option, lang.MUXOPTION.HELP.ASSIGN_GOV},
     };
 
     char message[MAX_BUFFER_SIZE];
@@ -103,30 +103,30 @@ static void add_info_items() {
 static void init_navigation_group() {
     add_info_items();
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlSearch,
-            ui_pnlCore,
-            ui_pnlGovernor
+            ui_pnlSearch_option,
+            ui_pnlCore_option,
+            ui_pnlGovernor_option
     };
 
-    ui_objects[0] = ui_lblSearch;
-    ui_objects[1] = ui_lblCore;
-    ui_objects[2] = ui_lblGovernor;
+    ui_objects[0] = ui_lblSearch_option;
+    ui_objects[1] = ui_lblCore_option;
+    ui_objects[2] = ui_lblGovernor_option;
 
-    ui_icons[0] = ui_icoSearch;
-    ui_icons[1] = ui_icoCore;
-    ui_icons[2] = ui_icoGovernor;
+    ui_icons[0] = ui_icoSearch_option;
+    ui_icons[1] = ui_icoCore_option;
+    ui_icons[2] = ui_icoGovernor_option;
 
-    apply_theme_list_panel(ui_pnlSearch);
-    apply_theme_list_panel(ui_pnlCore);
-    apply_theme_list_panel(ui_pnlGovernor);
+    apply_theme_list_panel(ui_pnlSearch_option);
+    apply_theme_list_panel(ui_pnlCore_option);
+    apply_theme_list_panel(ui_pnlGovernor_option);
 
-    apply_theme_list_item(&theme, ui_lblSearch, lang.MUXOPTION.SEARCH);
-    apply_theme_list_item(&theme, ui_lblCore, lang.MUXOPTION.ASSIGN_CORE);
-    apply_theme_list_item(&theme, ui_lblGovernor, lang.MUXOPTION.ASSIGN_GOV);
+    apply_theme_list_item(&theme, ui_lblSearch_option, lang.MUXOPTION.SEARCH);
+    apply_theme_list_item(&theme, ui_lblCore_option, lang.MUXOPTION.ASSIGN_CORE);
+    apply_theme_list_item(&theme, ui_lblGovernor_option, lang.MUXOPTION.ASSIGN_GOV);
 
-    apply_theme_list_glyph(&theme, ui_icoSearch, mux_module, "search");
-    apply_theme_list_glyph(&theme, ui_icoCore, mux_module, "core");
-    apply_theme_list_glyph(&theme, ui_icoGovernor, mux_module, "governor");
+    apply_theme_list_glyph(&theme, ui_icoSearch_option, mux_module, "search");
+    apply_theme_list_glyph(&theme, ui_icoCore_option, mux_module, "core");
+    apply_theme_list_glyph(&theme, ui_icoGovernor_option, mux_module, "governor");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -273,9 +273,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblSearch, "search");
-    lv_obj_set_user_data(ui_lblCore, "core");
-    lv_obj_set_user_data(ui_lblGovernor, "governor");
+    lv_obj_set_user_data(ui_lblSearch_option, "search");
+    lv_obj_set_user_data(ui_lblCore_option, "core");
+    lv_obj_set_user_data(ui_lblGovernor_option, "governor");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -342,7 +342,6 @@ int muxoption_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXOPTION.TITLE);
     init_muxoption(ui_pnlContent);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -356,6 +355,8 @@ int muxoption_main(int argc, char *argv[]) {
 
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

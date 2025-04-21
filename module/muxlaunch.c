@@ -106,33 +106,33 @@ static void init_navigation_group() {
         set_label_long_mode(&theme, ui_objects[0], item_labels_short[0]);
     } else {
         lv_obj_t *ui_objects_panel[] = {
-                ui_pnlExplore,
-                ui_pnlCollection,
-                ui_pnlHistory,
-                ui_pnlApps,
-                ui_pnlInfo,
-                ui_pnlConfig,
-                ui_pnlReboot,
-                ui_pnlShutdown,
+                ui_pnlExplore_launch,
+                ui_pnlCollection_launch,
+                ui_pnlHistory_launch,
+                ui_pnlApps_launch,
+                ui_pnlInfo_launch,
+                ui_pnlConfig_launch,
+                ui_pnlReboot_launch,
+                ui_pnlShutdown_launch,
         };
 
-        ui_objects[0] = ui_lblContent;
-        ui_objects[1] = ui_lblCollection;
-        ui_objects[2] = ui_lblHistory;
-        ui_objects[3] = ui_lblApps;
-        ui_objects[4] = ui_lblInfo;
-        ui_objects[5] = ui_lblConfig;
-        ui_objects[6] = ui_lblReboot;
-        ui_objects[7] = ui_lblShutdown;
+        ui_objects[0] = ui_lblContent_launch;
+        ui_objects[1] = ui_lblCollection_launch;
+        ui_objects[2] = ui_lblHistory_launch;
+        ui_objects[3] = ui_lblApps_launch;
+        ui_objects[4] = ui_lblInfo_launch;
+        ui_objects[5] = ui_lblConfig_launch;
+        ui_objects[6] = ui_lblReboot_launch;
+        ui_objects[7] = ui_lblShutdown_launch;
 
-        ui_icons[0] = ui_icoContent;
-        ui_icons[1] = ui_icoCollection;
-        ui_icons[2] = ui_icoHistory;
-        ui_icons[3] = ui_icoApps;
-        ui_icons[4] = ui_icoInfo;
-        ui_icons[5] = ui_icoConfig;
-        ui_icons[6] = ui_icoReboot;
-        ui_icons[7] = ui_icoShutdown;
+        ui_icons[0] = ui_icoContent_launch;
+        ui_icons[1] = ui_icoCollection_launch;
+        ui_icons[2] = ui_icoHistory_launch;
+        ui_icons[3] = ui_icoApps_launch;
+        ui_icons[4] = ui_icoInfo_launch;
+        ui_icons[5] = ui_icoConfig_launch;
+        ui_icons[6] = ui_icoReboot_launch;
+        ui_icons[7] = ui_icoShutdown_launch;
 
         for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
             apply_theme_list_panel(ui_objects_panel[i]);
@@ -521,14 +521,14 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblContent, "explore");
-    lv_obj_set_user_data(ui_lblCollection, "collection");
-    lv_obj_set_user_data(ui_lblHistory, "history");
-    lv_obj_set_user_data(ui_lblApps, "apps");
-    lv_obj_set_user_data(ui_lblInfo, "info");
-    lv_obj_set_user_data(ui_lblConfig, "config");
-    lv_obj_set_user_data(ui_lblReboot, "reboot");
-    lv_obj_set_user_data(ui_lblShutdown, "shutdown");
+    lv_obj_set_user_data(ui_lblContent_launch, "explore");
+    lv_obj_set_user_data(ui_lblCollection_launch, "collection");
+    lv_obj_set_user_data(ui_lblHistory_launch, "history");
+    lv_obj_set_user_data(ui_lblApps_launch, "apps");
+    lv_obj_set_user_data(ui_lblInfo_launch, "info");
+    lv_obj_set_user_data(ui_lblConfig_launch, "config");
+    lv_obj_set_user_data(ui_lblReboot_launch, "reboot");
+    lv_obj_set_user_data(ui_lblShutdown_launch, "shutdown");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

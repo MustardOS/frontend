@@ -9,6 +9,7 @@
 #include "../common/language.h"
 #include "../common/config.h"
 #include "../common/device.h"
+#include "../common/osk.h"
 
 #include "muxapp.h"
 #include "muxarchive.h"
@@ -50,8 +51,8 @@
 #include "muxvisual.h"
 #include "muxwebserv.h"
 
-
 static void cleanup_screen() {
+    if (ui_screen_container == NULL) return;
     init_dispose();
     lv_disp_load_scr(ui_screen_temp);
 
@@ -61,16 +62,20 @@ static void cleanup_screen() {
     }
     current_item_index = 0;
     first_open = 1;
+    key_curr = 0;
+    key_show = 0;
+    msgbox_active = 0;
+    nav_sound = 0;
 }
 
-static int main(int argc, char *argv[]) {
-    printf("****muxfrontend argv[0]: %s\n", argv[0]);
-
-    printf("****setup_background_process\n");
+int main(int argc, char *argv[]) {
+    setup_background_process();
     
-    // lv_log_register_print_cb(my_log_cb);
-    
-                init_theme(0, 0);
+    load_device(&device);
+    load_config(&config);
+    load_lang(&lang);
+    init_theme(0, 0);
+    init_display();
     
     while (1) {
         printf("frontend loop\n");
@@ -79,17 +84,100 @@ static int main(int argc, char *argv[]) {
             char *explore_dir = read_line_from_file(EXPLORE_DIR, 1);
             char *last_index = read_line_from_file(MUOS_IDX_LOAD, 1);
 
-            if (strcmp(action, "reboot") == 0 || strcmp(action, "shutdown") == 0) {
-                printf("****muxfrontend reboot or shutdown action: %s\n", action);
+            if (strcmp(action, "reboot") == 0) {
+                run_exec((const char *[]) { "/opt/muos/script/mux/quit.sh", "reboot", "frontend" });
+                break;
+            } else if (strcmp(action, "shutdown") == 0) {
+                run_exec((const char *[]) { "/opt/muos/script/mux/quit.sh", "poweroff", "frontend" });
                 break;
             } else if (strcmp(action, "explore") == 0) {
                 printf("****muxfrontend explore action: %s  explore_dir: %s   last_index: %s\n", action, explore_dir, last_index);
                 char *args[] = { "./muxplore", "-d", explore_dir, "-i", last_index };
                 muxplore_main(5, args);
             } else if (strcmp(action, "info") == 0) {
-                printf("****muxfrontend info action: %s  explore_dir: %s   last_index: %s\n", action, explore_dir, last_index);
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "launcher");
                 char *args[] = { "./muxinfo"};
                 muxinfo_main(1, args);
+            } else if (strcmp(action, "archive") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "app");
+                char *args[] = { "./muxarchive"};
+                muxarchive_main(1, args);
+            } else if (strcmp(action, "task") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "app");
+                char *args[] = { "./muxtask"};
+                muxtask_main(1, args);
+            } else if (strcmp(action, "tweakgen") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
+                char *args[] = { "./muxtweakgen"};
+                muxtweakgen_main(1, args);
+            } else if (strcmp(action, "connect") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
+                char *args[] = { "./muxconnect"};
+                muxconnect_main(1, args);
+            } else if (strcmp(action, "custom") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
+                char *args[] = { "./muxcustom"};
+                muxcustom_main(1, args);
+            } else if (strcmp(action, "network") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "connect");
+                char *args[] = { "./muxnetwork"};
+                muxnetwork_main(1, args);
+            } else if (strcmp(action, "language") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
+                char *args[] = { "./muxlanguage"};
+                muxlanguage_main(1, args);
+            } else if (strcmp(action, "webserv") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "connect");
+                char *args[] = { "./muxwebserv"};
+                muxwebserv_main(1, args);
+            } else if (strcmp(action, "hdmi") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "tweakgen");
+                char *args[] = { "./muxhdmi"};
+                muxhdmi_main(1, args);
+            } else if (strcmp(action, "rtc") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "tweakgen");
+                char *args[] = { "./muxrtc"};
+                muxrtc_main(1, args);
+            } else if (strcmp(action, "storage") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
+                char *args[] = { "./muxstorage"};
+                muxstorage_main(1, args);
+            } else if (strcmp(action, "power") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
+                char *args[] = { "./muxpower"};
+                muxpower_main(1, args);
+            } else if (strcmp(action, "visual") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
+                char *args[] = { "./muxvisual"};
+                muxvisual_main(1, args);
+            } else if (strcmp(action, "net_profile") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "network");
+                char *args[] = { "./muxnetprofile"};
+                muxnetprofile_main(1, args);
+            } else if (strcmp(action, "net_scan") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "network");
+                char *args[] = { "./muxnetscan"};
+                muxnetscan_main(1, args);
+            } else if (strcmp(action, "timezone") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "rtc");
+                char *args[] = { "./muxtimezone"};
+                muxtimezone_main(1, args);
+            } else if (strcmp(action, "screenshot") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
+                char *args[] = { "./muxshot"};
+                muxshot_main(1, args);
+            } else if (strcmp(action, "space") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
+                char *args[] = { "./muxspace"};
+                muxspace_main(1, args);
+            } else if (strcmp(action, "tester") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
+                char *args[] = { "./muxtester"};
+                muxtester_main(1, args);
+            } else if (strcmp(action, "system") == 0) {
+                write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
+                char *args[] = { "./muxsysinfo"};
+                muxsysinfo_main(1, args);
             } else {
                 printf("****muxfrontend launcher action: %s\n", action);
                 char *args[] = { "./muxlaunch" };

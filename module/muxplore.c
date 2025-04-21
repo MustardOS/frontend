@@ -27,10 +27,9 @@
 #define EXPLORE_DIR "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
+static lv_obj_t *ui_imgSplash;
 
-lv_obj_t *ui_imgSplash;
-
-lv_obj_t *ui_viewport_objects[7];
+static lv_obj_t *ui_viewport_objects[7];
 static lv_obj_t *ui_mux_panels[7];
 
 static char *prev_dir = "";
@@ -427,15 +426,6 @@ static void gen_label(char *item_glyph, char *item_text) {
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, ui_lblExploreItemGlyph, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
-}
-
-static char *get_glyph_name(size_t index) {
-    const char *file_name = strip_ext(items[index].name);
-    const char *system_name = get_last_subdir(sys_dir, '/', 4);
-
-    if (search_for_config(INFO_COL_PATH, file_name, system_name)) return "collection";
-    if (search_for_config(INFO_HIS_PATH, file_name, system_name)) return "history";
-    return "rom";
 }
 
 static void gen_item(char **file_names, int file_count) {

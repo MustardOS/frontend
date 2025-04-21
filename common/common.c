@@ -35,8 +35,10 @@
 #include "device.h"
 #include "theme.h"
 #include "mini/mini.h"
-#include "../module/muxshare.h"
 
+char *mux_module;
+int msgbox_active;
+int nav_sound;
 struct json translation_generic;
 struct json translation_specific;
 struct pattern skip_pattern_list = {NULL, 0, 0};

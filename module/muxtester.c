@@ -14,14 +14,7 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 
-
-
 lv_obj_t *ui_imgButton;
-
-// Stubs to appease the compiler!
-static void list_nav_prev(void) {}
-
-static void list_nav_next(void) {}
 
 static void handle_input(mux_input_type type, mux_input_action action) {
     char image_path[MAX_BUFFER_SIZE];
@@ -145,7 +138,6 @@ int muxtester_main(int argc, char *argv[]) {
     init_theme(0, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTESTER.TITLE);
-    init_timer(NULL, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -158,6 +150,8 @@ int muxtester_main(int argc, char *argv[]) {
     init_navigation_sound(&nav_sound, mux_module);
 
     load_kiosk(&kiosk);
+
+    init_timer(NULL, NULL);
 
     mux_input_options input_opts = {
             .press_handler = {[MUX_INPUT_POWER_SHORT] = handle_power},

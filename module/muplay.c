@@ -10,11 +10,6 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-
 struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;

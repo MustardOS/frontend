@@ -22,14 +22,11 @@ struct mux_passcode passcode;
 static char *p_type;
 static char *p_code;
 static char *p_msg;
-// Stubs to appease the compiler!
-static void list_nav_prev(void) {}
 
-static void list_nav_next(void) {}
 #define UI_COUNT 6
 static lv_obj_t *ui_objects[UI_COUNT];
 
-lv_obj_t *ui_mux_panels[2];
+static lv_obj_t *ui_mux_panels[2];
 
 static void init_navigation_group() {
     ui_objects[0] = ui_rolComboOne;
@@ -194,7 +191,6 @@ int muxpass_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPASS.TITLE);
     init_muxpass(ui_pnlContent);
-    init_timer(NULL, NULL);
     init_elements();
 
     if (strlen(p_msg) > 1) toast_message(p_msg, 0, 0);
@@ -213,6 +209,8 @@ int muxpass_main(int argc, char *argv[]) {
     init_navigation_sound(&nav_sound, mux_module);
 
     load_kiosk(&kiosk);
+
+    init_timer(NULL, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

@@ -17,7 +17,6 @@
 #include "config.h"
 #include "device.h"
 #include "theme.h"
-#include "../module/muxshare.h"
 
 __thread uint64_t start_ms = 0;
 static struct dt_task_param dt_par;

@@ -14,11 +14,6 @@
 #include "../common/kiosk.h"
 #include "../common/theme.h"
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-
 struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;

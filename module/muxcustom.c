@@ -573,7 +573,6 @@ int muxcustom_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCUSTOM.TITLE);
     init_muxcustom(ui_pnlContent);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -589,6 +588,8 @@ int muxcustom_main(int argc, char *argv[]) {
 
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

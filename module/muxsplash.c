@@ -13,14 +13,6 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 #include "../common/theme.h"
-static int msgbox_active = 0;
-static int nav_sound = 0;
-
-
-// Stubs to appease the compiler!
-static void list_nav_prev(void) {}
-
-static void list_nav_next(void) {}
 
 int muxsplash_main(int argc, char *argv[]) {
     if (argc != 2) {

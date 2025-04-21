@@ -23,16 +23,14 @@
 #include "../common/log.h"
 #include "../lookup/lookup.h"
 
+static lv_obj_t *ui_imgSplash;
 
-lv_obj_t *ui_imgSplash;
-
-lv_obj_t *ui_viewport_objects[7];
-lv_obj_t *ui_mux_panels[7];
+static lv_obj_t *ui_viewport_objects[7];
+static lv_obj_t *ui_mux_panels[7];
 
 static int his_index = -1;
 
 static int file_count = 0;
-static int nav_moved = 0;
 static int starter_image = 0;
 static int splash_valid = 0;
 
@@ -95,9 +93,9 @@ static void update_file_counter() {
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
         char counter_text[MAX_BUFFER_SIZE];
         snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
-        fade_label(ui_lblCounter, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
+        fade_label(ui_lblCounter_history, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
     } else {
-        lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblCounter_history, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -634,7 +632,7 @@ static void init_elements() {
 
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
-    ui_mux_panels[2] = ui_lblCounter;
+    ui_mux_panels[2] = ui_lblCounter_history;
     ui_mux_panels[3] = ui_pnlHelp;
     ui_mux_panels[4] = ui_pnlProgressBrightness;
     ui_mux_panels[5] = ui_pnlProgressVolume;
@@ -734,7 +732,6 @@ int muxhistory_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, "");
     init_muxhistory(ui_screen, &theme);
-    init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
@@ -796,6 +793,8 @@ int muxhistory_main(int argc, char *argv[]) {
         }
         remove(ADD_MODE_DONE);
     }
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

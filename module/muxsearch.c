@@ -23,9 +23,6 @@
 static int starter_image = 0;
 static int got_results = 0;
 
-static int key_show = 0;
-static int key_curr = 0;
-
 static char SD1[MAX_BUFFER_SIZE];
 static char SD2[MAX_BUFFER_SIZE];
 static char E_USB[MAX_BUFFER_SIZE];
@@ -39,11 +36,9 @@ struct json search_folders;
 
 size_t all_item_count = 0;
 content_item *all_items = NULL;
-lv_obj_t *key_entry;
 
-
-lv_obj_t *ui_viewport_objects[7];
-lv_obj_t *ui_mux_panels[7];
+static lv_obj_t *ui_viewport_objects[7];
+static lv_obj_t *ui_mux_panels[7];
 
 struct help_msg {
     lv_obj_t *element;
@@ -52,9 +47,9 @@ struct help_msg {
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblLookup,       lang.MUXSEARCH.LOOKUP},
-            {ui_lblSearchLocal,  lang.MUXSEARCH.LOCAL},
-            {ui_lblSearchGlobal, lang.MUXSEARCH.GLOBAL},
+            {ui_lblLookup_search,       lang.MUXSEARCH.LOOKUP},
+            {ui_lblSearchLocal_search,  lang.MUXSEARCH.LOCAL},
+            {ui_lblSearchGlobal_search, lang.MUXSEARCH.GLOBAL},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -75,44 +70,44 @@ static void show_help(lv_obj_t *element_focused) {
 
 static void init_navigation_group() {
     lv_obj_t *ui_panels[] = {
-            ui_pnlLookup,
-            ui_pnlSearchLocal,
-            ui_pnlSearchGlobal,
+            ui_pnlLookup_search,
+            ui_pnlSearchLocal_search,
+            ui_pnlSearchGlobal_search,
     };
 
     lv_obj_t *ui_labels[] = {
-            ui_lblLookup,
-            ui_lblSearchLocal,
-            ui_lblSearchGlobal,
+            ui_lblLookup_search,
+            ui_lblSearchLocal_search,
+            ui_lblSearchGlobal_search,
     };
 
     lv_obj_t *ui_values[] = {
-            ui_lblLookupValue,
-            ui_lblSearchLocalValue,
-            ui_lblSearchGlobalValue,
+            ui_lblLookupValue_search,
+            ui_lblSearchLocalValue_search,
+            ui_lblSearchGlobalValue_search,
     };
 
     lv_obj_t *ui_icons[] = {
-            ui_icoLookup,
-            ui_icoSearchLocal,
-            ui_icoSearchGlobal,
+            ui_icoLookup_search,
+            ui_icoSearchLocal_search,
+            ui_icoSearchGlobal_search,
     };
 
-    apply_theme_list_panel(ui_pnlLookup);
-    apply_theme_list_panel(ui_pnlSearchLocal);
-    apply_theme_list_panel(ui_pnlSearchGlobal);
+    apply_theme_list_panel(ui_pnlLookup_search);
+    apply_theme_list_panel(ui_pnlSearchLocal_search);
+    apply_theme_list_panel(ui_pnlSearchGlobal_search);
 
-    apply_theme_list_item(&theme, ui_lblLookup, lang.MUXSEARCH.LOOKUP);
-    apply_theme_list_item(&theme, ui_lblSearchLocal, lang.MUXSEARCH.LOCAL);
-    apply_theme_list_item(&theme, ui_lblSearchGlobal, lang.MUXSEARCH.GLOBAL);
+    apply_theme_list_item(&theme, ui_lblLookup_search, lang.MUXSEARCH.LOOKUP);
+    apply_theme_list_item(&theme, ui_lblSearchLocal_search, lang.MUXSEARCH.LOCAL);
+    apply_theme_list_item(&theme, ui_lblSearchGlobal_search, lang.MUXSEARCH.GLOBAL);
 
-    apply_theme_list_glyph(&theme, ui_icoLookup, mux_module, "lookup");
-    apply_theme_list_glyph(&theme, ui_icoSearchLocal, mux_module, "local");
-    apply_theme_list_glyph(&theme, ui_icoSearchGlobal, mux_module, "global");
+    apply_theme_list_glyph(&theme, ui_icoLookup_search, mux_module, "lookup");
+    apply_theme_list_glyph(&theme, ui_icoSearchLocal_search, mux_module, "local");
+    apply_theme_list_glyph(&theme, ui_icoSearchGlobal_search, mux_module, "global");
 
-    apply_theme_list_value(&theme, ui_lblLookupValue, "");
-    apply_theme_list_value(&theme, ui_lblSearchLocalValue, "");
-    apply_theme_list_value(&theme, ui_lblSearchGlobalValue, "");
+    apply_theme_list_value(&theme, ui_lblLookupValue_search, "");
+    apply_theme_list_value(&theme, ui_lblSearchLocalValue_search, "");
+    apply_theme_list_value(&theme, ui_lblSearchGlobalValue_search, "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -514,16 +509,16 @@ static void handle_keyboard_OK_press(void) {
     key_show = 0;
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblLookup) {
-        lv_label_set_text(ui_lblLookupValue,
-                          lv_textarea_get_text(ui_txtEntry));
+    if (element_focused == ui_lblLookup_search) {
+        lv_label_set_text(ui_lblLookupValue_search,
+                          lv_textarea_get_text(ui_txtEntry_search));
     }
 
     reset_osk(key_entry);
 
-    lv_textarea_set_text(ui_txtEntry, "");
+    lv_textarea_set_text(ui_txtEntry_search, "");
     lv_group_set_focus_cb(ui_group, NULL);
-    lv_obj_add_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_pnlEntry_search, LV_OBJ_FLAG_HIDDEN);
 }
 
 static void handle_keyboard_press(void) {
@@ -551,34 +546,34 @@ static void handle_confirm(void) {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    if (element_focused == ui_lblLookup) {
+    if (element_focused == ui_lblLookup_search) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
         key_show = 1;
 
-        lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_move_foreground(ui_pnlEntry);
+        lv_obj_clear_flag(ui_pnlEntry_search, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(ui_pnlEntry_search);
 
-        lv_textarea_set_text(ui_txtEntry, lv_label_get_text(lv_group_get_focused(ui_group_value)));
-    } else if (element_focused == ui_lblSearchLocal || element_focused == ui_lblSearchGlobal) {
-        if (strlen(lv_label_get_text(ui_lblLookupValue)) <= 2) {
+        lv_textarea_set_text(ui_txtEntry_search, lv_label_get_text(lv_group_get_focused(ui_group_value)));
+    } else if (element_focused == ui_lblSearchLocal_search || element_focused == ui_lblSearchGlobal_search) {
+        if (strlen(lv_label_get_text(ui_lblLookupValue_search)) <= 2) {
             toast_message(lang.MUXSEARCH.ERROR, 1000, 1000);
             return;
         }
 
         toast_message(lang.MUXSEARCH.SEARCH, 0, 0);
 
-        if (element_focused == ui_lblSearchLocal) {
+        if (element_focused == ui_lblSearchLocal_search) {
             run_exec((const char *[]) {
                     (INTERNAL_PATH "script/mux/find.sh"),
-                    str_trim(lv_label_get_text(ui_lblLookupValue)), rom_dir,
+                    str_trim(lv_label_get_text(ui_lblLookupValue_search)), rom_dir,
                     NULL
             });
         } else {
             run_exec((const char *[]) {
                     (INTERNAL_PATH "script/mux/find.sh"),
-                    str_trim(lv_label_get_text(ui_lblLookupValue)), SD1, SD2, E_USB,
+                    str_trim(lv_label_get_text(ui_lblLookupValue_search)), SD1, SD2, E_USB,
                     NULL
             });
         }
@@ -642,7 +637,7 @@ static void handle_b(void) {
     }
 
     if (key_show) {
-        close_osk(key_entry, ui_group, ui_txtEntry, ui_pnlEntry);
+        close_osk(key_entry, ui_group, ui_txtEntry_search, ui_pnlEntry_search);
         return;
     }
 
@@ -653,7 +648,7 @@ static void handle_x(void) {
     if (msgbox_active) return;
 
     if (key_show) {
-        key_backspace(ui_txtEntry);
+        key_backspace(ui_txtEntry_search);
         return;
     }
 
@@ -792,7 +787,7 @@ static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
-    ui_mux_panels[3] = ui_pnlEntry;
+    ui_mux_panels[3] = ui_pnlEntry_search;
     ui_mux_panels[4] = ui_pnlProgressBrightness;
     ui_mux_panels[5] = ui_pnlProgressVolume;
     ui_mux_panels[6] = ui_pnlMessage;
@@ -828,9 +823,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblLookup, "lookup");
-    lv_obj_set_user_data(ui_lblSearchLocal, "local");
-    lv_obj_set_user_data(ui_lblSearchGlobal, "global");
+    lv_obj_set_user_data(ui_lblLookup_search, "lookup");
+    lv_obj_set_user_data(ui_lblSearchLocal_search, "local");
+    lv_obj_set_user_data(ui_lblSearchGlobal_search, "global");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -844,7 +839,7 @@ static void init_elements() {
 }
 
 static void init_osk() {
-    key_entry = lv_btnmatrix_create(ui_pnlEntry);
+    key_entry = lv_btnmatrix_create(ui_pnlEntry_search);
 
     lv_obj_set_width(key_entry, device.MUX.WIDTH * 5 / 6);
     lv_obj_set_height(key_entry, device.MUX.HEIGHT * 5 / 9);
@@ -864,7 +859,7 @@ static void init_osk() {
 
     lv_obj_align(key_entry, LV_ALIGN_CENTER, 0, 0);
 
-    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry);
+    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry_search);
 
     lv_obj_set_style_border_width(key_entry, 3, LV_PART_ITEMS | LV_STATE_CHECKED);
     lv_obj_set_style_border_width(key_entry, 1, LV_PART_ITEMS | LV_STATE_DEFAULT);
@@ -904,14 +899,14 @@ static void init_osk() {
     lv_obj_set_style_pad_right(key_entry, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_gap(key_entry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_height(ui_txtEntry, 48);
-    lv_obj_set_style_text_color(ui_txtEntry, lv_color_hex(theme.OSK.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_txtEntry, theme.OSK.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_txtEntry, lv_color_hex(theme.OSK.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_txtEntry, theme.OSK.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_height(ui_txtEntry_search, 48);
+    lv_obj_set_style_text_color(ui_txtEntry_search, lv_color_hex(theme.OSK.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_txtEntry_search, theme.OSK.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_txtEntry_search, lv_color_hex(theme.OSK.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_txtEntry_search, theme.OSK.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_txtEntry_search, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_txtEntry_search, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_txtEntry_search, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 static void ui_refresh_task() {
@@ -935,7 +930,7 @@ static void on_key_event(struct input_event ev) {
     if (ev.code == KEY_ESC && ev.value == 1) {
         handle_b();
     } else {
-        process_key_event(&ev, ui_txtEntry);
+        process_key_event(&ev, ui_txtEntry_search);
     }
 }
 
@@ -974,7 +969,6 @@ int muxsearch_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
     init_muxsearch(ui_screen, ui_pnlContent, &theme);
-    init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
@@ -1001,12 +995,14 @@ int muxsearch_main(int argc, char *argv[]) {
 
     if (got_results) {
         process_results(json_content);
-        lv_label_set_text(ui_lblLookupValue, lookup_value);
+        lv_label_set_text(ui_lblLookupValue_search, lookup_value);
         free(json_content);
     }
 
     init_osk();
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

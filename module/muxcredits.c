@@ -12,13 +12,6 @@
 #include "../common/kiosk.h"
 #include "../common/theme.h"
 
-
-
-// Stubs to appease the compiler!
-static void list_nav_prev(void) {}
-
-static void list_nav_next(void) {}
-
 static void timeout_task() {
     safe_quit(0);
     mux_input_stop();

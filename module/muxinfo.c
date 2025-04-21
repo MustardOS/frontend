@@ -175,7 +175,6 @@ static void handle_b() {
     }
 
     play_sound("back", nav_sound, 0, 1);
-    write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "launcher");
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "info");
 
     safe_quit(0);

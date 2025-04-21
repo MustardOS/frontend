@@ -15,13 +15,6 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 
-
-
-// Stubs to appease the compiler!
-static void list_nav_prev(void) {}
-
-static void list_nav_next(void) {}
-
 int muxstart_main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <progress> <message>\n", argv[0]);

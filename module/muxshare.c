@@ -1,12 +1,8 @@
 #include "muxshare.h"
 
-char *mux_module;
-
 size_t item_count = 0;
 content_item *items = NULL;
 
-int msgbox_active = 0;
-int nav_sound;
 int bar_header = 0;
 int bar_footer = 0;
 

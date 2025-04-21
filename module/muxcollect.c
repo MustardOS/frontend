@@ -27,24 +27,19 @@
 
 #define COLLECTION_DIR "/tmp/collection_dir"
 
+static lv_obj_t *ui_imgSplash;
 
-
-lv_obj_t *key_entry;
-lv_obj_t *ui_imgSplash;
-
-lv_obj_t *ui_viewport_objects[7];
-lv_obj_t *ui_mux_panels[7];
+static lv_obj_t *ui_viewport_objects[7];
+static lv_obj_t *ui_mux_panels[7];
 
 static char *prev_dir = "";
 static char *sys_dir = INFO_COL_PATH;
 static char new_dir[MAX_BUFFER_SIZE];
 
 static int add_mode = 0;
-static int key_curr = 0;
 static int sys_index = -1;
 static int file_count = 0;
 static int dir_count = 0;
-static int nav_moved = 0;
 static int starter_image = 0;
 static int splash_valid = 0;
 static int nogrid_file_exists = 0;
@@ -116,9 +111,9 @@ static void update_file_counter() {
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
         char counter_text[MAX_BUFFER_SIZE];
         snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
-        fade_label(ui_lblCounter, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
+        fade_label(ui_lblCounter_collect, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
     } else {
-        lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblCounter_collect, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -654,10 +649,10 @@ static void handle_keyboard_OK_press(void) {
     key_show = 0;
 
     snprintf(new_dir, sizeof(new_dir), "%s/%s",
-             sys_dir, lv_textarea_get_text(ui_txtEntry));
+             sys_dir, lv_textarea_get_text(ui_txtEntry_collect));
     create_directories(new_dir);
 
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txtEntry));
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txtEntry_collect));
     load_mux("collection");
 
     safe_quit(0);
@@ -808,7 +803,7 @@ static void handle_b() {
     }
 
     if (key_show) {
-        close_osk(key_entry, ui_group, ui_txtEntry, ui_pnlEntry);
+        close_osk(key_entry, ui_group, ui_txtEntry_collect, ui_pnlEntry_collect);
         return;
     }
 
@@ -843,7 +838,7 @@ static void handle_b() {
 
 static void handle_x() {
     if (key_show) {
-        key_backspace(ui_txtEntry);
+        key_backspace(ui_txtEntry_collect);
         return;
     }
 
@@ -888,10 +883,10 @@ static void handle_y() {
 
         key_show = 1;
 
-        lv_obj_clear_flag(ui_pnlEntry, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_move_foreground(ui_pnlEntry);
+        lv_obj_clear_flag(ui_pnlEntry_collect, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(ui_pnlEntry_collect);
 
-        lv_textarea_set_text(ui_txtEntry, "");
+        lv_textarea_set_text(ui_txtEntry_collect, "");
     }
 }
 
@@ -1034,7 +1029,7 @@ static void init_elements() {
 
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
-    ui_mux_panels[2] = ui_lblCounter;
+    ui_mux_panels[2] = ui_lblCounter_collect;
     ui_mux_panels[3] = ui_pnlHelp;
     ui_mux_panels[4] = ui_pnlProgressBrightness;
     ui_mux_panels[5] = ui_pnlProgressVolume;
@@ -1088,7 +1083,7 @@ static void init_elements() {
 }
 
 static void init_osk() {
-    key_entry = lv_btnmatrix_create(ui_pnlEntry);
+    key_entry = lv_btnmatrix_create(ui_pnlEntry_collect);
 
     lv_obj_set_width(key_entry, device.MUX.WIDTH * 5 / 6);
     lv_obj_set_height(key_entry, device.MUX.HEIGHT * 5 / 9);
@@ -1108,7 +1103,7 @@ static void init_osk() {
 
     lv_obj_align(key_entry, LV_ALIGN_CENTER, 0, 0);
 
-    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry);
+    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry_collect);
 
     lv_obj_set_style_border_width(key_entry, 3, LV_PART_ITEMS | LV_STATE_CHECKED);
     lv_obj_set_style_border_width(key_entry, 1, LV_PART_ITEMS | LV_STATE_DEFAULT);
@@ -1148,14 +1143,14 @@ static void init_osk() {
     lv_obj_set_style_pad_right(key_entry, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_gap(key_entry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_height(ui_txtEntry, 48);
-    lv_obj_set_style_text_color(ui_txtEntry, lv_color_hex(theme.OSK.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_txtEntry, theme.OSK.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_txtEntry, lv_color_hex(theme.OSK.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_txtEntry, theme.OSK.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(ui_txtEntry, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_height(ui_txtEntry_collect, 48);
+    lv_obj_set_style_text_color(ui_txtEntry_collect, lv_color_hex(theme.OSK.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_txtEntry_collect, theme.OSK.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_txtEntry_collect, lv_color_hex(theme.OSK.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_txtEntry_collect, theme.OSK.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_txtEntry_collect, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(ui_txtEntry_collect, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(ui_txtEntry_collect, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 static void ui_refresh_task() {
@@ -1187,7 +1182,7 @@ static void on_key_event(struct input_event ev) {
     if (ev.code == KEY_ESC && ev.value == 1) {
         handle_b();
     } else {
-        process_key_event(&ev, ui_txtEntry);
+        process_key_event(&ev, ui_txtEntry_collect);
     }
 }
 
@@ -1227,7 +1222,6 @@ int muxcollect_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, "");
     init_muxcollect(ui_screen, ui_pnlContent, &theme);
-    init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
@@ -1344,6 +1338,8 @@ int muxcollect_main(int argc, char *argv[]) {
     update_file_counter();
     init_osk();
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||

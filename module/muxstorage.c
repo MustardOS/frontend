@@ -38,24 +38,24 @@ struct storage storage_path[UI_COUNT];
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBIOS,             lang.MUXSTORAGE.HELP.BIOS},
-            {ui_lblCatalogue,        lang.MUXSTORAGE.HELP.CATALOGUE},
-            {ui_lblName,             lang.MUXSTORAGE.HELP.FRIENDLY},
-            {ui_lblRetroArch,        lang.MUXSTORAGE.HELP.RA_SYSTEM},
-            {ui_lblConfig,           lang.MUXSTORAGE.HELP.RA_CONFIG},
-            {ui_lblCore,             lang.MUXSTORAGE.HELP.ASSIGNED},
-            {ui_lblCollection,       lang.MUXSTORAGE.HELP.COLLECTION},
-            {ui_lblHistory,          lang.MUXSTORAGE.HELP.HISTORY},
-            {ui_lblMusic,            lang.MUXSTORAGE.HELP.MUSIC},
-            {ui_lblSave,             lang.MUXSTORAGE.HELP.SAVE},
-            {ui_lblScreenshot,       lang.MUXSTORAGE.HELP.SCREENSHOT},
-            {ui_lblTheme,            lang.MUXSTORAGE.HELP.PACKAGE.THEME},
-            {ui_lblCataloguePackage, lang.MUXSTORAGE.HELP.PACKAGE.CATALOGUE},
-            {ui_lblConfigPackage,    lang.MUXSTORAGE.HELP.PACKAGE.RA_CONFIG},
-            {ui_lblLanguage,         lang.MUXSTORAGE.HELP.LANGUAGE},
-            {ui_lblNetwork,          lang.MUXSTORAGE.HELP.NET_PROFILE},
-            {ui_lblSyncthing_storage,        lang.MUXSTORAGE.HELP.SYNCTHING},
-            {ui_lblUserInit,         lang.MUXSTORAGE.HELP.USER_INIT},
+            {ui_lblBIOS_storage,             lang.MUXSTORAGE.HELP.BIOS},
+            {ui_lblCatalogue_storage,        lang.MUXSTORAGE.HELP.CATALOGUE},
+            {ui_lblName_storage,             lang.MUXSTORAGE.HELP.FRIENDLY},
+            {ui_lblRetroArch_storage,        lang.MUXSTORAGE.HELP.RA_SYSTEM},
+            {ui_lblConfig_storage,           lang.MUXSTORAGE.HELP.RA_CONFIG},
+            {ui_lblCore_storage,             lang.MUXSTORAGE.HELP.ASSIGNED},
+            {ui_lblCollection_storage_storage,       lang.MUXSTORAGE.HELP.COLLECTION},
+            {ui_lblHistory_storage,          lang.MUXSTORAGE.HELP.HISTORY},
+            {ui_lblMusic_storage,            lang.MUXSTORAGE.HELP.MUSIC},
+            {ui_lblSave_storage,             lang.MUXSTORAGE.HELP.SAVE},
+            {ui_lblScreenshot_storage,       lang.MUXSTORAGE.HELP.SCREENSHOT},
+            {ui_lblTheme_storage,            lang.MUXSTORAGE.HELP.PACKAGE.THEME},
+            {ui_lblCatalogue_storagePackage, lang.MUXSTORAGE.HELP.PACKAGE.CATALOGUE},
+            {ui_lblConfig_storagePackage,    lang.MUXSTORAGE.HELP.PACKAGE.RA_CONFIG},
+            {ui_lblLanguage_storage,         lang.MUXSTORAGE.HELP.LANGUAGE},
+            {ui_lblNetwork_storage,          lang.MUXSTORAGE.HELP.NET_PROFILE},
+            {ui_lblSyncthing_storage_storage,        lang.MUXSTORAGE.HELP.SYNCTHING},
+            {ui_lblUserInit_storage,         lang.MUXSTORAGE.HELP.USER_INIT},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -80,58 +80,58 @@ static void update_storage_info() {
      * If it's not on SD1 then you have bigger problems!
     */
     storage_path[0].path_suffix = STORE_LOC_BIOS;
-    storage_path[0].ui_label = ui_lblBIOSValue;
+    storage_path[0].ui_label = ui_lblBIOSValue_storage;
 
     storage_path[1].path_suffix = STORE_LOC_CLOG;
-    storage_path[1].ui_label = ui_lblCatalogueValue;
+    storage_path[1].ui_label = ui_lblCatalogueValue_storage;
 
     storage_path[2].path_suffix = STORE_LOC_NAME;
-    storage_path[2].ui_label = ui_lblNameValue;
+    storage_path[2].ui_label = ui_lblNameValue_storage;
 
     storage_path[3].path_suffix = STORE_LOC_RARC;
-    storage_path[3].ui_label = ui_lblRetroArchValue;
+    storage_path[3].ui_label = ui_lblRetroArchValue_storage;
 
     storage_path[4].path_suffix = STORE_LOC_CONF;
-    storage_path[4].ui_label = ui_lblConfigValue;
+    storage_path[4].ui_label = ui_lblConfigValue_storage;
 
     storage_path[5].path_suffix = STORE_LOC_CORE;
-    storage_path[5].ui_label = ui_lblCoreValue;
+    storage_path[5].ui_label = ui_lblCoreValue_storage;
 
     storage_path[6].path_suffix = STORE_LOC_COLL;
-    storage_path[6].ui_label = ui_lblCollectionValue;
+    storage_path[6].ui_label = ui_lblCollection_storageValue_storage;
 
     storage_path[7].path_suffix = STORE_LOC_HIST;
-    storage_path[7].ui_label = ui_lblHistoryValue;
+    storage_path[7].ui_label = ui_lblHistoryValue_storage;
 
     storage_path[8].path_suffix = STORE_LOC_MUSC;
-    storage_path[8].ui_label = ui_lblMusicValue;
+    storage_path[8].ui_label = ui_lblMusicValue_storage;
 
     storage_path[9].path_suffix = STORE_LOC_SAVE;
-    storage_path[9].ui_label = ui_lblSaveValue;
+    storage_path[9].ui_label = ui_lblSaveValue_storage;
 
     storage_path[10].path_suffix = STORE_LOC_SCRS;
-    storage_path[10].ui_label = ui_lblScreenshotValue;
+    storage_path[10].ui_label = ui_lblScreenshotValue_storage;
 
     storage_path[11].path_suffix = STORE_LOC_THEM;
-    storage_path[11].ui_label = ui_lblThemeValue;
+    storage_path[11].ui_label = ui_lblThemeValue_storage;
 
     storage_path[12].path_suffix = STORE_LOC_PCAT;
-    storage_path[12].ui_label = ui_lblCataloguePackageValue;
+    storage_path[12].ui_label = ui_lblCataloguePackageValue_storage;
 
     storage_path[13].path_suffix = STORE_LOC_PCON;
-    storage_path[13].ui_label = ui_lblConfigPackageValue;
+    storage_path[13].ui_label = ui_lblConfigPackageValue_storage;
 
     storage_path[14].path_suffix = STORE_LOC_LANG;
-    storage_path[14].ui_label = ui_lblLanguageValue;
+    storage_path[14].ui_label = ui_lblLanguageValue_storage;
 
     storage_path[15].path_suffix = STORE_LOC_NETW;
-    storage_path[15].ui_label = ui_lblNetworkValue;
+    storage_path[15].ui_label = ui_lblNetworkValue_storage;
 
     storage_path[16].path_suffix = STORE_LOC_SYCT;
-    storage_path[16].ui_label = ui_lblSyncthingValue_storage;
+    storage_path[16].ui_label = ui_lblSyncthingValue_storage_storage;
 
     storage_path[17].path_suffix = STORE_LOC_INIT;
-    storage_path[17].ui_label = ui_lblUserInitValue;
+    storage_path[17].ui_label = ui_lblUserInitValue_storage;
 
     char dir[FILENAME_MAX];
     for (int i = 0; i < sizeof(storage_path) / sizeof(storage_path[0]); i++) {
@@ -148,162 +148,162 @@ static void update_storage_info() {
 
 static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlBIOS,
-            ui_pnlCatalogue,
-            ui_pnlName,
-            ui_pnlRetroArch,
-            ui_pnlConfig,
-            ui_pnlCore,
-            ui_pnlCollection,
-            ui_pnlHistory,
-            ui_pnlMusic,
-            ui_pnlSave,
-            ui_pnlScreenshot,
-            ui_pnlTheme,
-            ui_pnlCataloguePackage,
-            ui_pnlConfigPackage,
-            ui_pnlLanguage,
-            ui_pnlNetwork,
-            ui_pnlSyncthing_storage,
-            ui_pnlUserInit
+            ui_pnlBIOS_storage,
+            ui_pnlCatalogue_storage,
+            ui_pnlName_storage,
+            ui_pnlRetroArch_storage,
+            ui_pnlConfig_storage,
+            ui_pnlCore_storage,
+            ui_pnlCollection_storage_storage,
+            ui_pnlHistory_storage,
+            ui_pnlMusic_storage,
+            ui_pnlSave_storage,
+            ui_pnlScreenshot_storage,
+            ui_pnlTheme_storage,
+            ui_pnlCatalogue_storagePackage,
+            ui_pnlConfig_storagePackage,
+            ui_pnlLanguage_storage,
+            ui_pnlNetwork_storage,
+            ui_pnlSyncthing_storage_storage,
+            ui_pnlUserInit_storage
     };
 
-    ui_objects[0] = ui_lblBIOS;
-    ui_objects[1] = ui_lblCatalogue;
-    ui_objects[2] = ui_lblName;
-    ui_objects[3] = ui_lblRetroArch;
-    ui_objects[4] = ui_lblConfig;
-    ui_objects[5] = ui_lblCore;
-    ui_objects[6] = ui_lblCollection;
-    ui_objects[7] = ui_lblHistory;
-    ui_objects[8] = ui_lblMusic;
-    ui_objects[9] = ui_lblSave;
-    ui_objects[10] = ui_lblScreenshot;
-    ui_objects[11] = ui_lblTheme;
-    ui_objects[12] = ui_lblCataloguePackage;
-    ui_objects[13] = ui_lblConfigPackage;
-    ui_objects[14] = ui_lblLanguage;
-    ui_objects[15] = ui_lblNetwork;
-    ui_objects[16] = ui_lblSyncthing_storage;
-    ui_objects[17] = ui_lblUserInit;
+    ui_objects[0] = ui_lblBIOS_storage;
+    ui_objects[1] = ui_lblCatalogue_storage;
+    ui_objects[2] = ui_lblName_storage;
+    ui_objects[3] = ui_lblRetroArch_storage;
+    ui_objects[4] = ui_lblConfig_storage;
+    ui_objects[5] = ui_lblCore_storage;
+    ui_objects[6] = ui_lblCollection_storage_storage;
+    ui_objects[7] = ui_lblHistory_storage;
+    ui_objects[8] = ui_lblMusic_storage;
+    ui_objects[9] = ui_lblSave_storage;
+    ui_objects[10] = ui_lblScreenshot_storage;
+    ui_objects[11] = ui_lblTheme_storage;
+    ui_objects[12] = ui_lblCatalogue_storagePackage;
+    ui_objects[13] = ui_lblConfig_storagePackage;
+    ui_objects[14] = ui_lblLanguage_storage;
+    ui_objects[15] = ui_lblNetwork_storage;
+    ui_objects[16] = ui_lblSyncthing_storage_storage;
+    ui_objects[17] = ui_lblUserInit_storage;
 
     lv_obj_t *ui_objects_value[] = {
-            ui_lblBIOSValue,
-            ui_lblCatalogueValue,
-            ui_lblNameValue,
-            ui_lblRetroArchValue,
-            ui_lblConfigValue,
-            ui_lblCoreValue,
-            ui_lblCollectionValue,
-            ui_lblHistoryValue,
-            ui_lblMusicValue,
-            ui_lblSaveValue,
-            ui_lblScreenshotValue,
-            ui_lblThemeValue,
-            ui_lblCataloguePackageValue,
-            ui_lblConfigPackageValue,
-            ui_lblLanguageValue,
-            ui_lblNetworkValue,
-            ui_lblSyncthingValue_storage,
-            ui_lblUserInitValue,
+            ui_lblBIOSValue_storage,
+            ui_lblCatalogueValue_storage,
+            ui_lblNameValue_storage,
+            ui_lblRetroArchValue_storage,
+            ui_lblConfigValue_storage,
+            ui_lblCoreValue_storage,
+            ui_lblCollection_storageValue_storage,
+            ui_lblHistoryValue_storage,
+            ui_lblMusicValue_storage,
+            ui_lblSaveValue_storage,
+            ui_lblScreenshotValue_storage,
+            ui_lblThemeValue_storage,
+            ui_lblCataloguePackageValue_storage,
+            ui_lblConfigPackageValue_storage,
+            ui_lblLanguageValue_storage,
+            ui_lblNetworkValue_storage,
+            ui_lblSyncthingValue_storage_storage,
+            ui_lblUserInitValue_storage,
     };
 
     lv_obj_t *ui_objects_glyph[] = {
-            ui_icoBIOS,
-            ui_icoCatalogue,
-            ui_icoName,
-            ui_icoRetroArch,
-            ui_icoConfig,
-            ui_icoCore,
-            ui_icoCollection,
-            ui_icoHistory,
-            ui_icoMusic,
-            ui_icoSave,
-            ui_icoScreenshot,
-            ui_icoTheme,
-            ui_icoCataloguePackage,
-            ui_icoConfigPackage,
-            ui_icoLanguage,
-            ui_icoNetwork,
-            ui_icoSyncthing_storage,
-            ui_icoUserInit
+            ui_icoBIOS_storage,
+            ui_icoCatalogue_storage,
+            ui_icoName_storage,
+            ui_icoRetroArch_storage,
+            ui_icoConfig_storage,
+            ui_icoCore_storage,
+            ui_icoCollection_storage_storage,
+            ui_icoHistory_storage,
+            ui_icoMusic_storage,
+            ui_icoSave_storage,
+            ui_icoScreenshot_storage,
+            ui_icoTheme_storage,
+            ui_icoCatalogue_storagePackage,
+            ui_icoConfig_storagePackage,
+            ui_icoLanguage_storage,
+            ui_icoNetwork_storage,
+            ui_icoSyncthing_storage_storage,
+            ui_icoUserInit_storage
     };
 
-    apply_theme_list_panel(ui_pnlBIOS);
-    apply_theme_list_panel(ui_pnlCatalogue);
-    apply_theme_list_panel(ui_pnlName);
-    apply_theme_list_panel(ui_pnlRetroArch);
-    apply_theme_list_panel(ui_pnlConfig);
-    apply_theme_list_panel(ui_pnlCore);
-    apply_theme_list_panel(ui_pnlCollection);
-    apply_theme_list_panel(ui_pnlHistory);
-    apply_theme_list_panel(ui_pnlMusic);
-    apply_theme_list_panel(ui_pnlSave);
-    apply_theme_list_panel(ui_pnlScreenshot);
-    apply_theme_list_panel(ui_pnlTheme);
-    apply_theme_list_panel(ui_pnlCataloguePackage);
-    apply_theme_list_panel(ui_pnlConfigPackage);
-    apply_theme_list_panel(ui_pnlLanguage);
-    apply_theme_list_panel(ui_pnlNetwork);
-    apply_theme_list_panel(ui_pnlSyncthing_storage);
-    apply_theme_list_panel(ui_pnlUserInit);
+    apply_theme_list_panel(ui_pnlBIOS_storage);
+    apply_theme_list_panel(ui_pnlCatalogue_storage);
+    apply_theme_list_panel(ui_pnlName_storage);
+    apply_theme_list_panel(ui_pnlRetroArch_storage);
+    apply_theme_list_panel(ui_pnlConfig_storage);
+    apply_theme_list_panel(ui_pnlCore_storage);
+    apply_theme_list_panel(ui_pnlCollection_storage_storage);
+    apply_theme_list_panel(ui_pnlHistory_storage);
+    apply_theme_list_panel(ui_pnlMusic_storage);
+    apply_theme_list_panel(ui_pnlSave_storage);
+    apply_theme_list_panel(ui_pnlScreenshot_storage);
+    apply_theme_list_panel(ui_pnlTheme_storage);
+    apply_theme_list_panel(ui_pnlCatalogue_storagePackage);
+    apply_theme_list_panel(ui_pnlConfig_storagePackage);
+    apply_theme_list_panel(ui_pnlLanguage_storage);
+    apply_theme_list_panel(ui_pnlNetwork_storage);
+    apply_theme_list_panel(ui_pnlSyncthing_storage_storage);
+    apply_theme_list_panel(ui_pnlUserInit_storage);
 
-    apply_theme_list_item(&theme, ui_lblBIOS, lang.MUXSTORAGE.BIOS);
-    apply_theme_list_item(&theme, ui_lblCatalogue, lang.MUXSTORAGE.CATALOGUE);
-    apply_theme_list_item(&theme, ui_lblName, lang.MUXSTORAGE.FRIENDLY);
-    apply_theme_list_item(&theme, ui_lblRetroArch, lang.MUXSTORAGE.RA_SYSTEM);
-    apply_theme_list_item(&theme, ui_lblConfig, lang.MUXSTORAGE.RA_CONFIG);
-    apply_theme_list_item(&theme, ui_lblCore, lang.MUXSTORAGE.ASSIGNED);
-    apply_theme_list_item(&theme, ui_lblCollection, lang.MUXSTORAGE.COLLECTION);
-    apply_theme_list_item(&theme, ui_lblHistory, lang.MUXSTORAGE.HISTORY);
-    apply_theme_list_item(&theme, ui_lblMusic, lang.MUXSTORAGE.MUSIC);
-    apply_theme_list_item(&theme, ui_lblSave, lang.MUXSTORAGE.SAVE);
-    apply_theme_list_item(&theme, ui_lblScreenshot, lang.MUXSTORAGE.SCREENSHOT);
-    apply_theme_list_item(&theme, ui_lblTheme, lang.MUXSTORAGE.PACKAGE.THEME);
-    apply_theme_list_item(&theme, ui_lblCataloguePackage, lang.MUXSTORAGE.PACKAGE.CATALOGUE);
-    apply_theme_list_item(&theme, ui_lblConfigPackage, lang.MUXSTORAGE.PACKAGE.RA_CONFIG);
-    apply_theme_list_item(&theme, ui_lblLanguage, lang.MUXSTORAGE.LANGUAGE);
-    apply_theme_list_item(&theme, ui_lblNetwork, lang.MUXSTORAGE.NET_PROFILE);
-    apply_theme_list_item(&theme, ui_lblSyncthing_storage, lang.MUXSTORAGE.SYNCTHING);
-    apply_theme_list_item(&theme, ui_lblUserInit, lang.MUXSTORAGE.USER_INIT);
+    apply_theme_list_item(&theme, ui_lblBIOS_storage, lang.MUXSTORAGE.BIOS);
+    apply_theme_list_item(&theme, ui_lblCatalogue_storage, lang.MUXSTORAGE.CATALOGUE);
+    apply_theme_list_item(&theme, ui_lblName_storage, lang.MUXSTORAGE.FRIENDLY);
+    apply_theme_list_item(&theme, ui_lblRetroArch_storage, lang.MUXSTORAGE.RA_SYSTEM);
+    apply_theme_list_item(&theme, ui_lblConfig_storage, lang.MUXSTORAGE.RA_CONFIG);
+    apply_theme_list_item(&theme, ui_lblCore_storage, lang.MUXSTORAGE.ASSIGNED);
+    apply_theme_list_item(&theme, ui_lblCollection_storage_storage, lang.MUXSTORAGE.COLLECTION);
+    apply_theme_list_item(&theme, ui_lblHistory_storage, lang.MUXSTORAGE.HISTORY);
+    apply_theme_list_item(&theme, ui_lblMusic_storage, lang.MUXSTORAGE.MUSIC);
+    apply_theme_list_item(&theme, ui_lblSave_storage, lang.MUXSTORAGE.SAVE);
+    apply_theme_list_item(&theme, ui_lblScreenshot_storage, lang.MUXSTORAGE.SCREENSHOT);
+    apply_theme_list_item(&theme, ui_lblTheme_storage, lang.MUXSTORAGE.PACKAGE.THEME);
+    apply_theme_list_item(&theme, ui_lblCatalogue_storagePackage, lang.MUXSTORAGE.PACKAGE.CATALOGUE);
+    apply_theme_list_item(&theme, ui_lblConfig_storagePackage, lang.MUXSTORAGE.PACKAGE.RA_CONFIG);
+    apply_theme_list_item(&theme, ui_lblLanguage_storage, lang.MUXSTORAGE.LANGUAGE);
+    apply_theme_list_item(&theme, ui_lblNetwork_storage, lang.MUXSTORAGE.NET_PROFILE);
+    apply_theme_list_item(&theme, ui_lblSyncthing_storage_storage, lang.MUXSTORAGE.SYNCTHING);
+    apply_theme_list_item(&theme, ui_lblUserInit_storage, lang.MUXSTORAGE.USER_INIT);
 
-    apply_theme_list_glyph(&theme, ui_icoBIOS, mux_module, "bios");
-    apply_theme_list_glyph(&theme, ui_icoCatalogue, mux_module, "catalogue");
-    apply_theme_list_glyph(&theme, ui_icoName, mux_module, "name");
-    apply_theme_list_glyph(&theme, ui_icoRetroArch, mux_module, "retroarch");
-    apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
-    apply_theme_list_glyph(&theme, ui_icoCore, mux_module, "core");
-    apply_theme_list_glyph(&theme, ui_icoCollection, mux_module, "collection");
-    apply_theme_list_glyph(&theme, ui_icoHistory, mux_module, "history");
-    apply_theme_list_glyph(&theme, ui_icoMusic, mux_module, "music");
-    apply_theme_list_glyph(&theme, ui_icoSave, mux_module, "save");
-    apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_module, "screenshot");
-    apply_theme_list_glyph(&theme, ui_icoTheme, mux_module, "theme");
-    apply_theme_list_glyph(&theme, ui_icoCataloguePackage, mux_module, "pack-catalogue");
-    apply_theme_list_glyph(&theme, ui_icoConfigPackage, mux_module, "pack-config");
-    apply_theme_list_glyph(&theme, ui_icoLanguage, mux_module, "language");
-    apply_theme_list_glyph(&theme, ui_icoNetwork, mux_module, "network");
-    apply_theme_list_glyph(&theme, ui_icoSyncthing_storage, mux_module, "syncthing");
-    apply_theme_list_glyph(&theme, ui_icoUserInit, mux_module, "userinit");
+    apply_theme_list_glyph(&theme, ui_icoBIOS_storage, mux_module, "bios");
+    apply_theme_list_glyph(&theme, ui_icoCatalogue_storage, mux_module, "catalogue");
+    apply_theme_list_glyph(&theme, ui_icoName_storage, mux_module, "name");
+    apply_theme_list_glyph(&theme, ui_icoRetroArch_storage, mux_module, "retroarch");
+    apply_theme_list_glyph(&theme, ui_icoConfig_storage, mux_module, "config");
+    apply_theme_list_glyph(&theme, ui_icoCore_storage, mux_module, "core");
+    apply_theme_list_glyph(&theme, ui_icoCollection_storage_storage, mux_module, "collection");
+    apply_theme_list_glyph(&theme, ui_icoHistory_storage, mux_module, "history");
+    apply_theme_list_glyph(&theme, ui_icoMusic_storage, mux_module, "music");
+    apply_theme_list_glyph(&theme, ui_icoSave_storage, mux_module, "save");
+    apply_theme_list_glyph(&theme, ui_icoScreenshot_storage, mux_module, "screenshot");
+    apply_theme_list_glyph(&theme, ui_icoTheme_storage, mux_module, "theme");
+    apply_theme_list_glyph(&theme, ui_icoCatalogue_storagePackage, mux_module, "pack-catalogue");
+    apply_theme_list_glyph(&theme, ui_icoConfig_storagePackage, mux_module, "pack-config");
+    apply_theme_list_glyph(&theme, ui_icoLanguage_storage, mux_module, "language");
+    apply_theme_list_glyph(&theme, ui_icoNetwork_storage, mux_module, "network");
+    apply_theme_list_glyph(&theme, ui_icoSyncthing_storage_storage, mux_module, "syncthing");
+    apply_theme_list_glyph(&theme, ui_icoUserInit_storage, mux_module, "userinit");
 
-    apply_theme_list_value(&theme, ui_lblBIOSValue, "");
-    apply_theme_list_value(&theme, ui_lblCatalogueValue, "");
-    apply_theme_list_value(&theme, ui_lblNameValue, "");
-    apply_theme_list_value(&theme, ui_lblRetroArchValue, "");
-    apply_theme_list_value(&theme, ui_lblConfigValue, "");
-    apply_theme_list_value(&theme, ui_lblCoreValue, "");
-    apply_theme_list_value(&theme, ui_lblCollectionValue, "");
-    apply_theme_list_value(&theme, ui_lblHistoryValue, "");
-    apply_theme_list_value(&theme, ui_lblMusicValue, "");
-    apply_theme_list_value(&theme, ui_lblSaveValue, "");
-    apply_theme_list_value(&theme, ui_lblScreenshotValue, "");
-    apply_theme_list_value(&theme, ui_lblThemeValue, "");
-    apply_theme_list_value(&theme, ui_lblCataloguePackageValue, "");
-    apply_theme_list_value(&theme, ui_lblConfigPackageValue, "");
-    apply_theme_list_value(&theme, ui_lblLanguageValue, "");
-    apply_theme_list_value(&theme, ui_lblNetworkValue, "");
-    apply_theme_list_value(&theme, ui_lblSyncthingValue_storage, "");
-    apply_theme_list_value(&theme, ui_lblUserInitValue, "");
+    apply_theme_list_value(&theme, ui_lblBIOSValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblCatalogueValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblNameValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblRetroArchValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblConfigValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblCoreValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblCollection_storageValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblHistoryValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblMusicValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblSaveValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblScreenshotValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblThemeValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblCataloguePackageValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblConfigPackageValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblLanguageValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblNetworkValue_storage, "");
+    apply_theme_list_value(&theme, ui_lblSyncthingValue_storage_storage, "");
+    apply_theme_list_value(&theme, ui_lblUserInitValue_storage, "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -447,24 +447,24 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblBIOS, "bios");
-    lv_obj_set_user_data(ui_lblCatalogue, "catalogue");
-    lv_obj_set_user_data(ui_lblName, "name");
-    lv_obj_set_user_data(ui_lblRetroArch, "retroarch");
-    lv_obj_set_user_data(ui_lblConfig, "config");
-    lv_obj_set_user_data(ui_lblCore, "core");
-    lv_obj_set_user_data(ui_lblCollection, "collection");
-    lv_obj_set_user_data(ui_lblHistory, "history");
-    lv_obj_set_user_data(ui_lblMusic, "music");
-    lv_obj_set_user_data(ui_lblSave, "save");
-    lv_obj_set_user_data(ui_lblScreenshot, "screenshot");
-    lv_obj_set_user_data(ui_lblTheme, "theme");
-    lv_obj_set_user_data(ui_lblCataloguePackage, "pack-catalogue");
-    lv_obj_set_user_data(ui_lblConfigPackage, "pack-config");
-    lv_obj_set_user_data(ui_lblLanguage, "language");
-    lv_obj_set_user_data(ui_lblNetwork, "network");
-    lv_obj_set_user_data(ui_lblSyncthing_storage, "syncthing");
-    lv_obj_set_user_data(ui_lblUserInit, "userinit");
+    lv_obj_set_user_data(ui_lblBIOS_storage, "bios");
+    lv_obj_set_user_data(ui_lblCatalogue_storage, "catalogue");
+    lv_obj_set_user_data(ui_lblName_storage, "name");
+    lv_obj_set_user_data(ui_lblRetroArch_storage, "retroarch");
+    lv_obj_set_user_data(ui_lblConfig_storage, "config");
+    lv_obj_set_user_data(ui_lblCore_storage, "core");
+    lv_obj_set_user_data(ui_lblCollection_storage_storage, "collection");
+    lv_obj_set_user_data(ui_lblHistory_storage, "history");
+    lv_obj_set_user_data(ui_lblMusic_storage, "music");
+    lv_obj_set_user_data(ui_lblSave_storage, "save");
+    lv_obj_set_user_data(ui_lblScreenshot_storage, "screenshot");
+    lv_obj_set_user_data(ui_lblTheme_storage, "theme");
+    lv_obj_set_user_data(ui_lblCatalogue_storagePackage, "pack-catalogue");
+    lv_obj_set_user_data(ui_lblConfig_storagePackage, "pack-config");
+    lv_obj_set_user_data(ui_lblLanguage_storage, "language");
+    lv_obj_set_user_data(ui_lblNetwork_storage, "network");
+    lv_obj_set_user_data(ui_lblSyncthing_storage_storage, "syncthing");
+    lv_obj_set_user_data(ui_lblUserInit_storage, "userinit");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -506,7 +506,6 @@ int muxstorage_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSTORAGE.TITLE);
     init_muxstorage(ui_pnlContent);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -532,6 +531,8 @@ int muxstorage_main(int argc, char *argv[]) {
     }
 
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

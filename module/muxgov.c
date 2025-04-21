@@ -516,7 +516,6 @@ int muxgov_main(int argc, char *argv[]) {
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, "");
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -566,6 +565,8 @@ int muxgov_main(int argc, char *argv[]) {
     }
 
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

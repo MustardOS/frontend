@@ -6,13 +6,9 @@
 #include "../common/device.h"
 #include "../common/collection.h"
 
-extern char *mux_module;
-
 extern size_t item_count;
 extern content_item *items;
 
-extern int msgbox_active;
-extern int nav_sound;
 extern int bar_header;
 extern int bar_footer;
 

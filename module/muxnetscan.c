@@ -229,7 +229,6 @@ int muxnetscan_main(int argc, char *argv[]) {
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETSCAN.TITLE);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -245,6 +244,8 @@ int muxnetscan_main(int argc, char *argv[]) {
 
     lv_label_set_text(ui_lblScreenMessage, !ui_count ? lang.MUXNETSCAN.NONE : "");
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

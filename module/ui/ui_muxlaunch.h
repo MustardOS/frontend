@@ -4,29 +4,29 @@
 
 void init_muxlaunch(lv_obj_t *ui_pnlContent);
 
-extern lv_obj_t *ui_pnlExplore;
-extern lv_obj_t *ui_pnlCollection;
-extern lv_obj_t *ui_pnlHistory;
-extern lv_obj_t *ui_pnlApps;
-extern lv_obj_t *ui_pnlInfo;
-extern lv_obj_t *ui_pnlConfig;
-extern lv_obj_t *ui_pnlReboot;
-extern lv_obj_t *ui_pnlShutdown;
+extern lv_obj_t *ui_pnlExplore_launch;
+extern lv_obj_t *ui_pnlCollection_launch;
+extern lv_obj_t *ui_pnlHistory_launch;
+extern lv_obj_t *ui_pnlApps_launch;
+extern lv_obj_t *ui_pnlInfo_launch;
+extern lv_obj_t *ui_pnlConfig_launch;
+extern lv_obj_t *ui_pnlReboot_launch;
+extern lv_obj_t *ui_pnlShutdown_launch;
 
-extern lv_obj_t *ui_lblContent;
-extern lv_obj_t *ui_lblCollection;
-extern lv_obj_t *ui_lblHistory;
-extern lv_obj_t *ui_lblApps;
-extern lv_obj_t *ui_lblInfo;
-extern lv_obj_t *ui_lblConfig;
-extern lv_obj_t *ui_lblReboot;
-extern lv_obj_t *ui_lblShutdown;
+extern lv_obj_t *ui_lblContent_launch;
+extern lv_obj_t *ui_lblCollection_launch;
+extern lv_obj_t *ui_lblHistory_launch;
+extern lv_obj_t *ui_lblApps_launch;
+extern lv_obj_t *ui_lblInfo_launch;
+extern lv_obj_t *ui_lblConfig_launch;
+extern lv_obj_t *ui_lblReboot_launch;
+extern lv_obj_t *ui_lblShutdown_launch;
 
-extern lv_obj_t *ui_icoContent;
-extern lv_obj_t *ui_icoCollection;
-extern lv_obj_t *ui_icoHistory;
-extern lv_obj_t *ui_icoApps;
-extern lv_obj_t *ui_icoInfo;
-extern lv_obj_t *ui_icoConfig;
-extern lv_obj_t *ui_icoReboot;
-extern lv_obj_t *ui_icoShutdown;
+extern lv_obj_t *ui_icoContent_launch;
+extern lv_obj_t *ui_icoCollection_launch;
+extern lv_obj_t *ui_icoHistory_launch;
+extern lv_obj_t *ui_icoApps_launch;
+extern lv_obj_t *ui_icoInfo_launch;
+extern lv_obj_t *ui_icoConfig_launch;
+extern lv_obj_t *ui_icoReboot_launch;
+extern lv_obj_t *ui_icoShutdown_launch;

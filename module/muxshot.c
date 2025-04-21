@@ -280,7 +280,6 @@ int muxshot_main(int argc, char *argv[]) {
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSHOT.TITLE);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -308,6 +307,8 @@ int muxshot_main(int argc, char *argv[]) {
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

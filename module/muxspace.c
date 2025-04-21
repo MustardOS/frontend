@@ -310,7 +310,6 @@ int muxspace_main(int argc, char *argv[]) {
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSPACE.TITLE);
     init_muxspace(ui_pnlContent);
-    init_timer(ui_refresh_task, update_storage_info);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -325,6 +324,8 @@ int muxspace_main(int argc, char *argv[]) {
     update_storage_info();
 
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, update_storage_info);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

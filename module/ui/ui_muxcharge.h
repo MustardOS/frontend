@@ -4,14 +4,14 @@
 
 void init_muxcharge(void);
 
-extern lv_obj_t *ui_scrCharge;
-extern lv_obj_t *ui_blank;
+extern lv_obj_t *ui_scrCharge_charge;
+extern lv_obj_t *ui_blank_charge;
 
-extern lv_obj_t *ui_imgWall;
+extern lv_obj_t *ui_imgWall_charge;
 
-extern lv_obj_t *ui_pnlWall;
-extern lv_obj_t *ui_pnlCharge;
+extern lv_obj_t *ui_pnlWall_charge;
+extern lv_obj_t *ui_pnlCharge_charge;
 
-extern lv_obj_t *ui_lblCapacity;
-extern lv_obj_t *ui_lblVoltage;
-extern lv_obj_t *ui_lblBoot;
+extern lv_obj_t *ui_lblCapacity_charge;
+extern lv_obj_t *ui_lblVoltage_charge;
+extern lv_obj_t *ui_lblBoot_charge;

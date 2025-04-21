@@ -494,7 +494,6 @@ int muxpicker_main(int argc, char *argv[]) {
         picker_title = lang.MUXPICKER.CUSTOM;
     }
     init_ui_common_screen(&theme, &device, &lang, picker_title);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -544,6 +543,8 @@ int muxpicker_main(int argc, char *argv[]) {
     }
 
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),

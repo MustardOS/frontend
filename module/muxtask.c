@@ -334,12 +334,10 @@ int muxtask_main(int argc, char *argv[]) {
     (void) argc;
 
     mux_module = basename(argv[0]);
-    
             
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTASK.TITLE);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -348,6 +346,7 @@ int muxtask_main(int argc, char *argv[]) {
 
     init_fonts();
     create_task_items();
+    update_footer_nav_elements();
     init_navigation_sound(&nav_sound, mux_module);
 
     int tin_index = 0;
@@ -373,6 +372,8 @@ int muxtask_main(int argc, char *argv[]) {
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
