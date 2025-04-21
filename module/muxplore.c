@@ -1221,7 +1221,6 @@ int muxplore_main(int argc, char *argv[]) {
 
     init_ui_common_screen(&theme, &device, &lang, "");
     init_muxplore(ui_screen, &theme);
-    init_timer(ui_refresh_task, NULL);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);
@@ -1293,6 +1292,8 @@ int muxplore_main(int argc, char *argv[]) {
         }
         remove(ADD_MODE_DONE);
     }
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||

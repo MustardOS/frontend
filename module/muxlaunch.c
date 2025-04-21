@@ -566,7 +566,6 @@ int muxlaunch_main(int argc, char *argv[]) {
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXLAUNCH.TITLE);
     init_muxlaunch(ui_pnlContent);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -585,6 +584,8 @@ int muxlaunch_main(int argc, char *argv[]) {
         remove("/tmp/hdmi_out");
         handle_b();
     }
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.GRID.ENABLED && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5) ||

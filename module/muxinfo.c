@@ -280,10 +280,10 @@ int muxinfo_main(int argc, char *argv[]) {
     init_navigation_group();
     init_navigation_sound(&nav_sound, mux_module);
 
-    init_timer(ui_refresh_task, NULL);
-
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
