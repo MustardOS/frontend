@@ -948,7 +948,7 @@ int muxsearch_main(int argc, char *argv[]) {
         }
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxsearch");
     
             
     snprintf(search_result, sizeof(search_result), "%s/%s/search.json",

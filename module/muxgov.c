@@ -434,7 +434,7 @@ int muxgov_main(int argc, char *argv[]) {
         return 1;
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxgov");
     
             
     LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)

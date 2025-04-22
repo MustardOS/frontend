@@ -328,7 +328,7 @@ int muxoption_main(int argc, char *argv[]) {
         }
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxoption");
     
             
     if (file_exist(OPTION_SKIP)) {

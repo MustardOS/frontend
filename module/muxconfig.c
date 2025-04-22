@@ -255,7 +255,7 @@ static void ui_refresh_task() {
 int muxconfig_main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxconfig");
     
             
     init_theme(1, 1);

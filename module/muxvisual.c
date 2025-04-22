@@ -543,10 +543,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxvisual_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxvisual_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxvisual");
     
             
     init_theme(1, 0);

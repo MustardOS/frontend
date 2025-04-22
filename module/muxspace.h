@@ -1,3 +1,3 @@
 #pragma once
 
-int muxspace_main(int argc, char *argv[]);
+int muxspace_main();

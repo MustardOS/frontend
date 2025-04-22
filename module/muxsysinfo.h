@@ -1,3 +1,3 @@
 #pragma once
 
-int muxsysinfo_main(int argc, char *argv[]);
+int muxsysinfo_main();

@@ -99,7 +99,7 @@ static void battery_task_charge() {
 int muxcharge_main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxcharge");
     
             
     init_theme(0, 0);

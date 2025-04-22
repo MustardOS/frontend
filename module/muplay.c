@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muplay");
+
     setup_background_process();
 
     load_device(&device);

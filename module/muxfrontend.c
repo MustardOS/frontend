@@ -96,97 +96,74 @@ int main(int argc, char *argv[]) {
                 muxplore_main(5, args);
             } else if (strcmp(action, "info") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "launcher");
-                char *args[] = { "./muxinfo"};
-                muxinfo_main(1, args);
+                muxinfo_main();
             } else if (strcmp(action, "archive") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "app");
-                char *args[] = { "./muxarchive"};
-                muxarchive_main(1, args);
+                muxarchive_main();
             } else if (strcmp(action, "task") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "app");
-                char *args[] = { "./muxtask"};
-                muxtask_main(1, args);
+                muxtask_main();
             } else if (strcmp(action, "tweakgen") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
-                char *args[] = { "./muxtweakgen"};
-                muxtweakgen_main(1, args);
+                muxtweakgen_main();
             } else if (strcmp(action, "connect") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
-                char *args[] = { "./muxconnect"};
-                muxconnect_main(1, args);
+                muxconnect_main();
             } else if (strcmp(action, "custom") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
-                char *args[] = { "./muxcustom"};
-                muxcustom_main(1, args);
+                muxcustom_main();
             } else if (strcmp(action, "network") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "connect");
-                char *args[] = { "./muxnetwork"};
-                muxnetwork_main(1, args);
+                muxnetwork_main();
             } else if (strcmp(action, "language") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
-                char *args[] = { "./muxlanguage"};
-                muxlanguage_main(1, args);
+                muxlanguage_main();
             } else if (strcmp(action, "webserv") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "connect");
-                char *args[] = { "./muxwebserv"};
-                muxwebserv_main(1, args);
+                muxwebserv_main();
             } else if (strcmp(action, "hdmi") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "tweakgen");
-                char *args[] = { "./muxhdmi"};
-                muxhdmi_main(1, args);
+                muxhdmi_main();
             } else if (strcmp(action, "rtc") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "tweakgen");
-                char *args[] = { "./muxrtc"};
-                muxrtc_main(1, args);
+                muxrtc_main();
             } else if (strcmp(action, "storage") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
-                char *args[] = { "./muxstorage"};
-                muxstorage_main(1, args);
+                muxstorage_main();
             } else if (strcmp(action, "power") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
-                char *args[] = { "./muxpower"};
-                muxpower_main(1, args);
+                muxpower_main();
             } else if (strcmp(action, "visual") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "config");
-                char *args[] = { "./muxvisual"};
-                muxvisual_main(1, args);
+                muxvisual_main();
             } else if (strcmp(action, "net_profile") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "network");
-                char *args[] = { "./muxnetprofile"};
-                muxnetprofile_main(1, args);
+                muxnetprofile_main();
             } else if (strcmp(action, "net_scan") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "network");
-                char *args[] = { "./muxnetscan"};
-                muxnetscan_main(1, args);
+                muxnetscan_main();
             } else if (strcmp(action, "timezone") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "rtc");
-                char *args[] = { "./muxtimezone"};
-                muxtimezone_main(1, args);
+                muxtimezone_main();
             } else if (strcmp(action, "screenshot") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
-                char *args[] = { "./muxshot"};
-                muxshot_main(1, args);
+                muxshot_main();
             } else if (strcmp(action, "space") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
-                char *args[] = { "./muxspace"};
-                muxspace_main(1, args);
+                muxspace_main();
             } else if (strcmp(action, "tester") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
-                char *args[] = { "./muxtester"};
-                muxtester_main(1, args);
+                muxtester_main();
             } else if (strcmp(action, "system") == 0) {
                 write_text_to_file(MUOS_ACT_LOAD, "w", CHAR, "info");
-                char *args[] = { "./muxsysinfo"};
-                muxsysinfo_main(1, args);
+                muxsysinfo_main();
             } else {
                 printf("****muxfrontend launcher action: %s\n", action);
-                char *args[] = { "./muxlaunch" };
-                muxlaunch_main(1, args);
+                muxlaunch_main();
             }
         } else {
             printf("****muxfrontend launcher action no file: \n");
-            char *args[] = { "./muxlaunch" };
-            muxlaunch_main(1, args);            
+            muxlaunch_main();
         }
         cleanup_screen();        
     }

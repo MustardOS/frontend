@@ -1,3 +1,3 @@
 #pragma once
 
-int muxtweakgen_main(int argc, char *argv[]);
+int muxtweakgen_main();

@@ -1,3 +1,3 @@
 #pragma once
 
-int muxtask_main(int argc, char *argv[]);
+int muxtask_main();

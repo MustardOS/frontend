@@ -380,10 +380,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxpower_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxpower_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxpower");
     
             
     init_theme(1, 0);

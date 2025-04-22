@@ -20,7 +20,7 @@ static void timeout_task() {
 int muxcredits_main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxcredits");
     
         
     init_theme(0, 0);

@@ -330,10 +330,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxtask_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxtask_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxtask");
             
     init_theme(1, 1);
     

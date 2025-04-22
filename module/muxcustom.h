@@ -1,3 +1,3 @@
 #pragma once
 
-int muxcustom_main(int argc, char *argv[]);
+int muxcustom_main();

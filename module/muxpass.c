@@ -162,7 +162,7 @@ int muxpass_main(int argc, char *argv[]) {
         return 2;
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxpass");
     
             
     load_passcode(&passcode, &device);

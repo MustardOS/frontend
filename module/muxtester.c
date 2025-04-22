@@ -129,10 +129,9 @@ static void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-int muxtester_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxtester_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxtester");
     
             
     init_theme(0, 0);

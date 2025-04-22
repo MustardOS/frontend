@@ -36,7 +36,7 @@
 #include "theme.h"
 #include "mini/mini.h"
 
-char *mux_module;
+char mux_module[MAX_BUFFER_SIZE];
 int msgbox_active;
 int nav_sound;
 struct json translation_generic;

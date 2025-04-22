@@ -1,3 +1,3 @@
 #pragma once
 
-int muxlaunch_main(int argc, char *argv[]);
+int muxlaunch_main();

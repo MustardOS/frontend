@@ -373,7 +373,7 @@ static void ui_refresh_task() {
 int muxapp_main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxapp");
             
     init_theme(1, 1);
     

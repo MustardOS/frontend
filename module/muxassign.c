@@ -562,7 +562,7 @@ int muxassign_main(int argc, char *argv[]) {
         return 1;
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxassign");
     
             
     LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name)

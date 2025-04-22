@@ -307,7 +307,7 @@ static void ui_refresh_task() {
 int muxsnapshot_main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxsnapshot");
     
             
     init_theme(1, 1);

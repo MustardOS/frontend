@@ -2,6 +2,7 @@
 
 #include "../lvgl/lvgl.h"
 #include "mini/mini.h"
+#include "options.h"
 
 #define BIT(n) (UINT64_C(1) << (n))
 #define TS(str) translate_specific(str)
@@ -12,7 +13,7 @@ extern int battery_capacity;
 extern int nav_sound;
 extern int progress_onscreen;
 extern struct mux_config config;
-extern char *mux_module;
+extern char mux_module[MAX_BUFFER_SIZE];
 
 struct ImageSettings {
     char *image_path;

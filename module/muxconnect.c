@@ -333,10 +333,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxconnect_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxconnect_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxconnect");
             
     init_theme(1, 1);
     

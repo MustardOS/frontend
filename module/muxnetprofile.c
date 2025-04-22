@@ -433,10 +433,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxnetprofile_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxnetprofile_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxnetprofile");
     
             
     init_theme(1, 1);

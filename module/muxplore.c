@@ -1202,7 +1202,7 @@ int muxplore_main(int argc, char *argv[]) {
         return 1;
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxplore");
     
     init_theme(1, 1);
 

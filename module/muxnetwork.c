@@ -939,10 +939,9 @@ static void on_key_event(struct input_event ev) {
     }
 }
 
-int muxnetwork_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxnetwork_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxnetwork");
     
             
     init_theme(1, 0);

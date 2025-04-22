@@ -375,10 +375,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxwebserv_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxwebserv_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxwebserv");
     
             
     init_theme(1, 0);

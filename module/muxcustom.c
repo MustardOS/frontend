@@ -563,10 +563,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxcustom_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxcustom_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxcustom");
     
             
     init_theme(1, 1);

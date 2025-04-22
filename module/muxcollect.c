@@ -1215,7 +1215,7 @@ int muxcollect_main(int argc, char *argv[]) {
         return 1;
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxcollect");
     
             
     init_theme(1, 0);

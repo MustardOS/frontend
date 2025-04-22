@@ -20,7 +20,7 @@ int muxsplash_main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muxsplash");
     
             
     init_theme(0, 0);

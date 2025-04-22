@@ -457,10 +457,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxtweakgen_main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
+int muxtweakgen_main() {
+    
+    snprintf(mux_module, sizeof(mux_module), "muxtweakgen");
     
             
     init_theme(1, 0);
