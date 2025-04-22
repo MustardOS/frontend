@@ -259,7 +259,7 @@ static void handle_a() {
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
@@ -276,7 +276,7 @@ static void handle_b() {
     play_sound("back", nav_sound, 0, 1);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "apps");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -434,7 +434,7 @@ int muxapp_main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    free_items(items, item_count);
+    free_items(&items, &item_count);
 
     return 0;
 }

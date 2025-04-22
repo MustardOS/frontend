@@ -358,7 +358,7 @@ static void handle_back(void) {
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "storage");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -398,7 +398,7 @@ static void handle_confirm(void) {
 
     load_mux("storage");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

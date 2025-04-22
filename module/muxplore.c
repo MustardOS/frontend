@@ -32,9 +32,10 @@ static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
 static lv_obj_t *ui_mux_panels[7];
 
-static char *prev_dir = "";
-static char *sys_dir = CONTENT_PATH;
+static char prev_dir[PATH_MAX];
+static char sys_dir[PATH_MAX];
 
+static int exit_status_muxplore = 0;
 static int sys_index = -1;
 static int file_count = 0;
 static int dir_count = 0;
@@ -374,6 +375,8 @@ static int32_t get_directory_item_count(const char *base_dir, const char *dir_na
 }
 
 static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
+    file_count = 0;
+    dir_count = 0;
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
 
@@ -689,7 +692,7 @@ static void add_to_collection(char *filename, const char *pointer) {
 
     load_mux("collection");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -924,6 +927,7 @@ static void handle_a() {
             }
 
             load_mux("explore");
+            exit_status_muxplore = 1;
         } else {
             write_text_to_file(OPTION_SKIP, "w", CHAR, "");
             load_mux("assign");
@@ -939,7 +943,7 @@ static void handle_a() {
         usleep(256);
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -954,18 +958,16 @@ static void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    if (sys_dir) {
-        if (at_base(sys_dir, "ROMS")) {
-            remove(EXPLORE_DIR);
-        } else {
-            char *base_dir = strrchr(sys_dir, '/');
-            if (base_dir) write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
-        }
+    if (at_base(sys_dir, "ROMS")) {
+        remove(EXPLORE_DIR);
+    } else {
+        char *base_dir = strrchr(sys_dir, '/');
+        if (base_dir) write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
     }
 
     load_mux(file_exist(EXPLORE_DIR) ? "explore" : "launcher");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -980,7 +982,7 @@ static void handle_x() {
     write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
     load_mux("explore");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -1006,7 +1008,7 @@ static void handle_start() {
     remove(EXPLORE_DIR);
     load_mux("explore");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -1022,7 +1024,7 @@ static void handle_select() {
             if (!kiosk.CONTENT.SEARCH) {
                 load_mux("search");
 
-                safe_quit(0);
+                close_input();
                 mux_input_stop();
             }
             return;
@@ -1039,7 +1041,7 @@ static void handle_select() {
         if (!kiosk.CONTENT.SEARCH) load_mux("search");
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -1174,33 +1176,20 @@ static void ui_refresh_task() {
     }
 }
 
-int muxplore_main(int argc, char *argv[]) {
-    char *cmd_help = "\nmuOS Extras - Content List\nUsage: %s <-di>\n\nOptions:\n"
-                     "\t-d Content directory\n"
-                     "\t-i Index of content to skip to\n\n";
+int muxplore_main(int index, char *dir) {
+    exit_status_muxplore = 0;
+    sys_index = -1;
+    file_count = 0;
+    dir_count = 0;
+    starter_image = 0;
+    splash_valid = 0;
+    nogrid_file_exists = 0;
 
-    int opt;
-    while ((opt = getopt(argc, argv, "d:i:")) != -1) {
-        switch (opt) {
-            case 'd':
-                sys_dir = !strlen(optarg) ? CONTENT_PATH : optarg;
-                break;
-            case 'i':
-                sys_index = safe_atoi(optarg);
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
-        }
-    }
+    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? CONTENT_PATH : dir);
+    sys_index = index;
 
     printf("sys_dir: %s\n", sys_dir);
     printf("sys_index: %d\n", sys_index);
-
-    if (sys_index == -1) {
-        fprintf(stderr, cmd_help, argv[0]);
-        return 1;
-    }
 
     snprintf(mux_module, sizeof(mux_module), "muxplore");
     
@@ -1233,13 +1222,13 @@ int muxplore_main(int argc, char *argv[]) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    if (file_exist(MUOS_PDI_LOAD)) prev_dir = read_text_from_file(MUOS_PDI_LOAD);
+    if (file_exist(MUOS_PDI_LOAD)) snprintf(prev_dir, sizeof(prev_dir), "%s", read_text_from_file(MUOS_PDI_LOAD));
 
     load_skip_patterns();
     create_content_items();
     ui_count = (int) item_count;
 
-    if (sys_dir) write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
     if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "ROMS") == 0) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
     }
@@ -1315,7 +1304,7 @@ int muxplore_main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    free_items(items, item_count);
+    free_items(&items, &item_count);
 
-    return 0;
+    return exit_status_muxplore;
 }

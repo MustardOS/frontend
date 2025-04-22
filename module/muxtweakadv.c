@@ -678,7 +678,7 @@ static void handle_back(void) {
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "advanced");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

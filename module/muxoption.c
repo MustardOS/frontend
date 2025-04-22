@@ -205,7 +205,7 @@ static void handle_confirm() {
         }
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -223,7 +223,7 @@ static void handle_back() {
     remove(MUOS_SAA_LOAD);
     remove(MUOS_SAG_LOAD);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -334,7 +334,7 @@ int muxoption_main(int argc, char *argv[]) {
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);
         LOG_INFO(mux_module, "Skipping Options Module - Not Required...")
-        safe_quit(0);
+        close_input();
         return 0;
     }
 

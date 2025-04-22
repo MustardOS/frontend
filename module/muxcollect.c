@@ -285,6 +285,8 @@ static int32_t get_directory_item_count(const char *base_dir, const char *dir_na
 }
 
 static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
+    file_count = 0;
+    dir_count = 0;
     struct dirent *entry;
     DIR *dir = opendir(base_dir);
 
@@ -655,7 +657,7 @@ static void handle_keyboard_OK_press(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_textarea_get_text(ui_txtEntry_collect));
     load_mux("collection");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -789,7 +791,7 @@ static void handle_a() {
         load_mux("collection");
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -832,7 +834,7 @@ static void handle_b() {
         }
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -865,7 +867,7 @@ static void handle_x() {
 
     load_mux("collection");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -1187,6 +1189,14 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxcollect_main(int argc, char *argv[]) {
+    add_mode = 0;
+    sys_index = -1;
+    file_count = 0;
+    dir_count = 0;
+    starter_image = 0;
+    splash_valid = 0;
+    nogrid_file_exists = 0;
+
     char *cmd_help = "\nmuOS Extras - Content Collection\nUsage: %s <-adi>\n\nOptions:\n"
                      "\t-a Add mode\n"
                      "\t-d Content directory\n"
@@ -1372,7 +1382,7 @@ int muxcollect_main(int argc, char *argv[]) {
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 
-    free_items(items, item_count);
+    free_items(&items, &item_count);
 
     return 0;
 }

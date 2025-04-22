@@ -335,7 +335,7 @@ static void handle_a() {
         mini_free(chosen_core);
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -359,7 +359,7 @@ static void handle_b() {
 
     remove(MUOS_SAA_LOAD);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -394,7 +394,7 @@ static void handle_x() {
 
         mini_free(chosen_core);
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
@@ -430,7 +430,7 @@ static void handle_y() {
 
         mini_free(chosen_core);
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
@@ -571,7 +571,7 @@ int muxassign_main(int argc, char *argv[]) {
 
     if (safe_atoi(auto_assign) && !file_exist(MUOS_SAA_LOAD)) {
         if (automatic_assign_core(rom_dir) || !strcmp(rom_system, "none")) {
-            safe_quit(0);
+            close_input();
             return 0;
         }
     }

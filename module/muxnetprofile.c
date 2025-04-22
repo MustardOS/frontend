@@ -302,7 +302,7 @@ static void handle_confirm(void) {
     play_sound("confirm", nav_sound, 0, 1);
     load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -317,7 +317,7 @@ static void handle_back(void) {
 
     play_sound("back", nav_sound, 0, 1);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -328,7 +328,7 @@ static void handle_save(void) {
         play_sound("confirm", nav_sound, 0, 1);
         load_mux("net_profile");
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
@@ -342,7 +342,7 @@ static void handle_remove(void) {
         play_sound("confirm", nav_sound, 0, 1);
         load_mux("net_profile");
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }

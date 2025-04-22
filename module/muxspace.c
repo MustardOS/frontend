@@ -223,7 +223,7 @@ static void handle_b() {
     play_sound("back", nav_sound, 0, 1);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "space");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

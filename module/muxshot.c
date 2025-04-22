@@ -173,7 +173,7 @@ static void handle_back() {
         return;
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -188,7 +188,7 @@ static void handle_remove() {
         remove(screenshot_file);
         load_mux("screenshot");
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
@@ -272,9 +272,9 @@ static void ui_refresh_task() {
 }
 
 int muxshot_main() {
-    
+    is_fullscreen = 0;
+
     snprintf(mux_module, sizeof(mux_module), "muxshot");
-    
             
     init_theme(1, 1);
     
@@ -332,7 +332,7 @@ int muxshot_main() {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    free_items(items, item_count);
+    free_items(&items, &item_count);
 
     return 0;
 }

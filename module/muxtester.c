@@ -92,7 +92,7 @@ static void handle_input(mux_input_type type, mux_input_action action) {
 static void handle_power() {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

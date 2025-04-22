@@ -467,10 +467,7 @@ static void process_results(const char *json_results) {
                     }
                 }
 
-                free_items(folder_items, folder_item_count);
-
-                folder_item_count = 0;
-                folder_items = NULL;
+                free_items(&folder_items, &folder_item_count);
             }
 
             folder = json_next(folder);
@@ -498,10 +495,7 @@ static void process_results(const char *json_results) {
             }
         }
 
-        free_items(t_all_items, t_all_item_count);
-
-        t_all_item_count = 0;
-        t_all_items = NULL;
+        free_items(&t_all_items, &t_all_item_count);
     }
 }
 
@@ -582,7 +576,7 @@ static void handle_confirm(void) {
 
         load_mux("search");
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     } else {
         if (strcasecmp(lv_obj_get_user_data(element_focused), "content") == 0) {
@@ -591,7 +585,7 @@ static void handle_confirm(void) {
 
             load_mux("explore");
 
-            safe_quit(0);
+            close_input();
             mux_input_stop();
         }
     }
@@ -612,7 +606,7 @@ static void handle_back(void) {
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
     if (strlen(rom_dir) == 0 || strcasecmp(rom_dir, CONTENT_PATH) == 0 || kiosk.CONTENT.OPTION) load_mux("explore");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -657,7 +651,7 @@ static void handle_x(void) {
 
     load_mux("search");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -935,6 +929,9 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxsearch_main(int argc, char *argv[]) {
+    starter_image = 0;
+    got_results = 0;
+
     char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
                      "\t-d Name of directory to search\n\n";
 

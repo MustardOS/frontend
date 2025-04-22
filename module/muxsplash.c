@@ -14,14 +14,9 @@
 #include "../common/kiosk.h"
 #include "../common/theme.h"
 
-int muxsplash_main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <full path to PNG image>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
+int muxsplash_main(char *splash_image) {
 
     snprintf(mux_module, sizeof(mux_module), "muxsplash");
-    
             
     init_theme(0, 0);
     
@@ -30,7 +25,7 @@ int muxsplash_main(int argc, char *argv[]) {
     lv_obj_add_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
 
     char init_wall[MAX_BUFFER_SIZE];
-    snprintf(init_wall, sizeof(init_wall), "M:%s", argv[1]);
+    snprintf(init_wall, sizeof(init_wall), "M:%s", splash_image);
 
     lv_img_set_src(ui_imgWall, init_wall);
 

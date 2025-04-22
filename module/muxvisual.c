@@ -455,7 +455,7 @@ static void handle_back(void) {
     save_visual_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "interface");
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

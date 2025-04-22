@@ -106,7 +106,7 @@ static void handle_a() {
              lv_label_get_text(lv_group_get_focused(ui_group)));
     run_exec((const char *[]) {"ln", "-sf", zone_group, "/etc/localtime", NULL});
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -121,7 +121,7 @@ static void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

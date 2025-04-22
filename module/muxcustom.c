@@ -97,7 +97,7 @@ static void populate_theme_alternates() {
         for (int i = 0; i < item_count; i++) {
             lv_dropdown_add_option(ui_droThemeAlternate, items[i].display_name, LV_DROPDOWN_POS_LAST);
         }
-        free_items(items, item_count);
+        free_items(&items, &item_count);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droThemeAlternate) == 0) {
@@ -435,7 +435,7 @@ static void handle_confirm() {
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themealternate");
             load_mux("custom");
 
-            safe_quit(0);
+            close_input();
             mux_input_stop();
 
             return;
@@ -451,7 +451,7 @@ static void handle_confirm() {
             play_sound("confirm", nav_sound, 0, 1);
             load_mux("picker");
 
-            safe_quit(0);
+            close_input();
             mux_input_stop();
 
             break;
@@ -475,7 +475,7 @@ static void handle_back() {
     save_options();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

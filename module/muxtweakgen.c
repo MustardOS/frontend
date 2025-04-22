@@ -347,7 +347,7 @@ static void handle_confirm(void) {
             save_tweak_options();
             load_mux(elements[i].mux_name);
 
-            safe_quit(0);
+            close_input();
             mux_input_stop();
 
             break;
@@ -371,7 +371,7 @@ static void handle_back(void) {
     save_tweak_options();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "general");
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

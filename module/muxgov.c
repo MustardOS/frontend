@@ -273,7 +273,7 @@ static void handle_a() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, SINGLE);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -289,7 +289,7 @@ static void handle_b() {
     play_sound("back", nav_sound, 0, 1);
     remove(MUOS_SAG_LOAD);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -301,7 +301,7 @@ static void handle_x() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, DIRECTORY);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -313,7 +313,7 @@ static void handle_y() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, PARENT);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -449,7 +449,7 @@ int muxgov_main(int argc, char *argv[]) {
                  INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
-            safe_quit(0);
+            close_input();
             return 0;
         }
 
@@ -501,13 +501,13 @@ int muxgov_main(int argc, char *argv[]) {
 
                 mini_free(core_config_ini);
 
-                safe_quit(0);
+                close_input();
                 return 0;
             } else {
                 LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
                 create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
 
-                safe_quit(0);
+                close_input();
                 return 0;
             }
         }

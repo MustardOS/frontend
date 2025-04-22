@@ -13,7 +13,7 @@
 #include "../common/theme.h"
 
 static void timeout_task() {
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

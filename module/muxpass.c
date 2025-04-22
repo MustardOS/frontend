@@ -17,6 +17,7 @@
 #include "../common/kiosk.h"
 #include "../common/passcode.h"
 
+static int exit_status_muxpass = 0;
 
 struct mux_passcode passcode;
 static char *p_type;
@@ -60,7 +61,8 @@ static void handle_confirm(void) {
     sprintf(try_code, "%s%s%s%s%s%s", b1, b2, b3, b4, b5, b6);
 
     if (strcasecmp(try_code, p_code) == 0) {
-        safe_quit(1);
+        exit_status_muxpass = 1;
+        close_input();
         mux_input_stop();
     }
 }
@@ -68,7 +70,8 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     play_sound("back", nav_sound, 0, 0);
 
-    safe_quit(2);
+    exit_status_muxpass = 2;
+    close_input();
     mux_input_stop();
 }
 
@@ -142,6 +145,7 @@ static void init_elements() {
 }
 
 int muxpass_main(int argc, char *argv[]) {
+    exit_status_muxpass = 0;
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
 
@@ -178,12 +182,10 @@ int muxpass_main(int argc, char *argv[]) {
         p_msg = passcode.MESSAGE.SETTING;
     } else {
         fprintf(stderr, cmd_help, argv[0]);
-        safe_quit(2);
         return 2;
     }
 
     if (strcasecmp(p_code, "000000") == 0) {
-        safe_quit(1);
         return 1;
     }
 
@@ -232,5 +234,5 @@ int muxpass_main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    return 2;
+    return exit_status_muxpass;
 }

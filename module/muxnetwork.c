@@ -533,7 +533,7 @@ static void handle_back(void) {
     save_network_config();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -546,7 +546,7 @@ static void handle_scan(void) {
 
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_obj_get_user_data(lv_group_get_focused(ui_group)));
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
@@ -561,7 +561,7 @@ static void handle_profiles(void) {
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, lv_obj_get_user_data(lv_group_get_focused(ui_group)));
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

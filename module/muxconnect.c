@@ -229,7 +229,7 @@ static void handle_a() {
             play_sound("confirm", nav_sound, 0, 1);
             load_mux(elements[i].mux_name);
 
-            safe_quit(0);
+            close_input();
             mux_input_stop();
 
             break;
@@ -253,7 +253,7 @@ static void handle_b() {
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "connect");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 

@@ -17,10 +17,7 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-
-
 static lv_obj_t *ui_mux_panels[5];
-
 
 static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
@@ -122,7 +119,7 @@ static void handle_confirm() {
     write_text_to_file((RUN_GLOBAL_PATH "settings/general/language"), "w", CHAR,
                        items[current_item_index].name);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -137,7 +134,7 @@ static void handle_back() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -266,7 +263,7 @@ int muxlanguage_main() {
     mux_input_task(&input_opts);
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "language");
-    free_items(items, item_count);
+    free_items(&items, &item_count);
 
     return 0;
 }

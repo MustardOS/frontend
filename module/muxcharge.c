@@ -75,7 +75,7 @@ static void handle_idle(void) {
     if (exit_status >= 0) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
 
         return;

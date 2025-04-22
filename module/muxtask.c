@@ -18,7 +18,6 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-
 static lv_obj_t *ui_mux_panels[5];
 
 struct help_msg {
@@ -209,7 +208,7 @@ static void handle_confirm() {
 
     load_mux("task");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -224,7 +223,7 @@ static void handle_back() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -396,7 +395,7 @@ int muxtask_main() {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    free_items(items, item_count);
+    free_items(&items, &item_count);
 
     return 0;
 }

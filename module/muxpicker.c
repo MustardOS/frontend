@@ -255,7 +255,7 @@ static void handle_confirm() {
 
     load_mux("picker");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -307,7 +307,7 @@ static void handle_confirm_force() {
 
     load_mux("picker");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -331,7 +331,7 @@ static void handle_back() {
         load_mux("picker");
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -366,7 +366,7 @@ static void handle_save() {
 
     load_mux("picker");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -570,7 +570,7 @@ int muxpicker_main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    free_items(items, item_count);
+    free_items(&items, &item_count);
 
     return 0;
 }

@@ -1,3 +1,3 @@
 #pragma once
 
-int muxplore_main(int argc, char *argv[]);
+int muxplore_main(int index, char *dir);

@@ -384,7 +384,7 @@ static void remove_from_history() {
         remove(history_file);
         load_mux("history");
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     } else {
         play_sound("error", nav_sound, 0, 0);
@@ -411,7 +411,7 @@ static void add_to_collection() {
 
     load_mux("collection");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -542,7 +542,7 @@ static void handle_a() {
     }
 
     load_mux("history");
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -557,7 +557,7 @@ static void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
@@ -707,6 +707,11 @@ static void ui_refresh_task() {
 }
 
 int muxhistory_main(int argc, char *argv[]) {
+    his_index = -1;
+    file_count = 0;
+    starter_image = 0;
+    splash_valid = 0;
+
     char *cmd_help = "\nmuOS Extras - Content History\nUsage: %s <-i>\n\nOptions:\n"
                      "\t-i Index of content to skip to\n\n";
 
@@ -826,7 +831,7 @@ int muxhistory_main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
-    free_items(items, item_count);
+    free_items(&items, &item_count);
 
     return 0;
 }

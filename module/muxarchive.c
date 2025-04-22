@@ -227,7 +227,7 @@ static void handle_a() {
 
         load_mux("archive");
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
@@ -243,7 +243,7 @@ static void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
