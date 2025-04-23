@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include <linux/limits.h>
 #include "../common/init.h"
 #include "../common/log.h"
 #include "../common/common.h"
@@ -20,14 +21,11 @@
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
-
 static lv_obj_t *ui_mux_panels[5];
 
-
-static char *auto_assign;
-static char *rom_name;
-static char *rom_dir;
-static char *rom_system;
+static char rom_name[PATH_MAX];
+static char rom_dir[PATH_MAX];
+static char rom_system[PATH_MAX];
 
 enum gov_gen_type {
     SINGLE,
@@ -401,47 +399,18 @@ static void ui_refresh_task() {
     }
 }
 
-int muxgov_main(int argc, char *argv[]) {
-    char *cmd_help = "\nmuOS Extras - Governor Assignment\nUsage: %s <-acds>\n\nOptions:\n"
-                     "\t-a Auto assign content directory check\n"
-                     "\t-c Name of content file\n"
-                     "\t-d Name of content directory\n"
-                     "\t-s Name of content system (use 'none' for root)\n\n";
-
-    int opt;
-    while ((opt = getopt(argc, argv, "a:c:d:s:")) != -1) {
-        switch (opt) {
-            case 'a':
-                auto_assign = optarg;
-                break;
-            case 'c':
-                rom_name = optarg;
-                break;
-            case 'd':
-                rom_dir = optarg;
-                break;
-            case 's':
-                rom_system = optarg;
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
-        }
-    }
-
-    if (!auto_assign || !rom_name || !rom_dir || !rom_system) {
-        fprintf(stderr, cmd_help, argv[0]);
-        return 1;
-    }
+int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
+    snprintf(rom_name, sizeof(rom_name), name);
+    snprintf(rom_dir, sizeof(rom_name), dir);
+    snprintf(rom_system, sizeof(rom_name), sys);
 
     snprintf(mux_module, sizeof(mux_module), "muxgov");
-    
             
     LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir)
     LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system)
 
-    if (safe_atoi(auto_assign) && !file_exist(MUOS_SAG_LOAD)) {
+    if (auto_assign && !file_exist(MUOS_SAG_LOAD)) {
         LOG_INFO(mux_module, "Automatic Assign Governor Initiated")
 
         char core_file[MAX_BUFFER_SIZE];
@@ -546,7 +515,7 @@ int muxgov_main(int argc, char *argv[]) {
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
                 LOG_INFO(mux_module, "<Obtaining System> Core Assigned: %s", ass_config)
-                rom_system = strip_ext(ass_config);
+                snprintf(rom_system, sizeof(rom_system), "%s", strip_ext(ass_config));
             }
         }
     }

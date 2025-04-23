@@ -145,15 +145,20 @@ int main(int argc, char *argv[]) {
                 if (set_splash_image_path("shutdown")) muxsplash_main(splash_image_path);
                 safe_quit(0);
                 break;
+            } else if (strcmp(action, "assign") == 0) {
+                muxassign_main(0, rom_name, rom_dir, rom_sys);
+            } else if (strcmp(action, "governor") == 0) {
+                muxgov_main(0, rom_name, rom_dir, rom_sys);
             } else if (strcmp(action, "explore") == 0) {
                 last_index_check();
                 char *explore_dir = read_line_from_file(EXPLORE_DIR, 1);
+                muxassign_main(1, rom_name, explore_dir, "none");
+                muxgov_main(1, rom_name, explore_dir, "none");
                 load_mux("launcher");
                 if (muxplore_main(last_index, explore_dir) == 1) {
                     safe_quit(0);
                     break;
                 }
-                set_previous_module("muxplore");
             } else if (strcmp(action, "info") == 0) {
                 load_mux("launcher");
                 muxinfo_main();

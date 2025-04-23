@@ -1,3 +1,3 @@
 #pragma once
 
-int muxgov_main(int argc, char *argv[]);
+int muxgov_main(int auto_assign, char *name, char *dir, char *sys);
