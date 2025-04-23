@@ -119,12 +119,18 @@ static int set_splash_image_path(char *splash_image_name) {
     return 0;
 }
 
+static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
+    printf("muxfrontend exec_mux goback: %s  module: %s\n", goback, module);
+    load_mux(goback);
+    func_to_exec();
+    set_previous_module(module);
+}
+
 int main(int argc, char *argv[]) {
     setup_background_process();
     
     load_device(&device);
     load_config(&config);
-    load_lang(&lang);
     init_theme(0, 0);
     init_display();
     
@@ -133,7 +139,12 @@ int main(int argc, char *argv[]) {
         process_content_action(MUOS_ASS_LOAD, "assign");
         process_content_action(MUOS_GOV_LOAD, "governor");
         
-        if (file_exist(MUOS_ACT_LOAD)){
+        if (file_exist(MUOS_ACT_LOAD)) {
+            if (strcmp(previous_module, "muxconfig") || strcmp(previous_module, "muxtweakgen") || 
+                    strcmp(previous_module, "muxtweakadv") || strcmp(previous_module, "muxvisual") || 
+                    strcmp(previous_module, "muxlanguage")) {
+                load_config(&config);
+            }
             exit_status = 0;
             char *action = read_line_from_file(MUOS_ACT_LOAD, 1);
 
@@ -182,99 +193,73 @@ int main(int argc, char *argv[]) {
                     safe_quit(0);
                     break;
                 }
+            } else if (strcmp(action, "config") == 0) {
+                if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_AUTH) && strcmp(previous_module, "muxtweakgen") != 0) {
+                    load_mux("launcher");
+                    if (muxpass_main("setting") == 1) {
+                        cleanup_screen();
+                        write_text_to_file(MUX_AUTH, "w", CHAR, "");
+                        exec_mux("launcher", "muxconfig", muxconfig_main);
+                    }
+                } else {
+                    exec_mux("launcher", "muxconfig", muxconfig_main);
+                }
+            } else if (strcmp(action, "tweakadv") == 0) {
+                exec_mux("tweakgen", "muxtweakadv", muxtweakadv_main);
+                if (!config.SETTINGS.ADVANCED.LOCK) {
+                    if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
+                    if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
+                }
+            } else if (strcmp(action, "option") == 0) {
+                load_mux("explore");
+                muxoption_main(rom_name, rom_dir, rom_sys);
             } else if (strcmp(action, "info") == 0) {
-                load_mux("launcher");
-                muxinfo_main();
-                set_previous_module("muxinfo");
+                exec_mux("launcher", "muxinfo", muxinfo_main);
             } else if (strcmp(action, "archive") == 0) {
-                load_mux("app");
-                muxarchive_main();
-                set_previous_module("muxarchive");
+                exec_mux("app", "muxarchive", muxarchive_main);
             } else if (strcmp(action, "task") == 0) {
-                load_mux("app");
-                muxtask_main();
-                set_previous_module("muxtask");
+                exec_mux("app", "muxtask", muxtask_main);
             } else if (strcmp(action, "tweakgen") == 0) {
-                load_mux("config");
-                muxtweakgen_main();
-                set_previous_module("muxtweakgen");
+                exec_mux("config", "muxtweakgen", muxtweakgen_main);
             } else if (strcmp(action, "connect") == 0) {
-                load_mux("config");
-                muxconnect_main();
-                set_previous_module("muxconnect");
+                exec_mux("config", "muxconnect", muxconnect_main);
             } else if (strcmp(action, "custom") == 0) {
-                load_mux("config");
-                muxcustom_main();
-                set_previous_module("muxcustom");
+                exec_mux("config", "muxcustom", muxcustom_main);
             } else if (strcmp(action, "network") == 0) {
-                load_mux("connect");
-                muxnetwork_main();
-                set_previous_module("muxnetwork");
+                exec_mux("connect", "muxnetwork", muxnetwork_main);
             } else if (strcmp(action, "language") == 0) {
-                load_mux("config");
-                muxlanguage_main();
-                set_previous_module("muxlanguage");
+                exec_mux("config", "muxlanguage", muxlanguage_main);
             } else if (strcmp(action, "webserv") == 0) {
-                load_mux("connect");
-                muxwebserv_main();
-                set_previous_module("muxwebserv");
+                exec_mux("connect", "muxwebserv", muxwebserv_main);
             } else if (strcmp(action, "hdmi") == 0) {
-                load_mux("tweakgen");
-                muxhdmi_main();
-                set_previous_module("muxhdmi");
+                exec_mux("tweakgen", "muxhdmi", muxhdmi_main);
             } else if (strcmp(action, "rtc") == 0) {
-                load_mux("tweakgen");
-                muxrtc_main();
-                set_previous_module("muxrtc");
+                exec_mux("tweakgen", "muxrtc", muxrtc_main);
             } else if (strcmp(action, "storage") == 0) {
-                load_mux("config");
-                muxstorage_main();
-                set_previous_module("muxstorage");
+                exec_mux("config", "muxstorage", muxstorage_main);
             } else if (strcmp(action, "power") == 0) {
-                load_mux("config");
-                muxpower_main();
-                set_previous_module("muxpower");
+                exec_mux("config", "muxpower", muxpower_main);
             } else if (strcmp(action, "visual") == 0) {
-                load_mux("config");
-                muxvisual_main();
-                set_previous_module("muxvisual");
+                exec_mux("config", "muxvisual", muxvisual_main);
             } else if (strcmp(action, "net_profile") == 0) {
-                load_mux("network");
-                muxnetprofile_main();
-                set_previous_module("muxnetprofile");
+                exec_mux("network", "muxnetprofile", muxnetprofile_main);
             } else if (strcmp(action, "net_scan") == 0) {
-                load_mux("network");
-                muxnetscan_main();
-                set_previous_module("muxnetscan");
+                exec_mux("network", "muxnetscan", muxnetscan_main);
             } else if (strcmp(action, "timezone") == 0) {
-                load_mux("rtc");
-                muxtimezone_main();
-                set_previous_module("muxtimezone");
+                exec_mux("rtc", "muxtimezone", muxtimezone_main);
             } else if (strcmp(action, "screenshot") == 0) {
-                load_mux("info");
-                muxshot_main();
-                set_previous_module("muxshot");
+                exec_mux("info", "muxshot", muxshot_main);
             } else if (strcmp(action, "space") == 0) {
-                load_mux("info");
-                muxspace_main();
-                set_previous_module("muxspace");
+                exec_mux("info", "muxspace", muxspace_main);
             } else if (strcmp(action, "tester") == 0) {
-                load_mux("info");
-                muxtester_main();
-                set_previous_module("muxtester");
+                exec_mux("info", "muxtester", muxtester_main);
             } else if (strcmp(action, "system") == 0) {
-                load_mux("info");
-                muxsysinfo_main();
-                set_previous_module("muxsysinfo");
+                exec_mux("info", "muxsysinfo", muxsysinfo_main);
             } else {
-                printf("****muxfrontend launcher action: %s\n", action);
-                muxlaunch_main();
-                set_previous_module("muxlaunch");
+                exec_mux("launcher", "muxlaunch", muxlaunch_main);
             }
         } else {
-            printf("****muxfrontend launcher action no file: \n");
-            muxlaunch_main();
-            set_previous_module("muxlaunch");
+            exec_mux("launcher", "muxlaunch", muxlaunch_main);
         }
         cleanup_screen();        
     }

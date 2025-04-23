@@ -260,8 +260,8 @@ static void ui_refresh_task() {
 }
 
 int muxinfo_main() {
-    snprintf(mux_module, sizeof(mux_module), "muxinfo");
-
+    init_module("muxinfo");
+    
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXINFO.TITLE);

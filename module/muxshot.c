@@ -274,8 +274,8 @@ static void ui_refresh_task() {
 int muxshot_main() {
     is_fullscreen = 0;
 
-    snprintf(mux_module, sizeof(mux_module), "muxshot");
-            
+    init_module("muxshot");
+    
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSHOT.TITLE);

@@ -472,9 +472,8 @@ int muxpicker_main(int argc, char *argv[]) {
         return 1;
     }
 
-    snprintf(mux_module, sizeof(mux_module), "muxpicker");
+    init_module("muxpicker");
     
-            
     init_theme(1, 1);
     
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right

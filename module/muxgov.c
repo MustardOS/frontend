@@ -404,8 +404,8 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
     snprintf(rom_dir, sizeof(rom_name), dir);
     snprintf(rom_system, sizeof(rom_name), sys);
 
-    snprintf(mux_module, sizeof(mux_module), "muxgov");
-            
+    init_module("muxgov");
+    
     LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir)
     LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system)

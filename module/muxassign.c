@@ -533,9 +533,8 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys) {
     snprintf(rom_dir, sizeof(rom_name), dir);
     snprintf(rom_system, sizeof(rom_name), sys);
 
-    snprintf(mux_module, sizeof(mux_module), "muxassign");
-    
-            
+    init_module("muxassign");
+                
     LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Core ROM_DIR: \"%s\"", rom_dir)
     LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system)

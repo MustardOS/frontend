@@ -302,9 +302,8 @@ static void ui_refresh_task() {
 
 int muxspace_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxspace");
+    init_module("muxspace");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSPACE.TITLE);

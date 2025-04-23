@@ -594,9 +594,8 @@ static void ui_refresh_task() {
 
 int muxsysinfo_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxsysinfo");
+    init_module("muxsysinfo");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSYSINFO.TITLE);

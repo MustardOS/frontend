@@ -776,12 +776,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxtweakadv_main(int argc, char *argv[]) {
-    (void) argc;
-
-    snprintf(mux_module, sizeof(mux_module), "muxtweakadv");
+int muxtweakadv_main() {
+    init_module("muxtweakadv");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTWEAKADV.TITLE);

@@ -556,8 +556,8 @@ static void ui_refresh_task() {
 }
 
 int muxlaunch_main() {
-    snprintf(mux_module, sizeof(mux_module), "muxlaunch");
-
+    init_module("muxlaunch");
+    
     printf("****muxlaunch_main argv[0]: %s\n", mux_module);
 
     init_theme(1, 1);

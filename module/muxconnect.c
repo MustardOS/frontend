@@ -335,8 +335,8 @@ static void ui_refresh_task() {
 
 int muxconnect_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxconnect");
-            
+    init_module("muxconnect");
+    
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCONNECT.TITLE);

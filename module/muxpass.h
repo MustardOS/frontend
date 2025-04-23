@@ -1,3 +1,3 @@
 #pragma once
 
-int muxpass_main(int argc, char *argv[]);
+int muxpass_main(char *p_type);

@@ -941,9 +941,8 @@ static void on_key_event(struct input_event ev) {
 
 int muxnetwork_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxnetwork");
+    init_module("muxnetwork");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETWORK.TITLE);

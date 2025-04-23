@@ -222,9 +222,8 @@ static void ui_refresh_task() {
 
 int muxnetscan_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxnetscan");
+    init_module("muxnetscan");
     
-            
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETSCAN.TITLE);

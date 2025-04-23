@@ -79,6 +79,11 @@ void close_input() {
     close(joy_extra);
 }
 
+void init_module(char *module) {
+    snprintf(mux_module, sizeof(mux_module), module);
+    load_lang(&lang);
+}
+
 void init_display() {
     lv_init();
     sdl_init();

@@ -945,9 +945,8 @@ int muxsearch_main(int argc, char *argv[]) {
         }
     }
 
-    snprintf(mux_module, sizeof(mux_module), "muxsearch");
+    init_module("muxsearch");
     
-            
     snprintf(search_result, sizeof(search_result), "%s/%s/search.json",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
 

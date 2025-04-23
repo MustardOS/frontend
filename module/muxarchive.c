@@ -324,9 +324,8 @@ static void ui_refresh_task() {
 
 int muxarchive_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxarchive");
-    
-            
+    init_module("muxarchive");
+                
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXARCHIVE.TITLE);

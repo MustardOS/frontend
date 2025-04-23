@@ -131,9 +131,8 @@ static void init_elements() {
 
 int muxtester_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxtester");
+    init_module("muxtester");
     
-            
     init_theme(0, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTESTER.TITLE);

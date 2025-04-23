@@ -712,8 +712,8 @@ int muxhistory_main(int his_index) {
     starter_image = 0;
     splash_valid = 0;
 
-    snprintf(mux_module, sizeof(mux_module), "muxhistory");
-            
+    init_module("muxhistory");
+    
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, "");

@@ -1191,7 +1191,7 @@ int muxplore_main(int index, char *dir) {
     printf("sys_dir: %s\n", sys_dir);
     printf("sys_index: %d\n", sys_index);
 
-    snprintf(mux_module, sizeof(mux_module), "muxplore");
+    init_module("muxplore");
     
     init_theme(1, 1);
 

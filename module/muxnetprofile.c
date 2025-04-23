@@ -435,9 +435,8 @@ static void ui_refresh_task() {
 
 int muxnetprofile_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxnetprofile");
+    init_module("muxnetprofile");
     
-            
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETPROFILE.TITLE);

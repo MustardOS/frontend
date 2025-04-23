@@ -377,9 +377,8 @@ static void ui_refresh_task() {
 
 int muxwebserv_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxwebserv");
-    
-            
+    init_module("muxwebserv");
+                
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXWEBSERV.TITLE);

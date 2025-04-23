@@ -20,7 +20,6 @@
 static int exit_status_muxpass = 0;
 
 struct mux_passcode passcode;
-static char *p_type;
 static char *p_code;
 static char *p_msg;
 
@@ -144,31 +143,13 @@ static void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-int muxpass_main(int argc, char *argv[]) {
+int muxpass_main(char *p_type) {
     exit_status_muxpass = 0;
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
 
-    int opt;
-    while ((opt = getopt(argc, argv, "t:")) != -1) {
-        switch (opt) {
-            case 't':
-                p_type = optarg;
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 2;
-        }
-    }
-
-    if (!p_type) {
-        fprintf(stderr, cmd_help, argv[0]);
-        return 2;
-    }
-
-    snprintf(mux_module, sizeof(mux_module), "muxpass");
+    init_module("muxpass");
     
-            
     load_passcode(&passcode, &device);
 
     if (strcasecmp(p_type, "boot") == 0) {
@@ -181,7 +162,7 @@ int muxpass_main(int argc, char *argv[]) {
         p_code = passcode.CODE.SETTING;
         p_msg = passcode.MESSAGE.SETTING;
     } else {
-        fprintf(stderr, cmd_help, argv[0]);
+        fprintf(stderr, cmd_help, p_type);
         return 2;
     }
 

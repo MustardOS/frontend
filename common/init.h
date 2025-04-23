@@ -29,6 +29,8 @@ void safe_quit(int exit_status);
 
 void close_input();
 
+void init_module(char *module);
+
 void init_display();
 
 void init_input(mux_input_options *opts, int def_combo);

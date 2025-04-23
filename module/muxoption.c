@@ -19,9 +19,9 @@
 #include "../common/log.h"
 
 
-static char *rom_name;
-static char *rom_dir;
-static char *rom_system;
+static char rom_name[MAX_BUFFER_SIZE];
+static char rom_dir[MAX_BUFFER_SIZE];
+static char rom_system[MAX_BUFFER_SIZE];
 
 
 #define UI_COUNT 3
@@ -302,35 +302,13 @@ static void ui_refresh_task() {
     }
 }
 
-int muxoption_main(int argc, char *argv[]) {
-    (void) argc;
+int muxoption_main(char *name, char *dir, char *sys) {
+    snprintf(rom_name, sizeof(rom_name), name);
+    snprintf(rom_dir, sizeof(rom_name), dir);
+    snprintf(rom_system, sizeof(rom_name), sys);
 
-    char *cmd_help = "\nmuOS Options\nUsage: %s <-cds>\n\nOptions:\n"
-                     "\t-c Name of content file\n"
-                     "\t-d Name of content directory\n"
-                     "\t-s Name of content system (use 'none' for root)\n\n";
-
-    int opt;
-    while ((opt = getopt(argc, argv, "c:d:s:")) != -1) {
-        switch (opt) {
-            case 'c':
-                rom_name = optarg;
-                break;
-            case 'd':
-                rom_dir = optarg;
-                break;
-            case 's':
-                rom_system = optarg;
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
-        }
-    }
-
-    snprintf(mux_module, sizeof(mux_module), "muxoption");
+    init_module("muxoption");
     
-            
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);
         LOG_INFO(mux_module, "Skipping Options Module - Not Required...")

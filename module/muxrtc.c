@@ -590,9 +590,8 @@ static void ui_refresh_task() {
 
 int muxrtc_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxrtc");
+    init_module("muxrtc");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXRTC.TITLE);

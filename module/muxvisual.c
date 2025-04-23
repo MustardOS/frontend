@@ -545,9 +545,8 @@ static void ui_refresh_task() {
 
 int muxvisual_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxvisual");
+    init_module("muxvisual");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXVISUAL.TITLE);

@@ -447,9 +447,8 @@ static void ui_refresh_task() {
 
 int muxhdmi_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxhdmi");
+    init_module("muxhdmi");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXHDMI.TITLE);

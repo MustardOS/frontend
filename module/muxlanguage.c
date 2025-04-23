@@ -211,9 +211,8 @@ static void ui_refresh_task() {
 
 int muxlanguage_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxlanguage");
+    init_module("muxlanguage");
     
-            
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXLANGUAGE.TITLE);

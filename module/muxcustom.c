@@ -565,9 +565,8 @@ static void ui_refresh_task() {
 
 int muxcustom_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxcustom");
-    
-            
+    init_module("muxcustom");
+                
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCUSTOM.TITLE);

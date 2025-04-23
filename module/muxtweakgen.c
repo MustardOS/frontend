@@ -459,9 +459,8 @@ static void ui_refresh_task() {
 
 int muxtweakgen_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxtweakgen");
+    init_module("muxtweakgen");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTWEAKGEN.TITLE);

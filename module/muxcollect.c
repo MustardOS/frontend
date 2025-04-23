@@ -1198,8 +1198,8 @@ int muxcollect_main(int add, char *dir, int last_index) {
     nogrid_file_exists = 0;
 
     snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? INFO_COL_PATH : dir);
-    snprintf(mux_module, sizeof(mux_module), "muxcollect");
-            
+    init_module("muxcollect");
+    
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, "");

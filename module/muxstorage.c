@@ -498,9 +498,8 @@ static void ui_refresh_task() {
 
 int muxstorage_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxstorage");
+    init_module("muxstorage");
     
-            
     init_theme(1, 0);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSTORAGE.TITLE);

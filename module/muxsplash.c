@@ -16,8 +16,8 @@
 
 int muxsplash_main(char *splash_image) {
 
-    snprintf(mux_module, sizeof(mux_module), "muxsplash");
-            
+    init_module("muxsplash");
+    
     init_theme(0, 0);
     
     init_ui_common_screen(&theme, &device, &lang, "");

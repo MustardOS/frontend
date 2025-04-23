@@ -331,8 +331,8 @@ static void ui_refresh_task() {
 
 int muxtask_main() {
     
-    snprintf(mux_module, sizeof(mux_module), "muxtask");
-            
+    init_module("muxtask");
+    
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTASK.TITLE);

@@ -252,12 +252,9 @@ static void ui_refresh_task() {
     }
 }
 
-int muxconfig_main(int argc, char *argv[]) {
-    (void) argc;
-
-    snprintf(mux_module, sizeof(mux_module), "muxconfig");
+int muxconfig_main() {
+    init_module("muxconfig");
     
-            
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCONFIG.TITLE);

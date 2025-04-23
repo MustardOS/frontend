@@ -307,9 +307,8 @@ static void ui_refresh_task() {
 int muxsnapshot_main(int argc, char *argv[]) {
     (void) argc;
 
-    snprintf(mux_module, sizeof(mux_module), "muxsnapshot");
+    init_module("muxsnapshot");
     
-            
     init_theme(1, 1);
     
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSNAPSHOT.TITLE);

@@ -1,3 +1,3 @@
 #pragma once
 
-int muxoption_main(int argc, char *argv[]);
+int muxoption_main(char *name, char *dir, char *sys);

@@ -21,9 +21,8 @@ int muxstart_main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    snprintf(mux_module, sizeof(mux_module), "muxstart");
+    init_module("muxstart");
     
-            
     init_theme(0, 0);
     
     init_muxstart();
