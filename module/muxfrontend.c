@@ -80,7 +80,7 @@ static void cleanup_screen() {
 }
 
 static void process_content_action(char *action, char *module) {
-    if (!file_exist(ADD_MODE_WORK)) return;
+    if (!file_exist(action)) return;
 
     snprintf(rom_name, sizeof(rom_name), "%s", read_line_from_file(action, 1));
     snprintf(rom_dir, sizeof(rom_dir), "%s", read_line_from_file(action, 2));
@@ -156,6 +156,29 @@ int main(int argc, char *argv[]) {
                 muxgov_main(1, rom_name, explore_dir, "none");
                 load_mux("launcher");
                 if (muxplore_main(last_index, explore_dir) == 1) {
+                    safe_quit(0);
+                    break;
+                }
+            } else if (strcmp(action, "collection") == 0) {
+                last_index_check();
+                int add_mode = 0;
+                if (file_exist(ADD_MODE_WORK)) {
+                    add_mode = 1;
+                    last_index = 0;
+                }
+                const char *args[] = { "find", INFO_COL_PATH, "-maxdepth", "2", "-type", "f", "-size", "0", "-delete", NULL };
+                run_exec(args);
+                load_mux("launcher");
+                if (muxcollect_main(add_mode, read_line_from_file(COLLECTION_DIR, 1), last_index) == 1) {
+                    safe_quit(0);
+                    break;
+                }
+            } else if (strcmp(action, "history") == 0) {
+                last_index_check();
+                const char *args[] = { "find", INFO_HIS_PATH, "-maxdepth", "1", "-type", "f", "-size", "0", "-delete", NULL };
+                run_exec(args);
+                load_mux("launcher");
+                if (muxhistory_main(last_index) == 1) {
                     safe_quit(0);
                     break;
                 }

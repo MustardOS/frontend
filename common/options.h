@@ -44,6 +44,7 @@
 #define ADD_MODE_WORK "/tmp/add_mode_work"
 #define ADD_MODE_DONE "/tmp/add_mode_done"
 #define ADD_MODE_FROM "/tmp/add_mode_from"
+#define COLLECTION_DIR "/tmp/collection_dir"
 
 #define RUN_DEVICE_PATH  RUN_PATH "device/"
 #define RUN_GLOBAL_PATH  RUN_PATH "global/"

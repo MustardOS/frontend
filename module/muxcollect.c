@@ -24,8 +24,7 @@
 #include "../common/input/list_nav.h"
 #include "../common/log.h"
 #include "../lookup/lookup.h"
-
-#define COLLECTION_DIR "/tmp/collection_dir"
+#include "../common/options.h"
 
 static lv_obj_t *ui_imgSplash;
 
@@ -33,9 +32,10 @@ static lv_obj_t *ui_viewport_objects[7];
 static lv_obj_t *ui_mux_panels[7];
 
 static char *prev_dir = "";
-static char *sys_dir = INFO_COL_PATH;
+static char sys_dir[MAX_BUFFER_SIZE];
 static char new_dir[MAX_BUFFER_SIZE];
 
+static int exit_status = 0;
 static int add_mode = 0;
 static int sys_index = -1;
 static int file_count = 0;
@@ -769,6 +769,7 @@ static void handle_a() {
                 } else {
                     unload_image_animation();
                 }
+                exit_status = 1;
             } else {
                 return;
             }
@@ -811,15 +812,13 @@ static void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    if (sys_dir) {
-        if (at_base(sys_dir, "collection")) {
-            if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
-            if (add_mode) write_text_to_file(ADD_MODE_DONE, "w", CHAR, "CANCEL");
-            if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
-        } else {
-            char *base_dir = strrchr(sys_dir, '/');
-            if (base_dir) write_text_to_file(COLLECTION_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
-        }
+    if (at_base(sys_dir, "collection")) {
+        if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
+        if (add_mode) write_text_to_file(ADD_MODE_DONE, "w", CHAR, "CANCEL");
+        if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
+    } else {
+        char *base_dir = strrchr(sys_dir, '/');
+        if (base_dir) write_text_to_file(COLLECTION_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
     }
 
     if (file_exist(COLLECTION_DIR)) {
@@ -1188,45 +1187,18 @@ static void on_key_event(struct input_event ev) {
     }
 }
 
-int muxcollect_main(int argc, char *argv[]) {
-    add_mode = 0;
-    sys_index = -1;
+int muxcollect_main(int add, char *dir, int last_index) {
+    exit_status = 0;
+    add_mode = add;
+    sys_index = last_index;
     file_count = 0;
     dir_count = 0;
     starter_image = 0;
     splash_valid = 0;
     nogrid_file_exists = 0;
 
-    char *cmd_help = "\nmuOS Extras - Content Collection\nUsage: %s <-adi>\n\nOptions:\n"
-                     "\t-a Add mode\n"
-                     "\t-d Content directory\n"
-                     "\t-i Index of content to skip to\n\n";
-
-    int opt;
-    while ((opt = getopt(argc, argv, "a:d:i:")) != -1) {
-        switch (opt) {
-            case 'a':
-                add_mode = safe_atoi(optarg);
-                break;
-            case 'd':
-                sys_dir = !strlen(optarg) ? INFO_COL_PATH : optarg;
-                break;
-            case 'i':
-                sys_index = safe_atoi(optarg);
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
-        }
-    }
-
-    if (sys_index == -1) {
-        fprintf(stderr, cmd_help, argv[0]);
-        return 1;
-    }
-
+    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? INFO_COL_PATH : dir);
     snprintf(mux_module, sizeof(mux_module), "muxcollect");
-    
             
     init_theme(1, 0);
     
@@ -1262,7 +1234,7 @@ int muxcollect_main(int argc, char *argv[]) {
     create_collection_items();
     ui_count = dir_count > 0 || file_count > 0 ? (int) lv_group_get_obj_count(ui_group) : 0;
 
-    if (sys_dir) write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
     if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "ROMS") == 0) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
     }
@@ -1384,5 +1356,5 @@ int muxcollect_main(int argc, char *argv[]) {
 
     free_items(&items, &item_count);
 
-    return 0;
+    return exit_status;
 }

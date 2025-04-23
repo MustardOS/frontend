@@ -1,3 +1,3 @@
 #pragma once
 
-int muxhistory_main(int argc, char *argv[]);
+int muxhistory_main(int his_index);

@@ -35,7 +35,7 @@ static lv_obj_t *ui_mux_panels[7];
 static char prev_dir[PATH_MAX];
 static char sys_dir[PATH_MAX];
 
-static int exit_status_muxplore = 0;
+static int exit_status = 0;
 static int sys_index = -1;
 static int file_count = 0;
 static int dir_count = 0;
@@ -927,7 +927,7 @@ static void handle_a() {
             }
 
             load_mux("explore");
-            exit_status_muxplore = 1;
+            exit_status = 1;
         } else {
             write_text_to_file(OPTION_SKIP, "w", CHAR, "");
             load_mux("assign");
@@ -1177,7 +1177,7 @@ static void ui_refresh_task() {
 }
 
 int muxplore_main(int index, char *dir) {
-    exit_status_muxplore = 0;
+    exit_status = 0;
     sys_index = -1;
     file_count = 0;
     dir_count = 0;
@@ -1306,5 +1306,5 @@ int muxplore_main(int index, char *dir) {
 
     free_items(&items, &item_count);
 
-    return exit_status_muxplore;
+    return exit_status;
 }

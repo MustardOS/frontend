@@ -28,8 +28,7 @@ static lv_obj_t *ui_imgSplash;
 static lv_obj_t *ui_viewport_objects[7];
 static lv_obj_t *ui_mux_panels[7];
 
-static int his_index = -1;
-
+static int exit_status = 0;
 static int file_count = 0;
 static int starter_image = 0;
 static int splash_valid = 0;
@@ -537,6 +536,7 @@ static void handle_a() {
         } else {
             unload_image_animation();
         }
+        exit_status = 1;
     } else {
         return;
     }
@@ -706,32 +706,13 @@ static void ui_refresh_task() {
     }
 }
 
-int muxhistory_main(int argc, char *argv[]) {
-    his_index = -1;
+int muxhistory_main(int his_index) {
+    exit_status = 0;
     file_count = 0;
     starter_image = 0;
     splash_valid = 0;
 
-    char *cmd_help = "\nmuOS Extras - Content History\nUsage: %s <-i>\n\nOptions:\n"
-                     "\t-i Index of content to skip to\n\n";
-
-    int opt;
-    while ((opt = getopt(argc, argv, "i:")) != -1) {
-        if (opt == 'i') {
-            his_index = safe_atoi(optarg);
-        } else {
-            fprintf(stderr, cmd_help, argv[0]);
-            return 1;
-        }
-    }
-
-    if (his_index == -1) {
-        fprintf(stderr, cmd_help, argv[0]);
-        return 1;
-    }
-
     snprintf(mux_module, sizeof(mux_module), "muxhistory");
-    
             
     init_theme(1, 1);
     
@@ -833,5 +814,5 @@ int muxhistory_main(int argc, char *argv[]) {
 
     free_items(&items, &item_count);
 
-    return 0;
+    return exit_status;
 }
