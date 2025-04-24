@@ -23,9 +23,7 @@
 #include "../common/input/list_nav.h"
 #include "../common/log.h"
 #include "../lookup/lookup.h"
-
-#define EXPLORE_DIR "/tmp/explore_dir"
-#define EXPLORE_NAME "/tmp/explore_name"
+#include "../common/options.h"
 
 static lv_obj_t *ui_imgSplash;
 

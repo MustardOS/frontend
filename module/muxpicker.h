@@ -1,3 +1,3 @@
 #pragma once
 
-int muxpicker_main(int argc, char *argv[]);
+int muxpicker_main(char *type, char *ex_dir);

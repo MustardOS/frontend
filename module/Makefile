@@ -28,7 +28,7 @@ EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-ffast-math -funroll-loops -falign-functions
 
 MODULES = muxapp muxarchive muxassign muxcharge muxcollect muxconfig muxconnect \
-          muxcredits muxcustom muxgov muxhdmi muxhistory muxinfo muxlanguage \
+          muxcustom muxgov muxhdmi muxhistory muxinfo muxlanguage \
           muxlaunch muxnetprofile muxnetscan muxnetwork muxoption muxpass \
           muxpicker muxpower muxplore muxrtc muxsearch muxshot muxsnapshot \
           muxspace muxsplash muxstart muxstorage muxsysinfo muxtask muxtester \

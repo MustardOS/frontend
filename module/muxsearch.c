@@ -928,22 +928,10 @@ static void on_key_event(struct input_event ev) {
     }
 }
 
-int muxsearch_main(int argc, char *argv[]) {
+int muxsearch_main(char *dir) {
+    snprintf(rom_dir, sizeof(rom_dir), dir);
     starter_image = 0;
     got_results = 0;
-
-    char *cmd_help = "\nmuOS Extras - Content Search\nUsage: %s <-d>\n\nOptions:\n"
-                     "\t-d Name of directory to search\n\n";
-
-    int opt;
-    while ((opt = getopt(argc, argv, "d:")) != -1) {
-        if (opt == 'd') {
-            snprintf(rom_dir, sizeof(rom_dir), "%s", optarg);
-        } else {
-            fprintf(stderr, cmd_help, argv[0]);
-            return 1;
-        }
-    }
 
     init_module("muxsearch");
     
@@ -1030,6 +1018,8 @@ int muxsearch_main(int argc, char *argv[]) {
     init_input(&input_opts, true);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
+
+    free_items(&all_items, &all_item_count);
 
     return 0;
 }

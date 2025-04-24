@@ -19,7 +19,6 @@
 #include "muxcollect.h"
 #include "muxconfig.h"
 #include "muxconnect.h"
-#include "muxcredits.h"
 #include "muxcustom.h"
 #include "muxgov.h"
 #include "muxhdmi.h"
@@ -197,6 +196,17 @@ int main(int argc, char *argv[]) {
                     safe_quit(0);
                     break;
                 }
+            } else if (strcmp(action, "search") == 0) {
+                load_mux("option");
+                muxsearch_main(read_line_from_file(EXPLORE_DIR, 1));
+                if (file_exist(MUOS_RES_LOAD)) {
+                    char *file_path = read_line_from_file(MUOS_RES_LOAD, 1);
+                    char *ex_directory = strip_dir(file_path);
+                    write_text_to_file(EXPLORE_DIR, "w", CHAR, ex_directory);
+                    write_text_to_file(EXPLORE_NAME, "w", CHAR, get_last_dir(file_path));
+                    cleanup_screen();
+                    load_mux("explore");
+                }
             } else if (strcmp(action, "config") == 0) {
                 if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_AUTH) && strcmp(previous_module, "muxtweakgen") != 0) {
                     load_mux("launcher");
@@ -214,9 +224,15 @@ int main(int argc, char *argv[]) {
                     if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
                     if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
                 }
+            } else if (strcmp(action, "credits") == 0) {
+                safe_quit(0);
+                break;
             } else if (strcmp(action, "option") == 0) {
                 load_mux("explore");
                 muxoption_main(rom_name, rom_dir, rom_sys);
+            } else if (strcmp(action, "picker") == 0) {
+                load_mux("custom");
+                muxpicker_main(read_line_from_file(MUOS_PIK_LOAD, 1), read_line_from_file(EXPLORE_DIR, 1));
             } else if (strcmp(action, "info") == 0) {
                 exec_mux("launcher", "muxinfo", muxinfo_main);
             } else if (strcmp(action, "archive") == 0) {

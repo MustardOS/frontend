@@ -21,13 +21,9 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-#define EXPLORE_DIR "/tmp/explore_dir"
-#define EXPLORE_NAME "/tmp/explore_name"
-
-
 static char base_dir[PATH_MAX];
 static char sys_dir[PATH_MAX];
-static char *picker_type;
+static char picker_type[32];
 static char *picker_extension;
 static lv_obj_t *ui_mux_panels[5];
 
@@ -445,37 +441,24 @@ static void ui_refresh_task() {
     }
 }
 
-int muxpicker_main(int argc, char *argv[]) {
-    char *cmd_help = "\nmuOS Extras - Custom Picker\nUsage: %s <-m>\n\nOptions:\n"
-                     "\t-m Picker module from:\n"
-                     "\t\ttheme\n" // This might need to be changed later?
-                     "\t\tpackage/catalogue\n"
-                     "\t\tpackage/config\n\n";
+int muxpicker_main(char *type, char *ex_dir) {
+    snprintf(picker_type, sizeof(picker_type), type);
+    snprintf(sys_dir, sizeof(sys_dir), ex_dir);
 
-    int opt;
-    while ((opt = getopt(argc, argv, "m:d:")) != -1) {
-        if (opt == 'd') {
-            snprintf(sys_dir, sizeof(sys_dir), "%s", optarg);
-        } else if (opt == 'm') {
-            picker_type = optarg;
-        } else {
-            fprintf(stderr, cmd_help, argv[0]);
-            return 1;
-        }
-    }
     snprintf(base_dir, sizeof(base_dir), (RUN_STORAGE_PATH "%s"), picker_type);
-    if (!strlen(sys_dir))
+    if (strcmp(sys_dir, "") == 0)
         snprintf(sys_dir, sizeof(sys_dir), (RUN_STORAGE_PATH "%s"), picker_type);
-
-    if (!picker_type) {
-        fprintf(stderr, cmd_help, argv[0]);
-        return 1;
-    }
 
     init_module("muxpicker");
     
     init_theme(1, 1);
     
+    printf("type: %s\n", type);
+    printf("picker_type: %s\n", picker_type);
+    printf("ex_dir: %s\n", ex_dir);
+    printf("base_dir: %s\n", base_dir);
+    printf("sys_dir: %s\n", sys_dir);
+
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
     const char *picker_title = NULL;

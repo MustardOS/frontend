@@ -316,7 +316,8 @@ void init_muxcredits(void) {
     lv_label_set_text(ui_lblCommanderCrew,
                       "xonglebongle\n"
                       "antikk\n"
-                      "corey"
+                      "corey\n"
+                      "bitter_bizarro"
     );
     lv_obj_set_scroll_dir(ui_lblCommanderCrew, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblCommanderCrew, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -377,8 +378,7 @@ void init_muxcredits(void) {
                       "bgelmini\n"
                       "ilfordhp5\n"
                       "duncanyoyo1\n"
-                      "illumini_85\n"
-                      "bitter_bizarro"
+                      "illumini_85"
     );
     lv_obj_set_scroll_dir(ui_lblEnforcerCrew, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblEnforcerCrew, lv_color_hex(0xFF4500), LV_PART_MAIN | LV_STATE_DEFAULT);

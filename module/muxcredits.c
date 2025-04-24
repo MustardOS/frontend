@@ -1,5 +1,4 @@
 #include "muxshare.h"
-#include "muxcredits.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcredits.h"
 #include <string.h>
@@ -14,15 +13,21 @@
 
 static void timeout_task() {
     close_input();
+    safe_quit(0);
     mux_input_stop();
 }
 
-int muxcredits_main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     (void) argc;
 
     init_module("muxcredits");
+    setup_background_process();
+
+    load_device(&device);
+    load_config(&config);
             
     init_theme(0, 0);
+    init_display();
     init_muxcredits();
 
     animFade_Animation(ui_conStart, -1000);

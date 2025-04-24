@@ -20,9 +20,6 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-#define EXPLORE_DIR "/tmp/explore_dir"
-#define EXPLORE_NAME "/tmp/explore_name"
-
 static lv_obj_t *ui_mux_panels[5];
 
 lv_obj_t *ui_imgScreenshot;

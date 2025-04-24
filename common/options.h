@@ -27,6 +27,7 @@
 #define OSK_DONE  "OK"
 
 #define EXPLORE_DIR "/tmp/explore_dir"
+#define EXPLORE_NAME "/tmp/explore_name"
 
 #define CONTENT_PATH "/mnt/union/ROMS"
 #define OPTION_SKIP  "/tmp/skip_opt"
