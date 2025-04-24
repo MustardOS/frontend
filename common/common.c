@@ -1400,25 +1400,26 @@ void load_font_text(lv_obj_t *screen) {
         char mux_dimension[15];
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char *mux_dimensions[15] = {mux_dimension, ""};
+        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
                 if ((snprintf(theme_font_text, sizeof(theme_font_text),
-                              "%s/%sfont/%s/%s.bin", STORAGE_THEME, mux_dimensions[i],
+                              "%s/%sfont/%s/%s.bin", theme_location, mux_dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE, mux_module) >= 0 &&
                      file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                              "%s/%sfont/%s/default.bin", STORAGE_THEME, mux_dimensions[i],
+                              "%s/%sfont/%s/default.bin", theme_location, mux_dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE) >=
                      0 && file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text),
-                              "%s/%sfont/%s.bin", STORAGE_THEME, mux_dimensions[i], mux_module) >= 0 &&
+                              "%s/%sfont/%s.bin", theme_location, mux_dimensions[i], mux_module) >= 0 &&
                      file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                              "%s/%sfont/default.bin", STORAGE_THEME, mux_dimensions[i]) >= 0 &&
+                              "%s/%sfont/default.bin", theme_location, mux_dimensions[i]) >= 0 &&
                      file_exist(theme_font_text))) {
 
                     LOG_INFO(mux_module, "Loading Main Theme Font: %s", theme_font_text)
@@ -1440,25 +1441,26 @@ void load_font_section(const char *section, lv_obj_t *element) {
         char mux_dimension[15];
         get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         char *mux_dimensions[15] = {mux_dimension, ""};
+        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
                 if ((snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s/%s.bin", STORAGE_THEME, mux_dimensions[i],
+                              "%s/%sfont/%s/%s/%s.bin", theme_location, mux_dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE, section,
                               mux_module) >= 0 && file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s/default.bin", STORAGE_THEME, mux_dimensions[i],
+                              "%s/%sfont/%s/%s/default.bin", theme_location, mux_dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE,
                               section) >= 0 && file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s.bin", STORAGE_THEME, mux_dimensions[i], section, mux_module) >= 0 &&
+                              "%s/%sfont/%s/%s.bin", theme_location, mux_dimensions[i], section, mux_module) >= 0 &&
                      file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/default.bin", STORAGE_THEME, mux_dimensions[i], section) >= 0 &&
+                              "%s/%sfont/%s/default.bin", theme_location, mux_dimensions[i], section) >= 0 &&
                      file_exist(theme_font_section))) {
 
                     LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, theme_font_section)
@@ -2334,8 +2336,7 @@ uint32_t fnv1a_hash(const char *str) {
     return hash;
 }
 
-bool
-get_glyph_path(const char *mux_module, char *glyph_name, char *glyph_image_embed, size_t glyph_image_embed_size) {
+bool get_glyph_path(const char *mux_module, char *glyph_name, char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
