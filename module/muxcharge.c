@@ -1,5 +1,4 @@
 #include "muxshare.h"
-#include "muxcharge.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcharge.h"
 #include <string.h>
@@ -76,6 +75,7 @@ static void handle_idle(void) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
 
         close_input();
+        safe_quit(0);
         mux_input_stop();
 
         return;
@@ -96,12 +96,17 @@ static void battery_task_charge() {
     blank++;
 }
 
-int muxcharge_main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     (void) argc;
 
+    load_device(&device);
+    load_config(&config);
+
     init_module("muxcharge");
+    setup_background_process();
                 
     init_theme(0, 0);
+    init_display();
     
     init_muxcharge();
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));

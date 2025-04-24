@@ -15,7 +15,6 @@
 #include "muxapp.h"
 #include "muxarchive.h"
 #include "muxassign.h"
-#include "muxcharge.h"
 #include "muxcollect.h"
 #include "muxconfig.h"
 #include "muxconnect.h"

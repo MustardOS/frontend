@@ -15,7 +15,7 @@ endif
 BIN_DIR = ./bin
 
 MODULE_DIR = module
-MODULES = mufbset muhotkey muplay muxcredits muxfrontend
+MODULES = mufbset muhotkey muplay muxcharge muxcredits muxfrontend
 
 DEPENDENCIES = common font lvgl lookup module
 
