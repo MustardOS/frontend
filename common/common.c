@@ -392,6 +392,16 @@ char *strip_ext(char *text) {
     return result;
 }
 
+char *grab_ext(char *text) {
+    char *ext = strrchr(text, '.');
+
+    if (ext != NULL && *(ext + 1) != '\0') {
+        return strdup(ext + 1);
+    }
+
+    return strdup("");
+}
+
 char *get_execute_result(const char *command) {
     FILE *fp = popen(command, "r");
     if (fp == NULL) {

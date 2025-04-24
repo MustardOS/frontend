@@ -99,6 +99,8 @@ char *strip_dir(char *text);
 
 char *strip_ext(char *text);
 
+char *grab_ext(char *text);
+
 char *get_execute_result(const char *command);
 
 int read_battery_capacity();
