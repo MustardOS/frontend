@@ -1,3 +1,5 @@
+#include "muxshare.h"
+#include "muxgov.h"
 #include "../lvgl/lvgl.h"
 #include <unistd.h>
 #include <string.h>
@@ -5,6 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <libgen.h>
+#include <linux/limits.h>
 #include "../common/init.h"
 #include "../common/log.h"
 #include "../common/common.h"
@@ -18,40 +21,11 @@
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
+static lv_obj_t *ui_mux_panels[5];
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
-
-lv_obj_t *ui_mux_panels[5];
-
-int ui_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-
-char *auto_assign;
-char *rom_name;
-char *rom_dir;
-char *rom_system;
+static char rom_name[PATH_MAX];
+static char rom_dir[PATH_MAX];
+static char rom_system[PATH_MAX];
 
 enum gov_gen_type {
     SINGLE,
@@ -60,12 +34,12 @@ enum gov_gen_type {
     DIRECTORY_NO_WIPE
 };
 
-void show_help() {
+static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      lang.MUXGOV.TITLE, lang.MUXGOV.HELP);
 }
 
-void assign_gov_single(char *core_dir, const char *gov, char *rom) {
+static void assign_gov_single(char *core_dir, const char *gov, char *rom) {
     char rom_path[MAX_BUFFER_SIZE];
     snprintf(rom_path, sizeof(rom_path), "%s/%s.gov",
              core_dir, strip_ext(rom));
@@ -83,7 +57,7 @@ void assign_gov_single(char *core_dir, const char *gov, char *rom) {
     fclose(rom_file);
 }
 
-void assign_gov_directory(char *core_dir, const char *gov, int purge) {
+static void assign_gov_directory(char *core_dir, const char *gov, int purge) {
     if (purge) {
         delete_files_of_type(core_dir, "/core.gov", NULL, 0);
     }
@@ -102,7 +76,7 @@ void assign_gov_directory(char *core_dir, const char *gov, int purge) {
     fclose(file);
 }
 
-void assign_gov_parent(char *core_dir, const char *gov) {
+static void assign_gov_parent(char *core_dir, const char *gov) {
     assign_gov_directory(core_dir, gov, 1);
 
     char **subdirs = get_subdirectories(rom_dir);
@@ -126,7 +100,7 @@ void assign_gov_parent(char *core_dir, const char *gov) {
     }
 }
 
-void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type method) {
+static void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s/",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
@@ -154,7 +128,7 @@ void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type method)
     }
 }
 
-char **read_available_governors(const char *filename, int *count) {
+static char **read_available_governors(const char *filename, int *count) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
@@ -194,7 +168,7 @@ char **read_available_governors(const char *filename, int *count) {
     return governors;
 }
 
-void create_gov_items(const char *target) {
+static void create_gov_items(const char *target) {
     char filename[FILENAME_MAX];
     snprintf(filename, sizeof(filename), "%s/%s/%s.ini",
              device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
@@ -220,6 +194,7 @@ void create_gov_items(const char *target) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
+    ui_count = 0;
     for (int i = 0; i < governor_count; ++i) {
         LOG_SUCCESS(mux_module, "Generating Item For Governor: %s", governors[i])
 
@@ -253,7 +228,7 @@ void create_gov_items(const char *target) {
     free(governors);
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -269,7 +244,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
@@ -289,7 +264,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_a() {
+static void handle_a() {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Single Governor Assignment Triggered")
@@ -297,11 +272,11 @@ void handle_a() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, SINGLE);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
-void handle_b() {
+static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -313,11 +288,11 @@ void handle_b() {
     play_sound("back", nav_sound, 0, 1);
     remove(MUOS_SAG_LOAD);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
-void handle_x() {
+static void handle_x() {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Directory Governor Assignment Triggered")
@@ -325,11 +300,11 @@ void handle_x() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, DIRECTORY);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
-void handle_y() {
+static void handle_y() {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Parent Governor Assignment Triggered")
@@ -337,11 +312,11 @@ void handle_y() {
 
     create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, PARENT);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
-void handle_help() {
+static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -350,7 +325,7 @@ void handle_help() {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -411,7 +386,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -425,51 +400,18 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
-    char *cmd_help = "\nmuOS Extras - Governor Assignment\nUsage: %s <-acds>\n\nOptions:\n"
-                     "\t-a Auto assign content directory check\n"
-                     "\t-c Name of content file\n"
-                     "\t-d Name of content directory\n"
-                     "\t-s Name of content system (use 'none' for root)\n\n";
+int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
+    snprintf(rom_name, sizeof(rom_name), name);
+    snprintf(rom_dir, sizeof(rom_name), dir);
+    snprintf(rom_system, sizeof(rom_name), sys);
 
-    int opt;
-    while ((opt = getopt(argc, argv, "a:c:d:s:")) != -1) {
-        switch (opt) {
-            case 'a':
-                auto_assign = optarg;
-                break;
-            case 'c':
-                rom_name = optarg;
-                break;
-            case 'd':
-                rom_dir = optarg;
-                break;
-            case 's':
-                rom_system = optarg;
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
-        }
-    }
-
-    if (!auto_assign || !rom_name || !rom_dir || !rom_system) {
-        fprintf(stderr, cmd_help, argv[0]);
-        return 1;
-    }
-
-    mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    init_module("muxgov");
+    
     LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir)
     LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system)
 
-    if (safe_atoi(auto_assign) && !file_exist(MUOS_SAG_LOAD)) {
+    if (auto_assign && !file_exist(MUOS_SAG_LOAD)) {
         LOG_INFO(mux_module, "Automatic Assign Governor Initiated")
 
         char core_file[MAX_BUFFER_SIZE];
@@ -477,7 +419,7 @@ int main(int argc, char *argv[]) {
                  INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
         if (file_exist(core_file)) {
-            safe_quit(0);
+            close_input();
             return 0;
         }
 
@@ -529,23 +471,21 @@ int main(int argc, char *argv[]) {
 
                 mini_free(core_config_ini);
 
-                safe_quit(0);
+                close_input();
                 return 0;
             } else {
                 LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
                 create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
 
-                safe_quit(0);
+                close_input();
                 return 0;
             }
         }
     }
 
     init_theme(1, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, "");
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -576,7 +516,7 @@ int main(int argc, char *argv[]) {
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
                 LOG_INFO(mux_module, "<Obtaining System> Core Assigned: %s", ass_config)
-                rom_system = strip_ext(ass_config);
+                snprintf(rom_system, sizeof(rom_system), "%s", strip_ext(ass_config));
             }
         }
     }
@@ -595,6 +535,8 @@ int main(int argc, char *argv[]) {
     }
 
     load_kiosk(&kiosk);
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -616,6 +558,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

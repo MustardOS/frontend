@@ -10,11 +10,6 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-
 struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
@@ -38,7 +33,8 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    mux_module = basename(argv[0]);
+    snprintf(mux_module, sizeof(mux_module), "muplay");
+
     setup_background_process();
 
     load_device(&device);

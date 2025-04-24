@@ -27,11 +27,17 @@ void refresh_screen(lv_obj_t *screen);
 
 void safe_quit(int exit_status);
 
+void close_input();
+
+void init_module(char *module);
+
 void init_display();
 
 void init_input(mux_input_options *opts, int def_combo);
 
 void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info)(lv_timer_t *));
+
+void init_dispose();
 
 void init_fonts();
 

@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcharge.h"
 #include <string.h>
@@ -12,42 +13,18 @@
 #include "../common/device.h"
 #include "../common/kiosk.h"
 
-char *mux_module;
+static int exit_status = -1;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int exit_status = -1;
-int bar_header = 0;
-int bar_footer = 0;
+static int blank = 0;
 
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int progress_onscreen = -1;
-int ui_count = 0;
-int current_item_index = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-
-// Stubs to appease the compiler!
-void list_nav_prev(void) {}
-
-void list_nav_next(void) {}
-
-int blank = 0;
-
-char capacity_info[MAX_BUFFER_SIZE];
-char voltage_info[MAX_BUFFER_SIZE];
+static char capacity_info[MAX_BUFFER_SIZE];
+static char voltage_info[MAX_BUFFER_SIZE];
 
 lv_timer_t *battery_timer;
 
 #define CHARGER_EXIT "/tmp/charger_exit"
 
-void check_for_cable() {
+static void check_for_cable() {
     if (file_exist(device.BATTERY.CHARGER)) {
         if (read_int_from_file(device.BATTERY.CHARGER, 1) == 0) {
             exit_status = 1;
@@ -55,25 +32,25 @@ void check_for_cable() {
     }
 }
 
-void set_brightness(int brightness) {
+static void set_brightness(int brightness) {
     char bright_value[8];
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
     run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/input/bright.sh", bright_value, NULL});
 }
 
-void handle_power_short(void) {
+static void handle_power_short(void) {
     if (blank < 3) {
         lv_timer_pause(battery_timer);
 
-        lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblCapacity_charge, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblVoltage_charge, LV_OBJ_FLAG_HIDDEN);
 
-        lv_obj_add_flag(ui_lblCapacity, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblVoltage, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblCapacity_charge, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblVoltage_charge, LV_OBJ_FLAG_FLOATING);
 
-        lv_label_set_text(ui_lblBoot, lang.MUXCHARGE.BOOT);
+        lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.BOOT);
 
-        refresh_screen(ui_scrCharge);
+        refresh_screen(ui_scrCharge_charge);
 
         exit_status = 0;
         return;
@@ -83,35 +60,36 @@ void handle_power_short(void) {
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));
 }
 
-void handle_idle(void) {
+static void handle_idle(void) {
     if (file_exist("/tmp/mux_blank")) {
-        lv_obj_set_style_bg_opa(ui_blank, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_move_foreground(ui_blank);
+        lv_obj_set_style_bg_opa(ui_blank_charge, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_move_foreground(ui_blank_charge);
     } else {
-        if (lv_obj_get_style_bg_opa(ui_blank, LV_PART_MAIN | LV_STATE_DEFAULT) > 0) {
-            lv_obj_set_style_bg_opa(ui_blank, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_move_background(ui_blank);
+        if (lv_obj_get_style_bg_opa(ui_blank_charge, LV_PART_MAIN | LV_STATE_DEFAULT) > 0) {
+            lv_obj_set_style_bg_opa(ui_blank_charge, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_move_background(ui_blank_charge);
         }
     }
 
     if (exit_status >= 0) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
 
+        close_input();
         safe_quit(0);
         mux_input_stop();
 
         return;
     }
 
-    refresh_screen(ui_scrCharge);
+    refresh_screen(ui_scrCharge_charge);
 }
 
-void battery_task() {
+static void battery_task_charge() {
     snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", lang.MUXCHARGE.CAPACITY, read_battery_capacity());
     snprintf(voltage_info, sizeof(voltage_info), "%s: %s", lang.MUXCHARGE.VOLTAGE, read_battery_voltage());
 
-    lv_label_set_text(ui_lblCapacity, capacity_info);
-    lv_label_set_text(ui_lblVoltage, voltage_info);
+    lv_label_set_text(ui_lblCapacity_charge, capacity_info);
+    lv_label_set_text(ui_lblVoltage_charge, voltage_info);
 
     if (blank == 3) set_brightness(0);
     check_for_cable();
@@ -121,39 +99,38 @@ void battery_task() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_module = basename(argv[0]);
-    setup_background_process();
-
     load_device(&device);
     load_config(&config);
-    load_lang(&lang);
 
+    init_module("muxcharge");
+    setup_background_process();
+                
     init_theme(0, 0);
     init_display();
-
-    init_mux();
+    
+    init_muxcharge();
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));
 
-    lv_obj_set_user_data(ui_scrCharge, mux_module);
-    lv_label_set_text(ui_lblBoot, lang.MUXCHARGE.POWER);
+    lv_obj_set_user_data(ui_scrCharge_charge, mux_module);
+    lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.POWER);
 
-    load_wallpaper(ui_scrCharge, NULL, ui_pnlWall, ui_imgWall, GENERAL);
-    load_font_text(ui_scrCharge);
+    load_wallpaper(ui_scrCharge_charge, NULL, ui_pnlWall_charge, ui_imgWall_charge, GENERAL);
+    load_font_text(ui_scrCharge_charge);
 
 #if TEST_IMAGE
-    display_testing_message(ui_scrCharge);
+    display_testing_message(ui_scrCharge_charge);
 #endif
 
-    overlay_image = lv_img_create(ui_scrCharge);
-    load_overlay_image(ui_scrCharge, overlay_image);
+    overlay_image = lv_img_create(ui_scrCharge_charge);
+    load_overlay_image(ui_scrCharge_charge, overlay_image);
 
     init_navigation_sound(&nav_sound, mux_module);
-    lv_obj_set_y(ui_pnlCharge, theme.CHARGER.Y_POS);
+    lv_obj_set_y(ui_pnlCharge_charge, theme.CHARGER.Y_POS);
 
-    battery_task();
-    battery_timer = lv_timer_create(battery_task, TIMER_BATTERY, NULL);
+    battery_task_charge();
+    battery_timer = lv_timer_create(battery_task_charge, TIMER_BATTERY, NULL);
 
-    refresh_screen(ui_scrCharge);
+    refresh_screen(ui_scrCharge_charge);
 
     mux_input_options input_opts = {
             .press_handler = {[MUX_INPUT_POWER_SHORT] = handle_power_short},

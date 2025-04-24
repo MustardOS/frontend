@@ -3,6 +3,7 @@
 #include "overlay.h"
 #include "device.h"
 #include "language.h"
+#include "common.h"
 
 #define OVERLAY_STANDARD 15
 

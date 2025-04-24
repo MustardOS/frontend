@@ -26,6 +26,9 @@
 #define OSK_CHAR  "!@#"
 #define OSK_DONE  "OK"
 
+#define EXPLORE_DIR "/tmp/explore_dir"
+#define EXPLORE_NAME "/tmp/explore_name"
+
 #define CONTENT_PATH "/mnt/union/ROMS"
 #define OPTION_SKIP  "/tmp/skip_opt"
 
@@ -42,6 +45,7 @@
 #define ADD_MODE_WORK "/tmp/add_mode_work"
 #define ADD_MODE_DONE "/tmp/add_mode_done"
 #define ADD_MODE_FROM "/tmp/add_mode_from"
+#define COLLECTION_DIR "/tmp/collection_dir"
 
 #define RUN_DEVICE_PATH  RUN_PATH "device/"
 #define RUN_GLOBAL_PATH  RUN_PATH "global/"
@@ -102,6 +106,9 @@
 #define MUOS_SIN_LOAD "/tmp/sin_go" // Storage Preference Last Index
 #define MUOS_SYS_LOAD "/tmp/sys_go" // Core/System Assignment Flag
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
+
+#define MUX_AUTH "/tmp/mux_auth" // Muxpass Config Authorization
+#define MUX_LAUNCHER_AUTH "/tmp/mux_launcher_auth" // Muxpass App and Launcher Authorization
 
 #define BRIGHT_PERC "/tmp/current_brightness_percent"
 #define VOLUME_PERC "/tmp/current_volume_percent"

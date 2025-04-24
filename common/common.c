@@ -36,6 +36,9 @@
 #include "theme.h"
 #include "mini/mini.h"
 
+char mux_module[MAX_BUFFER_SIZE];
+int msgbox_active;
+int nav_sound;
 struct json translation_generic;
 struct json translation_specific;
 struct pattern skip_pattern_list = {NULL, 0, 0};

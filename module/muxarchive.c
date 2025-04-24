@@ -1,3 +1,5 @@
+#include "muxshare.h"
+#include "muxarchive.h"
 #include "../lvgl/lvgl.h"
 #include <dirent.h>
 #include <string.h>
@@ -16,45 +18,14 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
+static lv_obj_t *ui_mux_panels[5];
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-size_t item_count = 0;
-content_item *items = NULL;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
-
-int ui_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-
-lv_obj_t *ui_mux_panels[5];
-
-void show_help() {
+static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      lang.MUXARCHIVE.TITLE, lang.MUXARCHIVE.HELP);
 }
 
-void create_archive_items() {
+static void create_archive_items() {
     const char *mount_points[] = {
             device.STORAGE.ROM.MOUNT,
             device.STORAGE.SDCARD.MOUNT,
@@ -210,7 +181,7 @@ void create_archive_items() {
     free(file_names);
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -225,7 +196,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
@@ -244,7 +215,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_a() {
+static void handle_a() {
     if (msgbox_active) return;
 
     if (ui_count > 0) {
@@ -256,12 +227,12 @@ void handle_a() {
 
         load_mux("archive");
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
 
-void handle_b() {
+static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -272,11 +243,11 @@ void handle_b() {
 
     play_sound("back", nav_sound, 0, 1);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
-void handle_menu() {
+static void handle_menu() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -285,7 +256,7 @@ void handle_menu() {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -332,7 +303,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -351,21 +322,13 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+int muxarchive_main() {
+    
+    init_module("muxarchive");
+                
     init_theme(1, 1);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXARCHIVE.TITLE);
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -398,6 +361,8 @@ int main(int argc, char *argv[]) {
 
     load_kiosk(&kiosk);
 
+    init_timer(ui_refresh_task, NULL);
+
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
@@ -416,8 +381,11 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
+
+    if (item_count > 0) free_items(&items, &item_count);
 
     return 0;
 }

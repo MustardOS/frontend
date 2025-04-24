@@ -2,36 +2,36 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_mux(lv_obj_t *ui_pnlContent);
+void init_muxtweakgen(lv_obj_t *ui_pnlContent);
 
-extern lv_obj_t *ui_pnlStartup;
-extern lv_obj_t *ui_pnlColour;
-extern lv_obj_t *ui_pnlRTC;
-extern lv_obj_t *ui_pnlBrightness;
-extern lv_obj_t *ui_pnlVolume;
-extern lv_obj_t *ui_pnlHDMI;
-extern lv_obj_t *ui_pnlAdvanced;
+extern lv_obj_t *ui_pnlStartup_tweakgen;
+extern lv_obj_t *ui_pnlColour_tweakgen;
+extern lv_obj_t *ui_pnlRTC_tweakgen;
+extern lv_obj_t *ui_pnlBrightness_tweakgen;
+extern lv_obj_t *ui_pnlVolume_tweakgen;
+extern lv_obj_t *ui_pnlHDMI_tweakgen;
+extern lv_obj_t *ui_pnlAdvanced_tweakgen;
 
-extern lv_obj_t *ui_lblStartup;
-extern lv_obj_t *ui_lblColour;
-extern lv_obj_t *ui_lblRTC;
-extern lv_obj_t *ui_lblBrightness;
-extern lv_obj_t *ui_lblVolume;
-extern lv_obj_t *ui_lblHDMI;
-extern lv_obj_t *ui_lblAdvanced;
+extern lv_obj_t *ui_lblStartup_tweakgen;
+extern lv_obj_t *ui_lblColour_tweakgen;
+extern lv_obj_t *ui_lblRTC_tweakgen;
+extern lv_obj_t *ui_lblBrightness_tweakgen;
+extern lv_obj_t *ui_lblVolume_tweakgen;
+extern lv_obj_t *ui_lblHDMI_tweakgen;
+extern lv_obj_t *ui_lblAdvanced_tweakgen;
 
-extern lv_obj_t *ui_icoStartup;
-extern lv_obj_t *ui_icoColour;
-extern lv_obj_t *ui_icoRTC;
-extern lv_obj_t *ui_icoBrightness;
-extern lv_obj_t *ui_icoVolume;
-extern lv_obj_t *ui_icoHDMI;
-extern lv_obj_t *ui_icoAdvanced;
+extern lv_obj_t *ui_icoStartup_tweakgen;
+extern lv_obj_t *ui_icoColour_tweakgen;
+extern lv_obj_t *ui_icoRTC_tweakgen;
+extern lv_obj_t *ui_icoBrightness_tweakgen;
+extern lv_obj_t *ui_icoVolume_tweakgen;
+extern lv_obj_t *ui_icoHDMI_tweakgen;
+extern lv_obj_t *ui_icoAdvanced_tweakgen;
 
-extern lv_obj_t *ui_droStartup;
-extern lv_obj_t *ui_droColour;
-extern lv_obj_t *ui_droRTC;
-extern lv_obj_t *ui_droBrightness;
-extern lv_obj_t *ui_droVolume;
-extern lv_obj_t *ui_droHDMI;
-extern lv_obj_t *ui_droAdvanced;
+extern lv_obj_t *ui_droStartup_tweakgen;
+extern lv_obj_t *ui_droColour_tweakgen;
+extern lv_obj_t *ui_droRTC_tweakgen;
+extern lv_obj_t *ui_droBrightness_tweakgen;
+extern lv_obj_t *ui_droVolume_tweakgen;
+extern lv_obj_t *ui_droHDMI_tweakgen;
+extern lv_obj_t *ui_droAdvanced_tweakgen;

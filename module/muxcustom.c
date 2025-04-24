@@ -1,3 +1,5 @@
+#include "muxshare.h"
+#include "muxcustom.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcustom.h"
 #include <string.h>
@@ -15,51 +17,25 @@
 #include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-int current_item_index = 0;
-int ui_count = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-char theme_alt_original[MAX_BUFFER_SIZE];
-int boxart_original, bgm_original, sound_original, boxartalign_original, background_animation_original,
+static char theme_alt_original[MAX_BUFFER_SIZE];
+static int boxart_original, bgm_original, sound_original, boxartalign_original, background_animation_original,
         font_original, launch_splash_original, black_fade_original;
 
-lv_group_t *ui_group;
-lv_group_t *ui_group_value;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
 
 #define UI_COUNT 12
-lv_obj_t *ui_objects[UI_COUNT];
+static lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_objects_value[UI_COUNT];
-lv_obj_t *ui_icons[UI_COUNT];
+static lv_obj_t *ui_icons[UI_COUNT];
 
-lv_obj_t *ui_mux_panels[5];
+static lv_obj_t *ui_mux_panels[5];
 
 struct help_msg {
     lv_obj_t *element;
     char *message;
 };
 
-void show_help(lv_obj_t *element_focused) {
+static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblBackgroundAnimation, lang.MUXCUSTOM.HELP.ANIMATION},
             {ui_lblBGM,                 lang.MUXCUSTOM.HELP.MUSIC},
@@ -91,7 +67,7 @@ void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-void populate_theme_alternates() {
+static void populate_theme_alternates() {
     lv_dropdown_clear_options(ui_droThemeAlternate);
     char alt_path[MAX_BUFFER_SIZE];
     snprintf(alt_path, sizeof(alt_path), "%s/alternate", STORAGE_THEME);
@@ -102,9 +78,7 @@ void populate_theme_alternates() {
     if (dir == NULL) {
         perror("Unable to open directory");
     } else {
-        size_t item_count = 0;
-        content_item *items = NULL;
-
+                
         while ((entry = readdir(dir)) != NULL) {
             char *filename = entry->d_name;
             size_t len = strlen(filename);
@@ -123,7 +97,7 @@ void populate_theme_alternates() {
         for (int i = 0; i < item_count; i++) {
             lv_dropdown_add_option(ui_droThemeAlternate, items[i].display_name, LV_DROPDOWN_POS_LAST);
         }
-        free_items(items, item_count);
+        free_items(&items, &item_count);
     }
 
     if (lv_dropdown_get_option_cnt(ui_droThemeAlternate) == 0) {
@@ -132,7 +106,7 @@ void populate_theme_alternates() {
     }
 }
 
-void init_dropdown_settings() {
+static void init_dropdown_settings() {
     bgm_original = lv_dropdown_get_selected(ui_droBGM);
     sound_original = lv_dropdown_get_selected(ui_droSound);
     boxart_original = lv_dropdown_get_selected(ui_droBoxArt);
@@ -143,7 +117,7 @@ void init_dropdown_settings() {
     font_original = lv_dropdown_get_selected(ui_droFont);
 }
 
-void init_navigation_group() {
+static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
             ui_pnlCatalogue,
             ui_pnlConfig,
@@ -300,7 +274,7 @@ void init_navigation_group() {
     populate_theme_alternates();
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -317,7 +291,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -334,21 +308,21 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_option_prev(void) {
+static void handle_option_prev(void) {
     if (msgbox_active) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
-void handle_option_next(void) {
+static void handle_option_next(void) {
     if (msgbox_active) return;
 
     play_sound("navigate", nav_sound, 0, 0);
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
-void restore_options() {
+static void restore_options() {
     snprintf(theme_alt_original, sizeof(theme_alt_original), "%s",
              str_replace(read_line_from_file((STORAGE_THEME "/active.txt"), 1), "\r", ""));
     int32_t option_index = lv_dropdown_get_option_index(ui_droThemeAlternate, theme_alt_original);
@@ -364,7 +338,7 @@ void restore_options() {
     lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
 }
 
-void save_options() {
+static void save_options() {
     int idx_boxart = lv_dropdown_get_selected(ui_droBoxArt);
     int idx_boxartalign = lv_dropdown_get_selected(ui_droBoxArtAlign) + 1;
     int idx_backgroundanimation = lv_dropdown_get_selected(ui_droBackgroundAnimation);
@@ -439,7 +413,7 @@ void save_options() {
     if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
 }
 
-void handle_confirm() {
+static void handle_confirm() {
     if (msgbox_active) return;
 
     struct {
@@ -461,7 +435,7 @@ void handle_confirm() {
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themealternate");
             load_mux("custom");
 
-            safe_quit(0);
+            close_input();
             mux_input_stop();
 
             return;
@@ -477,7 +451,7 @@ void handle_confirm() {
             play_sound("confirm", nav_sound, 0, 1);
             load_mux("picker");
 
-            safe_quit(0);
+            close_input();
             mux_input_stop();
 
             break;
@@ -487,7 +461,7 @@ void handle_confirm() {
     handle_option_next();
 }
 
-void handle_back() {
+static void handle_back() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -501,11 +475,11 @@ void handle_back() {
     save_options();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
-void handle_help() {
+static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -514,7 +488,7 @@ void handle_help() {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -575,7 +549,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -589,22 +563,14 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
-    (void) argc;
-
-    mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+int muxcustom_main() {
+    
+    init_module("muxcustom");
+                
     init_theme(1, 1);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCUSTOM.TITLE);
-    init_mux(ui_pnlContent);
-    init_timer(ui_refresh_task, NULL);
+    init_muxcustom(ui_pnlContent);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -620,6 +586,8 @@ int main(int argc, char *argv[]) {
 
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
+
+    init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
@@ -643,6 +611,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 

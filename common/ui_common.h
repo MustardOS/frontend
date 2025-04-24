@@ -5,6 +5,8 @@ struct mux_device;
 struct mux_lang;
 struct footer_glyph;
 
+void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme, struct mux_device *device);
+
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title);
 
@@ -55,6 +57,7 @@ void scroll_help_content(int direction, bool page_down);
 void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name);
 
 extern lv_obj_t *ui_screen_container;
+extern lv_obj_t *ui_screen_temp;
 extern lv_obj_t *ui_screen;
 extern lv_obj_t *ui_pnlWall;
 extern lv_obj_t *ui_imgWall;

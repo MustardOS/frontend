@@ -162,7 +162,7 @@ void animFade_Animation(lv_obj_t *TargetObject, int delay) {
     lv_anim_start(&PropertyAnimation_3);
 }
 
-void init_mux(void) {
+void init_muxcredits(void) {
     ui_scrCredits = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_scrCredits, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_scrCredits, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -316,7 +316,8 @@ void init_mux(void) {
     lv_label_set_text(ui_lblCommanderCrew,
                       "xonglebongle\n"
                       "antikk\n"
-                      "corey"
+                      "corey\n"
+                      "bitter_bizarro"
     );
     lv_obj_set_scroll_dir(ui_lblCommanderCrew, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblCommanderCrew, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -377,8 +378,7 @@ void init_mux(void) {
                       "bgelmini\n"
                       "ilfordhp5\n"
                       "duncanyoyo1\n"
-                      "illumini_85\n"
-                      "bitter_bizarro"
+                      "illumini_85"
     );
     lv_obj_set_scroll_dir(ui_lblEnforcerCrew, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblEnforcerCrew, lv_color_hex(0xFF4500), LV_PART_MAIN | LV_STATE_DEFAULT);

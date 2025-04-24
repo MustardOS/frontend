@@ -2,7 +2,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_mux(lv_obj_t *ui_pnlContent);
+void init_muxspace(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlSD1;
 extern lv_obj_t *ui_pnlSD2;

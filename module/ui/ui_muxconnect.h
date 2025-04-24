@@ -2,7 +2,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_mux(lv_obj_t *ui_pnlContent);
+void init_muxconnect(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlNetwork;
 extern lv_obj_t *ui_pnlServices;
@@ -19,7 +19,7 @@ extern lv_obj_t *ui_icoServices;
 extern lv_obj_t *ui_icoBluetooth;
 extern lv_obj_t *ui_icoUSBFunction;
 
-extern lv_obj_t *ui_droNetwork;
+extern lv_obj_t *ui_droNetwork_connect;
 extern lv_obj_t *ui_droServices;
 extern lv_obj_t *ui_droBluetooth;
 extern lv_obj_t *ui_droUSBFunction;

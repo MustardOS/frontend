@@ -1,3 +1,4 @@
+#include "muxshare.h"
 #include "../lvgl/lvgl.h"
 #include "ui/ui_muxcredits.h"
 #include <string.h>
@@ -10,32 +11,8 @@
 #include "../common/kiosk.h"
 #include "../common/theme.h"
 
-char *mux_module;
-
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int progress_onscreen = -1;
-int ui_count = 0;
-int current_item_index = 0;
-
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-
-// Stubs to appease the compiler!
-void list_nav_prev(void) {}
-
-void list_nav_next(void) {}
-
-void timeout_task() {
+static void timeout_task() {
+    close_input();
     safe_quit(0);
     mux_input_stop();
 }
@@ -43,15 +20,15 @@ void timeout_task() {
 int main(int argc, char *argv[]) {
     (void) argc;
 
-    mux_module = basename(argv[0]);
+    init_module("muxcredits");
     setup_background_process();
 
     load_device(&device);
     load_config(&config);
-
+            
     init_theme(0, 0);
     init_display();
-    init_mux();
+    init_muxcredits();
 
     animFade_Animation(ui_conStart, -1000);
     animFade_Animation(ui_conOfficial, 8000);

@@ -2,12 +2,12 @@
 
 #include "../../lvgl/lvgl.h"
 
-void init_mux(lv_obj_t *ui_pnlContent);
+void init_muxwebserv(lv_obj_t *ui_pnlContent);
 
 extern lv_obj_t *ui_pnlSSHD;
 extern lv_obj_t *ui_pnlSFTPGo;
 extern lv_obj_t *ui_pnlTTYD;
-extern lv_obj_t *ui_pnlSyncthing;
+extern lv_obj_t *ui_pnlSyncthing_webserv;
 extern lv_obj_t *ui_pnlRSLSync;
 extern lv_obj_t *ui_pnlNTP;
 extern lv_obj_t *ui_pnlTailscaled;
@@ -15,7 +15,7 @@ extern lv_obj_t *ui_pnlTailscaled;
 extern lv_obj_t *ui_lblSSHD;
 extern lv_obj_t *ui_lblSFTPGo;
 extern lv_obj_t *ui_lblTTYD;
-extern lv_obj_t *ui_lblSyncthing;
+extern lv_obj_t *ui_lblSyncthing_webserv;
 extern lv_obj_t *ui_lblRSLSync;
 extern lv_obj_t *ui_lblNTP;
 extern lv_obj_t *ui_lblTailscaled;
@@ -23,7 +23,7 @@ extern lv_obj_t *ui_lblTailscaled;
 extern lv_obj_t *ui_icoSSHD;
 extern lv_obj_t *ui_icoSFTPGo;
 extern lv_obj_t *ui_icoTTYD;
-extern lv_obj_t *ui_icoSyncthing;
+extern lv_obj_t *ui_icoSyncthing_webserv;
 extern lv_obj_t *ui_icoRSLSync;
 extern lv_obj_t *ui_icoNTP;
 extern lv_obj_t *ui_icoTailscaled;

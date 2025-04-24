@@ -15,15 +15,9 @@ endif
 BIN_DIR = ./bin
 
 MODULE_DIR = module
-MODULES = muxapp muxarchive muxassign muxcharge muxcollect muxconfig muxconnect \
-          muxcredits muxcustom muxgov muxhdmi muxhistory muxinfo muxlanguage \
-          muxlaunch muxnetprofile muxnetscan muxnetwork muxoption muxpass \
-          muxpicker muxpower muxplore muxrtc muxsearch muxshot muxsnapshot \
-          muxspace muxsplash muxstart muxstorage muxsysinfo muxtask muxtester \
-          muxtimezone muxtweakadv muxtweakgen muxvisual muxwebserv \
-          mufbset muhotkey muplay
+MODULES = mufbset muhotkey muplay muxcharge muxcredits muxfrontend
 
-DEPENDENCIES = common font lvgl lookup
+DEPENDENCIES = common font lvgl lookup module
 
 DEBUG ?= 0
 VERBOSE = $(if $(filter 2,$(DEBUG)),, @)
@@ -38,7 +32,7 @@ MUXLIB = $(CFLAGS) -I./module/ui -I./font -I./lookup -I./common \
          -I./common/img -I./common/input -I./common/json \
          -I./common/mini -I./common/miniz
 
-LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux \
+LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux -lmuxmodule \
           -lnotosans -lnotosans_big -lnotosans_jp -lnotosans_ar -lnotosans_kr -lnotosans_sc -lnotosans_tc \
           -lSDL2 -lSDL2_mixer -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 

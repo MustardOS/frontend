@@ -1,3 +1,5 @@
+#include "muxshare.h"
+#include "muxassign.h"
 #include "../lvgl/lvgl.h"
 #include <unistd.h>
 #include <dirent.h>
@@ -21,52 +23,18 @@
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
-char *mux_module;
+static lv_obj_t *ui_mux_panels[5];
 
-static int joy_general;
-static int joy_power;
-static int joy_volume;
-static int joy_extra;
+static char rom_name[PATH_MAX];
+static char rom_dir[PATH_MAX];
+static char rom_system[PATH_MAX];
 
-int msgbox_active = 0;
-int nav_sound = 0;
-int bar_header = 0;
-int bar_footer = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int nav_moved = 1;
-lv_obj_t *msgbox_element = NULL;
-lv_obj_t *overlay_image = NULL;
-lv_obj_t *kiosk_image = NULL;
-
-int progress_onscreen = -1;
-
-lv_group_t *ui_group;
-lv_group_t *ui_group_glyph;
-lv_group_t *ui_group_panel;
-
-lv_obj_t *ui_mux_panels[5];
-
-int ui_count = 0;
-int current_item_index = 0;
-int first_open = 1;
-
-char *auto_assign;
-char *rom_name;
-char *rom_dir;
-char *rom_system;
-
-void show_help() {
+static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP);
 }
 
-char **read_assign_ini(const char *filename, int *cores) {
+static char **read_assign_ini(const char *filename, int *cores) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
@@ -100,7 +68,7 @@ char **read_assign_ini(const char *filename, int *cores) {
     return headers;
 }
 
-void create_system_items() {
+static void create_system_items() {
     DIR *ad;
     struct dirent *af;
 
@@ -160,6 +128,7 @@ void create_system_items() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
+    ui_count = 0;
     if (file_count > 0) {
         for (size_t i = 0; i < file_count; i++) {
             if (!file_names[i]) continue;
@@ -190,7 +159,7 @@ void create_system_items() {
     }
 }
 
-char *get_raw_core(const char *group) {
+static char *get_raw_core(const char *group) {
     char chosen_core_ini[FILENAME_MAX];
     snprintf(chosen_core_ini, sizeof(chosen_core_ini),
              "%s/%s/%s.ini",
@@ -209,7 +178,7 @@ char *get_raw_core(const char *group) {
     return raw_core_copy;
 }
 
-void create_core_items(const char *target) {
+static void create_core_items(const char *target) {
     char *directory_core = get_directory_core(rom_dir, 1);
     char *file_core = get_file_core(rom_dir, rom_name);
     char filename[FILENAME_MAX];
@@ -240,6 +209,7 @@ void create_core_items(const char *target) {
             "bios", "global"
     };
 
+    ui_count = 0;
     for (int i = 0; i < cores; ++i) {
         int skip = 0;
         for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); k++) {
@@ -297,7 +267,7 @@ void create_core_items(const char *target) {
     free(core_headers);
 }
 
-void list_nav_prev(int steps) {
+static void list_nav_prev(int steps) {
     play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -313,7 +283,7 @@ void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
-void list_nav_next(int steps) {
+static void list_nav_next(int steps) {
     if (first_open) {
         first_open = 0;
     } else {
@@ -333,7 +303,7 @@ void list_nav_next(int steps) {
     nav_moved = 1;
 }
 
-void handle_a() {
+static void handle_a() {
     if (msgbox_active) return;
 
     const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
@@ -366,11 +336,11 @@ void handle_a() {
         mini_free(chosen_core);
     }
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
-void handle_b() {
+static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
         msgbox_active = 0;
@@ -390,11 +360,11 @@ void handle_b() {
 
     remove(MUOS_SAA_LOAD);
 
-    safe_quit(0);
+    close_input();
     mux_input_stop();
 }
 
-void handle_x() {
+static void handle_x() {
     if (msgbox_active) return;
 
     if (strcasecmp(rom_system, "none") != 0) {
@@ -425,12 +395,12 @@ void handle_x() {
 
         mini_free(chosen_core);
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
 
-void handle_y() {
+static void handle_y() {
     if (msgbox_active) return;
 
     if (strcasecmp(rom_system, "none") != 0) {
@@ -461,12 +431,12 @@ void handle_y() {
 
         mini_free(chosen_core);
 
-        safe_quit(0);
+        close_input();
         mux_input_stop();
     }
 }
 
-void handle_help() {
+static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -475,7 +445,7 @@ void handle_help() {
     }
 }
 
-void init_elements() {
+static void init_elements() {
     ui_mux_panels[0] = ui_pnlFooter;
     ui_mux_panels[1] = ui_pnlHeader;
     ui_mux_panels[2] = ui_pnlHelp;
@@ -546,7 +516,7 @@ void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-void ui_refresh_task() {
+static void ui_refresh_task() {
     update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
 
     if (nav_moved) {
@@ -560,62 +530,27 @@ void ui_refresh_task() {
     }
 }
 
-int main(int argc, char *argv[]) {
-    char *cmd_help = "\nmuOS Extras - Core Assignment\nUsage: %s <-acds>\n\nOptions:\n"
-                     "\t-a Auto assign content directory check\n"
-                     "\t-c Name of content file\n"
-                     "\t-d Name of content directory\n"
-                     "\t-s Name of content system (use 'none' for root)\n\n";
+int muxassign_main(int auto_assign, char *name, char *dir, char *sys) {
+    snprintf(rom_name, sizeof(rom_name), name);
+    snprintf(rom_dir, sizeof(rom_name), dir);
+    snprintf(rom_system, sizeof(rom_name), sys);
 
-    int opt;
-    while ((opt = getopt(argc, argv, "a:c:d:s:")) != -1) {
-        switch (opt) {
-            case 'a':
-                auto_assign = optarg;
-                break;
-            case 'c':
-                rom_name = optarg;
-                break;
-            case 'd':
-                rom_dir = optarg;
-                break;
-            case 's':
-                rom_system = optarg;
-                break;
-            default:
-                fprintf(stderr, cmd_help, argv[0]);
-                return 1;
-        }
-    }
-
-    if (!auto_assign || !rom_name || !rom_dir || !rom_system) {
-        fprintf(stderr, cmd_help, argv[0]);
-        return 1;
-    }
-
-    mux_module = basename(argv[0]);
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-    load_lang(&lang);
-
+    init_module("muxassign");
+                
     LOG_INFO(mux_module, "Assign Core ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Core ROM_DIR: \"%s\"", rom_dir)
     LOG_INFO(mux_module, "Assign Core ROM_SYS: \"%s\"", rom_system)
 
-    if (safe_atoi(auto_assign) && !file_exist(MUOS_SAA_LOAD)) {
+    if (auto_assign && !file_exist(MUOS_SAA_LOAD)) {
         if (automatic_assign_core(rom_dir) || !strcmp(rom_system, "none")) {
-            safe_quit(0);
+            close_input();
             return 0;
         }
     }
 
     init_theme(1, 0);
-    init_display();
-
+    
     init_ui_common_screen(&theme, &device, &lang, "");
-    init_timer(ui_refresh_task, NULL);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -649,6 +584,8 @@ int main(int argc, char *argv[]) {
 
     load_kiosk(&kiosk);
 
+    init_timer(ui_refresh_task, NULL);
+
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
@@ -669,6 +606,7 @@ int main(int argc, char *argv[]) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
