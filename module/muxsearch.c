@@ -1,22 +1,15 @@
 #include "muxshare.h"
 #include "muxsearch.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxsearch.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/osk.h"
-#include "../common/language.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/log.h"
-#include "../common/collection.h"
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
@@ -486,7 +479,7 @@ static void process_results(const char *json_results) {
         for (size_t i = 0; i < t_all_item_count; i++) {
             if (t_all_items[i].content_type == ROM) {
                 content_item *new_item = add_item(&all_items, &all_item_count, t_all_items[i].name,
-                         t_all_items[i].display_name, t_all_items[i].extra_data, ROM);
+                                                  t_all_items[i].display_name, t_all_items[i].extra_data, ROM);
                 char display_name[MAX_BUFFER_SIZE];
                 snprintf(display_name, sizeof(display_name), "%s",
                          strip_ext(t_all_items[i].display_name));
@@ -934,7 +927,7 @@ int muxsearch_main(char *dir) {
     got_results = 0;
 
     init_module("muxsearch");
-    
+
     snprintf(search_result, sizeof(search_result), "%s/%s/search.json",
              device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
 
@@ -950,7 +943,7 @@ int muxsearch_main(char *dir) {
     }
 
     init_theme(1, 1);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSEARCH.TITLE);
     init_muxsearch(ui_screen, ui_pnlContent, &theme);
 

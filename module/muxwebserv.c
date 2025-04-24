@@ -1,25 +1,15 @@
 #include "muxshare.h"
 #include "muxwebserv.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxwebserv.h"
 #include <string.h>
 #include <stdio.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
 
 static int sshd_original, sftpgo_original, ttyd_original, syncthing_original,
         rslsync_original, ntp_original, tailscaled_original;
-
 
 #define UI_COUNT 7
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -33,13 +23,13 @@ struct help_msg {
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblSSHD,       lang.MUXWEBSERV.HELP.SHELL},
-            {ui_lblSFTPGo,     lang.MUXWEBSERV.HELP.SFTP},
-            {ui_lblTTYD,       lang.MUXWEBSERV.HELP.TERMINAL},
-            {ui_lblSyncthing_webserv,  lang.MUXWEBSERV.HELP.SYNCTHING},
-            {ui_lblRSLSync,    lang.MUXWEBSERV.HELP.RESILIO},
-            {ui_lblNTP,        lang.MUXWEBSERV.HELP.NTP},
-            {ui_lblTailscaled, lang.MUXWEBSERV.HELP.TAILSCALE},
+            {ui_lblSSHD,              lang.MUXWEBSERV.HELP.SHELL},
+            {ui_lblSFTPGo,            lang.MUXWEBSERV.HELP.SFTP},
+            {ui_lblTTYD,              lang.MUXWEBSERV.HELP.TERMINAL},
+            {ui_lblSyncthing_webserv, lang.MUXWEBSERV.HELP.SYNCTHING},
+            {ui_lblRSLSync,           lang.MUXWEBSERV.HELP.RESILIO},
+            {ui_lblNTP,               lang.MUXWEBSERV.HELP.NTP},
+            {ui_lblTailscaled,        lang.MUXWEBSERV.HELP.TAILSCALE},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -376,11 +366,11 @@ static void ui_refresh_task() {
 }
 
 int muxwebserv_main() {
-    
+
     init_module("muxwebserv");
-                
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXWEBSERV.TITLE);
     init_muxwebserv(ui_pnlContent);
     init_elements();

@@ -1,21 +1,12 @@
 #include "muxshare.h"
 #include "muxrtc.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxrtc.h"
 #include <unistd.h>
 #include <stdio.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
 
 static int rtcYearValue;
 static int rtcMonthValue;
@@ -25,7 +16,6 @@ static int rtcMinuteValue;
 static int rtcNotationValue = 0;
 
 static char rtc_buffer[32];
-
 
 #define UI_COUNT 7
 static lv_obj_t *ui_objects[UI_COUNT];

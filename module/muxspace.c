@@ -1,23 +1,13 @@
 #include "muxshare.h"
 #include "muxspace.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxspace.h"
 #include <string.h>
 #include <stdio.h>
-#include <libgen.h>
 #include <sys/statvfs.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
-
 
 #define UI_COUNT 4
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -301,11 +291,11 @@ static void ui_refresh_task() {
 }
 
 int muxspace_main() {
-    
+
     init_module("muxspace");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSPACE.TITLE);
     init_muxspace(ui_pnlContent);
     init_elements();

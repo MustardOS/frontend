@@ -1,18 +1,10 @@
 #include "muxshare.h"
 #include "muxtester.h"
-#include "../lvgl/lvgl.h"
 #include <string.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/img/nothing.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 
 lv_obj_t *ui_imgButton;
 
@@ -100,8 +92,10 @@ static void init_elements() {
     ui_imgButton = lv_img_create(ui_screen);
     lv_obj_set_align(ui_imgButton, LV_ALIGN_CENTER);
     lv_img_set_src(ui_imgButton, &ui_image_Nothing);
-    lv_obj_set_style_img_recolor(ui_imgButton, lv_color_hex(theme.LIST_DEFAULT.GLYPH_RECOLOUR), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_img_recolor_opa(ui_imgButton, theme.LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor(ui_imgButton, lv_color_hex(theme.LIST_DEFAULT.GLYPH_RECOLOUR),
+                                 LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_imgButton, theme.LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA,
+                                     LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblMessage, lang.MUXTESTER.POWER);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
@@ -130,11 +124,11 @@ static void init_elements() {
 }
 
 int muxtester_main() {
-    
+
     init_module("muxtester");
-    
+
     init_theme(0, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTESTER.TITLE);
     init_elements();
 

@@ -1,20 +1,12 @@
 #include "muxshare.h"
 #include "muxlaunch.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxlaunch.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 
 #define UI_COUNT 8
 lv_obj_t *ui_objects_panel[UI_COUNT];
@@ -557,7 +549,7 @@ static void ui_refresh_task() {
 
 int muxlaunch_main() {
     init_module("muxlaunch");
-    
+
     printf("****muxlaunch_main argv[0]: %s\n", mux_module);
 
     init_theme(1, 1);

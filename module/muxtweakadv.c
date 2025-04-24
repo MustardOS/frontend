@@ -1,27 +1,17 @@
 #include "muxshare.h"
 #include "muxtweakadv.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxtweakadv.h"
 #include <string.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
 
 static int accelerate_original, swap_original, thermal_original, volume_original, brightness_original,
         offset_original, lockdown_original, led_original, random_theme_original, retrowait_original,
         state_original, verbose_original, rumble_original, user_init_original, dpad_swap_original,
         overdrive_original, swapfile_original, zramfile_original, cardmode_original;
-
 
 #define UI_COUNT 19
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -778,9 +768,9 @@ static void ui_refresh_task() {
 
 int muxtweakadv_main() {
     init_module("muxtweakadv");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTWEAKADV.TITLE);
     init_muxtweakadv(ui_pnlContent);
     init_elements();

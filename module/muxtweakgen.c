@@ -1,25 +1,15 @@
 #include "muxshare.h"
 #include "muxtweakgen.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxtweakgen.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-
 static int startup_original, colour_original, brightness_original, volume_original;
-
 
 #define UI_COUNT 7
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -94,8 +84,8 @@ static void restore_tweak_options() {
 
     if (!config.SETTINGS.ADVANCED.OVERDRIVE) {
         lv_dropdown_set_selected(ui_droVolume_tweakgen, config.SETTINGS.GENERAL.VOLUME > 100
-                                               ? config.SETTINGS.GENERAL.VOLUME / 2
-                                               : config.SETTINGS.GENERAL.VOLUME);
+                                                        ? config.SETTINGS.GENERAL.VOLUME / 2
+                                                        : config.SETTINGS.GENERAL.VOLUME);
     } else {
         lv_dropdown_set_selected(ui_droVolume_tweakgen, config.SETTINGS.GENERAL.VOLUME);
     }
@@ -458,11 +448,11 @@ static void ui_refresh_task() {
 }
 
 int muxtweakgen_main() {
-    
+
     init_module("muxtweakgen");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTWEAKGEN.TITLE);
     init_muxtweakgen(ui_pnlContent);
     init_elements();

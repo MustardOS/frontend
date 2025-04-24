@@ -1,23 +1,14 @@
 #include "muxshare.h"
 #include "muxgov.h"
-#include "../lvgl/lvgl.h"
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <libgen.h>
 #include <linux/limits.h>
 #include "../common/init.h"
 #include "../common/log.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
@@ -406,7 +397,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
     snprintf(rom_system, sizeof(rom_name), sys);
 
     init_module("muxgov");
-    
+
     LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)
     LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir)
     LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system)
@@ -484,7 +475,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
     }
 
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, "");
     init_elements();
 

@@ -1,23 +1,13 @@
 #include "muxshare.h"
 #include "muxvisual.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxvisual.h"
 #include <stdlib.h>
 #include <string.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/overlay.h"
 #include "../common/input/list_nav.h"
-
-
 
 static int overlay_count;
 
@@ -32,7 +22,6 @@ static int battery_original, mux_clock_original, network_original, name_original
 static lv_obj_t *ui_objects[UI_COUNT];
 
 static lv_obj_t *ui_mux_panels[5];
-
 
 struct help_msg {
     lv_obj_t *element;
@@ -140,7 +129,8 @@ static void restore_visual_options() {
     lv_dropdown_set_selected(ui_droMenuCounterFolder_visual, config.VISUAL.COUNTERFOLDER);
     lv_dropdown_set_selected(ui_droMenuCounterFile_visual, config.VISUAL.COUNTERFILE);
     lv_dropdown_set_selected(ui_droHidden_visual, config.SETTINGS.GENERAL.HIDDEN);
-    lv_dropdown_set_selected(ui_droOverlayImage_visual, (config.VISUAL.OVERLAY_IMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAY_IMAGE);
+    lv_dropdown_set_selected(ui_droOverlayImage_visual,
+                             (config.VISUAL.OVERLAY_IMAGE > overlay_count) ? 0 : config.VISUAL.OVERLAY_IMAGE);
     lv_dropdown_set_selected(ui_droOverlayTransparency_visual, config.VISUAL.OVERLAY_TRANSPARENCY);
 }
 
@@ -544,11 +534,11 @@ static void ui_refresh_task() {
 }
 
 int muxvisual_main() {
-    
+
     init_module("muxvisual");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXVISUAL.TITLE);
     init_muxvisual(ui_pnlContent);
     init_elements();

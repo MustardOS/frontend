@@ -1,24 +1,14 @@
 #include "muxshare.h"
 #include "muxapp.h"
-#include "../lvgl/lvgl.h"
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include <unistd.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/collection.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
 
 static lv_obj_t *ui_mux_panels[5];
 
@@ -372,9 +362,9 @@ static void ui_refresh_task() {
 
 int muxapp_main() {
     init_module("muxapp");
-                
+
     init_theme(1, 1);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXAPP.TITLE);
     init_elements();
 

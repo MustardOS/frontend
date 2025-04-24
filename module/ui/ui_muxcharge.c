@@ -31,11 +31,13 @@ void init_muxcharge(void) {
     apply_gradient_to_ui_screen(ui_scrCharge_charge, &theme, &device);
 
     lv_obj_clear_flag(ui_scrCharge_charge, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_SCROLLABLE |
-                                    LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
+                                           LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
     lv_obj_set_scrollbar_mode(ui_scrCharge_charge, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_set_style_bg_color(ui_scrCharge_charge, lv_color_hex(theme.SYSTEM.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_scrCharge_charge, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE ? theme.SYSTEM.BACKGROUND_ALPHA : 0,
-        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_scrCharge_charge, lv_color_hex(theme.SYSTEM.BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_scrCharge_charge, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
+                                                 ? theme.SYSTEM.BACKGROUND_ALPHA : 0,
+                            LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_scrCharge_charge, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlWall_charge = lv_obj_create(ui_scrCharge_charge);
@@ -43,7 +45,8 @@ void init_muxcharge(void) {
     lv_obj_set_height(ui_pnlWall_charge, device.MUX.HEIGHT);
     lv_obj_set_align(ui_pnlWall_charge, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlWall_charge, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(ui_pnlWall_charge, lv_color_hex(theme.CHARGER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlWall_charge, lv_color_hex(theme.CHARGER.BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlWall_charge, theme.CHARGER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlWall_charge, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -63,7 +66,8 @@ void init_muxcharge(void) {
     lv_obj_set_flex_align(ui_pnlCharge_charge, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_pnlCharge_charge, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(ui_pnlCharge_charge, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_pnlCharge_charge, lv_color_hex(theme.CHARGER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_pnlCharge_charge, lv_color_hex(theme.CHARGER.BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlCharge_charge, theme.CHARGER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_pnlCharge_charge, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(ui_pnlCharge_charge, 15, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -84,7 +88,8 @@ void init_muxcharge(void) {
                       LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_lblCapacity_charge, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lblCapacity_charge, LV_DIR_LEFT);
-    lv_obj_set_style_text_color(ui_lblCapacity_charge, lv_color_hex(theme.CHARGER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblCapacity_charge, lv_color_hex(theme.CHARGER.TEXT),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblCapacity_charge, theme.CHARGER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblCapacity_charge, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -95,13 +100,15 @@ void init_muxcharge(void) {
     lv_obj_set_align(ui_lblVoltage_charge, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblVoltage_charge, LV_LABEL_LONG_CLIP);
     lv_label_set_recolor(ui_lblVoltage_charge, "true");
-    lv_obj_clear_flag(ui_lblVoltage_charge, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
-                                     LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
-                                     LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                                     LV_OBJ_FLAG_SCROLL_CHAIN);
+    lv_obj_clear_flag(ui_lblVoltage_charge,
+                      LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
+                      LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
+                      LV_OBJ_FLAG_SCROLL_MOMENTUM |
+                      LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_lblVoltage_charge, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lblVoltage_charge, LV_DIR_LEFT);
-    lv_obj_set_style_text_color(ui_lblVoltage_charge, lv_color_hex(theme.CHARGER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblVoltage_charge, lv_color_hex(theme.CHARGER.TEXT),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblVoltage_charge, theme.CHARGER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblVoltage_charge, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -112,10 +119,11 @@ void init_muxcharge(void) {
     lv_obj_set_align(ui_lblBoot_charge, LV_ALIGN_CENTER);
     lv_label_set_long_mode(ui_lblBoot_charge, LV_LABEL_LONG_CLIP);
     lv_label_set_recolor(ui_lblBoot_charge, "true");
-    lv_obj_clear_flag(ui_lblBoot_charge, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
-                                  LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
-                                  LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                                  LV_OBJ_FLAG_SCROLL_CHAIN);
+    lv_obj_clear_flag(ui_lblBoot_charge,
+                      LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_GESTURE_BUBBLE |
+                      LV_OBJ_FLAG_SNAPPABLE | LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ELASTIC |
+                      LV_OBJ_FLAG_SCROLL_MOMENTUM |
+                      LV_OBJ_FLAG_SCROLL_CHAIN);
     lv_obj_set_scrollbar_mode(ui_lblBoot_charge, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scroll_dir(ui_lblBoot_charge, LV_DIR_LEFT);
     lv_obj_set_style_text_color(ui_lblBoot_charge, lv_color_hex(theme.CHARGER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);

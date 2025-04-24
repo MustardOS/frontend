@@ -6,7 +6,7 @@ lv_obj_t *ui_lblCounter_collect;
 lv_obj_t *ui_pnlEntry_collect;
 lv_obj_t *ui_txtEntry_collect;
 
-void init_muxcollect(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
+void init_muxcollect(lv_obj_t *ui_screen, struct theme_config *theme) {
     ui_lblCounter_collect = lv_label_create(ui_screen);
     lv_label_set_text(ui_lblCounter_collect, "");
     lv_obj_set_width(ui_lblCounter_collect, LV_SIZE_CONTENT);
@@ -15,10 +15,12 @@ void init_muxcollect(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_
     lv_label_set_text(ui_lblCounter_collect, "");
     lv_obj_add_flag(ui_lblCounter_collect, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_lblCounter_collect, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_color(ui_lblCounter_collect, lv_color_hex(theme->COUNTER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblCounter_collect, lv_color_hex(theme->COUNTER.TEXT),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblCounter_collect, theme->COUNTER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblCounter_collect, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_lblCounter_collect, lv_color_hex(theme->COUNTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblCounter_collect, lv_color_hex(theme->COUNTER.BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblCounter_collect, theme->COUNTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblCounter_collect, lv_color_hex(theme->COUNTER.BORDER_COLOUR),
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -71,7 +73,8 @@ void init_muxcollect(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_
     lv_textarea_set_max_length(ui_txtEntry_collect, 1024);
     lv_textarea_set_one_line(ui_txtEntry_collect, true);
     lv_obj_set_style_radius(ui_txtEntry_collect, theme->OSK.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_txtEntry_collect, lv_color_hex(theme->OSK.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_txtEntry_collect, lv_color_hex(theme->OSK.BORDER),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_txtEntry_collect, theme->OSK.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_txtEntry_collect, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 }

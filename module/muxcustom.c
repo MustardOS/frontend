@@ -1,27 +1,16 @@
 #include "muxshare.h"
 #include "muxcustom.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxcustom.h"
 #include <string.h>
 #include <dirent.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/collection.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
 
 static char theme_alt_original[MAX_BUFFER_SIZE];
 static int boxart_original, bgm_original, sound_original, boxartalign_original, background_animation_original,
         font_original, launch_splash_original, black_fade_original;
-
 
 #define UI_COUNT 12
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -78,13 +67,13 @@ static void populate_theme_alternates() {
     if (dir == NULL) {
         perror("Unable to open directory");
     } else {
-                
+
         while ((entry = readdir(dir)) != NULL) {
             char *filename = entry->d_name;
             size_t len = strlen(filename);
 
             if ((len > 4 && strcmp(str_tolower(filename + len - 4), ".ini") == 0) ||
-                    (len > 7 && strcmp(str_tolower(filename + len - 7), ".muxzip") == 0)) {
+                (len > 7 && strcmp(str_tolower(filename + len - 7), ".muxzip") == 0)) {
                 char *name_without_ext = strip_ext(filename);
                 if (!item_exists(items, item_count, name_without_ext)) {
                     add_item(&items, &item_count, name_without_ext, name_without_ext, "", ROM);
@@ -564,11 +553,11 @@ static void ui_refresh_task() {
 }
 
 int muxcustom_main() {
-    
+
     init_module("muxcustom");
-                
+
     init_theme(1, 1);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCUSTOM.TITLE);
     init_muxcustom(ui_pnlContent);
     init_elements();

@@ -1,6 +1,5 @@
 #include "muxshare.h"
 #include "muxplore.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxplore.h"
 #include <unistd.h>
 #include <dirent.h>
@@ -8,22 +7,15 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/img/nothing.h"
 #include "../common/common.h"
 #include "../common/common_core.h"
-#include "../common/language.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
-#include "../common/collection.h"
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 #include "../common/log.h"
 #include "../lookup/lookup.h"
-#include "../common/options.h"
 
 static lv_obj_t *ui_imgSplash;
 
@@ -179,7 +171,8 @@ static void update_file_counter() {
     if ((ui_count > 0 && !file_count && config.VISUAL.COUNTERFOLDER) ||
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
         char counter_text[MAX_BUFFER_SIZE];
-        snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
+        snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR,
+                 ui_count);
         fade_label(ui_lblCounter, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
     } else {
         lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
@@ -1190,7 +1183,7 @@ int muxplore_main(int index, char *dir) {
     printf("sys_index: %d\n", sys_index);
 
     init_module("muxplore");
-    
+
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, "");

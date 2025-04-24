@@ -110,7 +110,8 @@ static void update_file_counter() {
     if ((ui_count > 0 && file_count == 0 && config.VISUAL.COUNTERFOLDER) ||
         (file_count > 0 && config.VISUAL.COUNTERFILE)) {
         char counter_text[MAX_BUFFER_SIZE];
-        snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
+        snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR,
+                 ui_count);
         fade_label(ui_lblCounter_collect, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
     } else {
         lv_obj_add_flag(ui_lblCounter_collect, LV_OBJ_FLAG_HIDDEN);
@@ -584,7 +585,8 @@ static int load_content(const char *content_name) {
 
 static void update_footer_glyph() {
     if (!add_mode) return;
-    lv_label_set_text(ui_lblNavA, items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.ADD);
+    lv_label_set_text(ui_lblNavA,
+                      items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.ADD);
 }
 
 static void list_nav_prev(int steps) {
@@ -1199,11 +1201,11 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? INFO_COL_PATH : dir);
     init_module("muxcollect");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, "");
-    init_muxcollect(ui_screen, ui_pnlContent, &theme);
+    init_muxcollect(ui_screen, &theme);
 
     ui_viewport_objects[0] = lv_obj_create(ui_pnlBox);
     ui_viewport_objects[1] = lv_img_create(ui_viewport_objects[0]);

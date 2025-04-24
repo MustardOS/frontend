@@ -131,7 +131,8 @@ void init_muxnetwork(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_
     lv_textarea_set_max_length(ui_txtEntry_network, 1024);
     lv_textarea_set_one_line(ui_txtEntry_network, true);
     lv_obj_set_style_radius(ui_txtEntry_network, theme->OSK.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_txtEntry_network, lv_color_hex(theme->OSK.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_txtEntry_network, lv_color_hex(theme->OSK.BORDER),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_txtEntry_network, theme->OSK.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_txtEntry_network, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 }

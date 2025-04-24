@@ -1,27 +1,17 @@
 #include "muxshare.h"
 #include "muxsysinfo.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxsysinfo.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include <errno.h>
 #include <sys/sysinfo.h>
 #include <sys/utsname.h>
 #include <time.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
-
 
 #define UI_COUNT 11
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -593,11 +583,11 @@ static void ui_refresh_task() {
 }
 
 int muxsysinfo_main() {
-    
+
     init_module("muxsysinfo");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSYSINFO.TITLE);
     init_muxsysinfo(ui_pnlContent);
     init_elements();

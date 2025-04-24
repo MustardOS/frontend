@@ -11,10 +11,12 @@ void init_muxhistory(lv_obj_t *ui_screen, struct theme_config *theme) {
     lv_label_set_text(ui_lblCounter_history, "");
     lv_obj_add_flag(ui_lblCounter_history, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_lblCounter_history, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_color(ui_lblCounter_history, lv_color_hex(theme->COUNTER.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(ui_lblCounter_history, lv_color_hex(theme->COUNTER.TEXT),
+                                LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblCounter_history, theme->COUNTER.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_lblCounter_history, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_lblCounter_history, lv_color_hex(theme->COUNTER.BACKGROUND), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_lblCounter_history, lv_color_hex(theme->COUNTER.BACKGROUND),
+                              LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_lblCounter_history, theme->COUNTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_lblCounter_history, lv_color_hex(theme->COUNTER.BORDER_COLOUR),
                                   LV_PART_MAIN | LV_STATE_DEFAULT);

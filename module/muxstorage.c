@@ -1,23 +1,13 @@
 #include "muxshare.h"
 #include "muxstorage.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxstorage.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
-
 
 #define UI_COUNT 18
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -38,24 +28,24 @@ struct storage storage_path[UI_COUNT];
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBIOS_storage,             lang.MUXSTORAGE.HELP.BIOS},
-            {ui_lblCatalogue_storage,        lang.MUXSTORAGE.HELP.CATALOGUE},
-            {ui_lblName_storage,             lang.MUXSTORAGE.HELP.FRIENDLY},
-            {ui_lblRetroArch_storage,        lang.MUXSTORAGE.HELP.RA_SYSTEM},
-            {ui_lblConfig_storage,           lang.MUXSTORAGE.HELP.RA_CONFIG},
-            {ui_lblCore_storage,             lang.MUXSTORAGE.HELP.ASSIGNED},
-            {ui_lblCollection_storage_storage,       lang.MUXSTORAGE.HELP.COLLECTION},
-            {ui_lblHistory_storage,          lang.MUXSTORAGE.HELP.HISTORY},
-            {ui_lblMusic_storage,            lang.MUXSTORAGE.HELP.MUSIC},
-            {ui_lblSave_storage,             lang.MUXSTORAGE.HELP.SAVE},
-            {ui_lblScreenshot_storage,       lang.MUXSTORAGE.HELP.SCREENSHOT},
-            {ui_lblTheme_storage,            lang.MUXSTORAGE.HELP.PACKAGE.THEME},
-            {ui_lblCatalogue_storagePackage, lang.MUXSTORAGE.HELP.PACKAGE.CATALOGUE},
-            {ui_lblConfig_storagePackage,    lang.MUXSTORAGE.HELP.PACKAGE.RA_CONFIG},
-            {ui_lblLanguage_storage,         lang.MUXSTORAGE.HELP.LANGUAGE},
-            {ui_lblNetwork_storage,          lang.MUXSTORAGE.HELP.NET_PROFILE},
-            {ui_lblSyncthing_storage_storage,        lang.MUXSTORAGE.HELP.SYNCTHING},
-            {ui_lblUserInit_storage,         lang.MUXSTORAGE.HELP.USER_INIT},
+            {ui_lblBIOS_storage,               lang.MUXSTORAGE.HELP.BIOS},
+            {ui_lblCatalogue_storage,          lang.MUXSTORAGE.HELP.CATALOGUE},
+            {ui_lblName_storage,               lang.MUXSTORAGE.HELP.FRIENDLY},
+            {ui_lblRetroArch_storage,          lang.MUXSTORAGE.HELP.RA_SYSTEM},
+            {ui_lblConfig_storage,             lang.MUXSTORAGE.HELP.RA_CONFIG},
+            {ui_lblCore_storage,               lang.MUXSTORAGE.HELP.ASSIGNED},
+            {ui_lblCollection_storage_storage, lang.MUXSTORAGE.HELP.COLLECTION},
+            {ui_lblHistory_storage,            lang.MUXSTORAGE.HELP.HISTORY},
+            {ui_lblMusic_storage,              lang.MUXSTORAGE.HELP.MUSIC},
+            {ui_lblSave_storage,               lang.MUXSTORAGE.HELP.SAVE},
+            {ui_lblScreenshot_storage,         lang.MUXSTORAGE.HELP.SCREENSHOT},
+            {ui_lblTheme_storage,              lang.MUXSTORAGE.HELP.PACKAGE.THEME},
+            {ui_lblCatalogue_storagePackage,   lang.MUXSTORAGE.HELP.PACKAGE.CATALOGUE},
+            {ui_lblConfig_storagePackage,      lang.MUXSTORAGE.HELP.PACKAGE.RA_CONFIG},
+            {ui_lblLanguage_storage,           lang.MUXSTORAGE.HELP.LANGUAGE},
+            {ui_lblNetwork_storage,            lang.MUXSTORAGE.HELP.NET_PROFILE},
+            {ui_lblSyncthing_storage_storage,  lang.MUXSTORAGE.HELP.SYNCTHING},
+            {ui_lblUserInit_storage,           lang.MUXSTORAGE.HELP.USER_INIT},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -497,11 +487,11 @@ static void ui_refresh_task() {
 }
 
 int muxstorage_main() {
-    
+
     init_module("muxstorage");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSTORAGE.TITLE);
     init_muxstorage(ui_pnlContent);
     init_elements();

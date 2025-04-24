@@ -1,20 +1,11 @@
 #include "muxshare.h"
 #include "muxpass.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxpass.h"
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/passcode.h"
 
 static int exit_status_muxpass = 0;
@@ -149,7 +140,7 @@ int muxpass_main(char *p_type) {
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
 
     init_module("muxpass");
-    
+
     load_passcode(&passcode, &device);
 
     if (strcasecmp(p_type, "boot") == 0) {
@@ -171,7 +162,7 @@ int muxpass_main(char *p_type) {
     }
 
     init_theme(0, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPASS.TITLE);
     init_muxpass(ui_pnlContent);
     init_elements();

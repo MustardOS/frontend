@@ -1,15 +1,9 @@
 #include "./ui/ui_muxlaunch.h"
 #include "muxshare.h"
-#include "../lvgl/lvgl.h"
-#include <unistd.h>
 #include <limits.h>
 #include "../common/common.h"
 #include "../common/init.h"
 #include "../common/ui_common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/config.h"
-#include "../common/device.h"
 #include "../common/osk.h"
 
 #include "muxapp.h"

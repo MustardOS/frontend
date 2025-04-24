@@ -1,18 +1,12 @@
 #include "muxshare.h"
 #include "muxnetwork.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxnetwork.h"
 #include <unistd.h>
 #include <stdio.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/language.h"
 #include "../common/ui_common.h"
 #include "../common/osk.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
 const char *pass_args[] = {(INTERNAL_PATH "script/web/password.sh"), NULL};
@@ -940,11 +934,11 @@ static void on_key_event(struct input_event ev) {
 }
 
 int muxnetwork_main() {
-    
+
     init_module("muxnetwork");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETWORK.TITLE);
     init_muxnetwork(ui_screen, ui_pnlContent, &theme);
     init_elements();

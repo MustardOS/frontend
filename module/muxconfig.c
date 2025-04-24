@@ -1,18 +1,10 @@
 #include "muxshare.h"
 #include "muxconfig.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxconfig.h"
 #include <string.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
 #define UI_COUNT 7
@@ -157,6 +149,7 @@ static void handle_a() {
     close_input();
     mux_input_stop();
 }
+
 static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
@@ -254,9 +247,9 @@ static void ui_refresh_task() {
 
 int muxconfig_main() {
     init_module("muxconfig");
-    
+
     init_theme(1, 1);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCONFIG.TITLE);
     init_muxconfig(ui_pnlContent);
     init_elements();

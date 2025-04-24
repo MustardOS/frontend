@@ -1,24 +1,14 @@
 #include "muxshare.h"
 #include "muxpicker.h"
-#include "../lvgl/lvgl.h"
-#include <unistd.h>
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include <linux/limits.h>
 #include "../common/init.h"
 #include "../common/img/missing.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/collection.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
 static char base_dir[PATH_MAX];
@@ -450,9 +440,9 @@ int muxpicker_main(char *type, char *ex_dir) {
         snprintf(sys_dir, sizeof(sys_dir), (RUN_STORAGE_PATH "%s"), picker_type);
 
     init_module("muxpicker");
-    
+
     init_theme(1, 1);
-    
+
     printf("type: %s\n", type);
     printf("picker_type: %s\n", picker_type);
     printf("ex_dir: %s\n", ex_dir);

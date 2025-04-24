@@ -1,25 +1,15 @@
 #include "muxshare.h"
 #include "muxhdmi.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxhdmi.h"
 #include <string.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
-
 
 static int resolution_original, theme_resolution_original, space_original,
         depth_original, range_original, scan_original, audio_original;
-
 
 #define UI_COUNT 7
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -446,11 +436,11 @@ static void ui_refresh_task() {
 }
 
 int muxhdmi_main() {
-    
+
     init_module("muxhdmi");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXHDMI.TITLE);
     init_muxhdmi(ui_pnlContent);
     init_elements();

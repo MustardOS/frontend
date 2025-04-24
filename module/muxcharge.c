@@ -1,20 +1,11 @@
 #include "muxshare.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxcharge.h"
 #include <string.h>
 #include <stdio.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 
 static int exit_status = -1;
-
 static int blank = 0;
 
 static char capacity_info[MAX_BUFFER_SIZE];
@@ -96,18 +87,16 @@ static void battery_task_charge() {
     blank++;
 }
 
-int main(int argc, char *argv[]) {
-    (void) argc;
-
+int main() {
     load_device(&device);
     load_config(&config);
 
     init_module("muxcharge");
     setup_background_process();
-                
+
     init_theme(0, 0);
     init_display();
-    
+
     init_muxcharge();
     set_brightness(read_int_from_file(INTERNAL_PATH "config/brightness.txt", 1));
 

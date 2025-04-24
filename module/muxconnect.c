@@ -1,23 +1,13 @@
 #include "muxshare.h"
 #include "muxconnect.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxconnect.h"
 #include <string.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-
 static int bluetooth_original, usbfunction_original;
-
 
 #define UI_COUNT 4
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -99,7 +89,8 @@ static void save_options() {
     if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
 }
 
-static void add_connect_item(lv_obj_t *ui_pnl, lv_obj_t *ui_lbl, lv_obj_t *ui_ico, lv_obj_t *ui_dro, char *item_text, char *glyph_name) {
+static void add_connect_item(lv_obj_t *ui_pnl, lv_obj_t *ui_lbl, lv_obj_t *ui_ico, lv_obj_t *ui_dro, char *item_text,
+                             char *glyph_name) {
     apply_theme_list_panel(ui_pnl);
     apply_theme_list_drop_down(&theme, ui_dro, "");
     apply_theme_list_item(&theme, ui_lbl, item_text);
@@ -128,11 +119,14 @@ static void init_navigation_group() {
 
     char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
 
-    add_connect_item(ui_pnlNetwork, ui_lblNetwork, ui_icoNetwork, ui_droNetwork_connect, lang.MUXCONNECT.WIFI, "network");
+    add_connect_item(ui_pnlNetwork, ui_lblNetwork, ui_icoNetwork, ui_droNetwork_connect, lang.MUXCONNECT.WIFI,
+                     "network");
     add_connect_item(ui_pnlServices, ui_lblServices, ui_icoServices, ui_droServices, lang.MUXCONNECT.WEB, "service");
-    add_connect_item(ui_pnlBluetooth, ui_lblBluetooth, ui_icoBluetooth, ui_droBluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth");
+    add_connect_item(ui_pnlBluetooth, ui_lblBluetooth, ui_icoBluetooth, ui_droBluetooth, lang.MUXCONNECT.BLUETOOTH,
+                     "bluetooth");
     add_drop_down_options(ui_droBluetooth, disabled_enabled, 2);
-    add_connect_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB, "usbfunction");
+    add_connect_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB,
+                     "usbfunction");
     add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
 
     if (!device.DEVICE.HAS_NETWORK) {
@@ -238,6 +232,7 @@ static void handle_a() {
 
     handle_option_next();
 }
+
 static void handle_b() {
     if (msgbox_active) {
         play_sound("confirm", nav_sound, 0, 0);
@@ -334,11 +329,11 @@ static void ui_refresh_task() {
 }
 
 int muxconnect_main() {
-    
+
     init_module("muxconnect");
-    
+
     init_theme(1, 1);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCONNECT.TITLE);
     init_muxconnect(ui_pnlContent);
     init_elements();

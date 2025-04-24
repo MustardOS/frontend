@@ -1,15 +1,8 @@
 #include "muxshare.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxcredits.h"
 #include <string.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/config.h"
-#include "../common/language.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
-#include "../common/theme.h"
 
 static void timeout_task() {
     close_input();
@@ -25,7 +18,7 @@ int main(int argc, char *argv[]) {
 
     load_device(&device);
     load_config(&config);
-            
+
     init_theme(0, 0);
     init_display();
     init_muxcredits();

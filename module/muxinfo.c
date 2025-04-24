@@ -1,18 +1,10 @@
 #include "muxshare.h"
 #include "muxinfo.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxinfo.h"
 #include <string.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
 #define UI_COUNT 5
@@ -261,7 +253,7 @@ static void ui_refresh_task() {
 
 int muxinfo_main() {
     init_module("muxinfo");
-    
+
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXINFO.TITLE);

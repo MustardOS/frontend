@@ -1,25 +1,15 @@
 #include "muxshare.h"
 #include "muxpower.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxpower.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
-
 static int shutdown_original, battery_original, idle_display_original, idle_sleep_original;
-
 
 #define UI_COUNT 4
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -381,11 +371,11 @@ static void ui_refresh_task() {
 }
 
 int muxpower_main() {
-    
+
     init_module("muxpower");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXPOWER.TITLE);
     init_muxpower(ui_pnlContent);
     init_elements();

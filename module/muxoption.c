@@ -1,28 +1,17 @@
 #include "muxshare.h"
 #include "muxoption.h"
-#include "../lvgl/lvgl.h"
 #include "ui/ui_muxoption.h"
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <libgen.h>
 #include "../common/init.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 #include "../common/log.h"
-
 
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
-
 
 #define UI_COUNT 3
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -308,7 +297,7 @@ int muxoption_main(char *name, char *dir, char *sys) {
     snprintf(rom_system, sizeof(rom_name), sys);
 
     init_module("muxoption");
-    
+
     if (file_exist(OPTION_SKIP)) {
         remove(OPTION_SKIP);
         LOG_INFO(mux_module, "Skipping Options Module - Not Required...")
@@ -317,7 +306,7 @@ int muxoption_main(char *name, char *dir, char *sys) {
     }
 
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXOPTION.TITLE);
     init_muxoption(ui_pnlContent);
     init_elements();

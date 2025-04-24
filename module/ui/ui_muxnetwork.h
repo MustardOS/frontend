@@ -5,8 +5,6 @@
 
 void init_muxnetwork(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme);
 
-extern lv_obj_t *ui_scrNetwork_network;
-
 extern lv_obj_t *ui_pnlIdentifier_network;
 extern lv_obj_t *ui_pnlPassword_network;
 extern lv_obj_t *ui_pnlScan_network;

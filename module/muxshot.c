@@ -1,23 +1,14 @@
 #include "muxshare.h"
 #include "muxshot.h"
-#include "../lvgl/lvgl.h"
 #include <regex.h>
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
-#include <libgen.h>
 #include <linux/limits.h>
 #include "../common/init.h"
 #include "../common/img/nothing.h"
 #include "../common/common.h"
-#include "../common/options.h"
-#include "../common/language.h"
-#include "../common/theme.h"
 #include "../common/ui_common.h"
-#include "../common/collection.h"
-#include "../common/config.h"
-#include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/input/list_nav.h"
 
 static lv_obj_t *ui_mux_panels[5];
@@ -272,9 +263,9 @@ int muxshot_main() {
     is_fullscreen = 0;
 
     init_module("muxshot");
-    
+
     init_theme(1, 1);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSHOT.TITLE);
     init_elements();
 
