@@ -370,9 +370,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxapp_main(int argc, char *argv[]) {
-    (void) argc;
-
+int muxapp_main() {
     init_module("muxapp");
                 
     init_theme(1, 1);

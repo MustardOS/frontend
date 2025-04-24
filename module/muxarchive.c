@@ -385,5 +385,7 @@ int muxarchive_main() {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
+    if (item_count > 0) free_items(&items, &item_count);
+
     return 0;
 }

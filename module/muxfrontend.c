@@ -207,6 +207,36 @@ int main(int argc, char *argv[]) {
                     cleanup_screen();
                     load_mux("explore");
                 }
+            } else if (strcmp(action, "app") == 0) {
+                int authorized = 0;
+                if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_LAUNCHER_AUTH)) {
+                    load_mux("launcher");
+                    if (muxpass_main("launch") == 1) {
+                        cleanup_screen();
+                        write_text_to_file(MUX_LAUNCHER_AUTH, "w", CHAR, "");
+                        authorized = 1;
+                    }
+                } else {
+                    authorized = 1;
+                }
+                if (authorized) {
+                    exec_mux("launcher", "muxapp", muxapp_main);
+                    if (file_exist(MUOS_APP_LOAD)) {
+                        char *app = read_line_from_file(MUOS_APP_LOAD, 1);
+                        int app_loaded = 1;
+                        if (strcmp(app, "Archive Manager") == 0) {
+                            load_mux("archive");
+                        } else if (strcmp(app, "Task Toolkit") == 0) {
+                            load_mux("task");
+                        } else {
+                            app_loaded = 0;
+                            load_mux("app");
+                            safe_quit(0);
+                            break;
+                        }
+                        if (app_loaded) remove(MUOS_APP_LOAD);
+                    }
+                }
             } else if (strcmp(action, "config") == 0) {
                 if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_AUTH) && strcmp(previous_module, "muxtweakgen") != 0) {
                     load_mux("launcher");
