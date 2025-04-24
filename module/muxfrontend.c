@@ -222,15 +222,16 @@ int main(int argc, char *argv[]) {
                     if (file_exist(MUOS_APP_LOAD)) {
                         char *app = read_line_from_file(MUOS_APP_LOAD, 1);
                         if (strcmp(app, "Archive Manager") == 0) {
+                            remove(MUOS_APP_LOAD);
                             load_mux("archive");
                         } else if (strcmp(app, "Task Toolkit") == 0) {
+                            remove(MUOS_APP_LOAD);
                             load_mux("task");
                         } else {
                             load_mux("app");
                             safe_quit(0);
                             break;
                         }
-                        remove(MUOS_APP_LOAD);
                     }
                 }
             } else if (strcmp(action, "config") == 0) {
