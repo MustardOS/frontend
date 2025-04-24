@@ -128,6 +128,7 @@ static void create_system_items() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
+    ui_count = 0;
     if (file_count > 0) {
         for (size_t i = 0; i < file_count; i++) {
             if (!file_names[i]) continue;
@@ -208,6 +209,7 @@ static void create_core_items(const char *target) {
             "bios", "global"
     };
 
+    ui_count = 0;
     for (int i = 0; i < cores; ++i) {
         int skip = 0;
         for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); k++) {

@@ -77,6 +77,7 @@ static void cleanup_screen() {
     key_show = 0;
     msgbox_active = 0;
     nav_sound = 0;
+    ui_count = 0;
 }
 
 static void process_content_action(char *action, char *module) {
@@ -87,7 +88,8 @@ static void process_content_action(char *action, char *module) {
     snprintf(rom_sys, sizeof(rom_sys), "%s", read_line_from_file(action, 3));
     snprintf(forced_flag, sizeof(forced_flag), "%s", read_line_from_file(action, 4));
 
-    load_mux(module);
+    remove(action);
+    load_mux((strcmp(forced_flag, "1") == 0) ? "option" : module);
 }
 
 static void last_index_check(){
@@ -157,8 +159,10 @@ int main(int argc, char *argv[]) {
                 safe_quit(0);
                 break;
             } else if (strcmp(action, "assign") == 0) {
+                load_mux("option");
                 muxassign_main(0, rom_name, rom_dir, rom_sys);
             } else if (strcmp(action, "governor") == 0) {
+                load_mux("option");
                 muxgov_main(0, rom_name, rom_dir, rom_sys);
             } else if (strcmp(action, "explore") == 0) {
                 last_index_check();

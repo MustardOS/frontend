@@ -1222,7 +1222,7 @@ int muxplore_main(int index, char *dir) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    if (file_exist(MUOS_PDI_LOAD)) snprintf(prev_dir, sizeof(prev_dir), "%s", read_text_from_file(MUOS_PDI_LOAD));
+    snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_text_from_file(MUOS_PDI_LOAD) : "");
 
     load_skip_patterns();
     create_content_items();

@@ -194,6 +194,7 @@ static void create_gov_items(const char *target) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
+    ui_count = 0;
     for (int i = 0; i < governor_count; ++i) {
         LOG_SUCCESS(mux_module, "Generating Item For Governor: %s", governors[i])
 
