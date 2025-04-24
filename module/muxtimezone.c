@@ -106,6 +106,8 @@ static void handle_a() {
              lv_label_get_text(lv_group_get_focused(ui_group)));
     run_exec((const char *[]) {"ln", "-sf", zone_group, "/etc/localtime", NULL});
 
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
+
     close_input();
     mux_input_stop();
 }

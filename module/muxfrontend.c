@@ -39,7 +39,6 @@
 #include "muxsnapshot.h"
 #include "muxspace.h"
 #include "muxsplash.h"
-#include "muxstart.h"
 #include "muxstorage.h"
 #include "muxsysinfo.h"
 #include "muxtask.h"
@@ -50,7 +49,6 @@
 #include "muxvisual.h"
 #include "muxwebserv.h"
 
-static int exit_status = 0;
 static int last_index = 0;
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
@@ -90,9 +88,9 @@ static void process_content_action(char *action, char *module) {
     load_mux((strcmp(forced_flag, "1") == 0) ? "option" : module);
 }
 
-static void last_index_check(){
+static void last_index_check() {
     last_index = 0;
-	if (file_exist(MUOS_IDX_LOAD) && !file_exist(ADD_MODE_WORK)) {
+    if (file_exist(MUOS_IDX_LOAD) && !file_exist(ADD_MODE_WORK)) {
         last_index = safe_atoi(read_line_from_file(MUOS_IDX_LOAD, 1));
         remove(MUOS_IDX_LOAD);
     }
@@ -106,15 +104,17 @@ static int set_splash_image_path(char *splash_image_name) {
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
-    if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png", 
-                theme, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
-        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s.png", 
-                theme, mux_dimension, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
-        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s/%s.png", 
-                theme, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
-        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s.png", 
-                theme, splash_image_name) >= 0 && file_exist(splash_image_path))
-    ) return 1;
+    if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png",
+                  theme, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
+         file_exist(splash_image_path)) ||
+        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s.png",
+                  theme, mux_dimension, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
+        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s/%s.png",
+                  theme, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 && file_exist(splash_image_path)) ||
+        (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s.png",
+                  theme, splash_image_name) >= 0 && file_exist(splash_image_path))
+            )
+        return 1;
 
     return 0;
 }
@@ -128,27 +128,30 @@ static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
 
 int main(int argc, char *argv[]) {
     setup_background_process();
-    
+
     load_device(&device);
     load_config(&config);
     init_theme(0, 0);
     init_display();
-    
+
     while (1) {
-        //Process content association and governor actions
+        // Process content association and governor actions
         process_content_action(MUOS_ASS_LOAD, "assign");
         process_content_action(MUOS_GOV_LOAD, "governor");
-        
+
         if (file_exist(MUOS_ACT_LOAD)) {
-            if (strcmp(previous_module, "muxconfig") || strcmp(previous_module, "muxtweakgen") || 
-                    strcmp(previous_module, "muxtweakadv") || strcmp(previous_module, "muxvisual") || 
-                    strcmp(previous_module, "muxlanguage")) {
+            if (strcmp(previous_module, "muxconfig") == 0 || strcmp(previous_module, "muxtweakgen") == 0 ||
+                strcmp(previous_module, "muxtweakadv") == 0 || strcmp(previous_module, "muxvisual") == 0 ||
+                strcmp(previous_module, "muxlanguage") == 0) {
                 load_config(&config);
             }
-            exit_status = 0;
             char *action = read_line_from_file(MUOS_ACT_LOAD, 1);
-
-            if (strcmp(action, "reboot") == 0) {
+            if (strcmp(action, "reset") == 0) {
+                if (config.BOOT.FACTORY_RESET) {
+                    safe_quit(0);
+                    break;
+                }
+            } else if (strcmp(action, "reboot") == 0) {
                 if (set_splash_image_path("reboot")) muxsplash_main(splash_image_path);
                 safe_quit(0);
                 break;
@@ -179,7 +182,8 @@ int main(int argc, char *argv[]) {
                     add_mode = 1;
                     last_index = 0;
                 }
-                const char *args[] = { "find", INFO_COL_PATH, "-maxdepth", "2", "-type", "f", "-size", "0", "-delete", NULL };
+                const char *args[] = {"find", INFO_COL_PATH, "-maxdepth", "2", "-type", "f", "-size", "0", "-delete",
+                                      NULL};
                 run_exec(args);
                 load_mux("launcher");
                 if (muxcollect_main(add_mode, read_line_from_file(COLLECTION_DIR, 1), last_index) == 1) {
@@ -188,7 +192,8 @@ int main(int argc, char *argv[]) {
                 }
             } else if (strcmp(action, "history") == 0) {
                 last_index_check();
-                const char *args[] = { "find", INFO_HIS_PATH, "-maxdepth", "1", "-type", "f", "-size", "0", "-delete", NULL };
+                const char *args[] = {"find", INFO_HIS_PATH, "-maxdepth", "1", "-type", "f", "-size", "0", "-delete",
+                                      NULL};
                 run_exec(args);
                 load_mux("launcher");
                 if (muxhistory_main(last_index) == 1) {
@@ -222,22 +227,21 @@ int main(int argc, char *argv[]) {
                     exec_mux("launcher", "muxapp", muxapp_main);
                     if (file_exist(MUOS_APP_LOAD)) {
                         char *app = read_line_from_file(MUOS_APP_LOAD, 1);
-                        int app_loaded = 1;
                         if (strcmp(app, "Archive Manager") == 0) {
                             load_mux("archive");
                         } else if (strcmp(app, "Task Toolkit") == 0) {
                             load_mux("task");
                         } else {
-                            app_loaded = 0;
                             load_mux("app");
                             safe_quit(0);
                             break;
                         }
-                        if (app_loaded) remove(MUOS_APP_LOAD);
+                        remove(MUOS_APP_LOAD);
                     }
                 }
             } else if (strcmp(action, "config") == 0) {
-                if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_AUTH) && strcmp(previous_module, "muxtweakgen") != 0) {
+                if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_AUTH) &&
+                    strcmp(previous_module, "muxtweakgen") != 0) {
                     load_mux("launcher");
                     if (muxpass_main("setting") == 1) {
                         cleanup_screen();
@@ -283,7 +287,11 @@ int main(int argc, char *argv[]) {
             } else if (strcmp(action, "hdmi") == 0) {
                 exec_mux("tweakgen", "muxhdmi", muxhdmi_main);
             } else if (strcmp(action, "rtc") == 0) {
-                exec_mux("tweakgen", "muxrtc", muxrtc_main);
+                if (config.BOOT.FACTORY_RESET) {
+                    exec_mux("reset", "muxrtc", muxrtc_main);
+                } else {
+                    exec_mux("tweakgen", "muxrtc", muxrtc_main);
+                }
             } else if (strcmp(action, "storage") == 0) {
                 exec_mux("config", "muxstorage", muxstorage_main);
             } else if (strcmp(action, "power") == 0) {
@@ -310,7 +318,7 @@ int main(int argc, char *argv[]) {
         } else {
             exec_mux("launcher", "muxlaunch", muxlaunch_main);
         }
-        cleanup_screen();        
+        cleanup_screen();
     }
 
     return 0;

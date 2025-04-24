@@ -37,6 +37,7 @@ struct mux_lang {
         char EXTRACT[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
+        char INSTALL[MAX_BUFFER_SIZE];
         char KIOSK_DISABLE[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
         char LOAD[MAX_BUFFER_SIZE];

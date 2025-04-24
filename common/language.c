@@ -53,6 +53,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.EXTRACT, "Extract");
     GENERIC_FIELD(lang->GENERIC.INDIVIDUAL, "Individual");
     GENERIC_FIELD(lang->GENERIC.INFO, "Info");
+    GENERIC_FIELD(lang->GENERIC.INSTALL, "Install");
     GENERIC_FIELD(lang->GENERIC.KIOSK_DISABLE, "This is disabled in kiosk mode!");
     GENERIC_FIELD(lang->GENERIC.LAUNCH, "Launch");
     GENERIC_FIELD(lang->GENERIC.LOAD, "Load");

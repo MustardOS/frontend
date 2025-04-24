@@ -296,7 +296,6 @@ static void handle_a() {
         save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
                             rtcHourValue, rtcMinuteValue);
         load_mux("timezone");
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
 
         close_input();
         mux_input_stop();
@@ -374,14 +373,11 @@ static void handle_b() {
     save_clock_settings(rtcYearValue, rtcMonthValue, rtcDayValue,
                         rtcHourValue, rtcMinuteValue);
 
-    usleep(device.SCREEN.WAIT);
-
-    char config_file[MAX_BUFFER_SIZE];
-    snprintf(config_file, sizeof(config_file),
-             "%s/config/config.ini", INTERNAL_PATH);
-
-    write_text_to_file((RUN_GLOBAL_PATH "boot/clock_setup"), "w", INT, 0);
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
+    if (config.BOOT.FACTORY_RESET) {
+        write_text_to_file((RUN_GLOBAL_PATH "boot/clock_setup"), "w", INT, 0);
+    } else {
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
+    }
 
     close_input();
     mux_input_stop();
@@ -543,7 +539,11 @@ static void init_elements() {
 
     lv_label_set_text(ui_lblMessage, "");
 
-    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
+    if (config.BOOT.FACTORY_RESET) {
+        lv_label_set_text(ui_lblNavB, lang.GENERIC.INSTALL);
+    } else {
+        lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
+    }
 
     lv_obj_t *nav_hide[] = {
             ui_lblNavBGlyph,
@@ -589,11 +589,11 @@ static void ui_refresh_task() {
 }
 
 int muxrtc_main() {
-    
+
     init_module("muxrtc");
-    
+
     init_theme(1, 0);
-    
+
     init_ui_common_screen(&theme, &device, &lang, lang.MUXRTC.TITLE);
     init_muxrtc(ui_pnlContent);
     init_elements();
