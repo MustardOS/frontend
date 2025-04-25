@@ -1411,8 +1411,8 @@ void load_font_text(lv_obj_t *screen) {
 
                     (snprintf(theme_font_text, sizeof(theme_font_text_default),
                               "%s/%sfont/%s/default.bin", theme_location, mux_dimensions[i],
-                              config.SETTINGS.GENERAL.LANGUAGE) >=
-                     0 && file_exist(theme_font_text)) ||
+                              config.SETTINGS.GENERAL.LANGUAGE) >= 0 &&
+                     file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text),
                               "%s/%sfont/%s.bin", theme_location, mux_dimensions[i], mux_module) >= 0 &&
@@ -1447,13 +1447,13 @@ void load_font_section(const char *section, lv_obj_t *element) {
             for (int i = 0; i < 2; i++) {
                 if ((snprintf(theme_font_section, sizeof(theme_font_section),
                               "%s/%sfont/%s/%s/%s.bin", theme_location, mux_dimensions[i],
-                              config.SETTINGS.GENERAL.LANGUAGE, section,
-                              mux_module) >= 0 && file_exist(theme_font_section)) ||
+                              config.SETTINGS.GENERAL.LANGUAGE, section, mux_module) >= 0 &&
+                     file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
                               "%s/%sfont/%s/%s/default.bin", theme_location, mux_dimensions[i],
-                              config.SETTINGS.GENERAL.LANGUAGE,
-                              section) >= 0 && file_exist(theme_font_section)) ||
+                              config.SETTINGS.GENERAL.LANGUAGE, section) >= 0 &&
+                     file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
                               "%s/%sfont/%s/%s.bin", theme_location, mux_dimensions[i], section, mux_module) >= 0 &&
@@ -2391,8 +2391,9 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
 }
 
 int theme_compat() {
+    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
     char theme_version_file[MAX_BUFFER_SIZE];
-    snprintf(theme_version_file, sizeof(theme_version_file), "%s/version.txt", STORAGE_THEME);
+    snprintf(theme_version_file, sizeof(theme_version_file), "%s/version.txt", theme_location);
 
     if (file_exist(theme_version_file)) {
         char *theme_version = read_line_from_file(theme_version_file, 1);
