@@ -164,6 +164,8 @@ static void save_network_config() {
     write_text_to_file((RUN_GLOBAL_PATH "network/subnet"), "w", CHAR, lv_label_get_text(ui_lblSubnet_networkValue));
     write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR, lv_label_get_text(ui_lblGateway_networkValue));
     write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, lv_label_get_text(ui_lblDNS_networkValue));
+    
+    refresh_config = 1;
 }
 
 static void init_navigation_group() {

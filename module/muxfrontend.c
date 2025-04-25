@@ -134,10 +134,9 @@ int main(int argc, char *argv[]) {
         process_content_action(MUOS_GOV_LOAD, "governor");
 
         if (file_exist(MUOS_ACT_LOAD)) {
-            if (strcmp(previous_module, "muxconfig") == 0 || strcmp(previous_module, "muxtweakgen") == 0 ||
-                strcmp(previous_module, "muxtweakadv") == 0 || strcmp(previous_module, "muxvisual") == 0 ||
-                strcmp(previous_module, "muxlanguage") == 0) {
+            if (refresh_config) {
                 load_config(&config);
+                refresh_config = 0;
             }
             char *action = read_line_from_file(MUOS_ACT_LOAD, 1);
             if (strcmp(action, "reset") == 0) {

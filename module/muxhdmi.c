@@ -165,6 +165,8 @@ static void save_hdmi_options() {
     if (lv_dropdown_get_selected(ui_droAudio_hdmi) != audio_original) {
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/audio"), "w", INT, idx_audio);
     }
+    
+    refresh_config = 1;
 }
 
 static void init_navigation_group() {

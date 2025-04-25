@@ -86,7 +86,10 @@ static void save_options() {
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
     }
 
-    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
+    if (is_modified > 0) {
+        run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
+        refresh_config = 1;
+    }
 }
 
 static void add_connect_item(lv_obj_t *ui_pnl, lv_obj_t *ui_lbl, lv_obj_t *ui_ico, lv_obj_t *ui_dro, char *item_text,

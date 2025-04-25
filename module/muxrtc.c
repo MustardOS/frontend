@@ -141,7 +141,7 @@ static void save_clock_settings(int year, int month, int day, int hour, int minu
 
         return;
     }
-
+    refresh_config = 1;
     fprintf(stderr, "Attempts to set system date failed\n");
 }
 
