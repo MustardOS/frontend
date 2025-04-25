@@ -1,8 +1,10 @@
+#include <string.h>
 #include "muxshare.h"
 #include "ui/ui_muxcredits.h"
-#include <string.h>
 #include "../common/init.h"
 #include "../common/common.h"
+#include "../font/notosans_big.h"
+#include "../font/notosans_big_hd.h"
 
 static void timeout_task() {
     close_input();
@@ -10,18 +12,25 @@ static void timeout_task() {
     mux_input_stop();
 }
 
-int main(int argc, char *argv[]) {
-    (void) argc;
-
+int main(void) {
     init_module("muxcredits");
-    setup_background_process();
+    //setup_background_process();
 
     load_device(&device);
     load_config(&config);
 
     init_theme(0, 0);
     init_display();
-    init_muxcredits();
+
+    const lv_font_t *header_font;
+    if (strcasecmp(device.DEVICE.NAME, "tui-brick") == 0) {
+        header_font = &ui_font_NotoSansBigHD;
+    } else {
+        header_font = &ui_font_NotoSansBig;
+    }
+
+    init_muxcredits(header_font);
+    load_font_text(ui_scrCredits);
 
     animFade_Animation(ui_conStart, -1000);
     animFade_Animation(ui_conOfficial, 8000);
@@ -41,7 +50,7 @@ int main(int argc, char *argv[]) {
     mux_input_options input_opts = {
             .combo = {
                     {
-                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_START),
+                            .type_mask = BIT(MUX_INPUT_START) | BIT(MUX_INPUT_MENU_SHORT),
                             .press_handler = timeout_task,
                     },
             }

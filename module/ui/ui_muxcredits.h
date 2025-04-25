@@ -4,7 +4,9 @@
 
 void animFade_Animation(lv_obj_t *TargetObject, int delay);
 
-void init_muxcredits(void);
+void init_muxcredits(const lv_font_t *header_font);
+
+extern lv_obj_t *ui_scrCredits;
 
 extern lv_obj_t *ui_conStart;
 extern lv_obj_t *ui_conOfficial;

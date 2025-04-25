@@ -20,7 +20,8 @@ MUXLIB = $(CFLAGS) -I./ui -I../font -I../lookup -I../common \
          -I../common/mini -I../common/miniz
 
 LDFLAGS = $(MUXLIB) -L../bin/lib -lui -llookup -lmux \
-          -lnotosans -lnotosans_big -lnotosans_jp -lnotosans_ar -lnotosans_kr -lnotosans_sc -lnotosans_tc \
+          -lnotosans -lnotosans_big -lnotosans_big_hd \
+          -lnotosans_jp -lnotosans_ar -lnotosans_kr -lnotosans_sc -lnotosans_tc \
           -lSDL2 -lSDL2_mixer -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
