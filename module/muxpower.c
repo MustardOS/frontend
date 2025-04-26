@@ -149,6 +149,7 @@ static void save_tweak_options() {
         snprintf(tweak_script, sizeof(tweak_script),
                  "%s/script/mux/tweak.sh", INTERNAL_PATH);
         run_exec((const char *[]) {tweak_script, NULL});
+        refresh_config = 1;
     }
 }
 

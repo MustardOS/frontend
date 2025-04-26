@@ -398,7 +398,7 @@ static void save_options() {
             }
         }
     }
-
+    refresh_config = 1;
     if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
 }
 

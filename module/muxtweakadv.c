@@ -369,7 +369,10 @@ static void save_tweak_options() {
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/cardmode"), "w", CHAR, idx_cardmode);
     }
 
-    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
+    if (is_modified > 0) {
+        run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
+        refresh_config = 1;
+    }
 }
 
 static void init_navigation_group() {

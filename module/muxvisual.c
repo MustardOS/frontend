@@ -210,6 +210,7 @@ static void save_visual_options() {
     if (lv_dropdown_get_selected(ui_droOverlayTransparency_visual) != overlaytransparency_original) {
         write_text_to_file((RUN_GLOBAL_PATH "visual/overlaytransparency"), "w", INT, idx_overlaytransparency);
     }
+    refresh_config = 1;
 }
 
 static void init_navigation_group() {

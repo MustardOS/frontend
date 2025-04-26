@@ -109,6 +109,8 @@ static void handle_confirm() {
 
     write_text_to_file((RUN_GLOBAL_PATH "settings/general/language"), "w", CHAR,
                        items[current_item_index].name);
+                       
+    refresh_config = 1;
 
     close_input();
     mux_input_stop();

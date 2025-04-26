@@ -97,6 +97,8 @@ static void handle_a() {
     run_exec((const char *[]) {"ln", "-sf", zone_group, "/etc/localtime", NULL});
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
+    
+    refresh_config = 1;
 
     close_input();
     mux_input_stop();

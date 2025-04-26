@@ -5,6 +5,7 @@
 #include "../common/init.h"
 #include "../common/ui_common.h"
 #include "../common/osk.h"
+#include "../common/input/list_nav.h"
 
 #include "muxapp.h"
 #include "muxarchive.h"
@@ -68,6 +69,7 @@ static void cleanup_screen() {
     msgbox_active = 0;
     nav_sound = 0;
     ui_count = 0;
+    grid_mode_enabled = 0;
 }
 
 static void process_content_action(char *action, char *module) {
@@ -134,10 +136,9 @@ int main(int argc, char *argv[]) {
         process_content_action(MUOS_GOV_LOAD, "governor");
 
         if (file_exist(MUOS_ACT_LOAD)) {
-            if (strcmp(previous_module, "muxconfig") == 0 || strcmp(previous_module, "muxtweakgen") == 0 ||
-                strcmp(previous_module, "muxtweakadv") == 0 || strcmp(previous_module, "muxvisual") == 0 ||
-                strcmp(previous_module, "muxlanguage") == 0) {
+            if (refresh_config) {
                 load_config(&config);
+                refresh_config = 0;
             }
             char *action = read_line_from_file(MUOS_ACT_LOAD, 1);
             if (strcmp(action, "reset") == 0) {

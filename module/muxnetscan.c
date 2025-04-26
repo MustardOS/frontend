@@ -109,6 +109,8 @@ static void handle_confirm(void) {
     write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR, "");
     write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, "");
 
+    refresh_config = 1;
+    
     close_input();
     mux_input_stop();
 }

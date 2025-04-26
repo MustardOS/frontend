@@ -140,7 +140,11 @@ static void save_web_options() {
         write_text_to_file((RUN_GLOBAL_PATH "web/tailscaled"), "w", INT, idx_tailscaled);
     }
 
-    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/web/service.sh", NULL});
+    if (is_modified > 0) {
+        run_exec((const char *[]) {(char *) INTERNAL_PATH "script/web/service.sh", NULL});
+        refresh_config = 1;
+    }
+
 }
 
 static void init_navigation_group() {
