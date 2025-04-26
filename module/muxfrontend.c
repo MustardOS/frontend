@@ -5,6 +5,7 @@
 #include "../common/init.h"
 #include "../common/ui_common.h"
 #include "../common/osk.h"
+#include "../common/input/list_nav.h"
 
 #include "muxapp.h"
 #include "muxarchive.h"
@@ -68,6 +69,7 @@ static void cleanup_screen() {
     msgbox_active = 0;
     nav_sound = 0;
     ui_count = 0;
+    grid_mode_enabled = 0;
 }
 
 static void process_content_action(char *action, char *module) {

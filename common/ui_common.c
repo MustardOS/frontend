@@ -489,7 +489,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblScreenMessage = lv_label_create(ui_screen);
     lv_label_set_text(ui_lblScreenMessage, "");
     lv_obj_set_width(ui_lblScreenMessage, device->MUX.WIDTH);
-    lv_obj_set_height(ui_lblScreenMessage, 28);
+    lv_obj_set_height(ui_lblScreenMessage, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_lblScreenMessage, LV_ALIGN_LEFT_MID);
     lv_obj_add_flag(ui_lblScreenMessage, LV_OBJ_FLAG_FLOATING);
     lv_obj_set_scroll_dir(ui_lblScreenMessage, LV_DIR_HOR);
@@ -516,7 +516,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     ui_pnlMessage = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlMessage, device->MUX.WIDTH - 25);
-    lv_obj_set_height(ui_pnlMessage, 42);
+    lv_obj_set_height(ui_pnlMessage, LV_SIZE_CONTENT);
     lv_obj_set_x(ui_pnlMessage, 0);
     lv_obj_set_y(ui_pnlMessage, -theme->FOOTER.HEIGHT - 5);
     lv_obj_set_align(ui_pnlMessage, LV_ALIGN_BOTTOM_MID);
@@ -535,8 +535,6 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_lblMessage = lv_label_create(ui_pnlMessage);
     lv_obj_set_width(ui_lblMessage, device->MUX.WIDTH - 50);
     lv_obj_set_height(ui_lblMessage, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblMessage, -220);
-    lv_obj_set_y(ui_lblMessage, -205);
     lv_obj_set_align(ui_lblMessage, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblMessage, "");
     lv_label_set_recolor(ui_lblMessage, "true");
