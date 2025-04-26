@@ -50,6 +50,9 @@ static char rom_dir[PATH_MAX];
 static char rom_sys[PATH_MAX];
 static char forced_flag[PATH_MAX];
 
+static int previous_mux_width;
+static int previous_mux_height;
+
 static char previous_module[MAX_BUFFER_SIZE];
 static char splash_image_path[MAX_BUFFER_SIZE];
 
@@ -122,6 +125,12 @@ static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
     set_previous_module(module);
 }
 
+static bool resolution_changed() {
+    load_device(&device);
+    load_theme_resolution(&config, &device);
+    return previous_mux_height != device.MUX.HEIGHT || previous_mux_width != device.MUX.WIDTH;
+}
+
 int main(int argc, char *argv[]) {
     setup_background_process();
 
@@ -129,6 +138,9 @@ int main(int argc, char *argv[]) {
     load_config(&config);
     init_theme(0, 0);
     init_display();
+
+    previous_mux_width = device.MUX.WIDTH;
+    previous_mux_height = device.MUX.HEIGHT;
 
     while (1) {
         // Process content association and governor actions
@@ -140,6 +152,12 @@ int main(int argc, char *argv[]) {
                 load_config(&config);
                 refresh_config = 0;
             }
+    
+            if (resolution_changed()) {
+                safe_quit(0);
+                break;
+            }
+
             char *action = read_line_from_file(MUOS_ACT_LOAD, 1);
             if (strcmp(action, "reset") == 0) {
                 if (config.BOOT.FACTORY_RESET) {
