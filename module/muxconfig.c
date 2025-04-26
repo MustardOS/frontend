@@ -79,6 +79,15 @@ static void init_navigation_group() {
     add_config_item(ui_pnlLanguage, ui_lblLanguage, ui_icoLanguage, lang.MUXCONFIG.LANGUAGE, "language");
     add_config_item(ui_pnlPower, ui_lblPower, ui_icoPower, lang.MUXCONFIG.POWER, "power");
     add_config_item(ui_pnlStorage, ui_lblStorage, ui_icoStorage, lang.MUXCONFIG.STORAGE, "storage");
+
+    char SD2[MAX_BUFFER_SIZE];
+    snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
+    if (!directory_exist(SD2)) {
+        lv_obj_add_flag(ui_pnlStorage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_lblStorage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_icoStorage, LV_OBJ_FLAG_HIDDEN);
+        ui_count -= 1;
+    }
 }
 
 static void list_nav_prev(int steps) {
