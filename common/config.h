@@ -59,12 +59,12 @@ struct mux_config {
             int16_t BRIGHTNESS;
             int16_t VOLUME;
             char LANGUAGE[MAX_BUFFER_SIZE];
-        } GENERAL;
-        struct {
-            int16_t RESOLUTION;
             int16_t THEME_RESOLUTION;
             int16_t THEME_RESOLUTION_WIDTH;
             int16_t THEME_RESOLUTION_HEIGHT;
+        } GENERAL;
+        struct {
+            int16_t RESOLUTION;
             int16_t SPACE;
             int16_t DEPTH;
             int16_t RANGE;

@@ -144,6 +144,8 @@ struct mux_lang {
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
+        char THEME_RESOLUTION[MAX_BUFFER_SIZE];
+        char SCREEN[MAX_BUFFER_SIZE];
         char THEME_ALTERNATE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
         char ANIMATION[MAX_BUFFER_SIZE];
@@ -183,6 +185,7 @@ struct mux_lang {
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
+            char THEME_RESOLUTION[MAX_BUFFER_SIZE];
             char ANIMATION[MAX_BUFFER_SIZE];
             char BOX_ART[MAX_BUFFER_SIZE];
             char BOX_ALIGN[MAX_BUFFER_SIZE];
@@ -213,8 +216,6 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char RESOLUTION[MAX_BUFFER_SIZE];
-        char THEME_RESOLUTION[MAX_BUFFER_SIZE];
-        char SCREEN[MAX_BUFFER_SIZE];
         struct {
             char DEPTH[MAX_BUFFER_SIZE];
             char SPACE[MAX_BUFFER_SIZE];
@@ -237,7 +238,6 @@ struct mux_lang {
         struct {
             char AUDIO_OUTPUT[MAX_BUFFER_SIZE];
             char RESOLUTION[MAX_BUFFER_SIZE];
-            char THEME_RESOLUTION[MAX_BUFFER_SIZE];
             char SCAN_SCALE[MAX_BUFFER_SIZE];
             struct {
                 char DEPTH[MAX_BUFFER_SIZE];

@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <SDL2/SDL.h>
+#include "../../../../common/common.h"
 #include "../../../../common/device.h"
 #include "../../../../common/config.h"
 #include "sdl.h"

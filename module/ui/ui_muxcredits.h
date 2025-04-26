@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdio.h>
 #include "../../lvgl/lvgl.h"
 
 void animFade_Animation(lv_obj_t *TargetObject, int delay);
