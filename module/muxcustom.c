@@ -390,7 +390,9 @@ static void save_options() {
             snprintf(rgb_script, sizeof(rgb_script),
                      "%s/alternate/rgb/%s/rgbconf.sh", STORAGE_THEME, theme_alt);
             if (file_exist(rgb_script)) {
-                run_exec((const char *[]) {rgb_script, NULL});
+                const char *args[] = {rgb_script, NULL};
+                run_exec(args, A_SIZE(args));
+
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
                 snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", STORAGE_THEME);
                 create_directories(strip_dir(rgb_script_dest));
@@ -398,8 +400,13 @@ static void save_options() {
             }
         }
     }
+
     refresh_config = 1;
-    if (is_modified > 0) run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
+
+    if (is_modified > 0) {
+        const char *args[] = {INTERNAL_PATH "script/mux/tweak.sh", NULL};
+        run_exec(args, A_SIZE(args));
+    }
 }
 
 static void handle_confirm() {

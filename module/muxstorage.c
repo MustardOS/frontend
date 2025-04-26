@@ -366,27 +366,19 @@ static void handle_confirm(void) {
         snprintf(storage_script, sizeof(storage_script), "%s/script/mux/migrate.sh", INTERNAL_PATH);
     }
 
-    // TODO: Get a suitable path for the terminal font from the active theme
-    //  and add it into the args below using the "-f" switch. Do the same
-    //  for the background image if one exists using the "-i" switch.
-    const char *args[] = {
-            (INTERNAL_PATH "extra/muterm"),
-            "-s", (char *) theme.TERMINAL.FONT_SIZE,
-            // "-f", get path of font
-            // "-i", get path of image
-            "-bg", (char *) theme.TERMINAL.BACKGROUND,
-            "-fg", (char *) theme.TERMINAL.FOREGROUND,
-            storage_script, storage_path[current_item_index].path_suffix,
-            NULL
-    };
+    size_t exec_count;
+    const char *args[] = {storage_script, storage_path[current_item_index].path_suffix, NULL};
+    const char **exec = build_term_exec(args, &exec_count);
 
-    if (config.VISUAL.BLACKFADE) {
-        fade_to_black(ui_screen);
-    } else {
-        unload_image_animation();
+    if (exec) {
+        if (config.VISUAL.BLACKFADE) {
+            fade_to_black(ui_screen);
+        } else {
+            unload_image_animation();
+        }
+        run_exec(exec, exec_count);
     }
-
-    run_exec(args);
+    free(exec);
 
     write_text_to_file(MUOS_SIN_LOAD, "w", INT, current_item_index);
 

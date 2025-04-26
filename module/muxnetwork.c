@@ -412,7 +412,7 @@ static void handle_confirm(void) {
     if (element_focused == ui_lblConnect_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound("confirm", nav_sound, 0, 0);
-            run_exec(net_d_args);
+            run_exec(net_d_args, A_SIZE(net_d_args));
             can_scan_check(1);
         } else {
             int valid_info = 0;
@@ -455,10 +455,10 @@ static void handle_confirm(void) {
                 lv_label_set_text(ui_lblConnect_networkValue, lang.MUXNETWORK.CONNECT_TRY);
                 lv_task_handler();
 
-                run_exec(pass_args);
+                run_exec(pass_args, A_SIZE(pass_args));
                 lv_task_handler();
 
-                run_exec(net_c_args);
+                run_exec(net_c_args, A_SIZE(net_c_args));
                 lv_task_handler();
 
                 get_current_ip();
@@ -551,7 +551,7 @@ static void handle_profiles(void) {
     play_sound("confirm", nav_sound, 0, 1);
 
     save_network_config();
-    run_exec(pass_args);
+    run_exec(pass_args, A_SIZE(pass_args));
 
     load_mux("net_profile");
 

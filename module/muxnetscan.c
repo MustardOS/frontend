@@ -20,7 +20,8 @@ static void scan_networks() {
     lv_obj_invalidate(ui_screen);
     lv_refr_now(NULL);
 
-    run_exec((const char *[]) {(INTERNAL_PATH "script/web/ssid.sh"), NULL});
+    const char *args[] = {(INTERNAL_PATH "script/web/ssid.sh"), NULL};
+    run_exec(args, A_SIZE(args));
 }
 
 static void list_nav_prev(int steps) {

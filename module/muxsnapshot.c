@@ -147,31 +147,19 @@ static void handle_a() {
     if (ui_count > 0) {
         play_sound("confirm", nav_sound, 0, 1);
 
-        static char extract_script[MAX_BUFFER_SIZE];
-        snprintf(extract_script, sizeof(extract_script),
-                 "%s/script/mux/extract.sh", INTERNAL_PATH);
+        size_t exec_count;
+        const char *args[] = {(INTERNAL_PATH "script/mux/extract.sh"), items[current_item_index].name, NULL};
+        const char **exec = build_term_exec(args, &exec_count);
 
-        // TODO: Get a suitable path for the terminal font from the active theme
-        //  and add it into the args below using the "-f" switch. Do the same
-        //  for the background image if one exists using the "-i" switch.
-        const char *args[] = {
-                (INTERNAL_PATH "extra/muterm"),
-                "-s", (char *) theme.TERMINAL.FONT_SIZE,
-                // "-f", get path of font
-                // "-i", get path of image
-                "-bg", (char *) theme.TERMINAL.BACKGROUND,
-                "-fg", (char *) theme.TERMINAL.FOREGROUND,
-                extract_script, items[current_item_index].name,
-                NULL
-        };
-
-        if (config.VISUAL.BLACKFADE) {
-            fade_to_black(ui_screen);
-        } else {
-            unload_image_animation();
+        if (exec) {
+            if (config.VISUAL.BLACKFADE) {
+                fade_to_black(ui_screen);
+            } else {
+                unload_image_animation();
+            }
+            run_exec(exec, exec_count);
         }
-
-        run_exec(args);
+        free(exec);
 
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 

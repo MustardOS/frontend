@@ -141,10 +141,10 @@ static void save_web_options() {
     }
 
     if (is_modified > 0) {
-        run_exec((const char *[]) {(char *) INTERNAL_PATH "script/web/service.sh", NULL});
+        const char *args[] = {(INTERNAL_PATH "script/web/service.sh"), NULL};
+        run_exec(args, A_SIZE(args));
         refresh_config = 1;
     }
-
 }
 
 static void init_navigation_group() {

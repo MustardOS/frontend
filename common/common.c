@@ -64,29 +64,57 @@ int directory_exist(char *dirname) {
     return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);
 }
 
-void extract_archive(char *filename) {
-    // TODO: Get a suitable path for the terminal font from the active theme
-    //  and add it into the args below using the "-f" switch. Do the same
-    //  for the background image if one exists using the "-i" switch.
-    const char *args[] = {
-            (INTERNAL_PATH "extra/muterm"),
-            "-s", (char *) theme.TERMINAL.FONT_SIZE,
-            // "-f", get path of font
-            // "-i", get path of image
-            "-bg", (char *) theme.TERMINAL.BACKGROUND,
-            "-fg", (char *) theme.TERMINAL.FOREGROUND,
-            (INTERNAL_PATH "script/mux/extract.sh"),
-            filename,
-            NULL
-    };
+const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
+    size_t arg_count = 0;
+    for (const char **p = term_cmd; p && *p; p++) arg_count++;
 
-    if (config.VISUAL.BLACKFADE) {
-        fade_to_black(ui_screen);
-    } else {
-        unload_image_animation();
+    size_t total_args = 16 + arg_count + 1;
+    const char **exec = malloc(sizeof(char *) * total_args);
+    if (!exec) return NULL;
+
+    size_t i = 0;
+    exec[i++] = (INTERNAL_PATH "extra/muterm");
+    exec[i++] = "-s";
+    exec[i++] = (char *) theme.TERMINAL.FONT_SIZE;
+
+    static char font_path[MAX_BUFFER_SIZE];
+    if (load_terminal_resource("font", "ttf", font_path, sizeof(font_path))) {
+        exec[i++] = "-f";
+        exec[i++] = font_path;
     }
 
-    run_exec(args);
+    static char image_path[MAX_BUFFER_SIZE];
+    if (load_terminal_resource("image", "png", image_path, sizeof(image_path))) {
+        exec[i++] = "-i";
+        exec[i++] = image_path;
+    }
+
+    exec[i++] = "-bg";
+    exec[i++] = (char *) theme.TERMINAL.BACKGROUND;
+    exec[i++] = "-fg";
+    exec[i++] = (char *) theme.TERMINAL.FOREGROUND;
+
+    for (const char **p = term_cmd; p && *p; p++) exec[i++] = *p;
+
+    exec[i] = NULL;
+    if (term_cnt) *term_cnt = i;
+    return exec;
+}
+
+void extract_archive(char *filename) {
+    size_t exec_count;
+    const char *args[] = {(INTERNAL_PATH "script/mux/extract.sh"), filename, NULL};
+    const char **exec = build_term_exec(args, &exec_count);
+
+    if (exec) {
+        if (config.VISUAL.BLACKFADE) {
+            fade_to_black(ui_screen);
+        } else {
+            unload_image_animation();
+        }
+        run_exec(exec, exec_count);
+    }
+    free(exec);
 }
 
 unsigned long long total_file_size(const char *path) {
@@ -1272,6 +1300,21 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
     }
 }
 
+int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size) {
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+
+    const char *dimensions[] = {mux_dimension, ""};
+    const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
+
+    for (size_t i = 0; i < 2; i++) {
+        snprintf(buffer, size, "%s/%s%s/muterm.%s", theme, dimensions[i], resource, extension);
+        if (file_exist(buffer)) return 1;
+    }
+
+    return 0;
+}
+
 static void image_anim_cb(void *var, int32_t img_idx) {
     lv_img_set_src(img_obj, img_paths[img_idx]);
 }
@@ -2141,10 +2184,30 @@ char *kiosk_nope() {
     return lang.GENERIC.KIOSK_DISABLE;
 }
 
-void run_exec(const char *args[]) {
+void run_exec(const char *args[], size_t size) {
+    const char *san[size];
+
+    size_t j = 0;
+    for (size_t i = 0; i < size; ++i) {
+        if (args[i]) {
+            san[j++] = args[i];
+        }
+    }
+    san[j] = NULL;
+
+/*
+ * Debugging message to print arguments to check if nulls
+ * are being sanitised or not.  They should but you never
+ * know with C these days...
+ *
+ *  for (size_t k = 0; k < j; ++k) {
+ *      printf("arg[%zu]: %s\n", k, san[k]);
+ *  }
+*/
+
     pid_t pid = fork();
     if (pid == 0) {
-        execvp(args[0], (char *const *) args);
+        execvp(san[0], (char *const *) san);
         _exit(EXIT_FAILURE);
     } else if (pid > 0) {
         waitpid(pid, NULL, 0);
@@ -2425,11 +2488,11 @@ void update_bootlogo() {
         snprintf(bootlogo_dest, sizeof(bootlogo_dest), "%s/bootlogo.bmp", device.STORAGE.BOOT.MOUNT);
 
         const char *args[] = {"cp", bootlogo_image, bootlogo_dest, NULL};
-        run_exec(args);
+        run_exec(args, A_SIZE(args));
 
         if (strcasecmp(device.DEVICE.NAME, "rg28xx-h") == 0) {
             const char *args[] = {"convert", bootlogo_dest, "-rotate", "270", bootlogo_dest, NULL};
-            run_exec(args);
+            run_exec(args, A_SIZE(args));
         }
     }
 }

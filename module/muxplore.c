@@ -968,7 +968,8 @@ static void handle_x() {
     toast_message(lang.MUXPLORE.REFRESH_RUN, 0, 0);
     lv_obj_move_foreground(ui_pnlMessage);
 
-    run_exec((const char *[]) {INTERNAL_PATH "script/mount/union.sh", "restart", NULL});
+    const char *args[] = {(INTERNAL_PATH "script/mount/union.sh"), "restart", NULL};
+    run_exec(args, A_SIZE(args));
 
     write_text_to_file(EXPLORE_DIR, "w", CHAR, sys_dir);
     load_mux("explore");

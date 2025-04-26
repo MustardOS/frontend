@@ -461,12 +461,16 @@ static void handle_kiosk_toggle() {
         }
 
         if (file_exist(KIOSK_CONFIG)) {
-            run_exec((const char *[]) {"mv", KIOSK_CONFIG, kiosk_storage, NULL});
+            const char *args[] = {"mv", KIOSK_CONFIG, kiosk_storage, NULL};
+            run_exec(args, A_SIZE(args));
             handle_kiosk_purge();
         } else {
             if (file_exist(kiosk_storage)) {
-                run_exec((const char *[]) {"mv", kiosk_storage, KIOSK_CONFIG, NULL});
-                run_exec((const char *[]) {(INTERNAL_PATH "script/var/init/kiosk.sh"), "init", NULL});
+                const char *args_mv[] = {"mv", kiosk_storage, KIOSK_CONFIG, NULL};
+                run_exec(args_mv, A_SIZE(args_mv));
+
+                const char *args_init[] = {(INTERNAL_PATH "script/var/init/kiosk.sh"), "init", NULL};
+                run_exec(args_init, A_SIZE(args_init));
 
                 toast_message(lang.MUXLAUNCH.KIOSK.PROCESS, 1000, 1000);
                 sleep(1); /* not really needed but it's a good buffer... */

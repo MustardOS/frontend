@@ -145,10 +145,8 @@ static void save_tweak_options() {
     }
 
     if (is_modified > 0) {
-        static char tweak_script[MAX_BUFFER_SIZE];
-        snprintf(tweak_script, sizeof(tweak_script),
-                 "%s/script/mux/tweak.sh", INTERNAL_PATH);
-        run_exec((const char *[]) {tweak_script, NULL});
+        const char *args[] = {(INTERNAL_PATH "script/mux/tweak.sh"), NULL};
+        run_exec(args, A_SIZE(args));
         refresh_config = 1;
     }
 }

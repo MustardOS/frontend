@@ -43,7 +43,9 @@ static void confirm_rtc_config() {
     if (!strcmp(notation_type, notation[1])) idx_notation = 1;
 
     write_text_to_file((RUN_GLOBAL_PATH "clock/notation"), "w", INT, idx_notation);
-    run_exec((const char *[]) {"hwclock", "-w", NULL});
+
+    const char *args[] = {"hwclock", "-w", NULL};
+    run_exec(args, A_SIZE(args));
 }
 
 static void restore_clock_settings() {

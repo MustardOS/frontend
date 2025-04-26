@@ -26,7 +26,9 @@ static void check_for_cable() {
 static void set_brightness(int brightness) {
     char bright_value[8];
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
-    run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/input/bright.sh", bright_value, NULL});
+
+    const char *args[] = {(INTERNAL_PATH "device/current/input/bright.sh"), bright_value, NULL};
+    run_exec(args, A_SIZE(args));
 }
 
 static void handle_power_short(void) {

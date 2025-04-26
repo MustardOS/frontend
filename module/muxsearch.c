@@ -552,17 +552,15 @@ static void handle_confirm(void) {
         toast_message(lang.MUXSEARCH.SEARCH, 0, 0);
 
         if (element_focused == ui_lblSearchLocal_search) {
-            run_exec((const char *[]) {
-                    (INTERNAL_PATH "script/mux/find.sh"),
-                    str_trim(lv_label_get_text(ui_lblLookupValue_search)), rom_dir,
-                    NULL
-            });
+            const char *args[] = {(INTERNAL_PATH "script/mux/find.sh"),
+                                  str_trim(lv_label_get_text(ui_lblLookupValue_search)), rom_dir,
+                                  NULL};
+            run_exec(args, A_SIZE(args));
         } else {
-            run_exec((const char *[]) {
-                    (INTERNAL_PATH "script/mux/find.sh"),
-                    str_trim(lv_label_get_text(ui_lblLookupValue_search)), SD1, SD2, E_USB,
-                    NULL
-            });
+            const char *args[] = {(INTERNAL_PATH "script/mux/find.sh"),
+                                  str_trim(lv_label_get_text(ui_lblLookupValue_search)), SD1, SD2, E_USB,
+                                  NULL};
+            run_exec(args, A_SIZE(args));
         }
 
         if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);

@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
                 }
                 const char *args[] = {"find", INFO_COL_PATH, "-maxdepth", "2", "-type", "f", "-size", "0", "-delete",
                                       NULL};
-                run_exec(args);
+                run_exec(args, A_SIZE(args));
                 load_mux("launcher");
                 if (muxcollect_main(add_mode, read_line_from_file(COLLECTION_DIR, 1), last_index) == 1) {
                     safe_quit(0);
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
                 last_index_check();
                 const char *args[] = {"find", INFO_HIS_PATH, "-maxdepth", "1", "-type", "f", "-size", "0", "-delete",
                                       NULL};
-                run_exec(args);
+                run_exec(args, A_SIZE(args));
                 load_mux("launcher");
                 if (muxhistory_main(last_index) == 1) {
                     safe_quit(0);

@@ -367,8 +367,12 @@ int main(int argc, char *argv[]) {
     int pty_fd;
     pid_t child = forkpty(&pty_fd, NULL, NULL, NULL);
     if (child == 0) {
-        run_exec(cmd);
-        exit(127);
+        if (cmd) { // Surely we are running something...?!
+            size_t cmd_count = 0;
+            while (cmd[cmd_count]) cmd_count++;
+            run_exec(cmd, cmd_count + 1);
+            exit(127);
+        }
     }
 
     fcntl(pty_fd, F_SETFL, fcntl(pty_fd, F_GETFL) | O_NONBLOCK);

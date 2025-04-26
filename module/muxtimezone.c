@@ -94,7 +94,9 @@ static void handle_a() {
     char zone_group[MAX_BUFFER_SIZE];
     snprintf(zone_group, sizeof(zone_group), "/usr/share/zoneinfo/%s",
              lv_label_get_text(lv_group_get_focused(ui_group)));
-    run_exec((const char *[]) {"ln", "-sf", zone_group, "/etc/localtime", NULL});
+
+    const char *args[] = {"ln", "-sf", zone_group, "/etc/localtime", NULL};
+    run_exec(args, A_SIZE(args));
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
     

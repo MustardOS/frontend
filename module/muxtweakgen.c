@@ -154,7 +154,9 @@ static void save_tweak_options() {
 
         char bright_value[8];
         snprintf(bright_value, sizeof(bright_value), "%d", idx_brightness + 1);
-        run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/input/bright.sh", bright_value, NULL});
+
+        const char *args[] = {(INTERNAL_PATH "device/current/input/bright.sh"), bright_value, NULL};
+        run_exec(args, A_SIZE(args));
     }
 
     if (lv_dropdown_get_selected(ui_droVolume_tweakgen) != volume_original) {
@@ -163,11 +165,14 @@ static void save_tweak_options() {
 
         char volume_value[8];
         snprintf(volume_value, sizeof(volume_value), "%d", idx_volume);
-        run_exec((const char *[]) {(char *) INTERNAL_PATH "device/current/input/audio.sh", volume_value, NULL});
+
+        const char *args[] = {(INTERNAL_PATH "device/current/input/audio.sh"), volume_value, NULL};
+        run_exec(args, A_SIZE(args));
     }
 
     if (is_modified > 0) {
-        run_exec((const char *[]) {(char *) INTERNAL_PATH "script/mux/tweak.sh", NULL});
+        const char *args[] = {(INTERNAL_PATH "script/mux/tweak.sh"), NULL};
+        run_exec(args, A_SIZE(args));
         refresh_config = 1;
     }
 }

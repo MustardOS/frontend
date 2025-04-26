@@ -4,6 +4,7 @@
 #include "mini/mini.h"
 #include "options.h"
 
+#define A_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define BIT(n) (UINT64_C(1) << (n))
 #define TS(str) translate_specific(str)
 
@@ -65,6 +66,8 @@ struct nav_flag {
 int file_exist(char *filename);
 
 int directory_exist(char *dirname);
+
+const char **build_term_exec(const char **term_cmd, size_t *term_cnt);
 
 void extract_archive(char *filename);
 
@@ -170,6 +173,8 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image);
 
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image);
 
+int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size);
+
 int load_image_specifics(const char *theme_base, const char *mux_dimension, const char *program,
                          const char *image_type, const char *image_extension, char *image_path, size_t path_size);
 
@@ -254,7 +259,7 @@ int get_grid_row_item_count(int current_item_index);
 
 char *kiosk_nope();
 
-void run_exec(const char *args[]);
+void run_exec(const char *args[], size_t size);
 
 char *get_directory_core(char *rom_dir, size_t line_number);
 
