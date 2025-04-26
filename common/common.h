@@ -66,6 +66,8 @@ int file_exist(char *filename);
 
 int directory_exist(char *dirname);
 
+void extract_archive(char *filename);
+
 unsigned long long total_file_size(const char *path);
 
 int str_compare(const void *a, const void *b);

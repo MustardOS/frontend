@@ -282,41 +282,51 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    int term_width = 0, term_height = 0, font_size = 0;
+    int term_width = 0;
+    int term_height = 0;
+    int font_size = 0;
+
     const char *font_path = NULL;
     const char *bg_path = NULL;
-    const char *cmd = NULL;
+    const char **cmd = NULL;
 
     if (argc == 2 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))) print_help(argv[0]);
 
     for (int i = 1; i < argc; i++) {
         const char *arg = argv[i];
 
-        if ((strcmp(arg, "-w") == 0 || strcmp(arg, "--width") == 0) && i + 1 < argc)
-            term_width = safe_atoi(argv[++i]);
-        else if ((strcmp(arg, "-h") == 0 || strcmp(arg, "--height") == 0) && i + 1 < argc)
-            term_height = safe_atoi(argv[++i]);
-        else if ((strcmp(arg, "-s") == 0 || strcmp(arg, "--size") == 0) && i + 1 < argc)
-            font_size = safe_atoi(argv[++i]);
-        else if ((strcmp(arg, "-f") == 0 || strcmp(arg, "--font") == 0) && i + 1 < argc)
-            font_path = argv[++i];
-        else if ((strcmp(arg, "-i") == 0 || strcmp(arg, "--image") == 0) && i + 1 < argc)
-            bg_path = argv[++i];
-        else if ((strcmp(arg, "-bg") == 0 || strcmp(arg, "--bgcolour") == 0) && i + 1 < argc) {
-            if (!parse_hex_colour(argv[++i], &solid_bg)) return 1;
+        if ((strcmp(arg, "-w") == 0 || strcmp(arg, "--width") == 0) && i + 1 < argc) {
+            term_width = safe_atoi(str_trim(argv[++i]));
+        } else if ((strcmp(arg, "-h") == 0 || strcmp(arg, "--height") == 0) && i + 1 < argc) {
+            term_height = safe_atoi(str_trim(argv[++i]));
+        } else if ((strcmp(arg, "-s") == 0 || strcmp(arg, "--size") == 0) && i + 1 < argc) {
+            font_size = safe_atoi(str_trim(argv[++i]));
+        } else if ((strcmp(arg, "-f") == 0 || strcmp(arg, "--font") == 0) && i + 1 < argc) {
+            font_path = str_trim(argv[++i]);
+        } else if ((strcmp(arg, "-i") == 0 || strcmp(arg, "--image") == 0) && i + 1 < argc) {
+            bg_path = str_trim(argv[++i]);
+        } else if ((strcmp(arg, "-bg") == 0 || strcmp(arg, "--bgcolour") == 0) && i + 1 < argc) {
+            if (!parse_hex_colour(str_trim(argv[++i]), &solid_bg)) return 1;
             use_solid_bg = 1;
         } else if ((strcmp(arg, "-fg") == 0 || strcmp(arg, "--fgcolour") == 0) && i + 1 < argc) {
-            if (!parse_hex_colour(argv[++i], &solid_fg)) return 1;
+            if (!parse_hex_colour(str_trim(argv[++i]), &solid_fg)) return 1;
             use_solid_fg = 1;
         } else if (arg[0] != '-') {
-            cmd = arg;
+            cmd = (const char **) &argv[i];
+            break;
         }
     }
 
     if (term_width == 0) term_width = device.SCREEN.WIDTH;
     if (term_height == 0) term_height = device.SCREEN.HEIGHT;
 
-    if (!font_size) font_size = 16;
+    if (!font_size) {
+        if (strcasecmp(device.DEVICE.NAME, "tui-brick") == 0) {
+            font_size = 28;
+        } else {
+            font_size = 16;
+        }
+    }
     if (!font_path) font_path = "/opt/muos/share/font/muterm.ttf";
 
     if (!cmd) print_help(argv[0]);
@@ -357,7 +367,7 @@ int main(int argc, char *argv[]) {
     int pty_fd;
     pid_t child = forkpty(&pty_fd, NULL, NULL, NULL);
     if (child == 0) {
-        execl("/bin/sh", "sh", "-c", cmd, NULL);
+        run_exec(cmd);
         exit(127);
     }
 

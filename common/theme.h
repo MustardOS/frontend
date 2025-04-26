@@ -407,6 +407,7 @@ struct theme_config {
     } MISC;
 
     struct {
+        char FONT_SIZE[MAX_BUFFER_SIZE];
         char FOREGROUND[MAX_BUFFER_SIZE];
         char BACKGROUND[MAX_BUFFER_SIZE];
     } TERMINAL;

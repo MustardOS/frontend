@@ -177,15 +177,19 @@ static void handle_confirm() {
     snprintf(task_script, sizeof(task_script), "%s/%s/%s.sh",
              device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH, items[current_item_index].name);
 
+    // TODO: Get a suitable path for the terminal font from the active theme
+    //  and add it into the args below using the "-f" switch. Do the same
+    //  for the background image if one exists using the "-i" switch.
     const char *args[] = {
-            (INTERNAL_PATH "bin/fbpad"),
-            "-bg", theme.TERMINAL.BACKGROUND,
-            "-fg", theme.TERMINAL.FOREGROUND,
+            (INTERNAL_PATH "extra/muterm"),
+            "-s", (char *) theme.TERMINAL.FONT_SIZE,
+            // "-f", get path of font
+            // "-i", get path of image
+            "-bg", (char *) theme.TERMINAL.BACKGROUND,
+            "-fg", (char *) theme.TERMINAL.FOREGROUND,
             task_script,
             NULL
     };
-
-    setenv("TERM", "xterm-256color", 1);
 
     if (config.VISUAL.BLACKFADE) {
         fade_to_black(ui_screen);

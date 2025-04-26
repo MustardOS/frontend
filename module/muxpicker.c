@@ -218,15 +218,19 @@ static void handle_confirm() {
                      relative_path, selected_item);
         }
 
+        // TODO: Get a suitable path for the terminal font from the active theme
+        //  and add it into the args below using the "-f" switch. Do the same
+        //  for the background image if one exists using the "-i" switch.
         const char *args[] = {
-                (INTERNAL_PATH "bin/fbpad"),
+                (INTERNAL_PATH "extra/muterm"),
+                "-s", (char *) theme.TERMINAL.FONT_SIZE,
+                // "-f", get path of font
+                // "-i", get path of image
                 "-bg", (char *) theme.TERMINAL.BACKGROUND,
                 "-fg", (char *) theme.TERMINAL.FOREGROUND,
                 picker_script, "install", relative_zip_path,
                 NULL
         };
-
-        setenv("TERM", "xterm-256color", 1);
 
         if (config.VISUAL.BLACKFADE) {
             fade_to_black(ui_screen);
@@ -271,15 +275,19 @@ static void handle_confirm_force() {
                  relative_path, selected_item);
     }
 
+    // TODO: Get a suitable path for the terminal font from the active theme
+    //  and add it into the args below using the "-f" switch. Do the same
+    //  for the background image if one exists using the "-i" switch.
     const char *args[] = {
-            (INTERNAL_PATH "bin/fbpad"),
+            (INTERNAL_PATH "extra/muterm"),
+            "-s", (char *) theme.TERMINAL.FONT_SIZE,
+            // "-f", get path of font
+            // "-i", get path of image
             "-bg", (char *) theme.TERMINAL.BACKGROUND,
             "-fg", (char *) theme.TERMINAL.FOREGROUND,
             picker_script, "install", relative_zip_path,
             NULL
     };
-
-    setenv("TERM", "xterm-256color", 1);
 
     if (config.VISUAL.BLACKFADE) {
         fade_to_black(ui_screen);
@@ -330,15 +338,19 @@ static void handle_save() {
     snprintf(picker_script, sizeof(picker_script),
              "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
 
+    // TODO: Get a suitable path for the terminal font from the active theme
+    //  and add it into the args below using the "-f" switch. Do the same
+    //  for the background image if one exists using the "-i" switch.
     const char *args[] = {
-            (INTERNAL_PATH "bin/fbpad"),
-            "-bg", theme.TERMINAL.BACKGROUND,
-            "-fg", theme.TERMINAL.FOREGROUND,
+            (INTERNAL_PATH "extra/muterm"),
+            "-s", (char *) theme.TERMINAL.FONT_SIZE,
+            // "-f", get path of font
+            // "-i", get path of image
+            "-bg", (char *) theme.TERMINAL.BACKGROUND,
+            "-fg", (char *) theme.TERMINAL.FOREGROUND,
             picker_script, "save", "-",
             NULL
     };
-
-    setenv("TERM", "xterm-256color", 1);
 
     if (config.VISUAL.BLACKFADE) {
         fade_to_black(ui_screen);

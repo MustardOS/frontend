@@ -381,6 +381,8 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->MISC.NAVIGATION_TYPE = 0;
     theme->MISC.ANTIALIASING = 1;
 
+    strncpy(theme->TERMINAL.FONT_SIZE, "16", MAX_BUFFER_SIZE - 1);
+    theme->TERMINAL.FONT_SIZE[MAX_BUFFER_SIZE - 1] = '\0';
     strncpy(theme->TERMINAL.FOREGROUND, "FFFFFF", MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
     strncpy(theme->TERMINAL.BACKGROUND, "000000", MAX_BUFFER_SIZE - 1);
@@ -744,6 +746,8 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", theme->MISC.NAVIGATION_TYPE);
     theme->MISC.ANTIALIASING = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->MISC.ANTIALIASING);
 
+    strncpy(theme->TERMINAL.FONT_SIZE, get_ini_string(muos_theme, "terminal", "FONT_SIZE", theme->TERMINAL.FONT_SIZE), MAX_BUFFER_SIZE - 1);
+    theme->TERMINAL.FONT_SIZE[MAX_BUFFER_SIZE - 1] = '\0';
     strncpy(theme->TERMINAL.FOREGROUND, get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND), MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
     strncpy(theme->TERMINAL.BACKGROUND, get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->TERMINAL.BACKGROUND), MAX_BUFFER_SIZE - 1);
@@ -772,7 +776,7 @@ int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size){
 void scale_theme(struct mux_device *device) {
     int16_t target_width = device->MUX.WIDTH;
     int16_t target_height = device->MUX.HEIGHT;
-    
+
     struct {
         int16_t width;
         int16_t height;
@@ -806,7 +810,7 @@ void scale_theme(struct mux_device *device) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width, dimensions[i].height);
         if (!directory_exist(theme_device_folder)) continue;
-        
+
         device->MUX.WIDTH = dimensions[i].width;
         device->MUX.HEIGHT = dimensions[i].height;
 
@@ -831,7 +835,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
         if (read_int_from_file(RUN_GLOBAL_PATH "boot/device_mode", 1) &&
             config->SETTINGS.HDMI.THEME_RESOLUTION > 0) {
-            snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, 
+            snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME,
                     config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH, config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT);
             if (directory_exist(theme_device_folder)) {
                 device->MUX.WIDTH = config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH;

@@ -382,7 +382,7 @@ static void save_options() {
             char theme_alt_archive[MAX_BUFFER_SIZE];
             snprintf(theme_alt_archive, sizeof(theme_alt_archive), "%s/alternate/%s.muxzip", STORAGE_THEME, theme_alt);
             if (file_exist(theme_alt_archive)) {
-                extract_file(theme_alt_archive);
+                extract_archive(theme_alt_archive);
                 update_bootlogo();
             }
 

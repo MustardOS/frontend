@@ -59,21 +59,26 @@ int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
 }
 
-void extract_file(char *filename) {
-    static char extract_script[MAX_BUFFER_SIZE];
-    snprintf(extract_script, sizeof(extract_script),
-             "%s/script/mux/extract.sh", INTERNAL_PATH);
+int directory_exist(char *dirname) {
+    struct stat stats;
+    return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);
+}
 
+void extract_archive(char *filename) {
+    // TODO: Get a suitable path for the terminal font from the active theme
+    //  and add it into the args below using the "-f" switch. Do the same
+    //  for the background image if one exists using the "-i" switch.
     const char *args[] = {
-            (INTERNAL_PATH "bin/fbpad"),
+            (INTERNAL_PATH "extra/muterm"),
+            "-s", (char *) theme.TERMINAL.FONT_SIZE,
+            // "-f", get path of font
+            // "-i", get path of image
             "-bg", (char *) theme.TERMINAL.BACKGROUND,
             "-fg", (char *) theme.TERMINAL.FOREGROUND,
-            extract_script,
+            (INTERNAL_PATH "script/mux/extract.sh"),
             filename,
             NULL
     };
-
-    setenv("TERM", "xterm-256color", 1);
 
     if (config.VISUAL.BLACKFADE) {
         fade_to_black(ui_screen);
@@ -82,11 +87,6 @@ void extract_file(char *filename) {
     }
 
     run_exec(args);
-}
-
-int directory_exist(char *dirname) {
-    struct stat stats;
-    return stat(dirname, &stats) == 0 && S_ISDIR(stats.st_mode);
 }
 
 unsigned long long total_file_size(const char *path) {

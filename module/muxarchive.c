@@ -212,7 +212,7 @@ static void handle_a() {
     if (ui_count > 0) {
         play_sound("confirm", nav_sound, 0, 1);
 
-        extract_file(items[current_item_index].name);
+        extract_archive(items[current_item_index].name);
 
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
