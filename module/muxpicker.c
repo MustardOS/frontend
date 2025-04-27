@@ -220,6 +220,8 @@ static void handle_confirm() {
                      relative_path, selected_item);
         }
 
+        if (!strcasecmp(picker_type, "theme")) delete_files_of_type(INTERNAL_THEME, "/muterm.ttf", NULL, 1);
+
         size_t exec_count;
         const char *args[] = {picker_script, "install", relative_zip_path, NULL};
         const char **exec = build_term_exec(args, &exec_count);
