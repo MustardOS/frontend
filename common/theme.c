@@ -833,17 +833,16 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (!config->BOOT.FACTORY_RESET) {
         char theme_device_folder[MAX_BUFFER_SIZE];
 
-        if (read_int_from_file(RUN_GLOBAL_PATH "boot/device_mode", 1) &&
-            config->SETTINGS.HDMI.THEME_RESOLUTION > 0) {
+        if (config->SETTINGS.GENERAL.THEME_RESOLUTION > 0) {
             snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME,
-                    config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH, config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT);
+                    config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH, config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT);
             if (directory_exist(theme_device_folder)) {
-                device->MUX.WIDTH = config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH;
-                device->MUX.HEIGHT = config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT;
+                device->MUX.WIDTH = config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH;
+                device->MUX.HEIGHT = config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT;
                 get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-                float scale_width = (float)device->SCREEN.EXTERNAL.WIDTH / device->MUX.WIDTH;
-                float scale_height = (float)device->SCREEN.EXTERNAL.HEIGHT / device->MUX.HEIGHT;
+                float scale_width = (float)device->SCREEN.WIDTH / device->MUX.WIDTH;
+                float scale_height = (float)device->SCREEN.HEIGHT / device->MUX.HEIGHT;
                 device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width : scale_height; // Ensure neither dimension exceeds target
                 printf("Calculated scale factor: %.2f\n", device->SCREEN.ZOOM);
             }

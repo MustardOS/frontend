@@ -64,40 +64,40 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.GENERAL.VOLUME, "settings/general/volume", 50)
     CFG_STR_FIELD(config->SETTINGS.GENERAL.STARTUP, "settings/general/startup", "launcher")
     CFG_STR_FIELD(config->SETTINGS.GENERAL.LANGUAGE, "settings/general/language", "English")
+    CFG_INT_FIELD(config->SETTINGS.GENERAL.THEME_RESOLUTION, "settings/general/theme_resolution", 0)
+    switch (config->SETTINGS.GENERAL.THEME_RESOLUTION) {
+        case 1:
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 640;
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 480;
+            break;
+        case 2:
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 720;
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 480;
+            break;
+        case 3:
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 720;
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 576;
+            break;
+        case 4:
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 720;
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 720;
+            break;
+        case 5:
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 1024;
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 768;
+            break;
+        case 6:
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH = 1280;
+            config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT = 720;
+            break;
+    }
 
     CFG_INT_FIELD(config->SETTINGS.HDMI.RESOLUTION, "settings/hdmi/resolution", 0)
-    CFG_INT_FIELD(config->SETTINGS.HDMI.THEME_RESOLUTION, "settings/hdmi/theme_resolution", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.SPACE, "settings/hdmi/space", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.DEPTH, "settings/hdmi/depth", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.RANGE, "settings/hdmi/range", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.SCAN, "settings/hdmi/scan", 0)
     CFG_INT_FIELD(config->SETTINGS.HDMI.AUDIO, "settings/hdmi/audio", 0)
-    switch (config->SETTINGS.HDMI.THEME_RESOLUTION) {
-        case 1:
-            config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH = 640;
-            config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 480;
-            break;
-        case 2:
-            config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH = 720;
-            config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 480;
-            break;
-        case 3:
-            config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH = 720;
-            config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 576;
-            break;
-        case 4:
-            config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH = 720;
-            config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 720;
-            break;
-        case 5:
-            config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH = 1024;
-            config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 768;
-            break;
-        case 6:
-            config->SETTINGS.HDMI.THEME_RESOLUTION_WIDTH = 1280;
-            config->SETTINGS.HDMI.THEME_RESOLUTION_HEIGHT = 720;
-            break;
-    }
 
     CFG_INT_FIELD(config->SETTINGS.POWER.LOW_BATTERY, "settings/power/low_battery", 0)
     CFG_INT_FIELD(config->SETTINGS.POWER.SHUTDOWN, "settings/power/shutdown", 0)

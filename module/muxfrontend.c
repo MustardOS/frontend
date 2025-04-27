@@ -131,6 +131,12 @@ int main(int argc, char *argv[]) {
     init_display();
 
     while (1) {
+        char theme_device_folder[MAX_BUFFER_SIZE];
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, device.MUX.WIDTH, device.MUX.HEIGHT);
+        if (refresh_resolution || !directory_exist(theme_device_folder)) {
+            safe_quit(0);
+            break;
+        }
         // Process content association and governor actions
         process_content_action(MUOS_ASS_LOAD, "assign");
         process_content_action(MUOS_GOV_LOAD, "governor");

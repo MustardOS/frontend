@@ -147,6 +147,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.CATALOGUE, "Catalogue Sets");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "Theme Picker");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_RESOLUTION, "Theme Resolution");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SCREEN, "Screen");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_ALTERNATE, "Alternative Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SPLASH, "Content Launch Splash");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FADE, "Black Fade Animation");
@@ -176,6 +178,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_RESOLUTION, "Allows for testing different theme resolutions");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SPLASH, "Toggle the splash image on content launching");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FADE, "Toggle the fade to black animation on content launching");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
@@ -194,8 +197,6 @@ void load_lang(struct mux_lang *lang) {
     // muxhdmi
     SPECIFIC_FIELD(lang->MUXHDMI.TITLE, "HDMI SETTINGS");
     SPECIFIC_FIELD(lang->MUXHDMI.RESOLUTION, "Resolution");
-    SPECIFIC_FIELD(lang->MUXHDMI.THEME_RESOLUTION, "Theme Resolution");
-    SPECIFIC_FIELD(lang->MUXHDMI.SCREEN, "Screen");
     SPECIFIC_FIELD(lang->MUXHDMI.COLOUR.DEPTH, "Colour Depth");
     SPECIFIC_FIELD(lang->MUXHDMI.COLOUR.SPACE, "Colour Space");
     SPECIFIC_FIELD(lang->MUXHDMI.COLOUR.RANGE.TITLE, "Colour Range");
@@ -209,7 +210,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXHDMI.SCAN_SCALE.UNDER, "Under");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.AUDIO_OUTPUT, "Switch between device speaker or external monitor audio via HDMI connection");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.RESOLUTION, "Select the resolution for HDMI output, such as 720p or 1080p");
-    SPECIFIC_FIELD(lang->MUXHDMI.HELP.THEME_RESOLUTION, "Allows for testing different theme resolutions");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.SCAN_SCALE, "Switch between overscan or underscan to fit the display screen");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.COLOUR.DEPTH, "Set the color depth, such as 8-bit or 10-bit");
     SPECIFIC_FIELD(lang->MUXHDMI.HELP.COLOUR.RANGE, "Set the color range of RGB colour space");

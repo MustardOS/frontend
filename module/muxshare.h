@@ -10,6 +10,7 @@ extern size_t item_count;
 extern content_item *items;
 
 extern int refresh_config;
+extern int refresh_resolution;
 
 extern int bar_header;
 extern int bar_footer;
