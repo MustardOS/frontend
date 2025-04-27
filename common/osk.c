@@ -1,6 +1,8 @@
 #include "../lvgl/lvgl.h"
 #include "common.h"
+#include "device.h"
 #include "options.h"
+#include "theme.h"
 #include "osk.h"
 
 int key_show;
