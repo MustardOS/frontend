@@ -212,9 +212,9 @@ static void handle_a() {
     if (ui_count > 0) {
         play_sound("confirm", nav_sound, 0, 1);
 
-        extract_archive(items[current_item_index].name);
-
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
+
+        extract_archive(items[current_item_index].name);
 
         load_mux("archive");
 
@@ -314,7 +314,6 @@ static void ui_refresh_task() {
 }
 
 int muxarchive_main() {
-
     init_module("muxarchive");
 
     init_theme(1, 1);

@@ -173,6 +173,8 @@ static void handle_confirm() {
 
     play_sound("confirm", nav_sound, 0, 1);
 
+    write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
+
     static char task_script[MAX_BUFFER_SIZE];
     snprintf(task_script, sizeof(task_script), "%s/%s/%s.sh",
              device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH, items[current_item_index].name);
@@ -190,8 +192,6 @@ static void handle_confirm() {
         run_exec(exec, exec_count);
     }
     free(exec);
-
-    write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
 
     load_mux("task");
 

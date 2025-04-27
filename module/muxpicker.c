@@ -179,6 +179,8 @@ static void handle_confirm() {
 
     play_sound("confirm", nav_sound, 0, 1);
 
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
+
     if (items[current_item_index].content_type == FOLDER) {
         char n_dir[MAX_BUFFER_SIZE];
         snprintf(n_dir, sizeof(n_dir), "%s/%s",
@@ -231,8 +233,6 @@ static void handle_confirm() {
             run_exec(exec, exec_count);
         }
         free(exec);
-
-        write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
     }
 
     load_mux("picker");
@@ -249,6 +249,8 @@ static void handle_confirm_force() {
     }
 
     play_sound("confirm", nav_sound, 0, 1);
+
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
     static char picker_script[MAX_BUFFER_SIZE];
     snprintf(picker_script, sizeof(picker_script),
@@ -280,8 +282,6 @@ static void handle_confirm_force() {
         run_exec(exec, exec_count);
     }
     free(exec);
-
-    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
     load_mux("picker");
 
@@ -318,6 +318,8 @@ static void handle_save() {
 
     play_sound("confirm", nav_sound, 0, 1);
 
+    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
+
     static char picker_script[MAX_BUFFER_SIZE];
     snprintf(picker_script, sizeof(picker_script),
              "%s/script/package/%s.sh", INTERNAL_PATH, get_last_subdir(picker_type, '/', 1));
@@ -336,7 +338,6 @@ static void handle_save() {
     }
     free(exec);
 
-    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
     load_mux("picker");
 
     close_input();
