@@ -252,7 +252,9 @@ static void gen_label(char *item_glyph, char *item_text, char *item_data, char *
     lv_obj_t *ui_lblResultItemGlyph = lv_img_create(ui_pnlResult);
     apply_theme_list_glyph(&theme, ui_lblResultItemGlyph, mux_module, item_glyph);
 
-    apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
+    if (strcasecmp(item_data, "folder") != 0) {
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
+    }
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblResultItem, item_text);
 
     lv_obj_set_user_data(ui_lblResultItem, item_data);
