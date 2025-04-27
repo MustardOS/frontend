@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
             int index = (int) (1 + (random() % (message_count - 1)));
             char combined[MAX_BUFFER_SIZE * 2];
 
-            snprintf(combined, sizeof(combined), "\n%s\n\n%s", messages[0], messages[index]);
+            snprintf(combined, sizeof(combined), "%s\n\n%s", messages[0], messages[index]);
             lv_label_set_text(ui_lblMessage, combined);
 
             if (file_exist("/tmp/msg_progress")) {
