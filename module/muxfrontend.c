@@ -3,6 +3,7 @@
 #include <limits.h>
 #include "../common/common.h"
 #include "../common/init.h"
+#include "../common/log.h"
 #include "../common/ui_common.h"
 #include "../common/osk.h"
 #include "../common/input/list_nav.h"
@@ -116,7 +117,7 @@ static int set_splash_image_path(char *splash_image_name) {
 }
 
 static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
-    printf("muxfrontend exec_mux goback: %s  module: %s\n", goback, module);
+    LOG_DEBUG(mux_module, "EXEC_MUX | GOBACK: %s | MODULE: %s", goback, module)
     load_mux(goback);
     func_to_exec();
     set_previous_module(module);
