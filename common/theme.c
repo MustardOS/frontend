@@ -108,6 +108,7 @@ void init_theme_config(struct theme_config *theme, struct mux_device *device) {
     theme->HELP.RADIUS = 3;
 
     theme->NAV.ALIGNMENT = 255;
+    theme->NAV.SPACING = 5;
 
     theme->NAV.A.GLYPH = 0xF7E318;
     theme->NAV.A.GLYPH_ALPHA = 255;
@@ -475,6 +476,7 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->HELP.RADIUS = get_ini_int(muos_theme, "help", "HELP_RADIUS", theme->HELP.RADIUS);
 
     theme->NAV.ALIGNMENT = get_ini_int(muos_theme, "navigation", "ALIGNMENT", theme->NAV.ALIGNMENT);
+    theme->NAV.SPACING = get_ini_int(muos_theme, "navigation", "SPACING", theme->NAV.SPACING);
 
     theme->NAV.A.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_A_GLYPH", theme->NAV.A.GLYPH);
     theme->NAV.A.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_ALPHA", theme->NAV.A.GLYPH_ALPHA);

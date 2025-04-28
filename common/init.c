@@ -163,22 +163,22 @@ void init_input(mux_input_options *opts, int def_combo) {
                 .press_handler = ui_common_handle_bright,
                 .hold_handler = ui_common_handle_bright
         };
-        opts->combo[0] = (mux_input_combo) {
+        opts->combo[2] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_UP),
                 .press_handler = ui_common_handle_bright,
                 .hold_handler = ui_common_handle_bright
         };
-        opts->combo[1] = (mux_input_combo) {
+        opts->combo[3] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_DOWN),
                 .press_handler = ui_common_handle_bright,
                 .hold_handler = ui_common_handle_bright
         };
-        opts->combo[2] = (mux_input_combo) {
+        opts->combo[4] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_VOL_UP),
                 .press_handler = ui_common_handle_vol,
                 .hold_handler = ui_common_handle_vol
         };
-        opts->combo[3] = (mux_input_combo) {
+        opts->combo[5] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_VOL_DOWN),
                 .press_handler = ui_common_handle_vol,
                 .hold_handler = ui_common_handle_vol
