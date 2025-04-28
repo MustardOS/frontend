@@ -9,6 +9,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `mufbset`: Customised framebuffer resolution switcher
 * `muhotkey`: Global Hotkey System
 * `muplay`: Internal Navigation Sound Player
+* `muterm`: Custom Terminal Emulator
 * `muxapp`: Application List
 * `muxarchive`: Archive Manager
 * `muxassign`: Assignable System/Core for Content
@@ -18,6 +19,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxconnect`: Connectivity Menu
 * `muxcredits`: Supporter Credits Screen
 * `muxcustom`: Customisation Menu
+* `muxfrontend`: Main Frontend Specific Runner
 * `muxgov`: System Governor Selector
 * `muxhdmi`: HDMI Configuration
 * `muxhistory`: Content History Menu
@@ -38,6 +40,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxpower`: Power Settings
 * `muxrtc`: Date and Time
 * `muxsearch`: Content Search
+* `muxshare`: Shared Frontend Variables
 * `muxsnapshot`: Save Snapshot Manager (_Work In Progress_)
 * `muxspace`: Disk Usage Information
 * `muxsplash`: Simple PNG Based Splash Screen
