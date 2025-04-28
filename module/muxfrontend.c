@@ -185,8 +185,8 @@ int main(int argc, char *argv[]) {
                     add_mode = 1;
                     last_index = 0;
                 }
-                const char *args[] = {"find", INFO_COL_PATH, "-maxdepth", "2", "-type", "f", "-size", "0", "-delete",
-                                      NULL};
+                const char *args[] = {"find", (const char *) INFO_COL_PATH, "-maxdepth", "2", "-type", "f",
+                                      "-size", "0", "-delete", NULL};
                 run_exec(args, A_SIZE(args));
                 load_mux("launcher");
                 if (muxcollect_main(add_mode, read_line_from_file(COLLECTION_DIR, 1), last_index) == 1) {
@@ -195,8 +195,8 @@ int main(int argc, char *argv[]) {
                 }
             } else if (strcmp(action, "history") == 0) {
                 last_index_check();
-                const char *args[] = {"find", INFO_HIS_PATH, "-maxdepth", "1", "-type", "f", "-size", "0", "-delete",
-                                      NULL};
+                const char *args[] = {"find", (const char *) INFO_HIS_PATH, "-maxdepth", "1", "-type", "f",
+                                      "-size", "0", "-delete", NULL};
                 run_exec(args, A_SIZE(args));
                 load_mux("launcher");
                 if (muxhistory_main(last_index) == 1) {
