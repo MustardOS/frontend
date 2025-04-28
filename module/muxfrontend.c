@@ -131,8 +131,10 @@ int main(int argc, char *argv[]) {
     init_display();
 
     while (1) {
+        char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
         char theme_device_folder[MAX_BUFFER_SIZE];
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, device.MUX.WIDTH, device.MUX.HEIGHT);
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d",
+                 theme_location, device.MUX.WIDTH, device.MUX.HEIGHT);
         if (refresh_resolution || !directory_exist(theme_device_folder)) {
             safe_quit(0);
             break;
