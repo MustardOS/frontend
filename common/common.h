@@ -15,6 +15,7 @@ extern int nav_sound;
 extern int progress_onscreen;
 extern struct mux_config config;
 extern char mux_module[MAX_BUFFER_SIZE];
+extern char current_wall[MAX_BUFFER_SIZE];
 
 struct ImageSettings {
     char *image_path;

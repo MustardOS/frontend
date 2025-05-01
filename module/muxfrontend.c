@@ -71,6 +71,7 @@ static void cleanup_screen() {
     nav_sound = 0;
     ui_count = 0;
     grid_mode_enabled = 0;
+    snprintf(current_wall, sizeof(current_wall), "");
 }
 
 static void process_content_action(char *action, char *module) {

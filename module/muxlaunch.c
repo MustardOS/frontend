@@ -565,8 +565,6 @@ int muxlaunch_main() {
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
-    load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
-
     init_fonts();
     init_navigation_group();
     init_navigation_sound(&nav_sound, mux_module);
@@ -578,6 +576,8 @@ int muxlaunch_main() {
         remove("/tmp/hdmi_out");
         handle_b();
     }
+
+    adjust_wallpaper_element(ui_group, 0, GENERAL);
 
     init_timer(ui_refresh_task, NULL);
 
