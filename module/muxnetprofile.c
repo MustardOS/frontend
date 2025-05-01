@@ -289,7 +289,9 @@ static void handle_confirm(void) {
 
     play_sound("confirm", nav_sound, 0, 1);
     load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
-
+    
+    refresh_config = 1;
+    
     close_input();
     mux_input_stop();
 }
