@@ -471,5 +471,7 @@ int muxnetprofile_main() {
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
 
+    free_items(&items, &item_count);
+
     return 0;
 }
