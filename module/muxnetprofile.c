@@ -287,7 +287,9 @@ static void handle_confirm(void) {
 
     play_sound(SND_CONFIRM, nav_sound, 0);
     load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
-
+    
+    refresh_config = 1;
+    
     close_input();
     mux_input_stop();
 }
@@ -464,6 +466,8 @@ int muxnetprofile_main() {
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     mux_input_task(&input_opts);
+
+    free_items(&items, &item_count);
 
     return 0;
 }
