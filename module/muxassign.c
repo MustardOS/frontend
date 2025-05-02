@@ -14,7 +14,8 @@
 #include "../common/json/json.h"
 #include "../common/input/list_nav.h"
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
@@ -258,40 +259,38 @@ static void create_core_items(const char *target) {
     free(core_headers);
 }
 
-static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
+static void list_nav_move(int steps, int direction) {
+    if (ui_count <= 0) return;
+    play_sound(SND_NAVIGATE, nav_sound, 0);
+
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_value, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
+
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     set_label_long_mode(&theme, lv_group_get_focused(ui_group),
                         lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void handle_a() {
@@ -303,7 +302,7 @@ static void handle_a() {
     } else {
         LOG_INFO(mux_module, "Single Core Assignment Triggered")
 
-        play_sound("confirm", nav_sound, 0, 1);
+        play_sound(SND_CONFIRM, nav_sound, 0);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
@@ -333,14 +332,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 0, 1);
+    play_sound(SND_BACK, nav_sound, 0);
     if (!strcasecmp(rom_system, "none")) {
         FILE *file = fopen(MUOS_SYS_LOAD, "w");
         fprintf(file, "%s", "");
@@ -361,7 +360,7 @@ static void handle_x() {
     if (strcasecmp(rom_system, "none") != 0) {
         LOG_INFO(mux_module, "Directory Core Assignment Triggered")
 
-        play_sound("confirm", nav_sound, 0, 1);
+        play_sound(SND_CONFIRM, nav_sound, 0);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
@@ -397,7 +396,7 @@ static void handle_y() {
     if (strcasecmp(rom_system, "none") != 0) {
         LOG_INFO(mux_module, "Parent Core Assignment Triggered")
 
-        play_sound("confirm", nav_sound, 0, 1);
+        play_sound(SND_CONFIRM, nav_sound, 0);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
@@ -431,7 +430,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         show_help();
     }
 }
@@ -522,9 +521,9 @@ static void ui_refresh_task() {
 }
 
 int muxassign_main(int auto_assign, char *name, char *dir, char *sys) {
-    snprintf(rom_name, sizeof(rom_name), name);
-    snprintf(rom_dir, sizeof(rom_name), dir);
-    snprintf(rom_system, sizeof(rom_name), sys);
+    snprintf(rom_name, sizeof(rom_name), "%s", name);
+    snprintf(rom_dir, sizeof(rom_name), "%s", dir);
+    snprintf(rom_system, sizeof(rom_name), "%s", sys);
 
     init_module("muxassign");
 
@@ -548,9 +547,7 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
-
     init_fonts();
-    init_navigation_sound(&nav_sound, mux_module);
 
     if (!strcasecmp(rom_system, "none")) {
         create_system_items();

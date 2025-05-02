@@ -434,8 +434,8 @@ void apply_theme_list_value(struct theme_config *lv_theme, lv_obj_t *ui_lblItemV
 
 void apply_theme_list_drop_down(struct theme_config *d_theme, lv_obj_t *ui_lblItemValue, char *options);
 
-void apply_theme_list_glyph(struct theme_config *g_theme, lv_obj_t *ui_lblItemGlyph,
-                            const char *screen_name, char *item_glyph);
+void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyph,
+                            const char *screen_name, const char *item_glyph);
 
 void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj_t *ui_rolComboThree,
                       lv_obj_t *ui_rolComboFour, lv_obj_t *ui_rolComboFive, lv_obj_t *ui_rolComboSix);

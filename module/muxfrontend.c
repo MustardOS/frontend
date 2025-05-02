@@ -68,7 +68,6 @@ static void cleanup_screen() {
     key_curr = 0;
     key_show = 0;
     msgbox_active = 0;
-    nav_sound = 0;
     ui_count = 0;
     grid_mode_enabled = 0;
 }
@@ -117,19 +116,22 @@ static int set_splash_image_path(char *splash_image_name) {
 }
 
 static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
-    LOG_DEBUG(mux_module, "EXEC_MUX | GOBACK: %s | MODULE: %s", goback, module)
+    LOG_DEBUG("muxfrontend", "GOBACK: %s | MODULE: %s", goback, module)
     load_mux(goback);
     func_to_exec();
     set_previous_module(module);
 }
 
-int main(int argc, char *argv[]) {
+int main() {
     setup_background_process();
 
     load_device(&device);
     load_config(&config);
     init_theme(0, 0);
     init_display();
+
+    init_navigation_sound(&nav_sound, "muxfrontend");
+    play_sound(SND_STARTUP, nav_sound, 0);
 
     while (1) {
         char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
@@ -188,7 +190,7 @@ int main(int argc, char *argv[]) {
                 }
                 const char *args[] = {"find", (const char *) INFO_COL_PATH, "-maxdepth", "2", "-type", "f",
                                       "-size", "0", "-delete", NULL};
-                run_exec(args, A_SIZE(args));
+                run_exec(args, A_SIZE(args), 0);
                 load_mux("launcher");
                 if (muxcollect_main(add_mode, read_line_from_file(COLLECTION_DIR, 1), last_index) == 1) {
                     safe_quit(0);
@@ -198,7 +200,7 @@ int main(int argc, char *argv[]) {
                 last_index_check();
                 const char *args[] = {"find", (const char *) INFO_HIS_PATH, "-maxdepth", "1", "-type", "f",
                                       "-size", "0", "-delete", NULL};
-                run_exec(args, A_SIZE(args));
+                run_exec(args, A_SIZE(args), 0);
                 load_mux("launcher");
                 if (muxhistory_main(last_index) == 1) {
                     safe_quit(0);

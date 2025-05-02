@@ -380,7 +380,7 @@ static void remove_from_history() {
         close_input();
         mux_input_stop();
     } else {
-        play_sound("error", nav_sound, 0, 0);
+        play_sound(SND_ERROR, nav_sound, 0);
         toast_message(lang.MUXHISTORY.ERROR.REMOVE, 1000, 1000);
     }
 }
@@ -444,16 +444,24 @@ static int load_content(const char *content_name) {
     return 0;
 }
 
-static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
+
+static void list_nav_move(int steps, int direction) {
+    if (ui_count <= 0) return;
+    play_sound(SND_NAVIGATE, nav_sound, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             items[current_item_index].display_name);
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
@@ -463,34 +471,19 @@ static void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            items[current_item_index].display_name);
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-
-    image_refresh("box");
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void handle_a() {
     if (!ui_count) return;
 
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
@@ -501,7 +494,7 @@ static void handle_a() {
         return;
     }
 
-    play_sound("confirm", nav_sound, 0, 1);
+    play_sound(SND_CONFIRM, nav_sound, 0);
 
     char f_content[MAX_BUFFER_SIZE];
     snprintf(f_content, sizeof(f_content), "%s.cfg",
@@ -542,14 +535,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 0, 1);
+    play_sound(SND_BACK, nav_sound, 0);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
     close_input();
     mux_input_stop();
@@ -558,14 +551,14 @@ static void handle_b() {
 static void handle_x() {
     if (msgbox_active || !ui_count) return;
 
-    play_sound("confirm", nav_sound, 0, 1);
+    play_sound(SND_CONFIRM, nav_sound, 0);
     remove_from_history();
 }
 
 static void handle_y() {
     if (msgbox_active || !ui_count) return;
 
-    play_sound("confirm", nav_sound, 0, 1);
+    play_sound(SND_CONFIRM, nav_sound, 0);
     add_to_collection();
 }
 
@@ -574,7 +567,7 @@ static void handle_menu() {
         return;
     }
 
-    play_sound("confirm", nav_sound, 0, 0);
+    play_sound(SND_CONFIRM, nav_sound, 0);
     image_refresh("preview");
 
     lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
@@ -593,7 +586,7 @@ static void handle_random_select() {
     uint32_t random_select = random() % MAX_BUFFER_SIZE;
     int selected_index = (int) (random_select & INT16_MAX);
 
-    !(selected_index & 1) ? list_nav_next(selected_index) : list_nav_prev(selected_index);
+    !(selected_index & 1) ? list_nav_move(selected_index, +1) : list_nav_move(selected_index, -1);
 }
 
 static void init_elements() {
@@ -729,7 +722,6 @@ int muxhistory_main(int his_index) {
 
     init_fonts();
     init_elements();
-    init_navigation_sound(&nav_sound, mux_module);
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
@@ -743,7 +735,7 @@ int muxhistory_main(int his_index) {
     if (ui_count > 0) {
         nav_vis = 1;
         if (his_index > -1 && his_index <= ui_count && current_item_index < ui_count) {
-            list_nav_next(his_index);
+            list_nav_move(his_index, +1);
         } else {
             image_refresh("box");
         }
@@ -770,6 +762,7 @@ int muxhistory_main(int his_index) {
     if (file_exist(ADD_MODE_DONE)) {
         if (!strcasecmp(read_text_from_file(ADD_MODE_DONE), "DONE")) {
             toast_message(lang.GENERIC.ADD_COLLECT, 1000, 1000);
+            refresh_screen(ui_screen);
         }
         remove(ADD_MODE_DONE);
     }

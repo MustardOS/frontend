@@ -11,7 +11,8 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 lv_obj_t *ui_imgScreenshot;
 static int is_fullscreen = 0;
@@ -94,50 +95,43 @@ static void create_screenshot_items() {
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
 
-static void list_nav_prev(int steps) {
+static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
+    play_sound(SND_NAVIGATE, nav_sound, 0);
 
-    play_sound("navigate", nav_sound, 0, 0);
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             items[current_item_index].display_name);
-        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
+
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     image_refresh();
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
     nav_moved = 1;
 }
 
-static void list_nav_next(int steps) {
-    if (ui_count <= 0) return;
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
 
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            items[current_item_index].display_name);
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    image_refresh();
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-    nav_moved = 1;
+static void list_nav_next(int steps) {
+    list_nav_move(steps, +1);
 }
 
 static void handle_confirm() {
     if (msgbox_active || ui_count <= 0) return;
 
-    play_sound("confirm", nav_sound, 0, 1);
+    play_sound(SND_CONFIRM, nav_sound, 0);
 
     if (is_fullscreen) {
         is_fullscreen = 0;
@@ -154,7 +148,7 @@ static void handle_confirm() {
 
 static void handle_back() {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -185,7 +179,7 @@ static void handle_help() {
     if (msgbox_active || is_fullscreen) return;
 
     if (progress_onscreen == -1 && ui_count > 0) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         show_help();
     }
 }
@@ -276,7 +270,6 @@ int muxshot_main() {
 
     init_fonts();
     create_screenshot_items();
-    init_navigation_sound(&nav_sound, mux_module);
 
     int nav_hidden = 0;
     if (ui_count > 0) {

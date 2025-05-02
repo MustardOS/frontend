@@ -18,7 +18,8 @@ static lv_style_t style_list_item_focused;
 static lv_style_t style_list_glyph_default;
 static lv_style_t style_list_glyph_focused;
 
-int load_scheme(const char *theme_base, const char *mux_dimension, const char *file_name, char *scheme, size_t scheme_size) {
+int load_scheme(const char *theme_base, const char *mux_dimension, const char *file_name, char *scheme,
+                size_t scheme_size) {
     return (snprintf(scheme, scheme_size, "%s/%sscheme/%s.ini", theme_base, mux_dimension, file_name)
             && file_exist(scheme)) ||
            (snprintf(scheme, scheme_size, "%s/scheme/%s.ini", theme_base, file_name)
@@ -394,36 +395,56 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     mini_t *muos_theme = mini_try_load(scheme);
 
     theme->SYSTEM.BACKGROUND = get_ini_hex(muos_theme, "background", "BACKGROUND", theme->SYSTEM.BACKGROUND);
-    theme->SYSTEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "background", "BACKGROUND_ALPHA", theme->SYSTEM.BACKGROUND_ALPHA);
-    theme->SYSTEM.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "background", "BACKGROUND_GRADIENT_COLOR", theme->SYSTEM.BACKGROUND_GRADIENT_COLOR);
-    theme->SYSTEM.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_START", theme->SYSTEM.BACKGROUND_GRADIENT_START);
-    theme->SYSTEM.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_STOP", theme->SYSTEM.BACKGROUND_GRADIENT_STOP);
-    theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_DIRECTION", theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION);
-    theme->SYSTEM.BACKGROUND_GRADIENT_DITHER = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_DITHER", theme->SYSTEM.BACKGROUND_GRADIENT_DITHER);
-    theme->SYSTEM.BACKGROUND_GRADIENT_BLUR = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_BLUR", theme->SYSTEM.BACKGROUND_GRADIENT_BLUR);
+    theme->SYSTEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "background", "BACKGROUND_ALPHA",
+                                                 theme->SYSTEM.BACKGROUND_ALPHA);
+    theme->SYSTEM.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "background", "BACKGROUND_GRADIENT_COLOR",
+                                                          theme->SYSTEM.BACKGROUND_GRADIENT_COLOR);
+    theme->SYSTEM.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_START",
+                                                          theme->SYSTEM.BACKGROUND_GRADIENT_START);
+    theme->SYSTEM.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_STOP",
+                                                         theme->SYSTEM.BACKGROUND_GRADIENT_STOP);
+    theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_DIRECTION",
+                                                              theme->SYSTEM.BACKGROUND_GRADIENT_DIRECTION);
+    theme->SYSTEM.BACKGROUND_GRADIENT_DITHER = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_DITHER",
+                                                           theme->SYSTEM.BACKGROUND_GRADIENT_DITHER);
+    theme->SYSTEM.BACKGROUND_GRADIENT_BLUR = get_ini_int(muos_theme, "background", "BACKGROUND_GRADIENT_BLUR",
+                                                         theme->SYSTEM.BACKGROUND_GRADIENT_BLUR);
 
-    theme->ANIMATION.ANIMATION_DELAY = get_ini_int(muos_theme, "animation", "ANIMATION_DELAY", theme->ANIMATION.ANIMATION_DELAY);
+    theme->ANIMATION.ANIMATION_DELAY = get_ini_int(muos_theme, "animation", "ANIMATION_DELAY",
+                                                   theme->ANIMATION.ANIMATION_DELAY);
     if (theme->ANIMATION.ANIMATION_DELAY < 10) theme->ANIMATION.ANIMATION_DELAY = 10;
-    theme->ANIMATION.ANIMATION_REPEAT = get_ini_int(muos_theme, "animation", "ANIMATION_REPEAT", theme->ANIMATION.ANIMATION_REPEAT);
+    theme->ANIMATION.ANIMATION_REPEAT = get_ini_int(muos_theme, "animation", "ANIMATION_REPEAT",
+                                                    theme->ANIMATION.ANIMATION_REPEAT);
 
     theme->FONT.HEADER_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_TOP", theme->FONT.HEADER_PAD_TOP);
-    theme->FONT.HEADER_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_BOTTOM", theme->FONT.HEADER_PAD_BOTTOM);
-    theme->FONT.HEADER_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_HEADER_ICON_PAD_TOP", theme->FONT.HEADER_ICON_PAD_TOP);
-    theme->FONT.HEADER_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_HEADER_ICON_PAD_BOTTOM", theme->FONT.HEADER_ICON_PAD_BOTTOM);
+    theme->FONT.HEADER_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_HEADER_PAD_BOTTOM",
+                                                theme->FONT.HEADER_PAD_BOTTOM);
+    theme->FONT.HEADER_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_HEADER_ICON_PAD_TOP",
+                                                  theme->FONT.HEADER_ICON_PAD_TOP);
+    theme->FONT.HEADER_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_HEADER_ICON_PAD_BOTTOM",
+                                                     theme->FONT.HEADER_ICON_PAD_BOTTOM);
     theme->FONT.FOOTER_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_FOOTER_PAD_TOP", theme->FONT.FOOTER_PAD_TOP);
-    theme->FONT.FOOTER_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_FOOTER_PAD_BOTTOM", theme->FONT.FOOTER_PAD_BOTTOM);
-    theme->FONT.FOOTER_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_FOOTER_ICON_PAD_TOP", theme->FONT.FOOTER_ICON_PAD_TOP);
-    theme->FONT.FOOTER_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_FOOTER_ICON_PAD_BOTTOM", theme->FONT.FOOTER_ICON_PAD_BOTTOM);
+    theme->FONT.FOOTER_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_FOOTER_PAD_BOTTOM",
+                                                theme->FONT.FOOTER_PAD_BOTTOM);
+    theme->FONT.FOOTER_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_FOOTER_ICON_PAD_TOP",
+                                                  theme->FONT.FOOTER_ICON_PAD_TOP);
+    theme->FONT.FOOTER_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_FOOTER_ICON_PAD_BOTTOM",
+                                                     theme->FONT.FOOTER_ICON_PAD_BOTTOM);
     theme->FONT.MESSAGE_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_MESSAGE_PAD_TOP", theme->FONT.MESSAGE_PAD_TOP);
-    theme->FONT.MESSAGE_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_MESSAGE_PAD_BOTTOM", theme->FONT.MESSAGE_PAD_BOTTOM);
-    theme->FONT.MESSAGE_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_MESSAGE_ICON_PAD_TOP", theme->FONT.MESSAGE_ICON_PAD_TOP);
-    theme->FONT.MESSAGE_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_MESSAGE_ICON_PAD_BOTTOM", theme->FONT.MESSAGE_ICON_PAD_BOTTOM);
+    theme->FONT.MESSAGE_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_MESSAGE_PAD_BOTTOM",
+                                                 theme->FONT.MESSAGE_PAD_BOTTOM);
+    theme->FONT.MESSAGE_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_MESSAGE_ICON_PAD_TOP",
+                                                   theme->FONT.MESSAGE_ICON_PAD_TOP);
+    theme->FONT.MESSAGE_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_MESSAGE_ICON_PAD_BOTTOM",
+                                                      theme->FONT.MESSAGE_ICON_PAD_BOTTOM);
     theme->FONT.LIST_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_TOP", theme->FONT.LIST_PAD_TOP);
     theme->FONT.LIST_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_BOTTOM", theme->FONT.LIST_PAD_BOTTOM);
     theme->FONT.LIST_PAD_LEFT = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_LEFT", theme->FONT.LIST_PAD_LEFT);
     theme->FONT.LIST_PAD_RIGHT = get_ini_int(muos_theme, "font", "FONT_LIST_PAD_RIGHT", theme->FONT.LIST_PAD_RIGHT);
-    theme->FONT.LIST_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_LIST_ICON_PAD_TOP", theme->FONT.LIST_ICON_PAD_TOP);
-    theme->FONT.LIST_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_LIST_ICON_PAD_BOTTOM", theme->FONT.LIST_ICON_PAD_BOTTOM);
+    theme->FONT.LIST_ICON_PAD_TOP = get_ini_int(muos_theme, "font", "FONT_LIST_ICON_PAD_TOP",
+                                                theme->FONT.LIST_ICON_PAD_TOP);
+    theme->FONT.LIST_ICON_PAD_BOTTOM = get_ini_int(muos_theme, "font", "FONT_LIST_ICON_PAD_BOTTOM",
+                                                   theme->FONT.LIST_ICON_PAD_BOTTOM);
 
     theme->STATUS.ALIGN = get_ini_int(muos_theme, "status", "ALIGN", theme->STATUS.ALIGN);
     theme->STATUS.PADDING_LEFT = get_ini_int(muos_theme, "status", "PADDING_LEFT", theme->STATUS.PADDING_LEFT);
@@ -432,19 +453,28 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->STATUS.BATTERY.NORMAL = get_ini_hex(muos_theme, "battery", "BATTERY_NORMAL", theme->STATUS.BATTERY.NORMAL);
     theme->STATUS.BATTERY.ACTIVE = get_ini_hex(muos_theme, "battery", "BATTERY_ACTIVE", theme->STATUS.BATTERY.ACTIVE);
     theme->STATUS.BATTERY.LOW = get_ini_hex(muos_theme, "battery", "BATTERY_LOW", theme->STATUS.BATTERY.LOW);
-    theme->STATUS.BATTERY.NORMAL_ALPHA = get_ini_int(muos_theme, "battery", "BATTERY_NORMAL_ALPHA", theme->STATUS.BATTERY.NORMAL_ALPHA);
-    theme->STATUS.BATTERY.ACTIVE_ALPHA = get_ini_int(muos_theme, "battery", "BATTERY_ACTIVE_ALPHA", theme->STATUS.BATTERY.ACTIVE_ALPHA);
-    theme->STATUS.BATTERY.LOW_ALPHA = get_ini_int(muos_theme, "battery", "BATTERY_LOW_ALPHA", theme->STATUS.BATTERY.LOW_ALPHA);
+    theme->STATUS.BATTERY.NORMAL_ALPHA = get_ini_int(muos_theme, "battery", "BATTERY_NORMAL_ALPHA",
+                                                     theme->STATUS.BATTERY.NORMAL_ALPHA);
+    theme->STATUS.BATTERY.ACTIVE_ALPHA = get_ini_int(muos_theme, "battery", "BATTERY_ACTIVE_ALPHA",
+                                                     theme->STATUS.BATTERY.ACTIVE_ALPHA);
+    theme->STATUS.BATTERY.LOW_ALPHA = get_ini_int(muos_theme, "battery", "BATTERY_LOW_ALPHA",
+                                                  theme->STATUS.BATTERY.LOW_ALPHA);
 
     theme->STATUS.NETWORK.NORMAL = get_ini_hex(muos_theme, "network", "NETWORK_NORMAL", theme->STATUS.NETWORK.NORMAL);
     theme->STATUS.NETWORK.ACTIVE = get_ini_hex(muos_theme, "network", "NETWORK_ACTIVE", theme->STATUS.NETWORK.ACTIVE);
-    theme->STATUS.NETWORK.NORMAL_ALPHA = get_ini_int(muos_theme, "network", "NETWORK_NORMAL_ALPHA", theme->STATUS.NETWORK.NORMAL_ALPHA);
-    theme->STATUS.NETWORK.ACTIVE_ALPHA = get_ini_int(muos_theme, "network", "NETWORK_ACTIVE_ALPHA", theme->STATUS.NETWORK.ACTIVE_ALPHA);
+    theme->STATUS.NETWORK.NORMAL_ALPHA = get_ini_int(muos_theme, "network", "NETWORK_NORMAL_ALPHA",
+                                                     theme->STATUS.NETWORK.NORMAL_ALPHA);
+    theme->STATUS.NETWORK.ACTIVE_ALPHA = get_ini_int(muos_theme, "network", "NETWORK_ACTIVE_ALPHA",
+                                                     theme->STATUS.NETWORK.ACTIVE_ALPHA);
 
-    theme->STATUS.BLUETOOTH.NORMAL = get_ini_hex(muos_theme, "bluetooth", "BLUETOOTH_NORMAL", theme->STATUS.BLUETOOTH.NORMAL);
-    theme->STATUS.BLUETOOTH.ACTIVE = get_ini_hex(muos_theme, "bluetooth", "BLUETOOTH_ACTIVE", theme->STATUS.BLUETOOTH.ACTIVE);
-    theme->STATUS.BLUETOOTH.NORMAL_ALPHA = get_ini_int(muos_theme, "bluetooth", "BLUETOOTH_NORMAL_ALPHA", theme->STATUS.BLUETOOTH.NORMAL_ALPHA);
-    theme->STATUS.BLUETOOTH.ACTIVE_ALPHA = get_ini_int(muos_theme, "bluetooth", "BLUETOOTH_ACTIVE_ALPHA", theme->STATUS.BLUETOOTH.ACTIVE_ALPHA);
+    theme->STATUS.BLUETOOTH.NORMAL = get_ini_hex(muos_theme, "bluetooth", "BLUETOOTH_NORMAL",
+                                                 theme->STATUS.BLUETOOTH.NORMAL);
+    theme->STATUS.BLUETOOTH.ACTIVE = get_ini_hex(muos_theme, "bluetooth", "BLUETOOTH_ACTIVE",
+                                                 theme->STATUS.BLUETOOTH.ACTIVE);
+    theme->STATUS.BLUETOOTH.NORMAL_ALPHA = get_ini_int(muos_theme, "bluetooth", "BLUETOOTH_NORMAL_ALPHA",
+                                                       theme->STATUS.BLUETOOTH.NORMAL_ALPHA);
+    theme->STATUS.BLUETOOTH.ACTIVE_ALPHA = get_ini_int(muos_theme, "bluetooth", "BLUETOOTH_ACTIVE_ALPHA",
+                                                       theme->STATUS.BLUETOOTH.ACTIVE_ALPHA);
 
     theme->DATETIME.TEXT = get_ini_hex(muos_theme, "date", "DATETIME_TEXT", theme->DATETIME.TEXT);
     theme->DATETIME.ALPHA = get_ini_int(muos_theme, "date", "DATETIME_ALPHA", theme->DATETIME.ALPHA);
@@ -454,13 +484,15 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 
     theme->FOOTER.HEIGHT = get_ini_int(muos_theme, "footer", "FOOTER_HEIGHT", theme->FOOTER.HEIGHT);
     theme->FOOTER.BACKGROUND = get_ini_hex(muos_theme, "footer", "FOOTER_BACKGROUND", theme->FOOTER.BACKGROUND);
-    theme->FOOTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "footer", "FOOTER_BACKGROUND_ALPHA", theme->FOOTER.BACKGROUND_ALPHA);
+    theme->FOOTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "footer", "FOOTER_BACKGROUND_ALPHA",
+                                                 theme->FOOTER.BACKGROUND_ALPHA);
     theme->FOOTER.TEXT = get_ini_hex(muos_theme, "footer", "FOOTER_TEXT", theme->FOOTER.TEXT);
     theme->FOOTER.TEXT_ALPHA = get_ini_int(muos_theme, "footer", "FOOTER_TEXT_ALPHA", theme->FOOTER.TEXT_ALPHA);
 
     theme->HEADER.HEIGHT = get_ini_int(muos_theme, "header", "HEADER_HEIGHT", theme->HEADER.HEIGHT);
     theme->HEADER.BACKGROUND = get_ini_hex(muos_theme, "header", "HEADER_BACKGROUND", theme->HEADER.BACKGROUND);
-    theme->HEADER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "header", "HEADER_BACKGROUND_ALPHA", theme->HEADER.BACKGROUND_ALPHA);
+    theme->HEADER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "header", "HEADER_BACKGROUND_ALPHA",
+                                                 theme->HEADER.BACKGROUND_ALPHA);
     theme->HEADER.TEXT = get_ini_hex(muos_theme, "header", "HEADER_TEXT", theme->HEADER.TEXT);
     theme->HEADER.TEXT_ALPHA = get_ini_int(muos_theme, "header", "HEADER_TEXT_ALPHA", theme->HEADER.TEXT_ALPHA);
     theme->HEADER.TEXT_ALIGN = get_ini_int(muos_theme, "header", "HEADER_TEXT_ALIGN", theme->HEADER.TEXT_ALIGN);
@@ -468,7 +500,8 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->HEADER.PADDING_RIGHT = get_ini_int(muos_theme, "header", "PADDING_RIGHT", theme->HEADER.PADDING_RIGHT);
 
     theme->HELP.BACKGROUND = get_ini_hex(muos_theme, "help", "HELP_BACKGROUND", theme->HELP.BACKGROUND);
-    theme->HELP.BACKGROUND_ALPHA = get_ini_int(muos_theme, "help", "HELP_BACKGROUND_ALPHA", theme->HELP.BACKGROUND_ALPHA);
+    theme->HELP.BACKGROUND_ALPHA = get_ini_int(muos_theme, "help", "HELP_BACKGROUND_ALPHA",
+                                               theme->HELP.BACKGROUND_ALPHA);
     theme->HELP.BORDER = get_ini_hex(muos_theme, "help", "HELP_BORDER", theme->HELP.BORDER);
     theme->HELP.BORDER_ALPHA = get_ini_int(muos_theme, "help", "HELP_BORDER_ALPHA", theme->HELP.BORDER_ALPHA);
     theme->HELP.CONTENT = get_ini_hex(muos_theme, "help", "HELP_CONTENT", theme->HELP.CONTENT);
@@ -480,45 +513,54 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
 
     theme->NAV.A.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_A_GLYPH", theme->NAV.A.GLYPH);
     theme->NAV.A.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_ALPHA", theme->NAV.A.GLYPH_ALPHA);
-    theme->NAV.A.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_RECOLOUR_ALPHA", theme->NAV.A.GLYPH_RECOLOUR_ALPHA);
+    theme->NAV.A.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_GLYPH_RECOLOUR_ALPHA",
+                                                    theme->NAV.A.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.A.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_A_TEXT", theme->NAV.A.TEXT);
     theme->NAV.A.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_A_TEXT_ALPHA", theme->NAV.A.TEXT_ALPHA);
 
     theme->NAV.B.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_B_GLYPH", theme->NAV.B.GLYPH);
     theme->NAV.B.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_B_GLYPH_ALPHA", theme->NAV.B.GLYPH_ALPHA);
-    theme->NAV.B.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_B_GLYPH_RECOLOUR_ALPHA", theme->NAV.B.GLYPH_RECOLOUR_ALPHA);
+    theme->NAV.B.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_B_GLYPH_RECOLOUR_ALPHA",
+                                                    theme->NAV.B.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.B.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_B_TEXT", theme->NAV.B.TEXT);
     theme->NAV.B.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_B_TEXT_ALPHA", theme->NAV.B.TEXT_ALPHA);
 
     theme->NAV.C.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_C_GLYPH", theme->NAV.C.GLYPH);
     theme->NAV.C.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_C_GLYPH_ALPHA", theme->NAV.C.GLYPH_ALPHA);
-    theme->NAV.C.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_C_GLYPH_RECOLOUR_ALPHA", theme->NAV.C.GLYPH_RECOLOUR_ALPHA);
+    theme->NAV.C.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_C_GLYPH_RECOLOUR_ALPHA",
+                                                    theme->NAV.C.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.C.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_C_TEXT", theme->NAV.C.TEXT);
     theme->NAV.C.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_C_TEXT_ALPHA", theme->NAV.C.TEXT_ALPHA);
 
     theme->NAV.X.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_X_GLYPH", theme->NAV.X.GLYPH);
     theme->NAV.X.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_X_GLYPH_ALPHA", theme->NAV.X.GLYPH_ALPHA);
-    theme->NAV.X.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_X_GLYPH_RECOLOUR_ALPHA", theme->NAV.X.GLYPH_RECOLOUR_ALPHA);
+    theme->NAV.X.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_X_GLYPH_RECOLOUR_ALPHA",
+                                                    theme->NAV.X.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.X.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_X_TEXT", theme->NAV.X.TEXT);
     theme->NAV.X.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_X_TEXT_ALPHA", theme->NAV.X.TEXT_ALPHA);
 
     theme->NAV.Y.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_Y_GLYPH", theme->NAV.Y.GLYPH);
     theme->NAV.Y.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Y_GLYPH_ALPHA", theme->NAV.Y.GLYPH_ALPHA);
-    theme->NAV.Y.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Y_GLYPH_RECOLOUR_ALPHA", theme->NAV.Y.GLYPH_RECOLOUR_ALPHA);
+    theme->NAV.Y.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Y_GLYPH_RECOLOUR_ALPHA",
+                                                    theme->NAV.Y.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.Y.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_Y_TEXT", theme->NAV.Y.TEXT);
     theme->NAV.Y.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Y_TEXT_ALPHA", theme->NAV.Y.TEXT_ALPHA);
 
     theme->NAV.Z.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_Z_GLYPH", theme->NAV.Z.GLYPH);
     theme->NAV.Z.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Z_GLYPH_ALPHA", theme->NAV.Z.GLYPH_ALPHA);
-    theme->NAV.Z.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Z_GLYPH_RECOLOUR_ALPHA", theme->NAV.Z.GLYPH_RECOLOUR_ALPHA);
+    theme->NAV.Z.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Z_GLYPH_RECOLOUR_ALPHA",
+                                                    theme->NAV.Z.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.Z.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_Z_TEXT", theme->NAV.Z.TEXT);
     theme->NAV.Z.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_Z_TEXT_ALPHA", theme->NAV.Z.TEXT_ALPHA);
 
     theme->NAV.MENU.GLYPH = get_ini_hex(muos_theme, "navigation", "NAV_MENU_GLYPH", theme->NAV.MENU.GLYPH);
-    theme->NAV.MENU.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_GLYPH_ALPHA", theme->NAV.MENU.GLYPH_ALPHA);
-    theme->NAV.MENU.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_GLYPH_RECOLOUR_ALPHA", theme->NAV.MENU.GLYPH_RECOLOUR_ALPHA);
+    theme->NAV.MENU.GLYPH_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_GLYPH_ALPHA",
+                                              theme->NAV.MENU.GLYPH_ALPHA);
+    theme->NAV.MENU.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_GLYPH_RECOLOUR_ALPHA",
+                                                       theme->NAV.MENU.GLYPH_RECOLOUR_ALPHA);
     theme->NAV.MENU.TEXT = get_ini_hex(muos_theme, "navigation", "NAV_MENU_TEXT", theme->NAV.MENU.TEXT);
-    theme->NAV.MENU.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_TEXT_ALPHA", theme->NAV.MENU.TEXT_ALPHA);
+    theme->NAV.MENU.TEXT_ALPHA = get_ini_int(muos_theme, "navigation", "NAV_MENU_TEXT_ALPHA",
+                                             theme->NAV.MENU.TEXT_ALPHA);
 
     theme->GRID.NAVIGATION_TYPE = get_ini_int(muos_theme, "grid", "NAVIGATION_TYPE", theme->GRID.NAVIGATION_TYPE);
     theme->GRID.BACKGROUND = get_ini_hex(muos_theme, "grid", "BACKGROUND", theme->GRID.BACKGROUND);
@@ -528,25 +570,50 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.COLUMN_COUNT = get_ini_int(muos_theme, "grid", "COLUMN_COUNT", theme->GRID.COLUMN_COUNT);
     theme->GRID.ROW_COUNT = get_ini_int(muos_theme, "grid", "ROW_COUNT", theme->GRID.ROW_COUNT);
 
-    theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_ALIGNMENT", theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT);
-    theme->GRID.CURRENT_ITEM_LABEL.WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_WIDTH", theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
-    theme->GRID.CURRENT_ITEM_LABEL.HEIGHT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_HEIGHT", theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
-    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_X", theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X);
-    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_Y", theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
-    theme->GRID.CURRENT_ITEM_LABEL.RADIUS = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_RADIUS", theme->GRID.CURRENT_ITEM_LABEL.RADIUS);
-    theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_WIDTH", theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH);
-    theme->GRID.CURRENT_ITEM_LABEL.BORDER = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER", theme->GRID.CURRENT_ITEM_LABEL.BORDER);
-    theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_ALPHA", theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA);
-    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND", theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND);
-    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA", theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT", theme->GRID.CURRENT_ITEM_LABEL.TEXT);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA", theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALIGNMENT", theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_LINE_SPACING", theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_LEFT", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_RIGHT", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT);
-    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_PADDING_TOP", theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP);
+    theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_ALIGNMENT",
+                                                           theme->GRID.CURRENT_ITEM_LABEL.ALIGNMENT);
+    theme->GRID.CURRENT_ITEM_LABEL.WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_WIDTH",
+                                                       theme->GRID.CURRENT_ITEM_LABEL.WIDTH);
+    theme->GRID.CURRENT_ITEM_LABEL.HEIGHT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_HEIGHT",
+                                                        theme->GRID.CURRENT_ITEM_LABEL.HEIGHT);
+    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_X",
+                                                          theme->GRID.CURRENT_ITEM_LABEL.OFFSET_X);
+    theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_OFFSET_Y",
+                                                          theme->GRID.CURRENT_ITEM_LABEL.OFFSET_Y);
+    theme->GRID.CURRENT_ITEM_LABEL.RADIUS = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_RADIUS",
+                                                        theme->GRID.CURRENT_ITEM_LABEL.RADIUS);
+    theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_WIDTH",
+                                                              theme->GRID.CURRENT_ITEM_LABEL.BORDER_WIDTH);
+    theme->GRID.CURRENT_ITEM_LABEL.BORDER = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER",
+                                                        theme->GRID.CURRENT_ITEM_LABEL.BORDER);
+    theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_BORDER_ALPHA",
+                                                              theme->GRID.CURRENT_ITEM_LABEL.BORDER_ALPHA);
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_BACKGROUND",
+                                                            theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND);
+    theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid",
+                                                                  "CURRENT_ITEM_LABEL_BACKGROUND_ALPHA",
+                                                                  theme->GRID.CURRENT_ITEM_LABEL.BACKGROUND_ALPHA);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT = get_ini_hex(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT",
+                                                      theme->GRID.CURRENT_ITEM_LABEL.TEXT);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALPHA",
+                                                            theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALPHA);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT = get_ini_int(muos_theme, "grid", "CURRENT_ITEM_LABEL_TEXT_ALIGNMENT",
+                                                                theme->GRID.CURRENT_ITEM_LABEL.TEXT_ALIGNMENT);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid",
+                                                                   "CURRENT_ITEM_LABEL_TEXT_LINE_SPACING",
+                                                                   theme->GRID.CURRENT_ITEM_LABEL.TEXT_LINE_SPACING);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid",
+                                                                     "CURRENT_ITEM_LABEL_TEXT_PADDING_BOTTOM",
+                                                                     theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_BOTTOM);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT = get_ini_int(muos_theme, "grid",
+                                                                   "CURRENT_ITEM_LABEL_TEXT_PADDING_LEFT",
+                                                                   theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_LEFT);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT = get_ini_int(muos_theme, "grid",
+                                                                    "CURRENT_ITEM_LABEL_TEXT_PADDING_RIGHT",
+                                                                    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_RIGHT);
+    theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP = get_ini_int(muos_theme, "grid",
+                                                                  "CURRENT_ITEM_LABEL_TEXT_PADDING_TOP",
+                                                                  theme->GRID.CURRENT_ITEM_LABEL.TEXT_PADDING_TOP);
 
     theme->GRID.ROW_HEIGHT = get_ini_int(muos_theme, "grid", "ROW_HEIGHT", theme->GRID.ROW_HEIGHT);
     theme->GRID.COLUMN_WIDTH = get_ini_int(muos_theme, "grid", "COLUMN_WIDTH", theme->GRID.COLUMN_WIDTH);
@@ -557,130 +624,220 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->GRID.CELL.HEIGHT = get_ini_int(muos_theme, "grid", "CELL_HEIGHT", theme->GRID.CELL.HEIGHT);
     theme->GRID.CELL.RADIUS = get_ini_int(muos_theme, "grid", "CELL_RADIUS", theme->GRID.CELL.RADIUS);
     theme->GRID.CELL.BORDER_WIDTH = get_ini_int(muos_theme, "grid", "CELL_BORDER_WIDTH", theme->GRID.CELL.BORDER_WIDTH);
-    theme->GRID.CELL.IMAGE_PADDING_TOP = get_ini_int(muos_theme, "grid", "CELL_IMAGE_PADDING_TOP", theme->GRID.CELL.IMAGE_PADDING_TOP);
-    theme->GRID.CELL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_BOTTOM", theme->GRID.CELL.TEXT_PADDING_BOTTOM);
-    theme->GRID.CELL.TEXT_PADDING_SIDE = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_SIDE", theme->GRID.CELL.TEXT_PADDING_SIDE);
-    theme->GRID.CELL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid", "CELL_TEXT_LINE_SPACING", theme->GRID.CELL.TEXT_LINE_SPACING);
+    theme->GRID.CELL.IMAGE_PADDING_TOP = get_ini_int(muos_theme, "grid", "CELL_IMAGE_PADDING_TOP",
+                                                     theme->GRID.CELL.IMAGE_PADDING_TOP);
+    theme->GRID.CELL.TEXT_PADDING_BOTTOM = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_BOTTOM",
+                                                       theme->GRID.CELL.TEXT_PADDING_BOTTOM);
+    theme->GRID.CELL.TEXT_PADDING_SIDE = get_ini_int(muos_theme, "grid", "CELL_TEXT_PADDING_SIDE",
+                                                     theme->GRID.CELL.TEXT_PADDING_SIDE);
+    theme->GRID.CELL.TEXT_LINE_SPACING = get_ini_int(muos_theme, "grid", "CELL_TEXT_LINE_SPACING",
+                                                     theme->GRID.CELL.TEXT_LINE_SPACING);
     theme->GRID.CELL.SHADOW = get_ini_hex(muos_theme, "grid", "CELL_SHADOW", theme->GRID.CELL.SHADOW);
     theme->GRID.CELL.SHADOW_WIDTH = get_ini_int(muos_theme, "grid", "CELL_SHADOW_WIDTH", theme->GRID.CELL.SHADOW_WIDTH);
-    theme->GRID.CELL.SHADOW_X_OFFSET = get_ini_int(muos_theme, "grid", "CELL_SHADOW_X_OFFSET", theme->GRID.CELL.SHADOW_X_OFFSET);
-    theme->GRID.CELL.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "grid", "CELL_SHADOW_Y_OFFSET", theme->GRID.CELL.SHADOW_Y_OFFSET);
+    theme->GRID.CELL.SHADOW_X_OFFSET = get_ini_int(muos_theme, "grid", "CELL_SHADOW_X_OFFSET",
+                                                   theme->GRID.CELL.SHADOW_X_OFFSET);
+    theme->GRID.CELL.SHADOW_Y_OFFSET = get_ini_int(muos_theme, "grid", "CELL_SHADOW_Y_OFFSET",
+                                                   theme->GRID.CELL.SHADOW_Y_OFFSET);
 
-    theme->GRID.CELL_DEFAULT.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND", theme->GRID.CELL_DEFAULT.BACKGROUND);
-    theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_ALPHA", theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA);
-    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_COLOR", theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR);
-    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_START", theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START);
-    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_STOP", theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP);
-    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_GRADIENT_DIRECTION", theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION);
-    theme->GRID.CELL_DEFAULT.BORDER = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BORDER", theme->GRID.CELL_DEFAULT.BORDER);
-    theme->GRID.CELL_DEFAULT.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BORDER_ALPHA", theme->GRID.CELL_DEFAULT.BORDER_ALPHA);
-    theme->GRID.CELL_DEFAULT.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_ALPHA", theme->GRID.CELL_DEFAULT.IMAGE_ALPHA);
-    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR", theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR);
-    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA", theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA);
+    theme->GRID.CELL_DEFAULT.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND",
+                                                      theme->GRID.CELL_DEFAULT.BACKGROUND);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BACKGROUND_ALPHA",
+                                                            theme->GRID.CELL_DEFAULT.BACKGROUND_ALPHA);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "grid",
+                                                                     "CELL_DEFAULT_BACKGROUND_GRADIENT_COLOR",
+                                                                     theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_COLOR);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "grid",
+                                                                     "CELL_DEFAULT_BACKGROUND_GRADIENT_START",
+                                                                     theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_START);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "grid",
+                                                                    "CELL_DEFAULT_BACKGROUND_GRADIENT_STOP",
+                                                                    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_STOP);
+    theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "grid",
+                                                                         "CELL_DEFAULT_BACKGROUND_GRADIENT_DIRECTION",
+                                                                         theme->GRID.CELL_DEFAULT.BACKGROUND_GRADIENT_DIRECTION);
+    theme->GRID.CELL_DEFAULT.BORDER = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_BORDER",
+                                                  theme->GRID.CELL_DEFAULT.BORDER);
+    theme->GRID.CELL_DEFAULT.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_BORDER_ALPHA",
+                                                        theme->GRID.CELL_DEFAULT.BORDER_ALPHA);
+    theme->GRID.CELL_DEFAULT.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_ALPHA",
+                                                       theme->GRID.CELL_DEFAULT.IMAGE_ALPHA);
+    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR",
+                                                          theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR);
+    theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_IMAGE_RECOLOUR_ALPHA",
+                                                                theme->GRID.CELL_DEFAULT.IMAGE_RECOLOUR_ALPHA);
     theme->GRID.CELL_DEFAULT.TEXT = get_ini_hex(muos_theme, "grid", "CELL_DEFAULT_TEXT", theme->GRID.CELL_DEFAULT.TEXT);
-    theme->GRID.CELL_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_TEXT_ALPHA", theme->GRID.CELL_DEFAULT.TEXT_ALPHA);
+    theme->GRID.CELL_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_DEFAULT_TEXT_ALPHA",
+                                                      theme->GRID.CELL_DEFAULT.TEXT_ALPHA);
 
-    theme->GRID.CELL_FOCUS.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BACKGROUND", theme->GRID.CELL_FOCUS.BACKGROUND);
-    theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_ALPHA", theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA);
-    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_COLOR", theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR);
-    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_START", theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START);
-    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_STOP", theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP);
-    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_GRADIENT_DIRECTION", theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION);
+    theme->GRID.CELL_FOCUS.BACKGROUND = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BACKGROUND",
+                                                    theme->GRID.CELL_FOCUS.BACKGROUND);
+    theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BACKGROUND_ALPHA",
+                                                          theme->GRID.CELL_FOCUS.BACKGROUND_ALPHA);
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR = get_ini_hex(muos_theme, "grid",
+                                                                   "CELL_FOCUS_BACKGROUND_GRADIENT_COLOR",
+                                                                   theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_COLOR);
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START = get_ini_int(muos_theme, "grid",
+                                                                   "CELL_FOCUS_BACKGROUND_GRADIENT_START",
+                                                                   theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_START);
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP = get_ini_int(muos_theme, "grid",
+                                                                  "CELL_FOCUS_BACKGROUND_GRADIENT_STOP",
+                                                                  theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_STOP);
+    theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION = get_ini_int(muos_theme, "grid",
+                                                                       "CELL_FOCUS_BACKGROUND_GRADIENT_DIRECTION",
+                                                                       theme->GRID.CELL_FOCUS.BACKGROUND_GRADIENT_DIRECTION);
     theme->GRID.CELL_FOCUS.BORDER = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_BORDER", theme->GRID.CELL_FOCUS.BORDER);
-    theme->GRID.CELL_FOCUS.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BORDER_ALPHA", theme->GRID.CELL_FOCUS.BORDER_ALPHA);
-    theme->GRID.CELL_FOCUS.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_ALPHA", theme->GRID.CELL_FOCUS.IMAGE_ALPHA);
-    theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_IMAGE_RECOLOUR", theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR);
-    theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_RECOLOUR_ALPHA", theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA);
+    theme->GRID.CELL_FOCUS.BORDER_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_BORDER_ALPHA",
+                                                      theme->GRID.CELL_FOCUS.BORDER_ALPHA);
+    theme->GRID.CELL_FOCUS.IMAGE_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_ALPHA",
+                                                     theme->GRID.CELL_FOCUS.IMAGE_ALPHA);
+    theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_IMAGE_RECOLOUR",
+                                                        theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR);
+    theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_IMAGE_RECOLOUR_ALPHA",
+                                                              theme->GRID.CELL_FOCUS.IMAGE_RECOLOUR_ALPHA);
     theme->GRID.CELL_FOCUS.TEXT = get_ini_hex(muos_theme, "grid", "CELL_FOCUS_TEXT", theme->GRID.CELL_FOCUS.TEXT);
-    theme->GRID.CELL_FOCUS.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_TEXT_ALPHA", theme->GRID.CELL_FOCUS.TEXT_ALPHA);
+    theme->GRID.CELL_FOCUS.TEXT_ALPHA = get_ini_int(muos_theme, "grid", "CELL_FOCUS_TEXT_ALPHA",
+                                                    theme->GRID.CELL_FOCUS.TEXT_ALPHA);
 
     theme->LIST_DEFAULT.RADIUS = get_ini_int(muos_theme, "list", "LIST_DEFAULT_RADIUS", theme->LIST_DEFAULT.RADIUS);
-    theme->LIST_DEFAULT.BACKGROUND = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_BACKGROUND", theme->LIST_DEFAULT.BACKGROUND);
-    theme->LIST_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BACKGROUND_ALPHA", theme->LIST_DEFAULT.BACKGROUND_ALPHA);
-    theme->LIST_DEFAULT.GRADIENT_START = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_START", theme->LIST_DEFAULT.GRADIENT_START);
-    theme->LIST_DEFAULT.GRADIENT_STOP = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_STOP", theme->LIST_DEFAULT.GRADIENT_STOP);
-    theme->LIST_DEFAULT.GRADIENT_DIRECTION = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_DIRECTION", theme->LIST_DEFAULT.GRADIENT_DIRECTION);
-    theme->LIST_DEFAULT.BORDER_WIDTH = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BORDER_WIDTH", theme->LIST_DEFAULT.BORDER_WIDTH);
-    theme->LIST_DEFAULT.BORDER_SIDE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BORDER_SIDE", theme->LIST_DEFAULT.BORDER_SIDE);
-    theme->LIST_DEFAULT.INDICATOR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_INDICATOR", theme->LIST_DEFAULT.INDICATOR);
-    theme->LIST_DEFAULT.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_INDICATOR_ALPHA", theme->LIST_DEFAULT.INDICATOR_ALPHA);
+    theme->LIST_DEFAULT.BACKGROUND = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_BACKGROUND",
+                                                 theme->LIST_DEFAULT.BACKGROUND);
+    theme->LIST_DEFAULT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BACKGROUND_ALPHA",
+                                                       theme->LIST_DEFAULT.BACKGROUND_ALPHA);
+    theme->LIST_DEFAULT.GRADIENT_START = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_START",
+                                                     theme->LIST_DEFAULT.GRADIENT_START);
+    theme->LIST_DEFAULT.GRADIENT_STOP = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_STOP",
+                                                    theme->LIST_DEFAULT.GRADIENT_STOP);
+    theme->LIST_DEFAULT.GRADIENT_DIRECTION = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GRADIENT_DIRECTION",
+                                                         theme->LIST_DEFAULT.GRADIENT_DIRECTION);
+    theme->LIST_DEFAULT.BORDER_WIDTH = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BORDER_WIDTH",
+                                                   theme->LIST_DEFAULT.BORDER_WIDTH);
+    theme->LIST_DEFAULT.BORDER_SIDE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_BORDER_SIDE",
+                                                  theme->LIST_DEFAULT.BORDER_SIDE);
+    theme->LIST_DEFAULT.INDICATOR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_INDICATOR",
+                                                theme->LIST_DEFAULT.INDICATOR);
+    theme->LIST_DEFAULT.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_INDICATOR_ALPHA",
+                                                      theme->LIST_DEFAULT.INDICATOR_ALPHA);
     theme->LIST_DEFAULT.TEXT = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_TEXT", theme->LIST_DEFAULT.TEXT);
-    theme->LIST_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_TEXT_ALPHA", theme->LIST_DEFAULT.TEXT_ALPHA);
-    theme->LIST_DEFAULT.BACKGROUND_GRADIENT = (theme->LIST_DEFAULT.GRADIENT_START == 255) ? theme->LIST_DEFAULT.BACKGROUND : theme->SYSTEM.BACKGROUND;
-    theme->LIST_DEFAULT.GLYPH_PADDING_LEFT = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_PAD_LEFT", theme->LIST_DEFAULT.GLYPH_PADDING_LEFT);
-    theme->LIST_DEFAULT.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_ALPHA", theme->LIST_DEFAULT.GLYPH_ALPHA);
-    theme->LIST_DEFAULT.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR", theme->LIST_DEFAULT.GLYPH_RECOLOUR);
-    theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA", theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA);
-    theme->LIST_DEFAULT.LABEL_LONG_MODE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE", theme->LIST_DEFAULT.LABEL_LONG_MODE);
+    theme->LIST_DEFAULT.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_TEXT_ALPHA",
+                                                 theme->LIST_DEFAULT.TEXT_ALPHA);
+    theme->LIST_DEFAULT.BACKGROUND_GRADIENT = (theme->LIST_DEFAULT.GRADIENT_START == 255)
+                                              ? theme->LIST_DEFAULT.BACKGROUND : theme->SYSTEM.BACKGROUND;
+    theme->LIST_DEFAULT.GLYPH_PADDING_LEFT = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_PAD_LEFT",
+                                                         theme->LIST_DEFAULT.GLYPH_PADDING_LEFT);
+    theme->LIST_DEFAULT.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_ALPHA",
+                                                  theme->LIST_DEFAULT.GLYPH_ALPHA);
+    theme->LIST_DEFAULT.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR",
+                                                     theme->LIST_DEFAULT.GLYPH_RECOLOUR);
+    theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_DEFAULT_GLYPH_RECOLOUR_ALPHA",
+                                                           theme->LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA);
+    theme->LIST_DEFAULT.LABEL_LONG_MODE = get_ini_int(muos_theme, "list", "LIST_DEFAULT_LABEL_LONG_MODE",
+                                                      theme->LIST_DEFAULT.LABEL_LONG_MODE);
 
     theme->LIST_DISABLED.TEXT = get_ini_hex(muos_theme, "list", "LIST_DISABLED_TEXT", theme->LIST_DISABLED.TEXT);
-    theme->LIST_DISABLED.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DISABLED_TEXT_ALPHA", theme->LIST_DISABLED.TEXT_ALPHA);
+    theme->LIST_DISABLED.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_DISABLED_TEXT_ALPHA",
+                                                  theme->LIST_DISABLED.TEXT_ALPHA);
 
-    theme->LIST_FOCUS.BACKGROUND = get_ini_hex(muos_theme, "list", "LIST_FOCUS_BACKGROUND", theme->LIST_FOCUS.BACKGROUND);
-    theme->LIST_FOCUS.BACKGROUND_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_BACKGROUND_ALPHA", theme->LIST_FOCUS.BACKGROUND_ALPHA);
-    theme->LIST_FOCUS.GRADIENT_START = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_START", theme->LIST_FOCUS.GRADIENT_START);
-    theme->LIST_FOCUS.GRADIENT_STOP = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_STOP", theme->LIST_FOCUS.GRADIENT_STOP);
-    theme->LIST_FOCUS.GRADIENT_DIRECTION = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_DIRECTION", theme->LIST_FOCUS.GRADIENT_DIRECTION);
-    theme->LIST_FOCUS.BORDER_WIDTH = get_ini_int(muos_theme, "list", "LIST_FOCUS_BORDER_WIDTH", theme->LIST_FOCUS.BORDER_WIDTH);
-    theme->LIST_FOCUS.BORDER_SIDE = get_ini_int(muos_theme, "list", "LIST_FOCUS_BORDER_SIDE", theme->LIST_FOCUS.BORDER_SIDE);
+    theme->LIST_FOCUS.BACKGROUND = get_ini_hex(muos_theme, "list", "LIST_FOCUS_BACKGROUND",
+                                               theme->LIST_FOCUS.BACKGROUND);
+    theme->LIST_FOCUS.BACKGROUND_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_BACKGROUND_ALPHA",
+                                                     theme->LIST_FOCUS.BACKGROUND_ALPHA);
+    theme->LIST_FOCUS.GRADIENT_START = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_START",
+                                                   theme->LIST_FOCUS.GRADIENT_START);
+    theme->LIST_FOCUS.GRADIENT_STOP = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_STOP",
+                                                  theme->LIST_FOCUS.GRADIENT_STOP);
+    theme->LIST_FOCUS.GRADIENT_DIRECTION = get_ini_int(muos_theme, "list", "LIST_FOCUS_GRADIENT_DIRECTION",
+                                                       theme->LIST_FOCUS.GRADIENT_DIRECTION);
+    theme->LIST_FOCUS.BORDER_WIDTH = get_ini_int(muos_theme, "list", "LIST_FOCUS_BORDER_WIDTH",
+                                                 theme->LIST_FOCUS.BORDER_WIDTH);
+    theme->LIST_FOCUS.BORDER_SIDE = get_ini_int(muos_theme, "list", "LIST_FOCUS_BORDER_SIDE",
+                                                theme->LIST_FOCUS.BORDER_SIDE);
     theme->LIST_FOCUS.INDICATOR = get_ini_hex(muos_theme, "list", "LIST_FOCUS_INDICATOR", theme->LIST_FOCUS.INDICATOR);
-    theme->LIST_FOCUS.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_INDICATOR_ALPHA", theme->LIST_FOCUS.INDICATOR_ALPHA);
+    theme->LIST_FOCUS.INDICATOR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_INDICATOR_ALPHA",
+                                                    theme->LIST_FOCUS.INDICATOR_ALPHA);
     theme->LIST_FOCUS.TEXT = get_ini_hex(muos_theme, "list", "LIST_FOCUS_TEXT", theme->LIST_FOCUS.TEXT);
-    theme->LIST_FOCUS.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_TEXT_ALPHA", theme->LIST_FOCUS.TEXT_ALPHA);
-    theme->LIST_FOCUS.BACKGROUND_GRADIENT = (theme->LIST_FOCUS.GRADIENT_START == 255) ? theme->LIST_FOCUS.BACKGROUND : theme->SYSTEM.BACKGROUND;
-    theme->LIST_FOCUS.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_ALPHA", theme->LIST_FOCUS.GLYPH_ALPHA);
-    theme->LIST_FOCUS.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR", theme->LIST_FOCUS.GLYPH_RECOLOUR);
-    theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR_ALPHA", theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA);
+    theme->LIST_FOCUS.TEXT_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_TEXT_ALPHA",
+                                               theme->LIST_FOCUS.TEXT_ALPHA);
+    theme->LIST_FOCUS.BACKGROUND_GRADIENT = (theme->LIST_FOCUS.GRADIENT_START == 255) ? theme->LIST_FOCUS.BACKGROUND
+                                                                                      : theme->SYSTEM.BACKGROUND;
+    theme->LIST_FOCUS.GLYPH_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_ALPHA",
+                                                theme->LIST_FOCUS.GLYPH_ALPHA);
+    theme->LIST_FOCUS.GLYPH_RECOLOUR = get_ini_hex(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR",
+                                                   theme->LIST_FOCUS.GLYPH_RECOLOUR);
+    theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA = get_ini_int(muos_theme, "list", "LIST_FOCUS_GLYPH_RECOLOUR_ALPHA",
+                                                         theme->LIST_FOCUS.GLYPH_RECOLOUR_ALPHA);
 
     theme->IMAGE_LIST.ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_ALPHA", theme->IMAGE_LIST.ALPHA);
     theme->IMAGE_LIST.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RADIUS", theme->IMAGE_LIST.RADIUS);
-    theme->IMAGE_LIST.RECOLOUR = get_ini_hex(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR", theme->IMAGE_LIST.RECOLOUR);
-    theme->IMAGE_LIST.RECOLOUR_ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR_ALPHA", theme->IMAGE_LIST.RECOLOUR_ALPHA);
+    theme->IMAGE_LIST.RECOLOUR = get_ini_hex(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR",
+                                             theme->IMAGE_LIST.RECOLOUR);
+    theme->IMAGE_LIST.RECOLOUR_ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_RECOLOUR_ALPHA",
+                                                   theme->IMAGE_LIST.RECOLOUR_ALPHA);
     theme->IMAGE_LIST.PAD_TOP = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_TOP", theme->IMAGE_LIST.PAD_TOP);
-    theme->IMAGE_LIST.PAD_BOTTOM = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_BOTTOM", theme->IMAGE_LIST.PAD_BOTTOM);
-    theme->IMAGE_LIST.PAD_LEFT = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_LEFT", theme->IMAGE_LIST.PAD_LEFT);
-    theme->IMAGE_LIST.PAD_RIGHT = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_RIGHT", theme->IMAGE_LIST.PAD_RIGHT);
+    theme->IMAGE_LIST.PAD_BOTTOM = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_BOTTOM",
+                                               theme->IMAGE_LIST.PAD_BOTTOM);
+    theme->IMAGE_LIST.PAD_LEFT = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_LEFT",
+                                             theme->IMAGE_LIST.PAD_LEFT);
+    theme->IMAGE_LIST.PAD_RIGHT = get_ini_int(muos_theme, "image_list", "IMAGE_LIST_PAD_RIGHT",
+                                              theme->IMAGE_LIST.PAD_RIGHT);
 
-    theme->IMAGE_PREVIEW.ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_ALPHA", theme->IMAGE_PREVIEW.ALPHA);
-    theme->IMAGE_PREVIEW.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RADIUS", theme->IMAGE_PREVIEW.RADIUS);
-    theme->IMAGE_PREVIEW.RECOLOUR = get_ini_hex(muos_theme, "image_list", "IMAGE_PREVIEW_RECOLOUR", theme->IMAGE_PREVIEW.RECOLOUR);
-    theme->IMAGE_PREVIEW.RECOLOUR_ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RECOLOUR_ALPHA", theme->IMAGE_PREVIEW.RECOLOUR_ALPHA);
+    theme->IMAGE_PREVIEW.ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_ALPHA",
+                                             theme->IMAGE_PREVIEW.ALPHA);
+    theme->IMAGE_PREVIEW.RADIUS = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RADIUS",
+                                              theme->IMAGE_PREVIEW.RADIUS);
+    theme->IMAGE_PREVIEW.RECOLOUR = get_ini_hex(muos_theme, "image_list", "IMAGE_PREVIEW_RECOLOUR",
+                                                theme->IMAGE_PREVIEW.RECOLOUR);
+    theme->IMAGE_PREVIEW.RECOLOUR_ALPHA = get_ini_int(muos_theme, "image_list", "IMAGE_PREVIEW_RECOLOUR_ALPHA",
+                                                      theme->IMAGE_PREVIEW.RECOLOUR_ALPHA);
 
     theme->CHARGER.BACKGROUND = get_ini_hex(muos_theme, "charging", "CHARGER_BACKGROUND", theme->CHARGER.BACKGROUND);
-    theme->CHARGER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "charging", "CHARGER_BACKGROUND_ALPHA", theme->CHARGER.BACKGROUND_ALPHA);
+    theme->CHARGER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "charging", "CHARGER_BACKGROUND_ALPHA",
+                                                  theme->CHARGER.BACKGROUND_ALPHA);
     theme->CHARGER.TEXT = get_ini_hex(muos_theme, "charging", "CHARGER_TEXT", theme->CHARGER.TEXT);
     theme->CHARGER.TEXT_ALPHA = get_ini_int(muos_theme, "charging", "CHARGER_TEXT_ALPHA", theme->CHARGER.TEXT_ALPHA);
     theme->CHARGER.Y_POS = get_ini_int(muos_theme, "charging", "CHARGER_Y_POS", theme->CHARGER.Y_POS);
 
-    theme->VERBOSE_BOOT.BACKGROUND = get_ini_hex(muos_theme, "verbose", "VERBOSE_BOOT_BACKGROUND", theme->VERBOSE_BOOT.BACKGROUND);
-    theme->VERBOSE_BOOT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "verbose", "VERBOSE_BOOT_BACKGROUND_ALPHA", theme->VERBOSE_BOOT.BACKGROUND_ALPHA);
+    theme->VERBOSE_BOOT.BACKGROUND = get_ini_hex(muos_theme, "verbose", "VERBOSE_BOOT_BACKGROUND",
+                                                 theme->VERBOSE_BOOT.BACKGROUND);
+    theme->VERBOSE_BOOT.BACKGROUND_ALPHA = get_ini_int(muos_theme, "verbose", "VERBOSE_BOOT_BACKGROUND_ALPHA",
+                                                       theme->VERBOSE_BOOT.BACKGROUND_ALPHA);
     theme->VERBOSE_BOOT.TEXT = get_ini_hex(muos_theme, "verbose", "VERBOSE_BOOT_TEXT", theme->VERBOSE_BOOT.TEXT);
-    theme->VERBOSE_BOOT.TEXT_ALPHA = get_ini_int(muos_theme, "verbose", "VERBOSE_BOOT_TEXT_ALPHA", theme->VERBOSE_BOOT.TEXT_ALPHA);
+    theme->VERBOSE_BOOT.TEXT_ALPHA = get_ini_int(muos_theme, "verbose", "VERBOSE_BOOT_TEXT_ALPHA",
+                                                 theme->VERBOSE_BOOT.TEXT_ALPHA);
     theme->VERBOSE_BOOT.Y_POS = get_ini_int(muos_theme, "verbose", "VERBOSE_BOOT_Y_POS", theme->VERBOSE_BOOT.Y_POS);
 
     theme->OSK.BACKGROUND = get_ini_hex(muos_theme, "keyboard", "OSK_BACKGROUND", theme->OSK.BACKGROUND);
-    theme->OSK.BACKGROUND_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_BACKGROUND_ALPHA", theme->OSK.BACKGROUND_ALPHA);
+    theme->OSK.BACKGROUND_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_BACKGROUND_ALPHA",
+                                              theme->OSK.BACKGROUND_ALPHA);
     theme->OSK.BORDER = get_ini_hex(muos_theme, "keyboard", "OSK_BORDER", theme->OSK.BORDER);
     theme->OSK.BORDER_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_BORDER_ALPHA", theme->OSK.BORDER_ALPHA);
     theme->OSK.RADIUS = get_ini_int(muos_theme, "keyboard", "OSK_RADIUS", theme->OSK.RADIUS);
     theme->OSK.TEXT = get_ini_hex(muos_theme, "keyboard", "OSK_TEXT", theme->OSK.TEXT);
     theme->OSK.TEXT_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_TEXT_ALPHA", theme->OSK.TEXT_ALPHA);
     theme->OSK.TEXT_FOCUS = get_ini_hex(muos_theme, "keyboard", "OSK_TEXT_FOCUS", theme->OSK.TEXT_FOCUS);
-    theme->OSK.TEXT_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_TEXT_FOCUS_ALPHA", theme->OSK.TEXT_FOCUS_ALPHA);
+    theme->OSK.TEXT_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_TEXT_FOCUS_ALPHA",
+                                              theme->OSK.TEXT_FOCUS_ALPHA);
     theme->OSK.ITEM.BACKGROUND = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND", theme->OSK.ITEM.BACKGROUND);
-    theme->OSK.ITEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_ALPHA", theme->OSK.ITEM.BACKGROUND_ALPHA);
-    theme->OSK.ITEM.BACKGROUND_FOCUS = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS", theme->OSK.ITEM.BACKGROUND_FOCUS);
-    theme->OSK.ITEM.BACKGROUND_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS_ALPHA", theme->OSK.ITEM.BACKGROUND_FOCUS_ALPHA);
+    theme->OSK.ITEM.BACKGROUND_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_ALPHA",
+                                                   theme->OSK.ITEM.BACKGROUND_ALPHA);
+    theme->OSK.ITEM.BACKGROUND_FOCUS = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS",
+                                                   theme->OSK.ITEM.BACKGROUND_FOCUS);
+    theme->OSK.ITEM.BACKGROUND_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BACKGROUND_FOCUS_ALPHA",
+                                                         theme->OSK.ITEM.BACKGROUND_FOCUS_ALPHA);
     theme->OSK.ITEM.BORDER = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BORDER", theme->OSK.ITEM.BORDER);
-    theme->OSK.ITEM.BORDER_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BORDER_ALPHA", theme->OSK.ITEM.BORDER_ALPHA);
-    theme->OSK.ITEM.BORDER_FOCUS = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BORDER_FOCUS", theme->OSK.ITEM.BORDER_FOCUS);
-    theme->OSK.ITEM.BORDER_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BORDER_FOCUS_ALPHA", theme->OSK.ITEM.BORDER_FOCUS_ALPHA);
+    theme->OSK.ITEM.BORDER_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BORDER_ALPHA",
+                                               theme->OSK.ITEM.BORDER_ALPHA);
+    theme->OSK.ITEM.BORDER_FOCUS = get_ini_hex(muos_theme, "keyboard", "OSK_ITEM_BORDER_FOCUS",
+                                               theme->OSK.ITEM.BORDER_FOCUS);
+    theme->OSK.ITEM.BORDER_FOCUS_ALPHA = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_BORDER_FOCUS_ALPHA",
+                                                     theme->OSK.ITEM.BORDER_FOCUS_ALPHA);
     theme->OSK.ITEM.RADIUS = get_ini_int(muos_theme, "keyboard", "OSK_ITEM_RADIUS", theme->OSK.ITEM.RADIUS);
 
     theme->MESSAGE.BACKGROUND = get_ini_hex(muos_theme, "notification", "MSG_BACKGROUND", theme->MESSAGE.BACKGROUND);
-    theme->MESSAGE.BACKGROUND_ALPHA = get_ini_int(muos_theme, "notification", "MSG_BACKGROUND_ALPHA", theme->MESSAGE.BACKGROUND_ALPHA);
+    theme->MESSAGE.BACKGROUND_ALPHA = get_ini_int(muos_theme, "notification", "MSG_BACKGROUND_ALPHA",
+                                                  theme->MESSAGE.BACKGROUND_ALPHA);
     theme->MESSAGE.BORDER = get_ini_hex(muos_theme, "notification", "MSG_BORDER", theme->MESSAGE.BORDER);
-    theme->MESSAGE.BORDER_ALPHA = get_ini_int(muos_theme, "notification", "MSG_BORDER_ALPHA", theme->MESSAGE.BORDER_ALPHA);
+    theme->MESSAGE.BORDER_ALPHA = get_ini_int(muos_theme, "notification", "MSG_BORDER_ALPHA",
+                                              theme->MESSAGE.BORDER_ALPHA);
     theme->MESSAGE.RADIUS = get_ini_int(muos_theme, "notification", "MSG_RADIUS", theme->MESSAGE.RADIUS);
     theme->MESSAGE.TEXT = get_ini_hex(muos_theme, "notification", "MSG_TEXT", theme->MESSAGE.TEXT);
     theme->MESSAGE.TEXT_ALPHA = get_ini_int(muos_theme, "notification", "MSG_TEXT_ALPHA", theme->MESSAGE.TEXT_ALPHA);
@@ -688,16 +845,21 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->BAR.PANEL_WIDTH = get_ini_int(muos_theme, "bar", "BAR_WIDTH", theme->BAR.PANEL_WIDTH);
     theme->BAR.PANEL_HEIGHT = get_ini_int(muos_theme, "bar", "BAR_HEIGHT", theme->BAR.PANEL_HEIGHT);
     theme->BAR.PANEL_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_BACKGROUND", theme->BAR.PANEL_BACKGROUND);
-    theme->BAR.PANEL_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_BACKGROUND_ALPHA", theme->BAR.PANEL_BACKGROUND_ALPHA);
+    theme->BAR.PANEL_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_BACKGROUND_ALPHA",
+                                                    theme->BAR.PANEL_BACKGROUND_ALPHA);
     theme->BAR.PANEL_BORDER = get_ini_hex(muos_theme, "bar", "BAR_BORDER", theme->BAR.PANEL_BORDER);
     theme->BAR.PANEL_BORDER_ALPHA = get_ini_int(muos_theme, "bar", "BAR_BORDER_ALPHA", theme->BAR.PANEL_BORDER_ALPHA);
     theme->BAR.PANEL_BORDER_RADIUS = get_ini_int(muos_theme, "bar", "BAR_RADIUS", theme->BAR.PANEL_BORDER_RADIUS);
     theme->BAR.PROGRESS_WIDTH = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_WIDTH", theme->BAR.PROGRESS_WIDTH);
     theme->BAR.PROGRESS_HEIGHT = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_HEIGHT", theme->BAR.PROGRESS_HEIGHT);
-    theme->BAR.PROGRESS_MAIN_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND", theme->BAR.PROGRESS_MAIN_BACKGROUND);
-    theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND_ALPHA", theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA);
-    theme->BAR.PROGRESS_ACTIVE_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND", theme->BAR.PROGRESS_ACTIVE_BACKGROUND);
-    theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND_ALPHA", theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA);
+    theme->BAR.PROGRESS_MAIN_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND",
+                                                      theme->BAR.PROGRESS_MAIN_BACKGROUND);
+    theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_BACKGROUND_ALPHA",
+                                                            theme->BAR.PROGRESS_MAIN_BACKGROUND_ALPHA);
+    theme->BAR.PROGRESS_ACTIVE_BACKGROUND = get_ini_hex(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND",
+                                                        theme->BAR.PROGRESS_ACTIVE_BACKGROUND);
+    theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_ACTIVE_BACKGROUND_ALPHA",
+                                                              theme->BAR.PROGRESS_ACTIVE_BACKGROUND_ALPHA);
     theme->BAR.PROGRESS_RADIUS = get_ini_int(muos_theme, "bar", "BAR_PROGRESS_RADIUS", theme->BAR.PROGRESS_RADIUS);
     theme->BAR.ICON = get_ini_hex(muos_theme, "bar", "BAR_ICON", theme->BAR.ICON);
     theme->BAR.ICON_ALPHA = get_ini_int(muos_theme, "bar", "BAR_ICON_ALPHA", theme->BAR.ICON_ALPHA);
@@ -706,70 +868,86 @@ void load_theme_from_scheme(const char *scheme, struct theme_config *theme, stru
     theme->ROLL.TEXT = get_ini_hex(muos_theme, "roll", "ROLL_TEXT", theme->ROLL.TEXT);
     theme->ROLL.TEXT_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_TEXT_ALPHA", theme->ROLL.TEXT_ALPHA);
     theme->ROLL.BACKGROUND = get_ini_hex(muos_theme, "roll", "ROLL_BACKGROUND", theme->ROLL.BACKGROUND);
-    theme->ROLL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_BACKGROUND_ALPHA", theme->ROLL.BACKGROUND_ALPHA);
+    theme->ROLL.BACKGROUND_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_BACKGROUND_ALPHA",
+                                               theme->ROLL.BACKGROUND_ALPHA);
     theme->ROLL.RADIUS = get_ini_int(muos_theme, "roll", "ROLL_RADIUS", theme->ROLL.RADIUS);
     theme->ROLL.SELECT_TEXT = get_ini_hex(muos_theme, "roll", "ROLL_SELECT_TEXT", theme->ROLL.SELECT_TEXT);
-    theme->ROLL.SELECT_TEXT_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_SELECT_TEXT_ALPHA", theme->ROLL.SELECT_TEXT_ALPHA);
-    theme->ROLL.SELECT_BACKGROUND = get_ini_hex(muos_theme, "roll", "ROLL_SELECT_BACKGROUND", theme->ROLL.SELECT_BACKGROUND);
-    theme->ROLL.SELECT_BACKGROUND_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_SELECT_BACKGROUND_ALPHA", theme->ROLL.SELECT_BACKGROUND_ALPHA);
+    theme->ROLL.SELECT_TEXT_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_SELECT_TEXT_ALPHA",
+                                                theme->ROLL.SELECT_TEXT_ALPHA);
+    theme->ROLL.SELECT_BACKGROUND = get_ini_hex(muos_theme, "roll", "ROLL_SELECT_BACKGROUND",
+                                                theme->ROLL.SELECT_BACKGROUND);
+    theme->ROLL.SELECT_BACKGROUND_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_SELECT_BACKGROUND_ALPHA",
+                                                      theme->ROLL.SELECT_BACKGROUND_ALPHA);
     theme->ROLL.SELECT_RADIUS = get_ini_int(muos_theme, "roll", "ROLL_SELECT_RADIUS", theme->ROLL.SELECT_RADIUS);
     theme->ROLL.BORDER_COLOUR = get_ini_hex(muos_theme, "roll", "ROLL_BORDER_COLOUR", theme->ROLL.BORDER_COLOUR);
     theme->ROLL.BORDER_ALPHA = get_ini_int(muos_theme, "roll", "ROLL_BORDER_ALPHA", theme->ROLL.BORDER_ALPHA);
     theme->ROLL.BORDER_RADIUS = get_ini_int(muos_theme, "roll", "ROLL_BORDER_RADIUS", theme->ROLL.BORDER_RADIUS);
 
     theme->COUNTER.ALIGNMENT = get_ini_int(muos_theme, "counter", "COUNTER_ALIGNMENT", theme->COUNTER.ALIGNMENT);
-    theme->COUNTER.PADDING_AROUND = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_AROUND", theme->COUNTER.PADDING_AROUND);
-    theme->COUNTER.PADDING_SIDE = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_SIDE", theme->COUNTER.PADDING_SIDE);
+    theme->COUNTER.PADDING_AROUND = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_AROUND",
+                                                theme->COUNTER.PADDING_AROUND);
+    theme->COUNTER.PADDING_SIDE = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_SIDE",
+                                              theme->COUNTER.PADDING_SIDE);
     theme->COUNTER.PADDING_TOP = get_ini_int(muos_theme, "counter", "COUNTER_PADDING_TOP", theme->COUNTER.PADDING_TOP);
-    theme->COUNTER.BORDER_COLOUR = get_ini_hex(muos_theme, "counter", "COUNTER_BORDER_COLOUR", theme->COUNTER.BORDER_COLOUR);
-    theme->COUNTER.BORDER_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BORDER_ALPHA", theme->COUNTER.BORDER_ALPHA);
-    theme->COUNTER.BORDER_WIDTH = get_ini_int(muos_theme, "counter", "COUNTER_BORDER_WIDTH", theme->COUNTER.BORDER_WIDTH);
+    theme->COUNTER.BORDER_COLOUR = get_ini_hex(muos_theme, "counter", "COUNTER_BORDER_COLOUR",
+                                               theme->COUNTER.BORDER_COLOUR);
+    theme->COUNTER.BORDER_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BORDER_ALPHA",
+                                              theme->COUNTER.BORDER_ALPHA);
+    theme->COUNTER.BORDER_WIDTH = get_ini_int(muos_theme, "counter", "COUNTER_BORDER_WIDTH",
+                                              theme->COUNTER.BORDER_WIDTH);
     theme->COUNTER.RADIUS = get_ini_int(muos_theme, "counter", "COUNTER_RADIUS", theme->COUNTER.RADIUS);
     theme->COUNTER.BACKGROUND = get_ini_hex(muos_theme, "counter", "COUNTER_BACKGROUND", theme->COUNTER.BACKGROUND);
-    theme->COUNTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BACKGROUND_ALPHA", theme->COUNTER.BACKGROUND_ALPHA);
+    theme->COUNTER.BACKGROUND_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_BACKGROUND_ALPHA",
+                                                  theme->COUNTER.BACKGROUND_ALPHA);
     theme->COUNTER.TEXT = get_ini_hex(muos_theme, "counter", "COUNTER_TEXT", theme->COUNTER.TEXT);
     theme->COUNTER.TEXT_ALPHA = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_ALPHA", theme->COUNTER.TEXT_ALPHA);
-    theme->COUNTER.TEXT_FADE_TIME = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_FADE_TIME", theme->COUNTER.TEXT_FADE_TIME);
-    strncpy(theme->COUNTER.TEXT_SEPARATOR, get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", theme->COUNTER.TEXT_SEPARATOR), MAX_BUFFER_SIZE - 1);
+    theme->COUNTER.TEXT_FADE_TIME = get_ini_int(muos_theme, "counter", "COUNTER_TEXT_FADE_TIME",
+                                                theme->COUNTER.TEXT_FADE_TIME);
+    strncpy(theme->COUNTER.TEXT_SEPARATOR,
+            get_ini_string(muos_theme, "counter", "COUNTER_TEXT_SEPARATOR", theme->COUNTER.TEXT_SEPARATOR),
+            MAX_BUFFER_SIZE - 1);
     theme->COUNTER.TEXT_SEPARATOR[MAX_BUFFER_SIZE - 1] = '\0';
 
     theme->MISC.STATIC_ALIGNMENT = get_ini_int(muos_theme, "misc", "STATIC_ALIGNMENT", theme->MISC.STATIC_ALIGNMENT);
     theme->MUX.ITEM.COUNT = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_COUNT", theme->MUX.ITEM.COUNT);
     theme->MUX.ITEM.HEIGHT = get_ini_int(muos_theme, "misc", "CONTENT_ITEM_HEIGHT", theme->MUX.ITEM.HEIGHT);
-    theme->MISC.CONTENT.SIZE_TO_CONTENT = get_ini_int(muos_theme, "misc", "CONTENT_SIZE_TO_CONTENT", theme->MISC.CONTENT.SIZE_TO_CONTENT);
+    theme->MISC.CONTENT.SIZE_TO_CONTENT = get_ini_int(muos_theme, "misc", "CONTENT_SIZE_TO_CONTENT",
+                                                      theme->MISC.CONTENT.SIZE_TO_CONTENT);
     theme->MISC.CONTENT.ALIGNMENT = get_ini_int(muos_theme, "misc", "CONTENT_ALIGNMENT", theme->MISC.CONTENT.ALIGNMENT);
-    theme->MISC.CONTENT.PADDING_LEFT = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_LEFT", theme->MISC.CONTENT.PADDING_LEFT);
-    theme->MISC.CONTENT.PADDING_TOP = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_TOP", theme->MISC.CONTENT.PADDING_TOP);
+    theme->MISC.CONTENT.PADDING_LEFT = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_LEFT",
+                                                   theme->MISC.CONTENT.PADDING_LEFT);
+    theme->MISC.CONTENT.PADDING_TOP = get_ini_int(muos_theme, "misc", "CONTENT_PADDING_TOP",
+                                                  theme->MISC.CONTENT.PADDING_TOP);
     theme->MISC.CONTENT.HEIGHT = get_ini_int(muos_theme, "misc", "CONTENT_HEIGHT", theme->MISC.CONTENT.HEIGHT);
     theme->MISC.CONTENT.WIDTH = get_ini_int(muos_theme, "misc", "CONTENT_WIDTH", theme->MISC.CONTENT.WIDTH);
-    theme->MISC.ANIMATED_BACKGROUND = get_ini_int(muos_theme, "misc", "ANIMATED_BACKGROUND", theme->MISC.ANIMATED_BACKGROUND);
+    theme->MISC.ANIMATED_BACKGROUND = get_ini_int(muos_theme, "misc", "ANIMATED_BACKGROUND",
+                                                  theme->MISC.ANIMATED_BACKGROUND);
     theme->MISC.RANDOM_BACKGROUND = get_ini_int(muos_theme, "misc", "RANDOM_BACKGROUND", theme->MISC.RANDOM_BACKGROUND);
     theme->MISC.IMAGE_OVERLAY = get_ini_int(muos_theme, "misc", "IMAGE_OVERLAY", theme->MISC.IMAGE_OVERLAY);
     theme->MISC.NAVIGATION_TYPE = get_ini_int(muos_theme, "misc", "NAVIGATION_TYPE", theme->MISC.NAVIGATION_TYPE);
     theme->MISC.ANTIALIASING = get_ini_int(muos_theme, "misc", "ANTIALIASING", theme->MISC.ANTIALIASING);
 
-    strncpy(theme->TERMINAL.FONT_SIZE, get_ini_string(muos_theme, "terminal", "FONT_SIZE", theme->TERMINAL.FONT_SIZE), MAX_BUFFER_SIZE - 1);
+    strncpy(theme->TERMINAL.FONT_SIZE, get_ini_string(muos_theme, "terminal", "FONT_SIZE", theme->TERMINAL.FONT_SIZE),
+            MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FONT_SIZE[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(theme->TERMINAL.FOREGROUND, get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND), MAX_BUFFER_SIZE - 1);
+    strncpy(theme->TERMINAL.FOREGROUND,
+            get_ini_string(muos_theme, "terminal", "FOREGROUND", theme->TERMINAL.FOREGROUND), MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.FOREGROUND[MAX_BUFFER_SIZE - 1] = '\0';
-    strncpy(theme->TERMINAL.BACKGROUND, get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->TERMINAL.BACKGROUND), MAX_BUFFER_SIZE - 1);
+    strncpy(theme->TERMINAL.BACKGROUND,
+            get_ini_string(muos_theme, "terminal", "BACKGROUND", theme->TERMINAL.BACKGROUND), MAX_BUFFER_SIZE - 1);
     theme->TERMINAL.BACKGROUND[MAX_BUFFER_SIZE - 1] = '\0';
 
     mini_free(muos_theme);
 }
 
-int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size){
-    char *theme_path;
-    if (config.BOOT.FACTORY_RESET) {
-        theme_path = INTERNAL_THEME;
-    } else {
-        theme_path = STORAGE_THEME;
-    }
+int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size) {
+    char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
 
     char active_path[MAX_BUFFER_SIZE];
-    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_path);
+    snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_location);
     if (file_exist(active_path)) {
-        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_path, str_replace(read_line_from_file(active_path, 1), "\r", ""));
+        snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_location,
+                 str_replace(read_line_from_file(active_path, 1), "\r", ""));
         return file_exist(alt_scheme_path);
     }
     return 0;
@@ -783,10 +961,10 @@ void scale_theme(struct mux_device *device) {
         int16_t width;
         int16_t height;
     } dimensions[] = {
-            {640, 480},
-            {720, 480},
-            {720, 576},
-            {720, 720},
+            {640,  480},
+            {720,  480},
+            {720,  576},
+            {720,  720},
             {1024, 768},
             {1280, 720}
     };
@@ -794,34 +972,39 @@ void scale_theme(struct mux_device *device) {
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); i++) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width, dimensions[i].height);
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width,
+                 dimensions[i].height);
         if (!directory_exist(theme_device_folder)) continue;
 
         // Compare aspect ratios
         if (target_width * dimensions[i].height == target_height * dimensions[i].width) {
             device->MUX.WIDTH = dimensions[i].width;
             device->MUX.HEIGHT = dimensions[i].height;
-            device->SCREEN.ZOOM = (float)target_width / dimensions[i].width;;
-            printf("Scaling resolution: %d x %d to %d x %d\n", dimensions[i].width, dimensions[i].height, target_width, target_height);
-            printf("Calculated scale factor: %.2f\n", device->SCREEN.ZOOM);
+            device->SCREEN.ZOOM = (float) target_width / dimensions[i].width;
+            LOG_INFO(mux_module, "Scaling Resolution: %dx%d to %dx%d",
+                     dimensions[i].width, dimensions[i].height, target_width, target_height)
+            LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
             return;
         }
     }
 
     for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); i++) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
-        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width, dimensions[i].height);
+        snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width,
+                 dimensions[i].height);
         if (!directory_exist(theme_device_folder)) continue;
 
         device->MUX.WIDTH = dimensions[i].width;
         device->MUX.HEIGHT = dimensions[i].height;
 
         // Calculate scale factor to ensure it fits within target dimensions
-        float scale_width = (float)target_width / dimensions[i].width;
-        float scale_height = (float)target_height / dimensions[i].height;
-        device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width : scale_height; // Ensure neither dimension exceeds target
-        printf("Scaling resolution: %d x %d to %d x %d\n", dimensions[i].width, dimensions[i].height, target_width, target_height);
-        printf("Calculated scale factor: %.2f\n", device->SCREEN.ZOOM);
+        float scale_width = (float) target_width / dimensions[i].width;
+        float scale_height = (float) target_height / dimensions[i].height;
+        device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width
+                                                           : scale_height; // Ensure neither dimension exceeds target
+        LOG_INFO(mux_module, "Scaling Resolution: %dx%d to %dx%d",
+                 dimensions[i].width, dimensions[i].height, target_width, target_height)
+        LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
         return;
     }
 }
@@ -837,16 +1020,17 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
 
         if (config->SETTINGS.GENERAL.THEME_RESOLUTION > 0) {
             snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME,
-                    config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH, config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT);
+                     config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH, config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT);
             if (directory_exist(theme_device_folder)) {
                 device->MUX.WIDTH = config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH;
                 device->MUX.HEIGHT = config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT;
                 get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-                float scale_width = (float)device->SCREEN.WIDTH / device->MUX.WIDTH;
-                float scale_height = (float)device->SCREEN.HEIGHT / device->MUX.HEIGHT;
-                device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width : scale_height; // Ensure neither dimension exceeds target
-                printf("Calculated scale factor: %.2f\n", device->SCREEN.ZOOM);
+                float scale_width = (float) device->SCREEN.WIDTH / device->MUX.WIDTH;
+                float scale_height = (float) device->SCREEN.HEIGHT / device->MUX.HEIGHT;
+                device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width
+                                                                   : scale_height; // Ensure neither dimension exceeds target
+                LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
             }
         }
 
@@ -856,7 +1040,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
             get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         }
 
-        printf("Loading Theme resolution: %d x %d\n", device->MUX.WIDTH, device->MUX.HEIGHT);
+        LOG_INFO("muxfrontend", "Loading Theme Resolution: %dx%d", device->MUX.WIDTH, device->MUX.HEIGHT)
     }
 
     init_theme_config(theme, device);
@@ -866,7 +1050,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (theme_compat()) {
         for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
             if (load_scheme(STORAGE_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
-                LOG_INFO(mux_module, "Loading STORAGE Theme Scheme: %s", scheme);
+                LOG_INFO("muxfrontend", "Loading STORAGE Theme Scheme: %s", scheme)
                 scheme_loaded = 1;
                 load_theme_from_scheme(scheme, theme, device);
             }
@@ -882,7 +1066,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     if (!scheme_loaded) {
         for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
             if (load_scheme(INTERNAL_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
-                LOG_INFO(mux_module, "Loading INTERNAL Theme Scheme: %s", scheme)
+                LOG_INFO("muxfrontend", "Loading INTERNAL Theme Scheme: %s", scheme)
                 scheme_loaded = 1;
                 load_theme_from_scheme(scheme, theme, device);
             }
@@ -1095,7 +1279,7 @@ void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, con
 }
 
 void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyph,
-                            const char *screen_name, char *item_glyph) {
+                            const char *screen_name, const char *item_glyph) {
     if (theme->LIST_DEFAULT.GLYPH_ALPHA == 0 && theme->LIST_FOCUS.GLYPH_ALPHA == 0) return;
 
     char glyph_image_embed[MAX_BUFFER_SIZE];

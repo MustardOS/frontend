@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL2/SDL_mixer.h>
 #include "../lvgl/lvgl.h"
 #include "mini/mini.h"
 #include "options.h"
@@ -15,6 +16,8 @@ extern int nav_sound;
 extern int progress_onscreen;
 extern struct mux_config config;
 extern char mux_module[MAX_BUFFER_SIZE];
+
+#define SOUND_TOTAL 11
 
 struct ImageSettings {
     char *image_path;
@@ -47,6 +50,23 @@ enum count_type {
 enum visual_type {
     CLOCK, BLUETOOTH, NETWORK, BATTERY
 };
+
+enum time_type {
+    TIME_12H, TIME_24H
+};
+
+enum sound_type {
+    SND_CONFIRM, SND_BACK, SND_KEYPRESS, SND_NAVIGATE,
+    SND_ERROR, SND_MUOS, SND_REBOOT, SND_SHUTDOWN,
+    SND_STARTUP, SND_INFO_OPEN, SND_INFO_CLOSE,
+};
+
+typedef struct {
+    Mix_Chunk *chunk;
+    Mix_Music *music;
+} CachedSound;
+
+extern CachedSound sound_cache[SOUND_TOTAL];
 
 enum write_file_type {
     CHAR, INT
@@ -136,6 +156,8 @@ void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *conte
 void show_rom_info(lv_obj_t *panel, lv_obj_t *e_title, lv_obj_t *p_title, lv_obj_t *e_desc,
                    char *t_title, char *t_desc);
 
+void nav_move(lv_group_t *group, int direction);
+
 void nav_prev(lv_group_t *group, int count);
 
 void nav_next(lv_group_t *group, int count);
@@ -158,7 +180,7 @@ void load_gov(const char *rom, const char *dir, const char *sys, int forced);
 
 void load_mux(const char *value);
 
-void play_sound(const char *sound, int enabled, int wait, int background);
+void play_sound(int sound, int enabled, int wait);
 
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive);
 
@@ -259,7 +281,7 @@ int get_grid_row_item_count(int current_item_index);
 
 char *kiosk_nope();
 
-void run_exec(const char *args[], size_t size);
+void run_exec(const char *args[], size_t size, int background);
 
 char *get_directory_core(char *rom_dir, size_t line_number);
 
@@ -284,7 +306,8 @@ int search_for_config(const char *base_path, const char *file_name, const char *
 
 uint32_t fnv1a_hash(const char *str);
 
-bool get_glyph_path(const char *mux_module, char *glyph_name, char *glyph_image_embed, size_t glyph_image_embed_size);
+bool get_glyph_path(const char *mux_module, const char *glyph_name,
+                    char *glyph_image_embed, size_t glyph_image_embed_size);
 
 void populate_history_items();
 

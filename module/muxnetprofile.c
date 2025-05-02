@@ -9,16 +9,17 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
                      lang.MUXNETPROFILE.TITLE, lang.MUXNETPROFILE.HELP);
 }
 
-static void sanitize_ssid_name(char *dest, const char *src, size_t max_len) {
+static void sanitise_ssid_name(char *dest, const char *src) {
     size_t j = 0;
-    while (*src && j < max_len - 1) {
+    while (*src && j < MAX_BUFFER_SIZE - 1) {
         // replace any slashes with underscores, to prevent some valid SSID names leading to invalid profile file names
         dest[j++] = (*src == '/' || *src == '\\') ? '_' : *src;
         src++;
@@ -107,15 +108,15 @@ static int save_profile() {
     static char profile_file[MAX_BUFFER_SIZE];
     int counter = 1;
 
-    char sanitized_ssid[MAX_BUFFER_SIZE];
-    sanitize_ssid_name(sanitized_ssid, p_ssid, sizeof(sanitized_ssid));
+    char sanitised_ssid[MAX_BUFFER_SIZE];
+    sanitise_ssid_name(sanitised_ssid, p_ssid);
 
     snprintf(profile_file, sizeof(profile_file),
-             (RUN_STORAGE_PATH "network/%s.ini"), sanitized_ssid);
+             (RUN_STORAGE_PATH "network/%s.ini"), sanitised_ssid);
 
     while (file_exist(profile_file)) {
         snprintf(profile_file, sizeof(profile_file),
-                 (RUN_STORAGE_PATH "network/%s - %d.ini"), sanitized_ssid, ++counter);
+                 (RUN_STORAGE_PATH "network/%s - %d.ini"), sanitised_ssid, ++counter);
     }
 
     mini_t *net_profile = mini_try_load(profile_file);
@@ -135,40 +136,37 @@ static int save_profile() {
     return 1;
 }
 
-static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
+static void list_nav_move(int steps, int direction) {
+    if (ui_count <= 0) return;
+    play_sound(SND_NAVIGATE, nav_sound, 0);
+
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = !current_item_index ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
+
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     set_label_long_mode(&theme, lv_group_get_focused(ui_group),
                         lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void create_profile_items() {
@@ -278,7 +276,7 @@ static void create_profile_items() {
         lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
-        list_nav_next(0);
+        list_nav_move(0, +1);
     }
 }
 
@@ -287,7 +285,7 @@ static void handle_confirm(void) {
         return;
     }
 
-    play_sound("confirm", nav_sound, 0, 1);
+    play_sound(SND_CONFIRM, nav_sound, 0);
     load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
 
     close_input();
@@ -296,14 +294,14 @@ static void handle_confirm(void) {
 
 static void handle_back(void) {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 0, 1);
+    play_sound(SND_BACK, nav_sound, 0);
 
     close_input();
     mux_input_stop();
@@ -313,7 +311,7 @@ static void handle_save(void) {
     if (msgbox_active) return;
 
     if (save_profile()) {
-        play_sound("confirm", nav_sound, 0, 1);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         load_mux("net_profile");
 
         close_input();
@@ -327,7 +325,7 @@ static void handle_remove(void) {
     }
 
     if (remove_profile(lv_label_get_text(lv_group_get_focused(ui_group)))) {
-        play_sound("confirm", nav_sound, 0, 1);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         load_mux("net_profile");
 
         close_input();
@@ -339,7 +337,7 @@ static void handle_help(void) {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         show_help();
     }
 }
@@ -422,7 +420,6 @@ static void ui_refresh_task() {
 }
 
 int muxnetprofile_main() {
-
     init_module("muxnetprofile");
 
     init_theme(1, 1);
@@ -436,7 +433,6 @@ int muxnetprofile_main() {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     init_fonts();
-    init_navigation_sound(&nav_sound, mux_module);
 
     create_profile_items();
     if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.NONE);

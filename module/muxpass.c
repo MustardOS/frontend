@@ -35,7 +35,7 @@ static void init_navigation_group() {
 }
 
 static void handle_confirm(void) {
-    play_sound("confirm", nav_sound, 0, 0);
+    play_sound(SND_CONFIRM, nav_sound, 0);
 
     char b1[2], b2[2], b3[2], b4[2], b5[2], b6[2];
     uint32_t bs = sizeof(b1);
@@ -58,7 +58,7 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
-    play_sound("back", nav_sound, 0, 0);
+    play_sound(SND_BACK, nav_sound, 0);
 
     exit_status_muxpass = 2;
     close_input();
@@ -67,7 +67,7 @@ static void handle_back(void) {
 
 static void handle_up(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    play_sound("navigate", nav_sound, 0, 0);
+    play_sound(SND_NAVIGATE, nav_sound, 0);
     lv_roller_set_selected(element_focused,
                            lv_roller_get_selected(element_focused) - 1,
                            LV_ANIM_ON);
@@ -75,19 +75,19 @@ static void handle_up(void) {
 
 static void handle_down(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    play_sound("navigate", nav_sound, 0, 0);
+    play_sound(SND_NAVIGATE, nav_sound, 0);
     lv_roller_set_selected(element_focused,
                            lv_roller_get_selected(element_focused) + 1,
                            LV_ANIM_ON);
 }
 
 static void handle_left(void) {
-    play_sound("navigate", nav_sound, 0, 0);
+    play_sound(SND_NAVIGATE, nav_sound, 0);
     nav_prev(ui_group, 1);
 }
 
 static void handle_right(void) {
-    play_sound("navigate", nav_sound, 0, 0);
+    play_sound(SND_NAVIGATE, nav_sound, 0);
     nav_next(ui_group, 1);
 }
 
@@ -180,7 +180,6 @@ int muxpass_main(char *p_type) {
 
     init_fonts();
     init_navigation_group();
-    init_navigation_sound(&nav_sound, mux_module);
 
     load_kiosk(&kiosk);
 

@@ -54,6 +54,7 @@ int collection_item_count = 0;
 char current_wall[MAX_BUFFER_SIZE];
 lv_obj_t *wall_img = NULL;
 struct grid_info grid_info;
+CachedSound sound_cache[SOUND_TOTAL];
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
@@ -112,7 +113,7 @@ void extract_archive(char *filename) {
         } else {
             unload_image_animation();
         }
-        run_exec(exec, exec_count);
+        run_exec(exec, exec_count, 0);
     }
     free(exec);
 }
@@ -702,6 +703,10 @@ void show_rom_info(lv_obj_t *panel, lv_obj_t *i_title, lv_obj_t *p_title, lv_obj
     }
 }
 
+void nav_move(lv_group_t *group, int direction) {
+    (direction < 0 ? nav_prev : nav_next)(group, 1);
+}
+
 void nav_prev(lv_group_t *group, int count) {
     int i;
     for (i = 0; i < count; i++) {
@@ -850,39 +855,18 @@ void load_mux(const char *value) {
     fclose(file);
 }
 
-void play_sound(const char *sound, int enabled, int wait, int background) {
-    if (!enabled) return;
+void play_sound(int sound, int enabled, int wait) {
+    if (!enabled || sound < 0 || sound >= SOUND_TOTAL) return;
 
-    char ns_file[MAX_BUFFER_SIZE];
-    snprintf(ns_file, sizeof(ns_file), "%s/sound/%s.wav", STORAGE_THEME, sound);
-
-    if (!file_exist(ns_file)) {
-        LOG_ERROR(mux_module, "Sound file not found: %s", ns_file)
-        return;
-    }
-
-    if (background) {
-        pid_t pid = fork();
-        if (pid == 0) {
-            snprintf(ns_file, sizeof(ns_file), "%s", sound);
-            execlp((INTERNAL_PATH "extra/muplay"), "muplay", ns_file, (char *) NULL);
-            LOG_ERROR(mux_module, "Failed to start 'muplay' for sound playback")
-            _exit(1);
-        } else if (pid < 0) {
-            LOG_ERROR(mux_module, "Failed to fork sound process!")
-        }
+    CachedSound *cs = &sound_cache[sound];
+    if (cs->chunk) {
+        int channel = Mix_PlayChannel(-1, cs->chunk, 0);
+        if (wait) while (Mix_Playing(channel)) SDL_Delay(20);
+    } else if (cs->music) {
+        Mix_PlayMusic(cs->music, 1);
+        if (wait) while (Mix_PlayingMusic()) SDL_Delay(20);
     } else {
-        Mix_Chunk *sound_chunk = Mix_LoadWAV(ns_file);
-
-        if (sound_chunk) {
-            int sound_play = Mix_PlayChannel(-1, sound_chunk, 0);
-
-            if (wait) {
-                while (Mix_Playing(sound_play)) {
-                    SDL_Delay(MAX_BUFFER_SIZE); // Could be shorter but some sounds get cut off so I'm cheating!~~
-                }
-            }
-        }
+        LOG_ERROR("sound", "Sound not cached: %d", sound)
     }
 }
 
@@ -2118,17 +2102,51 @@ int map_drop_down_to_value(int selected_index, const int *options, int num_optio
     return def_value;
 }
 
+void load_sound_cache(const char *theme_location) {
+    const char *names[SOUND_TOTAL] = {
+            "confirm", "back", "keypress", "navigate", "error", "muos",
+            "reboot", "shutdown", "startup", "info_open", "info_close"
+    };
+
+    const char *snd_ext[] = {"wav", "ogg"};
+    for (int i = 0; i < SOUND_TOTAL; ++i) {
+        for (size_t j = 0; j < sizeof(snd_ext) / sizeof(snd_ext[0]); ++j) {
+            char path[MAX_BUFFER_SIZE];
+            snprintf(path, sizeof(path), "%s/sound/%s.%s", theme_location, names[i], snd_ext[j]);
+
+            if (file_exist(path)) {
+                if (strcmp(snd_ext[j], "wav") == 0) {
+                    sound_cache[i].chunk = Mix_LoadWAV(path);
+                } else {
+                    sound_cache[i].music = Mix_LoadMUS(path);
+                }
+                break;
+            }
+        }
+    }
+}
+
 void init_navigation_sound(int *nav_sound, const char *mux_module) {
     *nav_sound = 0;
 
     if (config.SETTINGS.GENERAL.SOUND) {
         if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            Mix_Init(0);
-            Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 2048);
-            LOG_SUCCESS(mux_module, "SDL Init Success")
-            *nav_sound = 1;
+            int flags = MIX_INIT_OGG;
+            int inited = Mix_Init(flags);
+
+            if ((inited & flags) != flags) {
+                LOG_ERROR(mux_module, "Missing SDL_mixer support for OGG")
+            }
+
+            if (Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 2048) == 0) {
+                LOG_SUCCESS(mux_module, "SDL Init Success")
+                load_sound_cache(config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME);
+                *nav_sound = 1;
+            } else {
+                LOG_ERROR(mux_module, "SDL_mixer open failed: %s", Mix_GetError())
+            }
         } else {
-            LOG_ERROR(mux_module, "SDL Failed To Init")
+            LOG_ERROR(mux_module, "SDL Init Failed")
         }
     }
 }
@@ -2181,10 +2199,11 @@ int get_grid_row_item_count(int current_item_index) {
 }
 
 char *kiosk_nope() {
+    play_sound(SND_ERROR, nav_sound, 0);
     return lang.GENERIC.KIOSK_DISABLE;
 }
 
-void run_exec(const char *args[], size_t size) {
+void run_exec(const char *args[], size_t size, int background) {
     const char *san[size];
 
     size_t j = 0;
@@ -2209,7 +2228,7 @@ void run_exec(const char *args[], size_t size) {
     if (pid == 0) {
         execvp(san[0], (char *const *) san);
         _exit(EXIT_FAILURE);
-    } else if (pid > 0) {
+    } else if (pid > 0 && !background) {
         waitpid(pid, NULL, 0);
     }
 }
@@ -2264,7 +2283,7 @@ struct screen_dimension get_device_dimensions() {
         dims.HEIGHT = device.SCREEN.INTERNAL.HEIGHT;
     }
 
-    LOG_INFO(mux_module, "Screen Output Dimensions: %dx%d", dims.WIDTH, dims.HEIGHT);
+    LOG_INFO(mux_module, "Screen Output Dimensions: %dx%d", dims.WIDTH, dims.HEIGHT)
     return dims;
 }
 
@@ -2399,7 +2418,8 @@ uint32_t fnv1a_hash(const char *str) {
     return hash;
 }
 
-bool get_glyph_path(const char *mux_module, char *glyph_name, char *glyph_image_embed, size_t glyph_image_embed_size) {
+bool get_glyph_path(const char *mux_module, const char *glyph_name,
+                    char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
@@ -2488,11 +2508,11 @@ void update_bootlogo() {
         snprintf(bootlogo_dest, sizeof(bootlogo_dest), "%s/bootlogo.bmp", device.STORAGE.BOOT.MOUNT);
 
         const char *args[] = {"cp", bootlogo_image, bootlogo_dest, NULL};
-        run_exec(args, A_SIZE(args));
+        run_exec(args, A_SIZE(args), 0);
 
         if (strcasecmp(device.DEVICE.NAME, "rg28xx-h") == 0) {
             const char *args[] = {"convert", bootlogo_dest, "-rotate", "270", bootlogo_dest, NULL};
-            run_exec(args, A_SIZE(args));
+            run_exec(args, A_SIZE(args), 0);
         }
     }
 }

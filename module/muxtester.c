@@ -124,7 +124,6 @@ static void init_elements() {
 }
 
 int muxtester_main() {
-
     init_module("muxtester");
 
     init_theme(0, 0);
@@ -139,8 +138,6 @@ int muxtester_main() {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     init_fonts();
-    init_navigation_sound(&nav_sound, mux_module);
-
     load_kiosk(&kiosk);
 
     init_timer(NULL, NULL);

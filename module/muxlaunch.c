@@ -13,7 +13,8 @@ lv_obj_t *ui_objects_panel[UI_COUNT];
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_icons[UI_COUNT];
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 static void show_help(lv_obj_t *element_focused) {
     char *help_messages[UI_COUNT] = {
@@ -145,52 +146,43 @@ static void init_navigation_group() {
     }
 }
 
-static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
+static void list_nav_move(int steps, int direction) {
+    play_sound(SND_NAVIGATE, nav_sound, 0);
+
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = !current_item_index ? UI_COUNT - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
+
     if (theme.GRID.ENABLED) {
         update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
                                     current_item_index, ui_pnlGrid);
     } else {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     }
+
     set_label_long_mode(&theme, lv_group_get_focused(ui_group),
                         lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    if (theme.GRID.ENABLED) {
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
-                                    current_item_index, ui_pnlGrid);
-    } else {
-        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    }
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void handle_a() {
@@ -217,15 +209,17 @@ static void handle_a() {
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
         if (!strcasecmp(u_data, elements[i].glyph_name)) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
+                play_sound(SND_ERROR, nav_sound, 0);
                 toast_message(kiosk_nope(), 1000, 1000);
+                refresh_screen(ui_screen);
                 return;
             }
 
-            const char *sound = !strcmp(elements[i].mux_name, "reboot") ? "reboot" :
-                                !strcmp(elements[i].mux_name, "shutdown") ? "shutdown" :
-                                "confirm";
+            int sound = !strcmp(elements[i].mux_name, "reboot") ? SND_REBOOT :
+                        !strcmp(elements[i].mux_name, "shutdown") ? SND_SHUTDOWN :
+                        SND_CONFIRM;
 
-            play_sound(sound, nav_sound, 0, 1);
+            play_sound(sound, nav_sound, 0);
             load_mux(elements[i].mux_name);
             break;
         }
@@ -237,7 +231,7 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_INFO_CLOSE, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -255,7 +249,7 @@ static void handle_menu() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_INFO_OPEN, nav_sound, 0);
         show_help(lv_group_get_focused(ui_group));
     }
 }
@@ -365,6 +359,8 @@ static void handle_left() {
             case 7:
                 list_nav_prev(5);
                 break;
+            default:
+                break;
         }
     }
 }
@@ -400,6 +396,8 @@ static void handle_right() {
                 break;
             case 2:
                 list_nav_next(5);
+                break;
+            default:
                 break;
         }
     }
@@ -462,15 +460,15 @@ static void handle_kiosk_toggle() {
 
         if (file_exist(KIOSK_CONFIG)) {
             const char *args[] = {"mv", KIOSK_CONFIG, kiosk_storage, NULL};
-            run_exec(args, A_SIZE(args));
+            run_exec(args, A_SIZE(args), 0);
             handle_kiosk_purge();
         } else {
             if (file_exist(kiosk_storage)) {
                 const char *args_mv[] = {"mv", kiosk_storage, KIOSK_CONFIG, NULL};
-                run_exec(args_mv, A_SIZE(args_mv));
+                run_exec(args_mv, A_SIZE(args_mv), 0);
 
                 const char *args_init[] = {(INTERNAL_PATH "script/var/init/kiosk.sh"), "init", NULL};
-                run_exec(args_init, A_SIZE(args_init));
+                run_exec(args_init, A_SIZE(args_init), 0);
 
                 toast_message(lang.MUXLAUNCH.KIOSK.PROCESS, 1000, 1000);
                 sleep(1); /* not really needed but it's a good buffer... */
@@ -553,9 +551,6 @@ static void ui_refresh_task() {
 
 int muxlaunch_main() {
     init_module("muxlaunch");
-
-    printf("****muxlaunch_main argv[0]: %s\n", mux_module);
-
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXLAUNCH.TITLE);
@@ -569,7 +564,6 @@ int muxlaunch_main() {
 
     init_fonts();
     init_navigation_group();
-    init_navigation_sound(&nav_sound, mux_module);
 
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));

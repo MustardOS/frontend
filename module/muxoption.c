@@ -17,7 +17,8 @@ static char rom_system[MAX_BUFFER_SIZE];
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_icons[UI_COUNT];
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 struct help_msg {
     lv_obj_t *element;
@@ -133,36 +134,36 @@ static void init_navigation_group() {
     }
 }
 
-static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
+static void list_nav_move(int steps, int direction) {
+    play_sound(SND_NAVIGATE, nav_sound, 0);
+
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
+
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     set_label_long_mode(&theme, lv_group_get_focused(ui_group),
                         lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == UI_COUNT - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void handle_confirm() {
@@ -184,11 +185,13 @@ static void handle_confirm() {
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
         if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
+                play_sound(SND_ERROR, nav_sound, 0);
                 toast_message(kiosk_nope(), 1000, 1000);
+                refresh_screen(ui_screen);
                 return;
             }
 
-            play_sound("confirm", nav_sound, 0, 1);
+            play_sound(SND_CONFIRM, nav_sound, 0);
             load_mux(elements[i].mux_name);
             break;
         }
@@ -200,14 +203,14 @@ static void handle_confirm() {
 
 static void handle_back() {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 0, 1);
+    play_sound(SND_BACK, nav_sound, 0);
 
     remove(MUOS_SAA_LOAD);
     remove(MUOS_SAG_LOAD);
@@ -220,7 +223,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         show_help(lv_group_get_focused(ui_group));
     }
 }
@@ -292,9 +295,9 @@ static void ui_refresh_task() {
 }
 
 int muxoption_main(char *name, char *dir, char *sys) {
-    snprintf(rom_name, sizeof(rom_name), name);
-    snprintf(rom_dir, sizeof(rom_name), dir);
-    snprintf(rom_system, sizeof(rom_name), sys);
+    snprintf(rom_name, sizeof(rom_name), "%s", name);
+    snprintf(rom_dir, sizeof(rom_name), "%s", dir);
+    snprintf(rom_system, sizeof(rom_name), "%s", sys);
 
     init_module("muxoption");
 
@@ -318,10 +321,9 @@ int muxoption_main(char *name, char *dir, char *sys) {
 
     init_fonts();
     init_navigation_group();
-    init_navigation_sound(&nav_sound, mux_module);
 
     load_kiosk(&kiosk);
-    list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
+    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 

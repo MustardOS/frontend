@@ -58,6 +58,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.LAUNCH, "Launch");
     GENERIC_FIELD(lang->GENERIC.LOAD, "Load");
     GENERIC_FIELD(lang->GENERIC.LOADING, "Loading…");
+    GENERIC_FIELD(lang->GENERIC.SAVING, "Saving…");
     GENERIC_FIELD(lang->GENERIC.MIGRATE, "Migrate to SD2");
     GENERIC_FIELD(lang->GENERIC.NEW, "New");
     GENERIC_FIELD(lang->GENERIC.NO_HELP, "No Help Information Found");

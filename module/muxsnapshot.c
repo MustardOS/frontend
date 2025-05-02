@@ -9,7 +9,8 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
@@ -113,39 +114,44 @@ static void create_snapshot_items() {
     free(file_names);
 }
 
-static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
+static void list_nav_move(int steps, int direction) {
+    if (ui_count <= 0) return;
+    play_sound(SND_NAVIGATE, nav_sound, 0);
+
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
+
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void handle_a() {
     if (msgbox_active) return;
 
     if (ui_count > 0) {
-        play_sound("confirm", nav_sound, 0, 1);
+        play_sound(SND_CONFIRM, nav_sound, 0);
 
         size_t exec_count;
         const char *args[] = {(INTERNAL_PATH "script/mux/extract.sh"), items[current_item_index].name, NULL};
@@ -157,7 +163,7 @@ static void handle_a() {
             } else {
                 unload_image_animation();
             }
-            run_exec(exec, exec_count);
+            run_exec(exec, exec_count, 0);
         }
         free(exec);
 
@@ -172,14 +178,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 0, 1);
+    play_sound(SND_BACK, nav_sound, 0);
 
     close_input();
     mux_input_stop();
@@ -189,7 +195,7 @@ static void handle_menu() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         show_help();
     }
 }
@@ -283,9 +289,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxsnapshot_main(int argc, char *argv[]) {
-    (void) argc;
-
+int muxsnapshot_main() {
     init_module("muxsnapshot");
 
     init_theme(1, 1);
@@ -300,7 +304,6 @@ int muxsnapshot_main(int argc, char *argv[]) {
 
     init_fonts();
     create_snapshot_items();
-    init_navigation_sound(&nav_sound, mux_module);
 
     int sys_index = 0;
     if (file_exist(MUOS_IDX_LOAD)) {
@@ -309,7 +312,7 @@ int muxsnapshot_main(int argc, char *argv[]) {
     }
 
     if (ui_count > 0) {
-        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) list_nav_next(sys_index);
+        if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) list_nav_move(sys_index, +1);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXSNAPSHOT.NONE);
     }

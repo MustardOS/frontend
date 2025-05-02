@@ -28,7 +28,7 @@ static void set_brightness(int brightness) {
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
 
     const char *args[] = {(INTERNAL_PATH "device/current/input/bright.sh"), bright_value, NULL};
-    run_exec(args, A_SIZE(args));
+    run_exec(args, A_SIZE(args), 1);
 }
 
 static void handle_power_short(void) {
@@ -115,7 +115,6 @@ int main() {
     overlay_image = lv_img_create(ui_scrCharge_charge);
     load_overlay_image(ui_scrCharge_charge, overlay_image);
 
-    init_navigation_sound(&nav_sound, mux_module);
     lv_obj_set_y(ui_pnlCharge_charge, theme.CHARGER.Y_POS);
 
     battery_task_charge();

@@ -2,7 +2,6 @@
 #include "muxpower.h"
 #include "ui/ui_muxpower.h"
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "../common/init.h"
 #include "../common/common.h"
@@ -14,7 +13,8 @@ static int shutdown_original, battery_original, idle_display_original, idle_slee
 #define UI_COUNT 4
 static lv_obj_t *ui_objects[UI_COUNT];
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 static const int shutdown_values[] = {-2, -1, 2, 10, 30, 60, 120, 300, 600, 900, 1800, 3600};
 static const int battery_values[] = {-255, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
@@ -146,7 +146,7 @@ static void save_tweak_options() {
 
     if (is_modified > 0) {
         const char *args[] = {(INTERNAL_PATH "script/mux/tweak.sh"), NULL};
-        run_exec(args, A_SIZE(args));
+        run_exec(args, A_SIZE(args), 0);
         refresh_config = 1;
     }
 }
@@ -231,43 +231,45 @@ static void init_navigation_group() {
     }
 }
 
-static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
+static void list_nav_move(int steps, int direction) {
+    play_sound(SND_NAVIGATE, nav_sound, 0);
+
     for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_value, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_value, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
+
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
-    for (int step = 0; step < steps; ++step) {
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_value, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    play_sound("navigate", nav_sound, 0, 0);
+    play_sound(SND_NAVIGATE, nav_sound, 0);
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    play_sound("navigate", nav_sound, 0, 0);
+    play_sound(SND_NAVIGATE, nav_sound, 0);
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
@@ -279,14 +281,14 @@ static void handle_confirm(void) {
 
 static void handle_back(void) {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 0, 1);
+    play_sound(SND_BACK, nav_sound, 0);
 
     save_tweak_options();
 
@@ -300,7 +302,7 @@ static void handle_help(void) {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         show_help(lv_group_get_focused(ui_group));
     }
 }
@@ -370,7 +372,6 @@ static void ui_refresh_task() {
 }
 
 int muxpower_main() {
-
     init_module("muxpower");
 
     init_theme(1, 0);
@@ -387,7 +388,6 @@ int muxpower_main() {
     init_fonts();
     init_navigation_group();
     init_element_events();
-    init_navigation_sound(&nav_sound, mux_module);
 
     restore_tweak_options();
     init_dropdown_settings();

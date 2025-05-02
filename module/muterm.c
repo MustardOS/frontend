@@ -370,7 +370,7 @@ int main(int argc, char *argv[]) {
         if (cmd) { // Surely we are running something...?!
             size_t cmd_count = 0;
             while (cmd[cmd_count]) cmd_count++;
-            run_exec(cmd, cmd_count + 1);
+            run_exec(cmd, cmd_count + 1, 0);
             exit(127);
         }
     }

@@ -10,7 +10,8 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 struct help_msg {
     lv_obj_t *element;
@@ -176,50 +177,45 @@ static void create_app_items() {
     }
 }
 
-static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
+static void list_nav_move(int steps, int direction) {
+    if (ui_count <= 0) return;
+    play_sound(SND_NAVIGATE, nav_sound, 0);
+
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             items[current_item_index].display_name);
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
     }
+
     if (grid_mode_enabled) {
         update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
                                     current_item_index, ui_pnlGrid);
     } else {
-        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL,
+                               ui_count, current_item_index, ui_pnlContent);
     }
+
     set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
+
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            items[current_item_index].display_name);
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    if (grid_mode_enabled) {
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
-                                    current_item_index, ui_pnlGrid);
-    } else {
-        update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    }
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void handle_a() {
@@ -237,14 +233,18 @@ static void handle_a() {
         for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
             if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
                 if (*(elements[i].kiosk_flag)) {
+                    play_sound(SND_ERROR, nav_sound, 0);
                     toast_message(kiosk_nope(), 1000, 1000);
+                    refresh_screen(ui_screen);
+
                     return;
                 }
             }
         }
 
-        play_sound("confirm", nav_sound, 0, 1);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         toast_message(lang.MUXAPP.LOAD_APP, 0, 0);
+        refresh_screen(ui_screen);
 
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
@@ -256,14 +256,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 0, 1);
+    play_sound(SND_BACK, nav_sound, 0);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "apps");
 
     close_input();
@@ -274,7 +274,7 @@ static void handle_menu() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         show_help();
     }
 }
@@ -374,7 +374,6 @@ int muxapp_main() {
     init_fonts();
     create_app_items();
     update_footer_nav_elements();
-    init_navigation_sound(&nav_sound, mux_module);
 
     int ain_index = 0;
     if (file_exist(MUOS_AIN_LOAD)) {
@@ -386,7 +385,7 @@ int muxapp_main() {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, APPLICATION);
 
     if (ui_count > 0) {
-        if (ain_index > -1 && ain_index <= ui_count && current_item_index < ui_count) list_nav_next(ain_index);
+        if (ain_index > -1 && ain_index <= ui_count && current_item_index < ui_count) list_nav_move(ain_index, +1);
     } else {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXAPP.NO_APP);
     }

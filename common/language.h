@@ -42,6 +42,7 @@ struct mux_lang {
         char LAUNCH[MAX_BUFFER_SIZE];
         char LOAD[MAX_BUFFER_SIZE];
         char LOADING[MAX_BUFFER_SIZE];
+        char SAVING[MAX_BUFFER_SIZE];
         char MIGRATE[MAX_BUFFER_SIZE];
         char NEW[MAX_BUFFER_SIZE];
         char NO_HELP[MAX_BUFFER_SIZE];

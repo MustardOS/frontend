@@ -1,3 +1,3 @@
 #pragma once
 
-int muxsnapshot_main(int argc, char *argv[]);
+int muxsnapshot_main();

@@ -80,7 +80,7 @@ void close_input() {
 }
 
 void init_module(char *module) {
-    snprintf(mux_module, sizeof(mux_module), module);
+    snprintf(mux_module, sizeof(mux_module), "%s", module);
     load_lang(&lang);
 }
 

@@ -7,7 +7,8 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
-static lv_obj_t *ui_mux_panels[5];
+#define UI_PANEL 5
+static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
@@ -21,43 +22,40 @@ static void scan_networks() {
     lv_refr_now(NULL);
 
     const char *args[] = {(INTERNAL_PATH "script/web/ssid.sh"), NULL};
-    run_exec(args, A_SIZE(args));
+    run_exec(args, A_SIZE(args), 0);
+}
+
+static void list_nav_move(int steps, int direction) {
+    if (ui_count <= 0) return;
+    play_sound(SND_NAVIGATE, nav_sound, 0);
+
+    for (int step = 0; step < steps; ++step) {
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
+                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
+    }
+
+    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
+                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    nav_moved = 1;
 }
 
 static void list_nav_prev(int steps) {
-    play_sound("navigate", nav_sound, 0, 0);
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    nav_moved = 1;
+    list_nav_move(steps, -1);
 }
 
 static void list_nav_next(int steps) {
-    if (first_open) {
-        first_open = 0;
-    } else {
-        play_sound("navigate", nav_sound, 0, 0);
-    }
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-    }
-    update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void create_network_items() {
@@ -101,7 +99,7 @@ static void create_network_items() {
 static void handle_confirm(void) {
     if (msgbox_active) return;
 
-    play_sound("confirm", nav_sound, 0, 1);
+    play_sound(SND_CONFIRM, nav_sound, 0);
     write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR,
                        lv_label_get_text(lv_group_get_focused(ui_group)));
     write_text_to_file((RUN_GLOBAL_PATH "network/pass"), "w", CHAR, "");
@@ -111,21 +109,21 @@ static void handle_confirm(void) {
     write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, "");
 
     refresh_config = 1;
-    
+
     close_input();
     mux_input_stop();
 }
 
 static void handle_back(void) {
     if (msgbox_active) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound("back", nav_sound, 0, 1);
+    play_sound(SND_BACK, nav_sound, 0);
 
     close_input();
     mux_input_stop();
@@ -134,7 +132,7 @@ static void handle_back(void) {
 static void handle_rescan(void) {
     if (msgbox_active) return;
 
-    play_sound("confirm", nav_sound, 0, 1);
+    play_sound(SND_CONFIRM, nav_sound, 0);
     load_mux("net_scan");
 
     close_input();
@@ -145,7 +143,7 @@ static void handle_help(void) {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound("confirm", nav_sound, 0, 0);
+        play_sound(SND_CONFIRM, nav_sound, 0);
         show_help();
     }
 }
@@ -214,7 +212,6 @@ static void ui_refresh_task() {
 }
 
 int muxnetscan_main() {
-
     init_module("muxnetscan");
 
     init_theme(1, 1);
@@ -228,7 +225,6 @@ int muxnetscan_main() {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     init_fonts();
-    init_navigation_sound(&nav_sound, mux_module);
 
     scan_networks();
     create_network_items();
