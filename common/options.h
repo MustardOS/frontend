@@ -41,6 +41,7 @@
 #define KIOSK_CONFIG   INTERNAL_PATH "config/kiosk.ini"
 #define LAST_PLAY_FILE INTERNAL_PATH "config/lastplay.txt"
 #define MUOS_VERSION   INTERNAL_PATH "config/version.txt"
+#define BGM_SILENCE    INTERNAL_PATH "share/media/silence.ogg"
 
 #define RUN_PATH "/run/muos/"
 
@@ -57,6 +58,8 @@
 
 #define STORAGE_THEME RUN_STORAGE_PATH "theme/active"
 #define STORAGE_SHOTS RUN_STORAGE_PATH "screenshot"
+#define STORAGE_MUSIC RUN_STORAGE_PATH "music"
+#define STORAGE_SOUND RUN_STORAGE_PATH "sound"
 
 #define INFO_CAT_PATH RUN_STORAGE_PATH "info/catalogue"
 #define INFO_COR_PATH RUN_STORAGE_PATH "info/core"
@@ -73,6 +76,7 @@
 #define STORE_LOC_BIOS "MUOS/bios"
 #define STORE_LOC_RARC "MUOS/retroarch"
 #define STORE_LOC_MUSC "MUOS/music"
+#define STORE_LOC_SOUN "MUOS/sound"
 #define STORE_LOC_SAVE "MUOS/save"
 #define STORE_LOC_SCRS "MUOS/screenshot"
 #define STORE_LOC_THEM "MUOS/theme"

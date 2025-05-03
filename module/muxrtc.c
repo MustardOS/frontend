@@ -234,7 +234,7 @@ static void init_navigation_group() {
 }
 
 static void list_nav_move(int steps, int direction) {
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         if (direction < 0) {
@@ -263,7 +263,7 @@ static void list_nav_next(int steps) {
 
 static void adjust_option(int direction) {
     if (msgbox_active) return;
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblYear) {
@@ -317,7 +317,7 @@ static void handle_a() {
     if (lv_group_get_focused(ui_group) == ui_lblTimezone) {
         if (kiosk.DATETIME.TIMEZONE) return;
 
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
 
         load_mux("timezone");
         save_and_exit(lang.GENERIC.LOADING);
@@ -328,14 +328,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, nav_sound, 0);
+    play_sound(SND_BACK, 0);
 
     if (config.BOOT.FACTORY_RESET) {
         write_text_to_file((RUN_GLOBAL_PATH "boot/clock_setup"), "w", INT, 0);
@@ -358,7 +358,7 @@ static void handle_menu() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         show_help();
     }
 }

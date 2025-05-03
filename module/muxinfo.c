@@ -104,7 +104,7 @@ static void init_navigation_group() {
 }
 
 static void list_nav_move(int steps, int direction) {
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -140,7 +140,7 @@ static void handle_a() {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     if (element_focused == ui_lblScreenshot) {
         load_mux("screenshot");
@@ -160,14 +160,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, nav_sound, 0);
+    play_sound(SND_BACK, 0);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "info");
 
     close_input();
@@ -178,7 +178,7 @@ static void handle_menu() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         show_help(lv_group_get_focused(ui_group));
     }
 }

@@ -19,7 +19,7 @@
 #include "../common/theme.h"
 
 int msgbox_active = 0;
-int nav_sound = 0;
+int fe_snd = 0;
 
 struct mux_lang lang;
 struct mux_config config;

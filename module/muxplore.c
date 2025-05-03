@@ -670,7 +670,7 @@ static void create_content_items() {
 }
 
 static void add_to_collection(char *filename, const char *pointer) {
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     char new_content[MAX_BUFFER_SIZE];
     snprintf(new_content, sizeof(new_content), "%s\n%s\n%s",
@@ -777,7 +777,7 @@ static void update_list_items(int start_index) {
 
 static void list_nav_prev(int steps) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     // TODO: Move this to the combined 'list_nav_move' function like
     //       the other modules... this is just more complicated!
@@ -822,7 +822,7 @@ static void list_nav_prev(int steps) {
 
 static void list_nav_next(int steps) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     // TODO: Move this to the combined 'list_nav_move' function like
     //       the other modules... this is just more complicated!
@@ -868,7 +868,7 @@ static void handle_a() {
     if (!ui_count) return;
 
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
@@ -879,7 +879,7 @@ static void handle_a() {
         return;
     }
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
     int load_message;
 
     if (items[current_item_index].content_type == FOLDER) {
@@ -942,14 +942,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, nav_sound, 0);
+    play_sound(SND_BACK, 0);
 
     if (at_base(sys_dir, "ROMS")) {
         remove(EXPLORE_DIR);
@@ -984,12 +984,12 @@ static void handle_y() {
     if (msgbox_active || !ui_count) return;
 
     if (items[current_item_index].content_type == FOLDER) {
-        play_sound(SND_ERROR, nav_sound, 0);
+        play_sound(SND_ERROR, 0);
         toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, 1000, 1000);
     } else {
         if (load_content(1)) return;
 
-        play_sound(SND_ERROR, nav_sound, 0);
+        play_sound(SND_ERROR, 0);
         toast_message(lang.MUXPLORE.ERROR.NO_CORE, 1000, 1000);
     }
 }
@@ -997,7 +997,7 @@ static void handle_y() {
 static void handle_start() {
     if (msgbox_active) return;
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     remove(EXPLORE_DIR);
     load_mux("explore");
@@ -1009,7 +1009,7 @@ static void handle_start() {
 static void handle_select() {
     if (msgbox_active || !ui_count) return;
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
@@ -1042,7 +1042,7 @@ static void handle_select() {
 static void handle_menu() {
     if (msgbox_active || !ui_count || progress_onscreen != -1) return;
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
     image_refresh("preview");
 
     lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);

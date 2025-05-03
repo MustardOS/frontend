@@ -261,7 +261,7 @@ static void create_core_items(const char *target) {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -302,7 +302,7 @@ static void handle_a() {
     } else {
         LOG_INFO(mux_module, "Single Core Assignment Triggered")
 
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
@@ -332,14 +332,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, nav_sound, 0);
+    play_sound(SND_BACK, 0);
     if (!strcasecmp(rom_system, "none")) {
         FILE *file = fopen(MUOS_SYS_LOAD, "w");
         fprintf(file, "%s", "");
@@ -360,7 +360,7 @@ static void handle_x() {
     if (strcasecmp(rom_system, "none") != 0) {
         LOG_INFO(mux_module, "Directory Core Assignment Triggered")
 
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
@@ -396,7 +396,7 @@ static void handle_y() {
     if (strcasecmp(rom_system, "none") != 0) {
         LOG_INFO(mux_module, "Parent Core Assignment Triggered")
 
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
 
         char chosen_core_ini[FILENAME_MAX];
         snprintf(chosen_core_ini, sizeof(chosen_core_ini),
@@ -430,7 +430,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         show_help();
     }
 }

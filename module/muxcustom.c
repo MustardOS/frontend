@@ -317,7 +317,7 @@ static void init_navigation_group() {
 }
 
 static void list_nav_move(int steps, int direction) {
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -352,14 +352,14 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
     decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
@@ -462,6 +462,14 @@ static void save_options() {
         }
     }
 
+    if (!idx_bgm) {
+        if (!is_silence_playing) play_silence_bgm();
+    } else {
+        if (idx_bgm != bgm_original || is_silence_playing) {
+            init_fe_bgm(&fe_bgm, idx_bgm, 1);
+        }
+    }
+
     refresh_config = 1;
 
     if (is_modified > 0) {
@@ -498,7 +506,7 @@ static void handle_confirm() {
             return;
         } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
-                play_sound(SND_ERROR, nav_sound, 0);
+                play_sound(SND_ERROR, 0);
                 toast_message(kiosk_nope(), 1000, 1000);
                 refresh_screen(ui_screen);
                 return;
@@ -507,7 +515,7 @@ static void handle_confirm() {
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, elements[i].mux_name);
             write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, elements[i].launch);
 
-            play_sound(SND_CONFIRM, nav_sound, 0);
+            play_sound(SND_CONFIRM, 0);
             load_mux("picker");
 
             close_input();
@@ -522,14 +530,14 @@ static void handle_confirm() {
 
 static void handle_back() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, nav_sound, 0);
+    play_sound(SND_BACK, 0);
 
     save_options();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
@@ -542,7 +550,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         show_help(lv_group_get_focused(ui_group));
     }
 }

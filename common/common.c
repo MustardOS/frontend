@@ -38,7 +38,8 @@
 
 char mux_module[MAX_BUFFER_SIZE];
 int msgbox_active;
-int nav_sound;
+int fe_snd;
+int fe_bgm;
 struct json translation_generic;
 struct json translation_specific;
 struct pattern skip_pattern_list = {NULL, 0, 0};
@@ -55,6 +56,10 @@ char current_wall[MAX_BUFFER_SIZE];
 lv_obj_t *wall_img = NULL;
 struct grid_info grid_info;
 CachedSound sound_cache[SOUND_TOTAL];
+int is_silence_playing = 0;
+Mix_Music *current_bgm = NULL;
+char **bgm_files = NULL;
+size_t bgm_file_count = 0;
 
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
@@ -855,8 +860,8 @@ void load_mux(const char *value) {
     fclose(file);
 }
 
-void play_sound(int sound, int enabled, int wait) {
-    if (!enabled || sound < 0 || sound >= SOUND_TOTAL) return;
+void play_sound(int sound, int wait) {
+    if (!fe_snd || sound < 0 || sound >= SOUND_TOTAL) return;
 
     CachedSound *cs = &sound_cache[sound];
     if (cs->chunk) {
@@ -960,7 +965,7 @@ int load_element_image_specifics(const char *theme_base, const char *mux_dimensi
     for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); ++i) {
         for (size_t j = 0; j < sizeof(paths) / sizeof(paths[0]); ++j) {
             for (size_t k = 0; k < sizeof(elements) / sizeof(elements[0]); ++k) {
-                int written = 0;
+                int written;
 
                 switch (j) {
                     case 0:
@@ -996,7 +1001,7 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
     };
 
     for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); ++i) {
-        int written = 0;
+        int written;
 
         switch (i) {
             case 0:
@@ -1045,7 +1050,7 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
     const char *programs[] = {program, program_fallback};
     for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); ++i) {
         for (size_t j = 0; j < sizeof(programs) / sizeof(programs[0]); ++j) {
-            int written = 0;
+            int written;
 
             switch (i) {
                 case 0:
@@ -2126,28 +2131,159 @@ void load_sound_cache(const char *theme_location) {
     }
 }
 
-void init_navigation_sound(int *nav_sound, const char *mux_module) {
-    *nav_sound = 0;
+void free_bgm_list(void) {
+    for (size_t i = 0; i < bgm_file_count; ++i) free(bgm_files[i]);
+    free(bgm_files);
 
-    if (config.SETTINGS.GENERAL.SOUND) {
-        if (SDL_Init(SDL_INIT_AUDIO) >= 0) {
-            int flags = MIX_INIT_OGG;
-            int inited = Mix_Init(flags);
+    bgm_files = NULL;
+    bgm_file_count = 0;
+}
 
-            if ((inited & flags) != flags) {
-                LOG_ERROR(mux_module, "Missing SDL_mixer support for OGG")
+void free_bgm(void) {
+    if (current_bgm) {
+        Mix_HaltMusic();
+        Mix_FreeMusic(current_bgm);
+        current_bgm = NULL;
+    }
+}
+
+void play_random_bgm(void) {
+    if (bgm_file_count == 0) return;
+
+    static size_t last_index = SIZE_MAX;
+    size_t index;
+
+    if (bgm_file_count == 1) {
+        index = 0;
+    } else {
+        index = rand() % bgm_file_count;
+        while (index == last_index) index = rand() % bgm_file_count;
+    }
+
+    const char *path = bgm_files[index];
+    last_index = index;
+
+    free_bgm();
+
+    current_bgm = Mix_LoadMUS(path);
+    if (current_bgm) {
+        is_silence_playing = 0;
+        Mix_PlayMusic(current_bgm, 1);
+    }
+}
+
+void play_silence_bgm(void) {
+    free_bgm();
+    is_silence_playing = 0;
+
+    char silence_path[MAX_BUFFER_SIZE];
+    snprintf(silence_path, sizeof(silence_path), "%s", BGM_SILENCE);
+
+    if (!file_exist(silence_path)) {
+        LOG_INFO("audio", "No 'silence.ogg' file found");
+        return;
+    }
+
+    current_bgm = Mix_LoadMUS(silence_path);
+    if (current_bgm) {
+        Mix_PlayMusic(current_bgm, -1);
+        is_silence_playing = 1;
+        LOG_SUCCESS("audio", "Silence BGM playback started");
+    } else {
+        LOG_ERROR("audio", "Failed to load 'silence.ogg': %s", Mix_GetError());
+    }
+}
+
+int init_audio_backend(void) {
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+        LOG_ERROR("audio", "SDL Init Failed");
+        return 0;
+    }
+
+    int flags = MIX_INIT_OGG;
+    int inited = Mix_Init(flags);
+    if ((inited & flags) != flags) {
+        LOG_ERROR("audio", "Missing SDL_mixer support for OGG");
+    }
+
+    if (Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError());
+        return 0;
+    }
+
+    LOG_SUCCESS("audio", "SDL Init Success");
+
+    printf("Audio Decode Support: ");
+    for (int i = 0; i < Mix_GetNumMusicDecoders(); i++) {
+        printf("%s ", Mix_GetMusicDecoder(i));
+    }
+    printf("\n");
+
+    return 1;
+}
+
+void init_fe_snd(int *fe_snd) {
+    if (!config.SETTINGS.GENERAL.SOUND) return;
+    *fe_snd = 0;
+
+    const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+    load_sound_cache(theme_location);
+
+    *fe_snd = 1;
+    LOG_SUCCESS("audio", "FE Sound Started");
+}
+
+void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
+    if (!bgm_type && !re_init) {
+        play_silence_bgm();
+        return;
+    }
+
+    free_bgm();
+    *fe_bgm = 0;
+
+    char base_path[MAX_BUFFER_SIZE];
+    snprintf(base_path, sizeof(base_path), "%s", STORAGE_MUSIC);
+    if (bgm_type == 2) {
+        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        snprintf(base_path, sizeof(base_path), "%s/music", theme_location);
+    }
+
+    DIR *dir = opendir(base_path);
+    if (!dir) {
+        LOG_INFO("audio", "Music directory not found: %s", base_path);
+        return;
+    }
+
+    size_t capacity = 8;
+    bgm_files = malloc(capacity * sizeof(char *));
+    bgm_file_count = 0;
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        size_t len = strlen(entry->d_name);
+        if (len > 4 && strcmp(entry->d_name + len - 4, ".ogg") == 0) {
+            if (bgm_file_count >= capacity) {
+                capacity *= 2;
+                bgm_files = realloc(bgm_files, capacity * sizeof(char *));
             }
 
-            if (Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 2048) == 0) {
-                LOG_SUCCESS(mux_module, "SDL Init Success")
-                load_sound_cache(config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME);
-                *nav_sound = 1;
-            } else {
-                LOG_ERROR(mux_module, "SDL_mixer open failed: %s", Mix_GetError())
-            }
-        } else {
-            LOG_ERROR(mux_module, "SDL Init Failed")
+            char full_path[MAX_BUFFER_SIZE];
+            snprintf(full_path, sizeof(full_path), "%s/%s", base_path, entry->d_name);
+            bgm_files[bgm_file_count++] = strdup(full_path);
         }
+    }
+    closedir(dir);
+
+    if (bgm_file_count > 0) {
+        srand(time(NULL));
+        Mix_HookMusicFinished(play_random_bgm);
+        play_random_bgm();
+        *fe_bgm = 1;
+        LOG_SUCCESS("audio", "FE Music playback started");
+    } else {
+        LOG_INFO("audio", "No OGG music files found");
+        play_silence_bgm();
     }
 }
 
@@ -2199,7 +2335,7 @@ int get_grid_row_item_count(int current_item_index) {
 }
 
 char *kiosk_nope() {
-    play_sound(SND_ERROR, nav_sound, 0);
+    play_sound(SND_ERROR, 0);
     return lang.GENERIC.KIOSK_DISABLE;
 }
 

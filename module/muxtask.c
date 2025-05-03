@@ -135,7 +135,7 @@ static void create_task_items() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -169,7 +169,7 @@ static void list_nav_next(int steps) {
 static void handle_confirm() {
     if (msgbox_active) return;
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
 
@@ -199,14 +199,14 @@ static void handle_confirm() {
 
 static void handle_back() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, nav_sound, 0);
+    play_sound(SND_BACK, 0);
 
     close_input();
     mux_input_stop();
@@ -216,7 +216,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         show_help();
     }
 }

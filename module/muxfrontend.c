@@ -56,6 +56,7 @@ static char splash_image_path[MAX_BUFFER_SIZE];
 
 static void cleanup_screen() {
     if (ui_screen_container == NULL) return;
+
     init_dispose();
     lv_disp_load_scr(ui_screen_temp);
 
@@ -63,6 +64,7 @@ static void cleanup_screen() {
         lv_obj_del(ui_screen_container);
         ui_screen_container = NULL;
     }
+
     current_item_index = 0;
     first_open = 1;
     key_curr = 0;
@@ -70,6 +72,7 @@ static void cleanup_screen() {
     msgbox_active = 0;
     ui_count = 0;
     grid_mode_enabled = 0;
+
     snprintf(current_wall, sizeof(current_wall), "");
 }
 
@@ -131,8 +134,12 @@ int main() {
     init_theme(0, 0);
     init_display();
 
-    init_navigation_sound(&nav_sound, "muxfrontend");
-    play_sound(SND_STARTUP, nav_sound, 0);
+    if (init_audio_backend()) {
+        init_fe_snd(&fe_snd);
+        init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
+
+        play_sound(SND_STARTUP, 0);
+    }
 
     while (1) {
         char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;

@@ -97,7 +97,7 @@ static void create_screenshot_items() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -131,7 +131,7 @@ static void list_nav_next(int steps) {
 static void handle_confirm() {
     if (msgbox_active || ui_count <= 0) return;
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     if (is_fullscreen) {
         is_fullscreen = 0;
@@ -148,7 +148,7 @@ static void handle_confirm() {
 
 static void handle_back() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -179,7 +179,7 @@ static void handle_help() {
     if (msgbox_active || is_fullscreen) return;
 
     if (progress_onscreen == -1 && ui_count > 0) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         show_help();
     }
 }

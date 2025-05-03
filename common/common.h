@@ -12,11 +12,14 @@
 extern int msgbox_active;
 extern lv_obj_t *msgbox_element;
 extern int battery_capacity;
-extern int nav_sound;
+extern int fe_snd;
+extern int fe_bgm;
 extern int progress_onscreen;
 extern struct mux_config config;
 extern char mux_module[MAX_BUFFER_SIZE];
 extern char current_wall[MAX_BUFFER_SIZE];
+extern int is_silence_playing;
+extern Mix_Music *current_bgm;
 
 #define SOUND_TOTAL 11
 
@@ -181,7 +184,7 @@ void load_gov(const char *rom, const char *dir, const char *sys, int forced);
 
 void load_mux(const char *value);
 
-void play_sound(int sound, int enabled, int wait);
+void play_sound(int sound, int wait);
 
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive);
 
@@ -268,7 +271,15 @@ void map_drop_down_to_index(lv_obj_t *dropdown, int value, const int *options, i
 
 int map_drop_down_to_value(int selected_index, const int *options, int num_options, int def_value);
 
-void init_navigation_sound(int *nav_sound, const char *mux_module);
+void free_bgm(void);
+
+void play_silence_bgm(void);
+
+int init_audio_backend(void);
+
+void init_fe_snd(int *fe_snd);
+
+void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init);
 
 int safe_atoi(const char *str);
 

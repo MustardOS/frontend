@@ -137,7 +137,7 @@ static void create_picker_items() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, nav_sound, 0);
+    play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -171,7 +171,7 @@ static void list_nav_next(int steps) {
 static void handle_confirm() {
     if (msgbox_active || ui_count <= 0) return;
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
@@ -183,7 +183,7 @@ static void handle_confirm() {
         write_text_to_file(EXPLORE_DIR, "w", CHAR, n_dir);
     } else {
         if (!strcasecmp(picker_type, "theme") && !version_check()) {
-            play_sound(SND_ERROR, nav_sound, 0);
+            play_sound(SND_ERROR, 0);
             toast_message(lang.MUXPICKER.INVALID_VER, 1000, 1000);
             return;
         }
@@ -192,7 +192,7 @@ static void handle_confirm() {
         snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
                  sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
         if (!strcasecmp(picker_type, "theme") && !resolution_check(picker_archive)) {
-            play_sound(SND_ERROR, nav_sound, 0);
+            play_sound(SND_ERROR, 0);
             toast_message(lang.MUXPICKER.INVALID_RES, 1000, 1000);
             return;
         }
@@ -244,7 +244,7 @@ static void handle_confirm_force() {
         return;
     }
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
@@ -287,14 +287,14 @@ static void handle_confirm_force() {
 
 static void handle_back() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, nav_sound, 0);
+    play_sound(SND_BACK, 0);
     if (strcasecmp(base_dir, sys_dir) == 0) {
         remove(EXPLORE_DIR);
         load_mux("custom");
@@ -312,7 +312,7 @@ static void handle_back() {
 static void handle_save() {
     if (msgbox_active) return;
 
-    play_sound(SND_CONFIRM, nav_sound, 0);
+    play_sound(SND_CONFIRM, 0);
 
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
@@ -344,7 +344,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1 && ui_count > 0) {
-        play_sound(SND_CONFIRM, nav_sound, 0);
+        play_sound(SND_CONFIRM, 0);
         show_help();
     }
 }
