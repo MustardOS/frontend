@@ -866,10 +866,7 @@ void play_sound(int sound, int wait) {
     CachedSound *cs = &sound_cache[sound];
     if (cs->chunk) {
         int channel = Mix_PlayChannel(-1, cs->chunk, 0);
-        if (wait) while (Mix_Playing(channel)) SDL_Delay(20);
-    } else if (cs->music) {
-        Mix_PlayMusic(cs->music, 1);
-        if (wait) while (Mix_PlayingMusic()) SDL_Delay(20);
+        if (wait) while (Mix_Playing(channel)) SDL_Delay(5);
     } else {
         LOG_ERROR("sound", "Sound not cached: %d", sound)
     }
@@ -2113,20 +2110,14 @@ void load_sound_cache(const char *theme_location) {
             "reboot", "shutdown", "startup", "info_open", "info_close"
     };
 
-    const char *snd_ext[] = {"wav", "ogg"};
     for (int i = 0; i < SOUND_TOTAL; ++i) {
-        for (size_t j = 0; j < sizeof(snd_ext) / sizeof(snd_ext[0]); ++j) {
-            char path[MAX_BUFFER_SIZE];
-            snprintf(path, sizeof(path), "%s/sound/%s.%s", theme_location, names[i], snd_ext[j]);
+        char path[MAX_BUFFER_SIZE];
+        snprintf(path, sizeof(path), "%s/sound/%s.wav", theme_location, names[i]);
 
-            if (file_exist(path)) {
-                if (strcmp(snd_ext[j], "wav") == 0) {
-                    sound_cache[i].chunk = Mix_LoadWAV(path);
-                } else {
-                    sound_cache[i].music = Mix_LoadMUS(path);
-                }
-                break;
-            }
+        if (file_exist(path)) {
+            sound_cache[i].chunk = Mix_LoadWAV(path);
+        } else {
+            sound_cache[i].chunk = NULL;
         }
     }
 }
@@ -2180,7 +2171,7 @@ void play_silence_bgm(void) {
     snprintf(silence_path, sizeof(silence_path), "%s", BGM_SILENCE);
 
     if (!file_exist(silence_path)) {
-        LOG_INFO("audio", "No 'silence.ogg' file found");
+        LOG_INFO("audio", "No 'silence.ogg' file found")
         return;
     }
 
@@ -2188,30 +2179,30 @@ void play_silence_bgm(void) {
     if (current_bgm) {
         Mix_PlayMusic(current_bgm, -1);
         is_silence_playing = 1;
-        LOG_SUCCESS("audio", "Silence BGM playback started");
+        LOG_SUCCESS("audio", "Silence BGM playback started")
     } else {
-        LOG_ERROR("audio", "Failed to load 'silence.ogg': %s", Mix_GetError());
+        LOG_ERROR("audio", "Failed to load 'silence.ogg': %s", Mix_GetError())
     }
 }
 
 int init_audio_backend(void) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        LOG_ERROR("audio", "SDL Init Failed");
+        LOG_ERROR("audio", "SDL Init Failed")
         return 0;
     }
 
     int flags = MIX_INIT_OGG;
     int inited = Mix_Init(flags);
     if ((inited & flags) != flags) {
-        LOG_ERROR("audio", "Missing SDL_mixer support for OGG");
+        LOG_ERROR("audio", "Missing SDL_mixer support for OGG")
     }
 
     if (Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
-        LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError());
+        LOG_ERROR("audio", "SDL_mixer open failed: %s", Mix_GetError())
         return 0;
     }
 
-    LOG_SUCCESS("audio", "SDL Init Success");
+    LOG_SUCCESS("audio", "SDL Init Success")
 
     printf("Audio Decode Support: ");
     for (int i = 0; i < Mix_GetNumMusicDecoders(); i++) {
@@ -2230,7 +2221,7 @@ void init_fe_snd(int *fe_snd) {
     load_sound_cache(theme_location);
 
     *fe_snd = 1;
-    LOG_SUCCESS("audio", "FE Sound Started");
+    LOG_SUCCESS("audio", "FE Sound Started")
 }
 
 void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
@@ -2251,7 +2242,7 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
 
     DIR *dir = opendir(base_path);
     if (!dir) {
-        LOG_INFO("audio", "Music directory not found: %s", base_path);
+        LOG_INFO("audio", "Music directory not found: %s", base_path)
         return;
     }
 
@@ -2280,9 +2271,9 @@ void init_fe_bgm(int *fe_bgm, int bgm_type, int re_init) {
         Mix_HookMusicFinished(play_random_bgm);
         play_random_bgm();
         *fe_bgm = 1;
-        LOG_SUCCESS("audio", "FE Music playback started");
+        LOG_SUCCESS("audio", "FE Music playback started")
     } else {
-        LOG_INFO("audio", "No OGG music files found");
+        LOG_INFO("audio", "No OGG music files found")
         play_silence_bgm();
     }
 }

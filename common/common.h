@@ -67,7 +67,6 @@ enum sound_type {
 
 typedef struct {
     Mix_Chunk *chunk;
-    Mix_Music *music;
 } CachedSound;
 
 extern CachedSound sound_cache[SOUND_TOTAL];
