@@ -235,7 +235,6 @@ static void list_nav_move(int steps, int direction) {
         }
 
         nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
         nav_move(ui_group_glyph, direction);
         nav_move(ui_group_panel, direction);
     }
