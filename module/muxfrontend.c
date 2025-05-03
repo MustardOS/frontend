@@ -135,7 +135,7 @@ int main() {
     init_display();
 
     if (init_audio_backend()) {
-        init_fe_snd(&fe_snd);
+        init_fe_snd(&fe_snd, config.SETTINGS.GENERAL.SOUND, 0);
         init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
 
         play_sound(SND_STARTUP, 0);

@@ -224,7 +224,7 @@ static void init_navigation_group() {
     apply_theme_list_item(&theme, ui_lblTheme, lang.MUXCUSTOM.THEME);
     apply_theme_list_item(&theme, ui_lblThemeResolution, lang.MUXCUSTOM.THEME_RESOLUTION);
     apply_theme_list_item(&theme, ui_lblThemeAlternate, lang.MUXCUSTOM.THEME_ALTERNATE);
-    apply_theme_list_item(&theme, ui_lblSound, lang.MUXCUSTOM.SOUND);
+    apply_theme_list_item(&theme, ui_lblSound, lang.MUXCUSTOM.SOUND.TITLE);
     apply_theme_list_item(&theme, ui_lblConfig, lang.MUXCUSTOM.CONFIG);
 
     apply_theme_list_glyph(&theme, ui_icoBackgroundAnimation, mux_module, "backgroundanimation");
@@ -258,6 +258,9 @@ static void init_navigation_group() {
     add_drop_down_options(ui_droBGM, (char *[]) {
             lang.GENERIC.DISABLED, lang.MUXCUSTOM.MUSIC.GLOBAL, lang.MUXCUSTOM.MUSIC.THEME}, 3);
 
+    add_drop_down_options(ui_droSound, (char *[]) {
+            lang.GENERIC.DISABLED, lang.MUXCUSTOM.SOUND.GLOBAL, lang.MUXCUSTOM.SOUND.THEME}, 3);
+
     add_drop_down_options(ui_droBoxArt, (char *[]) {
             lang.MUXCUSTOM.BOX_ART.BEHIND,
             lang.MUXCUSTOM.BOX_ART.FRONT,
@@ -284,7 +287,6 @@ static void init_navigation_group() {
     add_drop_down_options(ui_droBackgroundAnimation, disabled_enabled, 2);
     add_drop_down_options(ui_droLaunchSplash, disabled_enabled, 2);
     add_drop_down_options(ui_droBlackFade, disabled_enabled, 2);
-    add_drop_down_options(ui_droSound, disabled_enabled, 2);
 
     lv_dropdown_clear_options(ui_droThemeResolution);
     lv_dropdown_add_option(ui_droThemeResolution, lang.MUXCUSTOM.SCREEN, LV_DROPDOWN_POS_LAST);
@@ -469,6 +471,8 @@ static void save_options() {
             init_fe_bgm(&fe_bgm, idx_bgm, 1);
         }
     }
+
+    init_fe_snd(&fe_snd, idx_sound, idx_sound);
 
     refresh_config = 1;
 

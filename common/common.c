@@ -2104,19 +2104,10 @@ int map_drop_down_to_value(int selected_index, const int *options, int num_optio
     return def_value;
 }
 
-void load_sound_cache(const char *theme_location) {
-    const char *names[SOUND_TOTAL] = {
-            "confirm", "back", "keypress", "navigate", "error", "muos",
-            "reboot", "shutdown", "startup", "info_open", "info_close"
-    };
-
+void free_sound_cache(void) {
     for (int i = 0; i < SOUND_TOTAL; ++i) {
-        char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), "%s/sound/%s.wav", theme_location, names[i]);
-
-        if (file_exist(path)) {
-            sound_cache[i].chunk = Mix_LoadWAV(path);
-        } else {
+        if (sound_cache[i].chunk) {
+            Mix_FreeChunk(sound_cache[i].chunk);
             sound_cache[i].chunk = NULL;
         }
     }
@@ -2204,21 +2195,51 @@ int init_audio_backend(void) {
 
     LOG_SUCCESS("audio", "SDL Init Success")
 
+/*
     printf("Audio Decode Support: ");
     for (int i = 0; i < Mix_GetNumMusicDecoders(); i++) {
         printf("%s ", Mix_GetMusicDecoder(i));
     }
     printf("\n");
+*/
 
     return 1;
 }
 
-void init_fe_snd(int *fe_snd) {
-    if (!config.SETTINGS.GENERAL.SOUND) return;
+void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
     *fe_snd = 0;
+    free_sound_cache();
 
-    const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
-    load_sound_cache(theme_location);
+    if (!snd_type && !re_init) return;
+
+    const char *names[SOUND_TOTAL] = {
+            "confirm", "back", "keypress", "navigate", "error", "muos",
+            "reboot", "shutdown", "startup", "info_open", "info_close"
+    };
+
+    char base_path[MAX_BUFFER_SIZE];
+    snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
+    if (snd_type == 2) {
+        const char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
+        snprintf(base_path, sizeof(base_path), "%s/sound", theme_location);
+    }
+
+    DIR *dir = opendir(base_path);
+    if (!dir) {
+        LOG_INFO("audio", "Sound directory not found: %s", base_path)
+        return;
+    }
+
+    for (int i = 0; i < SOUND_TOTAL; ++i) {
+        char path[MAX_BUFFER_SIZE];
+        snprintf(path, sizeof(path), "%s/%s.wav", base_path, names[i]);
+
+        if (file_exist(path)) {
+            sound_cache[i].chunk = Mix_LoadWAV(path);
+        } else {
+            sound_cache[i].chunk = NULL;
+        }
+    }
 
     *fe_snd = 1;
     LOG_SUCCESS("audio", "FE Sound Started")

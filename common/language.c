@@ -172,10 +172,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.TITLE, "Interface Font Type");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.LANG, "Language");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FONT.THEME, "Theme");
-    SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND, "Navigation Sound");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.TITLE, "Background Music");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.GLOBAL, "Global");
     SPECIFIC_FIELD(lang->MUXCUSTOM.MUSIC.THEME, "Theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.TITLE, "Navigation Sound");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.GLOBAL, "Global");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
