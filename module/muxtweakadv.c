@@ -63,44 +63,6 @@ static void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-static void dropdown_event_handler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-
-    if (code == LV_EVENT_VALUE_CHANGED) {
-        char buf[MAX_BUFFER_SIZE];
-        lv_dropdown_get_selected_str(obj, buf, sizeof(buf));
-    }
-}
-
-static void init_element_events() {
-    lv_obj_t *dropdowns[] = {
-            ui_droAccelerate_tweakadv,
-            ui_droSwap_tweakadv,
-            ui_droThermal_tweakadv,
-            ui_droVolume_tweakadv,
-            ui_droBrightness_tweakadv,
-            ui_droOffset_tweakadv,
-            ui_droPasscode_tweakadv,
-            ui_droLED_tweakadv,
-            ui_droTheme_tweakadv,
-            ui_droRetroWait_tweakadv,
-            ui_droState_tweakadv,
-            ui_droVerbose_tweakadv,
-            ui_droRumble_tweakadv,
-            ui_droUserInit_tweakadv,
-            ui_droDPADSwap_tweakadv,
-            ui_droOverdrive_tweakadv,
-            ui_droSwap_tweakadvfile,
-            ui_droZramfile_tweakadv,
-            ui_droCardMode_tweakadv
-    };
-
-    for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
-        lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
-    }
-}
-
 static void init_dropdown_settings() {
     accelerate_original = lv_dropdown_get_selected(ui_droAccelerate_tweakadv);
     swap_original = lv_dropdown_get_selected(ui_droSwap_tweakadv);
@@ -789,7 +751,6 @@ int muxtweakadv_main() {
 
     init_fonts();
     init_navigation_group();
-    init_element_events();
 
     restore_tweak_options();
     init_dropdown_settings();

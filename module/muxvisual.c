@@ -64,40 +64,6 @@ static void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-static void dropdown_event_handler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-
-    if (code == LV_EVENT_VALUE_CHANGED) {
-        char buf[MAX_BUFFER_SIZE];
-        lv_dropdown_get_selected_str(obj, buf, sizeof(buf));
-    }
-}
-
-static void init_element_events() {
-    lv_obj_t *dropdowns[] = {
-            ui_droBattery_visual_visual,
-            ui_droClock_visual,
-            ui_droNetwork_visual_visual,
-            ui_droName_visual,
-            ui_droDash_visual,
-            ui_droFriendlyFolder_visual,
-            ui_droTheTitleFormat_visual,
-            ui_droTitleIncludeRootDrive_visual,
-            ui_droFolderItemCount_visual,
-            ui_droDisplayEmptyFolder_visual,
-            ui_droMenuCounterFolder_visual,
-            ui_droMenuCounterFile_visual,
-            ui_droHidden_visual,
-            ui_droOverlayImage_visual,
-            ui_droOverlayTransparency_visual,
-    };
-
-    for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
-        lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
-    }
-}
-
 static void init_dropdown_settings() {
     battery_original = lv_dropdown_get_selected(ui_droBattery_visual_visual);
     mux_clock_original = lv_dropdown_get_selected(ui_droClock_visual);
@@ -554,7 +520,6 @@ int muxvisual_main() {
 
     init_fonts();
     init_navigation_group();
-    init_element_events();
 
     restore_visual_options();
     init_dropdown_settings();

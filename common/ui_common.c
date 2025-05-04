@@ -1341,7 +1341,8 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
             lv_obj_align(cell_image_focused, LV_ALIGN_TOP_MID, 0, theme->GRID.CELL.IMAGE_PADDING_TOP);
         }
         lv_obj_set_style_img_opa(cell_image_focused, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_ALL, NULL); // Add event callback
+        lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_FOCUSED, NULL);
+        lv_obj_add_event_cb(cell_pnl, grid_item_focus_event_cb, LV_EVENT_DEFOCUSED, NULL);
     }
 
     lv_obj_set_width(cell_label, theme->GRID.CELL.WIDTH - (theme->GRID.CELL.TEXT_PADDING_SIDE * 2));
