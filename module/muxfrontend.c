@@ -129,12 +129,17 @@ int main() {
     init_theme(0, 0);
     init_display();
 
-    if (init_audio_backend()) {
-        init_fe_snd(&fe_snd, config.SETTINGS.GENERAL.SOUND, 0);
-        init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
-
-        play_sound(SND_STARTUP, 0);
+    int r = 10;
+    while (r-- > 0) {
+        if (init_audio_backend()) {
+            init_fe_snd(&fe_snd, config.SETTINGS.GENERAL.SOUND, 0);
+            init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
+            break;
+        }
+        usleep(250000);
     }
+
+    play_sound(SND_STARTUP, 0);
 
     while (1) {
         char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
