@@ -128,6 +128,9 @@ void osk_handler(lv_event_t *e) {
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *element = lv_event_get_user_data(e);
 
+    if (!obj || !lv_obj_is_valid(obj)) return;
+    if (!element || !lv_obj_is_valid(element)) return;
+
     switch (code) {
         case LV_EVENT_SCROLL:
             lv_btnmatrix_set_selected_btn(obj, key_curr);
@@ -157,7 +160,8 @@ void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, bool include_numkey)
     lv_btnmatrix_set_selected_btn(key_entry, key_curr);
     lv_btnmatrix_set_btn_ctrl(key_entry, lv_btnmatrix_get_selected_btn(key_entry), LV_BTNMATRIX_CTRL_CHECKED);
     lv_obj_align(key_entry, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry);
+    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_SCROLL, ui_txtEntry);
+    lv_obj_add_event_cb(key_entry, osk_handler, LV_EVENT_CLICKED, ui_txtEntry);
 
     lv_obj_set_style_border_width(key_entry, 3, LV_PART_ITEMS | LV_STATE_CHECKED);
     lv_obj_set_style_border_width(key_entry, 1, LV_PART_ITEMS | LV_STATE_DEFAULT);
@@ -222,7 +226,8 @@ void init_osk(lv_obj_t *ui_pnlEntry, lv_obj_t *ui_txtEntry, bool include_numkey)
         lv_btnmatrix_set_selected_btn(num_entry, key_curr);
         lv_btnmatrix_set_btn_ctrl(num_entry, lv_btnmatrix_get_selected_btn(num_entry), LV_BTNMATRIX_CTRL_CHECKED);
         lv_obj_align(num_entry, LV_ALIGN_CENTER, 0, 0);
-        lv_obj_add_event_cb(num_entry, osk_handler, LV_EVENT_ALL, ui_txtEntry);
+        lv_obj_add_event_cb(num_entry, osk_handler, LV_EVENT_SCROLL, ui_txtEntry);
+        lv_obj_add_event_cb(num_entry, osk_handler, LV_EVENT_CLICKED, ui_txtEntry);
     
         lv_obj_set_style_border_width(num_entry, 3, LV_PART_ITEMS | LV_STATE_CHECKED);
         lv_obj_set_style_border_width(num_entry, 1, LV_PART_ITEMS | LV_STATE_DEFAULT);

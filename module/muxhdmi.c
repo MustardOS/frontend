@@ -48,31 +48,6 @@ static void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-static void dropdown_event_handler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-
-    if (code == LV_EVENT_VALUE_CHANGED) {
-        char buf[MAX_BUFFER_SIZE];
-        lv_dropdown_get_selected_str(obj, buf, sizeof(buf));
-    }
-}
-
-static void init_element_events() {
-    lv_obj_t *dropdowns[] = {
-            ui_droResolution_hdmi,
-            ui_droSpace_hdmi,
-            ui_droDepth_hdmi,
-            ui_droRange_hdmi,
-            ui_droScan_hdmi,
-            ui_droAudio_hdmi
-    };
-
-    for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
-        lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
-    }
-}
-
 static void init_dropdown_settings() {
     resolution_original = lv_dropdown_get_selected(ui_droResolution_hdmi);
     space_original = lv_dropdown_get_selected(ui_droSpace_hdmi);
@@ -392,7 +367,6 @@ int muxhdmi_main() {
 
     init_fonts();
     init_navigation_group();
-    init_element_events();
 
     restore_hdmi_options();
     init_dropdown_settings();

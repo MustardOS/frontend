@@ -60,6 +60,11 @@ static void cleanup_screen() {
     init_dispose();
     lv_disp_load_scr(ui_screen_temp);
 
+    if (ui_screen_container && lv_obj_is_valid(ui_screen_container)) {
+        lv_obj_del(ui_screen_container);
+        ui_screen_container = NULL;
+    }
+
     current_item_index = 0;
     first_open = 1;
     key_curr = 0;

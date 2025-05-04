@@ -49,32 +49,6 @@ static void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-static void dropdown_event_handler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-
-    if (code == LV_EVENT_VALUE_CHANGED) {
-        char buf[MAX_BUFFER_SIZE];
-        lv_dropdown_get_selected_str(obj, buf, sizeof(buf));
-    }
-}
-
-static void init_element_events() {
-    lv_obj_t *dropdowns[] = {
-            ui_droSSHD,
-            ui_droSFTPGo,
-            ui_droTTYD,
-            ui_droSyncthing,
-            ui_droRSLSync,
-            ui_droNTP,
-            ui_droTailscaled
-    };
-
-    for (unsigned int i = 0; i < sizeof(dropdowns) / sizeof(dropdowns[0]); i++) {
-        lv_obj_add_event_cb(dropdowns[i], dropdown_event_handler, LV_EVENT_ALL, NULL);
-    }
-}
-
 static void init_dropdown_settings() {
     sshd_original = lv_dropdown_get_selected(ui_droSSHD);
     sftpgo_original = lv_dropdown_get_selected(ui_droSFTPGo);
@@ -388,7 +362,6 @@ int muxwebserv_main() {
 
     init_fonts();
     init_navigation_group();
-    init_element_events();
 
     restore_web_options();
     init_dropdown_settings();
