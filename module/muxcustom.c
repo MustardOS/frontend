@@ -499,6 +499,7 @@ static void handle_confirm() {
     const char *u_data = lv_obj_get_user_data(element_focused);
 
     save_options();
+
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
         if (strcasecmp(u_data, "themealternate") == 0) {
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themealternate");
@@ -541,10 +542,10 @@ static void handle_back() {
         return;
     }
 
-    play_sound(SND_BACK, 0);
-
     save_options();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "custom");
+
+    play_sound(SND_BACK, 0);
 
     close_input();
     mux_input_stop();
