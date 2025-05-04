@@ -775,34 +775,52 @@ static void update_list_items(int start_index) {
     }
 }
 
-static void list_nav_prev(int steps) {
+static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
     play_sound(SND_NAVIGATE, 0);
 
-    // TODO: Move this to the combined 'list_nav_move' function like
-    //       the other modules... this is just more complicated!
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                             items[current_item_index].display_name);
-        current_item_index = (!current_item_index) ? ui_count - 1 : current_item_index - 1;
-        nav_prev(ui_group, 1);
-        nav_prev(ui_group_glyph, 1);
-        nav_prev(ui_group_panel, 1);
+
+        if (direction < 0) {
+            current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
+        } else {
+            current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
+        }
+
+        nav_move(ui_group, direction);
+        nav_move(ui_group_glyph, direction);
+        nav_move(ui_group_panel, direction);
 
         if (!grid_mode_enabled && item_count > theme.MUX.ITEM.COUNT) {
-            if (current_item_index == item_count - 1) {
-                update_list_items((int) item_count - theme.MUX.ITEM.COUNT);
+            int items_before_selected = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
+            int items_after_selected = (theme.MUX.ITEM.COUNT - 1) / 2;
+
+            if (direction < 0) {
+                if (current_item_index == item_count - 1) {
+                    update_list_items((int) item_count - theme.MUX.ITEM.COUNT);
+                } else {
+                    if (current_item_index >= items_before_selected &&
+                        current_item_index < item_count - items_after_selected - 1) {
+                        lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent,
+                                                               theme.MUX.ITEM.COUNT - 1); // Get the last child
+                        lv_obj_move_to_index(last_item, 0);
+                        update_list_item(lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1),
+                                         current_item_index - items_before_selected);
+                    }
+                }
             } else {
-                // how many items should be above the currently selected item when scrolling
-                int items_before_selected = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
-                int items_after_selected = (theme.MUX.ITEM.COUNT - 1) / 2;
-                if (current_item_index >= items_before_selected &&
-                    current_item_index < item_count - items_after_selected - 1) {
-                    lv_obj_t *last_item = lv_obj_get_child(ui_pnlContent,
-                                                           theme.MUX.ITEM.COUNT - 1); // Get the last child
-                    lv_obj_move_to_index(last_item, 0);
-                    update_list_item(lv_obj_get_child(last_item, 0), lv_obj_get_child(last_item, 1),
-                                     current_item_index - items_before_selected);
+                if (current_item_index == 0) {
+                    update_list_items(0);
+                } else {
+                    if (current_item_index > items_before_selected &&
+                        current_item_index < item_count - items_after_selected) {
+                        lv_obj_t *first_item = lv_obj_get_child(ui_pnlContent, 0);
+                        lv_obj_move_to_index(first_item, theme.MUX.ITEM.COUNT - 1);
+                        update_list_item(lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1),
+                                         current_item_index + items_after_selected);
+                    }
                 }
             }
         }
@@ -820,48 +838,12 @@ static void list_nav_prev(int steps) {
     nav_moved = 1;
 }
 
+static void list_nav_prev(int steps) {
+    list_nav_move(steps, -1);
+}
+
 static void list_nav_next(int steps) {
-    if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, 0);
-
-    // TODO: Move this to the combined 'list_nav_move' function like
-    //       the other modules... this is just more complicated!
-    for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            items[current_item_index].display_name);
-        current_item_index = (current_item_index == ui_count - 1) ? 0 : current_item_index + 1;
-        nav_next(ui_group, 1);
-        nav_next(ui_group_glyph, 1);
-        nav_next(ui_group_panel, 1);
-
-        if (!grid_mode_enabled && item_count > theme.MUX.ITEM.COUNT) {
-            if (current_item_index == 0) {
-                update_list_items(0);
-            } else {
-                // how many items should be above the currently selected item when scrolling
-                int items_before_selected = (theme.MUX.ITEM.COUNT - theme.MUX.ITEM.COUNT % 2) / 2;
-                int items_after_selected = (theme.MUX.ITEM.COUNT - 1) / 2;
-                if (current_item_index > items_before_selected &&
-                    current_item_index < item_count - items_after_selected) {
-                    lv_obj_t *first_item = lv_obj_get_child(ui_pnlContent, 0);
-                    lv_obj_move_to_index(first_item, theme.MUX.ITEM.COUNT - 1);
-                    update_list_item(lv_obj_get_child(first_item, 0), lv_obj_get_child(first_item, 1),
-                                     current_item_index + items_after_selected);
-                }
-            }
-        }
-    }
-
-    if (grid_mode_enabled) {
-        update_grid_scroll_position(theme.GRID.COLUMN_COUNT, theme.GRID.ROW_COUNT, theme.GRID.ROW_HEIGHT,
-                                    current_item_index, ui_pnlGrid);
-    }
-
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
-    lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
-
-    image_refresh("box");
-    nav_moved = 1;
+    list_nav_move(steps, +1);
 }
 
 static void handle_a() {
