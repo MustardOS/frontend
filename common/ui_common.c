@@ -1229,7 +1229,13 @@ void create_grid_panel(struct theme_config *theme, int item_count) {
 void grid_item_focus_event_cb(lv_event_t *e) {
     lv_obj_t *cell_pnl = lv_event_get_target(e);
     uint32_t child_cnt = lv_obj_get_child_cnt(cell_pnl);
+    if (child_cnt == 0) {
+        // Panel has no children (maybe being deleted)
+        return;
+    }
+
     lv_obj_t *cell_image_focused = lv_obj_get_child(cell_pnl, child_cnt - 1);
+    if (!cell_image_focused) return;    
 
     if (lv_event_get_code(e) == LV_EVENT_FOCUSED) {
         lv_obj_set_style_img_opa(cell_image_focused, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
