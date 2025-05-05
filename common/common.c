@@ -800,6 +800,8 @@ void capacity_task() {
 }
 
 void increase_option_value(lv_obj_t *element) {
+    play_sound(SND_OPTION, 0);
+
     uint16_t total = lv_dropdown_get_option_cnt(element);
     if (total <= 1) return;
     uint16_t current = lv_dropdown_get_selected(element);
@@ -814,6 +816,8 @@ void increase_option_value(lv_obj_t *element) {
 }
 
 void decrease_option_value(lv_obj_t *element) {
+    play_sound(SND_OPTION, 0);
+
     uint16_t total = lv_dropdown_get_option_cnt(element);
     if (total <= 1) return;
     uint16_t current = lv_dropdown_get_selected(element);
@@ -2213,8 +2217,9 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
     if (!snd_type && !re_init) return;
 
     const char *names[SOUND_TOTAL] = {
-            "confirm", "back", "keypress", "navigate", "error", "muos",
-            "reboot", "shutdown", "startup", "info_open", "info_close"
+            "confirm", "back", "keypress", "navigate",
+            "error", "muos", "reboot", "shutdown",
+            "startup", "info_open", "info_close", "option"
     };
 
     char base_path[MAX_BUFFER_SIZE];

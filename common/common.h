@@ -21,7 +21,7 @@ extern char current_wall[MAX_BUFFER_SIZE];
 extern int is_silence_playing;
 extern Mix_Music *current_bgm;
 
-#define SOUND_TOTAL 11
+#define SOUND_TOTAL 12
 
 struct ImageSettings {
     char *image_path;
@@ -62,7 +62,7 @@ enum time_type {
 enum sound_type {
     SND_CONFIRM, SND_BACK, SND_KEYPRESS, SND_NAVIGATE,
     SND_ERROR, SND_MUOS, SND_REBOOT, SND_SHUTDOWN,
-    SND_STARTUP, SND_INFO_OPEN, SND_INFO_CLOSE,
+    SND_STARTUP, SND_INFO_OPEN, SND_INFO_CLOSE, SND_OPTION
 };
 
 typedef struct {

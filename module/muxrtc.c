@@ -263,7 +263,7 @@ static void list_nav_next(int steps) {
 
 static void adjust_option(int direction) {
     if (msgbox_active) return;
-    play_sound(SND_NAVIGATE, 0);
+    play_sound(SND_OPTION, 0);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblYear) {
