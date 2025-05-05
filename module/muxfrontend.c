@@ -350,20 +350,13 @@ static const ModuleEntry modules[] = {
         {NULL,         NULL, NULL, NULL,                                 NULL}
 };
 
-int main() {
-    setup_background_process();
-
-    load_device(&device);
-    load_config(&config);
-
-    init_theme(0, 0);
-    init_display();
-
+void init_audio() {
     int r = 10;
     while (r-- > 0) {
         if (init_audio_backend()) {
             init_fe_snd(&fe_snd, config.SETTINGS.GENERAL.SOUND, 0);
             init_fe_bgm(&fe_bgm, config.SETTINGS.GENERAL.BGM, 0);
+
             break;
         }
 
@@ -376,6 +369,18 @@ int main() {
     }
 
     if (config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
+}
+
+int main() {
+    setup_background_process();
+
+    load_device(&device);
+    load_config(&config);
+
+    init_theme(0, 0);
+    init_display();
+
+    init_audio();
 
     while (1) {
         if (file_exist(SAFE_QUIT)) break;
