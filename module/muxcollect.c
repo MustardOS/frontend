@@ -583,7 +583,7 @@ static void update_footer_glyph() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -640,7 +640,7 @@ static void handle_keyboard_OK_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (strcasecmp(is_key, OSK_DONE) == 0) {

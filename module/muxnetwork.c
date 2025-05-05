@@ -264,7 +264,7 @@ static void init_navigation_group() {
 }
 
 static void list_nav_move(int steps, int direction) {
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         if (direction < 0) {
@@ -325,7 +325,7 @@ static void handle_keyboard_OK_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     const char *is_key;
     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {

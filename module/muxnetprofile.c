@@ -138,7 +138,7 @@ static int save_profile() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),

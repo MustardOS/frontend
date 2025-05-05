@@ -304,7 +304,7 @@ static void gen_label(char *item_glyph, char *item_text, char *item_data, char *
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
         if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
@@ -500,7 +500,7 @@ static void handle_keyboard_OK_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (strcasecmp(is_key, OSK_DONE) == 0) {

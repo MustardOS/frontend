@@ -66,28 +66,30 @@ static void handle_back(void) {
 }
 
 static void handle_up(void) {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     play_sound(SND_NAVIGATE, 0);
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     lv_roller_set_selected(element_focused,
                            lv_roller_get_selected(element_focused) - 1,
                            LV_ANIM_ON);
 }
 
 static void handle_down(void) {
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     play_sound(SND_NAVIGATE, 0);
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     lv_roller_set_selected(element_focused,
                            lv_roller_get_selected(element_focused) + 1,
                            LV_ANIM_ON);
 }
 
 static void handle_left(void) {
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
     nav_prev(ui_group, 1);
 }
 
 static void handle_right(void) {
-    play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
     nav_next(ui_group, 1);
 }
 
