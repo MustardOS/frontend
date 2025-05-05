@@ -977,7 +977,7 @@ static void handle_y() {
 }
 
 static void handle_start() {
-    if (msgbox_active) return;
+    if (msgbox_active || !ui_count) return;
 
     play_sound(SND_CONFIRM, 0);
 
