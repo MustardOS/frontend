@@ -69,7 +69,7 @@ void refresh_screen(lv_obj_t *screen) {
 }
 
 void safe_quit(int exit_status) {
-    write_text_to_file("/tmp/safe_quit", "w", INT, exit_status);
+    write_text_to_file(SAFE_QUIT, "w", INT, exit_status);
 }
 
 void close_input() {

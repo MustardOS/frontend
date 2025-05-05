@@ -28,6 +28,8 @@
 #define OSK_CHAR  "!@#"
 #define OSK_DONE  "OK"
 
+#define SAFE_QUIT "/tmp/safe_quit"
+
 #define EXPLORE_DIR "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
