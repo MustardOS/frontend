@@ -8,7 +8,6 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `lvgl`: [LVGL Embedded Graphics Library](https://github.com/lvgl/lvgl)
 * `mufbset`: Customised framebuffer resolution switcher
 * `muhotkey`: Global Hotkey System
-* `muplay`: Internal Navigation Sound Player
 * `muterm`: Custom Terminal Emulator
 * `muxapp`: Application List
 * `muxarchive`: Archive Manager
