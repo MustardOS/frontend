@@ -215,11 +215,11 @@ static void handle_a() {
                 return;
             }
 
-            int sound = !strcmp(elements[i].mux_name, "reboot") ? SND_REBOOT :
-                        !strcmp(elements[i].mux_name, "shutdown") ? SND_SHUTDOWN :
-                        SND_CONFIRM;
+            if (strcmp(elements[i].mux_name, "reboot") != 0 &&
+                strcmp(elements[i].mux_name, "shutdown") != 0) {
+                play_sound(SND_CONFIRM, 0);
+            }
 
-            play_sound(sound, 0);
             load_mux(elements[i].mux_name);
             break;
         }
