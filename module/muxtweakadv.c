@@ -333,6 +333,9 @@ static void save_tweak_options() {
     }
 
     if (is_modified > 0) {
+        toast_message(lang.GENERIC.SAVING, 0, 0);
+        refresh_screen(ui_screen);
+
         const char *args[] = {(INTERNAL_PATH "script/mux/tweak.sh"), NULL};
         run_exec(args, A_SIZE(args), 0);
         refresh_config = 1;

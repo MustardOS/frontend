@@ -104,11 +104,13 @@ static void handle_confirm() {
     if (msgbox_active) return;
 
     play_sound(SND_CONFIRM, 0);
-    toast_message(lang.MUXLANGUAGE.SAVE, 0, 0);
+
+    toast_message(lang.GENERIC.SAVING, 0, 0);
+    refresh_screen(ui_screen);
 
     write_text_to_file((RUN_GLOBAL_PATH "settings/general/language"), "w", CHAR,
                        items[current_item_index].name);
-                       
+
     refresh_config = 1;
 
     close_input();

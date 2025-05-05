@@ -118,65 +118,88 @@ static void save_visual_options() {
     int idx_overlayimage = lv_dropdown_get_selected(ui_droOverlayImage_visual);
     int idx_overlaytransparency = lv_dropdown_get_selected(ui_droOverlayTransparency_visual);
 
+    int is_modified = 0;
+
     if (lv_dropdown_get_selected(ui_droBattery_visual_visual) != battery_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/battery"), "w", INT, idx_battery);
     }
 
     if (lv_dropdown_get_selected(ui_droClock_visual) != mux_clock_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/clock"), "w", INT, idx_clock);
     }
 
     if (lv_dropdown_get_selected(ui_droNetwork_visual_visual) != network_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/network"), "w", INT, idx_network);
     }
 
     if (lv_dropdown_get_selected(ui_droName_visual) != name_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/name"), "w", INT, idx_name);
     }
 
     if (lv_dropdown_get_selected(ui_droDash_visual) != dash_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/dash"), "w", INT, idx_dash);
     }
 
     if (lv_dropdown_get_selected(ui_droFriendlyFolder_visual) != friendlyfolder_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/friendlyfolder"), "w", INT, idx_friendlyfolder);
     }
 
     if (lv_dropdown_get_selected(ui_droTheTitleFormat_visual) != thetitleformat_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/thetitleformat"), "w", INT, idx_thetitleformat);
     }
 
     if (lv_dropdown_get_selected(ui_droTitleIncludeRootDrive_visual) != titleincluderootdrive_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/titleincluderootdrive"), "w", INT, idx_titleincluderootdrive);
     }
 
     if (lv_dropdown_get_selected(ui_droFolderItemCount_visual) != folderitemcount_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/folderitemcount"), "w", INT, idx_folderitemcount);
     }
 
     if (lv_dropdown_get_selected(ui_droDisplayEmptyFolder_visual) != display_empty_folder_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/folderempty"), "w", INT, idx_folderempty);
     }
 
     if (lv_dropdown_get_selected(ui_droMenuCounterFolder_visual) != menu_counter_folder_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/counterfolder"), "w", INT, idx_counterfolder);
     }
 
     if (lv_dropdown_get_selected(ui_droMenuCounterFile_visual) != menu_counter_file_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/counterfile"), "w", INT, idx_counterfile);
     }
 
     if (lv_dropdown_get_selected(ui_droHidden_visual) != hidden_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/general/hidden"), "w", INT, idx_hidden);
     }
 
     if (lv_dropdown_get_selected(ui_droOverlayImage_visual) != overlayimage_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/overlayimage"), "w", INT, idx_overlayimage);
     }
 
     if (lv_dropdown_get_selected(ui_droOverlayTransparency_visual) != overlaytransparency_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/overlaytransparency"), "w", INT, idx_overlaytransparency);
     }
+
+    if (is_modified > 0) {
+        toast_message(lang.GENERIC.SAVING, 0, 0);
+        refresh_screen(ui_screen);
+    }
+
     refresh_config = 1;
 }
 

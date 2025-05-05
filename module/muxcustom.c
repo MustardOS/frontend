@@ -414,40 +414,54 @@ static void save_options() {
     }
 
     if (lv_dropdown_get_selected(ui_droSound) != sound_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/general/sound"), "w", INT, idx_sound);
     }
 
     if (lv_dropdown_get_selected(ui_droChime) != chime_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/general/chime"), "w", INT, idx_chime);
     }
 
     if (lv_dropdown_get_selected(ui_droBoxArt) != boxart_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/boxart"), "w", INT, idx_boxart);
     }
 
     if (lv_dropdown_get_selected(ui_droBoxArtAlign) != boxartalign_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/boxartalign"), "w", INT, idx_boxartalign);
     }
 
     if (lv_dropdown_get_selected(ui_droBackgroundAnimation) != background_animation_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/backgroundanimation"), "w", INT, idx_backgroundanimation);
     }
 
     if (lv_dropdown_get_selected(ui_droLaunchSplash) != launch_splash_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/launchsplash"), "w", INT, idx_launchsplash);
     }
 
     if (lv_dropdown_get_selected(ui_droBlackFade) != black_fade_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "visual/blackfade"), "w", INT, idx_blackfade);
     }
 
     if (lv_dropdown_get_selected(ui_droFont) != font_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/font"), "w", INT, idx_font);
     }
 
     if (lv_dropdown_get_selected(ui_droThemeResolution) != theme_resolution_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/general/theme_resolution"), "w", INT, idx_theme_resolution);
         refresh_resolution = 1;
+    }
+
+    if (is_modified > 0) {
+        toast_message(lang.GENERIC.SAVING, 0, 0);
+        refresh_screen(ui_screen);
     }
 
     if (!lv_obj_has_flag(ui_pnlThemeAlternate, LV_OBJ_FLAG_HIDDEN)) {

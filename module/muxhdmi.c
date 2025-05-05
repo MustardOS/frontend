@@ -77,28 +77,41 @@ static void save_hdmi_options() {
     int idx_scan = lv_dropdown_get_selected(ui_droScan_hdmi);
     int idx_audio = lv_dropdown_get_selected(ui_droAudio_hdmi);
 
+    int is_modified = 0;
+
     if (lv_dropdown_get_selected(ui_droResolution_hdmi) != resolution_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/resolution"), "w", INT, idx_resolution);
     }
 
     if (lv_dropdown_get_selected(ui_droSpace_hdmi) != space_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/space"), "w", INT, idx_space);
     }
 
     if (lv_dropdown_get_selected(ui_droDepth_hdmi) != depth_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/depth"), "w", INT, idx_depth);
     }
 
     if (lv_dropdown_get_selected(ui_droRange_hdmi) != range_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/range"), "w", INT, idx_range);
     }
 
     if (lv_dropdown_get_selected(ui_droScan_hdmi) != scan_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/scan"), "w", INT, idx_scan);
     }
 
     if (lv_dropdown_get_selected(ui_droAudio_hdmi) != audio_original) {
+        is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/hdmi/audio"), "w", INT, idx_audio);
+    }
+
+    if (is_modified > 0) {
+        toast_message(lang.GENERIC.SAVING, 0, 0);
+        refresh_screen(ui_screen);
     }
 
     refresh_config = 1;

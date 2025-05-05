@@ -517,12 +517,8 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     play_sound(SND_BACK, 0);
 
-    toast_message(lang.MUXNETWORK.SAVE, 0, 0);
-
-    /* I hate doing this shit but for some reason the active network
-     * glyph completely wigs out if you don't wait until it finishes
-     * the connection checks...
-    */ if (literally_just_connected) sleep(3);
+    toast_message(lang.GENERIC.SAVING, 0, 0);
+    refresh_screen(ui_screen);
 
     save_network_config();
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "network");

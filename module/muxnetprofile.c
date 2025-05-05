@@ -41,6 +41,9 @@ static int remove_profile(char *name) {
 }
 
 static void load_profile(char *name) {
+    toast_message(lang.GENERIC.LOADING, 0, 0);
+    refresh_screen(ui_screen);
+
     static char profile_file[MAX_BUFFER_SIZE];
     snprintf(profile_file, sizeof(profile_file),
              (RUN_STORAGE_PATH "network/%s.ini"), name);
@@ -75,6 +78,9 @@ static void load_profile(char *name) {
 }
 
 static int save_profile() {
+    toast_message(lang.GENERIC.SAVING, 0, 0);
+    refresh_screen(ui_screen);
+
     const char *p_type = read_text_from_file((RUN_GLOBAL_PATH "network/type"));
     const char *p_ssid = read_text_from_file((RUN_GLOBAL_PATH "network/ssid"));
     const char *p_pass = read_text_from_file((RUN_GLOBAL_PATH "network/pass"));
@@ -287,9 +293,9 @@ static void handle_confirm(void) {
 
     play_sound(SND_CONFIRM, 0);
     load_profile(lv_label_get_text(lv_group_get_focused(ui_group)));
-    
+
     refresh_config = 1;
-    
+
     close_input();
     mux_input_stop();
 }
