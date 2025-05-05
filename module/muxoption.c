@@ -294,7 +294,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxoption_main(char *name, char *dir, char *sys) {
+int muxoption_main(int nothing, char *name, char *dir, char *sys) {
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_dir, sizeof(rom_name), "%s", dir);
     snprintf(rom_system, sizeof(rom_name), "%s", sys);
