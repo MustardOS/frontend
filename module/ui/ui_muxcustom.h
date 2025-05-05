@@ -15,6 +15,7 @@ extern lv_obj_t *ui_pnlTheme;
 extern lv_obj_t *ui_pnlThemeResolution;
 extern lv_obj_t *ui_pnlThemeAlternate;
 extern lv_obj_t *ui_pnlSound;
+extern lv_obj_t *ui_pnlChime;
 extern lv_obj_t *ui_pnlCatalogue;
 extern lv_obj_t *ui_pnlConfig;
 
@@ -29,6 +30,7 @@ extern lv_obj_t *ui_lblTheme;
 extern lv_obj_t *ui_lblThemeResolution;
 extern lv_obj_t *ui_lblThemeAlternate;
 extern lv_obj_t *ui_lblSound;
+extern lv_obj_t *ui_lblChime;
 extern lv_obj_t *ui_lblCatalogue;
 extern lv_obj_t *ui_lblConfig;
 
@@ -43,6 +45,7 @@ extern lv_obj_t *ui_icoTheme;
 extern lv_obj_t *ui_icoThemeResolution;
 extern lv_obj_t *ui_icoThemeAlternate;
 extern lv_obj_t *ui_icoSound;
+extern lv_obj_t *ui_icoChime;
 extern lv_obj_t *ui_icoCatalogue;
 extern lv_obj_t *ui_icoConfig;
 
@@ -57,5 +60,6 @@ extern lv_obj_t *ui_droTheme;
 extern lv_obj_t *ui_droThemeResolution;
 extern lv_obj_t *ui_droThemeAlternate;
 extern lv_obj_t *ui_droSound;
+extern lv_obj_t *ui_droChime;
 extern lv_obj_t *ui_droCatalogue;
 extern lv_obj_t *ui_droConfig;

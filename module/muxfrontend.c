@@ -375,7 +375,7 @@ int main() {
         usleep(delay);
     }
 
-    play_sound(SND_STARTUP, 1);
+    if (config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
 
     while (1) {
         if (file_exist(SAFE_QUIT)) break;

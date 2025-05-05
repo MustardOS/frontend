@@ -53,6 +53,7 @@ struct mux_config {
         struct {
             int16_t HIDDEN;
             int16_t SOUND;
+            int16_t CHIME;
             int16_t BGM;
             char STARTUP[MAX_BUFFER_SIZE];
             int16_t COLOUR;

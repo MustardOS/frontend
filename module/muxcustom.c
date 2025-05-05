@@ -10,9 +10,9 @@
 
 static char theme_alt_original[MAX_BUFFER_SIZE];
 static int boxart_original, bgm_original, sound_original, boxartalign_original, background_animation_original,
-        font_original, launch_splash_original, black_fade_original, theme_resolution_original;
+        font_original, launch_splash_original, black_fade_original, theme_resolution_original, chime_original;
 
-#define UI_COUNT 13
+#define UI_COUNT 14
 static lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_objects_value[UI_COUNT];
 static lv_obj_t *ui_icons[UI_COUNT];
@@ -61,6 +61,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBackgroundAnimation, lang.MUXCUSTOM.HELP.ANIMATION},
             {ui_lblBGM,                 lang.MUXCUSTOM.HELP.MUSIC},
             {ui_lblSound,               lang.MUXCUSTOM.HELP.SOUND},
+            {ui_lblChime,               lang.MUXCUSTOM.HELP.CHIME},
             {ui_lblBlackFade,           lang.MUXCUSTOM.HELP.FADE},
             {ui_lblBoxArt,              lang.MUXCUSTOM.HELP.BOX_ART},
             {ui_lblBoxArtAlign,         lang.MUXCUSTOM.HELP.BOX_ALIGN},
@@ -131,6 +132,7 @@ static void populate_theme_alternates() {
 static void init_dropdown_settings() {
     bgm_original = lv_dropdown_get_selected(ui_droBGM);
     sound_original = lv_dropdown_get_selected(ui_droSound);
+    chime_original = lv_dropdown_get_selected(ui_droChime);
     boxart_original = lv_dropdown_get_selected(ui_droBoxArt);
     boxartalign_original = lv_dropdown_get_selected(ui_droBoxArtAlign);
     background_animation_original = lv_dropdown_get_selected(ui_droBackgroundAnimation);
@@ -154,7 +156,8 @@ static void init_navigation_group() {
             ui_pnlBoxArtAlign,
             ui_pnlLaunchSplash,
             ui_pnlFont,
-            ui_pnlSound
+            ui_pnlSound,
+            ui_pnlChime
     };
 
     ui_objects[0] = ui_lblCatalogue;
@@ -170,6 +173,7 @@ static void init_navigation_group() {
     ui_objects[10] = ui_lblLaunchSplash;
     ui_objects[11] = ui_lblFont;
     ui_objects[12] = ui_lblSound;
+    ui_objects[13] = ui_lblChime;
 
     ui_icons[0] = ui_icoCatalogue;
     ui_icons[1] = ui_icoConfig;
@@ -184,6 +188,7 @@ static void init_navigation_group() {
     ui_icons[10] = ui_icoLaunchSplash;
     ui_icons[11] = ui_icoFont;
     ui_icons[12] = ui_icoSound;
+    ui_icons[13] = ui_icoChime;
 
     ui_objects_value[0] = ui_droCatalogue;
     ui_objects_value[1] = ui_droConfig;
@@ -198,6 +203,7 @@ static void init_navigation_group() {
     ui_objects_value[10] = ui_droLaunchSplash;
     ui_objects_value[11] = ui_droFont;
     ui_objects_value[12] = ui_droSound;
+    ui_objects_value[13] = ui_droChime;
 
     apply_theme_list_panel(ui_pnlThemeAlternate);
     apply_theme_list_panel(ui_pnlBackgroundAnimation);
@@ -211,6 +217,7 @@ static void init_navigation_group() {
     apply_theme_list_panel(ui_pnlTheme);
     apply_theme_list_panel(ui_pnlThemeResolution);
     apply_theme_list_panel(ui_pnlSound);
+    apply_theme_list_panel(ui_pnlChime);
     apply_theme_list_panel(ui_pnlConfig);
 
     apply_theme_list_item(&theme, ui_lblBackgroundAnimation, lang.MUXCUSTOM.ANIMATION);
@@ -225,6 +232,7 @@ static void init_navigation_group() {
     apply_theme_list_item(&theme, ui_lblThemeResolution, lang.MUXCUSTOM.THEME_RESOLUTION);
     apply_theme_list_item(&theme, ui_lblThemeAlternate, lang.MUXCUSTOM.THEME_ALTERNATE);
     apply_theme_list_item(&theme, ui_lblSound, lang.MUXCUSTOM.SOUND.TITLE);
+    apply_theme_list_item(&theme, ui_lblChime, lang.MUXCUSTOM.CHIME);
     apply_theme_list_item(&theme, ui_lblConfig, lang.MUXCUSTOM.CONFIG);
 
     apply_theme_list_glyph(&theme, ui_icoBackgroundAnimation, mux_module, "backgroundanimation");
@@ -239,6 +247,7 @@ static void init_navigation_group() {
     apply_theme_list_glyph(&theme, ui_icoThemeResolution, mux_module, "theme_resolution");
     apply_theme_list_glyph(&theme, ui_icoThemeAlternate, mux_module, "themealternate");
     apply_theme_list_glyph(&theme, ui_icoSound, mux_module, "sound");
+    apply_theme_list_glyph(&theme, ui_icoChime, mux_module, "chime");
     apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
 
     apply_theme_list_drop_down(&theme, ui_droBackgroundAnimation, NULL);
@@ -253,6 +262,7 @@ static void init_navigation_group() {
     apply_theme_list_drop_down(&theme, ui_droThemeResolution, NULL);
     apply_theme_list_drop_down(&theme, ui_droThemeAlternate, "");
     apply_theme_list_drop_down(&theme, ui_droSound, NULL);
+    apply_theme_list_drop_down(&theme, ui_droChime, NULL);
     apply_theme_list_drop_down(&theme, ui_droConfig, "");
 
     add_drop_down_options(ui_droBGM, (char *[]) {
@@ -287,6 +297,7 @@ static void init_navigation_group() {
     add_drop_down_options(ui_droBackgroundAnimation, disabled_enabled, 2);
     add_drop_down_options(ui_droLaunchSplash, disabled_enabled, 2);
     add_drop_down_options(ui_droBlackFade, disabled_enabled, 2);
+    add_drop_down_options(ui_droChime, disabled_enabled, 2);
 
     lv_dropdown_clear_options(ui_droThemeResolution);
     lv_dropdown_add_option(ui_droThemeResolution, lang.MUXCUSTOM.SCREEN, LV_DROPDOWN_POS_LAST);
@@ -377,6 +388,7 @@ static void restore_options() {
     lv_dropdown_set_selected(ui_droFont, config.SETTINGS.ADVANCED.FONT);
     lv_dropdown_set_selected(ui_droBGM, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droSound, config.SETTINGS.GENERAL.SOUND);
+    lv_dropdown_set_selected(ui_droChime, config.SETTINGS.GENERAL.CHIME);
     restore_theme_resolution();
 }
 
@@ -389,6 +401,7 @@ static void save_options() {
     int idx_font = lv_dropdown_get_selected(ui_droFont);
     int idx_bgm = lv_dropdown_get_selected(ui_droBGM);
     int idx_sound = lv_dropdown_get_selected(ui_droSound);
+    int idx_chime = lv_dropdown_get_selected(ui_droChime);
     char theme_resolution[MAX_BUFFER_SIZE];
     lv_dropdown_get_selected_str(ui_droThemeResolution, theme_resolution, sizeof(theme_resolution));
     int idx_theme_resolution = get_theme_resolution_value(theme_resolution);
@@ -402,6 +415,10 @@ static void save_options() {
 
     if (lv_dropdown_get_selected(ui_droSound) != sound_original) {
         write_text_to_file((RUN_GLOBAL_PATH "settings/general/sound"), "w", INT, idx_sound);
+    }
+
+    if (lv_dropdown_get_selected(ui_droChime) != chime_original) {
+        write_text_to_file((RUN_GLOBAL_PATH "settings/general/chime"), "w", INT, idx_chime);
     }
 
     if (lv_dropdown_get_selected(ui_droBoxArt) != boxart_original) {
@@ -607,6 +624,7 @@ static void init_elements() {
     lv_obj_set_user_data(ui_lblThemeResolution, "theme_resolution");
     lv_obj_set_user_data(ui_lblThemeAlternate, "themealternate");
     lv_obj_set_user_data(ui_lblSound, "sound");
+    lv_obj_set_user_data(ui_lblChime, "chime");
     lv_obj_set_user_data(ui_lblConfig, "config");
 
 #if TEST_IMAGE

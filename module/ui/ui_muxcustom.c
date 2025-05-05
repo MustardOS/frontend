@@ -11,6 +11,7 @@ lv_obj_t *ui_pnlTheme;
 lv_obj_t *ui_pnlThemeResolution;
 lv_obj_t *ui_pnlThemeAlternate;
 lv_obj_t *ui_pnlSound;
+lv_obj_t *ui_pnlChime;
 lv_obj_t *ui_pnlCatalogue;
 lv_obj_t *ui_pnlConfig;
 
@@ -25,6 +26,7 @@ lv_obj_t *ui_lblTheme;
 lv_obj_t *ui_lblThemeResolution;
 lv_obj_t *ui_lblThemeAlternate;
 lv_obj_t *ui_lblSound;
+lv_obj_t *ui_lblChime;
 lv_obj_t *ui_lblCatalogue;
 lv_obj_t *ui_lblConfig;
 
@@ -39,6 +41,7 @@ lv_obj_t *ui_icoTheme;
 lv_obj_t *ui_icoThemeResolution;
 lv_obj_t *ui_icoThemeAlternate;
 lv_obj_t *ui_icoSound;
+lv_obj_t *ui_icoChime;
 lv_obj_t *ui_icoCatalogue;
 lv_obj_t *ui_icoConfig;
 
@@ -53,6 +56,7 @@ lv_obj_t *ui_droTheme;
 lv_obj_t *ui_droThemeResolution;
 lv_obj_t *ui_droThemeAlternate;
 lv_obj_t *ui_droSound;
+lv_obj_t *ui_droChime;
 lv_obj_t *ui_droCatalogue;
 lv_obj_t *ui_droConfig;
 
@@ -70,6 +74,7 @@ void init_muxcustom(lv_obj_t *ui_pnlContent) {
     ui_pnlLaunchSplash = lv_obj_create(ui_pnlContent);
     ui_pnlFont = lv_obj_create(ui_pnlContent);
     ui_pnlSound = lv_obj_create(ui_pnlContent);
+    ui_pnlChime = lv_obj_create(ui_pnlContent);
 
     ui_lblBackgroundAnimation = lv_label_create(ui_pnlBackgroundAnimation);
     lv_label_set_text(ui_lblBackgroundAnimation, "");
@@ -93,6 +98,8 @@ void init_muxcustom(lv_obj_t *ui_pnlContent) {
     lv_label_set_text(ui_lblThemeAlternate, "");
     ui_lblSound = lv_label_create(ui_pnlSound);
     lv_label_set_text(ui_lblSound, "");
+    ui_lblChime = lv_label_create(ui_pnlChime);
+    lv_label_set_text(ui_lblChime, "");
     ui_lblCatalogue = lv_label_create(ui_pnlCatalogue);
     lv_label_set_text(ui_lblCatalogue, "");
     ui_lblConfig = lv_label_create(ui_pnlConfig);
@@ -109,6 +116,7 @@ void init_muxcustom(lv_obj_t *ui_pnlContent) {
     ui_icoThemeResolution = lv_img_create(ui_pnlThemeResolution);
     ui_icoThemeAlternate = lv_img_create(ui_pnlThemeAlternate);
     ui_icoSound = lv_img_create(ui_pnlSound);
+    ui_icoChime = lv_img_create(ui_pnlChime);
     ui_icoCatalogue = lv_img_create(ui_pnlCatalogue);
     ui_icoConfig = lv_img_create(ui_pnlConfig);
 
@@ -145,6 +153,9 @@ void init_muxcustom(lv_obj_t *ui_pnlContent) {
     ui_droSound = lv_dropdown_create(ui_pnlSound);
     lv_dropdown_clear_options(ui_droSound);
     lv_obj_set_style_text_opa(ui_droSound, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    ui_droChime = lv_dropdown_create(ui_pnlChime);
+    lv_dropdown_clear_options(ui_droChime);
+    lv_obj_set_style_text_opa(ui_droChime, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
     ui_droCatalogue = lv_dropdown_create(ui_pnlCatalogue);
     lv_dropdown_clear_options(ui_droCatalogue);
     lv_obj_set_style_text_opa(ui_droCatalogue, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);

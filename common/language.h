@@ -152,6 +152,7 @@ struct mux_lang {
         char ANIMATION[MAX_BUFFER_SIZE];
         char FADE[MAX_BUFFER_SIZE];
         char SPLASH[MAX_BUFFER_SIZE];
+        char CHIME[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
             char BEHIND[MAX_BUFFER_SIZE];
@@ -199,6 +200,7 @@ struct mux_lang {
             char FONT[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
             char SOUND[MAX_BUFFER_SIZE];
+            char CHIME[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCUSTOM;
 
