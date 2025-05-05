@@ -61,6 +61,12 @@ Mix_Music *current_bgm = NULL;
 char **bgm_files = NULL;
 size_t bgm_file_count = 0;
 
+const char *snd_names[SOUND_TOTAL] = {
+        "confirm", "back", "keypress", "navigate",
+        "error", "muos", "reboot", "shutdown",
+        "startup", "info_open", "info_close", "option"
+};
+
 int file_exist(char *filename) {
     return access(filename, F_OK) == 0;
 }
@@ -872,7 +878,7 @@ void play_sound(int sound, int wait) {
         int channel = Mix_PlayChannel(-1, cs->chunk, 0);
         if (wait) while (Mix_Playing(channel)) SDL_Delay(5);
     } else {
-        LOG_ERROR("sound", "Sound not cached: %d", sound)
+        LOG_ERROR("sound", "Sound not found or cached: %s.wav", snd_names[sound]);
     }
 }
 
@@ -2216,12 +2222,6 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
 
     if (!snd_type && !re_init) return;
 
-    const char *names[SOUND_TOTAL] = {
-            "confirm", "back", "keypress", "navigate",
-            "error", "muos", "reboot", "shutdown",
-            "startup", "info_open", "info_close", "option"
-    };
-
     char base_path[MAX_BUFFER_SIZE];
     snprintf(base_path, sizeof(base_path), "%s", STORAGE_SOUND);
     if (snd_type == 2) {
@@ -2237,7 +2237,7 @@ void init_fe_snd(int *fe_snd, int snd_type, int re_init) {
 
     for (int i = 0; i < SOUND_TOTAL; ++i) {
         char path[MAX_BUFFER_SIZE];
-        snprintf(path, sizeof(path), "%s/%s.wav", base_path, names[i]);
+        snprintf(path, sizeof(path), "%s/%s.wav", base_path, snd_names[i]);
 
         if (file_exist(path)) {
             sound_cache[i].chunk = Mix_LoadWAV(path);
