@@ -24,6 +24,7 @@
 #include "muxinfo.h"
 #include "muxlanguage.h"
 #include "muxlaunch.h"
+#include "muxnetinfo.h"
 #include "muxnetprofile.h"
 #include "muxnetscan.h"
 #include "muxnetwork.h"
@@ -344,7 +345,8 @@ static const ModuleEntry modules[] = {
         {"screenshot",  "info",     "muxshot",       muxshot_main,       NULL},
         {"space",       "info",     "muxspace",      muxspace_main,      NULL},
         {"tester",      "info",     "muxtester",     muxtester_main,     NULL},
-        {"system",      "info",     "muxsysinfo",    muxsysinfo_main,    NULL},
+        {"sysinfo",     "info",     "muxsysinfo",    muxsysinfo_main,    NULL},
+        {"netinfo",     "info",     "muxnetinfo",    muxnetinfo_main,    NULL},
 
         // this is required because it is the end of the table!
         {NULL,         NULL, NULL, NULL,                                 NULL}

@@ -501,7 +501,7 @@ static void handle_b() {
     }
 
     play_sound(SND_BACK, 0);
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "system");
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "sysinfo");
 
     close_input();
     mux_input_stop();

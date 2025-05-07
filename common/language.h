@@ -256,14 +256,16 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char SYSTEM[MAX_BUFFER_SIZE];
+        char SYSINFO[MAX_BUFFER_SIZE];
+        char NETINFO[MAX_BUFFER_SIZE];
         char ACTIVITY[MAX_BUFFER_SIZE];
         char SCREENSHOT[MAX_BUFFER_SIZE];
         char SPACE[MAX_BUFFER_SIZE];
         char INPUT[MAX_BUFFER_SIZE];
         char CREDIT[MAX_BUFFER_SIZE];
         struct {
-            char SYSTEM[MAX_BUFFER_SIZE];
+            char SYSINFO[MAX_BUFFER_SIZE];
+            char NETINFO[MAX_BUFFER_SIZE];
             char ACTIVITY[MAX_BUFFER_SIZE];
             char SCREENSHOT[MAX_BUFFER_SIZE];
             char SPACE[MAX_BUFFER_SIZE];
@@ -314,6 +316,26 @@ struct mux_lang {
             char REBOOT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXLAUNCH;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char IP[MAX_BUFFER_SIZE];
+        char MAC[MAX_BUFFER_SIZE];
+        char SSID[MAX_BUFFER_SIZE];
+        char GATEWAY[MAX_BUFFER_SIZE];
+        char DNS[MAX_BUFFER_SIZE];
+        char SIGNAL[MAX_BUFFER_SIZE];
+        char TRAFFIC[MAX_BUFFER_SIZE];
+        struct {
+            char IP[MAX_BUFFER_SIZE];
+            char MAC[MAX_BUFFER_SIZE];
+            char SSID[MAX_BUFFER_SIZE];
+            char GATEWAY[MAX_BUFFER_SIZE];
+            char DNS[MAX_BUFFER_SIZE];
+            char SIGNAL[MAX_BUFFER_SIZE];
+            char TRAFFIC[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXNETINFO;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

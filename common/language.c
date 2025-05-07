@@ -228,13 +228,15 @@ void load_lang(struct mux_lang *lang) {
 
     // muxinfo
     SPECIFIC_FIELD(lang->MUXINFO.TITLE, "INFORMATION");
-    SPECIFIC_FIELD(lang->MUXINFO.SYSTEM, "System Details");
+    SPECIFIC_FIELD(lang->MUXINFO.SYSINFO, "System Details");
+    SPECIFIC_FIELD(lang->MUXINFO.NETINFO, "Network Details");
     SPECIFIC_FIELD(lang->MUXINFO.ACTIVITY, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXINFO.SCREENSHOT, "Screenshots");
     SPECIFIC_FIELD(lang->MUXINFO.SPACE, "Storage Space");
     SPECIFIC_FIELD(lang->MUXINFO.INPUT, "Input Tester");
     SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters");
-    SPECIFIC_FIELD(lang->MUXINFO.HELP.SYSTEM, "Access version information and system details");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.SYSINFO, "Access version information and system details");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.NETINFO, "Access network information");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.ACTIVITY, "Access statistics of played content and other activity");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SCREENSHOT, "View all of the screenshots taken on the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SPACE, "View the current used space of the mounted storage devices");
@@ -283,6 +285,23 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETPROFILE.HELP, "Quickly switch between different Wi-Fi configurations based on your location or network preferences");
     SPECIFIC_FIELD(lang->MUXNETPROFILE.INVALID_SSID, "Invalid SSID");
     SPECIFIC_FIELD(lang->MUXNETPROFILE.INVALID_NETWORK, "Invalid Network Settings");
+
+    // muxnetinfo
+    SPECIFIC_FIELD(lang->MUXNETINFO.TITLE, "NETWORK DETAILS");
+    SPECIFIC_FIELD(lang->MUXNETINFO.IP, "IP Address");
+    SPECIFIC_FIELD(lang->MUXNETINFO.MAC, "MAC Address");
+    SPECIFIC_FIELD(lang->MUXNETINFO.SSID, "Access Point");
+    SPECIFIC_FIELD(lang->MUXNETINFO.GATEWAY, "Gateway");
+    SPECIFIC_FIELD(lang->MUXNETINFO.DNS, "DNS");
+    SPECIFIC_FIELD(lang->MUXNETINFO.SIGNAL, "Signal");
+    SPECIFIC_FIELD(lang->MUXNETINFO.TRAFFIC, "Traffic");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.IP, "The current IP address assigned to this device");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.MAC, "The unique hardware address of the network interface");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.SSID, "The name (SSID) of the connected Wi-Fi network");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.GATEWAY, "The network gateway used to reach external networks");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.DNS, "The DNS servers used to resolve domain names");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.SIGNAL, "The Wi-Fi signal strength expressed as a percentage");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.TRAFFIC, "The total data sent and received over the network");
 
     // muxnetscan
     SPECIFIC_FIELD(lang->MUXNETSCAN.TITLE, "NETWORK SCAN");

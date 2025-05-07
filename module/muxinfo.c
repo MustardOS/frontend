@@ -7,7 +7,7 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
-#define UI_COUNT 5
+#define UI_COUNT 6
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_icons[UI_COUNT];
 
@@ -25,7 +25,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblScreenshot, lang.MUXINFO.HELP.SCREENSHOT},
             {ui_lblSpace,      lang.MUXINFO.HELP.SPACE},
             {ui_lblTester,     lang.MUXINFO.HELP.INPUT},
-            {ui_lblSystem,     lang.MUXINFO.HELP.SYSTEM},
+            {ui_lblSysinfo,     lang.MUXINFO.HELP.SYSINFO},
+            {ui_lblNetinfo,     lang.MUXINFO.HELP.NETINFO},
             {ui_lblCredits,    lang.MUXINFO.HELP.CREDIT},
     };
 
@@ -50,41 +51,47 @@ static void init_navigation_group() {
             ui_pnlScreenshot,
             ui_pnlSpace,
             ui_pnlTester,
-            ui_pnlSystem,
+            ui_pnlSysinfo,
+            ui_pnlNetinfo,
             ui_pnlCredits,
     };
 
     ui_objects[0] = ui_lblScreenshot;
     ui_objects[1] = ui_lblSpace;
     ui_objects[2] = ui_lblTester;
-    ui_objects[3] = ui_lblSystem;
-    ui_objects[4] = ui_lblCredits;
+    ui_objects[3] = ui_lblSysinfo;
+    ui_objects[4] = ui_lblNetinfo;
+    ui_objects[5] = ui_lblCredits;
 
     ui_icons[0] = ui_icoScreenshot;
     ui_icons[1] = ui_icoSpace;
     ui_icons[2] = ui_icoTester;
-    ui_icons[3] = ui_icoSystem;
-    ui_icons[4] = ui_icoCredits;
+    ui_icons[3] = ui_icoSysinfo;
+    ui_icons[4] = ui_icoNetinfo;
+    ui_icons[5] = ui_icoCredits;
 
     apply_theme_list_panel(ui_pnlTracker);
     apply_theme_list_panel(ui_pnlScreenshot);
     apply_theme_list_panel(ui_pnlSpace);
     apply_theme_list_panel(ui_pnlTester);
-    apply_theme_list_panel(ui_pnlSystem);
+    apply_theme_list_panel(ui_pnlSysinfo);
+    apply_theme_list_panel(ui_pnlNetinfo);
     apply_theme_list_panel(ui_pnlCredits);
 
     //apply_theme_list_item(&theme, ui_lblTracker, lang.MUXINFO.ACTIVITY);
     apply_theme_list_item(&theme, ui_lblScreenshot, lang.MUXINFO.SCREENSHOT);
     apply_theme_list_item(&theme, ui_lblSpace, lang.MUXINFO.SPACE);
     apply_theme_list_item(&theme, ui_lblTester, lang.MUXINFO.INPUT);
-    apply_theme_list_item(&theme, ui_lblSystem, lang.MUXINFO.SYSTEM);
+    apply_theme_list_item(&theme, ui_lblSysinfo, lang.MUXINFO.SYSINFO);
+    apply_theme_list_item(&theme, ui_lblNetinfo, lang.MUXINFO.NETINFO);
     apply_theme_list_item(&theme, ui_lblCredits, lang.MUXINFO.CREDIT);
 
     //apply_theme_list_glyph(&theme, ui_icoTracker, mux_module, "tracker");
     apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_module, "screenshot");
     apply_theme_list_glyph(&theme, ui_icoSpace, mux_module, "space");
     apply_theme_list_glyph(&theme, ui_icoTester, mux_module, "tester");
-    apply_theme_list_glyph(&theme, ui_icoSystem, mux_module, "system");
+    apply_theme_list_glyph(&theme, ui_icoSysinfo, mux_module, "sysinfo");
+    apply_theme_list_glyph(&theme, ui_icoNetinfo, mux_module, "netinfo");
     apply_theme_list_glyph(&theme, ui_icoCredits, mux_module, "credit");
 
     ui_group = lv_group_create();
@@ -148,8 +155,10 @@ static void handle_a() {
         load_mux("space");
     } else if (element_focused == ui_lblTester) {
         load_mux("tester");
-    } else if (element_focused == ui_lblSystem) {
-        load_mux("system");
+    } else if (element_focused == ui_lblSysinfo) {
+        load_mux("sysinfo");
+    } else if (element_focused == ui_lblNetinfo) {
+        load_mux("netinfo");
     } else if (element_focused == ui_lblCredits) {
         load_mux("credits");
     }
@@ -224,7 +233,8 @@ static void init_elements() {
     lv_obj_set_user_data(ui_lblScreenshot, "screenshot");
     lv_obj_set_user_data(ui_lblSpace, "space");
     lv_obj_set_user_data(ui_lblTester, "tester");
-    lv_obj_set_user_data(ui_lblSystem, "system");
+    lv_obj_set_user_data(ui_lblSysinfo, "sysinfo");
+    lv_obj_set_user_data(ui_lblNetinfo, "netinfo");
     lv_obj_set_user_data(ui_lblCredits, "credit");
 
 #if TEST_IMAGE
