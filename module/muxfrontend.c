@@ -162,6 +162,10 @@ static void module_reboot() {
     module_exit("reboot", SND_REBOOT);
 }
 
+static void module_quit() {
+    safe_quit(0);
+}
+
 static void module_explore() {
     last_index_check();
 
@@ -323,6 +327,7 @@ static const ModuleEntry modules[] = {
         {"config",     NULL, NULL, NULL, module_config},
         {"tweakadv",   NULL, NULL, NULL, module_tweakadv},
         {"rtc",        NULL, NULL, NULL, module_rtc},
+        {"credits",    NULL, NULL, NULL, module_quit},
 
         // the following modules can be loaded directly
         // without any other functionality
