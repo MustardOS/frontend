@@ -858,7 +858,7 @@ void init_muxcredits(const lv_font_t *header_font) {
 
     ui_lblSpecialTitle = lv_label_create(ui_conSpecial);
     lv_label_set_text(ui_lblSpecialTitle, "");
-    lv_obj_set_height(ui_lblSpecialTitle, 60);
+    lv_obj_set_height(ui_lblSpecialTitle, LV_SIZE_CONTENT);
     lv_obj_set_width(ui_lblSpecialTitle, lv_pct(100));
     lv_obj_set_x(ui_lblSpecialTitle, 0);
     lv_obj_set_y(ui_lblSpecialTitle, 0);
@@ -881,8 +881,8 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_border_side(ui_lblSpecialTitle, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblSpecialTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblSpecialTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblSpecialTitle, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblSpecialTitle, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblSpecialTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblSpecialTitle, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(ui_lblSpecialTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_lblSpecialTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_lblSpecialTitle, lv_color_hex(0x87C97C), LV_PART_MAIN | LV_STATE_FOCUSED);
@@ -911,7 +911,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_border_side(ui_lblSpecialMid, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblSpecialMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblSpecialMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblSpecialMid, 18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblSpecialMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblSpecialMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(ui_lblSpecialMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_lblSpecialMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -920,7 +920,7 @@ void init_muxcredits(const lv_font_t *header_font) {
 
     ui_lblBongleTitle = lv_label_create(ui_conSpecial);
     lv_label_set_text(ui_lblBongleTitle, "");
-    lv_obj_set_height(ui_lblBongleTitle, 60);
+    lv_obj_set_height(ui_lblBongleTitle, LV_SIZE_CONTENT);
     lv_obj_set_width(ui_lblBongleTitle, lv_pct(100));
     lv_obj_set_x(ui_lblBongleTitle, 0);
     lv_obj_set_y(ui_lblBongleTitle, 0);
@@ -943,8 +943,8 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_border_side(ui_lblBongleTitle, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblBongleTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblBongleTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblBongleTitle, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(ui_lblBongleTitle, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblBongleTitle, 20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(ui_lblBongleTitle, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(ui_lblBongleTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_lblBongleTitle, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(ui_lblBongleTitle, lv_color_hex(0x87C97C), LV_PART_MAIN | LV_STATE_FOCUSED);
@@ -973,7 +973,7 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_style_border_side(ui_lblBongleMid, LV_BORDER_SIDE_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(ui_lblBongleMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(ui_lblBongleMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(ui_lblBongleMid, 18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(ui_lblBongleMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_lblBongleMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_row(ui_lblBongleMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_lblBongleMid, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1002,8 +1002,6 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_label_set_text(ui_lblKofiTitle, "");
     lv_obj_set_width(ui_lblKofiTitle, lv_pct(100));
     lv_obj_set_height(ui_lblKofiTitle, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblKofiTitle, 0);
-    lv_obj_set_y(ui_lblKofiTitle, 20);
     lv_obj_set_align(ui_lblKofiTitle, LV_ALIGN_TOP_MID);
     lv_label_set_text(ui_lblKofiTitle, "Thank you for choosing muOS");
     lv_obj_set_scroll_dir(ui_lblKofiTitle, LV_DIR_HOR);
@@ -1034,8 +1032,6 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_label_set_text(ui_lblKofiMessageOne, "");
     lv_obj_set_width(ui_lblKofiMessageOne, lv_pct(100));
     lv_obj_set_height(ui_lblKofiMessageOne, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblKofiMessageOne, 0);
-    lv_obj_set_y(ui_lblKofiMessageOne, 30);
     lv_obj_set_align(ui_lblKofiMessageOne, LV_ALIGN_CENTER);
     lv_label_set_text(ui_lblKofiMessageOne,
                       "You can support muOS by donating or subscribing which helps the "
@@ -1063,10 +1059,8 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_label_set_text(ui_lblKofiMessageTwo, "");
     lv_obj_set_width(ui_lblKofiMessageTwo, lv_pct(100));
     lv_obj_set_height(ui_lblKofiMessageTwo, LV_SIZE_CONTENT);
-    lv_obj_set_x(ui_lblKofiMessageTwo, 0);
-    lv_obj_set_y(ui_lblKofiMessageTwo, 30);
     lv_obj_set_align(ui_lblKofiMessageTwo, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_lblKofiMessageTwo, "Scanning the below QR Code will take you to the Ko-fi page!\n");
+    lv_label_set_text(ui_lblKofiMessageTwo, "Scanning the below QR Code will take you to the Ko-fi page!");
     lv_obj_set_scroll_dir(ui_lblKofiMessageTwo, LV_DIR_HOR);
     lv_obj_set_style_text_color(ui_lblKofiMessageTwo, lv_color_hex(0xDDA200), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_lblKofiMessageTwo, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
