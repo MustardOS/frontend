@@ -53,6 +53,10 @@ int main(void) {
                             .type_mask = BIT(MUX_INPUT_START) | BIT(MUX_INPUT_MENU_SHORT),
                             .press_handler = timeout_task,
                     },
+                    {
+                            .type_mask = BIT(MUX_INPUT_START) | BIT(MUX_INPUT_MENU_LONG),
+                            .press_handler = timeout_task,
+                    },
             }
     };
     init_input(&input_opts, false);
