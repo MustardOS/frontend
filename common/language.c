@@ -81,6 +81,9 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.USER_DEFINED, "User Defined");
     GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting");
     GENERIC_FIELD(lang->GENERIC.SHUTTING_DOWN, "Shutting Down");
+    GENERIC_FIELD(lang->GENERIC.NOT_CONNECTED, "Not Connected");
+    GENERIC_FIELD(lang->GENERIC.EDIT, "Edit");
+    GENERIC_FIELD(lang->GENERIC.CHANGE, "Change");
 
     // muxapp
     SPECIFIC_FIELD(lang->MUXAPP.TITLE, "APPLICATIONS");
@@ -288,20 +291,24 @@ void load_lang(struct mux_lang *lang) {
 
     // muxnetinfo
     SPECIFIC_FIELD(lang->MUXNETINFO.TITLE, "NETWORK DETAILS");
-    SPECIFIC_FIELD(lang->MUXNETINFO.IP, "IP Address");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HOSTNAME, "Hostname");
     SPECIFIC_FIELD(lang->MUXNETINFO.MAC, "MAC Address");
+    SPECIFIC_FIELD(lang->MUXNETINFO.IP, "IP Address");
     SPECIFIC_FIELD(lang->MUXNETINFO.SSID, "Access Point");
     SPECIFIC_FIELD(lang->MUXNETINFO.GATEWAY, "Gateway");
     SPECIFIC_FIELD(lang->MUXNETINFO.DNS, "DNS");
     SPECIFIC_FIELD(lang->MUXNETINFO.SIGNAL, "Signal");
-    SPECIFIC_FIELD(lang->MUXNETINFO.TRAFFIC, "Traffic");
-    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.IP, "The current IP address assigned to this device");
+    SPECIFIC_FIELD(lang->MUXNETINFO.ACTRAFFIC, "Accumulated Traffic");
+    SPECIFIC_FIELD(lang->MUXNETINFO.TPTRAFFIC, "Throughput Traffic");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.HOSTNAME, "The current hostname of this device");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.MAC, "The unique hardware address of the network interface");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.IP, "The current IP address assigned to this device");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.SSID, "The name (SSID) of the connected Wi-Fi network");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.GATEWAY, "The network gateway used to reach external networks");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.DNS, "The DNS servers used to resolve domain names");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.SIGNAL, "The Wi-Fi signal strength expressed as a percentage");
-    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.TRAFFIC, "The total data sent and received over the network");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.ACTRAFFIC, "The total data sent and received over the network");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.TPTRAFFIC, "The current data sent and received over the network");
 
     // muxnetscan
     SPECIFIC_FIELD(lang->MUXNETSCAN.TITLE, "NETWORK SCAN");

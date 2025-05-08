@@ -65,6 +65,9 @@ struct mux_lang {
         char USER_DEFINED[MAX_BUFFER_SIZE];
         char REBOOTING[MAX_BUFFER_SIZE];
         char SHUTTING_DOWN[MAX_BUFFER_SIZE];
+        char NOT_CONNECTED[MAX_BUFFER_SIZE];
+        char EDIT[MAX_BUFFER_SIZE];
+        char CHANGE[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -319,21 +322,25 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char IP[MAX_BUFFER_SIZE];
+        char HOSTNAME[MAX_BUFFER_SIZE];
         char MAC[MAX_BUFFER_SIZE];
+        char IP[MAX_BUFFER_SIZE];
         char SSID[MAX_BUFFER_SIZE];
         char GATEWAY[MAX_BUFFER_SIZE];
         char DNS[MAX_BUFFER_SIZE];
         char SIGNAL[MAX_BUFFER_SIZE];
-        char TRAFFIC[MAX_BUFFER_SIZE];
+        char ACTRAFFIC[MAX_BUFFER_SIZE];
+        char TPTRAFFIC[MAX_BUFFER_SIZE];
         struct {
-            char IP[MAX_BUFFER_SIZE];
+            char HOSTNAME[MAX_BUFFER_SIZE];
             char MAC[MAX_BUFFER_SIZE];
+            char IP[MAX_BUFFER_SIZE];
             char SSID[MAX_BUFFER_SIZE];
             char GATEWAY[MAX_BUFFER_SIZE];
             char DNS[MAX_BUFFER_SIZE];
             char SIGNAL[MAX_BUFFER_SIZE];
-            char TRAFFIC[MAX_BUFFER_SIZE];
+            char ACTRAFFIC[MAX_BUFFER_SIZE];
+            char TPTRAFFIC[MAX_BUFFER_SIZE];
         } HELP;
     } MUXNETINFO;
 

@@ -141,6 +141,8 @@ char *read_line_from_file(const char *filename, size_t line_number);
 
 int read_int_from_file(const char *filename, size_t line_number);
 
+unsigned long long read_ll_from_file(const char *filename);
+
 const char *get_random_hex();
 
 uint32_t get_ini_hex(mini_t *ini_config, const char *section, const char *key, uint32_t default_value);

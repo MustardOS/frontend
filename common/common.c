@@ -598,6 +598,18 @@ int read_int_from_file(const char *filename, size_t line_number) {
     return 0;
 }
 
+unsigned long long read_ll_from_file(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) return 0;
+
+    unsigned long long value = 0;
+
+    fscanf(file, "%llu", &value);
+    fclose(file);
+
+    return value;
+}
+
 const char *get_random_hex() {
     int red = rand() % UINT8_MAX;
     int green = rand() % UINT8_MAX;
@@ -878,7 +890,7 @@ void play_sound(int sound, int wait) {
         int channel = Mix_PlayChannel(-1, cs->chunk, 0);
         if (wait) while (Mix_Playing(channel)) SDL_Delay(5);
     } else {
-        LOG_ERROR("sound", "Sound not found or cached: %s.wav", snd_names[sound]);
+        LOG_ERROR("sound", "Sound not found or cached: %s.wav", snd_names[sound])
     }
 }
 

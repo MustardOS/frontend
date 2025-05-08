@@ -3,12 +3,14 @@
 #include "ui/ui_muxnetinfo.h"
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 #include "../common/init.h"
 #include "../common/common.h"
 #include "../common/ui_common.h"
+#include "../common/osk.h"
 #include "../common/input/list_nav.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 9
 static lv_obj_t *ui_objects[UI_COUNT];
 #define UI_PANEL 5
 static lv_obj_t *ui_mux_panels[UI_PANEL];
@@ -18,15 +20,19 @@ struct help_msg {
     char *message;
 };
 
+const char *hostname_original;
+
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblIP_netinfo,      lang.MUXNETINFO.HELP.IP},
-            {ui_lblMAC_netinfo,     lang.MUXNETINFO.HELP.MAC},
-            {ui_lblSSID_netinfo,    lang.MUXNETINFO.HELP.SSID},
-            {ui_lblGateway_netinfo, lang.MUXNETINFO.HELP.GATEWAY},
-            {ui_lblDNS_netinfo,     lang.MUXNETINFO.HELP.DNS},
-            {ui_lblSignal_netinfo,  lang.MUXNETINFO.HELP.SIGNAL},
-            {ui_lblTraffic_netinfo, lang.MUXNETINFO.HELP.TRAFFIC},
+            {ui_lblHostname_netinfo,  lang.MUXNETINFO.HELP.HOSTNAME},
+            {ui_lblMAC_netinfo,       lang.MUXNETINFO.HELP.MAC},
+            {ui_lblIP_netinfo,        lang.MUXNETINFO.HELP.IP},
+            {ui_lblSSID_netinfo,      lang.MUXNETINFO.HELP.SSID},
+            {ui_lblGateway_netinfo,   lang.MUXNETINFO.HELP.GATEWAY},
+            {ui_lblDNS_netinfo,       lang.MUXNETINFO.HELP.DNS},
+            {ui_lblSignal_netinfo,    lang.MUXNETINFO.HELP.SIGNAL},
+            {ui_lblACTraffic_netinfo, lang.MUXNETINFO.HELP.ACTRAFFIC},
+            {ui_lblTPTraffic_netinfo, lang.MUXNETINFO.HELP.TPTRAFFIC},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -45,17 +51,14 @@ static void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-static const char *get_ip_address() {
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "ip addr show %s | awk '/inet / {print $2}' | cut -d/ -f1", device.NETWORK.INTERFACE);
-
-    const char *result = get_execute_result(cmd);
+static const char *get_hostname() {
+    const char *result = read_line_from_file("/etc/hostname", 1);
     if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
 
-    static char ip[64];
-    snprintf(ip, sizeof(ip), "%s", result);
+    static char hostname[64];
+    snprintf(hostname, sizeof(hostname), "%s", result);
 
-    return ip;
+    return hostname;
 }
 
 static const char *get_mac_address() {
@@ -74,7 +77,24 @@ static const char *get_mac_address() {
     return mac;
 }
 
+static const char *get_ip_address() {
+    if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
+
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "ip addr show %s | awk '/inet / {print $2}' | cut -d/ -f1", device.NETWORK.INTERFACE);
+
+    const char *result = get_execute_result(cmd);
+    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+
+    static char ip[64];
+    snprintf(ip, sizeof(ip), "%s", result);
+
+    return ip;
+}
+
 static const char *get_ssid() {
+    if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
+
     char cmd[128];
     snprintf(cmd, sizeof(cmd), "iw dev %s link | awk -F': ' '/SSID/ {print $2}'", device.NETWORK.INTERFACE);
 
@@ -88,6 +108,8 @@ static const char *get_ssid() {
 }
 
 static const char *get_gateway() {
+    if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
+
     const char *result = get_execute_result("ip route | awk '/default/ {print $3}'");
     if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
 
@@ -98,6 +120,8 @@ static const char *get_gateway() {
 }
 
 static const char *get_dns_servers() {
+    if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
+
     const char *result = get_execute_result("awk '/nameserver/ {print $2}' /etc/resolv.conf | xargs");
     if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
 
@@ -108,6 +132,8 @@ static const char *get_dns_servers() {
 }
 
 static const char *get_signal_strength() {
+    if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
+
     // I think these values are correct?
     // https://www.intuitibits.com/2016/03/23/dbm-to-percent-conversion/
     static const uint8_t dbm_perc[101] = {
@@ -140,138 +166,156 @@ static const char *get_signal_strength() {
     return signal;
 }
 
-static const char *get_traffic() {
-    FILE *fp = fopen("/proc/net/dev", "r");
-    if (!fp) return lang.GENERIC.UNKNOWN;
+static const char *get_ac_traffic() {
+    if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
-    char line[256];
-    const char *iface = device.NETWORK.INTERFACE;
-    size_t iface_len = strlen(iface);
+    char rx_path[128], tx_path[128];
+    snprintf(rx_path, sizeof(rx_path), "/sys/class/net/%s/statistics/rx_bytes", device.NETWORK.INTERFACE);
+    snprintf(tx_path, sizeof(tx_path), "/sys/class/net/%s/statistics/tx_bytes", device.NETWORK.INTERFACE);
 
-    unsigned long long rx_bytes = 0, tx_bytes = 0;
+    unsigned long long rx = read_ll_from_file(rx_path);
+    unsigned long long tx = read_ll_from_file(tx_path);
 
-    // Skip the two headers at the top
-    fgets(line, sizeof(line), fp);
-    fgets(line, sizeof(line), fp);
+    static char ac_traffic[64];
+    snprintf(ac_traffic, sizeof(ac_traffic), "RX: %.1f MB TX: %.1f MB",
+             rx / 1024.0 / 1024.0, tx / 1024.0 / 1024.0);
 
-    while (fgets(line, sizeof(line), fp)) {
-        char *ptr = line;
-        while (*ptr == ' ') ptr++;
+    return ac_traffic;
+}
 
-        if (strncmp(ptr, iface, iface_len) == 0 && ptr[iface_len] == ':') {
-            ptr = strchr(ptr, ':');
-            if (!ptr) break;
-            ptr++;
+static const char *get_tp_traffic() {
+    if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
-            // RX bytes is field 1, TX bytes is field 9 - at least with busybox!
-            // This gets the total traffic, couldn't work out how to get live data!
-            char *token;
-            int field = 0;
-            while ((token = strsep(&ptr, " ")) != NULL) {
-                if (*token == '\0') continue;
+    static unsigned long long last_rx = 0, last_tx = 0;
+    static time_t last_time = 0;
+    double rx_rate = 0, tx_rate = 0;
 
-                field++;
-                if (field == 1) {
-                    rx_bytes = strtoull(token, NULL, 10);
-                } else if (field == 9) {
-                    tx_bytes = strtoull(token, NULL, 10);
-                    break;
-                }
-            }
+    char rx_path[128], tx_path[128];
+    snprintf(rx_path, sizeof(rx_path), "/sys/class/net/%s/statistics/rx_bytes", device.NETWORK.INTERFACE);
+    snprintf(tx_path, sizeof(tx_path), "/sys/class/net/%s/statistics/tx_bytes", device.NETWORK.INTERFACE);
 
-            break;
+    unsigned long long rx = read_ll_from_file(rx_path);
+    unsigned long long tx = read_ll_from_file(tx_path);
+
+    time_t now = time(NULL);
+    if (last_time > 0) {
+        double delta = difftime(now, last_time);
+        if (delta > 0) {
+            rx_rate = (rx - last_rx) / delta;
+            tx_rate = (tx - last_tx) / delta;
         }
     }
 
-    fclose(fp);
+    last_rx = rx;
+    last_tx = tx;
 
-    static char traffic[64];
-    snprintf(traffic, sizeof(traffic), "RX: %.1f MB TX: %.1f MB",
-             rx_bytes / 1024.0 / 1024.0, tx_bytes / 1024.0 / 1024.0);
+    last_time = now;
 
-    return traffic;
+    static char tp_traffic[64];
+    snprintf(tp_traffic, sizeof(tp_traffic), "RX: %.1f KB/s TX: %.1f KB/s",
+             rx_rate / 1024.0, tx_rate / 1024.0);
+
+    return tp_traffic;
 }
 
 static void update_network_info() {
-    lv_label_set_text(ui_lblIPValue_netinfo, get_ip_address());
+    lv_label_set_text(ui_lblHostnameValue_netinfo, get_hostname());
     lv_label_set_text(ui_lblMACValue_netinfo, get_mac_address());
+    lv_label_set_text(ui_lblIPValue_netinfo, get_ip_address());
     lv_label_set_text(ui_lblSSIDValue_netinfo, get_ssid());
     lv_label_set_text(ui_lblGatewayValue_netinfo, get_gateway());
     lv_label_set_text(ui_lblDNSValue_netinfo, get_dns_servers());
     lv_label_set_text(ui_lblSignalValue_netinfo, get_signal_strength());
-    lv_label_set_text(ui_lblTrafficValue_netinfo, get_traffic());
+    lv_label_set_text(ui_lblACTrafficValue_netinfo, get_ac_traffic());
+    lv_label_set_text(ui_lblTPTrafficValue_netinfo, get_tp_traffic());
 }
 
 static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
-            ui_pnlIP_netinfo,
+            ui_pnlHostname_netinfo,
             ui_pnlMAC_netinfo,
+            ui_pnlIP_netinfo,
             ui_pnlSSID_netinfo,
             ui_pnlGateway_netinfo,
             ui_pnlDNS_netinfo,
             ui_pnlSignal_netinfo,
-            ui_pnlTraffic_netinfo
+            ui_pnlACTraffic_netinfo,
+            ui_pnlTPTraffic_netinfo
     };
 
-    ui_objects[0] = ui_lblIP_netinfo;
+    ui_objects[0] = ui_lblHostname_netinfo;
     ui_objects[1] = ui_lblMAC_netinfo;
-    ui_objects[2] = ui_lblSSID_netinfo;
-    ui_objects[3] = ui_lblGateway_netinfo;
-    ui_objects[4] = ui_lblDNS_netinfo;
-    ui_objects[5] = ui_lblSignal_netinfo;
-    ui_objects[6] = ui_lblTraffic_netinfo;
+    ui_objects[2] = ui_lblIP_netinfo;
+    ui_objects[3] = ui_lblSSID_netinfo;
+    ui_objects[4] = ui_lblGateway_netinfo;
+    ui_objects[5] = ui_lblDNS_netinfo;
+    ui_objects[6] = ui_lblSignal_netinfo;
+    ui_objects[7] = ui_lblACTraffic_netinfo;
+    ui_objects[8] = ui_lblTPTraffic_netinfo;
 
     lv_obj_t *ui_objects_value[] = {
-            ui_lblIPValue_netinfo,
+            ui_lblHostnameValue_netinfo,
             ui_lblMACValue_netinfo,
+            ui_lblIPValue_netinfo,
             ui_lblSSIDValue_netinfo,
             ui_lblGatewayValue_netinfo,
             ui_lblDNSValue_netinfo,
             ui_lblSignalValue_netinfo,
-            ui_lblTrafficValue_netinfo
+            ui_lblACTrafficValue_netinfo,
+            ui_lblTPTrafficValue_netinfo
     };
 
     lv_obj_t *ui_objects_glyph[] = {
-            ui_icoIP_netinfo,
+            ui_icoHostname_netinfo,
             ui_icoMAC_netinfo,
+            ui_icoIP_netinfo,
             ui_icoSSID_netinfo,
             ui_icoGateway_netinfo,
             ui_icoDNS_netinfo,
             ui_icoSignal_netinfo,
-            ui_icoTraffic_netinfo
+            ui_icoACTraffic_netinfo,
+            ui_icoTPTraffic_netinfo
     };
 
-    apply_theme_list_panel(ui_pnlIP_netinfo);
+    apply_theme_list_panel(ui_pnlHostname_netinfo);
     apply_theme_list_panel(ui_pnlMAC_netinfo);
+    apply_theme_list_panel(ui_pnlIP_netinfo);
     apply_theme_list_panel(ui_pnlSSID_netinfo);
     apply_theme_list_panel(ui_pnlGateway_netinfo);
     apply_theme_list_panel(ui_pnlDNS_netinfo);
     apply_theme_list_panel(ui_pnlSignal_netinfo);
-    apply_theme_list_panel(ui_pnlTraffic_netinfo);
+    apply_theme_list_panel(ui_pnlACTraffic_netinfo);
+    apply_theme_list_panel(ui_pnlTPTraffic_netinfo);
 
-    apply_theme_list_item(&theme, ui_lblIP_netinfo, lang.MUXNETINFO.IP);
+    apply_theme_list_item(&theme, ui_lblHostname_netinfo, lang.MUXNETINFO.HOSTNAME);
     apply_theme_list_item(&theme, ui_lblMAC_netinfo, lang.MUXNETINFO.MAC);
+    apply_theme_list_item(&theme, ui_lblIP_netinfo, lang.MUXNETINFO.IP);
     apply_theme_list_item(&theme, ui_lblSSID_netinfo, lang.MUXNETINFO.SSID);
     apply_theme_list_item(&theme, ui_lblGateway_netinfo, lang.MUXNETINFO.GATEWAY);
     apply_theme_list_item(&theme, ui_lblDNS_netinfo, lang.MUXNETINFO.DNS);
     apply_theme_list_item(&theme, ui_lblSignal_netinfo, lang.MUXNETINFO.SIGNAL);
-    apply_theme_list_item(&theme, ui_lblTraffic_netinfo, lang.MUXNETINFO.TRAFFIC);
+    apply_theme_list_item(&theme, ui_lblACTraffic_netinfo, lang.MUXNETINFO.ACTRAFFIC);
+    apply_theme_list_item(&theme, ui_lblTPTraffic_netinfo, lang.MUXNETINFO.TPTRAFFIC);
 
-    apply_theme_list_glyph(&theme, ui_icoIP_netinfo, mux_module, "ip");
+    apply_theme_list_glyph(&theme, ui_icoHostname_netinfo, mux_module, "hostname");
     apply_theme_list_glyph(&theme, ui_icoMAC_netinfo, mux_module, "mac");
+    apply_theme_list_glyph(&theme, ui_icoIP_netinfo, mux_module, "ip");
     apply_theme_list_glyph(&theme, ui_icoSSID_netinfo, mux_module, "ssid");
     apply_theme_list_glyph(&theme, ui_icoGateway_netinfo, mux_module, "gateway");
     apply_theme_list_glyph(&theme, ui_icoDNS_netinfo, mux_module, "dns");
     apply_theme_list_glyph(&theme, ui_icoSignal_netinfo, mux_module, "signal");
-    apply_theme_list_glyph(&theme, ui_icoTraffic_netinfo, mux_module, "traffic");
+    apply_theme_list_glyph(&theme, ui_icoACTraffic_netinfo, mux_module, "actraffic");
+    apply_theme_list_glyph(&theme, ui_icoTPTraffic_netinfo, mux_module, "tptraffic");
 
-    apply_theme_list_value(&theme, ui_lblIPValue_netinfo, "");
+    apply_theme_list_value(&theme, ui_lblHostnameValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblMACValue_netinfo, "");
+    apply_theme_list_value(&theme, ui_lblIPValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblSSIDValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblGatewayValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblDNSValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblSignalValue_netinfo, "");
-    apply_theme_list_value(&theme, ui_lblTrafficValue_netinfo, "");
+    apply_theme_list_value(&theme, ui_lblACTrafficValue_netinfo, "");
+    apply_theme_list_value(&theme, ui_lblTPTrafficValue_netinfo, "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -305,6 +349,29 @@ static void list_nav_move(int steps, int direction) {
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    int show_nav_a = 0;
+
+    if (element_focused == ui_lblHostname_netinfo) {
+        lv_label_set_text(ui_lblNavA, lang.GENERIC.EDIT);
+        show_nav_a = 1;
+    } else if (element_focused == ui_lblMAC_netinfo) {
+        if (is_network_connected()) goto end_nav;
+        lv_label_set_text(ui_lblNavA, lang.GENERIC.CHANGE);
+        show_nav_a = 1;
+    } else {
+        lv_label_set_text(ui_lblNavA, "");
+    }
+
+    end_nav:
+    if (show_nav_a) {
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    } else {
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    }
 }
 
 static void list_nav_prev(int steps) {
@@ -315,8 +382,81 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static void handle_keyboard_OK_press(void) {
+    key_show = 0;
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+
+    if (element_focused == ui_lblHostname_netinfo) {
+        hostname_original = lv_label_get_text(ui_lblHostnameValue_netinfo);
+
+        const char *new_hostname = lv_textarea_get_text(ui_txtEntry_netinfo);
+        if (strlen(new_hostname) < 3) goto clear_osk;
+
+        lv_label_set_text(ui_lblHostnameValue_netinfo, new_hostname);
+        write_text_to_file("/etc/hostname", "w", CHAR, new_hostname);
+
+        const char *hn_set_args[] = {"hostname", new_hostname, NULL};
+        run_exec(hn_set_args, A_SIZE(hn_set_args), 1);
+    }
+
+    clear_osk:
+    reset_osk(key_entry);
+
+    lv_textarea_set_text(ui_txtEntry_netinfo, "");
+    lv_group_set_focus_cb(ui_group, NULL);
+    lv_obj_add_flag(ui_pnlEntry_netinfo, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void handle_keyboard_press(void) {
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+
+    const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
+    if (strcasecmp(is_key, OSK_DONE) == 0) {
+        handle_keyboard_OK_press();
+    } else if (strcmp(is_key, OSK_UPPER) == 0) {
+        lv_btnmatrix_set_map(key_entry, key_upper_map);
+    } else if (strcmp(is_key, OSK_CHAR) == 0) {
+        lv_btnmatrix_set_map(key_entry, key_special_map);
+    } else if (strcmp(is_key, OSK_LOWER) == 0) {
+        lv_btnmatrix_set_map(key_entry, key_lower_map);
+    } else {
+        lv_event_send(key_entry, LV_EVENT_CLICKED, &key_curr);
+    }
+}
+
+static void handle_back(void) {
+    play_sound(SND_BACK, 0);
+    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "netinfo");
+
+    close_input();
+    mux_input_stop();
+}
+
 static void handle_a() {
     if (msgbox_active) return;
+
+    if (key_show) {
+        handle_keyboard_press();
+        return;
+    }
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblHostname_netinfo) {
+        lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
+
+        key_show = 1;
+
+        lv_obj_clear_flag(ui_pnlEntry_netinfo, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(ui_pnlEntry_netinfo);
+
+        lv_textarea_set_text(ui_txtEntry_netinfo, lv_label_get_text(lv_group_get_focused(ui_group_value)));
+    } else if (element_focused == ui_lblMAC_netinfo) {
+        if (is_network_connected()) return;
+
+        const char *mac_change_args[] = {"macchanger", "-r", device.NETWORK.INTERFACE, NULL};
+        run_exec(mac_change_args, A_SIZE(mac_change_args), 1);
+    }
 }
 
 static void handle_b() {
@@ -328,20 +468,119 @@ static void handle_b() {
         return;
     }
 
-    play_sound(SND_BACK, 0);
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "netinfo");
+    if (key_show) {
+        close_osk(key_entry, ui_group, ui_txtEntry_netinfo, ui_pnlEntry_netinfo);
+        return;
+    }
 
-    close_input();
-    mux_input_stop();
+    handle_back();
 }
 
-static void handle_menu() {
+static void handle_x(void) {
     if (msgbox_active) return;
+
+    if (key_show) {
+        key_backspace(ui_txtEntry_netinfo);
+        return;
+    }
+}
+
+static void handle_y(void) {
+    if (msgbox_active) return;
+
+    if (key_show) {
+        key_swap();
+        return;
+    }
+}
+
+static void handle_help(void) {
+    if (msgbox_active || key_show) return;
 
     if (progress_onscreen == -1) {
         play_sound(SND_CONFIRM, 0);
         show_help(lv_group_get_focused(ui_group));
     }
+}
+
+static void handle_up(void) {
+    if (key_show) {
+        key_up();
+        return;
+    }
+
+    handle_list_nav_up();
+}
+
+static void handle_up_hold(void) {
+    if (key_show) {
+        key_up();
+        return;
+    }
+
+    handle_list_nav_up_hold();
+}
+
+static void handle_down(void) {
+    if (key_show) {
+        key_down();
+        return;
+    }
+
+    handle_list_nav_down();
+}
+
+static void handle_down_hold(void) {
+    if (key_show) {
+        key_down();
+        return;
+    }
+
+    handle_list_nav_down_hold();
+}
+
+static void handle_left(void) {
+    if (key_show) {
+        key_left();
+        return;
+    }
+}
+
+static void handle_right(void) {
+    if (key_show) {
+        key_right();
+        return;
+    }
+}
+
+static void handle_left_hold(void) {
+    if (key_show) {
+        key_left();
+        return;
+    }
+}
+
+static void handle_right_hold(void) {
+    if (key_show) {
+        key_right();
+        return;
+    }
+}
+
+static void handle_l1(void) {
+    if (key_show) {
+        return;
+    }
+
+    handle_list_nav_page_up();
+}
+
+static void handle_r1(void) {
+    if (key_show) {
+        return;
+    }
+
+    handle_list_nav_page_down();
 }
 
 static void init_elements() {
@@ -366,25 +605,54 @@ static void init_elements() {
 
     lv_label_set_text(ui_lblMessage, "");
 
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.EDIT);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
 
     lv_obj_t *nav_hide[] = {
+            ui_lblNavAGlyph,
+            ui_lblNavA,
             ui_lblNavBGlyph,
             ui_lblNavB
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblIP_netinfo, "ip");
+    lv_obj_set_user_data(ui_lblHostname_netinfo, "hostname");
     lv_obj_set_user_data(ui_lblMAC_netinfo, "mac");
+    lv_obj_set_user_data(ui_lblIP_netinfo, "ip");
     lv_obj_set_user_data(ui_lblSSID_netinfo, "ssid");
     lv_obj_set_user_data(ui_lblGateway_netinfo, "gateway");
     lv_obj_set_user_data(ui_lblDNS_netinfo, "dns");
     lv_obj_set_user_data(ui_lblSignal_netinfo, "signal");
-    lv_obj_set_user_data(ui_lblTraffic_netinfo, "traffic");
+    lv_obj_set_user_data(ui_lblACTraffic_netinfo, "actraffic");
+    lv_obj_set_user_data(ui_lblTPTraffic_netinfo, "tptraffic");
+
+    if (!is_network_connected()) {
+        lv_obj_add_flag(ui_pnlIP_netinfo, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlIP_netinfo, LV_OBJ_FLAG_FLOATING);
+
+        lv_obj_add_flag(ui_pnlSSID_netinfo, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlSSID_netinfo, LV_OBJ_FLAG_FLOATING);
+
+        lv_obj_add_flag(ui_pnlGateway_netinfo, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlGateway_netinfo, LV_OBJ_FLAG_FLOATING);
+
+        lv_obj_add_flag(ui_pnlDNS_netinfo, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlDNS_netinfo, LV_OBJ_FLAG_FLOATING);
+
+        lv_obj_add_flag(ui_pnlSignal_netinfo, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlSignal_netinfo, LV_OBJ_FLAG_FLOATING);
+
+        lv_obj_add_flag(ui_pnlACTraffic_netinfo, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlACTraffic_netinfo, LV_OBJ_FLAG_FLOATING);
+
+        lv_obj_add_flag(ui_pnlTPTraffic_netinfo, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlTPTraffic_netinfo, LV_OBJ_FLAG_FLOATING);
+
+        ui_count = ui_count - 7;
+    }
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -411,13 +679,24 @@ static void ui_refresh_task() {
     }
 }
 
+static void on_key_event(struct input_event ev) {
+    if (ev.code == KEY_ENTER && ev.value == 1) {
+        handle_keyboard_OK_press();
+    }
+    if (ev.code == KEY_ESC && ev.value == 1) {
+        handle_b();
+    } else {
+        process_key_event(&ev, ui_txtEntry_netinfo);
+    }
+}
+
 int muxnetinfo_main() {
     init_module("muxnetinfo");
 
     init_theme(1, 0);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXNETINFO.TITLE);
-    init_muxnetinfo(ui_pnlContent);
+    init_muxnetinfo(ui_screen, ui_pnlContent, &theme);
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
@@ -430,6 +709,7 @@ int muxnetinfo_main() {
 
     update_network_info();
 
+    init_osk(ui_pnlEntry_netinfo, ui_txtEntry_netinfo, false);
     load_kiosk(&kiosk);
 
     init_timer(ui_refresh_task, update_network_info);
@@ -439,21 +719,28 @@ int muxnetinfo_main() {
             .press_handler = {
                     [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
-                    [MUX_INPUT_MENU_SHORT] = handle_menu,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+                    [MUX_INPUT_X] = handle_x,
+                    [MUX_INPUT_Y] = handle_y,
+                    [MUX_INPUT_MENU_SHORT] = handle_help,
+                    [MUX_INPUT_DPAD_UP] = handle_up,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right,
+                    [MUX_INPUT_L1] = handle_l1,
+                    [MUX_INPUT_R1] = handle_r1,
             },
             .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
+                    [MUX_INPUT_DPAD_UP] = handle_up_hold,
+                    [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
+                    [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
+                    [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
+                    [MUX_INPUT_L1] = handle_l1,
+                    [MUX_INPUT_R1] = handle_r1,
             }
     };
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
+    register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
 
     return 0;

@@ -610,9 +610,7 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || key_show) {
-        return;
-    }
+    if (msgbox_active || key_show) return;
 
     if (progress_onscreen == -1) {
         play_sound(SND_CONFIRM, 0);
@@ -830,13 +828,13 @@ int muxnetwork_main() {
     init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
-
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     init_fonts();
     init_navigation_group();
+
     restore_network_values();
 
     init_osk(ui_pnlEntry_network, ui_txtEntry_network, true);
