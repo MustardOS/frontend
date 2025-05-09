@@ -408,9 +408,8 @@ static void init_elements() {
     lv_obj_set_user_data(ui_lblAdvanced_tweakgen, "advanced");
 
     if (!device.DEVICE.HAS_HDMI) {
-        lv_obj_add_flag(ui_pnlHDMI_tweakgen, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlHDMI_tweakgen, LV_OBJ_FLAG_FLOATING);
-        ui_count--;
+        lv_obj_add_flag(ui_pnlHDMI_tweakgen, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        ui_count -= 1;
     }
 
 #if TEST_IMAGE

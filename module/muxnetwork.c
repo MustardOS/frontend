@@ -64,10 +64,8 @@ static void can_scan_check(int forced_disconnect) {
     if (!forced_disconnect && is_network_connected()) {
         lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.DISCONNECT);
 
-        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
         update_network_status(ui_staNetwork, &theme, 0);
         return;
@@ -75,10 +73,8 @@ static void can_scan_check(int forced_disconnect) {
 
     lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.CONNECT);
 
-    lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
-    lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+    lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
     lv_label_set_text(ui_lblConnect_networkValue, lang.MUXNETWORK.NOT_CONNECTED);
 
@@ -106,10 +102,8 @@ static void get_current_ip() {
             }
             lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.DISCONNECT);
 
-            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
-            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+            lv_obj_add_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+            lv_obj_add_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
             update_network_status(ui_staNetwork, &theme, 1);
         }
@@ -374,25 +368,17 @@ bool handle_navigate(void) {
             if (!strcasecmp(lv_label_get_text(ui_lblType_networkValue), lang.MUXNETWORK.STATIC)) {
                 lv_label_set_text(ui_lblType_networkValue, lang.MUXNETWORK.DHCP);
                 ui_count = UI_DHCP;
-                lv_obj_add_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_flag(ui_pnlAddress_network, LV_OBJ_FLAG_FLOATING);
-                lv_obj_add_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_FLOATING);
-                lv_obj_add_flag(ui_pnlGateway_network, LV_OBJ_FLAG_FLOATING);
-                lv_obj_add_flag(ui_pnlDNS_network, LV_OBJ_FLAG_FLOATING);
+                lv_obj_add_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+                lv_obj_add_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+                lv_obj_add_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+                lv_obj_add_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
             } else {
                 lv_label_set_text(ui_lblType_networkValue, lang.MUXNETWORK.STATIC);
                 ui_count = UI_STATIC;
-                lv_obj_clear_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(ui_pnlAddress_network, LV_OBJ_FLAG_FLOATING);
-                lv_obj_clear_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_FLOATING);
-                lv_obj_clear_flag(ui_pnlGateway_network, LV_OBJ_FLAG_FLOATING);
-                lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_FLOATING);
+                lv_obj_clear_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+                lv_obj_clear_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+                lv_obj_clear_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+                lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
             }
         } else {
             play_sound(SND_ERROR, 0);
@@ -763,23 +749,15 @@ static void init_elements() {
     lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
 
     if (!config.NETWORK.TYPE) {
-        lv_obj_add_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlAddress_network, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlGateway_network, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlDNS_network, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     } else {
-        lv_obj_clear_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pnlAddress_network, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_pnlGateway_network, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
 #if TEST_IMAGE

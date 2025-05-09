@@ -630,28 +630,15 @@ static void init_elements() {
     lv_obj_set_user_data(ui_lblTPTraffic_netinfo, "tptraffic");
 
     if (!is_network_connected()) {
-        lv_obj_add_flag(ui_pnlIP_netinfo, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlIP_netinfo, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlIP_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlSSID_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlGateway_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlDNS_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlSignal_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlACTraffic_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlTPTraffic_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
-        lv_obj_add_flag(ui_pnlSSID_netinfo, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlSSID_netinfo, LV_OBJ_FLAG_FLOATING);
-
-        lv_obj_add_flag(ui_pnlGateway_netinfo, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlGateway_netinfo, LV_OBJ_FLAG_FLOATING);
-
-        lv_obj_add_flag(ui_pnlDNS_netinfo, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlDNS_netinfo, LV_OBJ_FLAG_FLOATING);
-
-        lv_obj_add_flag(ui_pnlSignal_netinfo, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlSignal_netinfo, LV_OBJ_FLAG_FLOATING);
-
-        lv_obj_add_flag(ui_pnlACTraffic_netinfo, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlACTraffic_netinfo, LV_OBJ_FLAG_FLOATING);
-
-        lv_obj_add_flag(ui_pnlTPTraffic_netinfo, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlTPTraffic_netinfo, LV_OBJ_FLAG_FLOATING);
-
-        ui_count = ui_count - 7;
+        ui_count -= 7;
     }
 
 #if TEST_IMAGE

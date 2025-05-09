@@ -681,8 +681,7 @@ static void init_elements() {
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
     lv_obj_set_user_data(ui_lblAccelerate_tweakadv, "accelerate");
@@ -706,9 +705,8 @@ static void init_elements() {
     lv_obj_set_user_data(ui_lblCardMode_tweakadv, "cardmode");
 
     if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlRetroWait_tweakadv, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlRetroWait_tweakadv, LV_OBJ_FLAG_FLOATING);
-        ui_count--;
+        lv_obj_add_flag(ui_pnlRetroWait_tweakadv, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        ui_count -= 1;
     }
 
 #if TEST_IMAGE

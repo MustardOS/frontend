@@ -479,10 +479,8 @@ int muxpicker_main(char *type, char *ex_dir) {
     if (ui_count > 0) {
         if (sys_index > -1 && sys_index <= ui_count && current_item_index < ui_count) list_nav_move(sys_index, +1);
     } else {
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
         const char *message_text = NULL;
         if (!strcasecmp(picker_type, "theme")) {

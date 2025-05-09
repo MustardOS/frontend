@@ -35,14 +35,10 @@ static void handle_power_short(void) {
     if (blank < 3) {
         lv_timer_pause(battery_timer);
 
-        lv_obj_add_flag(ui_lblCapacity_charge, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblVoltage_charge, LV_OBJ_FLAG_HIDDEN);
-
-        lv_obj_add_flag(ui_lblCapacity_charge, LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblVoltage_charge, LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblCapacity_charge, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblVoltage_charge, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
         lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.BOOT);
-
         refresh_screen(ui_scrCharge_charge);
 
         exit_status = 0;

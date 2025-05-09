@@ -125,7 +125,7 @@ static void populate_theme_alternates() {
 
     if (lv_dropdown_get_option_cnt(ui_droThemeAlternate) == 0) {
         lv_obj_add_flag(ui_pnlThemeAlternate, LV_OBJ_FLAG_HIDDEN);
-        ui_count--;
+        ui_count -= 1;
     }
 }
 
