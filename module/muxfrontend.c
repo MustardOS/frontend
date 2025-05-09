@@ -375,7 +375,8 @@ void init_audio() {
         usleep(delay);
     }
 
-    if (config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
+    if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
+    write_text_to_file(CHIME_DONE, "w", CHAR, "");
 }
 
 int main() {
