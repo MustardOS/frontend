@@ -56,9 +56,12 @@ static void init_dropdown_settings() {
     volume_original = lv_dropdown_get_selected(ui_droVolume_tweakgen);
 }
 
-static void restore_tweak_options() {
+static void update_volume_and_brightness() {
+    char buffer[MAX_BUFFER_SIZE];
+    CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 96)
+    CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, "settings/general/volume", 50)
+
     lv_dropdown_set_selected(ui_droBrightness_tweakgen, config.SETTINGS.GENERAL.BRIGHTNESS + 1);
-    lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
 
     if (!config.SETTINGS.ADVANCED.OVERDRIVE) {
         lv_dropdown_set_selected(ui_droVolume_tweakgen, config.SETTINGS.GENERAL.VOLUME > 100
@@ -67,6 +70,12 @@ static void restore_tweak_options() {
     } else {
         lv_dropdown_set_selected(ui_droVolume_tweakgen, config.SETTINGS.GENERAL.VOLUME);
     }
+}
+
+static void restore_tweak_options() {
+    update_volume_and_brightness();
+
+    lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
 
     const char *startup_type = config.SETTINGS.GENERAL.STARTUP;
     if (strcasecmp(startup_type, "explore") == 0) {
@@ -82,6 +91,21 @@ static void restore_tweak_options() {
     } else {
         lv_dropdown_set_selected(ui_droStartup_tweakgen, 0);
     }
+}
+
+static void set_setting_value(const char *setting, const char *script_name, int value, int offset) {
+    char setting_path[MAX_BUFFER_SIZE];
+    snprintf(setting_path, sizeof(setting_path), RUN_GLOBAL_PATH "settings/general/%s", setting);
+    write_text_to_file(setting_path, "w", INT, value);
+
+    char value_str[8];
+    snprintf(value_str, sizeof(value_str), "%d", value + offset);
+
+    char script_path[MAX_BUFFER_SIZE];
+    snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/current/input/%s", script_name);
+
+    const char *args[] = {script_path, value_str, NULL};
+    run_exec(args, A_SIZE(args), 1);
 }
 
 static void save_tweak_options() {
@@ -128,24 +152,12 @@ static void save_tweak_options() {
 
     if (lv_dropdown_get_selected(ui_droBrightness_tweakgen) != brightness_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/brightness"), "w", INT, idx_brightness);
-
-        char bright_value[8];
-        snprintf(bright_value, sizeof(bright_value), "%d", idx_brightness + 1);
-
-        const char *args[] = {(INTERNAL_PATH "device/current/input/bright.sh"), bright_value, NULL};
-        run_exec(args, A_SIZE(args), 0);
+        set_setting_value("brightness", "bright.sh", idx_brightness, 1);
     }
 
     if (lv_dropdown_get_selected(ui_droVolume_tweakgen) != volume_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/volume"), "w", INT, idx_volume);
-
-        char volume_value[8];
-        snprintf(volume_value, sizeof(volume_value), "%d", idx_volume);
-
-        const char *args[] = {(INTERNAL_PATH "device/current/input/audio.sh"), volume_value, NULL};
-        run_exec(args, A_SIZE(args), 0);
+        set_setting_value("volume", "audio.sh", idx_volume, 0);
     }
 
     if (is_modified > 0) {
@@ -286,16 +298,30 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+static void update_option_values() {
+    int curr_brightness = lv_dropdown_get_selected(ui_droBrightness_tweakgen);
+    int curr_volume = lv_dropdown_get_selected(ui_droVolume_tweakgen);
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblBrightness_tweakgen) {
+        set_setting_value("brightness", "bright.sh", curr_brightness, 1);
+    } else if (element_focused == ui_lblVolume_tweakgen) {
+        set_setting_value("volume", "audio.sh", curr_volume, 0);
+    }
+}
+
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
     decrease_option_value(lv_group_get_focused(ui_group_value));
+    update_option_values();
 }
 
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
     increase_option_value(lv_group_get_focused(ui_group_value));
+    update_option_values();
 }
 
 static void handle_confirm(void) {
@@ -466,7 +492,7 @@ int muxtweakgen_main() {
         handle_list_nav_up();
     }
 
-    init_timer(ui_refresh_task, NULL);
+    init_timer(ui_refresh_task, update_volume_and_brightness);
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
