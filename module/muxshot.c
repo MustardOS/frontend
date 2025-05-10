@@ -155,6 +155,8 @@ static void handle_back() {
         return;
     }
 
+    play_sound(SND_BACK, 0);
+
     close_input();
     mux_input_stop();
 }
