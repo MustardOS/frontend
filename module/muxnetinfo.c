@@ -10,7 +10,7 @@
 #include "../common/osk.h"
 #include "../common/input/list_nav.h"
 
-#define UI_COUNT 9
+#define UI_COUNT 10
 static lv_obj_t *ui_objects[UI_COUNT];
 #define UI_PANEL 5
 static lv_obj_t *ui_mux_panels[UI_PANEL];
@@ -31,6 +31,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblGateway_netinfo,   lang.MUXNETINFO.HELP.GATEWAY},
             {ui_lblDNS_netinfo,       lang.MUXNETINFO.HELP.DNS},
             {ui_lblSignal_netinfo,    lang.MUXNETINFO.HELP.SIGNAL},
+            {ui_lblChannel_netinfo,   lang.MUXNETINFO.HELP.CHANNEL},
             {ui_lblACTraffic_netinfo, lang.MUXNETINFO.HELP.ACTRAFFIC},
             {ui_lblTPTraffic_netinfo, lang.MUXNETINFO.HELP.TPTRAFFIC},
     };
@@ -166,6 +167,81 @@ static const char *get_signal_strength() {
     return signal;
 }
 
+static const char *get_channel_info() {
+    if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
+
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "iw dev %s link | awk '/freq:/ {print $2}'", device.NETWORK.INTERFACE);
+
+    const char *result = get_execute_result(cmd);
+    if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
+
+    int freq = safe_atoi(result);
+
+    static const struct {
+        int freq;
+        int channel;
+    } freq_table[] = {
+            // 2.4 GHz
+            {2412, 1},
+            {2417, 2},
+            {2422, 3},
+            {2427, 4},
+            {2432, 5},
+            {2437, 6},
+            {2442, 7},
+            {2447, 8},
+            {2452, 9},
+            {2457, 10},
+            {2462, 11},
+            {2467, 12},
+            {2472, 13},
+            {2484, 14},
+
+            // 3.65 GHz? No just kidding...?
+
+            // 5 GHz
+            {5180, 36},
+            {5200, 40},
+            {5220, 44},
+            {5240, 48},
+            {5260, 52},
+            {5280, 56},
+            {5300, 60},
+            {5320, 64},
+            {5500, 100},
+            {5520, 104},
+            {5540, 108},
+            {5560, 112},
+            {5580, 116},
+            {5600, 120},
+            {5620, 124},
+            {5640, 128},
+            {5660, 132},
+            {5680, 136},
+            {5700, 140},
+            {5745, 149},
+            {5765, 153},
+            {5785, 157},
+            {5805, 161},
+            {5825, 165}
+
+            // 6 GHz, maybe one day!
+    };
+
+    for (size_t i = 0; i < sizeof(freq_table) / sizeof(freq_table[0]); i++) {
+        if (freq_table[i].freq == freq) {
+            static char info[64];
+            snprintf(info, sizeof(info), "%d MHz - %s %d", freq, lang.GENERIC.CHANNEL, freq_table[i].channel);
+            return info;
+        }
+    }
+
+    static char unknown[64];
+    snprintf(unknown, sizeof(unknown), "%d MHz - %s %s", freq, lang.GENERIC.CHANNEL, lang.GENERIC.UNKNOWN);
+    return unknown;
+}
+
 static const char *get_ac_traffic() {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
@@ -226,6 +302,7 @@ static void update_network_info() {
     lv_label_set_text(ui_lblGatewayValue_netinfo, get_gateway());
     lv_label_set_text(ui_lblDNSValue_netinfo, get_dns_servers());
     lv_label_set_text(ui_lblSignalValue_netinfo, get_signal_strength());
+    lv_label_set_text(ui_lblChannelValue_netinfo, get_channel_info());
     lv_label_set_text(ui_lblACTrafficValue_netinfo, get_ac_traffic());
     lv_label_set_text(ui_lblTPTrafficValue_netinfo, get_tp_traffic());
 }
@@ -239,6 +316,7 @@ static void init_navigation_group() {
             ui_pnlGateway_netinfo,
             ui_pnlDNS_netinfo,
             ui_pnlSignal_netinfo,
+            ui_pnlChannel_netinfo,
             ui_pnlACTraffic_netinfo,
             ui_pnlTPTraffic_netinfo
     };
@@ -250,8 +328,9 @@ static void init_navigation_group() {
     ui_objects[4] = ui_lblGateway_netinfo;
     ui_objects[5] = ui_lblDNS_netinfo;
     ui_objects[6] = ui_lblSignal_netinfo;
-    ui_objects[7] = ui_lblACTraffic_netinfo;
-    ui_objects[8] = ui_lblTPTraffic_netinfo;
+    ui_objects[7] = ui_lblChannel_netinfo;
+    ui_objects[8] = ui_lblACTraffic_netinfo;
+    ui_objects[9] = ui_lblTPTraffic_netinfo;
 
     lv_obj_t *ui_objects_value[] = {
             ui_lblHostnameValue_netinfo,
@@ -261,6 +340,7 @@ static void init_navigation_group() {
             ui_lblGatewayValue_netinfo,
             ui_lblDNSValue_netinfo,
             ui_lblSignalValue_netinfo,
+            ui_lblChannelValue_netinfo,
             ui_lblACTrafficValue_netinfo,
             ui_lblTPTrafficValue_netinfo
     };
@@ -273,6 +353,7 @@ static void init_navigation_group() {
             ui_icoGateway_netinfo,
             ui_icoDNS_netinfo,
             ui_icoSignal_netinfo,
+            ui_icoChannel_netinfo,
             ui_icoACTraffic_netinfo,
             ui_icoTPTraffic_netinfo
     };
@@ -284,6 +365,7 @@ static void init_navigation_group() {
     apply_theme_list_panel(ui_pnlGateway_netinfo);
     apply_theme_list_panel(ui_pnlDNS_netinfo);
     apply_theme_list_panel(ui_pnlSignal_netinfo);
+    apply_theme_list_panel(ui_pnlChannel_netinfo);
     apply_theme_list_panel(ui_pnlACTraffic_netinfo);
     apply_theme_list_panel(ui_pnlTPTraffic_netinfo);
 
@@ -294,6 +376,7 @@ static void init_navigation_group() {
     apply_theme_list_item(&theme, ui_lblGateway_netinfo, lang.MUXNETINFO.GATEWAY);
     apply_theme_list_item(&theme, ui_lblDNS_netinfo, lang.MUXNETINFO.DNS);
     apply_theme_list_item(&theme, ui_lblSignal_netinfo, lang.MUXNETINFO.SIGNAL);
+    apply_theme_list_item(&theme, ui_lblChannel_netinfo, lang.MUXNETINFO.CHANNEL);
     apply_theme_list_item(&theme, ui_lblACTraffic_netinfo, lang.MUXNETINFO.ACTRAFFIC);
     apply_theme_list_item(&theme, ui_lblTPTraffic_netinfo, lang.MUXNETINFO.TPTRAFFIC);
 
@@ -304,6 +387,7 @@ static void init_navigation_group() {
     apply_theme_list_glyph(&theme, ui_icoGateway_netinfo, mux_module, "gateway");
     apply_theme_list_glyph(&theme, ui_icoDNS_netinfo, mux_module, "dns");
     apply_theme_list_glyph(&theme, ui_icoSignal_netinfo, mux_module, "signal");
+    apply_theme_list_glyph(&theme, ui_icoChannel_netinfo, mux_module, "channel");
     apply_theme_list_glyph(&theme, ui_icoACTraffic_netinfo, mux_module, "actraffic");
     apply_theme_list_glyph(&theme, ui_icoTPTraffic_netinfo, mux_module, "tptraffic");
 
@@ -314,6 +398,7 @@ static void init_navigation_group() {
     apply_theme_list_value(&theme, ui_lblGatewayValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblDNSValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblSignalValue_netinfo, "");
+    apply_theme_list_value(&theme, ui_lblChannelValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblACTrafficValue_netinfo, "");
     apply_theme_list_value(&theme, ui_lblTPTrafficValue_netinfo, "");
 
@@ -626,6 +711,7 @@ static void init_elements() {
     lv_obj_set_user_data(ui_lblGateway_netinfo, "gateway");
     lv_obj_set_user_data(ui_lblDNS_netinfo, "dns");
     lv_obj_set_user_data(ui_lblSignal_netinfo, "signal");
+    lv_obj_set_user_data(ui_lblChannel_netinfo, "channel");
     lv_obj_set_user_data(ui_lblACTraffic_netinfo, "actraffic");
     lv_obj_set_user_data(ui_lblTPTraffic_netinfo, "tptraffic");
 
@@ -635,6 +721,7 @@ static void init_elements() {
         lv_obj_add_flag(ui_pnlGateway_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_pnlDNS_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_pnlSignal_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlChannel_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_pnlACTraffic_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_pnlTPTraffic_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 

@@ -77,6 +77,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.SWITCH_INFO, "Switch to Information");
     GENERIC_FIELD(lang->GENERIC.SYNC, "Sync to SD1");
     GENERIC_FIELD(lang->GENERIC.UNKNOWN, "Unknown");
+    GENERIC_FIELD(lang->GENERIC.CHANNEL, "Channel");
     GENERIC_FIELD(lang->GENERIC.USE, "Use");
     GENERIC_FIELD(lang->GENERIC.USER_DEFINED, "User Defined");
     GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting");
@@ -298,6 +299,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETINFO.GATEWAY, "Gateway");
     SPECIFIC_FIELD(lang->MUXNETINFO.DNS, "DNS");
     SPECIFIC_FIELD(lang->MUXNETINFO.SIGNAL, "Signal");
+    SPECIFIC_FIELD(lang->MUXNETINFO.CHANNEL, "Channel");
     SPECIFIC_FIELD(lang->MUXNETINFO.ACTRAFFIC, "Accumulated Traffic");
     SPECIFIC_FIELD(lang->MUXNETINFO.TPTRAFFIC, "Throughput Traffic");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.HOSTNAME, "The current hostname of this device");
@@ -307,6 +309,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.GATEWAY, "The network gateway used to reach external networks");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.DNS, "The DNS servers used to resolve domain names");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.SIGNAL, "The Wi-Fi signal strength expressed as a percentage");
+    SPECIFIC_FIELD(lang->MUXNETINFO.HELP.CHANNEL, "The Wi-Fi frequency and connected channel of the access point");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.ACTRAFFIC, "The total data sent and received over the network");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.TPTRAFFIC, "The current data sent and received over the network");
 

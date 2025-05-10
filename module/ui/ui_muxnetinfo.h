@@ -12,6 +12,7 @@ extern lv_obj_t *ui_pnlSSID_netinfo;
 extern lv_obj_t *ui_pnlGateway_netinfo;
 extern lv_obj_t *ui_pnlDNS_netinfo;
 extern lv_obj_t *ui_pnlSignal_netinfo;
+extern lv_obj_t *ui_pnlChannel_netinfo;
 extern lv_obj_t *ui_pnlACTraffic_netinfo;
 extern lv_obj_t *ui_pnlTPTraffic_netinfo;
 
@@ -22,6 +23,7 @@ extern lv_obj_t *ui_lblSSID_netinfo;
 extern lv_obj_t *ui_lblGateway_netinfo;
 extern lv_obj_t *ui_lblDNS_netinfo;
 extern lv_obj_t *ui_lblSignal_netinfo;
+extern lv_obj_t *ui_lblChannel_netinfo;
 extern lv_obj_t *ui_lblACTraffic_netinfo;
 extern lv_obj_t *ui_lblTPTraffic_netinfo;
 
@@ -32,6 +34,7 @@ extern lv_obj_t *ui_icoSSID_netinfo;
 extern lv_obj_t *ui_icoGateway_netinfo;
 extern lv_obj_t *ui_icoDNS_netinfo;
 extern lv_obj_t *ui_icoSignal_netinfo;
+extern lv_obj_t *ui_icoChannel_netinfo;
 extern lv_obj_t *ui_icoACTraffic_netinfo;
 extern lv_obj_t *ui_icoTPTraffic_netinfo;
 
@@ -42,6 +45,7 @@ extern lv_obj_t *ui_lblSSIDValue_netinfo;
 extern lv_obj_t *ui_lblGatewayValue_netinfo;
 extern lv_obj_t *ui_lblDNSValue_netinfo;
 extern lv_obj_t *ui_lblSignalValue_netinfo;
+extern lv_obj_t *ui_lblChannelValue_netinfo;
 extern lv_obj_t *ui_lblACTrafficValue_netinfo;
 extern lv_obj_t *ui_lblTPTrafficValue_netinfo;
 

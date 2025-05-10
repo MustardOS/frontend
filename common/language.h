@@ -61,6 +61,7 @@ struct mux_lang {
         char SWITCH_INFO[MAX_BUFFER_SIZE];
         char SYNC[MAX_BUFFER_SIZE];
         char UNKNOWN[MAX_BUFFER_SIZE];
+        char CHANNEL[MAX_BUFFER_SIZE];
         char USE[MAX_BUFFER_SIZE];
         char USER_DEFINED[MAX_BUFFER_SIZE];
         char REBOOTING[MAX_BUFFER_SIZE];
@@ -329,6 +330,7 @@ struct mux_lang {
         char GATEWAY[MAX_BUFFER_SIZE];
         char DNS[MAX_BUFFER_SIZE];
         char SIGNAL[MAX_BUFFER_SIZE];
+        char CHANNEL[MAX_BUFFER_SIZE];
         char ACTRAFFIC[MAX_BUFFER_SIZE];
         char TPTRAFFIC[MAX_BUFFER_SIZE];
         struct {
@@ -339,6 +341,7 @@ struct mux_lang {
             char GATEWAY[MAX_BUFFER_SIZE];
             char DNS[MAX_BUFFER_SIZE];
             char SIGNAL[MAX_BUFFER_SIZE];
+            char CHANNEL[MAX_BUFFER_SIZE];
             char ACTRAFFIC[MAX_BUFFER_SIZE];
             char TPTRAFFIC[MAX_BUFFER_SIZE];
         } HELP;

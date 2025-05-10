@@ -8,6 +8,7 @@ lv_obj_t *ui_pnlSSID_netinfo;
 lv_obj_t *ui_pnlGateway_netinfo;
 lv_obj_t *ui_pnlDNS_netinfo;
 lv_obj_t *ui_pnlSignal_netinfo;
+lv_obj_t *ui_pnlChannel_netinfo;
 lv_obj_t *ui_pnlACTraffic_netinfo;
 lv_obj_t *ui_pnlTPTraffic_netinfo;
 
@@ -18,6 +19,7 @@ lv_obj_t *ui_lblSSID_netinfo;
 lv_obj_t *ui_lblGateway_netinfo;
 lv_obj_t *ui_lblDNS_netinfo;
 lv_obj_t *ui_lblSignal_netinfo;
+lv_obj_t *ui_lblChannel_netinfo;
 lv_obj_t *ui_lblACTraffic_netinfo;
 lv_obj_t *ui_lblTPTraffic_netinfo;
 
@@ -28,6 +30,7 @@ lv_obj_t *ui_icoSSID_netinfo;
 lv_obj_t *ui_icoGateway_netinfo;
 lv_obj_t *ui_icoDNS_netinfo;
 lv_obj_t *ui_icoSignal_netinfo;
+lv_obj_t *ui_icoChannel_netinfo;
 lv_obj_t *ui_icoACTraffic_netinfo;
 lv_obj_t *ui_icoTPTraffic_netinfo;
 
@@ -38,6 +41,7 @@ lv_obj_t *ui_lblSSIDValue_netinfo;
 lv_obj_t *ui_lblGatewayValue_netinfo;
 lv_obj_t *ui_lblDNSValue_netinfo;
 lv_obj_t *ui_lblSignalValue_netinfo;
+lv_obj_t *ui_lblChannelValue_netinfo;
 lv_obj_t *ui_lblACTrafficValue_netinfo;
 lv_obj_t *ui_lblTPTrafficValue_netinfo;
 
@@ -52,6 +56,7 @@ void init_muxnetinfo(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_
     ui_pnlGateway_netinfo = lv_obj_create(ui_pnlContent);
     ui_pnlDNS_netinfo = lv_obj_create(ui_pnlContent);
     ui_pnlSignal_netinfo = lv_obj_create(ui_pnlContent);
+    ui_pnlChannel_netinfo = lv_obj_create(ui_pnlContent);
     ui_pnlACTraffic_netinfo = lv_obj_create(ui_pnlContent);
     ui_pnlTPTraffic_netinfo = lv_obj_create(ui_pnlContent);
 
@@ -69,6 +74,8 @@ void init_muxnetinfo(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_
     lv_label_set_text(ui_lblDNS_netinfo, "");
     ui_lblSignal_netinfo = lv_label_create(ui_pnlSignal_netinfo);
     lv_label_set_text(ui_lblSignal_netinfo, "");
+    ui_lblChannel_netinfo = lv_label_create(ui_pnlChannel_netinfo);
+    lv_label_set_text(ui_lblChannel_netinfo, "");
     ui_lblACTraffic_netinfo = lv_label_create(ui_pnlACTraffic_netinfo);
     lv_label_set_text(ui_lblACTraffic_netinfo, "");
     ui_lblTPTraffic_netinfo = lv_label_create(ui_pnlTPTraffic_netinfo);
@@ -81,6 +88,7 @@ void init_muxnetinfo(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_
     ui_icoGateway_netinfo = lv_img_create(ui_pnlGateway_netinfo);
     ui_icoDNS_netinfo = lv_img_create(ui_pnlDNS_netinfo);
     ui_icoSignal_netinfo = lv_img_create(ui_pnlSignal_netinfo);
+    ui_icoChannel_netinfo = lv_img_create(ui_pnlChannel_netinfo);
     ui_icoACTraffic_netinfo = lv_img_create(ui_pnlACTraffic_netinfo);
     ui_icoTPTraffic_netinfo = lv_img_create(ui_pnlTPTraffic_netinfo);
 
@@ -98,6 +106,8 @@ void init_muxnetinfo(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_
     lv_label_set_text(ui_lblDNSValue_netinfo, "");
     ui_lblSignalValue_netinfo = lv_label_create(ui_pnlSignal_netinfo);
     lv_label_set_text(ui_lblSignalValue_netinfo, "");
+    ui_lblChannelValue_netinfo = lv_label_create(ui_pnlChannel_netinfo);
+    lv_label_set_text(ui_lblChannelValue_netinfo, "");
     ui_lblACTrafficValue_netinfo = lv_label_create(ui_pnlACTraffic_netinfo);
     lv_label_set_text(ui_lblACTrafficValue_netinfo, "");
     ui_lblTPTrafficValue_netinfo = lv_label_create(ui_pnlTPTraffic_netinfo);
