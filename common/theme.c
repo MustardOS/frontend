@@ -1107,7 +1107,7 @@ void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, char 
     char *content_label = lv_label_get_text(ui_lblItem);
 
     size_t len = strlen(content_label);
-    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "…") == 0;
+    bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
 
     if (strcasecmp(item_text, content_label) != 0 && ends_with_ellipse) {
         lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_SCROLL_CIRCULAR);
@@ -1119,31 +1119,7 @@ void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
                          lv_obj_t *ui_lblItem, const char *item_text) {
     if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) return;
 
-    lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_WRAP);
-    const lv_font_t *font = lv_obj_get_style_text_font(ui_pnlContent, LV_PART_MAIN);
-    const lv_coord_t letter_space = lv_obj_get_style_text_letter_space(ui_pnlContent, LV_PART_MAIN);
-    lv_coord_t act_line_length = lv_txt_get_width(item_text, strlen(item_text), font, letter_space,
-                                                  LV_TEXT_FLAG_EXPAND);
-    int max_item_width = theme->MISC.CONTENT.WIDTH - theme->FONT.LIST_PAD_LEFT - theme->FONT.LIST_PAD_RIGHT -
-                         (theme->LIST_DEFAULT.BORDER_WIDTH * 2);
-
-    if (act_line_length > max_item_width) {
-        int len = strlen(item_text);
-        for (int i = len; i >= 0; i--) {
-            char *new_string = (char *) malloc(i + 4);
-            strncpy(new_string, item_text, i);
-            new_string[i] = '\0';
-            strcat(new_string, "…");
-
-            if (max_item_width >=
-                lv_txt_get_width(new_string, strlen(new_string), font, letter_space, LV_TEXT_FLAG_EXPAND)) {
-                lv_label_set_text(ui_lblItem, new_string);
-                free(new_string);
-                return;
-            }
-            free(new_string);
-        }
-    }
+    lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_DOT);
 }
 
 void apply_size_to_content(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem,
