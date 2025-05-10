@@ -1084,11 +1084,13 @@ static void lv_label_refr_text(lv_obj_t *obj) {
                    LV_LABEL_DOT_NUM) {   /*Don't turn to dots all the characters*/
             label->dot_end = LV_LABEL_DOT_END_INV;
         } else {
+            lv_coord_t pad_left = lv_obj_get_style_pad_left(obj, LV_PART_MAIN);
+            lv_coord_t dot_width = lv_font_get_glyph_width(font, '.', '.');
             lv_point_t p;
             lv_coord_t y_overed;
-            p.x = lv_area_get_width(&txt_coords) -
+            p.x = (lv_area_get_width(&txt_coords) -
                   (lv_font_get_glyph_width(font, '.', '.') + letter_space) *
-                  LV_LABEL_DOT_NUM; /*Shrink with dots*/
+                  LV_LABEL_DOT_NUM) + pad_left - dot_width; /*Shrink with dots*/
             p.y = lv_area_get_height(&txt_coords);
             y_overed = p.y %
                        (lv_font_get_line_height(font) + line_space); /*Round down to the last line*/
