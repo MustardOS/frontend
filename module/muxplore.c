@@ -688,7 +688,7 @@ static void add_to_collection(char *filename, const char *pointer) {
 }
 
 static int load_content(int add_collection) {
-    char *assigned_core = load_content_core(0, 1);
+    char *assigned_core = load_content_core(0, !add_collection);
     if (assigned_core == NULL || strcasestr(assigned_core, "(null)")) return 0;
     LOG_INFO(mux_module, "Assigned Core: %s", str_replace(assigned_core, "\n", "|"))
 
@@ -749,8 +749,6 @@ static int load_content(int add_collection) {
 
         return 1;
     }
-
-    toast_message(lang.MUXPLORE.ERROR.NO_CORE, 0, 0);
 
     return 0;
 }
@@ -969,10 +967,10 @@ static void handle_y() {
         play_sound(SND_ERROR, 0);
         toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, 1000, 1000);
     } else {
-        if (load_content(1)) return;
-
-        play_sound(SND_ERROR, 0);
-        toast_message(lang.MUXPLORE.ERROR.NO_CORE, 1000, 1000);
+        if (!load_content(1)) {
+            play_sound(SND_ERROR, 0);
+            toast_message(lang.MUXPLORE.ERROR.NO_CORE, 1000, 1000);
+        };
     }
 }
 
