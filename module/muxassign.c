@@ -467,8 +467,7 @@ static void init_elements() {
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
     if (strcasecmp(rom_system, "none") != 0) {
@@ -476,15 +475,11 @@ static void init_elements() {
         lv_label_set_text(ui_lblNavX, lang.GENERIC.DIRECTORY);
         lv_label_set_text(ui_lblNavY, lang.GENERIC.RECURSIVE);
 
-        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
-        lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
 
         lv_obj_move_foreground(ui_lblNavAGlyph);
         lv_obj_move_foreground(ui_lblNavA);
