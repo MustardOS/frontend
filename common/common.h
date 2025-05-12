@@ -22,6 +22,7 @@ extern int is_silence_playing;
 extern Mix_Music *current_bgm;
 extern int current_brightness;
 extern int current_volume;
+extern pid_t child_pid;
 
 #define SOUND_TOTAL 12
 

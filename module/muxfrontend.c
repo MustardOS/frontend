@@ -154,6 +154,8 @@ static void module_exit(char *splash, int sound) {
 
 static void module_shutdown() {
     if (config.SETTINGS.ADVANCED.PARENTLOCK && file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
+    if (file_exist(MUX_PARENTLOCK_TRACKING)) muxparentlock_savetracker();
+
     module_exit("shutdown", SND_SHUTDOWN);
 }
 
@@ -311,7 +313,14 @@ static void module_tweakadv() {
         if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
     }
     if (!config.SETTINGS.ADVANCED.PARENTLOCK) {
-        if (file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
+        if (file_exist(MUX_PARENTAUTH)) {
+        	remove(MUX_PARENTAUTH);
+        }
+        // Disable time tracker
+       	muxparentlock_savetracker();
+    } else {
+        // Start the time tracker anyway
+    	muxparentlock_process();
     }
     
 }
@@ -420,6 +429,17 @@ int main() {
         // Process content association and governor actions
         process_content_action(MUOS_ASS_LOAD, "assign");
         process_content_action(MUOS_GOV_LOAD, "governor");
+
+        // Check if parental control is enabled, and start it in that case (if not done yet)
+        if (muxparentlock_process() == 2) {
+        	if (muxparentlock_main("unlock") == 1) {
+            	cleanup_screen();
+
+            	write_text_to_file(MUX_PARENTAUTH, "w", CHAR, "");
+	        } 
+	        // QUESTION: How can we stop the console if the code is never correct here?
+	        else continue;
+        }
 
         if (file_exist(MUOS_ACT_LOAD)) {
             if (refresh_config) {

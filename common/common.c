@@ -62,6 +62,7 @@ char **bgm_files = NULL;
 size_t bgm_file_count = 0;
 int current_brightness = 0;
 int current_volume = 0;
+pid_t child_pid = 0;
 
 const char *snd_names[SOUND_TOTAL] = {
         "confirm", "back", "keypress", "navigate",
@@ -2363,11 +2364,13 @@ void run_exec(const char *args[], size_t size, int background) {
  *  }
 */
 
+    child_pid = 0;
     pid_t pid = fork();
     if (pid == 0) {
         execvp(san[0], (char *const *) san);
         _exit(EXIT_FAILURE);
     } else if (pid > 0 && !background) {
+    	child_pid = pid;
         waitpid(pid, NULL, 0);
     }
 }

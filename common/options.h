@@ -117,8 +117,12 @@
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
 
 #define MUX_AUTH "/tmp/mux_auth" // Muxpass Config Authorization
-#define MUX_PARENTAUTH "/tmp/mux_parentauth" // Muxpass Config Authorization
+#define MUX_PARENTAUTH "/tmp/mux_parentauth" // Muxparentlock Config Authorization
 #define MUX_LAUNCHER_AUTH "/tmp/mux_launcher_auth" // Muxpass App and Launcher Authorization
+
+#define MUX_PARENTLOCK_TRACKING "/tmp/mux_parenttrack" // Muxparentlock uptime tracking file (volatile)
+#define MUX_PARENTLOCK_TRACKING_POWEROFF "mux_parenttrack" // Muxparentlock uptime tracking file (volatile)
+
 
 #define BRIGHT_PERC "/tmp/current_brightness_percent"
 #define VOLUME_PERC "/tmp/current_volume_percent"

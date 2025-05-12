@@ -3,6 +3,9 @@
 #include "ui/ui_muxparentlock.h"
 #include <string.h>
 #include <stdio.h>
+#include <signal.h>
+#include <pthread.h> 
+#include <unistd.h> // For sync()
 #include "../common/init.h"
 #include "../common/common.h"
 #include "../common/ui_common.h"
@@ -200,36 +203,118 @@ int muxparentlock_main(char *p_type) {
     return exit_status_muxparentlock;
 }
 
-static int triggerLock()
+// This is always called from a different process or thread
+// thus, the main thread should be stopped to prevent dual control of the screen and input
+static void * triggerLock()
 {
-	
+	if (child_pid == 0) {
+		// No child, simply trigger the pass screen, so exit the current screen in the frontend
+		close_input();
+		mux_input_stop();
+	}
+	// Need to stop the current process, the frontend is already stopped waiting for this child to finish
+	// display the pass screen and resume if it's valid
+	if (!kill(child_pid, SIGSTOP)) {
+		// Clear framebuffer
+		system("muxfbset -c"); // Not using run_exec here since that would clear child_pid
+		
+		if (muxparentlock_main("unlock") == 1) {
+
+		    write_text_to_file(MUX_PARENTAUTH, "w", CHAR, "");
+		    kill(child_pid, SIGCONT);
+		    return 0;
+		}
+	}
+	return "Error showing lock screen";
 }
 
-int muxparentlock_process()
+pthread_t timetracker_thread;
+int       timetracker_running = 0; 
+pthread_mutex_t loop_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  loop_cond  = PTHREAD_COND_INITIALIZER;
+
+static int interruptible_wait(int seconds)
+{
+	struct timespec ts;
+
+	clock_gettime(CLOCK_REALTIME, &ts);
+	ts.tv_sec += seconds;
+
+	pthread_mutex_lock(&loop_mutex);
+
+	if (pthread_cond_timedwait(&loop_cond, &loop_mutex, &ts) == 0) {
+		pthread_mutex_unlock(&loop_mutex);
+		return 1; // Interrupted
+	}
+	pthread_mutex_unlock(&loop_mutex);
+	return 0;
+}
+
+void muxparentlock_savetracker(void)
+{
+	if (file_exist(MUX_PARENTLOCK_TRACKING)) {
+		char counter_file[MAX_BUFFER_SIZE];
+		int written = snprintf(counter_file, sizeof(counter_file), "%s/%s/parent_ctr.txt", device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+		if (written < 0 || (size_t) written >= sizeof(counter_file)) return;
+
+		const char *args[] = {"cp", MUX_PARENTLOCK_TRACKING, counter_file, NULL};
+		run_exec(args, A_SIZE(args), 0);
+		sync();
+	}
+	if (timetracker_running) {
+	    char * last_error = NULL;
+	    // Signal we want a premature exit of the thread 
+		pthread_mutex_lock(&loop_mutex);
+	    pthread_cond_signal(&loop_cond);
+    	pthread_mutex_unlock(&loop_mutex);
+
+		pthread_join(timetracker_thread, (void**)&last_error);
+	}
+}
+
+static int get_actual_counter_file(char * counter_file, size_t arr_size)
+{
+	// First try the volatile version (since we prefer to save in priority to volatile mount to avoid wear on the SD card)
+	if (file_exist(MUX_PARENTLOCK_TRACKING)) {
+		strncpy(counter_file, MUX_PARENTLOCK_TRACKING, arr_size);
+		return 0;
+	}
+	// Else try the non volatile version from the SD card	
+	int written = snprintf(counter_file, arr_size, "%s/%s/parent_ctr.txt", device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+	if (written < 0 || (size_t) written >= arr_size) return 1;
+
+	return 0;
+}
+
+
+static void* process(void *) 
 {
     struct timespec boot, cur;
     time_t lastBoot = 0;
     unsigned additionalTime = 0, maxTimeForToday = 86400;
     struct tm current;
+
+	// If parent unlocked beforehand, let's avoid the whole tracking process
+	// This file will be removed upon reboot or when leaving the config page 
+	if (file_exist(MUX_PARENTAUTH)) return 0;
 	// Save startup time (using monotonic clock that's not counting while the device is suspended)
 	clock_gettime( CLOCK_MONOTONIC, &boot );
 
 	// Load the last boot time file, to avoid gremlins from shutting down the device to reset the counter
 	char counter_file[MAX_BUFFER_SIZE];
-	int written = snprintf(counter_file, sizeof(counter_file), "%s/%s/parent_ctr.txt", device->STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
-
-	if (written < 0 || (size_t) written >= sizeof(counter_file)) return triggerLock();
+	if (get_actual_counter_file(counter_file, sizeof(counter_file))) return triggerLock();
 
 	// We need to know what day of week we are
-	if (!localtime_r(time(NULL), &current)) return triggerLock();
+	time_t now = time(NULL);
+	if (!localtime_r(&now, &current)) return triggerLock();
 
     if (file_exist(counter_file)) {
 		struct tm previous;
 		char * prev_run = read_line_from_file(counter_file, 1);
-		if (sscanf(prev_run, "%ull %u", &lastBoot, &additionalTime) != 2) { free(prev_run); return triggerLock(); }
+		if (sscanf(prev_run, "%ld %u", &lastBoot, &additionalTime) != 2) { free(prev_run); return triggerLock(); }
 		free(prev_run);
 
-		if (!localtime_r(lastBoot, &previous)) return triggerLock();
+		if (!localtime_r(&lastBoot, &previous)) return triggerLock();
 
 		// Get current day of week and check if it's valid
 		if (previous.tm_wday != current.tm_wday || previous.tm_mday != current.tm_mday || previous.tm_mon != current.tm_mon) {
@@ -273,24 +358,44 @@ int muxparentlock_process()
 
 	// Main process is dumb here, we are sleeping for 1mn and take the time, 
 	// and write it to the counter or trigger the parental lock
-	int throttleWrite = 0;
 	while (1)
 	{
 		unsigned elapsed = 0;
-		sleep(60);
-		throttleWrite++;
+		// Wait for 1mn here or the console shutdown
+		if (interruptible_wait(60)) break;
+
 		clock_gettime( CLOCK_MONOTONIC, &cur );
 
 		elapsed = cur.tv_sec - boot.tv_sec + additionalTime;
 
-		if (throttleWrite == 5) {
-			FILE * file = fopen(counter_file, "w");
-			if (!file) return triggerLock();
-			fprintf(file, "%ull %u\n", lastBoot, elapsed);
-			fclose(file);
-		}
+		FILE * file = fopen(MUX_PARENTLOCK_TRACKING, "w");
+		if (!file) return triggerLock();
+		fprintf(file, "%ld %u\n", lastBoot, elapsed);
+		fclose(file);
 
 		if (elapsed > maxTimeForToday) return triggerLock();
 	}
 	return 0;
+}
+
+int muxparentlock_process()
+{
+	if (file_exist(MUX_PARENTAUTH)) 
+	{	// The code was entered, so let's prevent showing the lock screen again 
+		if (timetracker_running == 2) timetracker_running = 1;
+		return 0;
+	}
+	// Message to tell the frontend that we need to display the pass screen
+	if (timetracker_running == 2) return 2;
+	// The time tracker is already running so don't do anything more here
+	if (timetracker_running) return 0;
+	// Check if we need to run (enabled)
+	if (!config.SETTINGS.ADVANCED.PARENTLOCK) return 0;
+	// Ok, run now
+	if (pthread_create(&timetracker_thread, NULL, process, NULL) == 0)
+	{
+		timetracker_running = 1;
+		return 0;
+	}
+	return 1;
 }
