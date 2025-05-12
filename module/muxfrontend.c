@@ -30,6 +30,7 @@
 #include "muxnetwork.h"
 #include "muxoption.h"
 #include "muxpass.h"
+#include "muxparentlock.h"
 #include "muxpicker.h"
 #include "muxpower.h"
 #include "muxplore.h"
@@ -152,10 +153,12 @@ static void module_exit(char *splash, int sound) {
 }
 
 static void module_shutdown() {
+    if (config.SETTINGS.ADVANCED.PARENTLOCK && file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
     module_exit("shutdown", SND_SHUTDOWN);
 }
 
 static void module_reboot() {
+    if (config.SETTINGS.ADVANCED.PARENTLOCK && file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
     module_exit("reboot", SND_REBOOT);
 }
 
@@ -284,9 +287,20 @@ static void module_config() {
             write_text_to_file(MUX_AUTH, "w", CHAR, "");
             exec_mux("launcher", "muxconfig", muxconfig_main);
         }
+    } else if (config.SETTINGS.ADVANCED.PARENTLOCK && !file_exist(MUX_PARENTAUTH) &&
+        strcmp(previous_module, "muxtweakgen") != 0) {
+        load_mux("launcher");
+
+        if (muxparentlock_main("unlock") == 1) {
+            cleanup_screen();
+
+            write_text_to_file(MUX_PARENTAUTH, "w", CHAR, "");
+            exec_mux("launcher", "muxconfig", muxconfig_main);
+        }
     } else {
         exec_mux("launcher", "muxconfig", muxconfig_main);
     }
+    if (config.SETTINGS.ADVANCED.PARENTLOCK && file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
 }
 
 static void module_tweakadv() {
@@ -296,6 +310,10 @@ static void module_tweakadv() {
         if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
         if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
     }
+    if (!config.SETTINGS.ADVANCED.PARENTLOCK) {
+        if (file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
+    }
+    
 }
 
 static void module_rtc() {

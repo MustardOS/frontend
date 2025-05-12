@@ -440,6 +440,10 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
 void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj_t *ui_rolComboThree,
                       lv_obj_t *ui_rolComboFour, lv_obj_t *ui_rolComboFive, lv_obj_t *ui_rolComboSix);
 
+void apply_parentlock_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj_t *ui_rolComboThree,
+                    	    lv_obj_t *ui_rolComboFour);
+
+
 void init_panel_style(struct theme_config *theme);
 
 void init_item_animation();

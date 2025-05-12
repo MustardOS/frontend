@@ -117,6 +117,7 @@
 #define MUOS_TIN_LOAD "/tmp/tin_go" // Task Toolkit Last Index
 
 #define MUX_AUTH "/tmp/mux_auth" // Muxpass Config Authorization
+#define MUX_PARENTAUTH "/tmp/mux_parentauth" // Muxpass Config Authorization
 #define MUX_LAUNCHER_AUTH "/tmp/mux_launcher_auth" // Muxpass App and Launcher Authorization
 
 #define BRIGHT_PERC "/tmp/current_brightness_percent"

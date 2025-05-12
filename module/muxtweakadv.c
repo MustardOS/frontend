@@ -9,9 +9,9 @@
 #include "../common/input/list_nav.h"
 
 static int accelerate_original, swap_original, thermal_original, volume_original, brightness_original,
-        offset_original, lockdown_original, led_original, random_theme_original, retrowait_original,
-        state_original, verbose_original, rumble_original, user_init_original, dpad_swap_original,
-        overdrive_original, swapfile_original, zramfile_original, cardmode_original;
+        offset_original, lockdown_original, parentlock_original, led_original, random_theme_original, 
+        retrowait_original, state_original, verbose_original, rumble_original, user_init_original, 
+        dpad_swap_original, overdrive_original, swapfile_original, zramfile_original, cardmode_original;
 
 #define UI_COUNT 19
 static lv_obj_t *ui_objects[UI_COUNT];
@@ -33,6 +33,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBrightness_tweakadv, lang.MUXTWEAKADV.HELP.BRIGHT},
             {ui_lblOffset_tweakadv,     lang.MUXTWEAKADV.HELP.OFFSET},
             {ui_lblPasscode_tweakadv,   lang.MUXTWEAKADV.HELP.LOCK},
+            {ui_lblParentLock_tweakadv, lang.MUXTWEAKADV.HELP.PARENTLOCK},
             {ui_lblLED_tweakadv,        lang.MUXTWEAKADV.HELP.LED},
             {ui_lblTheme_tweakadv,      lang.MUXTWEAKADV.HELP.RANDOM},
             {ui_lblRetroWait_tweakadv,  lang.MUXTWEAKADV.HELP.NET_WAIT},
@@ -71,6 +72,7 @@ static void init_dropdown_settings() {
     brightness_original = lv_dropdown_get_selected(ui_droBrightness_tweakadv);
     offset_original = lv_dropdown_get_selected(ui_droOffset_tweakadv);
     lockdown_original = lv_dropdown_get_selected(ui_droPasscode_tweakadv);
+    parentlock_original = lv_dropdown_get_selected(ui_droParentLock_tweakadv);
     led_original = lv_dropdown_get_selected(ui_droLED_tweakadv);
     random_theme_original = lv_dropdown_get_selected(ui_droTheme_tweakadv);
     retrowait_original = lv_dropdown_get_selected(ui_droRetroWait_tweakadv);
@@ -121,6 +123,7 @@ static void restore_tweak_options() {
 
     lv_dropdown_set_selected(ui_droOffset_tweakadv, config.SETTINGS.ADVANCED.OFFSET);
     lv_dropdown_set_selected(ui_droPasscode_tweakadv, config.SETTINGS.ADVANCED.LOCK);
+    lv_dropdown_set_selected(ui_droParentLock_tweakadv, config.SETTINGS.ADVANCED.PARENTLOCK);
     lv_dropdown_set_selected(ui_droLED_tweakadv, config.SETTINGS.ADVANCED.LED);
     lv_dropdown_set_selected(ui_droTheme_tweakadv, config.SETTINGS.ADVANCED.THEME);
     lv_dropdown_set_selected(ui_droRetroWait_tweakadv, config.SETTINGS.ADVANCED.RETROWAIT);
@@ -210,6 +213,7 @@ static void save_tweak_options() {
     int idx_thermal = lv_dropdown_get_selected(ui_droThermal_tweakadv);
     int idx_offset = lv_dropdown_get_selected(ui_droOffset_tweakadv);
     int idx_lockdown = lv_dropdown_get_selected(ui_droPasscode_tweakadv);
+    int idx_parentlock = lv_dropdown_get_selected(ui_droParentLock_tweakadv);
     int idx_led = lv_dropdown_get_selected(ui_droLED_tweakadv);
     int idx_random_theme = lv_dropdown_get_selected(ui_droTheme_tweakadv);
     int idx_retrowait = lv_dropdown_get_selected(ui_droRetroWait_tweakadv);
@@ -270,6 +274,11 @@ static void save_tweak_options() {
     if (lv_dropdown_get_selected(ui_droPasscode_tweakadv) != lockdown_original) {
         is_modified++;
         write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/lock"), "w", INT, idx_lockdown);
+    }
+
+    if (lv_dropdown_get_selected(ui_droParentLock_tweakadv) != parentlock_original) {
+        is_modified++;
+        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/parentlock"), "w", INT, idx_parentlock);
     }
 
     if (lv_dropdown_get_selected(ui_droLED_tweakadv) != led_original) {
@@ -355,6 +364,7 @@ static void init_navigation_group() {
             ui_pnlAccelerate_tweakadv,
             ui_pnlThermal_tweakadv,
             ui_pnlPasscode_tweakadv,
+            ui_pnlParentLock_tweakadv,
             ui_pnlTheme_tweakadv,
             ui_pnlRetroWait_tweakadv,
             ui_pnlState_tweakadv,
@@ -376,14 +386,15 @@ static void init_navigation_group() {
     ui_objects[8] = ui_lblAccelerate_tweakadv;
     ui_objects[9] = ui_lblThermal_tweakadv;
     ui_objects[10] = ui_lblPasscode_tweakadv;
-    ui_objects[11] = ui_lblTheme_tweakadv;
-    ui_objects[12] = ui_lblRetroWait_tweakadv;
-    ui_objects[13] = ui_lblState_tweakadv;
-    ui_objects[14] = ui_lblSwap_tweakadvfile;
-    ui_objects[15] = ui_lblZramfile_tweakadv;
-    ui_objects[16] = ui_lblUserInit_tweakadv;
-    ui_objects[17] = ui_lblVerbose_tweakadv;
-    ui_objects[18] = ui_lblVolume_tweakadv;
+    ui_objects[11] = ui_lblParentLock_tweakadv;
+    ui_objects[12] = ui_lblTheme_tweakadv;
+    ui_objects[13] = ui_lblRetroWait_tweakadv;
+    ui_objects[14] = ui_lblState_tweakadv;
+    ui_objects[15] = ui_lblSwap_tweakadvfile;
+    ui_objects[16] = ui_lblZramfile_tweakadv;
+    ui_objects[17] = ui_lblUserInit_tweakadv;
+    ui_objects[18] = ui_lblVerbose_tweakadv;
+    ui_objects[19] = ui_lblVolume_tweakadv;
 
     lv_obj_t *ui_objects_value[] = {
             ui_droSwap_tweakadv,
@@ -397,6 +408,7 @@ static void init_navigation_group() {
             ui_droAccelerate_tweakadv,
             ui_droThermal_tweakadv,
             ui_droPasscode_tweakadv,
+            ui_droParentLock_tweakadv,           
             ui_droTheme_tweakadv,
             ui_droRetroWait_tweakadv,
             ui_droState_tweakadv,
@@ -419,6 +431,7 @@ static void init_navigation_group() {
             ui_icoAccelerate_tweakadv,
             ui_icoThermal_tweakadv,
             ui_icoPasscode_tweakadv,
+            ui_icoParentLock_tweakadv,
             ui_icoTheme_tweakadv,
             ui_icoRetroWait_tweakadv,
             ui_icoState_tweakadv,
@@ -436,6 +449,7 @@ static void init_navigation_group() {
     apply_theme_list_panel(ui_pnlBrightness_tweakadv);
     apply_theme_list_panel(ui_pnlOffset_tweakadv);
     apply_theme_list_panel(ui_pnlPasscode_tweakadv);
+    apply_theme_list_panel(ui_pnlParentLock_tweakadv); 
     apply_theme_list_panel(ui_pnlLED_tweakadv);
     apply_theme_list_panel(ui_pnlTheme_tweakadv);
     apply_theme_list_panel(ui_pnlRetroWait_tweakadv);
@@ -456,6 +470,7 @@ static void init_navigation_group() {
     apply_theme_list_item(&theme, ui_lblBrightness_tweakadv, lang.MUXTWEAKADV.BRIGHT.TITLE);
     apply_theme_list_item(&theme, ui_lblOffset_tweakadv, lang.MUXTWEAKADV.OFFSET);
     apply_theme_list_item(&theme, ui_lblPasscode_tweakadv, lang.MUXTWEAKADV.LOCK);
+    apply_theme_list_item(&theme, ui_lblParentLock_tweakadv, lang.MUXTWEAKADV.PARENTLOCK);
     apply_theme_list_item(&theme, ui_lblLED_tweakadv, lang.MUXTWEAKADV.LED);
     apply_theme_list_item(&theme, ui_lblTheme_tweakadv, lang.MUXTWEAKADV.RANDOM);
     apply_theme_list_item(&theme, ui_lblRetroWait_tweakadv, lang.MUXTWEAKADV.NET_WAIT);
@@ -476,6 +491,7 @@ static void init_navigation_group() {
     apply_theme_list_glyph(&theme, ui_icoBrightness_tweakadv, mux_module, "brightness");
     apply_theme_list_glyph(&theme, ui_icoOffset_tweakadv, mux_module, "offset");
     apply_theme_list_glyph(&theme, ui_icoPasscode_tweakadv, mux_module, "lock");
+    apply_theme_list_glyph(&theme, ui_icoParentLock_tweakadv, mux_module, "lock");
     apply_theme_list_glyph(&theme, ui_icoLED_tweakadv, mux_module, "led");
     apply_theme_list_glyph(&theme, ui_icoTheme_tweakadv, mux_module, "theme");
     apply_theme_list_glyph(&theme, ui_icoRetroWait_tweakadv, mux_module, "retrowait");
@@ -503,6 +519,7 @@ static void init_navigation_group() {
     free(offset_string);
 
     apply_theme_list_drop_down(&theme, ui_droPasscode_tweakadv, NULL);
+    apply_theme_list_drop_down(&theme, ui_droParentLock_tweakadv, NULL);
     apply_theme_list_drop_down(&theme, ui_droLED_tweakadv, NULL);
     apply_theme_list_drop_down(&theme, ui_droTheme_tweakadv, NULL);
     apply_theme_list_drop_down(&theme, ui_droRetroWait_tweakadv, NULL);
@@ -544,6 +561,7 @@ static void init_navigation_group() {
             lang.MUXTWEAKADV.BRIGHT.HIGH}, 3);
 
     add_drop_down_options(ui_droPasscode_tweakadv, disabled_enabled, 2);
+    add_drop_down_options(ui_droParentLock_tweakadv, disabled_enabled, 2);
     add_drop_down_options(ui_droLED_tweakadv, disabled_enabled, 2);
     add_drop_down_options(ui_droTheme_tweakadv, disabled_enabled, 2);
     add_drop_down_options(ui_droRetroWait_tweakadv, disabled_enabled, 2);
@@ -691,6 +709,7 @@ static void init_elements() {
     lv_obj_set_user_data(ui_lblBrightness_tweakadv, "brightness");
     lv_obj_set_user_data(ui_lblOffset_tweakadv, "offset");
     lv_obj_set_user_data(ui_lblPasscode_tweakadv, "lock");
+    lv_obj_set_user_data(ui_lblParentLock_tweakadv, "lock");
     lv_obj_set_user_data(ui_lblLED_tweakadv, "led");
     lv_obj_set_user_data(ui_lblTheme_tweakadv, "theme");
     lv_obj_set_user_data(ui_lblRetroWait_tweakadv, "retrowait");
