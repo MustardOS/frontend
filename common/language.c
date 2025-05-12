@@ -312,6 +312,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.CHANNEL, "The Wi-Fi frequency and connected channel of the access point");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.ACTRAFFIC, "The total data sent and received over the network");
     SPECIFIC_FIELD(lang->MUXNETINFO.HELP.TPTRAFFIC, "The current data sent and received over the network");
+    SPECIFIC_FIELD(lang->MUXNETINFO.ERROR.EDIT, "Cannot edit if network is active!");
+    SPECIFIC_FIELD(lang->MUXNETINFO.ERROR.CHANGE, "Cannot change if network is active!");
 
     // muxnetscan
     SPECIFIC_FIELD(lang->MUXNETSCAN.TITLE, "NETWORK SCAN");

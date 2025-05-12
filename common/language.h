@@ -345,6 +345,10 @@ struct mux_lang {
             char ACTRAFFIC[MAX_BUFFER_SIZE];
             char TPTRAFFIC[MAX_BUFFER_SIZE];
         } HELP;
+        struct {
+            char EDIT[MAX_BUFFER_SIZE];
+            char CHANGE[MAX_BUFFER_SIZE];
+        } ERROR;
     } MUXNETINFO;
 
     struct {

@@ -436,24 +436,15 @@ static void list_nav_move(int steps, int direction) {
     nav_moved = 1;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    int show_nav_a = 0;
+    if (element_focused == ui_lblHostname_netinfo || element_focused == ui_lblMAC_netinfo) {
+        lv_label_set_text(ui_lblNavA, element_focused == ui_lblHostname_netinfo ?
+                                      lang.GENERIC.EDIT : lang.GENERIC.CHANGE);
 
-    if (element_focused == ui_lblHostname_netinfo) {
-        lv_label_set_text(ui_lblNavA, lang.GENERIC.EDIT);
-        show_nav_a = 1;
-    } else if (element_focused == ui_lblMAC_netinfo) {
-        if (is_network_connected()) goto end_nav;
-        lv_label_set_text(ui_lblNavA, lang.GENERIC.CHANGE);
-        show_nav_a = 1;
-    } else {
-        lv_label_set_text(ui_lblNavA, "");
-    }
-
-    end_nav:
-    if (show_nav_a) {
         lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     } else {
+        lv_label_set_text(ui_lblNavA, "");
+
         lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
@@ -527,6 +518,12 @@ static void handle_a() {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblHostname_netinfo) {
+        if (is_network_connected()) {
+            play_sound(SND_ERROR, 0);
+            toast_message(lang.MUXNETINFO.ERROR.EDIT, 1000, 1000);
+            return;
+        }
+
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
@@ -537,7 +534,11 @@ static void handle_a() {
 
         lv_textarea_set_text(ui_txtEntry_netinfo, lv_label_get_text(lv_group_get_focused(ui_group_value)));
     } else if (element_focused == ui_lblMAC_netinfo) {
-        if (is_network_connected()) return;
+        if (is_network_connected()) {
+            play_sound(SND_ERROR, 0);
+            toast_message(lang.MUXNETINFO.ERROR.CHANGE, 1000, 1000);
+            return;
+        }
 
         const char *mac_change_args[] = {"macchanger", "-r", device.NETWORK.INTERFACE, NULL};
         run_exec(mac_change_args, A_SIZE(mac_change_args), 1);
