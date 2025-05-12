@@ -825,6 +825,7 @@ static void handle_x() {
 
     if (items[current_item_index].content_type == FOLDER) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name) > 0) {
+            play_sound(SND_ERROR, 0);
             toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, 1000, 1000);
             return;
         } else {
