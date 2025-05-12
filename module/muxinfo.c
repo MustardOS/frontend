@@ -25,8 +25,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblScreenshot, lang.MUXINFO.HELP.SCREENSHOT},
             {ui_lblSpace,      lang.MUXINFO.HELP.SPACE},
             {ui_lblTester,     lang.MUXINFO.HELP.INPUT},
-            {ui_lblSysinfo,     lang.MUXINFO.HELP.SYSINFO},
-            {ui_lblNetinfo,     lang.MUXINFO.HELP.NETINFO},
+            {ui_lblSysinfo,    lang.MUXINFO.HELP.SYSINFO},
+            {ui_lblNetinfo,    lang.MUXINFO.HELP.NETINFO},
             {ui_lblCredits,    lang.MUXINFO.HELP.CREDIT},
     };
 
@@ -235,6 +235,13 @@ static void init_elements() {
     lv_obj_set_user_data(ui_lblSysinfo, "sysinfo");
     lv_obj_set_user_data(ui_lblNetinfo, "netinfo");
     lv_obj_set_user_data(ui_lblCredits, "credit");
+
+    if (!device.DEVICE.HAS_NETWORK) {
+        lv_obj_add_flag(ui_pnlNetinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNetinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_icoNetinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        ui_count -= 1;
+    }
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
