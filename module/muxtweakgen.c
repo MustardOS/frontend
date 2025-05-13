@@ -61,7 +61,7 @@ static void update_volume_and_brightness() {
     CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 96)
     CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, "settings/general/volume", 50)
 
-    lv_dropdown_set_selected(ui_droBrightness_tweakgen, config.SETTINGS.GENERAL.BRIGHTNESS + 1);
+    lv_dropdown_set_selected(ui_droBrightness_tweakgen, config.SETTINGS.GENERAL.BRIGHTNESS - 1);
 
     if (!config.SETTINGS.ADVANCED.OVERDRIVE) {
         lv_dropdown_set_selected(ui_droVolume_tweakgen, config.SETTINGS.GENERAL.VOLUME > 100
@@ -96,7 +96,9 @@ static void restore_tweak_options() {
 static void set_setting_value(const char *setting, const char *script_name, int value, int offset) {
     char setting_path[MAX_BUFFER_SIZE];
     snprintf(setting_path, sizeof(setting_path), RUN_GLOBAL_PATH "settings/general/%s", setting);
-    write_text_to_file(setting_path, "w", INT, value);
+    write_text_to_file(setting_path, "w", INT, value + offset);
+
+    if (!script_name) return;
 
     char value_str[8];
     snprintf(value_str, sizeof(value_str), "%d", value + offset);
@@ -304,7 +306,7 @@ static void update_option_values() {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBrightness_tweakgen) {
-        set_setting_value("brightness", "bright.sh", curr_brightness, 1);
+        set_setting_value("brightness", NULL, curr_brightness, 1);
     } else if (element_focused == ui_lblVolume_tweakgen) {
         set_setting_value("volume", "audio.sh", curr_volume, 0);
     }
