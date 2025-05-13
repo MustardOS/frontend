@@ -772,6 +772,17 @@ void init_defaults(){
     held = 0;
 }
 
+bool is_switch_held(int fd) {
+    unsigned char sw_states[SW_MAX / 8 + 1] = {0};
+
+    if (ioctl(fd, EVIOCGSW(sizeof(sw_states)), sw_states) < 0) {
+        perror("ioctl EVIOCGSW failed");
+        return false;
+    }
+
+    return sw_states[device.INPUT_CODE.BUTTON.SWITCH / 8] & (1 << (device.INPUT_CODE.BUTTON.SWITCH % 8));
+}
+
 void mux_input_task(const mux_input_options *opts) {
     init_defaults();
     swap_axis = opts->swap_axis;
@@ -835,6 +846,9 @@ void mux_input_task(const mux_input_options *opts) {
         timeout_hold = config.SETTINGS.ADVANCED.ACCELERATE;
     }
 
+    if (is_switch_held(opts->general_fd)) {
+        pressed = (pressed | BIT(MUX_INPUT_SWITCH));
+    }
     // Input event loop:
     while (!stop) {
         int num_events = epoll_wait(epoll_fd, epoll_event, device.DEVICE.EVENT,
