@@ -94,19 +94,22 @@ static void cleanup_screen() {
 static void process_content_action(char *action, char *module) {
     if (!file_exist(action)) return;
 
-    snprintf(rom_name, sizeof(rom_name), "%s", read_line_from_file(action, 1));
-    snprintf(rom_dir, sizeof(rom_dir), "%s", read_line_from_file(action, 2));
-    snprintf(rom_sys, sizeof(rom_sys), "%s", read_line_from_file(action, 3));
-    snprintf(forced_flag, sizeof(forced_flag), "%s", read_line_from_file(action, 4));
+    snprintf(rom_name, sizeof(rom_name), "%s", read_line_char_from(action, 1));
+    snprintf(rom_dir, sizeof(rom_dir), "%s", read_line_char_from(action, 2));
+    snprintf(rom_sys, sizeof(rom_sys), "%s", read_line_char_from(action, 3));
+    snprintf(forced_flag, sizeof(forced_flag), "%s", read_line_char_from(action, 4));
 
     remove(action);
     load_mux((strcmp(forced_flag, "1") == 0) ? "option" : module);
 }
 
 static void last_index_check() {
+    process_content_action(MUOS_ASS_LOAD, "assign");
+    process_content_action(MUOS_GOV_LOAD, "governor");
+
     last_index = 0;
     if (file_exist(MUOS_IDX_LOAD) && !file_exist(ADD_MODE_WORK)) {
-        last_index = safe_atoi(read_line_from_file(MUOS_IDX_LOAD, 1));
+        last_index = safe_atoi(read_line_char_from(MUOS_IDX_LOAD, 1));
         remove(MUOS_IDX_LOAD);
     }
 }
@@ -171,7 +174,7 @@ static void module_quit() {
 static void module_explore() {
     last_index_check();
 
-    char *explore_dir = read_line_from_file(EXPLORE_DIR, 1);
+    char *explore_dir = read_line_char_from(EXPLORE_DIR, 1);
     muxassign_main(1, rom_name, explore_dir, "none");
     muxgov_main(1, rom_name, explore_dir, "none");
 
@@ -191,7 +194,7 @@ static void module_content_list(const char *path, const char *max_depth, int is_
         int add_mode = file_exist(ADD_MODE_WORK);
         if (add_mode) last_index = 0;
 
-        if (muxcollect_main(add_mode, read_line_from_file(COLLECTION_DIR, 1), last_index) == 1) safe_quit(0);
+        if (muxcollect_main(add_mode, read_line_char_from(COLLECTION_DIR, 1), last_index) == 1) safe_quit(0);
     } else {
         if (muxhistory_main(last_index) == 1) safe_quit(0);
     }
@@ -207,10 +210,10 @@ static void module_history() {
 
 static void module_search() {
     load_mux("option");
-    muxsearch_main(read_line_from_file(EXPLORE_DIR, 1));
+    muxsearch_main(read_line_char_from(EXPLORE_DIR, 1));
 
     if (file_exist(MUOS_RES_LOAD)) {
-        char *file_path = read_line_from_file(MUOS_RES_LOAD, 1);
+        char *file_path = read_line_char_from(MUOS_RES_LOAD, 1);
         char *ex_directory = strip_dir(file_path);
 
         write_text_to_file(EXPLORE_DIR, "w", CHAR, ex_directory);
@@ -223,7 +226,7 @@ static void module_search() {
 
 static void module_picker() {
     load_mux("custom");
-    muxpicker_main(read_line_from_file(MUOS_PIK_LOAD, 1), read_line_from_file(EXPLORE_DIR, 1));
+    muxpicker_main(read_line_char_from(MUOS_PIK_LOAD, 1), read_line_char_from(EXPLORE_DIR, 1));
 }
 
 static void module_run(const char *mux, int (*func_to_exec)(int, char *, char *, char *)) {
@@ -262,7 +265,7 @@ static void module_app() {
         exec_mux("launcher", "muxapp", muxapp_main);
 
         if (file_exist(MUOS_APP_LOAD)) {
-            char *app = read_line_from_file(MUOS_APP_LOAD, 1);
+            char *app = read_line_char_from(MUOS_APP_LOAD, 1);
 
             if (strcmp(app, "Archive Manager") == 0) {
                 remove(MUOS_APP_LOAD);
@@ -399,8 +402,7 @@ void init_audio() {
         usleep(delay);
     }
 
-    if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
-    write_text_to_file(CHIME_DONE, "w", CHAR, "");
+    if (config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
 }
 
 int main() {
@@ -426,9 +428,6 @@ int main() {
             safe_quit(0);
             break;
         }
-        // Process content association and governor actions
-        process_content_action(MUOS_ASS_LOAD, "assign");
-        process_content_action(MUOS_GOV_LOAD, "governor");
 
         // Check if parental control is enabled, and start it in that case (if not done yet)
         if (muxparentlock_process() == 2) {
@@ -449,7 +448,7 @@ int main() {
 
             int go_mux = 0;
             for (size_t i = 0; modules[i].action != NULL; ++i) {
-                if (strcmp(read_line_from_file(MUOS_ACT_LOAD, 1), modules[i].action) == 0) {
+                if (strcmp(read_line_char_from(MUOS_ACT_LOAD, 1), modules[i].action) == 0) {
                     modules[i].mux_func
                     ? modules[i].mux_func()
                     : exec_mux(modules[i].goback, modules[i].module, modules[i].mux_main);

@@ -316,7 +316,7 @@ static void* process(void *)
 
     if (file_exist(counter_file)) {
 		struct tm previous;
-		char * prev_run = read_line_from_file(counter_file, 1);
+		char * prev_run = read_line_char_from(counter_file, 1);
 		if (sscanf(prev_run, "%ld %u", &lastBoot, &additionalTime) != 2) { free(prev_run); return triggerLock(); }
 		free(prev_run);
 
