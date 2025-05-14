@@ -1,11 +1,13 @@
-#include "muxshare.h"
-#include "muxparentlock.h"
-#include "ui/ui_muxparentlock.h"
+#define _GNU_SOURCE
+#include <pthread.h> 
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
-#include <pthread.h> 
 #include <unistd.h> // For sync()
+#include "muxshare.h"
+#include "muxparentlock.h"
+#include "ui/ui_muxparentlock.h"
+#include "../common/log.h"
 #include "../common/init.h"
 #include "../common/common.h"
 #include "../common/ui_common.h"
@@ -203,20 +205,28 @@ int muxparentlock_main(char *p_type) {
     return exit_status_muxparentlock;
 }
 
+pthread_t timetracker_thread;
+int       timetracker_running = 0; 
+pthread_mutex_t loop_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  loop_cond  = PTHREAD_COND_INITIALIZER;
+
 // This is always called from a different process or thread
 // thus, the main thread should be stopped to prevent dual control of the screen and input
 static void * triggerLock()
 {
+	LOG_DEBUG("muxparentlock", "Triggering parental lock for child PID: %d", child_pid)
 	if (child_pid == 0) {
 		// No child, simply trigger the pass screen, so exit the current screen in the frontend
+		timetracker_running = 2;
 		close_input();
 		mux_input_stop();
+		return 0;
 	}
 	// Need to stop the current process, the frontend is already stopped waiting for this child to finish
 	// display the pass screen and resume if it's valid
 	if (!kill(child_pid, SIGSTOP)) {
 		// Clear framebuffer
-		system("muxfbset -c"); // Not using run_exec here since that would clear child_pid
+		system("cat /dev/zero > /dev/fb0"); // Not using run_exec here since that would clear child_pid
 		
 		if (muxparentlock_main("unlock") == 1) {
 
@@ -228,10 +238,6 @@ static void * triggerLock()
 	return "Error showing lock screen";
 }
 
-pthread_t timetracker_thread;
-int       timetracker_running = 0; 
-pthread_mutex_t loop_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t  loop_cond  = PTHREAD_COND_INITIALIZER;
 
 static int interruptible_wait(int seconds)
 {
@@ -354,6 +360,7 @@ static void* process(void *)
 
 	// If 0: no limit else need to convert from min to sec
 	maxTimeForToday = !maxTimeForToday ? 86400 : maxTimeForToday * 60;
+	LOG_DEBUG("muxparentlock", "Parent lock thread created, maxTimeForToday %u/addtime %u", maxTimeForToday, additionalTime)
 	
 
 	// Main process is dumb here, we are sleeping for 1mn and take the time, 
@@ -392,9 +399,11 @@ int muxparentlock_process()
 	// Check if we need to run (enabled)
 	if (!config.SETTINGS.ADVANCED.PARENTLOCK) return 0;
 	// Ok, run now
+	LOG_DEBUG("muxfrontend", "Creating parent lock thread")
 	if (pthread_create(&timetracker_thread, NULL, process, NULL) == 0)
 	{
 		timetracker_running = 1;
+		pthread_setname_np(timetracker_thread, "parentalcontrol");
 		return 0;
 	}
 	return 1;
