@@ -17,10 +17,10 @@ void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name
         snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
                  INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4));
         snprintf(catalogue_name, catalogue_name_size, "%s",
-                 read_line_from_file(core_file, 2));
+                 read_line_char_from(core_file, 2));
     } else {
         snprintf(catalogue_name, catalogue_name_size, "%s",
-                 read_line_from_file(core_file, 3));
+                 read_line_char_from(core_file, 3));
     }
 
     LOG_INFO(mux_module, "Reading Configuration: %s", core_file);
@@ -259,14 +259,14 @@ bool automatic_assign_core(char *rom_dir) {
     snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
-    if (json_valid(read_text_from_file(assign_file))) {
+    if (json_valid(read_all_char_from(assign_file))) {
         static char assign_check[MAX_BUFFER_SIZE];
         snprintf(assign_check, sizeof(assign_check), "%s",
                     str_tolower(get_last_dir(rom_dir)));
         str_remchars(assign_check, " -_+");
 
         struct json auto_assign_config = json_object_get(
-                json_parse(read_text_from_file(assign_file)),
+                json_parse(read_all_char_from(assign_file)),
                 assign_check);
 
         if (json_exists(auto_assign_config)) {

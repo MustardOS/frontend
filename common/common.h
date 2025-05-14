@@ -20,6 +20,8 @@ extern char mux_module[MAX_BUFFER_SIZE];
 extern char current_wall[MAX_BUFFER_SIZE];
 extern int is_silence_playing;
 extern Mix_Music *current_bgm;
+extern int current_brightness;
+extern int current_volume;
 
 #define SOUND_TOTAL 12
 
@@ -135,13 +137,15 @@ int read_battery_capacity();
 
 char *read_battery_voltage();
 
-char *read_text_from_file(const char *filename);
+char *read_all_char_from(const char *filename);
 
-char *read_line_from_file(const char *filename, size_t line_number);
+char *read_line_char_from(const char *filename, size_t line_number);
 
-int read_int_from_file(const char *filename, size_t line_number);
+int read_all_int_from(const char *filename, size_t buffer);
 
-unsigned long long read_ll_from_file(const char *filename);
+int read_line_int_from(const char *filename, size_t line_number);
+
+unsigned long long read_all_long_from(const char *filename);
 
 const char *get_random_hex();
 
@@ -257,8 +261,6 @@ char *generate_number_string(int min, int max, int increment, const char *prefix
                              const char *suffix, int infix_position);
 
 char *get_script_value(const char *filename, const char *key, const char *not_found);
-
-void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar, lv_obj_t *volume_icon);
 
 int resolution_check(const char *zip_filename);
 

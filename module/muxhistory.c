@@ -33,7 +33,7 @@ static char preview_image_previous_path[MAX_BUFFER_SIZE];
 static char splash_image_previous_path[MAX_BUFFER_SIZE];
 
 static char *load_content_governor(char *pointer) {
-    pointer = read_text_from_file(pointer);
+    pointer = read_all_char_from(pointer);
 
     char content_gov[MAX_BUFFER_SIZE];
     snprintf(content_gov, sizeof(content_gov), "%s.gov",
@@ -41,7 +41,7 @@ static char *load_content_governor(char *pointer) {
 
     if (file_exist(content_gov)) {
         LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
-        return read_text_from_file(content_gov);
+        return read_all_char_from(content_gov);
     } else {
         snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov",
                  INFO_COR_PATH, str_replace(get_last_subdir(pointer, '/', 6), get_last_dir(pointer), ""));
@@ -51,7 +51,7 @@ static char *load_content_governor(char *pointer) {
 
     if (file_exist(content_gov)) {
         LOG_SUCCESS(mux_module, "Loading Global Governor: %s", content_gov)
-        return read_text_from_file(content_gov);
+        return read_all_char_from(content_gov);
     }
 
     LOG_INFO(mux_module, "No governor detected")
@@ -65,15 +65,15 @@ static char *load_content_description() {
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, 1), '/', 6));
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
-             INFO_CAT_PATH, read_line_from_file(pointer, 3),
-             strip_ext(read_line_from_file(pointer, 7)));
+             INFO_CAT_PATH, read_line_char_from(pointer, 3),
+             strip_ext(read_line_char_from(pointer, 7)));
 
     if (file_exist(content_desc)) {
-        return read_text_from_file(content_desc);
+        return read_all_char_from(content_desc);
     }
 
     snprintf(current_meta_text, sizeof(current_meta_text), " ");
@@ -160,11 +160,11 @@ static void image_refresh(char *image_type) {
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, 1), '/', 6));
 
-    char *h_file_name = strip_ext(read_line_from_file(pointer, 7));
+    char *h_file_name = strip_ext(read_line_char_from(pointer, 7));
 
-    char *h_core_artwork = read_line_from_file(pointer, 3);
+    char *h_core_artwork = read_line_char_from(pointer, 3);
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
                  STORAGE_THEME, mux_dimension, image_type);
@@ -288,7 +288,7 @@ static char *get_glyph_name(size_t index) {
              INFO_HIS_PATH, strip_ext(items[index].name));
 
     const char *file_name = strip_ext(items[index].name);
-    const char *system_name = read_line_from_file(history_file, 2);
+    const char *system_name = read_line_char_from(history_file, 2);
 
     if (search_for_config(INFO_COL_PATH, file_name, system_name)) return "collection";
     return "history";
@@ -302,9 +302,9 @@ static void gen_item(char **file_names, int file_count) {
     int fn_valid = 0;
     struct json fn_json = {0};
 
-    if (json_valid(read_text_from_file(custom_lookup))) {
+    if (json_valid(read_all_char_from(custom_lookup))) {
         fn_valid = 1;
-        fn_json = json_parse(read_text_from_file(custom_lookup));
+        fn_json = json_parse(read_all_char_from(custom_lookup));
     }
 
     for (int i = 0; i < file_count; i++) {
@@ -313,10 +313,10 @@ static void gen_item(char **file_names, int file_count) {
         char collection_file[MAX_BUFFER_SIZE];
         snprintf(collection_file, sizeof(collection_file), "%s/%s",
                  INFO_HIS_PATH, file_names[i]);
-        const char *stripped_name = read_line_from_file(collection_file, 3);
+        const char *stripped_name = read_line_char_from(collection_file, 3);
         if (stripped_name && stripped_name[0] == '\0') {
-            const char *cache_file = read_line_from_file(collection_file, 1);
-            stripped_name = strip_ext(read_line_from_file(cache_file, 7));
+            const char *cache_file = read_line_char_from(collection_file, 1);
+            stripped_name = strip_ext(read_line_char_from(cache_file, 7));
         }
 
         if (fn_valid) {
@@ -393,8 +393,8 @@ static void add_to_collection() {
     char history_content[MAX_BUFFER_SIZE];
     snprintf(history_content, sizeof(history_content), "%s.cfg\n%s\n%s",
              strip_ext(items[current_item_index].name),
-             read_line_from_file(pointer_file, 1),
-             read_line_from_file(pointer_file, 2)
+             read_line_char_from(pointer_file, 1),
+             read_line_char_from(pointer_file, 2)
     );
 
     write_text_to_file(ADD_MODE_WORK, "w", CHAR, history_content);
@@ -419,10 +419,10 @@ static int load_content(const char *content_name) {
 
     char cache_file[MAX_BUFFER_SIZE];
     snprintf(cache_file, sizeof(cache_file), "%s",
-             read_line_from_file(pointer_file, 1));
+             read_line_char_from(pointer_file, 1));
 
     if (file_exist(cache_file)) {
-        char *assigned_core = read_line_from_file(cache_file, 2);
+        char *assigned_core = read_line_char_from(cache_file, 2);
         LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
         LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
         LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
@@ -431,10 +431,10 @@ static int load_content(const char *content_name) {
         snprintf(add_to_history, sizeof(add_to_history), "%s/%s",
                  INFO_HIS_PATH, content_name);
 
-        write_text_to_file(add_to_history, "w", CHAR, read_text_from_file(pointer_file));
-        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_from_file(pointer_file, 1));
+        write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
+        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, 1));
         write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
-        write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(cache_file));
+        write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
         return 1;
     }
 
@@ -671,8 +671,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -758,7 +756,7 @@ int muxhistory_main(int his_index) {
     load_kiosk(&kiosk);
 
     if (file_exist(ADD_MODE_DONE)) {
-        if (!strcasecmp(read_text_from_file(ADD_MODE_DONE), "DONE")) {
+        if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {
             toast_message(lang.GENERIC.ADD_COLLECT, 1000, 1000);
             refresh_screen(ui_screen);
         }

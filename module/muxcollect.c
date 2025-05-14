@@ -55,7 +55,7 @@ static char *load_content_governor(char *pointer) {
 
     if (file_exist(content_gov)) {
         LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
-        return read_text_from_file(content_gov);
+        return read_all_char_from(content_gov);
     } else {
         snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov",
                  INFO_COR_PATH, str_replace(get_last_subdir(pointer, '/', 6), get_last_dir(pointer), ""));
@@ -65,7 +65,7 @@ static char *load_content_governor(char *pointer) {
 
     if (file_exist(content_gov)) {
         LOG_SUCCESS(mux_module, "Loading Global Governor: %s", content_gov)
-        return read_text_from_file(content_gov);
+        return read_all_char_from(content_gov);
     }
 
     LOG_INFO(mux_module, "No governor detected")
@@ -79,19 +79,19 @@ static char *load_content_description() {
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, 1), '/', 6));
 
     char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
-            read_line_from_file(pointer, 7));
+            read_line_char_from(pointer, 7));
     char *h_core_artwork =
-            items[current_item_index].content_type == FOLDER ? "Collection" : read_line_from_file(pointer, 3);
+            items[current_item_index].content_type == FOLDER ? "Collection" : read_line_char_from(pointer, 3);
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
              INFO_CAT_PATH, h_core_artwork, h_file_name);
 
     if (file_exist(content_desc)) {
-        return read_text_from_file(content_desc);
+        return read_all_char_from(content_desc);
     }
 
     snprintf(current_meta_text, sizeof(current_meta_text), " ");
@@ -175,13 +175,13 @@ static void image_refresh(char *image_type) {
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_line_from_file(core_file, 1), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, 1), '/', 6));
 
     char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
-            read_line_from_file(pointer, 7));
+            read_line_char_from(pointer, 7));
 
     char *h_core_artwork =
-            items[current_item_index].content_type == FOLDER ? "Collection" : read_line_from_file(pointer, 3);
+            items[current_item_index].content_type == FOLDER ? "Collection" : read_line_char_from(pointer, 3);
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
@@ -344,9 +344,9 @@ static void gen_item(char **file_names, int file_count) {
     int fn_valid = 0;
     struct json fn_json = {0};
 
-    if (json_valid(read_text_from_file(custom_lookup))) {
+    if (json_valid(read_all_char_from(custom_lookup))) {
         fn_valid = 1;
-        fn_json = json_parse(read_text_from_file(custom_lookup));
+        fn_json = json_parse(read_all_char_from(custom_lookup));
     }
 
     for (int i = 0; i < file_count; i++) {
@@ -355,10 +355,10 @@ static void gen_item(char **file_names, int file_count) {
         char collection_file[MAX_BUFFER_SIZE];
         snprintf(collection_file, sizeof(collection_file), "%s/%s",
                  sys_dir, file_names[i]);
-        const char *stripped_name = read_line_from_file(collection_file, 3);
+        const char *stripped_name = read_line_char_from(collection_file, 3);
         if (stripped_name && stripped_name[0] == '\0') {
-            const char *cache_file = read_line_from_file(collection_file, 1);
-            stripped_name = strip_ext(read_line_from_file(cache_file, 7));
+            const char *cache_file = read_line_char_from(collection_file, 1);
+            stripped_name = strip_ext(read_line_char_from(cache_file, 7));
         }
 
         if (fn_valid) {
@@ -487,7 +487,7 @@ static void create_collection_items() {
         snprintf(folder_name_file, sizeof(folder_name_file), "%s/folder.json",
                  INFO_NAM_PATH);
 
-        char *file_content = read_text_from_file(folder_name_file);
+        char *file_content = read_all_char_from(folder_name_file);
         if (file_content && json_valid(file_content)) {
             fn_valid = 1;
             fn_json = json_parse(file_content);
@@ -546,14 +546,14 @@ static int load_content(const char *content_name) {
 
     char cache_file[MAX_BUFFER_SIZE];
     snprintf(cache_file, sizeof(cache_file), "%s",
-             read_line_from_file(pointer_file, 1));
+             read_line_char_from(pointer_file, 1));
 
     char *assigned_gov = NULL;
     assigned_gov = load_content_governor(cache_file);
     if (!assigned_gov) assigned_gov = device.CPU.DEFAULT;
 
     if (file_exist(cache_file)) {
-        char *assigned_core = read_line_from_file(cache_file, 2);
+        char *assigned_core = read_line_char_from(cache_file, 2);
         LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
         LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
         LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
@@ -562,10 +562,10 @@ static int load_content(const char *content_name) {
         snprintf(add_to_history, sizeof(add_to_history), "%s/%s",
                  INFO_HIS_PATH, content_name);
 
-        write_text_to_file(add_to_history, "w", CHAR, read_text_from_file(pointer_file));
-        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_from_file(pointer_file, 1));
+        write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
+        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, 1));
         write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
-        write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(cache_file));
+        write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
         return 1;
     }
 
@@ -657,12 +657,12 @@ static void handle_keyboard_press(void) {
 }
 
 static void add_collection_item() {
-    char *base_file_name = read_line_from_file(ADD_MODE_WORK, 1);
-    char *cache_file = read_line_from_file(ADD_MODE_WORK, 2);
+    char *base_file_name = read_line_char_from(ADD_MODE_WORK, 1);
+    char *cache_file = read_line_char_from(ADD_MODE_WORK, 2);
 
     char collection_content[MAX_BUFFER_SIZE];
     snprintf(collection_content, sizeof(collection_content), "%s\n%s\n%s",
-             cache_file, read_line_from_file(ADD_MODE_WORK, 3), strip_ext(read_line_from_file(cache_file, 7)));
+             cache_file, read_line_char_from(ADD_MODE_WORK, 3), strip_ext(read_line_char_from(cache_file, 7)));
 
     char collection_file[MAX_BUFFER_SIZE];
     snprintf(collection_file, sizeof(collection_file), "%s/%s-%08X.cfg",
@@ -765,7 +765,7 @@ static void handle_a() {
 
     acq:
     if (file_exist(ADD_MODE_DONE)) {
-        load_mux(read_text_from_file(ADD_MODE_FROM));
+        load_mux(read_all_char_from(ADD_MODE_FROM));
     } else {
         load_mux("collection");
     }
@@ -803,7 +803,7 @@ static void handle_b() {
         load_mux("collection");
     } else {
         if (file_exist(ADD_MODE_DONE)) {
-            load_mux(read_text_from_file(ADD_MODE_FROM));
+            load_mux(read_all_char_from(ADD_MODE_FROM));
             remove(ADD_MODE_FROM);
         } else {
             load_mux("launcher");
@@ -1061,8 +1061,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -1134,13 +1132,13 @@ int muxcollect_main(int add, char *dir, int last_index) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    if (file_exist(MUOS_PDI_LOAD)) prev_dir = read_text_from_file(MUOS_PDI_LOAD);
+    if (file_exist(MUOS_PDI_LOAD)) prev_dir = read_all_char_from(MUOS_PDI_LOAD);
 
     create_collection_items();
     ui_count = dir_count > 0 || file_count > 0 ? (int) lv_group_get_obj_count(ui_group) : 0;
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
-    if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "ROMS") == 0) {
+    if (strcasecmp(read_all_char_from(MUOS_PDI_LOAD), "ROMS") == 0) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
     }
 

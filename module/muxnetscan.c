@@ -65,7 +65,7 @@ static void create_network_items() {
 
     char *scan_file = "/tmp/net_scan";
     FILE *file = fopen(scan_file, "r");
-    if (!file || strcmp(read_line_from_file(scan_file, 1), "[!]") == 0) return;
+    if (!file || strcmp(read_line_char_from(scan_file, 1), "[!]") == 0) return;
 
     char ssid[40];
     while (fgets(ssid, sizeof(ssid), file)) {
@@ -197,8 +197,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));

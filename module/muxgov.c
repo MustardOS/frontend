@@ -375,8 +375,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -415,14 +413,14 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
         snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
                  device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
-        if (json_valid(read_text_from_file(assign_file))) {
+        if (json_valid(read_all_char_from(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
             snprintf(assign_check, sizeof(assign_check), "%s",
                      str_tolower(get_last_dir(rom_dir)));
             str_remchars(assign_check, " -_+");
 
             struct json auto_assign_config = json_object_get(
-                    json_parse(read_text_from_file(assign_file)),
+                    json_parse(read_all_char_from(assign_file)),
                     assign_check);
 
             if (json_exists(auto_assign_config)) {
@@ -487,14 +485,14 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
         snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
                  device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
-        if (json_valid(read_text_from_file(assign_file))) {
+        if (json_valid(read_all_char_from(assign_file))) {
             static char assign_check[MAX_BUFFER_SIZE];
             snprintf(assign_check, sizeof(assign_check), "%s",
                      str_tolower(get_last_dir(rom_dir)));
             str_remchars(assign_check, " -_+");
 
             struct json auto_assign_config = json_object_get(
-                    json_parse(read_text_from_file(assign_file)),
+                    json_parse(read_all_char_from(assign_file)),
                     assign_check);
 
             if (json_exists(auto_assign_config)) {

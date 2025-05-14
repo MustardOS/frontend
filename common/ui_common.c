@@ -68,6 +68,11 @@ lv_obj_t *ui_pnlProgressVolume;
 lv_obj_t *ui_icoProgressVolume;
 lv_obj_t *ui_barProgressVolume;
 
+static int brightness_changed = 0;
+static int volume_changed = 0;
+static int last_brightness = -1;
+static int last_volume = -1;
+
 // Global buffer for the canvas
 static lv_color_t *cbuf;
 
@@ -721,11 +726,13 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_img_recolor(ui_icoProgressBrightness, lv_color_hex(theme->BAR.ICON),
                                  LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_icoProgressBrightness, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    update_glyph(ui_icoProgressBrightness, "bar", "brightness");
+    update_glyph(ui_icoProgressBrightness, "bar", "bright_0");
 
+    current_brightness = config.SETTINGS.GENERAL.BRIGHTNESS;
     ui_barProgressBrightness = lv_bar_create(ui_pnlProgressBrightness);
-    lv_bar_set_value(ui_barProgressBrightness, 0, LV_ANIM_ON);
-    lv_bar_set_start_value(ui_barProgressBrightness, 0, LV_ANIM_ON);
+    lv_bar_set_value(ui_barProgressBrightness, current_brightness, LV_ANIM_OFF);
+    lv_bar_set_start_value(ui_barProgressBrightness, 0, LV_ANIM_OFF);
+    lv_bar_set_range(ui_barProgressBrightness, 0, device->SCREEN.BRIGHT);
     lv_obj_set_width(ui_barProgressBrightness, theme->BAR.PROGRESS_WIDTH);
     lv_obj_set_height(ui_barProgressBrightness, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressBrightness, LV_ALIGN_CENTER);
@@ -767,14 +774,11 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_img_recolor_opa(ui_icoProgressVolume, theme->BAR.ICON_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     update_glyph(ui_icoProgressVolume, "bar", "volume_0");
 
+    current_volume = config.SETTINGS.GENERAL.VOLUME;
     ui_barProgressVolume = lv_bar_create(ui_pnlProgressVolume);
-    lv_bar_set_value(ui_barProgressVolume, 0, LV_ANIM_ON);
-    lv_bar_set_start_value(ui_barProgressVolume, 0, LV_ANIM_ON);
-    if (config.SETTINGS.ADVANCED.OVERDRIVE) {
-        lv_bar_set_range(ui_barProgressVolume, 0, 200);
-    } else {
-        lv_bar_set_range(ui_barProgressVolume, 0, 100);
-    }
+    lv_bar_set_value(ui_barProgressVolume, current_volume, LV_ANIM_OFF);
+    lv_bar_set_start_value(ui_barProgressVolume, 0, LV_ANIM_OFF);
+    lv_bar_set_range(ui_barProgressVolume, 0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100);
     lv_obj_set_width(ui_barProgressVolume, theme->BAR.PROGRESS_WIDTH);
     lv_obj_set_height(ui_barProgressVolume, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressVolume, LV_ALIGN_CENTER);
@@ -792,37 +796,110 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_disp_load_scr(ui_screen_container);
 }
 
-void ui_common_handle_bright() {
-    if (read_int_from_file("/tmp/hdmi_in_use", 1) || config.BOOT.FACTORY_RESET) {
-        return;
-    }
+int ui_common_check() {
+    if (config.BOOT.DEVICE_MODE || config.BOOT.FACTORY_RESET) return 0;
 
     progress_onscreen = 1;
-    lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
+    return 1;
 }
 
-void ui_common_handle_vol() {
-    if (read_int_from_file("/tmp/hdmi_in_use", 1) || config.BOOT.FACTORY_RESET) {
-        return;
+static void adjust_brightness(int direction) {
+    if (!ui_common_check() || !progress_onscreen) return;
+
+    if (direction > 0) {
+        current_brightness += (current_brightness <= 14) ? 1 : 15;
+        if (current_brightness > device.SCREEN.BRIGHT) current_brightness = device.SCREEN.BRIGHT;
+    } else {
+        current_brightness -= (current_brightness <= 15) ? 1 : 15;
+        if (current_brightness < 0) current_brightness = 0;
     }
 
-    progress_onscreen = 2;
+    const char *glyph = "bright_0";
+    if (current_brightness > 70) glyph = "bright_3";
+    else if (current_brightness > 35) glyph = "bright_2";
+    else if (current_brightness > 0) glyph = "bright_1";
+
+    update_glyph(ui_icoProgressBrightness, "bar", glyph);
+
+    lv_obj_add_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
+
+    brightness_changed = 1;
+}
+
+static void adjust_volume(int direction) {
+    if (!ui_common_check() || !progress_onscreen) return;
+
+    if (direction > 0) {
+        current_volume += 8;
+        if (current_volume > device.AUDIO.MAX) current_volume = device.AUDIO.MAX;
+    } else {
+        current_volume -= 8;
+        if (current_volume < 0) current_volume = 0;
+    }
+
+    const char *glyph = "volume_0";
+    if (config.SETTINGS.ADVANCED.OVERDRIVE) {
+        if (current_volume > 141) glyph = "volume_3";
+        else if (current_volume > 71) glyph = "volume_2";
+        else if (current_volume > 0) glyph = "volume_1";
+    } else {
+        if (current_volume > 71) glyph = "volume_3";
+        else if (current_volume > 46) glyph = "volume_2";
+        else if (current_volume > 0) glyph = "volume_1";
+    }
+
+    update_glyph(ui_icoProgressVolume, "bar", glyph);
+
     lv_obj_add_flag(ui_pnlProgressBrightness, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlProgressVolume, LV_OBJ_FLAG_HIDDEN);
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
+
+    volume_changed = 1;
+}
+
+void ui_common_handle_bright_up() {
+    adjust_brightness(+1);
+}
+
+void ui_common_handle_bright_down() {
+    adjust_brightness(-1);
+}
+
+void ui_common_handle_volume_up() {
+    adjust_volume(+1);
+}
+
+void ui_common_handle_volume_down() {
+    adjust_volume(-1);
 }
 
 void ui_common_handle_idle() {
+    if (brightness_changed || last_brightness != current_brightness) {
+        lv_bar_set_value(ui_barProgressBrightness, current_brightness, LV_ANIM_OFF);
+
+        last_brightness = current_brightness;
+        brightness_changed = 0;
+
+        return;
+    }
+
+    if (volume_changed || last_volume != current_volume) {
+        lv_bar_set_value(ui_barProgressVolume, current_volume, LV_ANIM_OFF);
+
+        last_volume = current_volume;
+        volume_changed = 0;
+
+        return;
+    }
+
     if (file_exist("/tmp/hdmi_do_refresh")) {
         remove("/tmp/hdmi_do_refresh");
 
         lv_obj_invalidate(ui_pnlHeader);
         lv_obj_invalidate(ui_pnlContent);
         lv_obj_invalidate(ui_pnlFooter);
-
         lv_obj_invalidate(ui_screen);
+
         lv_refr_now(NULL);
     }
 
@@ -1235,7 +1312,7 @@ void grid_item_focus_event_cb(lv_event_t *e) {
     }
 
     lv_obj_t *cell_image_focused = lv_obj_get_child(cell_pnl, child_cnt - 1);
-    if (!cell_image_focused) return;    
+    if (!cell_image_focused) return;
 
     if (lv_event_get_code(e) == LV_EVENT_FOCUSED) {
         lv_obj_set_style_img_opa(cell_image_focused, 255, LV_PART_MAIN | LV_STATE_DEFAULT);

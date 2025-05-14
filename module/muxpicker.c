@@ -31,7 +31,7 @@ static void show_help() {
 
     char credits[MAX_BUFFER_SIZE];
     if (extract_file_from_zip(picker_archive, "credits.txt", "/tmp/credits.txt")) {
-        strcpy(credits, read_text_from_file("/tmp/credits.txt"));
+        strcpy(credits, read_all_char_from("/tmp/credits.txt"));
     } else {
         strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
     }
@@ -47,8 +47,8 @@ static int version_check() {
     if (!extract_file_from_zip(picker_archive, "version.txt", TEMP_VERSION)) return 0;
 
     char muos_version[MAX_BUFFER_SIZE];
-    snprintf(muos_version, sizeof(muos_version), "%s", read_line_from_file(MUOS_VERSION, 1));
-    return str_startswith(muos_version, read_line_from_file(TEMP_VERSION, 1));
+    snprintf(muos_version, sizeof(muos_version), "%s", read_line_char_from(MUOS_VERSION, 1));
+    return str_startswith(muos_version, read_line_char_from(TEMP_VERSION, 1));
 }
 
 static int extract_preview() {
@@ -402,8 +402,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (ui_count > 0 && nav_moved) {
         image_refresh();
 
@@ -461,10 +459,10 @@ int muxpicker_main(char *type, char *ex_dir) {
 
     int sys_index = 0;
     if (file_exist(MUOS_PIN_LOAD)) {
-        sys_index = read_int_from_file(MUOS_PIN_LOAD, 1);
+        sys_index = read_line_int_from(MUOS_PIN_LOAD, 1);
         remove(MUOS_PIN_LOAD);
     }
-    char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_from_file(EXPLORE_NAME, 1) : NULL;
+    char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
         for (size_t i = 0; i < item_count; i++) {
             if (!strcasecmp(items[i].name, e_name_line)) {

@@ -156,7 +156,7 @@ static void handle_idle(void) {
     if (idle_display.tick != mux_input_tick()) {
         // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
         // conditions here, but it's more flexible to leave that externally controllable.)
-        switch (read_int_from_file((RUN_SYSTEM_PATH "idle_inhibit"), 1)) {
+        switch (read_line_int_from((RUN_SYSTEM_PATH "idle_inhibit"), 1)) {
             case IDLE_INHIBIT_BOTH:
                 idle_display.tick = mux_input_tick();
                 // fallthrough
@@ -223,7 +223,7 @@ static int parse_type(struct json input) {
 //   "NAME2": {"handle_hold": true, "inputs": ["INPUT3"]}
 // }
 static void parse_combos(const char *filename) {
-    char *json_str = read_text_from_file(filename);
+    char *json_str = read_all_char_from(filename);
     if (!json_valid(json_str)) {
         fprintf(stderr, "muhotkey: JSON error: file not valid\n");
         exit(1);

@@ -535,8 +535,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -565,8 +563,8 @@ int muxlaunch_main() {
     load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
 
-    if (file_exist("/tmp/hdmi_out")) {
-        remove("/tmp/hdmi_out");
+    if (config.BOOT.DEVICE_MODE && !file_exist("/tmp/hdmi_out")) {
+        write_text_to_file("/tmp/hdmi_out", "w", CHAR, "");
         handle_b();
     }
 
@@ -603,33 +601,33 @@ int muxlaunch_main() {
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                            .press_handler = ui_common_handle_bright,
-                            .hold_handler = ui_common_handle_bright,
+                            .press_handler = ui_common_handle_bright_up,
+                            .hold_handler = ui_common_handle_bright_up,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                            .press_handler = ui_common_handle_bright,
-                            .hold_handler = ui_common_handle_bright,
+                            .press_handler = ui_common_handle_bright_down,
+                            .hold_handler = ui_common_handle_bright_down,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_UP),
-                            .press_handler = ui_common_handle_bright,
-                            .hold_handler = ui_common_handle_bright,
+                            .press_handler = ui_common_handle_bright_up,
+                            .hold_handler = ui_common_handle_bright_up,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_DOWN),
-                            .press_handler = ui_common_handle_bright,
-                            .hold_handler = ui_common_handle_bright,
+                            .press_handler = ui_common_handle_bright_down,
+                            .hold_handler = ui_common_handle_bright_down,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_VOL_UP),
-                            .press_handler = ui_common_handle_vol,
-                            .hold_handler = ui_common_handle_vol,
+                            .press_handler = ui_common_handle_volume_up,
+                            .hold_handler = ui_common_handle_volume_up,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                            .press_handler = ui_common_handle_vol,
-                            .hold_handler = ui_common_handle_vol,
+                            .press_handler = ui_common_handle_volume_down,
+                            .hold_handler = ui_common_handle_volume_down,
                     },
             }
     };

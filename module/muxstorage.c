@@ -466,8 +466,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -504,7 +502,7 @@ int muxstorage_main() {
 
     int sin_index = 0;
     if (file_exist(MUOS_SIN_LOAD)) {
-        sin_index = read_int_from_file(MUOS_SIN_LOAD, 1);
+        sin_index = read_line_int_from(MUOS_SIN_LOAD, 1);
         remove(MUOS_SIN_LOAD);
     }
 

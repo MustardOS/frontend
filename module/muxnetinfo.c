@@ -53,7 +53,7 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static const char *get_hostname() {
-    const char *result = read_line_from_file("/etc/hostname", 1);
+    const char *result = read_line_char_from("/etc/hostname", 1);
     if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
 
     static char hostname[64];
@@ -249,8 +249,8 @@ static const char *get_ac_traffic() {
     snprintf(rx_path, sizeof(rx_path), "/sys/class/net/%s/statistics/rx_bytes", device.NETWORK.INTERFACE);
     snprintf(tx_path, sizeof(tx_path), "/sys/class/net/%s/statistics/tx_bytes", device.NETWORK.INTERFACE);
 
-    unsigned long long rx = read_ll_from_file(rx_path);
-    unsigned long long tx = read_ll_from_file(tx_path);
+    unsigned long long rx = read_all_long_from(rx_path);
+    unsigned long long tx = read_all_long_from(tx_path);
 
     static char ac_traffic[64];
     snprintf(ac_traffic, sizeof(ac_traffic), "RX: %.1f MB TX: %.1f MB",
@@ -270,8 +270,8 @@ static const char *get_tp_traffic() {
     snprintf(rx_path, sizeof(rx_path), "/sys/class/net/%s/statistics/rx_bytes", device.NETWORK.INTERFACE);
     snprintf(tx_path, sizeof(tx_path), "/sys/class/net/%s/statistics/tx_bytes", device.NETWORK.INTERFACE);
 
-    unsigned long long rx = read_ll_from_file(rx_path);
-    unsigned long long tx = read_ll_from_file(tx_path);
+    unsigned long long rx = read_all_long_from(rx_path);
+    unsigned long long tx = read_all_long_from(tx_path);
 
     time_t now = time(NULL);
     if (last_time > 0) {
@@ -741,8 +741,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));

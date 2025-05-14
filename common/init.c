@@ -155,33 +155,33 @@ void init_input(mux_input_options *opts, int def_combo) {
     if (def_combo) {
         opts->combo[0] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
-                .hold_handler = ui_common_handle_bright
+                .press_handler = ui_common_handle_bright_up,
+                .hold_handler = ui_common_handle_bright_up
         };
         opts->combo[1] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
-                .hold_handler = ui_common_handle_bright
+                .press_handler = ui_common_handle_bright_down,
+                .hold_handler = ui_common_handle_bright_down
         };
         opts->combo[2] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_bright,
-                .hold_handler = ui_common_handle_bright
+                .press_handler = ui_common_handle_bright_up,
+                .hold_handler = ui_common_handle_bright_up
         };
         opts->combo[3] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_bright,
-                .hold_handler = ui_common_handle_bright
+                .press_handler = ui_common_handle_bright_down,
+                .hold_handler = ui_common_handle_bright_down
         };
         opts->combo[4] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_VOL_UP),
-                .press_handler = ui_common_handle_vol,
-                .hold_handler = ui_common_handle_vol
+                .press_handler = ui_common_handle_volume_up,
+                .hold_handler = ui_common_handle_volume_up
         };
         opts->combo[5] = (mux_input_combo) {
                 .type_mask = BIT(MUX_INPUT_VOL_DOWN),
-                .press_handler = ui_common_handle_vol,
-                .hold_handler = ui_common_handle_vol
+                .press_handler = ui_common_handle_volume_down,
+                .hold_handler = ui_common_handle_volume_down
         };
     }
 
@@ -196,8 +196,10 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
     timer_capacity = lv_timer_create(capacity_task, TIMER_CAPACITY, &bat_par);
     timer_status = lv_timer_create(status_task, TIMER_STATUS, NULL);
 
-    if (device.DEVICE.HAS_BLUETOOTH && config.VISUAL.BLUETOOTH) timer_bluetooth = lv_timer_create(bluetooth_task, TIMER_BLUETOOTH, NULL);
-    if (device.DEVICE.HAS_NETWORK && config.VISUAL.NETWORK) timer_network = lv_timer_create(network_task, TIMER_NETWORK, NULL);
+    if (device.DEVICE.HAS_BLUETOOTH && config.VISUAL.BLUETOOTH)
+        timer_bluetooth = lv_timer_create(bluetooth_task, TIMER_BLUETOOTH, NULL);
+    if (device.DEVICE.HAS_NETWORK && config.VISUAL.NETWORK)
+        timer_network = lv_timer_create(network_task, TIMER_NETWORK, NULL);
     if (config.VISUAL.BATTERY) timer_battery = lv_timer_create(battery_task, TIMER_BATTERY, NULL);
     if (update_system_info) timer_update_system_info = lv_timer_create(update_system_info, TIMER_SYSINFO, NULL);
     lv_refr_now(NULL);
@@ -290,7 +292,7 @@ void network_task() {
 }
 
 void battery_task() {
-    int bat_cap = read_int_from_file(device.BATTERY.CHARGER, 1);
+    int bat_cap = read_line_int_from(device.BATTERY.CHARGER, 1);
     if (bat_cap != current_capacity) {
         current_capacity = bat_cap;
         update_battery_capacity(ui_staCapacity, &theme);

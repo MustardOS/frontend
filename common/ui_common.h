@@ -10,9 +10,13 @@ void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
                            struct mux_lang *lang, const char *title);
 
-void ui_common_handle_bright();
+void ui_common_handle_bright_up();
 
-void ui_common_handle_vol();
+void ui_common_handle_bright_down();
+
+void ui_common_handle_volume_up();
+
+void ui_common_handle_volume_down();
 
 void ui_common_handle_idle();
 

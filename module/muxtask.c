@@ -287,8 +287,6 @@ static void update_footer_nav_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -323,7 +321,7 @@ int muxtask_main() {
 
     int tin_index = 0;
     if (file_exist(MUOS_TIN_LOAD)) {
-        tin_index = read_int_from_file(MUOS_TIN_LOAD, 1);
+        tin_index = read_line_int_from(MUOS_TIN_LOAD, 1);
         remove(MUOS_TIN_LOAD);
     }
 

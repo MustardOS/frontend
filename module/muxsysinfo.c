@@ -83,7 +83,7 @@ const char *get_cpu_model() {
 
 const char *get_current_frequency() {
     static char buffer[32];
-    char *freq_str = read_text_from_file("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq");
+    char *freq_str = read_all_char_from("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq");
 
     if (!freq_str || freq_str[0] == '\0') {
         snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
@@ -107,7 +107,7 @@ const char *get_current_frequency() {
 
 const char *get_scaling_governor() {
     static char buffer[MAX_BUFFER_SIZE];
-    char *governor_str = read_text_from_file("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
+    char *governor_str = read_all_char_from("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
 
     if (!governor_str || governor_str[0] == '\0') {
         snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
@@ -129,7 +129,7 @@ const char *get_memory_usage() {
 
 const char *get_temperature() {
     static char buffer[32];
-    char *temp_str = read_text_from_file("/sys/class/thermal/thermal_zone0/temp");
+    char *temp_str = read_all_char_from("/sys/class/thermal/thermal_zone0/temp");
 
     if (!temp_str || temp_str[0] == '\0') {
         snprintf(buffer, sizeof(buffer), "%s", lang.GENERIC.UNKNOWN);
@@ -192,15 +192,15 @@ const char *get_battery_cap() {
 const char *get_build_version() {
     static char build_version[32];
     snprintf(build_version, sizeof(build_version), "%s (%s)",
-             str_replace(read_line_from_file((INTERNAL_PATH "config/version.txt"), 1), "_", " "),
-             read_line_from_file((INTERNAL_PATH "config/version.txt"), 2));
+             str_replace(read_line_char_from((INTERNAL_PATH "config/version.txt"), 1), "_", " "),
+             read_line_char_from((INTERNAL_PATH "config/version.txt"), 2));
     return build_version;
 }
 
 const char *get_device_info() {
     static char device_info[32];
     snprintf(device_info, sizeof(device_info), "%s",
-             read_line_from_file((INTERNAL_PATH "config/device.txt"), 1));
+             read_line_char_from((INTERNAL_PATH "config/device.txt"), 1));
     return device_info;
 }
 
@@ -573,8 +573,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));

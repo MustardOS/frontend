@@ -947,7 +947,7 @@ int get_alt_scheme_path(char *alt_scheme_path, size_t alt_scheme_path_size) {
     snprintf(active_path, sizeof(active_path), "%s/active.txt", theme_location);
     if (file_exist(active_path)) {
         snprintf(alt_scheme_path, alt_scheme_path_size, "%s/alternate/%s.ini", theme_location,
-                 str_replace(read_line_from_file(active_path, 1), "\r", ""));
+                 str_replace(read_line_char_from(active_path, 1), "\r", ""));
         return file_exist(alt_scheme_path);
     }
     return 0;

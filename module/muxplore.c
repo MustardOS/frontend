@@ -46,9 +46,9 @@ static void check_for_disable_grid_file(char *item_curr_dir) {
 }
 
 static char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_lookup) {
-    const char *core_line = read_line_from_file(core_path, line_core) ?: "unknown";
-    const char *catalogue_line = read_line_from_file(core_path, line_catalogue) ?: "unknown";
-    const char *lookup_line = read_line_from_file(core_path, line_lookup) ?: "unknown";
+    const char *core_line = read_line_char_from(core_path, line_core) ?: "unknown";
+    const char *catalogue_line = read_line_char_from(core_path, line_catalogue) ?: "unknown";
+    const char *lookup_line = read_line_char_from(core_path, line_lookup) ?: "unknown";
 
     size_t required_size = snprintf(NULL, 0, "%s\n%s\n%s", core_line, catalogue_line, lookup_line) + 1;
 
@@ -112,7 +112,7 @@ static char *load_content_governor(int force, int run_quit) {
 
         if (file_exist(content_gov) && !force) {
             LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
-            char *gov_text = read_text_from_file(content_gov);
+            char *gov_text = read_all_char_from(content_gov);
             if (gov_text) {
                 return gov_text;
             } else {
@@ -125,7 +125,7 @@ static char *load_content_governor(int force, int run_quit) {
 
     if (file_exist(content_gov) && !force) {
         LOG_SUCCESS(mux_module, "Loading Global Governor: %s", content_gov)
-        char *gov = read_text_from_file(content_gov);
+        char *gov = read_all_char_from(content_gov);
         if (gov) {
             return gov;
         } else {
@@ -160,7 +160,7 @@ static char *load_content_description() {
     }
 
     if (file_exist(content_desc)) {
-        return read_text_from_file(content_desc);
+        return read_all_char_from(content_desc);
     }
 
     snprintf(current_meta_text, sizeof(current_meta_text), " ");
@@ -444,12 +444,12 @@ static void gen_item(char **file_names, int file_count) {
     int fn_valid = 0;
     struct json fn_json = {0};
 
-    if (json_valid(read_text_from_file(custom_lookup))) {
+    if (json_valid(read_all_char_from(custom_lookup))) {
         fn_valid = 1;
-        fn_json = json_parse(read_text_from_file(custom_lookup));
+        fn_json = json_parse(read_all_char_from(custom_lookup));
     }
 
-    int use_lookup = read_int_from_file(name_lookup, 3);
+    int use_lookup = read_line_int_from(name_lookup, 3);
 
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
@@ -481,7 +481,7 @@ static void gen_item(char **file_names, int file_count) {
 
     sort_items(items, item_count);
 
-    char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_from_file(EXPLORE_NAME, 1) : NULL;
+    char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
         for (size_t i = 0; i < item_count; i++) {
             if (!strcasecmp(items[i].name, e_name_line)) {
@@ -615,7 +615,7 @@ static void create_content_items() {
         snprintf(folder_name_file, sizeof(folder_name_file), "%s/folder.json",
                  INFO_NAM_PATH);
 
-        char *file_content = read_text_from_file(folder_name_file);
+        char *file_content = read_all_char_from(folder_name_file);
         if (file_content && json_valid(file_content)) {
             fn_valid = 1;
             fn_json = json_parse(strdup(file_content));
@@ -742,7 +742,7 @@ static int load_content(int add_collection) {
             write_text_to_file(content, "w", CHAR, pointer);
             write_text_to_file(LAST_PLAY_FILE, "w", CHAR, cache_file);
             write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
-            write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_text_from_file(content_loader_file));
+            write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(content_loader_file));
         }
 
         LOG_SUCCESS(mux_module, "Content Loaded Successfully")
@@ -1126,8 +1126,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -1191,14 +1189,14 @@ int muxplore_main(int index, char *dir) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_text_from_file(MUOS_PDI_LOAD) : "");
+    snprintf(prev_dir, sizeof(prev_dir), "%s", (file_exist(MUOS_PDI_LOAD)) ? read_all_char_from(MUOS_PDI_LOAD) : "");
 
     load_skip_patterns();
     create_content_items();
     ui_count = (int) item_count;
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
-    if (strcasecmp(read_text_from_file(MUOS_PDI_LOAD), "ROMS") == 0) {
+    if (strcasecmp(read_all_char_from(MUOS_PDI_LOAD), "ROMS") == 0) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_subdir(sys_dir, '/', 4));
     }
 
@@ -1232,7 +1230,7 @@ int muxplore_main(int index, char *dir) {
     load_kiosk(&kiosk);
 
     if (file_exist(ADD_MODE_DONE)) {
-        if (!strcasecmp(read_text_from_file(ADD_MODE_DONE), "DONE")) {
+        if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {
             toast_message(lang.GENERIC.ADD_COLLECT, 1000, 1000);
         }
         remove(ADD_MODE_DONE);

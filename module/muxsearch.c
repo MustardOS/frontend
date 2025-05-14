@@ -189,10 +189,10 @@ static void image_refresh(char *image_type) {
         snprintf(core_file, sizeof(core_file), "%s/%score.cfg",
                  INFO_COR_PATH, str_replace(file_name, last_dir, ""));
         snprintf(core_artwork, sizeof(core_artwork), "%s",
-                 read_line_from_file(core_file, 2));
+                 read_line_char_from(core_file, 2));
     } else {
         snprintf(core_artwork, sizeof(core_artwork), "%s",
-                 read_line_from_file(core_file, 3));
+                 read_line_char_from(core_file, 3));
     }
 
     LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
@@ -266,9 +266,9 @@ static void gen_label(char *item_glyph, char *item_text, char *item_data, char *
             int fn_valid = 0;
             struct json fn_json;
 
-            if (json_valid(read_text_from_file(FRIENDLY_RESULT))) {
+            if (json_valid(read_all_char_from(FRIENDLY_RESULT))) {
                 fn_valid = 1;
-                fn_json = json_parse(read_text_from_file(FRIENDLY_RESULT));
+                fn_json = json_parse(read_all_char_from(FRIENDLY_RESULT));
             }
 
             if (fn_valid) {
@@ -813,8 +813,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -850,7 +848,7 @@ int muxsearch_main(char *dir) {
     char *json_content;
 
     if (file_exist(search_result)) {
-        json_content = read_text_from_file(search_result);
+        json_content = read_all_char_from(search_result);
         if (json_content) {
             got_results = 1;
         } else {

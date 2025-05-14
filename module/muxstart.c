@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
             lv_label_set_text(ui_lblMessage, combined);
 
             if (file_exist("/tmp/msg_progress")) {
-                lv_bar_set_value(ui_barProgress, read_int_from_file("/tmp/msg_progress", 1), LV_ANIM_OFF);
+                lv_bar_set_value(ui_barProgress, read_line_int_from("/tmp/msg_progress", 1), LV_ANIM_OFF);
             }
 
             refresh_screen(ui_scrStart);

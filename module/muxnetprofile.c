@@ -81,14 +81,14 @@ static int save_profile() {
     toast_message(lang.GENERIC.SAVING, 0, 0);
     refresh_screen(ui_screen);
 
-    const char *p_type = read_text_from_file((RUN_GLOBAL_PATH "network/type"));
-    const char *p_ssid = read_text_from_file((RUN_GLOBAL_PATH "network/ssid"));
-    const char *p_pass = read_text_from_file((RUN_GLOBAL_PATH "network/pass"));
-    const char *p_scan = read_text_from_file((RUN_GLOBAL_PATH "network/scan"));
-    const char *p_address = read_text_from_file((RUN_GLOBAL_PATH "network/address"));
-    const char *p_subnet = read_text_from_file((RUN_GLOBAL_PATH "network/subnet"));
-    const char *p_gateway = read_text_from_file((RUN_GLOBAL_PATH "network/gateway"));
-    const char *p_dns = read_text_from_file((RUN_GLOBAL_PATH "network/dns"));
+    const char *p_type = read_all_char_from((RUN_GLOBAL_PATH "network/type"));
+    const char *p_ssid = read_all_char_from((RUN_GLOBAL_PATH "network/ssid"));
+    const char *p_pass = read_all_char_from((RUN_GLOBAL_PATH "network/pass"));
+    const char *p_scan = read_all_char_from((RUN_GLOBAL_PATH "network/scan"));
+    const char *p_address = read_all_char_from((RUN_GLOBAL_PATH "network/address"));
+    const char *p_subnet = read_all_char_from((RUN_GLOBAL_PATH "network/subnet"));
+    const char *p_gateway = read_all_char_from((RUN_GLOBAL_PATH "network/gateway"));
+    const char *p_dns = read_all_char_from((RUN_GLOBAL_PATH "network/dns"));
 
     if (!p_ssid || !strlen(p_ssid)) {
         toast_message(lang.MUXNETPROFILE.INVALID_SSID, 1000, 1000);
@@ -405,8 +405,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));

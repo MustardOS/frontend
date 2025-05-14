@@ -60,6 +60,8 @@ int is_silence_playing = 0;
 Mix_Music *current_bgm = NULL;
 char **bgm_files = NULL;
 size_t bgm_file_count = 0;
+int current_brightness = 0;
+int current_volume = 0;
 
 const char *snd_names[SOUND_TOTAL] = {
         "confirm", "back", "keypress", "navigate",
@@ -512,7 +514,7 @@ char *read_battery_voltage() {
     return form_voltage;
 }
 
-char *read_text_from_file(const char *filename) {
+char *read_all_char_from(const char *filename) {
     char *text = NULL;
     FILE *file = fopen(filename, "r");
 
@@ -542,7 +544,7 @@ char *read_text_from_file(const char *filename) {
     return text;
 }
 
-char *read_line_from_file(const char *filename, size_t line_number) {
+char *read_line_char_from(const char *filename, size_t line_number) {
     if (!filename || line_number == 0) {
         fprintf(stderr, "Invalid filename or line number.\n");
         return "";
@@ -579,7 +581,23 @@ char *read_line_from_file(const char *filename, size_t line_number) {
     return "";
 }
 
-int read_int_from_file(const char *filename, size_t line_number) {
+int read_all_int_from(const char *filename, size_t buffer) {
+    FILE *file = fopen(filename, "r");
+    if (!file) return 0;
+
+    char line[buffer];
+    if (!fgets(line, sizeof(line), file)) {
+        fclose(file);
+        return 0;
+    }
+
+    fclose(file);
+    long value = strtol(line, NULL, 10);
+    return (value > INT_MAX || value < INT_MIN) ? 0 : (int) value;
+}
+
+
+int read_line_int_from(const char *filename, size_t line_number) {
     char line[MAX_BUFFER_SIZE];
     FILE *file = fopen(filename, "r");
     if (!file) return 0;
@@ -598,7 +616,7 @@ int read_int_from_file(const char *filename, size_t line_number) {
     return 0;
 }
 
-unsigned long long read_ll_from_file(const char *filename) {
+unsigned long long read_all_long_from(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) return 0;
 
@@ -768,7 +786,7 @@ void datetime_task(lv_timer_t *timer) {
 }
 
 char *get_capacity() {
-    char *battery_glyph_name = read_int_from_file(device.BATTERY.CHARGER, 1) ? "capacity_charging_" : "capacity_";
+    char *battery_glyph_name = read_line_int_from(device.BATTERY.CHARGER, 1) ? "capacity_charging_" : "capacity_";
 
     static char capacity_str[MAX_BUFFER_SIZE];
     switch (battery_capacity) {
@@ -1525,7 +1543,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
 
 int is_network_connected() {
     if (file_exist(device.NETWORK.STATE)) {
-        if (strcasecmp("up", read_text_from_file(device.NETWORK.STATE)) == 0) return 1;
+        if (strcasecmp("up", read_all_char_from(device.NETWORK.STATE)) == 0) return 1;
     }
 
     return 0;
@@ -1820,9 +1838,9 @@ void load_language_file(const char *module) {
     snprintf(language_file, sizeof(language_file), (RUN_STORAGE_PATH "language/%s.json"),
              config.SETTINGS.GENERAL.LANGUAGE);
 
-    if (json_valid(read_text_from_file(language_file))) {
-        translation_specific = json_object_get(json_parse(read_text_from_file(language_file)), module);
-        translation_generic = json_object_get(json_parse(read_text_from_file(language_file)), "generic");
+    if (json_valid(read_all_char_from(language_file))) {
+        translation_specific = json_object_get(json_parse(read_all_char_from(language_file)), module);
+        translation_generic = json_object_get(json_parse(read_all_char_from(language_file)), "generic");
     }
 }
 
@@ -1933,50 +1951,6 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
 
     if (value == NULL || value[0] == '\0') value = strdup(not_found);
     return value;
-}
-
-void update_bars(lv_obj_t *bright_bar, lv_obj_t *volume_bar, lv_obj_t *volume_icon) {
-    if (!progress_onscreen) {
-        return;
-    }
-
-    lv_bar_set_value(bright_bar, read_int_from_file(BRIGHT_PERC, 1), LV_ANIM_ON);
-
-    int volume = read_int_from_file(VOLUME_PERC, 1);
-    lv_bar_set_value(volume_bar, volume, LV_ANIM_ON);
-    if (config.SETTINGS.ADVANCED.OVERDRIVE) {
-        switch (volume) {
-            default:
-            case 0:
-                update_glyph(volume_icon, "bar", "volume_0");
-                break;
-            case 1 ... 71:
-                update_glyph(volume_icon, "bar", "volume_1");
-                break;
-            case 72 ... 141:
-                update_glyph(volume_icon, "bar", "volume_2");
-                break;
-            case 142 ... 200:
-                update_glyph(volume_icon, "bar", "volume_3");
-                break;
-        }
-    } else {
-        switch (volume) {
-            default:
-            case 0:
-                update_glyph(volume_icon, "bar", "volume_0");
-                break;
-            case 1 ... 46:
-                update_glyph(volume_icon, "bar", "volume_1");
-                break;
-            case 47 ... 71:
-                update_glyph(volume_icon, "bar", "volume_2");
-                break;
-            case 72 ... 100:
-                update_glyph(volume_icon, "bar", "volume_3");
-                break;
-        }
-    }
 }
 
 int resolution_check(const char *zip_filename) {
@@ -2403,7 +2377,7 @@ char *get_directory_core(char *rom_dir, size_t line_number) {
     snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
     if (file_exist(content_core)) {
-        return read_line_from_file(content_core, line_number);
+        return read_line_char_from(content_core, line_number);
     }
     return "";
 }
@@ -2413,7 +2387,7 @@ char *get_file_core(char *rom_dir, char *rom_name) {
     snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
     if (file_exist(content_core)) {
-        return read_line_from_file(content_core, 2);
+        return read_line_char_from(content_core, 2);
     }
     return "";
 }
@@ -2423,7 +2397,7 @@ char *get_directory_governor(char *rom_dir) {
     snprintf(content_governor, sizeof(content_governor), "%s/%s/core.gov",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
     if (file_exist(content_governor)) {
-        return read_line_from_file(content_governor, 1);
+        return read_line_char_from(content_governor, 1);
     }
     return "";
 }
@@ -2433,14 +2407,14 @@ char *get_file_governor(char *rom_dir, char *rom_name) {
     snprintf(content_governor, sizeof(content_governor), "%s/%s/%s.gov",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
     if (file_exist(content_governor)) {
-        return read_line_from_file(content_governor, 1);
+        return read_line_char_from(content_governor, 1);
     }
     return "";
 }
 
 struct screen_dimension get_device_dimensions() {
     struct screen_dimension dims;
-    if (read_int_from_file(device.SCREEN.HDMI, 1)) {
+    if (read_line_int_from(device.SCREEN.HDMI, 1)) {
         dims.WIDTH = device.SCREEN.EXTERNAL.WIDTH;
         dims.HEIGHT = device.SCREEN.EXTERNAL.HEIGHT;
     } else {
@@ -2498,7 +2472,7 @@ int search_for_config(const char *base_path, const char *file_name, const char *
 
         if (entry->d_type == DT_REG) {
             if (strstr(entry->d_name, file_name)) {
-                char *line = read_line_from_file(full_path, 2);
+                char *line = read_line_char_from(full_path, 2);
                 if (line && strcmp(line, system_name) == 0) {
                     closedir(dir);
                     return 1;
@@ -2539,7 +2513,7 @@ void populate_items(const char *base_path, const char ***items, int *item_count)
         if (S_ISREG(st.st_mode)) {
             if (strstr(entry->d_name, ".cfg")) {
                 *items = realloc(*items, ((*item_count) + 1) * sizeof(char *));
-                (*items)[*item_count] = strdup(read_line_from_file(full_path, 1));
+                (*items)[*item_count] = strdup(read_line_char_from(full_path, 1));
                 (*item_count)++;
             }
         } else if (S_ISDIR(st.st_mode)) {
@@ -2607,7 +2581,7 @@ bool get_glyph_path(const char *mux_module, const char *glyph_name,
 int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
     if (!file_exist(MUOS_PDI_LOAD)) return 0;
 
-    char *prev = read_text_from_file(MUOS_PDI_LOAD);
+    char *prev = read_all_char_from(MUOS_PDI_LOAD);
     if (!prev) return 0;
 
     int text_hit = 0;
@@ -2644,8 +2618,8 @@ int theme_compat() {
     snprintf(theme_version_file, sizeof(theme_version_file), "%s/version.txt", theme_location);
 
     if (file_exist(theme_version_file)) {
-        char *theme_version = read_line_from_file(theme_version_file, 1);
-        char *internal_version = read_line_from_file((INTERNAL_PATH "config/version.txt"), 1);
+        char *theme_version = read_line_char_from(theme_version_file, 1);
+        char *internal_version = read_line_char_from((INTERNAL_PATH "config/version.txt"), 1);
         if (strstr(internal_version, theme_version)) {
             return 1;
         } else {

@@ -7,6 +7,7 @@ void load_config(struct mux_config *config) {
     char buffer[MAX_BUFFER_SIZE];
 
     CFG_INT_FIELD(config->BOOT.FACTORY_RESET, "boot/factory_reset", 0)
+    CFG_INT_FIELD(config->BOOT.DEVICE_MODE, "boot/device_mode", 0)
 
     CFG_INT_FIELD(config->CLOCK.NOTATION, "clock/notation", 0)
     CFG_STR_FIELD(config->CLOCK.POOL, "clock/pool", "pool.ntp.org")

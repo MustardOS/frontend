@@ -294,8 +294,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -329,7 +327,7 @@ int muxarchive_main() {
 
     int arc_index = 0;
     if (file_exist(MUOS_IDX_LOAD)) {
-        arc_index = read_int_from_file(MUOS_IDX_LOAD, 1);
+        arc_index = read_line_int_from(MUOS_IDX_LOAD, 1);
         remove(MUOS_IDX_LOAD);
     }
 

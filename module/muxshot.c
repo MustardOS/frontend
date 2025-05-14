@@ -242,8 +242,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (ui_count > 0 && nav_moved) {
         image_refresh();
 

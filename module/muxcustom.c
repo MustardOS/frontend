@@ -376,7 +376,7 @@ static void handle_option_next(void) {
 
 static void restore_options() {
     snprintf(theme_alt_original, sizeof(theme_alt_original), "%s",
-             str_replace(read_line_from_file((STORAGE_THEME "/active.txt"), 1), "\r", ""));
+             str_replace(read_line_char_from((STORAGE_THEME "/active.txt"), 1), "\r", ""));
     int32_t option_index = lv_dropdown_get_option_index(ui_droThemeAlternate, theme_alt_original);
     if (option_index > 0)
         lv_dropdown_set_selected(ui_droThemeAlternate, option_index);
@@ -488,7 +488,7 @@ static void save_options() {
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
                 snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", STORAGE_THEME);
                 create_directories(strip_dir(rgb_script_dest));
-                write_text_to_file(rgb_script_dest, "w", CHAR, read_text_from_file(rgb_script));
+                write_text_to_file(rgb_script_dest, "w", CHAR, read_all_char_from(rgb_script));
             }
         }
     }
@@ -652,8 +652,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-    update_bars(ui_barProgressBrightness, ui_barProgressVolume, ui_icoProgressVolume);
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
