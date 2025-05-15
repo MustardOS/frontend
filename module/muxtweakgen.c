@@ -58,8 +58,8 @@ static void init_dropdown_settings() {
 
 static void update_volume_and_brightness() {
     char buffer[MAX_BUFFER_SIZE];
-    CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 96)
-    CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, "settings/general/volume", 50)
+    CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 90)
+    CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, "settings/general/volume", 75)
 
     lv_dropdown_set_selected(ui_droBrightness_tweakgen, config.SETTINGS.GENERAL.BRIGHTNESS - 1);
 
@@ -94,20 +94,18 @@ static void restore_tweak_options() {
 }
 
 static void set_setting_value(const char *setting, const char *script_name, int value, int offset) {
-    char setting_path[MAX_BUFFER_SIZE];
-    snprintf(setting_path, sizeof(setting_path), RUN_GLOBAL_PATH "settings/general/%s", setting);
-    write_text_to_file(setting_path, "w", INT, value + offset);
-
-    if (!script_name) return;
+    char script_path[MAX_BUFFER_SIZE];
+    snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/current/input/%s.sh", script_name);
 
     char value_str[8];
     snprintf(value_str, sizeof(value_str), "%d", value + offset);
 
-    char script_path[MAX_BUFFER_SIZE];
-    snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/current/input/%s", script_name);
-
-    const char *args[] = {script_path, value_str, NULL};
-    run_exec(args, A_SIZE(args), 1);
+    if (!block_input) {
+        block_input = 1;
+        const char *args[] = {script_path, value_str, NULL};
+        run_exec(args, A_SIZE(args), 0);
+        block_input = 0;
+    }
 }
 
 static void save_tweak_options() {
@@ -306,28 +304,28 @@ static void update_option_values() {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBrightness_tweakgen) {
-        set_setting_value("brightness", NULL, curr_brightness, 1);
+        set_setting_value("brightness", "bright", curr_brightness, 1);
     } else if (element_focused == ui_lblVolume_tweakgen) {
-        set_setting_value("volume", "audio.sh", curr_volume, 0);
+        set_setting_value("volume", "audio", curr_volume, 0);
     }
 }
 
 static void handle_option_prev(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || block_input) return;
 
     decrease_option_value(lv_group_get_focused(ui_group_value));
     update_option_values();
 }
 
 static void handle_option_next(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || block_input) return;
 
     increase_option_value(lv_group_get_focused(ui_group_value));
     update_option_values();
 }
 
 static void handle_confirm(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || block_input) return;
 
     struct {
         const char *glyph_name;
@@ -367,7 +365,7 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
-    if (msgbox_active) {
+    if (msgbox_active || block_input) {
         play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
@@ -385,7 +383,7 @@ static void handle_back(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active) return;
+    if (msgbox_active || block_input) return;
 
     if (progress_onscreen == -1) {
         play_sound(SND_CONFIRM, 0);
@@ -451,7 +449,6 @@ static void init_elements() {
 }
 
 static void ui_refresh_task() {
-
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
@@ -485,12 +482,6 @@ int muxtweakgen_main() {
 
     load_kiosk(&kiosk);
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
-
-    if (file_exist("/tmp/hdmi_out")) {
-        remove("/tmp/hdmi_out");
-        handle_list_nav_down();
-        handle_list_nav_up();
-    }
 
     init_timer(ui_refresh_task, update_volume_and_brightness);
 

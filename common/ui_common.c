@@ -730,9 +730,9 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     current_brightness = config.SETTINGS.GENERAL.BRIGHTNESS;
     ui_barProgressBrightness = lv_bar_create(ui_pnlProgressBrightness);
-    lv_bar_set_value(ui_barProgressBrightness, current_brightness, LV_ANIM_OFF);
+    lv_bar_set_value(ui_barProgressBrightness, brightness_to_percent(config.SETTINGS.GENERAL.BRIGHTNESS), LV_ANIM_OFF);
     lv_bar_set_start_value(ui_barProgressBrightness, 0, LV_ANIM_OFF);
-    lv_bar_set_range(ui_barProgressBrightness, 0, device->SCREEN.BRIGHT);
+    lv_bar_set_range(ui_barProgressBrightness, 0, 100);
     lv_obj_set_width(ui_barProgressBrightness, theme->BAR.PROGRESS_WIDTH);
     lv_obj_set_height(ui_barProgressBrightness, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressBrightness, LV_ALIGN_CENTER);
@@ -776,9 +776,9 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
 
     current_volume = config.SETTINGS.GENERAL.VOLUME;
     ui_barProgressVolume = lv_bar_create(ui_pnlProgressVolume);
-    lv_bar_set_value(ui_barProgressVolume, current_volume, LV_ANIM_OFF);
+    lv_bar_set_value(ui_barProgressVolume, volume_to_percent(config.SETTINGS.GENERAL.VOLUME), LV_ANIM_OFF);
     lv_bar_set_start_value(ui_barProgressVolume, 0, LV_ANIM_OFF);
-    lv_bar_set_range(ui_barProgressVolume, 0, config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100);
+    lv_bar_set_range(ui_barProgressVolume, 0, 100);
     lv_obj_set_width(ui_barProgressVolume, theme->BAR.PROGRESS_WIDTH);
     lv_obj_set_height(ui_barProgressVolume, theme->BAR.PROGRESS_HEIGHT);
     lv_obj_set_align(ui_barProgressVolume, LV_ALIGN_CENTER);
@@ -814,10 +814,12 @@ static void adjust_brightness(int direction) {
         if (current_brightness < 0) current_brightness = 0;
     }
 
+    int percent = brightness_to_percent(current_brightness);
+
     const char *glyph = "bright_0";
-    if (current_brightness > 70) glyph = "bright_3";
-    else if (current_brightness > 35) glyph = "bright_2";
-    else if (current_brightness > 0) glyph = "bright_1";
+    if (percent > 70) glyph = "bright_3";
+    else if (percent > 35) glyph = "bright_2";
+    else if (percent > 0) glyph = "bright_1";
 
     update_glyph(ui_icoProgressBrightness, "bar", glyph);
 
@@ -838,16 +840,12 @@ static void adjust_volume(int direction) {
         if (current_volume < 0) current_volume = 0;
     }
 
+    int percent = volume_to_percent(current_volume);
+
     const char *glyph = "volume_0";
-    if (config.SETTINGS.ADVANCED.OVERDRIVE) {
-        if (current_volume > 141) glyph = "volume_3";
-        else if (current_volume > 71) glyph = "volume_2";
-        else if (current_volume > 0) glyph = "volume_1";
-    } else {
-        if (current_volume > 71) glyph = "volume_3";
-        else if (current_volume > 46) glyph = "volume_2";
-        else if (current_volume > 0) glyph = "volume_1";
-    }
+    if (percent > 70) glyph = "volume_3";
+    else if (percent > 35) glyph = "volume_2";
+    else if (percent > 0) glyph = "volume_1";
 
     update_glyph(ui_icoProgressVolume, "bar", glyph);
 
@@ -875,19 +873,25 @@ void ui_common_handle_volume_down() {
 
 void ui_common_handle_idle() {
     if (brightness_changed || last_brightness != current_brightness) {
-        lv_bar_set_value(ui_barProgressBrightness, current_brightness, LV_ANIM_OFF);
+        lv_bar_set_value(ui_barProgressBrightness, brightness_to_percent(current_brightness), LV_ANIM_OFF);
 
         last_brightness = current_brightness;
         brightness_changed = 0;
+
+        char buffer[MAX_BUFFER_SIZE];
+        CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 90)
 
         return;
     }
 
     if (volume_changed || last_volume != current_volume) {
-        lv_bar_set_value(ui_barProgressVolume, current_volume, LV_ANIM_OFF);
+        lv_bar_set_value(ui_barProgressVolume, volume_to_percent(current_volume), LV_ANIM_OFF);
 
         last_volume = current_volume;
         volume_changed = 0;
+
+        char buffer[MAX_BUFFER_SIZE];
+        CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, "settings/general/volume", 75)
 
         return;
     }
@@ -1161,7 +1165,7 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
              load_static_image(ui_screen, ui_group, wall_type));
 
     if (strlen(static_image) > 0) {
-        LOG_INFO(mux_module, "Loading Static Image: %s", static_image);
+        LOG_INFO(mux_module, "Loading Static Image: %s", static_image)
 
         switch (theme.MISC.STATIC_ALIGNMENT) {
             case 0: // Bottom + Front

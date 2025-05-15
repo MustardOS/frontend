@@ -10,6 +10,7 @@
 #define TS(str) translate_specific(str)
 
 extern int msgbox_active;
+extern int block_input;
 extern lv_obj_t *msgbox_element;
 extern int battery_capacity;
 extern int fe_snd;
@@ -335,3 +336,7 @@ void load_splash_image_fallback(const char *mux_dimension, char *image, size_t i
 int theme_compat();
 
 void update_bootlogo();
+
+int brightness_to_percent(int val);
+
+int volume_to_percent(int val);

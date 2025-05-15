@@ -38,6 +38,7 @@
 
 char mux_module[MAX_BUFFER_SIZE];
 int msgbox_active;
+int block_input;
 int fe_snd;
 int fe_bgm;
 struct json translation_generic;
@@ -2654,4 +2655,13 @@ void update_bootlogo() {
             run_exec(args, A_SIZE(args), 0);
         }
     }
+}
+
+int brightness_to_percent(int val) {
+    return (val * 100) / device.SCREEN.BRIGHT;
+}
+
+int volume_to_percent(int val) {
+    int max = config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100;
+    return (val * 100) / max;
 }

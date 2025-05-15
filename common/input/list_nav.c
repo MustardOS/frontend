@@ -1,13 +1,11 @@
 #include "list_nav.h"
-
-#include <sys/param.h>
-
 #include "../common.h"
 #include "../ui_common.h"
 #include "../input.h"
 #include "../theme.h"
 
 static void (*list_nav_prev_cb)(int) = NULL;
+
 static void (*list_nav_next_cb)(int) = NULL;
 
 void list_nav_set_callbacks(void (*prev)(int), void (*next)(int)) {
@@ -25,10 +23,11 @@ void handle_list_nav_next(int steps) {
 
 extern int ui_count;
 extern int current_item_index;
+
 int grid_mode_enabled = 0;
 
 void handle_list_nav_up(void) {
-    if (msgbox_active || !ui_count) {
+    if (msgbox_active || !ui_count || block_input) {
         if (!swap_axis) scroll_help_content(1, false);
         return;
     }
@@ -37,7 +36,7 @@ void handle_list_nav_up(void) {
     if (grid_mode_enabled &&
         theme.GRID.NAVIGATION_TYPE == 4 && get_grid_column_index(current_item_index) == 0) {
         handle_list_nav_next(get_grid_row_index(current_item_index) == grid_info.last_row_index ?
-                      grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
+                             grid_info.last_row_item_count - 1 : grid_info.column_count - 1);
         // Regular Navigation
     } else {
         handle_list_nav_prev(1);
@@ -45,7 +44,7 @@ void handle_list_nav_up(void) {
 }
 
 void handle_list_nav_down(void) {
-    if (msgbox_active || !ui_count) {
+    if (msgbox_active || !ui_count || block_input) {
         if (!swap_axis) scroll_help_content(-1, false);
         return;
     }
@@ -61,7 +60,7 @@ void handle_list_nav_down(void) {
 }
 
 void handle_list_nav_up_hold(void) {
-    if (msgbox_active || !ui_count) {
+    if (msgbox_active || !ui_count || block_input) {
         if (!swap_axis) scroll_help_content(1, false);
         return;
     }
@@ -75,7 +74,7 @@ void handle_list_nav_up_hold(void) {
 }
 
 void handle_list_nav_down_hold(void) {
-    if (msgbox_active || !ui_count) {
+    if (msgbox_active || !ui_count || block_input) {
         if (!swap_axis) scroll_help_content(-1, false);
         return;
     }
@@ -90,7 +89,7 @@ void handle_list_nav_down_hold(void) {
 }
 
 void handle_list_nav_left() {
-    if (msgbox_active) {
+    if (msgbox_active || block_input) {
         if (swap_axis) scroll_help_content(1, false);
         return;
     }
@@ -109,7 +108,7 @@ void handle_list_nav_left() {
 }
 
 void handle_list_nav_right() {
-    if (msgbox_active) {
+    if (msgbox_active || block_input) {
         if (swap_axis) scroll_help_content(-1, false);
         return;
     }
@@ -133,7 +132,7 @@ void handle_list_nav_right() {
 }
 
 void handle_list_nav_left_hold(void) {
-    if (msgbox_active) {
+    if (msgbox_active || block_input) {
         if (swap_axis) scroll_help_content(1, false);
         return;
     }
@@ -146,7 +145,7 @@ void handle_list_nav_left_hold(void) {
 }
 
 void handle_list_nav_right_hold(void) {
-    if (msgbox_active) {
+    if (msgbox_active || block_input) {
         if (swap_axis) scroll_help_content(-1, false);
         return;
     }
@@ -159,7 +158,7 @@ void handle_list_nav_right_hold(void) {
 }
 
 void handle_list_nav_page_up(void) {
-    if (msgbox_active || !ui_count) {
+    if (msgbox_active || !ui_count || block_input) {
         scroll_help_content(1, true);
         return;
     }
@@ -177,7 +176,7 @@ void handle_list_nav_page_up(void) {
 }
 
 void handle_list_nav_page_down(void) {
-    if (msgbox_active || !ui_count) {
+    if (msgbox_active || !ui_count || block_input) {
         scroll_help_content(-1, true);
         return;
     }
