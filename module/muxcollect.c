@@ -596,7 +596,6 @@ static void list_nav_move(int steps, int direction) {
         }
 
         nav_move(ui_group, direction);
-        nav_move(ui_group_value, direction);
         nav_move(ui_group_glyph, direction);
         nav_move(ui_group_panel, direction);
     }
@@ -1253,6 +1252,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
                     [MUX_INPUT_R2] = handle_random_select,
             }
     };
+    list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
     register_key_event_callback(on_key_event);
     mux_input_task(&input_opts);
