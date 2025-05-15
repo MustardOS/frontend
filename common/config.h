@@ -49,6 +49,7 @@ struct mux_config {
             int16_t OVERDRIVE;
             int16_t SWAPFILE;
             int16_t ZRAMFILE;
+            int16_t PARENTLOCK;
             char CARDMODE[MAX_BUFFER_SIZE];
         } ADVANCED;
         struct {

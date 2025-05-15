@@ -371,6 +371,9 @@ void load_lang(struct mux_lang *lang) {
     // muxpass
     SPECIFIC_FIELD(lang->MUXPASS.TITLE, "PASSCODE");
 
+    // muxparentlock
+    SPECIFIC_FIELD(lang->MUXPARENTLOCK.TITLE, "UNLOCK CODE");
+
     // muxpicker
     SPECIFIC_FIELD(lang->MUXPICKER.CUSTOM, "CUSTOM PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.CATALOGUE, "CATALOGUE PICKER");
@@ -547,6 +550,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.THERMAL, "Thermal Zone Control");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.OFFSET, "Battery Offset");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.LOCK, "Passcode Lock");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.PARENTLOCK, "Parental Control");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.LED, "LED During Play");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RANDOM, "Random Theme on Boot");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.NET_WAIT, "RetroArch Network Wait");
@@ -580,6 +584,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OFFSET, "Change the displayed battery percentage to improve accuracy based on calibration or known deviations in the battery capacity reading");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LOCK, "Toggle the passcode lock - More information can be found on the muOS website");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.PARENTLOCK, "Toggle the parental lock - More information can be found on the muOS website");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.LED, "Toggle the power LED during content launch");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RANDOM, "Change the default theme used for the next device launch");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.NET_WAIT, "Toggle a delayed start of RetroArch until a network connection is established");
