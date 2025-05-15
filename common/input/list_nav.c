@@ -27,7 +27,8 @@ extern int current_item_index;
 int grid_mode_enabled = 0;
 
 void handle_list_nav_up(void) {
-    if (msgbox_active || !ui_count || block_input) {
+    if (!ui_count || block_input) return;
+    if (msgbox_active) {
         if (!swap_axis) scroll_help_content(1, false);
         return;
     }
@@ -44,7 +45,8 @@ void handle_list_nav_up(void) {
 }
 
 void handle_list_nav_down(void) {
-    if (msgbox_active || !ui_count || block_input) {
+    if (!ui_count || block_input) return;
+    if (msgbox_active) {
         if (!swap_axis) scroll_help_content(-1, false);
         return;
     }
@@ -60,7 +62,8 @@ void handle_list_nav_down(void) {
 }
 
 void handle_list_nav_up_hold(void) {
-    if (msgbox_active || !ui_count || block_input) {
+    if (!ui_count || block_input) return;
+    if (msgbox_active) {
         if (!swap_axis) scroll_help_content(1, false);
         return;
     }
@@ -74,7 +77,8 @@ void handle_list_nav_up_hold(void) {
 }
 
 void handle_list_nav_down_hold(void) {
-    if (msgbox_active || !ui_count || block_input) {
+    if (!ui_count || block_input) return;
+    if (msgbox_active) {
         if (!swap_axis) scroll_help_content(-1, false);
         return;
     }
@@ -89,7 +93,8 @@ void handle_list_nav_down_hold(void) {
 }
 
 void handle_list_nav_left() {
-    if (msgbox_active || block_input) {
+    if (block_input) return;
+    if (msgbox_active) {
         if (swap_axis) scroll_help_content(1, false);
         return;
     }
@@ -108,7 +113,8 @@ void handle_list_nav_left() {
 }
 
 void handle_list_nav_right() {
-    if (msgbox_active || block_input) {
+    if (block_input) return;
+    if (msgbox_active) {
         if (swap_axis) scroll_help_content(-1, false);
         return;
     }
@@ -132,7 +138,8 @@ void handle_list_nav_right() {
 }
 
 void handle_list_nav_left_hold(void) {
-    if (msgbox_active || block_input) {
+    if (block_input) return;
+    if (msgbox_active) {
         if (swap_axis) scroll_help_content(1, false);
         return;
     }
@@ -145,7 +152,8 @@ void handle_list_nav_left_hold(void) {
 }
 
 void handle_list_nav_right_hold(void) {
-    if (msgbox_active || block_input) {
+    if (block_input) return;
+    if (msgbox_active) {
         if (swap_axis) scroll_help_content(-1, false);
         return;
     }
@@ -158,7 +166,8 @@ void handle_list_nav_right_hold(void) {
 }
 
 void handle_list_nav_page_up(void) {
-    if (msgbox_active || !ui_count || block_input) {
+    if (!ui_count || block_input) return;
+    if (msgbox_active) {
         scroll_help_content(1, true);
         return;
     }
@@ -176,7 +185,8 @@ void handle_list_nav_page_up(void) {
 }
 
 void handle_list_nav_page_down(void) {
-    if (msgbox_active || !ui_count || block_input) {
+    if (!ui_count || block_input) return;
+    if (msgbox_active) {
         scroll_help_content(-1, true);
         return;
     }
