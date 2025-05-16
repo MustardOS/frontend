@@ -833,11 +833,11 @@ void capacity_task() {
 }
 
 void increase_option_value(lv_obj_t *element) {
-    play_sound(SND_OPTION, 0);
-
     uint16_t total = lv_dropdown_get_option_cnt(element);
     if (total <= 1) return;
     uint16_t current = lv_dropdown_get_selected(element);
+
+    play_sound(SND_OPTION, 0);
 
     if (current < (total - 1)) {
         current++;
@@ -849,11 +849,11 @@ void increase_option_value(lv_obj_t *element) {
 }
 
 void decrease_option_value(lv_obj_t *element) {
-    play_sound(SND_OPTION, 0);
-
     uint16_t total = lv_dropdown_get_option_cnt(element);
     if (total <= 1) return;
     uint16_t current = lv_dropdown_get_selected(element);
+
+    play_sound(SND_OPTION, 0);
 
     if (current > 0) {
         current--;
