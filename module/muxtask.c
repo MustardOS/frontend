@@ -123,8 +123,6 @@ static void handle_confirm() {
 
     play_sound(SND_CONFIRM, 0);
 
-    write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
-
     if (items[current_item_index].content_type == FOLDER) {
         char n_dir[MAX_BUFFER_SIZE];
         snprintf(n_dir, sizeof(n_dir), "%s/%s",
@@ -132,6 +130,8 @@ static void handle_confirm() {
 
         write_text_to_file(EXPLORE_DIR, "w", CHAR, n_dir);
     } else {
+        write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
+
         static char task_script[MAX_BUFFER_SIZE];
         snprintf(task_script, sizeof(task_script), "%s/%s.sh",
                  sys_dir, items[current_item_index].name);
