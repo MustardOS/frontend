@@ -15,6 +15,7 @@ static char base_dir[PATH_MAX];
 static char sys_dir[PATH_MAX];
 static char picker_type[32];
 static char *picker_extension;
+
 #define UI_PANEL 5
 static lv_obj_t *ui_mux_panels[UI_PANEL];
 
@@ -132,6 +133,7 @@ static void create_picker_items() {
         apply_size_to_content(&theme, ui_pnlContent, ui_lblPickerItem, ui_lblPickerItemGlyph, items[i].display_name);
         apply_text_long_dot(&theme, ui_pnlContent, ui_lblPickerItem, items[i].display_name);
     }
+
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 }
 
@@ -221,11 +223,7 @@ static void handle_confirm() {
         const char **exec = build_term_exec(args, &exec_count);
 
         if (exec) {
-            if (config.VISUAL.BLACKFADE) {
-                fade_to_black(ui_screen);
-            } else {
-                unload_image_animation();
-            }
+            config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
             run_exec(exec, exec_count, 0);
         }
         free(exec);
@@ -270,11 +268,7 @@ static void handle_confirm_force() {
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {
-        if (config.VISUAL.BLACKFADE) {
-            fade_to_black(ui_screen);
-        } else {
-            unload_image_animation();
-        }
+        config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
         run_exec(exec, exec_count, 0);
     }
     free(exec);
@@ -325,11 +319,7 @@ static void handle_save() {
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {
-        if (config.VISUAL.BLACKFADE) {
-            fade_to_black(ui_screen);
-        } else {
-            unload_image_animation();
-        }
+        config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
         run_exec(exec, exec_count, 0);
     }
     free(exec);
@@ -454,6 +444,7 @@ int muxpicker_main(char *type, char *ex_dir) {
         sys_index = read_line_int_from(MUOS_PIN_LOAD, 1);
         remove(MUOS_PIN_LOAD);
     }
+
     char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
         for (size_t i = 0; i < item_count; i++) {

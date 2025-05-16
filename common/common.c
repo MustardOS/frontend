@@ -122,11 +122,7 @@ void extract_archive(char *filename) {
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {
-        if (config.VISUAL.BLACKFADE) {
-            fade_to_black(ui_screen);
-        } else {
-            unload_image_animation();
-        }
+        config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
         run_exec(exec, exec_count, 0);
     }
     free(exec);

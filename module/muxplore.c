@@ -893,11 +893,7 @@ static void handle_a() {
                 }
             }
 
-            if (config.VISUAL.BLACKFADE) {
-                fade_to_black(ui_screen);
-            } else {
-                unload_image_animation();
-            }
+            config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
 
             load_mux("explore");
             exit_status = 1;
