@@ -365,7 +365,8 @@ static void handle_confirm(void) {
 }
 
 static void handle_back(void) {
-    if (msgbox_active || block_input) {
+    if (block_input) return;
+    if (msgbox_active) {
         play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
         progress_onscreen = 0;
