@@ -28,6 +28,7 @@ struct mux_kiosk {
     } CONTENT;
 
     struct {
+        int16_t BOOTLOGO;
         int16_t CATALOGUE;
         int16_t CONFIGURATION;
         int16_t THEME;

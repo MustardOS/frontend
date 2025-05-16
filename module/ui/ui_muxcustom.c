@@ -1,5 +1,6 @@
 #include "ui_muxcustom.h"
 
+lv_obj_t *ui_pnlBootlogo;
 lv_obj_t *ui_pnlBackgroundAnimation;
 lv_obj_t *ui_pnlBGM;
 lv_obj_t *ui_pnlBlackFade;
@@ -15,6 +16,7 @@ lv_obj_t *ui_pnlChime;
 lv_obj_t *ui_pnlCatalogue;
 lv_obj_t *ui_pnlConfig;
 
+lv_obj_t *ui_lblBootlogo;
 lv_obj_t *ui_lblBackgroundAnimation;
 lv_obj_t *ui_lblBGM;
 lv_obj_t *ui_lblBlackFade;
@@ -30,6 +32,7 @@ lv_obj_t *ui_lblChime;
 lv_obj_t *ui_lblCatalogue;
 lv_obj_t *ui_lblConfig;
 
+lv_obj_t *ui_icoBootlogo;
 lv_obj_t *ui_icoBackgroundAnimation;
 lv_obj_t *ui_icoBGM;
 lv_obj_t *ui_icoBlackFade;
@@ -45,6 +48,7 @@ lv_obj_t *ui_icoChime;
 lv_obj_t *ui_icoCatalogue;
 lv_obj_t *ui_icoConfig;
 
+lv_obj_t *ui_droBootlogo;
 lv_obj_t *ui_droBackgroundAnimation;
 lv_obj_t *ui_droBGM;
 lv_obj_t *ui_droBlackFade;
@@ -61,6 +65,7 @@ lv_obj_t *ui_droCatalogue;
 lv_obj_t *ui_droConfig;
 
 void init_muxcustom(lv_obj_t *ui_pnlContent) {
+    ui_pnlBootlogo = lv_obj_create(ui_pnlContent);
     ui_pnlCatalogue = lv_obj_create(ui_pnlContent);
     ui_pnlConfig = lv_obj_create(ui_pnlContent);
     ui_pnlTheme = lv_obj_create(ui_pnlContent);
@@ -76,6 +81,8 @@ void init_muxcustom(lv_obj_t *ui_pnlContent) {
     ui_pnlSound = lv_obj_create(ui_pnlContent);
     ui_pnlChime = lv_obj_create(ui_pnlContent);
 
+    ui_lblBootlogo = lv_label_create(ui_pnlBootlogo);
+    lv_label_set_text(ui_lblBootlogo, "");
     ui_lblBackgroundAnimation = lv_label_create(ui_pnlBackgroundAnimation);
     lv_label_set_text(ui_lblBackgroundAnimation, "");
     ui_lblBGM = lv_label_create(ui_pnlBGM);
@@ -105,6 +112,7 @@ void init_muxcustom(lv_obj_t *ui_pnlContent) {
     ui_lblConfig = lv_label_create(ui_pnlConfig);
     lv_label_set_text(ui_lblConfig, "");
 
+    ui_icoBootlogo = lv_img_create(ui_pnlBootlogo);
     ui_icoBackgroundAnimation = lv_img_create(ui_pnlBackgroundAnimation);
     ui_icoBGM = lv_img_create(ui_pnlBGM);
     ui_icoBlackFade = lv_img_create(ui_pnlBlackFade);
@@ -120,6 +128,9 @@ void init_muxcustom(lv_obj_t *ui_pnlContent) {
     ui_icoCatalogue = lv_img_create(ui_pnlCatalogue);
     ui_icoConfig = lv_img_create(ui_pnlConfig);
 
+    ui_droBootlogo = lv_dropdown_create(ui_pnlBootlogo);
+    lv_dropdown_clear_options(ui_droBootlogo);
+    lv_obj_set_style_text_opa(ui_droBootlogo, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
     ui_droBackgroundAnimation = lv_dropdown_create(ui_pnlBackgroundAnimation);
     lv_dropdown_clear_options(ui_droBackgroundAnimation);
     lv_obj_set_style_text_opa(ui_droBackgroundAnimation, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);

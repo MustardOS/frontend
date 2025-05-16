@@ -21,6 +21,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->CONTENT.RETROARCH, "content/retroarch", 0)
     CFG_INT_FIELD(kiosk->CONTENT.SEARCH, "content/search", 0)
 
+    CFG_INT_FIELD(kiosk->CUSTOM.BOOTLOGO, "custom/bootlogo", 0)
     CFG_INT_FIELD(kiosk->CUSTOM.CATALOGUE, "custom/catalogue", 0)
     CFG_INT_FIELD(kiosk->CUSTOM.CONFIGURATION, "custom/configuration", 0)
     CFG_INT_FIELD(kiosk->CUSTOM.THEME, "custom/theme", 0)

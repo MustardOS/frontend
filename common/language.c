@@ -149,6 +149,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxcustom
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.BOOTLOGO, "Bootlogo Images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CATALOGUE, "Catalogue Sets");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "Theme Picker");
@@ -183,10 +184,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.GLOBAL, "Global");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.THEME, "Theme");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CHIME, "Startup Chime");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOOTLOGO, "Load user created boot logos for your device");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_RESOLUTION, "Allows for testing different theme resolutions");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_ALTERNATE, "Switch between different theme alternatives");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SPLASH, "Toggle the splash image on content launching");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.FADE, "Toggle the fade to black animation on content launching");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.ANIMATION, "Toggle the background animation of the current selected theme");
@@ -373,6 +376,7 @@ void load_lang(struct mux_lang *lang) {
 
     // muxpicker
     SPECIFIC_FIELD(lang->MUXPICKER.CUSTOM, "CUSTOM PICKER");
+    SPECIFIC_FIELD(lang->MUXPICKER.BOOTLOGO, "BOOTLOGO PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.CATALOGUE, "CATALOGUE PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.CONFIG, "CONFIG PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.THEME, "THEME PICKER");
@@ -380,6 +384,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPICKER.INVALID_RES, "Incompatible Theme Resolution Detected");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CREDIT, "There are no attributed credits!");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CUSTOM, "No Custom Packages Found");
+    SPECIFIC_FIELD(lang->MUXPICKER.NONE.BOOTLOGO, "No Boot Logos Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CATALOGUE, "No Catalogue Packages Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CONFIG, "No Configuration Packages Found");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.THEME, "No Theme Packages Found");

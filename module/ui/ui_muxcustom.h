@@ -4,6 +4,7 @@
 
 void init_muxcustom(lv_obj_t *ui_pnlContent);
 
+extern lv_obj_t *ui_pnlBootlogo;
 extern lv_obj_t *ui_pnlBackgroundAnimation;
 extern lv_obj_t *ui_pnlBGM;
 extern lv_obj_t *ui_pnlBlackFade;
@@ -19,6 +20,7 @@ extern lv_obj_t *ui_pnlChime;
 extern lv_obj_t *ui_pnlCatalogue;
 extern lv_obj_t *ui_pnlConfig;
 
+extern lv_obj_t *ui_lblBootlogo;
 extern lv_obj_t *ui_lblBackgroundAnimation;
 extern lv_obj_t *ui_lblBGM;
 extern lv_obj_t *ui_lblBlackFade;
@@ -34,6 +36,7 @@ extern lv_obj_t *ui_lblChime;
 extern lv_obj_t *ui_lblCatalogue;
 extern lv_obj_t *ui_lblConfig;
 
+extern lv_obj_t *ui_icoBootlogo;
 extern lv_obj_t *ui_icoBackgroundAnimation;
 extern lv_obj_t *ui_icoBGM;
 extern lv_obj_t *ui_icoBlackFade;
@@ -49,6 +52,7 @@ extern lv_obj_t *ui_icoChime;
 extern lv_obj_t *ui_icoCatalogue;
 extern lv_obj_t *ui_icoConfig;
 
+extern lv_obj_t *ui_droBootlogo;
 extern lv_obj_t *ui_droBackgroundAnimation;
 extern lv_obj_t *ui_droBGM;
 extern lv_obj_t *ui_droBlackFade;

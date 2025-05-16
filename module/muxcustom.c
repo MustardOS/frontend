@@ -12,7 +12,7 @@ static char theme_alt_original[MAX_BUFFER_SIZE];
 static int boxart_original, bgm_original, sound_original, boxartalign_original, background_animation_original,
         font_original, launch_splash_original, black_fade_original, theme_resolution_original, chime_original;
 
-#define UI_COUNT 14
+#define UI_COUNT 15
 static lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_objects_value[UI_COUNT];
 static lv_obj_t *ui_icons[UI_COUNT];
@@ -66,12 +66,13 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBoxArt,              lang.MUXCUSTOM.HELP.BOX_ART},
             {ui_lblBoxArtAlign,         lang.MUXCUSTOM.HELP.BOX_ALIGN},
             {ui_lblFont,                lang.MUXCUSTOM.HELP.FONT},
-            {ui_lblTheme,               lang.MUXCUSTOM.THEME},
+            {ui_lblTheme,               lang.MUXCUSTOM.HELP.THEME},
             {ui_lblThemeResolution,     lang.MUXCUSTOM.HELP.THEME_RESOLUTION},
-            {ui_lblThemeAlternate,      lang.MUXCUSTOM.THEME_ALTERNATE},
-            {ui_lblCatalogue,           lang.MUXCUSTOM.CATALOGUE},
-            {ui_lblConfig,              lang.MUXCUSTOM.CONFIG},
+            {ui_lblThemeAlternate,      lang.MUXCUSTOM.HELP.THEME_ALTERNATE},
+            {ui_lblCatalogue,           lang.MUXCUSTOM.HELP.CATALOGUE},
+            {ui_lblConfig,              lang.MUXCUSTOM.HELP.CONFIG},
             {ui_lblLaunchSplash,        lang.MUXCUSTOM.HELP.SPLASH},
+            {ui_lblBootlogo,            lang.MUXCUSTOM.HELP.BOOTLOGO},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -144,6 +145,7 @@ static void init_dropdown_settings() {
 
 static void init_navigation_group() {
     lv_obj_t *ui_objects_panel[] = {
+            ui_pnlBootlogo,
             ui_pnlCatalogue,
             ui_pnlConfig,
             ui_pnlTheme,
@@ -160,51 +162,55 @@ static void init_navigation_group() {
             ui_pnlChime
     };
 
-    ui_objects[0] = ui_lblCatalogue;
-    ui_objects[1] = ui_lblConfig;
-    ui_objects[2] = ui_lblTheme;
-    ui_objects[3] = ui_lblThemeResolution;
-    ui_objects[4] = ui_lblThemeAlternate;
-    ui_objects[5] = ui_lblBackgroundAnimation;
-    ui_objects[6] = ui_lblBGM;
-    ui_objects[7] = ui_lblBlackFade;
-    ui_objects[8] = ui_lblBoxArt;
-    ui_objects[9] = ui_lblBoxArtAlign;
-    ui_objects[10] = ui_lblLaunchSplash;
-    ui_objects[11] = ui_lblFont;
-    ui_objects[12] = ui_lblSound;
-    ui_objects[13] = ui_lblChime;
+    ui_objects[0] = ui_lblBootlogo;
+    ui_objects[1] = ui_lblCatalogue;
+    ui_objects[2] = ui_lblConfig;
+    ui_objects[3] = ui_lblTheme;
+    ui_objects[4] = ui_lblThemeResolution;
+    ui_objects[5] = ui_lblThemeAlternate;
+    ui_objects[6] = ui_lblBackgroundAnimation;
+    ui_objects[7] = ui_lblBGM;
+    ui_objects[8] = ui_lblBlackFade;
+    ui_objects[9] = ui_lblBoxArt;
+    ui_objects[10] = ui_lblBoxArtAlign;
+    ui_objects[11] = ui_lblLaunchSplash;
+    ui_objects[12] = ui_lblFont;
+    ui_objects[13] = ui_lblSound;
+    ui_objects[14] = ui_lblChime;
 
-    ui_icons[0] = ui_icoCatalogue;
-    ui_icons[1] = ui_icoConfig;
-    ui_icons[2] = ui_icoTheme;
-    ui_icons[3] = ui_icoThemeResolution;
-    ui_icons[4] = ui_icoThemeAlternate;
-    ui_icons[5] = ui_icoBackgroundAnimation;
-    ui_icons[6] = ui_icoBGM;
-    ui_icons[7] = ui_icoBlackFade;
-    ui_icons[8] = ui_icoBoxArt;
-    ui_icons[9] = ui_icoBoxArtAlign;
-    ui_icons[10] = ui_icoLaunchSplash;
-    ui_icons[11] = ui_icoFont;
-    ui_icons[12] = ui_icoSound;
-    ui_icons[13] = ui_icoChime;
+    ui_icons[0] = ui_icoBootlogo;
+    ui_icons[1] = ui_icoCatalogue;
+    ui_icons[2] = ui_icoConfig;
+    ui_icons[3] = ui_icoTheme;
+    ui_icons[4] = ui_icoThemeResolution;
+    ui_icons[5] = ui_icoThemeAlternate;
+    ui_icons[6] = ui_icoBackgroundAnimation;
+    ui_icons[7] = ui_icoBGM;
+    ui_icons[8] = ui_icoBlackFade;
+    ui_icons[9] = ui_icoBoxArt;
+    ui_icons[10] = ui_icoBoxArtAlign;
+    ui_icons[11] = ui_icoLaunchSplash;
+    ui_icons[12] = ui_icoFont;
+    ui_icons[13] = ui_icoSound;
+    ui_icons[14] = ui_icoChime;
 
-    ui_objects_value[0] = ui_droCatalogue;
-    ui_objects_value[1] = ui_droConfig;
-    ui_objects_value[2] = ui_droTheme;
-    ui_objects_value[3] = ui_droThemeResolution;
-    ui_objects_value[4] = ui_droThemeAlternate;
-    ui_objects_value[5] = ui_droBackgroundAnimation;
-    ui_objects_value[6] = ui_droBGM;
-    ui_objects_value[7] = ui_droBlackFade;
-    ui_objects_value[8] = ui_droBoxArt;
-    ui_objects_value[9] = ui_droBoxArtAlign;
-    ui_objects_value[10] = ui_droLaunchSplash;
-    ui_objects_value[11] = ui_droFont;
-    ui_objects_value[12] = ui_droSound;
-    ui_objects_value[13] = ui_droChime;
+    ui_objects_value[0] = ui_droBootlogo;
+    ui_objects_value[1] = ui_droCatalogue;
+    ui_objects_value[2] = ui_droConfig;
+    ui_objects_value[3] = ui_droTheme;
+    ui_objects_value[4] = ui_droThemeResolution;
+    ui_objects_value[5] = ui_droThemeAlternate;
+    ui_objects_value[6] = ui_droBackgroundAnimation;
+    ui_objects_value[7] = ui_droBGM;
+    ui_objects_value[8] = ui_droBlackFade;
+    ui_objects_value[9] = ui_droBoxArt;
+    ui_objects_value[10] = ui_droBoxArtAlign;
+    ui_objects_value[11] = ui_droLaunchSplash;
+    ui_objects_value[12] = ui_droFont;
+    ui_objects_value[13] = ui_droSound;
+    ui_objects_value[14] = ui_droChime;
 
+    apply_theme_list_panel(ui_pnlBootlogo);
     apply_theme_list_panel(ui_pnlThemeAlternate);
     apply_theme_list_panel(ui_pnlBackgroundAnimation);
     apply_theme_list_panel(ui_pnlBGM);
@@ -220,6 +226,7 @@ static void init_navigation_group() {
     apply_theme_list_panel(ui_pnlChime);
     apply_theme_list_panel(ui_pnlConfig);
 
+    apply_theme_list_item(&theme, ui_lblBootlogo, lang.MUXCUSTOM.BOOTLOGO);
     apply_theme_list_item(&theme, ui_lblBackgroundAnimation, lang.MUXCUSTOM.ANIMATION);
     apply_theme_list_item(&theme, ui_lblBGM, lang.MUXCUSTOM.MUSIC.TITLE);
     apply_theme_list_item(&theme, ui_lblBlackFade, lang.MUXCUSTOM.FADE);
@@ -235,6 +242,7 @@ static void init_navigation_group() {
     apply_theme_list_item(&theme, ui_lblChime, lang.MUXCUSTOM.CHIME);
     apply_theme_list_item(&theme, ui_lblConfig, lang.MUXCUSTOM.CONFIG);
 
+    apply_theme_list_glyph(&theme, ui_icoBootlogo, mux_module, "bootlogo");
     apply_theme_list_glyph(&theme, ui_icoBackgroundAnimation, mux_module, "backgroundanimation");
     apply_theme_list_glyph(&theme, ui_icoBGM, mux_module, "bgm");
     apply_theme_list_glyph(&theme, ui_icoBlackFade, mux_module, "blackfade");
@@ -250,6 +258,7 @@ static void init_navigation_group() {
     apply_theme_list_glyph(&theme, ui_icoChime, mux_module, "chime");
     apply_theme_list_glyph(&theme, ui_icoConfig, mux_module, "config");
 
+    apply_theme_list_drop_down(&theme, ui_droBootlogo, "");
     apply_theme_list_drop_down(&theme, ui_droBackgroundAnimation, NULL);
     apply_theme_list_drop_down(&theme, ui_droBGM, NULL);
     apply_theme_list_drop_down(&theme, ui_droBlackFade, NULL);
@@ -520,6 +529,7 @@ static void handle_confirm() {
         int16_t *kiosk_flag;
     } elements[] = {
             {"theme",     "theme",             &kiosk.CUSTOM.THEME},
+            {"bootlogo",  "package/bootlogo",  &kiosk.CUSTOM.BOOTLOGO},
             {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
             {"config",    "package/config",    &kiosk.CUSTOM.CONFIGURATION}
     };
@@ -625,6 +635,7 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
+    lv_obj_set_user_data(ui_lblBootlogo, "bootlogo");
     lv_obj_set_user_data(ui_lblBackgroundAnimation, "backgroundanimation");
     lv_obj_set_user_data(ui_lblBGM, "bgm");
     lv_obj_set_user_data(ui_lblBlackFade, "blackfade");

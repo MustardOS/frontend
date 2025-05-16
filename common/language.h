@@ -146,6 +146,7 @@ struct mux_lang {
     } MUXCONNECT;
 
     struct {
+        char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
@@ -192,10 +193,12 @@ struct mux_lang {
             char THEME[MAX_BUFFER_SIZE];
         } SOUND;
         struct {
+            char BOOTLOGO[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
             char THEME_RESOLUTION[MAX_BUFFER_SIZE];
+            char THEME_ALTERNATE[MAX_BUFFER_SIZE];
             char ANIMATION[MAX_BUFFER_SIZE];
             char BOX_ART[MAX_BUFFER_SIZE];
             char BOX_ALIGN[MAX_BUFFER_SIZE];
@@ -426,6 +429,7 @@ struct mux_lang {
 
     struct {
         char CUSTOM[MAX_BUFFER_SIZE];
+        char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
@@ -433,6 +437,7 @@ struct mux_lang {
         char INVALID_RES[MAX_BUFFER_SIZE];
         struct {
             char CREDIT[MAX_BUFFER_SIZE];
+            char BOOTLOGO[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];

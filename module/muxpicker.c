@@ -380,6 +380,11 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
+    if (!strcasecmp(picker_type, "package/bootlogo")) {
+        lv_obj_add_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    }
+
 #if TEST_IMAGE
     display_testing_message(ui_screen);
 #endif
@@ -418,6 +423,9 @@ int muxpicker_main(char *type, char *ex_dir) {
     if (!strcasecmp(picker_type, "theme")) {
         picker_extension = "muxthm";
         picker_title = lang.MUXPICKER.THEME;
+    } else if (!strcasecmp(picker_type, "package/bootlogo")) {
+        picker_extension = "muxblg";
+        picker_title = lang.MUXPICKER.BOOTLOGO;
     } else if (!strcasecmp(picker_type, "package/catalogue")) {
         picker_extension = "muxcat";
         picker_title = lang.MUXPICKER.CATALOGUE;
@@ -465,6 +473,8 @@ int muxpicker_main(char *type, char *ex_dir) {
         const char *message_text = NULL;
         if (!strcasecmp(picker_type, "theme")) {
             message_text = lang.MUXPICKER.NONE.THEME;
+        } else if (!strcasecmp(picker_type, "package/bootlogo")) {
+            message_text = lang.MUXPICKER.NONE.BOOTLOGO;
         } else if (!strcasecmp(picker_type, "package/catalogue")) {
             message_text = lang.MUXPICKER.NONE.CATALOGUE;
         } else if (!strcasecmp(picker_type, "package/config")) {
