@@ -415,20 +415,12 @@ static void ui_refresh_task() {
 int muxpicker_main(char *type, char *ex_dir) {
     snprintf(picker_type, sizeof(picker_type), "%s", type);
     snprintf(sys_dir, sizeof(sys_dir), "%s", ex_dir);
-
     snprintf(base_dir, sizeof(base_dir), (RUN_STORAGE_PATH "%s"), picker_type);
-    if (strcmp(sys_dir, "") == 0)
-        snprintf(sys_dir, sizeof(sys_dir), (RUN_STORAGE_PATH "%s"), picker_type);
+    if (strcmp(sys_dir, "") == 0) snprintf(sys_dir, sizeof(sys_dir), "%s", base_dir);
 
     init_module("muxpicker");
 
     init_theme(1, 1);
-
-    printf("type: %s\n", type);
-    printf("picker_type: %s\n", picker_type);
-    printf("ex_dir: %s\n", ex_dir);
-    printf("base_dir: %s\n", base_dir);
-    printf("sys_dir: %s\n", sys_dir);
 
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
