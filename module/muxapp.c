@@ -230,6 +230,8 @@ static void handle_a() {
                 {lang.MUXAPP.TASK,    &kiosk.APPLICATION.TASK}
         };
 
+        int skip_toast = 0;
+
         for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
             if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
                 if (*(elements[i].kiosk_flag)) {
@@ -239,12 +241,17 @@ static void handle_a() {
 
                     return;
                 }
+
+                skip_toast = 1;
             }
         }
 
         play_sound(SND_CONFIRM, 0);
-        toast_message(lang.MUXAPP.LOAD_APP, 0, 0);
-        refresh_screen(ui_screen);
+
+        if (!skip_toast) {
+            toast_message(lang.MUXAPP.LOAD_APP, 0, 0);
+            refresh_screen(ui_screen);
+        }
 
         write_text_to_file(MUOS_APP_LOAD, "w", CHAR, items[current_item_index].extra_data);
         write_text_to_file(MUOS_AIN_LOAD, "w", INT, current_item_index);
