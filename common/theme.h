@@ -136,6 +136,7 @@ struct theme_config {
     struct {
         uint16_t ALIGNMENT;
         uint16_t SPACING;
+        struct footer_glyph LR;
         struct footer_glyph A;
         struct footer_glyph B;
         struct footer_glyph C;

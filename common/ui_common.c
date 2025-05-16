@@ -29,6 +29,8 @@ lv_obj_t *ui_staNetwork;
 lv_obj_t *ui_staCapacity;
 lv_obj_t *ui_pnlFooter;
 lv_obj_t *ui_lblGridCurrentItem;
+lv_obj_t *ui_lblNavLRGlyph;
+lv_obj_t *ui_lblNavLR;
 lv_obj_t *ui_lblNavAGlyph;
 lv_obj_t *ui_lblNavA;
 lv_obj_t *ui_lblNavBGlyph;
@@ -467,6 +469,9 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
             break;
     }
     lv_obj_set_style_flex_main_place(ui_pnlFooter, e_align, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_lblNavLRGlyph = create_footer_glyph(ui_pnlFooter, theme, "lr", theme->NAV.LR);
+    ui_lblNavLR = create_footer_text(ui_pnlFooter, theme, theme->NAV.LR.TEXT, theme->NAV.LR.TEXT_ALPHA);
 
     ui_lblNavAGlyph = create_footer_glyph(ui_pnlFooter, theme, (config.SETTINGS.ADVANCED.SWAP) ? "b" : "a",
                                           theme->NAV.A);

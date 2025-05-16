@@ -93,7 +93,7 @@ static void restore_tweak_options() {
     }
 }
 
-static void set_setting_value(const char *setting, const char *script_name, int value, int offset) {
+static void set_setting_value(const char *script_name, int value, int offset) {
     char script_path[MAX_BUFFER_SIZE];
     snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/current/input/%s.sh", script_name);
 
@@ -152,12 +152,12 @@ static void save_tweak_options() {
 
     if (lv_dropdown_get_selected(ui_droBrightness_tweakgen) != brightness_original) {
         is_modified++;
-        set_setting_value("brightness", "bright.sh", idx_brightness, 1);
+        set_setting_value("bright.sh", idx_brightness, 1);
     }
 
     if (lv_dropdown_get_selected(ui_droVolume_tweakgen) != volume_original) {
         is_modified++;
-        set_setting_value("volume", "audio.sh", idx_volume, 0);
+        set_setting_value("audio.sh", idx_volume, 0);
     }
 
     if (is_modified > 0) {
@@ -288,6 +288,19 @@ static void list_nav_move(int steps, int direction) {
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblRTC_tweakgen || element_focused == ui_lblAdvanced_tweakgen) {
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    } else {
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    }
 }
 
 static void list_nav_prev(int steps) {
@@ -304,9 +317,9 @@ static void update_option_values() {
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBrightness_tweakgen) {
-        set_setting_value("brightness", "bright", curr_brightness, 1);
+        set_setting_value("bright", curr_brightness, 1);
     } else if (element_focused == ui_lblVolume_tweakgen) {
-        set_setting_value("volume", "audio", curr_volume, 0);
+        set_setting_value("audio", curr_volume, 0);
     }
 }
 
@@ -366,6 +379,7 @@ static void handle_confirm(void) {
 
 static void handle_back(void) {
     if (block_input) return;
+
     if (msgbox_active) {
         play_sound(SND_CONFIRM, 0);
         msgbox_active = 0;
@@ -414,9 +428,15 @@ static void init_elements() {
 
     lv_label_set_text(ui_lblMessage, "");
 
+    lv_label_set_text(ui_lblNavLR, lang.GENERIC.CHANGE);
+    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
+            ui_lblNavLRGlyph,
+            ui_lblNavLR,
+            ui_lblNavAGlyph,
+            ui_lblNavA,
             ui_lblNavBGlyph,
             ui_lblNavB
     };

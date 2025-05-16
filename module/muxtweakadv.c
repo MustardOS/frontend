@@ -673,9 +673,12 @@ static void init_elements() {
 
     lv_label_set_text(ui_lblMessage, "");
 
+    lv_label_set_text(ui_lblNavLR, lang.GENERIC.CHANGE);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
 
     lv_obj_t *nav_hide[] = {
+            ui_lblNavLRGlyph,
+            ui_lblNavLR,
             ui_lblNavBGlyph,
             ui_lblNavB
     };

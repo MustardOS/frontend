@@ -275,6 +275,15 @@ static void list_nav_move(int steps, int direction) {
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
+
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblType_network) {
+        lv_obj_add_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    } else {
+        lv_obj_clear_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    }
 }
 
 static void list_nav_prev(int steps) {
@@ -710,11 +719,14 @@ static void init_elements() {
     process_visual_element(NETWORK, ui_staNetwork);
     process_visual_element(BATTERY, ui_staCapacity);
 
+    lv_label_set_text(ui_lblNavLR, lang.GENERIC.CHANGE);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
     lv_label_set_text(ui_lblNavX, lang.MUXNETWORK.SCAN);
     lv_label_set_text(ui_lblNavY, lang.MUXNETWORK.PROFILES);
 
     lv_obj_t *nav_hide[] = {
+            ui_lblNavLRGlyph,
+            ui_lblNavLR,
             ui_lblNavBGlyph,
             ui_lblNavB,
             ui_lblNavXGlyph,
