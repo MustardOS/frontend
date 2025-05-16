@@ -9,6 +9,9 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
+static char base_dir[PATH_MAX];
+static char sys_dir[PATH_MAX];
+
 #define UI_PANEL 5
 static lv_obj_t *ui_mux_panels[UI_PANEL];
 
@@ -16,10 +19,6 @@ struct help_msg {
     lv_obj_t *element;
     char *message;
 };
-
-static void create_task_items();
-
-static void update_footer_nav_elements();
 
 static void show_help() {
     char *title = items[current_item_index].name;
@@ -33,104 +32,57 @@ static void show_help() {
 }
 
 static void create_task_items() {
-    char task_path[MAX_BUFFER_SIZE];
-    snprintf(task_path, sizeof(task_path),
-             "%s/%s", device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH);
+    DIR *td;
+    struct dirent *tf;
 
-    const char *task_directories[] = {
-            task_path
-    };
-    char task_dir[MAX_BUFFER_SIZE];
+    td = opendir(sys_dir);
+    if (!td) return;
 
-    char **file_names = NULL;
-    size_t file_count = 0;
+    while ((tf = readdir(td))) {
+        if (tf->d_type == DT_DIR) {
+            add_item(&items, &item_count, tf->d_name, tf->d_name, "", FOLDER);
+        } else if (tf->d_type == DT_REG) {
+            char filename[FILENAME_MAX];
+            snprintf(filename, sizeof(filename), "%s/%s", sys_dir, tf->d_name);
 
-    for (size_t dir_index = 0; dir_index < sizeof(task_directories) / sizeof(task_directories[0]); ++dir_index) {
-        snprintf(task_dir, sizeof(task_dir), "%s/", task_directories[dir_index]);
-
-        DIR *ad = opendir(task_dir);
-        if (!ad) continue;
-
-        struct dirent *tf;
-        while ((tf = readdir(ad))) {
-            if (tf->d_type == DT_REG) {
-                char *last_dot = strrchr(tf->d_name, '.');
-                if (last_dot && strcasecmp(last_dot, ".sh") == 0) {
-                    char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-                    if (!temp) {
-                        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
-                        free(file_names);
-                        closedir(ad);
-                        return;
-                    }
-                    file_names = temp;
-
-                    char full_task_name[MAX_BUFFER_SIZE];
-                    snprintf(full_task_name, sizeof(full_task_name), "%s%s", task_dir, tf->d_name);
-                    file_names[file_count] = strdup(full_task_name);
-                    if (!file_names[file_count]) {
-                        perror(lang.SYSTEM.FAIL_DUP_STRING);
-                        free(file_names);
-                        closedir(ad);
-                        return;
-                    }
-                    file_count++;
-                }
+            char *last_dot = strrchr(tf->d_name, '.');
+            if (last_dot && !strcasecmp(last_dot, ".sh")) {
+                *last_dot = '\0';
+                add_item(&items, &item_count, tf->d_name, tf->d_name, filename, ROM);
             }
         }
-        closedir(ad);
     }
 
-    if (!file_names) return;
-    qsort(file_names, file_count, sizeof(char *), str_compare);
+    closedir(td);
+    sort_items(items, item_count);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (size_t i = 0; i < file_count; i++) {
-        if (!file_names[i]) continue;
-        char *base_filename = file_names[i];
-
-        char task_name[MAX_BUFFER_SIZE];
-        snprintf(task_name, sizeof(task_name), "%s",
-                 str_remchar(str_replace(base_filename, strip_dir(base_filename), ""), '/'));
-
-        char task_store[MAX_BUFFER_SIZE];
-        snprintf(task_store, sizeof(task_store), "%s", strip_ext(task_name));
-
+    for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
-        add_item(&items, &item_count, task_store, TS(task_store), file_names[i], ROM);
-
         lv_obj_t *ui_pnlTask = lv_obj_create(ui_pnlContent);
-        if (ui_pnlTask) {
-            apply_theme_list_panel(ui_pnlTask);
-            lv_obj_set_user_data(ui_pnlTask, strdup(TS(task_store)));
+        apply_theme_list_panel(ui_pnlTask);
 
-            lv_obj_t *ui_lblTaskItem = lv_label_create(ui_pnlTask);
-            if (ui_lblTaskItem) apply_theme_list_item(&theme, ui_lblTaskItem, TS(task_store));
+        lv_obj_t *ui_lblTaskItem = lv_label_create(ui_pnlTask);
+        apply_theme_list_item(&theme, ui_lblTaskItem, items[i].display_name);
 
-            lv_obj_t *ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
-            if (ui_lblTaskItemGlyph) {
-                apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module,
-                                       get_script_value(items[i].extra_data, "ICON", "task"));
-            }
+        lv_obj_t *ui_lblTaskItemGlyph = lv_img_create(ui_pnlTask);
+        apply_theme_list_glyph(&theme, ui_lblTaskItemGlyph, mux_module,
+                               items[i].content_type == FOLDER ? "folder" :
+                               get_script_value(items[i].extra_data, "ICON", "task"));
 
-            lv_group_add_obj(ui_group, ui_lblTaskItem);
-            lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);
-            lv_group_add_obj(ui_group_panel, ui_pnlTask);
+        lv_group_add_obj(ui_group, ui_lblTaskItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblTaskItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlTask);
 
-            apply_size_to_content(&theme, ui_pnlContent, ui_lblTaskItem, ui_lblTaskItemGlyph, TS(task_store));
-            apply_text_long_dot(&theme, ui_pnlContent, ui_lblTaskItem, TS(task_store));
-        }
-
-        free(base_filename);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblTaskItem, ui_lblTaskItemGlyph, items[i].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblTaskItem, items[i].display_name);
     }
 
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
-
-    free(file_names);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -167,29 +119,33 @@ static void list_nav_next(int steps) {
 }
 
 static void handle_confirm() {
-    if (msgbox_active) return;
+    if (msgbox_active || ui_count <= 0) return;
 
     play_sound(SND_CONFIRM, 0);
 
     write_text_to_file(MUOS_TIN_LOAD, "w", INT, current_item_index);
 
-    static char task_script[MAX_BUFFER_SIZE];
-    snprintf(task_script, sizeof(task_script), "%s/%s/%s.sh",
-             device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH, items[current_item_index].name);
+    if (items[current_item_index].content_type == FOLDER) {
+        char n_dir[MAX_BUFFER_SIZE];
+        snprintf(n_dir, sizeof(n_dir), "%s/%s",
+                 sys_dir, items[current_item_index].name);
 
-    size_t exec_count;
-    const char *args[] = {task_script, NULL};
-    const char **exec = build_term_exec(args, &exec_count);
+        write_text_to_file(EXPLORE_DIR, "w", CHAR, n_dir);
+    } else {
+        static char task_script[MAX_BUFFER_SIZE];
+        snprintf(task_script, sizeof(task_script), "%s/%s.sh",
+                 sys_dir, items[current_item_index].name);
 
-    if (exec) {
-        if (config.VISUAL.BLACKFADE) {
-            fade_to_black(ui_screen);
-        } else {
-            unload_image_animation();
+        size_t exec_count;
+        const char *args[] = {task_script, NULL};
+        const char **exec = build_term_exec(args, &exec_count);
+
+        if (exec) {
+            config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+            run_exec(exec, exec_count, 0);
         }
-        run_exec(exec, exec_count, 0);
+        free(exec);
     }
-    free(exec);
 
     load_mux("task");
 
@@ -207,6 +163,15 @@ static void handle_back() {
     }
 
     play_sound(SND_BACK, 0);
+    if (strcasecmp(base_dir, sys_dir) == 0) {
+        remove(EXPLORE_DIR);
+        load_mux("app");
+    } else {
+        char *base_dir = strrchr(sys_dir, '/');
+        if (base_dir) write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
+        write_text_to_file(EXPLORE_NAME, "w", CHAR, get_last_subdir(sys_dir, '/', 5));
+        load_mux("task");
+    }
 
     close_input();
     mux_input_stop();
@@ -257,14 +222,6 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    if (!ui_count) {
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    } else {
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
-
 #if TEST_IMAGE
     display_testing_message(ui_screen);
 #endif
@@ -276,18 +233,8 @@ static void init_elements() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-static void update_footer_nav_elements() {
-    if (!ui_count) {
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    } else {
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
-}
-
 static void ui_refresh_task() {
-    if (nav_moved) {
+    if (ui_count > 0 && nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
             lv_obj_set_user_data(element_focused, items[current_item_index].name);
@@ -303,7 +250,11 @@ static void ui_refresh_task() {
     }
 }
 
-int muxtask_main() {
+int muxtask_main(char *ex_dir) {
+    snprintf(sys_dir, sizeof(sys_dir), "%s", ex_dir);
+    snprintf(base_dir, sizeof(base_dir), ("%s/" MUOS_TASK_PATH), device.STORAGE.ROM.MOUNT);
+    if (strcmp(sys_dir, "") == 0) snprintf(sys_dir, sizeof(sys_dir), "%s", base_dir);
+
     init_module("muxtask");
 
     init_theme(1, 1);
@@ -317,7 +268,6 @@ int muxtask_main() {
 
     init_fonts();
     create_task_items();
-    update_footer_nav_elements();
 
     int tin_index = 0;
     if (file_exist(MUOS_TIN_LOAD)) {
@@ -325,21 +275,26 @@ int muxtask_main() {
         remove(MUOS_TIN_LOAD);
     }
 
-    lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
-
-    int nav_hidden = 0;
-    if (ui_count > 0) {
-        nav_hidden = 1;
-        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) list_nav_move(tin_index, +1);
-    } else {
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXTASK.NONE);
+    char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
+    if (e_name_line) {
+        for (size_t i = 0; i < item_count; i++) {
+            if (!strcasecmp(items[i].name, e_name_line)) {
+                tin_index = (int) i;
+                remove(EXPLORE_NAME);
+                break;
+            }
+        }
     }
 
-    struct nav_flag nav_e[] = {
-            {ui_lblNavA,      nav_hidden},
-            {ui_lblNavAGlyph, nav_hidden}
-    };
-    set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
+    lv_obj_set_user_data(lv_group_get_focused(ui_group), items[current_item_index].name);
+
+    if (ui_count > 0) {
+        if (tin_index > -1 && tin_index <= ui_count && current_item_index < ui_count) list_nav_move(tin_index, +1);
+    } else {
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXTASK.NONE);
+    }
 
     load_kiosk(&kiosk);
 

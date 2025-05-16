@@ -273,6 +273,11 @@ static void module_app() {
     }
 }
 
+static void module_task() {
+    load_mux("app");
+    muxtask_main(read_line_char_from(EXPLORE_DIR, 1));
+}
+
 static void module_config() {
     if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_AUTH) &&
         strcmp(previous_module, "muxtweakgen") != 0) {
@@ -321,6 +326,7 @@ static const ModuleEntry modules[] = {
         {"picker",     NULL, NULL, NULL, module_picker},
         {"option",     NULL, NULL, NULL, module_option},
         {"app",        NULL, NULL, NULL, module_app},
+        {"task",       NULL, NULL, NULL, module_task},
         {"config",     NULL, NULL, NULL, module_config},
         {"tweakadv",   NULL, NULL, NULL, module_tweakadv},
         {"rtc",        NULL, NULL, NULL, module_rtc},
@@ -329,7 +335,6 @@ static const ModuleEntry modules[] = {
         // the following modules can be loaded directly
         // without any other functionality
         {"info",        "launcher", "muxinfo",       muxinfo_main,       NULL},
-        {"task",        "app",      "muxtask",       muxtask_main,       NULL},
         {"archive",     "app",      "muxarchive",    muxarchive_main,    NULL},
         {"tweakgen",    "config",   "muxtweakgen",   muxtweakgen_main,   NULL},
         {"connect",     "config",   "muxconnect",    muxconnect_main,    NULL},
