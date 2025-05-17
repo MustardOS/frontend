@@ -877,6 +877,11 @@ void ui_common_handle_volume_down() {
 }
 
 void ui_common_handle_idle() {
+    if (!strcmp(mux_module, "muxcredits") || !strcmp(mux_module, "muxcharge")) {
+        lv_task_handler();
+        return;
+    }
+
     if (brightness_changed || last_brightness != current_brightness) {
         lv_bar_set_value(ui_barProgressBrightness, brightness_to_percent(current_brightness), LV_ANIM_OFF);
 
@@ -886,6 +891,7 @@ void ui_common_handle_idle() {
         char buffer[MAX_BUFFER_SIZE];
         CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 90)
 
+        lv_task_handler();
         return;
     }
 
@@ -898,6 +904,7 @@ void ui_common_handle_idle() {
         char buffer[MAX_BUFFER_SIZE];
         CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, "settings/general/volume", 75)
 
+        lv_task_handler();
         return;
     }
 
