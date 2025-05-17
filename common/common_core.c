@@ -23,7 +23,7 @@ void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name
                  read_line_char_from(core_file, 3));
     }
 
-    LOG_INFO(mux_module, "Reading Configuration: %s", core_file);
+    LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
 }
 
 char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
@@ -213,7 +213,8 @@ void assign_core_parent(char *rom_dir, char *core_dir, const char *core, char *s
     }
 }
 
-void create_core_assignment(char *rom_dir, const char *core, char *sys, char *rom, int cache, enum core_gen_type method) {
+void
+create_core_assignment(char *rom_dir, const char *core, char *sys, char *rom, int cache, enum core_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
@@ -244,25 +245,23 @@ void create_core_assignment(char *rom_dir, const char *core, char *sys, char *ro
 }
 
 bool automatic_assign_core(char *rom_dir) {
-    LOG_INFO(mux_module, "Automatic Assign Core Initiated");
+    LOG_INFO(mux_module, "Automatic Assign Core Initiated")
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-                INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
 
-    if (file_exist(core_file)) {
-        return true;
-    }
+    if (file_exist(core_file)) return true;
     int auto_assign_good = 0;
 
     char assign_file[MAX_BUFFER_SIZE];
     snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
-                device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
+             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
     if (json_valid(read_all_char_from(assign_file))) {
         static char assign_check[MAX_BUFFER_SIZE];
         snprintf(assign_check, sizeof(assign_check), "%s",
-                    str_tolower(get_last_dir(rom_dir)));
+                 str_tolower(get_last_dir(rom_dir)));
         str_remchars(assign_check, " -_+");
 
         struct json auto_assign_config = json_object_get(
@@ -273,44 +272,69 @@ bool automatic_assign_core(char *rom_dir) {
             char ass_config[MAX_BUFFER_SIZE];
             json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-            LOG_INFO(mux_module, "<Automatic Core Assign> Core Assigned: %s", ass_config)
+            LOG_INFO(mux_module, "\tSystem Assigned: %s", ass_config)
 
-            char assigned_core_ini[MAX_BUFFER_SIZE];
-            snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s/%s",
-                        device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config);
+            char assigned_core_global[MAX_BUFFER_SIZE];
+            snprintf(assigned_core_global, sizeof(assigned_core_global), "%s/%s/%s/global.ini",
+                     device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config);
 
-            LOG_INFO(mux_module, "<Automatic Core Assign> Obtaining Core INI: %s", assigned_core_ini)
+            LOG_INFO(mux_module, "\tObtaining System Global INI: %s", assigned_core_global)
 
-            mini_t *core_config_ini = mini_load(assigned_core_ini);
+            mini_t *global_ini = mini_load(assigned_core_global);
 
             static char def_core[MAX_BUFFER_SIZE];
-            strcpy(def_core, get_ini_string(core_config_ini, "global", "default", "none"));
+            strcpy(def_core, get_ini_string(global_ini, "global", "default", "none"));
 
-            LOG_INFO(mux_module, "<Automatic Core Assign> Default Core: %s", def_core)
+            LOG_INFO(mux_module, "\tDefault Core: %s", def_core)
 
             if (strcmp(def_core, "none") != 0) {
+                char default_core[MAX_BUFFER_SIZE];
+                snprintf(default_core, sizeof(default_core), "%s/%s/%s/%s.ini",
+                         device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config, def_core);
+
+                mini_t *core_ini = mini_load(default_core);
+
                 static char auto_core[MAX_BUFFER_SIZE];
-                strcpy(auto_core, get_ini_string(core_config_ini, def_core, "core", "invalid"));
+                strcpy(auto_core, get_ini_string(core_ini, def_core, "core", "none"));
 
-                LOG_INFO(mux_module, "<Automatic Core Assign> Assigned Core To: %s", auto_core)
+                if (strcmp(auto_core, "none") != 0) {
+                    LOG_INFO(mux_module, "\tAssigned Core To: %s", auto_core)
 
-                if (strcmp(def_core, "invalid") != 0) {
                     static char core_catalogue[MAX_BUFFER_SIZE];
-                    strcpy(core_catalogue, get_ini_string(core_config_ini, "global", "catalogue", "none"));
+                    static int core_lookup;
 
-                    int name_lookup = get_ini_int(core_config_ini, "global", "lookup", 0);
+                    char *use_local_catalogue = get_ini_string(core_ini, def_core, "catalogue", "none");
+                    if (strcmp(use_local_catalogue, "none") != 0) {
+                        strcpy(core_catalogue, use_local_catalogue);
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Catalogue: %s", core_catalogue)
+                    } else {
+                        strcpy(core_catalogue, get_ini_string(global_ini, "global", "catalogue", "none"));
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Catalogue: %s", core_catalogue)
+                    }
 
-                    LOG_INFO(mux_module, "<Automatic Core Assign> Core Cache: %d", name_lookup)
-                    LOG_INFO(mux_module, "<Automatic Core Assign> Core Catalogue: %s", core_catalogue)
+                    int use_local_lookup = get_ini_int(core_ini, def_core, "lookup", 0);
+                    if (use_local_lookup) {
+                        core_lookup = use_local_lookup;
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Lookup: %d", core_lookup)
+                    } else {
+                        core_lookup = get_ini_int(global_ini, "global", "lookup", 0);
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Lookup: %d", core_lookup)
+                    }
 
-                    create_core_assignment(rom_dir, auto_core, core_catalogue, "", name_lookup, DIRECTORY_NO_WIPE);
+                    create_core_assignment(rom_dir, auto_core, core_catalogue, "", core_lookup, DIRECTORY_NO_WIPE);
 
                     auto_assign_good = 1;
-                    LOG_SUCCESS(mux_module, "<Automatic Core Assign> Successful")
+                    LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful")
+                } else {
+                    LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", auto_core)
                 }
+
+                mini_free(core_ini);
+            } else {
+                LOG_ERROR(mux_module, "\tInvalid Core or Not Found: %s", def_core)
             }
 
-            mini_free(core_config_ini);
+            mini_free(global_ini);
         }
     }
 

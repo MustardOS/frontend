@@ -160,25 +160,11 @@ static char **read_available_governors(const char *filename, int *count) {
     return governors;
 }
 
-static void create_gov_items(const char *target) {
-    char filename[FILENAME_MAX];
-    snprintf(filename, sizeof(filename), "%s/%s/%s.ini",
-             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
-
+static void generate_available_governors(const char *default_governor) {
     int governor_count;
     char **governors = read_available_governors("/sys/devices/system/cpu/cpu0/cpufreq/"
                                                 "scaling_available_governors", &governor_count);
     if (!governors) return;
-
-    char *assign_default = NULL;
-    mini_t *assign_ini = mini_try_load(filename);
-
-    if (assign_ini) {
-        const char *a_def = mini_get_string(assign_ini, "global", "governor", device.CPU.DEFAULT);
-        assign_default = malloc(strlen(a_def) + 1);
-        if (assign_default) strcpy(assign_default, a_def);
-        mini_free(assign_ini);
-    }
 
     qsort(governors, governor_count, sizeof(char *), str_compare);
 
@@ -201,7 +187,7 @@ static void create_gov_items(const char *target) {
 
         lv_obj_t *ui_lblGovItemGlyph = lv_img_create(ui_pnlGov);
 
-        char *glyph = !strcasecmp(governors[i], assign_default) ? "default" : "governor";
+        char *glyph = !strcasecmp(governors[i], default_governor) ? "default" : "governor";
         apply_theme_list_glyph(&theme, ui_lblGovItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblGovItem);
@@ -214,10 +200,45 @@ static void create_gov_items(const char *target) {
         free(governors[i]);
     }
 
-    free(assign_default);
-
     if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
     free(governors);
+}
+
+static void create_gov_items(const char *target) {
+    if (!strcmp(target, "none")) generate_available_governors(target);
+
+    char assign_dir[PATH_MAX];
+    snprintf(assign_dir, sizeof(assign_dir), "%s/%s/%s",
+             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
+
+    char global_assign[FILENAME_MAX];
+    snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
+
+    mini_t *global_config = mini_load(global_assign);
+
+    char *target_default = get_ini_string(global_config, "global", "name", "none");
+    if (!strcmp(target_default, "none")) return;
+
+    char local_assign[FILENAME_MAX];
+    snprintf(local_assign, sizeof(local_assign), "%s/%s.ini", assign_dir, target_default);
+    mini_t *local_config = mini_load(local_assign);
+
+    char *use_governor;
+    char *local_governor = get_ini_string(local_config, target_default, "governor", "none");
+    if (!strcmp(local_governor, "none")) {
+        use_governor = local_governor;
+    } else {
+        use_governor = get_ini_string(global_config, "global", "governor", device.CPU.DEFAULT);
+    }
+
+    char default_governor[FILENAME_MAX];
+    strncpy(default_governor, use_governor, sizeof(default_governor));
+    default_governor[sizeof(default_governor) - 1] = '\0';
+
+    mini_free(global_config);
+    mini_free(local_config);
+
+    generate_available_governors(default_governor);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -427,40 +448,55 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
                 char ass_config[MAX_BUFFER_SIZE];
                 json_string_copy(auto_assign_config, ass_config, sizeof(ass_config));
 
-                LOG_INFO(mux_module, "<Automatic Governor Assign> Core Assigned: %s", ass_config)
+                LOG_INFO(mux_module, "\tCore Assigned: %s", ass_config)
 
-                char assigned_core_ini[MAX_BUFFER_SIZE];
-                snprintf(assigned_core_ini, sizeof(assigned_core_ini), "%s/%s/%s",
+                char assigned_global[MAX_BUFFER_SIZE];
+                snprintf(assigned_global, sizeof(assigned_global), "%s/%s/%s/global.ini",
                          device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config);
 
-                LOG_INFO(mux_module, "<Automatic Governor Assign> Obtaining Core INI: %s", assigned_core_ini)
+                LOG_INFO(mux_module, "\tObtaining Core INI: %s", assigned_global)
 
-                mini_t *core_config_ini = mini_load(assigned_core_ini);
+                mini_t *global_ini = mini_load(assigned_global);
 
                 static char def_gov[MAX_BUFFER_SIZE];
-                strcpy(def_gov, get_ini_string(core_config_ini, "global", "governor", "none"));
+                strcpy(def_gov, get_ini_string(global_ini, "global", "governor", "none"));
 
-                LOG_INFO(mux_module, "<Automatic Governor Assign> Default Governor: %s", def_gov)
+                static char def_sys[MAX_BUFFER_SIZE];
+                strcpy(def_sys, get_ini_string(global_ini, "global", "default", "none"));
 
                 if (strcmp(def_gov, "none") != 0) {
-                    static char auto_gov[MAX_BUFFER_SIZE];
-                    strcpy(auto_gov, get_ini_string(core_config_ini, "global", "governor", device.CPU.DEFAULT));
+                    char default_core[MAX_BUFFER_SIZE];
+                    snprintf(default_core, sizeof(default_core), "%s/%s/%s/%s.ini",
+                             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config, def_sys);
 
-                    LOG_INFO(mux_module, "<Automatic Governor Assign> Assigned Governor To: %s", auto_gov)
-                    create_gov_assignment(auto_gov, rom_name, DIRECTORY_NO_WIPE);
+                    static char core_governor[MAX_BUFFER_SIZE];
+                    mini_t *local_ini = mini_load(default_core);
 
-                    LOG_SUCCESS(mux_module, "<Automatic Governor Assign> Successful")
+                    char *use_local_governor = get_ini_string(local_ini, def_sys, "governor", "none");
+                    if (strcmp(use_local_governor, "none") != 0) {
+                        strcpy(core_governor, use_local_governor);
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor)
+                    } else {
+                        strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor)
+                    }
+
+                    mini_free(local_ini);
+
+                    create_gov_assignment(core_governor, rom_name, DIRECTORY_NO_WIPE);
+                    LOG_SUCCESS(mux_module, "\tGovernor Assignment Successful")
                 } else {
-                    LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
+                    LOG_INFO(mux_module, "\tAssigned Governor To Default: %s",
+                             device.CPU.DEFAULT)
                     create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
                 }
 
-                mini_free(core_config_ini);
+                mini_free(global_ini);
 
                 close_input();
                 return 0;
             } else {
-                LOG_INFO(mux_module, "Assigned Governor To Default: %s", device.CPU.DEFAULT)
+                LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.CPU.DEFAULT)
                 create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
 
                 close_input();
@@ -505,13 +541,14 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
         }
     }
 
+    char title[MAX_BUFFER_SIZE];
+    snprintf(title, sizeof(title), "%s - %s", lang.MUXGOV.TITLE, get_last_dir(rom_dir));
+    lv_label_set_text(ui_lblTitle, title);
+
     create_gov_items(rom_system);
 
     if (ui_count > 0) {
         LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s")
-        char title[MAX_BUFFER_SIZE];
-        snprintf(title, sizeof(title), "%s - %s", lang.MUXGOV.TITLE, get_last_dir(rom_dir));
-        lv_label_set_text(ui_lblTitle, title);
         list_nav_next(0);
     } else {
         LOG_ERROR(mux_module, "No Governors Detected!")

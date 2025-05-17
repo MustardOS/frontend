@@ -3,7 +3,6 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 #include <linux/limits.h>
 #include "../common/init.h"
@@ -26,40 +25,6 @@ static void show_help() {
                      lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP);
 }
 
-static char **read_assign_ini(const char *filename, int *cores) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
-        return NULL;
-    }
-
-    char **headers = (char **) malloc(MAX_BUFFER_SIZE * sizeof(char *));
-    if (!headers) {
-        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
-        fclose(file);
-        return NULL;
-    }
-
-    *cores = 0;
-    char line[MAX_BUFFER_SIZE];
-    while (fgets(line, sizeof(line), file)) {
-        if (line[0] == '[') {
-            char *start = strstr(line, "[");
-            char *end = strstr(line, "]");
-            if (start && end && start < end) {
-                size_t len = end - start - 1;
-                headers[*cores] = (char *) malloc((len + 1) * sizeof(char));
-                strncpy(headers[*cores], start + 1, len);
-                headers[*cores][len] = '\0';
-                (*cores)++;
-            }
-        }
-    }
-
-    fclose(file);
-    return headers;
-}
-
 static void create_system_items() {
     DIR *ad;
     struct dirent *af;
@@ -71,192 +36,140 @@ static void create_system_items() {
     ad = opendir(assign_dir);
     if (!ad) return;
 
-    char **file_names = NULL;
-    size_t file_count = 0;
+    while ((af = readdir(ad))) {
+        if (af->d_type == DT_DIR) add_item(&items, &item_count, af->d_name, af->d_name, "", FOLDER);
+    }
+
+    closedir(ad);
+    sort_items(items, item_count);
+
+    ui_group = lv_group_create();
+    ui_group_glyph = lv_group_create();
+    ui_group_panel = lv_group_create();
+
+    for (size_t i = 0; i < item_count; i++) {
+        ui_count++;
+
+        lv_obj_t *ui_pnlSystem = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(ui_pnlSystem);
+
+        lv_obj_t *ui_lblSystemItem = lv_label_create(ui_pnlSystem);
+        apply_theme_list_item(&theme, ui_lblSystemItem, items[i].name);
+        lv_obj_set_user_data(ui_lblSystemItem, items[i].name);
+
+        lv_obj_t *ui_lblSystemItemGlyph = lv_img_create(ui_pnlSystem);
+        apply_theme_list_glyph(&theme, ui_lblSystemItemGlyph, mux_module, "system");
+
+        lv_group_add_obj(ui_group, ui_lblSystemItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblSystemItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlSystem);
+
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblSystemItem, ui_lblSystemItemGlyph, items[i].name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblSystemItem, items[i].name);
+    }
+
+    if (ui_count > 0) {
+        lv_obj_update_layout(ui_pnlContent);
+        free_items(&items, &item_count);
+    }
+}
+
+static void create_core_items(const char *target) {
+    char assign_dir[PATH_MAX];
+    snprintf(assign_dir, sizeof(assign_dir), "%s/%s/%s",
+             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
+
+    char global_assign[FILENAME_MAX];
+    snprintf(global_assign, sizeof(global_assign), "%s/global.ini", assign_dir);
+
+    char default_assign[FILENAME_MAX];
+    mini_t *global_config = mini_load(global_assign);
+    strncpy(default_assign, get_ini_string(global_config, "global", "default", "none"), sizeof(default_assign));
+    default_assign[sizeof(default_assign) - 1] = '\0';
+    mini_free(global_config);
+
+    if (!strcmp(default_assign, "none")) return;
+
+    DIR *ad;
+    struct dirent *af;
+
+    ad = opendir(assign_dir);
+    if (!ad) return;
 
     while ((af = readdir(ad))) {
         if (af->d_type == DT_REG) {
-            char filename[FILENAME_MAX];
-            snprintf(filename, sizeof(filename), "%s/%s", assign_dir, af->d_name);
+            if (strcasecmp(af->d_name, "global.ini") == 0) continue;
+
+            char core_file[FILENAME_MAX];
+            snprintf(core_file, sizeof(core_file), "%s/%s", assign_dir, af->d_name);
 
             char *last_dot = strrchr(af->d_name, '.');
-            if (last_dot) *last_dot = '\0';
+            if (last_dot && !strcasecmp(last_dot, ".ini")) {
+                *last_dot = '\0';
 
-            char **temp = realloc(file_names, (file_count + 1) * sizeof(char *));
-            if (!temp) {
-                if (file_names) {
-                    for (size_t i = 0; i < file_count; i++) {
-                        if (!file_names[i]) continue;
-                        free(file_names[i]);
-                    }
-                    free(file_names);
-                    file_names = NULL;
+                mini_t *core_config = mini_load(core_file);
+
+                char assign_name[FILENAME_MAX];
+                strncpy(assign_name, get_ini_string(core_config, af->d_name, "name", "none"), sizeof(assign_name));
+                assign_name[sizeof(assign_name) - 1] = '\0';
+
+                char assign_core[FILENAME_MAX];
+                strncpy(assign_core, get_ini_string(core_config, af->d_name, "core", "none"), sizeof(assign_core));
+                assign_core[sizeof(assign_core) - 1] = '\0';
+
+                mini_free(core_config);
+
+                if (strcmp(assign_core, "none") != 0) {
+                    add_item(&items, &item_count, assign_name, af->d_name, assign_core, ROM);
                 }
-                break;
             }
-
-            file_names = temp;
-            file_names[file_count] = strdup(af->d_name);
-            if (!file_names[file_count]) {
-                for (size_t i = 0; i < file_count; i++) {
-                    if (!file_names[i]) continue;
-                    free(file_names[i]);
-                }
-                free(file_names);
-                file_names = NULL;
-                break;
-            }
-
-            file_count++;
         }
     }
 
     closedir(ad);
-
-    if (!file_names) return;
-    qsort(file_names, file_count, sizeof(char *), str_compare);
+    sort_items(items, item_count);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_count = 0;
-    if (file_count > 0) {
-        for (size_t i = 0; i < file_count; i++) {
-            if (!file_names[i]) continue;
-            char *base_filename = file_names[i];
-
-            ui_count++;
-
-            lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
-            apply_theme_list_panel(ui_pnlCore);
-            lv_obj_set_user_data(ui_pnlCore, strdup(base_filename));
-
-            lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
-            apply_theme_list_item(&theme, ui_lblCoreItem, base_filename);
-            lv_obj_set_user_data(ui_lblCoreItem, strdup(base_filename));
-
-            lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
-            apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, "system");
-
-            lv_group_add_obj(ui_group, ui_lblCoreItem);
-            lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
-            lv_group_add_obj(ui_group_panel, ui_pnlCore);
-
-            apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, base_filename);
-            apply_text_long_dot(&theme, ui_pnlContent, ui_lblCoreItem, base_filename);
-        }
-
-        if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
-    }
-}
-
-static char *get_raw_core(const char *group) {
-    char chosen_core_ini[FILENAME_MAX];
-    snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-             "%s/%s/%s.ini",
-             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
-
-    mini_t *chosen_core = mini_load(chosen_core_ini);
-
-    const char *raw_core = strdup(mini_get_string(
-            chosen_core, group,
-            "core", "none"));
-    char *raw_core_copy = NULL;
-    raw_core_copy = malloc(strlen(raw_core) + 1);
-    if (raw_core_copy) strcpy(raw_core_copy, raw_core);
-
-    mini_free(chosen_core);
-    return raw_core_copy;
-}
-
-static void create_core_items(const char *target) {
-    char *directory_core = get_directory_core(rom_dir, 1);
-    char *file_core = get_file_core(rom_dir, rom_name);
-    char filename[FILENAME_MAX];
-    snprintf(filename, sizeof(filename), "%s/%s/%s.ini",
-             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, target);
-
-    int cores;
-    char **core_headers = read_assign_ini(filename, &cores);
-    if (!core_headers) return;
-
-    char *assign_default = NULL;
-    mini_t *assign_ini = mini_try_load(filename);
-
-    if (assign_ini) {
-        const char *a_def = mini_get_string(assign_ini, "global", "default", "");
-        assign_default = malloc(strlen(a_def) + 1);
-        if (assign_default) strcpy(assign_default, a_def);
-        mini_free(assign_ini);
-    }
-
-    qsort(core_headers, cores, sizeof(char *), str_compare);
-
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
-
-    const char *skip_entries[] = {
-            "bios", "global"
-    };
-
-    ui_count = 0;
-    for (int i = 0; i < cores; ++i) {
-        int skip = 0;
-        for (int k = 0; k < sizeof(skip_entries) / sizeof(skip_entries[0]); k++) {
-            if (!strcasecmp(core_headers[i], skip_entries[k])) {
-                skip = 1;
-                break;
-            }
-        }
-
-        if (skip) {
-            LOG_INFO(mux_module, "Skipping Non-Assignable Core: %s", core_headers[i])
-            continue;
-        }
-
-        LOG_SUCCESS(mux_module, "Generating Item For Core: %s", core_headers[i])
-
+    for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
-        char *rawcore = get_raw_core(core_headers[i]);
+        char *directory_core = get_directory_core(rom_dir, 1);
+        char *file_core = get_file_core(rom_dir, rom_name);
+
         char display_name[MAX_BUFFER_SIZE];
-        if (strcasecmp(file_core, directory_core) != 0 && !strcasecmp(file_core, rawcore)) {
-            snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], lang.MUXASSIGN.FILE);
-        } else if (!strcasecmp(directory_core, rawcore)) {
-            snprintf(display_name, sizeof(display_name), "%s (%s)", core_headers[i], lang.MUXASSIGN.DIR);
+        if (strcasecmp(file_core, directory_core) != 0 && !strcasecmp(file_core, items[i].extra_data)) {
+            snprintf(display_name, sizeof(display_name), "%s (%s)", items[i].name, lang.MUXASSIGN.FILE);
+        } else if (!strcasecmp(directory_core, items[i].extra_data)) {
+            snprintf(display_name, sizeof(display_name), "%s (%s)", items[i].name, lang.MUXASSIGN.DIR);
         } else {
-            snprintf(display_name, sizeof(display_name), "%s", core_headers[i]);
+            snprintf(display_name, sizeof(display_name), "%s", items[i].name);
         }
 
         lv_obj_t *ui_pnlCore = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(ui_pnlCore);
-        lv_obj_set_user_data(ui_pnlCore, strdup(display_name));
 
         lv_obj_t *ui_lblCoreItem = lv_label_create(ui_pnlCore);
-        apply_theme_list_item(&theme, ui_lblCoreItem, display_name);
-        lv_obj_set_user_data(ui_lblCoreItem, strdup(core_headers[i]));
+        apply_theme_list_item(&theme, ui_lblCoreItem, items[i].name);
 
         lv_obj_t *ui_lblCoreItemGlyph = lv_img_create(ui_pnlCore);
-
-        char *glyph = !strcasecmp(core_headers[i], assign_default) ? "default" : "core";
+        char *glyph = !strcasecmp(items[i].name, default_assign) ? "default" : "core";
         apply_theme_list_glyph(&theme, ui_lblCoreItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblCoreItem);
         lv_group_add_obj(ui_group_glyph, ui_lblCoreItemGlyph);
         lv_group_add_obj(ui_group_panel, ui_pnlCore);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, display_name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblCoreItem, display_name);
-
-        free(core_headers[i]);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblCoreItem, ui_lblCoreItemGlyph, items[i].name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblCoreItem, items[i].name);
     }
 
-    free(assign_default);
-
-    if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
-    free(core_headers);
+    if (ui_count > 0) {
+        lv_obj_update_layout(ui_pnlContent);
+        free_items(&items, &item_count);
+    }
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -292,43 +205,6 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
-    if (msgbox_active) return;
-
-    const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
-    if (!strcasecmp(rom_system, "none")) {
-        load_assign(rom_name, rom_dir, u_data, 0);
-    } else {
-        LOG_INFO(mux_module, "Single Core Assignment Triggered")
-
-        play_sound(SND_CONFIRM, 0);
-
-        char chosen_core_ini[FILENAME_MAX];
-        snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                 "%s/%s/%s.ini",
-                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
-        mini_t *chosen_core = mini_load(chosen_core_ini);
-
-        const char *raw_core = mini_get_string(
-                chosen_core, u_data,
-                "core", "none");
-
-        int name_lookup = get_ini_int(chosen_core, "global", "lookup", 0);
-
-        static char core_catalogue[MAX_BUFFER_SIZE];
-        strcpy(core_catalogue, get_ini_string(chosen_core, "global",
-                                              "catalogue", rom_system));
-
-        create_core_assignment(rom_dir, raw_core, core_catalogue, rom_name,
-                               name_lookup, SINGLE);
-
-        mini_free(chosen_core);
-    }
-
-    close_input();
-    mux_input_stop();
-}
-
 static void handle_b() {
     if (msgbox_active) {
         play_sound(SND_CONFIRM, 0);
@@ -353,76 +229,83 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_x() {
+static void handle_core_assignment(const char *log_msg, int assignment_mode) {
+    LOG_INFO(mux_module, "%s", log_msg)
+    play_sound(SND_CONFIRM, 0);
+
+    char *selected_item = str_tolower(lv_label_get_text(lv_group_get_focused(ui_group)));
+    LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, lv_label_get_text(lv_group_get_focused(ui_group)))
+
+    char assign_dir[PATH_MAX];
+    snprintf(assign_dir, sizeof(assign_dir), "%s/%s/%s",
+             device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
+
+    char global_core[FILENAME_MAX];
+    snprintf(global_core, sizeof(global_core), "%s/global.ini",
+             assign_dir);
+    mini_t *global_ini = mini_load(global_core);
+    LOG_INFO(mux_module, "Global Core Path: %s", global_core)
+
+    char local_core[FILENAME_MAX];
+    snprintf(local_core, sizeof(local_core), "%s/%s.ini",
+             assign_dir, selected_item);
+    mini_t *local_ini = mini_load(local_core);
+    LOG_INFO(mux_module, "Global Core Path: %s", local_core)
+
+    static char core_catalogue[MAX_BUFFER_SIZE];
+    char *use_local_catalogue = get_ini_string(local_ini, selected_item, "catalogue", "none");
+    if (strcmp(use_local_catalogue, "none") != 0) {
+        strcpy(core_catalogue, use_local_catalogue);
+    } else {
+        strcpy(core_catalogue, get_ini_string(global_ini, "global", "catalogue", "none"));
+    }
+    LOG_INFO(mux_module, "Content Core Catalogue: %s", core_catalogue)
+
+    static int core_lookup;
+    int use_local_lookup = get_ini_int(local_ini, selected_item, "lookup", 0);
+    core_lookup = use_local_lookup ? use_local_lookup : get_ini_int(global_ini, "global", "lookup", 0);
+    LOG_INFO(mux_module, "Content Core Lookup: %d", core_lookup)
+
+    static char core_launch[MAX_BUFFER_SIZE];
+    strcpy(core_launch, get_ini_string(local_ini, selected_item, "core", "none"));
+    LOG_INFO(mux_module, "Content Core Launcher: %s", core_launch)
+
+    create_core_assignment(rom_dir, core_launch, core_catalogue, rom_name, core_lookup, assignment_mode);
+
+    mini_free(global_ini);
+    mini_free(local_ini);
+}
+
+static void handle_a() {
     if (msgbox_active) return;
 
-    if (strcasecmp(rom_system, "none") != 0) {
-        LOG_INFO(mux_module, "Directory Core Assignment Triggered")
-
+    if (!strcasecmp(rom_system, "none")) {
         play_sound(SND_CONFIRM, 0);
-
-        char chosen_core_ini[FILENAME_MAX];
-        snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                 "%s/%s/%s.ini",
-                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
-
-        mini_t *chosen_core = mini_load(chosen_core_ini);
-
-        const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
-        const char *raw_core = mini_get_string(
-                chosen_core, u_data,
-                "core", "none");
-
-        int name_lookup = get_ini_int(chosen_core, "global", "lookup", 0);
-
-        static char core_catalogue[MAX_BUFFER_SIZE];
-        strcpy(core_catalogue, get_ini_string(chosen_core, "global",
-                                              "catalogue", rom_system));
-
-        create_core_assignment(rom_dir, raw_core, core_catalogue, rom_name,
-                               name_lookup, DIRECTORY);
-
-        mini_free(chosen_core);
-
-        close_input();
-        mux_input_stop();
+        load_assign(rom_name, rom_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0);
+    } else {
+        handle_core_assignment("Single Core Assignment Triggered", SINGLE);
     }
+
+    close_input();
+    mux_input_stop();
+}
+
+static void handle_x() {
+    if (msgbox_active || !strcasecmp(rom_system, "none")) return;
+
+    handle_core_assignment("Directory Core Assignment Triggered", DIRECTORY);
+
+    close_input();
+    mux_input_stop();
 }
 
 static void handle_y() {
-    if (msgbox_active) return;
+    if (msgbox_active || !strcasecmp(rom_system, "none")) return;
 
-    if (strcasecmp(rom_system, "none") != 0) {
-        LOG_INFO(mux_module, "Parent Core Assignment Triggered")
+    handle_core_assignment("Parent Core Assignment Triggered", PARENT);
 
-        play_sound(SND_CONFIRM, 0);
-
-        char chosen_core_ini[FILENAME_MAX];
-        snprintf(chosen_core_ini, sizeof(chosen_core_ini),
-                 "%s/%s/%s.ini",
-                 device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, rom_system);
-
-        mini_t *chosen_core = mini_load(chosen_core_ini);
-
-        const char *u_data = str_trim(lv_obj_get_user_data(lv_group_get_focused(ui_group)));
-        const char *raw_core = mini_get_string(
-                chosen_core, u_data,
-                "core", "none");
-
-        int name_lookup = get_ini_int(chosen_core, "global", "lookup", 0);
-
-        static char core_catalogue[MAX_BUFFER_SIZE];
-        strcpy(core_catalogue, get_ini_string(chosen_core, "global",
-                                              "catalogue", rom_system));
-
-        create_core_assignment(rom_dir, raw_core, core_catalogue, rom_name,
-                               name_lookup, PARENT);
-
-        mini_free(chosen_core);
-
-        close_input();
-        mux_input_stop();
-    }
+    close_input();
+    mux_input_stop();
 }
 
 static void handle_help() {
