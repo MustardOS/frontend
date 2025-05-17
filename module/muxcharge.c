@@ -13,14 +13,11 @@ static char voltage_info[MAX_BUFFER_SIZE];
 
 lv_timer_t *battery_timer;
 
+#define CHARGER_BRIGHT "/tmp/charger_bright"
 #define CHARGER_EXIT "/tmp/charger_exit"
 
 static void check_for_cable() {
-    if (file_exist(device.BATTERY.CHARGER)) {
-        if (read_line_int_from(device.BATTERY.CHARGER, 1) == 0) {
-            exit_status = 1;
-        }
-    }
+    if (file_exist(device.BATTERY.CHARGER) && !read_line_int_from(device.BATTERY.CHARGER, 1)) exit_status = 1;
 }
 
 static void set_brightness(int brightness) {
@@ -46,7 +43,7 @@ static void handle_power_short(void) {
     }
 
     blank = 0;
-    set_brightness(read_line_int_from(INTERNAL_PATH "config/brightness.txt", 1));
+    set_brightness(read_line_int_from(CHARGER_BRIGHT, 1));
 }
 
 static void handle_idle(void) {
@@ -96,7 +93,9 @@ int main() {
     init_display();
 
     init_muxcharge();
-    set_brightness(read_line_int_from(INTERNAL_PATH "config/brightness.txt", 1));
+
+    write_text_to_file(CHARGER_BRIGHT, "w", INT, config.SETTINGS.GENERAL.BRIGHTNESS);
+    set_brightness(read_line_int_from(CHARGER_BRIGHT, 1));
 
     lv_obj_set_user_data(ui_scrCharge_charge, mux_module);
     lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.POWER);
