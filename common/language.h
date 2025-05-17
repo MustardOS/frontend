@@ -416,6 +416,9 @@ struct mux_lang {
         char CURRENT[MAX_BUFFER_SIZE];
         char DIRECTORY[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];
+        char CORE[MAX_BUFFER_SIZE];
+        char GOVERNOR[MAX_BUFFER_SIZE];
+        char NOT_ASSIGNED[MAX_BUFFER_SIZE];
         struct {
             char ASSIGN_CORE[MAX_BUFFER_SIZE];
             char ASSIGN_GOV[MAX_BUFFER_SIZE];

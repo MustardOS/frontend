@@ -37,18 +37,6 @@ static void show_help(lv_obj_t *element_focused) {
 
     if (element_focused == help_messages[0].element) {
         snprintf(message, sizeof(message), "%s", help_messages[0].message);
-    } else if (element_focused == help_messages[1].element) {
-        snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s",
-                 lang.MUXOPTION.HELP.ASSIGN_CORE,
-                 lang.MUXOPTION.CURRENT,
-                 lang.MUXOPTION.DIRECTORY, get_directory_core(rom_dir, 1),
-                 lang.MUXOPTION.INDIVIDUAL, get_file_core(rom_dir, rom_name));
-    } else if (element_focused == help_messages[2].element) {
-        snprintf(message, sizeof(message), "%s\n\n%s:\n%s:  %s\n%s:  %s",
-                 lang.MUXOPTION.HELP.ASSIGN_GOV,
-                 lang.MUXOPTION.CURRENT,
-                 lang.MUXOPTION.DIRECTORY, get_directory_governor(rom_dir),
-                 lang.MUXOPTION.INDIVIDUAL, get_file_governor(rom_dir, rom_name));
     }
 
     if (strlen(message) <= 1) snprintf(message, sizeof(message), "%s", lang.GENERIC.NO_HELP);
@@ -80,14 +68,67 @@ static void add_info_item(int index, char *item_text, char *glyph_name, bool add
 }
 
 static void add_info_items() {
-    char game_directory[FILENAME_MAX];
-    snprintf(game_directory, sizeof(game_directory), "%s:  %s", lang.MUXOPTION.DIRECTORY,
-             get_last_subdir(rom_dir, '/', 4));
-    add_info_item(0, game_directory, "folder", false);
-    char game_name[FILENAME_MAX];
-    snprintf(game_name, sizeof(game_name), "%s:  %s", lang.MUXOPTION.NAME, rom_name);
-    add_info_item(1, game_name, "rom", false);
-    add_info_item(2, "", "", true);
+    char buffer[FILENAME_MAX];
+    int line_index = 0;
+
+    snprintf(buffer, sizeof(buffer), "%s:  %s",
+             lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4));
+    add_info_item(line_index++, buffer, "folder", false);
+
+    snprintf(buffer, sizeof(buffer), "%s:  %s",
+             lang.MUXOPTION.NAME, rom_name);
+    add_info_item(line_index++, buffer, "rom", false);
+
+    const char *dot = strrchr(rom_name, '.');
+    int has_extension = (dot && dot != rom_name);
+
+    if (has_extension) {
+        const char *core = strip_ext(get_file_core(rom_dir, rom_name));
+        const char *core_suffix = NULL;
+
+        if (!*core) {
+            core = get_directory_core(rom_dir, 1);
+            core_suffix = *core ? lang.MUXOPTION.DIRECTORY : NULL;
+        } else {
+            core_suffix = lang.MUXOPTION.INDIVIDUAL;
+        }
+
+        if (!*core) {
+            core = lang.MUXOPTION.NOT_ASSIGNED;
+            core_suffix = NULL;
+        }
+
+        snprintf(buffer, sizeof(buffer), "%s:  %s%s%s%s",
+                 lang.MUXOPTION.CORE, core,
+                 core_suffix ? "  (" : "",
+                 core_suffix ? core_suffix : "",
+                 core_suffix ? ")" : "");
+        add_info_item(line_index++, buffer, "core", false);
+
+        const char *governor = get_file_governor(rom_dir, rom_name);
+        const char *gov_suffix = NULL;
+
+        if (!*governor) {
+            governor = get_directory_governor(rom_dir);
+            gov_suffix = *governor ? lang.MUXOPTION.DIRECTORY : NULL;
+        } else {
+            gov_suffix = lang.MUXOPTION.INDIVIDUAL;
+        }
+
+        if (!*governor) {
+            governor = lang.MUXOPTION.NOT_ASSIGNED;
+            gov_suffix = NULL;
+        }
+
+        snprintf(buffer, sizeof(buffer), "%s:  %s%s%s%s",
+                 lang.MUXOPTION.GOVERNOR, governor,
+                 gov_suffix ? "  (" : "",
+                 gov_suffix ? gov_suffix : "",
+                 gov_suffix ? ")" : "");
+        add_info_item(line_index++, buffer, "governor", false);
+    }
+
+    add_info_item(line_index, "", "", true);
 }
 
 static void init_navigation_group() {

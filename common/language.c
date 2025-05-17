@@ -367,6 +367,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.CURRENT, "Current");
     SPECIFIC_FIELD(lang->MUXOPTION.DIRECTORY, "Directory");
     SPECIFIC_FIELD(lang->MUXOPTION.INDIVIDUAL, "Individual");
+    SPECIFIC_FIELD(lang->MUXOPTION.CORE, "Core");
+    SPECIFIC_FIELD(lang->MUXOPTION.GOVERNOR, "Governor");
+    SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.ASSIGN_CORE, "Set the system core or external emulator for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.ASSIGN_GOV, "Set the CPU governor for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
