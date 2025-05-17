@@ -1152,9 +1152,6 @@ int muxplore_main(int index, char *dir) {
     snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? CONTENT_PATH : dir);
     sys_index = index;
 
-    printf("sys_dir: %s\n", sys_dir);
-    printf("sys_index: %d\n", sys_index);
-
     init_module("muxplore");
 
     init_theme(1, 1);
