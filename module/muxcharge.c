@@ -4,14 +4,14 @@
 #include <stdio.h>
 #include "../common/init.h"
 #include "../common/common.h"
+#include "../common/log.h"
 
 static int exit_status = -1;
-static int blank = 0;
+static int was_blank = 0;
+static int is_blank = 0;
 
 static char capacity_info[MAX_BUFFER_SIZE];
 static char voltage_info[MAX_BUFFER_SIZE];
-
-lv_timer_t *battery_timer;
 
 #define CHARGER_BRIGHT "/tmp/charger_bright"
 #define CHARGER_EXIT "/tmp/charger_exit"
@@ -25,25 +25,28 @@ static void set_brightness(int brightness) {
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
 
     const char *args[] = {(INTERNAL_PATH "device/current/input/bright.sh"), bright_value, NULL};
-    run_exec(args, A_SIZE(args), 1);
+    run_exec(args, A_SIZE(args), 0);
+
+    load_config(&config);
 }
 
 static void handle_power_short(void) {
-    if (blank < 3) {
-        lv_timer_pause(battery_timer);
+    LOG_SUCCESS(mux_module, "Power Button Pressed")
 
-        lv_obj_add_flag(ui_lblCapacity_charge, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblVoltage_charge, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    if (was_blank) {
+        int bright_value = read_line_int_from(CHARGER_BRIGHT, 1);
+        LOG_INFO(mux_module, "Setting Brightness To: %d", bright_value)
+        set_brightness(bright_value);
 
-        lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.BOOT);
-        refresh_screen(ui_scrCharge_charge);
-
-        exit_status = 0;
+        was_blank = 0;
+        is_blank = 0;
         return;
     }
 
-    blank = 0;
-    set_brightness(read_line_int_from(CHARGER_BRIGHT, 1));
+    lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.BOOT);
+    lv_refr_now(NULL);
+
+    exit_status = 0;
 }
 
 static void handle_idle(void) {
@@ -77,9 +80,14 @@ static void battery_task_charge() {
     lv_label_set_text(ui_lblCapacity_charge, capacity_info);
     lv_label_set_text(ui_lblVoltage_charge, voltage_info);
 
-    if (blank == 3) set_brightness(0);
+    if (is_blank == 4) {
+        LOG_INFO(mux_module, "Setting Brightness To: %d", 0)
+        set_brightness(0);
+        was_blank = 1;
+    }
+
     check_for_cable();
-    blank++;
+    is_blank++;
 }
 
 int main() {
@@ -87,15 +95,16 @@ int main() {
     load_config(&config);
 
     init_module("muxcharge");
-    setup_background_process();
+    //setup_background_process();
 
     init_theme(0, 0);
     init_display();
 
     init_muxcharge();
 
+    LOG_INFO(mux_module, "Current Brightness: %d", config.SETTINGS.GENERAL.BRIGHTNESS)
     write_text_to_file(CHARGER_BRIGHT, "w", INT, config.SETTINGS.GENERAL.BRIGHTNESS);
-    set_brightness(read_line_int_from(CHARGER_BRIGHT, 1));
+    set_brightness(config.SETTINGS.GENERAL.BRIGHTNESS);
 
     lv_obj_set_user_data(ui_scrCharge_charge, mux_module);
     lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.POWER);
@@ -110,10 +119,11 @@ int main() {
     overlay_image = lv_img_create(ui_scrCharge_charge);
     load_overlay_image(ui_scrCharge_charge, overlay_image);
 
+    LOG_INFO(mux_module, "Charging Statistics Y Position: %d", theme.CHARGER.Y_POS)
     lv_obj_set_y(ui_pnlCharge_charge, theme.CHARGER.Y_POS);
 
     battery_task_charge();
-    battery_timer = lv_timer_create(battery_task_charge, TIMER_BATTERY, NULL);
+    lv_timer_create(battery_task_charge, TIMER_BATTERY, NULL);
 
     refresh_screen(ui_scrCharge_charge);
 
