@@ -16,12 +16,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../lvgl/lvgl.h"
-#include "../font/notosans.h"
-#include "../font/notosans_jp.h"
-#include "../font/notosans_ar.h"
-#include "../font/notosans_kr.h"
-#include "../font/notosans_sc.h"
-#include "../font/notosans_tc.h"
+#include "../font/notosans_medium.h"
+#include "../font/notosans_ar_medium.h"
+#include "../font/notosans_jp_medium.h"
+#include "../font/notosans_kr_medium.h"
+#include "../font/notosans_sc_medium.h"
+#include "../font/notosans_tc_medium.h"
 #include "miniz/miniz.h"
 #include "img/nothing.h"
 #include "json/json.h"
@@ -1428,20 +1428,34 @@ void unload_image_animation() {
     if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 
-const lv_font_t *get_language_font() {
-    if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Simplified)") == 0) {
-        return &ui_font_NotoSans_SC;
-    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Traditional)") == 0) {
-        return &ui_font_NotoSans_TC;
-    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0) {
-        return &ui_font_NotoSans_JP;
-    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Arabic") == 0) {
-        return &ui_font_NotoSans_AR;
-    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0) {
-        return &ui_font_NotoSans_KR;
+int get_font_size() {
+    if (device.MUX.WIDTH == 1280) {
+        return 30;
+    } else if (device.MUX.WIDTH == 1024) {
+        return 32;
     } else {
-        return &ui_font_NotoSans;
+        return 20;
     }
+}
+
+lv_font_t *get_language_font() {
+    int font_size = get_font_size();
+    size_t cache_size = 1024 * 10;
+    lv_font_t *font;
+    if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Simplified)") == 0) {
+        font = lv_tiny_ttf_create_data_ex(&notosans_sc_medium_ttf, notosans_medium_ttf_len, font_size, cache_size);
+    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Chinese (Traditional)") == 0) {
+        font = lv_tiny_ttf_create_data_ex(&notosans_tc_medium_ttf, notosans_medium_ttf_len, font_size, cache_size);
+    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Japanese") == 0) {
+        font = lv_tiny_ttf_create_data_ex(&notosans_jp_medium_ttf, notosans_medium_ttf_len, font_size, cache_size);
+    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Arabic") == 0) {
+        font = lv_tiny_ttf_create_data_ex(&notosans_ar_medium_ttf, notosans_medium_ttf_len, font_size, cache_size);
+    } else if (strcasecmp(config.SETTINGS.GENERAL.LANGUAGE, "Korean") == 0) {
+        font = lv_tiny_ttf_create_data_ex(&notosans_kr_medium_ttf, notosans_medium_ttf_len, font_size, cache_size);
+    } else {
+        font = lv_tiny_ttf_create_data_ex(&notosans_medium_ttf, notosans_medium_ttf_len, font_size, cache_size);
+    }
+    return font;
 }
 
 void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
@@ -1457,7 +1471,7 @@ void get_mux_dimension(char *mux_dimension, size_t size) {
 }
 
 void load_font_text(lv_obj_t *screen) {
-    const lv_font_t *language_font = get_language_font();
+    lv_font_t *language_font = get_language_font();
 
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_text_default[MAX_BUFFER_SIZE];

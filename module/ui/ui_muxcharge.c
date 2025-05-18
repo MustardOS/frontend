@@ -3,7 +3,6 @@
 #include "../../common/ui_common.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
-#include "../../font/notosans.h"
 #include "../../common/img/nothing.h"
 
 lv_obj_t *ui_scrCharge_charge;
@@ -38,7 +37,6 @@ void init_muxcharge(void) {
     lv_obj_set_style_bg_opa(ui_scrCharge_charge, theme.SYSTEM.BACKGROUND_GRADIENT_DIRECTION == LV_GRAD_DIR_NONE
                                                  ? theme.SYSTEM.BACKGROUND_ALPHA : 0,
                             LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_scrCharge_charge, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlWall_charge = lv_obj_create(ui_scrCharge_charge);
     lv_obj_set_width(ui_pnlWall_charge, device.MUX.WIDTH);

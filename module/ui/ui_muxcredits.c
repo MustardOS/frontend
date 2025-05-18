@@ -1,6 +1,5 @@
 #include "ui_muxcredits.h"
 #include "../../common/config.h"
-#include "../../font/notosans.h"
 
 lv_obj_t *ui_scrCredits;
 
@@ -242,7 +241,6 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_clear_flag(ui_scrCredits, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(ui_scrCredits, lv_color_hex(0x100808), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_scrCredits, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_scrCredits, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_conCredits = lv_obj_create(ui_scrCredits);
     lv_obj_remove_style_all(ui_conCredits);
