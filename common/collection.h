@@ -4,7 +4,7 @@
 
 typedef enum {
     FOLDER,
-    ROM
+    ITEM
 } content_type;
 
 typedef struct {

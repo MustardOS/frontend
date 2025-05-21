@@ -17,6 +17,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
 
     CFG_INT_FIELD(kiosk->CONTENT.ASSIGN_CORE, "content/core", 0)
     CFG_INT_FIELD(kiosk->CONTENT.ASSIGN_GOVERNOR, "content/governor", 0)
+    CFG_INT_FIELD(kiosk->CONTENT.ASSIGN_TAG, "content/tag", 0)
     CFG_INT_FIELD(kiosk->CONTENT.OPTION, "content/option", 0)
     CFG_INT_FIELD(kiosk->CONTENT.RETROARCH, "content/retroarch", 0)
     CFG_INT_FIELD(kiosk->CONTENT.SEARCH, "content/search", 0)

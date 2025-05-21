@@ -243,7 +243,7 @@ static void create_profile_items() {
 
         ui_count++;
 
-        add_item(&items, &item_count, profile_store, profile_store, "", ROM);
+        add_item(&items, &item_count, profile_store, profile_store, "", ITEM);
 
         lv_obj_t *ui_pnlProfile = lv_obj_create(ui_pnlContent);
         if (ui_pnlProfile) {

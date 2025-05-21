@@ -148,7 +148,7 @@ static void create_archive_items() {
 
         ui_count++;
 
-        add_item(&items, &item_count, base_filename, strip_ext(archive_store), item_glyph, ROM);
+        add_item(&items, &item_count, base_filename, strip_ext(archive_store), item_glyph, ITEM);
 
         lv_obj_t *ui_pnlArchive = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(ui_pnlArchive);

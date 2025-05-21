@@ -168,9 +168,7 @@ int str_compare(const void *a, const void *b) {
         char c1 = tolower(*str1);
         char c2 = tolower(*str2);
 
-        if (c1 != c2) {
-            return c1 - c2;
-        }
+        if (c1 != c2) return c1 - c2;
 
         str1++;
         str2++;
@@ -180,9 +178,7 @@ int str_compare(const void *a, const void *b) {
 }
 
 int str_startswith(const char *a, const char *b) {
-    if (strncmp(a, b, strlen(b)) == 0) {
-        return 1;
-    }
+    if (strncmp(a, b, strlen(b)) == 0) return 1;
 
     return 0;
 }
@@ -190,9 +186,7 @@ int str_startswith(const char *a, const char *b) {
 char *str_nonew(char *text) {
     char *newline_pos = strchr(text, '\n');
 
-    if (newline_pos != NULL) {
-        *newline_pos = '\0';
-    }
+    if (newline_pos != NULL) *newline_pos = '\0';
 
     return text;
 }
@@ -217,6 +211,7 @@ char *str_remchar(char *text, char c) {
             r_ptr++;
             continue;
         }
+
         *w_ptr = *r_ptr;
         w_ptr++;
         r_ptr++;
@@ -246,6 +241,7 @@ char *str_remchars(char *text, char *c) {
             *w_ptr = *r_ptr;
             w_ptr++;
         }
+
         r_ptr++;
     }
 
@@ -268,22 +264,14 @@ void str_split(char *text, char sep, char *p1, char *p2) {
 }
 
 char *str_trim(char *text) {
-    if (!text || !*text) {
-        return text;
-    }
+    if (!text || !*text) return text;
 
-    while (isspace((unsigned char) (*text))) {
-        text++;
-    }
+    while (isspace((unsigned char) (*text))) text++;
 
-    if (*text == '\0') {
-        return text;
-    }
+    if (*text == '\0') return text;
 
     char *end = text + strlen(text) - 1;
-    while (end > text && isspace((unsigned char) (*end))) {
-        end--;
-    }
+    while (end > text && isspace((unsigned char) (*end))) end--;
 
     *(end + 1) = '\0';
     return text;
@@ -298,28 +286,21 @@ char *str_replace(const char *orig, const char *rep, const char *with) {
     size_t len_front;
     int count;
 
-    if (!orig || !rep)
-        return NULL;
+    if (!orig || !rep) return NULL;
 
     len_rep = strlen(rep);
 
-    if (len_rep == 0)
-        return NULL;
+    if (len_rep == 0) return NULL;
 
-    if (!with)
-        with = "";
+    if (!with) with = "";
 
     len_with = strlen(with);
 
     ins = orig;
-    for (count = 0; (tmp = strstr(ins, rep)); ++count) {
-        ins = tmp + len_rep;
-    }
-
+    for (count = 0; (tmp = strstr(ins, rep)); ++count) ins = tmp + len_rep;
     tmp = result = (char *) malloc(strlen(orig) + (len_with - len_rep) * count + 1);
 
-    if (!result)
-        return NULL;
+    if (!result) return NULL;
 
     while (count--) {
         ins = strstr(orig, rep);
@@ -328,6 +309,7 @@ char *str_replace(const char *orig, const char *rep, const char *with) {
         tmp = strcpy(tmp, with) + len_with;
         orig += len_front + len_rep;
     }
+
     strcpy(tmp, orig);
     return result;
 }
@@ -385,14 +367,17 @@ int str_extract(const char *orig, const char *prefix, const char *suffix, char *
     return 1;
 }
 
+char *str_capital(char *text) {
+    if (text && text[0] != '\0') text[0] = toupper((unsigned char) text[0]);
+    return text;
+}
+
 char *get_last_subdir(char *text, char separator, int n) {
     char *ptr = text;
     int count = 0;
 
     while (*ptr && count < n) {
-        if (*ptr == separator) {
-            count++;
-        }
+        if (*ptr == separator) count++;
         ptr++;
     }
 
@@ -402,9 +387,7 @@ char *get_last_subdir(char *text, char separator, int n) {
 char *get_last_dir(char *text) {
     char *last_slash = strrchr(text, '/');
 
-    if (last_slash != NULL) {
-        return last_slash + 1;
-    }
+    if (last_slash != NULL) return last_slash + 1;
 
     return "";
 }
@@ -413,9 +396,7 @@ char *strip_dir(char *text) {
     char *result = strdup(text);
     char *last_slash = strrchr(result, '/');
 
-    if (last_slash != NULL) {
-        *last_slash = '\0';
-    }
+    if (last_slash != NULL) *last_slash = '\0';
 
     return result;
 }
@@ -424,9 +405,7 @@ char *strip_ext(char *text) {
     char *result = strdup(text);
     char *ext = strrchr(result, '.');
 
-    if (ext != NULL) {
-        *ext = '\0';
-    }
+    if (ext != NULL) *ext = '\0';
 
     return result;
 }
@@ -434,9 +413,7 @@ char *strip_ext(char *text) {
 char *grab_ext(char *text) {
     char *ext = strrchr(text, '.');
 
-    if (ext != NULL && *(ext + 1) != '\0') {
-        return strdup(ext + 1);
-    }
+    if (ext != NULL && *(ext + 1) != '\0') return strdup(ext + 1);
 
     return strdup("");
 }
@@ -453,8 +430,7 @@ char *get_execute_result(const char *command) {
     pclose(fp);
 
     char *newline = strchr(result, '\n');
-    if (newline != NULL)
-        *newline = '\0';
+    if (newline != NULL) *newline = '\0';
 
     return result;
 }
@@ -475,13 +451,8 @@ int read_battery_capacity() {
 
     fclose(file);
 
-    capacity = capacity + ((config.SETTINGS.ADVANCED.OFFSET) - 50);
-
-    if (capacity > 100) {
-        return 100;
-    } else {
-        return capacity;
-    }
+    capacity += (config.SETTINGS.ADVANCED.OFFSET - 50);
+    return capacity > 100 ? 100 : capacity;
 }
 
 char *read_battery_voltage() {
@@ -515,9 +486,7 @@ char *read_all_char_from(const char *filename) {
     char *text = NULL;
     FILE *file = fopen(filename, "r");
 
-    if (file == NULL) {
-        return "";
-    }
+    if (file == NULL) return "";
 
     fseek(file, 0, SEEK_END);
     long fileSize = ftell(file);
@@ -565,9 +534,9 @@ char *read_line_char_from(const char *filename, size_t line_number) {
         current_line++;
         if (current_line == line_number) {
             size_t length = strlen(line);
-            if (length > 0 && line[length - 1] == '\n') {
-                line[length - 1] = '\0';
-            }
+
+            if (length > 0 && line[length - 1] == '\n') line[length - 1] = '\0';
+
             fclose(file);
             return line;
         }
@@ -575,6 +544,7 @@ char *read_line_char_from(const char *filename, size_t line_number) {
 
     free(line);
     fclose(file);
+
     return "";
 }
 
@@ -699,9 +669,7 @@ void write_text_to_file(const char *filename, const char *mode, int type, ...) {
 void create_directories(const char *path) {
     struct stat st;
 
-    if (stat(path, &st) == 0) {
-        return;
-    }
+    if (stat(path, &st) == 0) return;
 
     char *path_copy = strdup(path);
     char *slash = strrchr(path_copy, '/');
@@ -712,9 +680,7 @@ void create_directories(const char *path) {
         // recursive bullshit
     }
 
-    if (mkdir(path_copy, 0777) == -1) {
-        free(path_copy);
-    }
+    if (mkdir(path_copy, 0777) == -1) free(path_copy);
 }
 
 void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *content_element,
@@ -747,33 +713,20 @@ void nav_move(lv_group_t *group, int direction) {
 
 void nav_prev(lv_group_t *group, int count) {
     int i;
-    for (i = 0; i < count; i++) {
-        lv_group_focus_prev(group);
-    }
+    for (i = 0; i < count; i++) lv_group_focus_prev(group);
 }
 
 void nav_next(lv_group_t *group, int count) {
     int i;
-    for (i = 0; i < count; i++) {
-        lv_group_focus_next(group);
-    }
+    for (i = 0; i < count; i++) lv_group_focus_next(group);
 }
 
 char *get_datetime() {
     time_t now = time(NULL);
     struct tm *time_info = localtime(&now);
-
     static char datetime_str[MAX_BUFFER_SIZE];
-    char *notation;
 
-    if (config.CLOCK.NOTATION) {
-        notation = TIME_STRING_24;
-    } else {
-        notation = TIME_STRING_12;
-    }
-
-    strftime(datetime_str, sizeof(datetime_str), notation, time_info);
-
+    strftime(datetime_str, sizeof(datetime_str), config.CLOCK.NOTATION ? TIME_STRING_24 : TIME_STRING_12, time_info);
     return datetime_str;
 }
 
@@ -2409,6 +2362,26 @@ char *get_file_governor(char *rom_dir, char *rom_name) {
     return "";
 }
 
+char *get_directory_tag(char *rom_dir) {
+    char content_tag[MAX_BUFFER_SIZE];
+    snprintf(content_tag, sizeof(content_tag), "%s/%s/core.tag",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    if (file_exist(content_tag)) {
+        return read_line_char_from(content_tag, 1);
+    }
+    return "";
+}
+
+char *get_file_tag(char *rom_dir, char *rom_name) {
+    char content_tag[MAX_BUFFER_SIZE];
+    snprintf(content_tag, sizeof(content_tag), "%s/%s/%s.tag",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
+    if (file_exist(content_tag)) {
+        return read_line_char_from(content_tag, 1);
+    }
+    return "";
+}
+
 struct screen_dimension get_device_dimensions() {
     struct screen_dimension dims;
     if (read_line_int_from(device.SCREEN.HDMI, 1)) {
@@ -2660,4 +2633,66 @@ int brightness_to_percent(int val) {
 int volume_to_percent(int val) {
     int max = config.SETTINGS.ADVANCED.OVERDRIVE ? 200 : 100;
     return (val * 100) / max;
+}
+
+char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        return NULL;
+    }
+
+    char **list = malloc(MAX_BUFFER_SIZE * sizeof(char *));
+    if (!list) {
+        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        fclose(file);
+        return NULL;
+    }
+
+    *count = 0;
+    char line[MAX_BUFFER_SIZE];
+    int failed = 0;
+
+    if (mode == TOKENS) {
+        if (fgets(line, sizeof(line), file)) {
+            char *token = strtok(line, " \t\r\n");
+            while (token && *count < MAX_BUFFER_SIZE) {
+                list[*count] = strdup(token);
+
+                if (!list[*count]) {
+                    failed = 1;
+                    break;
+                }
+
+                (*count)++;
+                token = strtok(NULL, " \t\r\n");
+            }
+        }
+    } else {
+        while (fgets(line, sizeof(line), file) && *count < MAX_BUFFER_SIZE) {
+            char *end = strpbrk(line, "\r\n");
+            if (end) *end = '\0';
+            if (*line == '\0') continue;
+
+            list[*count] = strdup(line);
+            if (!list[*count]) {
+                failed = 1;
+                break;
+            }
+
+            (*count)++;
+        }
+    }
+
+    fclose(file);
+
+    if (failed) {
+        perror(lang.SYSTEM.FAIL_ALLOCATE_MEM);
+        for (int i = 0; i < *count; i++) free(list[i]);
+        free(list);
+
+        return NULL;
+    }
+
+    return list;
 }

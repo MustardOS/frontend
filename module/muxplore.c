@@ -149,7 +149,7 @@ static char *load_content_description() {
     char core_desc[MAX_BUFFER_SIZE];
     get_catalogue_name(sys_dir, content_label, core_desc, sizeof(core_desc));
 
-    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) return lang.GENERIC.NO_INFO;
+    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ITEM) return lang.GENERIC.NO_INFO;
 
     if (items[current_item_index].content_type == FOLDER) {
         snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
@@ -248,7 +248,7 @@ static void image_refresh(char *image_type) {
 
         get_catalogue_name(sys_dir, content_label, core_artwork, sizeof(core_artwork));
 
-        if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
+        if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ITEM) {
             snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
                      STORAGE_THEME, mux_dimension, image_type);
             if (!file_exist(image)) {
@@ -473,7 +473,7 @@ static void gen_item(char **file_names, int file_count) {
         char curr_item[MAX_BUFFER_SIZE];
         snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
 
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ROM);
+        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
         free(file_names[i]);
@@ -496,7 +496,7 @@ static void gen_item(char **file_names, int file_count) {
     populate_collection_items();
 
     for (size_t i = 0; i < item_count; i++) {
-        if (items[i].content_type == ROM) {
+        if (items[i].content_type == ITEM) {
             char content_core[MAX_BUFFER_SIZE] = {0};
             const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
             snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
@@ -508,7 +508,7 @@ static void gen_item(char **file_names, int file_count) {
     if (dir_count < theme.MUX.ITEM.COUNT) {
         for (size_t i = 0; i < item_count; i++) {
             if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
-            if (items[i].content_type == ROM) {
+            if (items[i].content_type == ITEM) {
                 gen_label(items[i].glyph_icon, items[i].display_name);
             }
         }

@@ -361,7 +361,8 @@ void load_lang(struct mux_lang *lang) {
     // muxoption
     SPECIFIC_FIELD(lang->MUXOPTION.TITLE, "CONTENT OPTION");
     SPECIFIC_FIELD(lang->MUXOPTION.ASSIGN_CORE, "Assign Core");
-    SPECIFIC_FIELD(lang->MUXOPTION.ASSIGN_GOV, "System Governor");
+    SPECIFIC_FIELD(lang->MUXOPTION.ASSIGN_GOV, "Assign Governor");
+    SPECIFIC_FIELD(lang->MUXOPTION.ASSIGN_TAG, "Assign Tag");
     SPECIFIC_FIELD(lang->MUXOPTION.SEARCH, "Search Content");
     SPECIFIC_FIELD(lang->MUXOPTION.NAME, "Name");
     SPECIFIC_FIELD(lang->MUXOPTION.CURRENT, "Current");
@@ -369,9 +370,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.INDIVIDUAL, "Individual");
     SPECIFIC_FIELD(lang->MUXOPTION.CORE, "Core");
     SPECIFIC_FIELD(lang->MUXOPTION.GOVERNOR, "Governor");
+    SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Tag");
     SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.ASSIGN_CORE, "Set the system core or external emulator for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.ASSIGN_GOV, "Set the CPU governor for the selected content or directory");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.ASSIGN_TAG, "Set the specific tag of the content selected to change the glyph");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
 
     // muxpass
@@ -533,6 +536,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.INFO, "The detected CPU type of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.SPEED, "The current CPU frequency of the device");
     SPECIFIC_FIELD(lang->MUXSYSINFO.HELP.CPU.GOV, "The current running governor of the device");
+
+    // muxtag
+    SPECIFIC_FIELD(lang->MUXTAG.TITLE, "TAG");
+    SPECIFIC_FIELD(lang->MUXTAG.HELP, "Change the tag of your current selected content to make it stand out");
+    SPECIFIC_FIELD(lang->MUXTAG.NONE, "No Tags Found…");
 
     // muxtask
     SPECIFIC_FIELD(lang->MUXTASK.TITLE, "TASK TOOLKIT");

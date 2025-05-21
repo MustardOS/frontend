@@ -133,7 +133,7 @@ static void create_app_items() {
         char app_store[MAX_BUFFER_SIZE];
         snprintf(app_store, sizeof(app_store), "%s", theme.GRID.ENABLED ? app_name_for_grid : dir_names[i]);
 
-        add_item(&items, &item_count, app_store, TS(app_store), dir_names[i], ROM);
+        add_item(&items, &item_count, app_store, TS(app_store), dir_names[i], ITEM);
 
         free(dir_names[i]);
     }

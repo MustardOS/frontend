@@ -378,7 +378,7 @@ static void gen_item(char **file_names, int file_count) {
         char curr_item[MAX_BUFFER_SIZE];
         snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count++);
 
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ROM);
+        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
     }
 
@@ -388,7 +388,7 @@ static void gen_item(char **file_names, int file_count) {
     start_time = current_time_ms();
 
     for (size_t i = 0; i < item_count; i++) {
-        if (items[i].content_type == ROM) {
+        if (items[i].content_type == ITEM) {
             gen_label("collection", items[i].display_name);
         }
     }

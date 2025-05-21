@@ -411,6 +411,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char ASSIGN_CORE[MAX_BUFFER_SIZE];
         char ASSIGN_GOV[MAX_BUFFER_SIZE];
+        char ASSIGN_TAG[MAX_BUFFER_SIZE];
         char SEARCH[MAX_BUFFER_SIZE];
         char NAME[MAX_BUFFER_SIZE];
         char CURRENT[MAX_BUFFER_SIZE];
@@ -418,10 +419,12 @@ struct mux_lang {
         char INDIVIDUAL[MAX_BUFFER_SIZE];
         char CORE[MAX_BUFFER_SIZE];
         char GOVERNOR[MAX_BUFFER_SIZE];
+        char TAG[MAX_BUFFER_SIZE];
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];
         struct {
             char ASSIGN_CORE[MAX_BUFFER_SIZE];
             char ASSIGN_GOV[MAX_BUFFER_SIZE];
+            char ASSIGN_TAG[MAX_BUFFER_SIZE];
             char SEARCH[MAX_BUFFER_SIZE];
         } HELP;
     } MUXOPTION;
@@ -623,6 +626,12 @@ struct mux_lang {
             } CPU;
         } HELP;
     } MUXSYSINFO;
+
+    struct {
+        char HELP[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char TITLE[MAX_BUFFER_SIZE];
+    } MUXTAG;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

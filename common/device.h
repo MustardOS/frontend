@@ -74,6 +74,7 @@ struct mux_device {
 
     struct {
         char DEFAULT[MAX_BUFFER_SIZE];
+        char AVAILABLE[MAX_BUFFER_SIZE];
         char GOVERNOR[MAX_BUFFER_SIZE];
         char SCALER[MAX_BUFFER_SIZE];
     } CPU;

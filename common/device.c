@@ -96,6 +96,7 @@ void load_device(struct mux_device *device) {
     DEV_MNT_FIELD(USB, "usb")
 
     DEV_STR_FIELD(device->CPU.DEFAULT, "cpu/default")
+    DEV_STR_FIELD(device->CPU.AVAILABLE, "cpu/available")
     DEV_STR_FIELD(device->CPU.GOVERNOR, "cpu/governor")
     DEV_STR_FIELD(device->CPU.SCALER, "cpu/scaler")
 

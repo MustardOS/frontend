@@ -120,7 +120,7 @@ static void create_core_items(const char *target) {
                 mini_free(core_config);
 
                 if (strcmp(assign_core, "none") != 0) {
-                    add_item(&items, &item_count, assign_name, af->d_name, assign_core, ROM);
+                    add_item(&items, &item_count, assign_name, af->d_name, assign_core, ITEM);
                 }
             }
         }
