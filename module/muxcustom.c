@@ -111,7 +111,7 @@ static void populate_theme_alternates() {
                 (len > 7 && strcmp(str_tolower(filename + len - 7), ".muxzip") == 0)) {
                 char *name_without_ext = strip_ext(filename);
                 if (!item_exists(items, item_count, name_without_ext)) {
-                    add_item(&items, &item_count, name_without_ext, name_without_ext, "", ROM);
+                    add_item(&items, &item_count, name_without_ext, name_without_ext, "", ITEM);
                 }
             }
         }

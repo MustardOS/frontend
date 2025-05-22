@@ -149,7 +149,7 @@ static char *load_content_description() {
     char core_desc[MAX_BUFFER_SIZE];
     get_catalogue_name(sys_dir, content_label, core_desc, sizeof(core_desc));
 
-    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ROM) return lang.GENERIC.NO_INFO;
+    if (strlen(core_desc) <= 1 && items[current_item_index].content_type == ITEM) return lang.GENERIC.NO_INFO;
 
     if (items[current_item_index].content_type == FOLDER) {
         snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
@@ -248,7 +248,7 @@ static void image_refresh(char *image_type) {
 
         get_catalogue_name(sys_dir, content_label, core_artwork, sizeof(core_artwork));
 
-        if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ROM) {
+        if (strlen(core_artwork) <= 1 && items[current_item_index].content_type == ITEM) {
             snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
                      STORAGE_THEME, mux_dimension, image_type);
             if (!file_exist(image)) {
@@ -405,7 +405,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     closedir(dir);
 }
 
-static void gen_label(char *item_glyph, char *item_text) {
+static void gen_label(char *module, char *item_glyph, char *item_text) {
     lv_obj_t *ui_pnlExplore = lv_obj_create(ui_pnlContent);
     lv_obj_t *ui_lblExploreItem = lv_label_create(ui_pnlExplore);
     lv_obj_t *ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
@@ -416,7 +416,7 @@ static void gen_label(char *item_glyph, char *item_text) {
 
     apply_theme_list_panel(ui_pnlExplore);
     apply_theme_list_item(&theme, ui_lblExploreItem, item_text);
-    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, mux_module, item_glyph);
+    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, module, item_glyph);
 
     apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, ui_lblExploreItemGlyph, item_text);
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
@@ -473,7 +473,7 @@ static void gen_item(char **file_names, int file_count) {
         char curr_item[MAX_BUFFER_SIZE];
         snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
 
-        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ROM);
+        content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
 
         free(file_names[i]);
@@ -495,21 +495,35 @@ static void gen_item(char **file_names, int file_count) {
     populate_history_items();
     populate_collection_items();
 
-    for (size_t i = 0; i < item_count; i++) {
-        if (items[i].content_type == ROM) {
-            char content_core[MAX_BUFFER_SIZE] = {0};
-            const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
+    const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
+    char content_core[MAX_BUFFER_SIZE];
+    char content_tag[MAX_BUFFER_SIZE];
+
+    for (size_t i = 0; i < item_count; ++i) {
+        if (items[i].content_type != ITEM) continue;
+
+        const char *basename = strip_ext(items[i].name);
+
+        snprintf(content_tag, sizeof(content_tag), "%s/%s/%s.tag",
+                 INFO_COR_PATH, last_subdir, basename);
+
+        if (file_exist(content_tag)) {
+            items[i].glyph_icon = strdup(str_remchar(read_line_char_from(content_tag, 1), ' '));
+            items[i].use_module = strdup("muxtag");
+        } else {
             snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
-                     INFO_COR_PATH, last_subdir, strip_ext(items[i].name));
+                     INFO_COR_PATH, last_subdir, basename);
+
             items[i].glyph_icon = strdup(get_content_explorer_glyph_name(content_core));
+            items[i].use_module = strdup(mux_module);
         }
     }
 
     if (dir_count < theme.MUX.ITEM.COUNT) {
         for (size_t i = 0; i < item_count; i++) {
             if (lv_obj_get_child_cnt(ui_pnlContent) >= theme.MUX.ITEM.COUNT) break;
-            if (items[i].content_type == ROM) {
-                gen_label(items[i].glyph_icon, items[i].display_name);
+            if (items[i].content_type == ITEM) {
+                gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
             }
         }
     }
@@ -655,7 +669,9 @@ static void create_content_items() {
             init_navigation_group_grid();
         } else {
             for (int i = 0; i < dir_count; i++) {
-                if (i < theme.MUX.ITEM.COUNT) gen_label(items[i].glyph_icon, items[i].display_name);
+                if (i < theme.MUX.ITEM.COUNT) {
+                    gen_label(items[i].use_module, items[i].glyph_icon, items[i].display_name);
+                }
                 if (!strcasecmp(items[i].name, prev_dir)) sys_index = i;
             }
         }
@@ -758,7 +774,7 @@ static void update_list_item(lv_obj_t *ui_lblItem, lv_obj_t *ui_lblItemGlyph, in
 
     char glyph_image_embed[MAX_BUFFER_SIZE];
     if (theme.LIST_DEFAULT.GLYPH_ALPHA > 0 && theme.LIST_FOCUS.GLYPH_ALPHA > 0) {
-        get_glyph_path(mux_module, items[index].glyph_icon, glyph_image_embed, MAX_BUFFER_SIZE);
+        get_glyph_path(items[index].use_module, items[index].glyph_icon, glyph_image_embed, MAX_BUFFER_SIZE);
         lv_img_set_src(ui_lblItemGlyph, glyph_image_embed);
     }
 

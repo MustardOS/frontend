@@ -33,7 +33,7 @@ static void populate_languages() {
             size_t len = strlen(entry->d_name);
             if (len > 5 && !strcasecmp(entry->d_name + len - 5, ".json")) {
                 entry->d_name[len - 5] = '\0';
-                add_item(&items, &item_count, entry->d_name, TS(entry->d_name), "", ROM);
+                add_item(&items, &item_count, entry->d_name, TS(entry->d_name), "", ITEM);
             }
         }
     }

@@ -307,7 +307,7 @@ static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
-        if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+        if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
             apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
                                 all_items[current_item_index].display_name);
         }
@@ -325,7 +325,7 @@ static void list_nav_move(int steps, int direction) {
     }
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
 
-    if (all_item_count > 0 && all_items[current_item_index].content_type == ROM) {
+    if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
         image_refresh("box");
         set_label_long_mode(&theme, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
     } else {
@@ -436,16 +436,16 @@ static void process_results(const char *json_results) {
                         }
 
                         adjust_visual_label(content_name, config.VISUAL.NAME, config.VISUAL.DASH);
-                        add_item(&folder_items, &folder_item_count, content_name, content_name, content_full_path, ROM);
+                        add_item(&folder_items, &folder_item_count, content_name, content_name, content_full_path, ITEM);
                     }
                 }
 
                 sort_items(folder_items, folder_item_count);
 
                 for (size_t i = 0; i < folder_item_count; i++) {
-                    if (folder_items[i].content_type == ROM) {
+                    if (folder_items[i].content_type == ITEM) {
                         add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
-                                 folder_items[i].display_name, folder_items[i].extra_data, ROM);
+                                 folder_items[i].display_name, folder_items[i].extra_data, ITEM);
                         gen_label("content", strip_ext(folder_items[i].display_name),
                                   "content", folder_items[i].extra_data);
                     }
@@ -468,9 +468,9 @@ static void process_results(const char *json_results) {
         add_item(&all_items, &all_item_count, "", "", "", FOLDER);
 
         for (size_t i = 0; i < t_all_item_count; i++) {
-            if (t_all_items[i].content_type == ROM) {
+            if (t_all_items[i].content_type == ITEM) {
                 content_item *new_item = add_item(&all_items, &all_item_count, t_all_items[i].name,
-                                                  t_all_items[i].display_name, t_all_items[i].extra_data, ROM);
+                                                  t_all_items[i].display_name, t_all_items[i].extra_data, ITEM);
                 char display_name[MAX_BUFFER_SIZE];
                 snprintf(display_name, sizeof(display_name), "%s",
                          strip_ext(t_all_items[i].display_name));
@@ -651,7 +651,7 @@ static void handle_y(void) {
 static void handle_help(void) {
     if (msgbox_active || key_show) return;
 
-    if (progress_onscreen == -1 && all_items[current_item_index].content_type != ROM) {
+    if (progress_onscreen == -1 && all_items[current_item_index].content_type != ITEM) {
         play_sound(SND_CONFIRM, 0);
         show_help(lv_group_get_focused(ui_group));
     }

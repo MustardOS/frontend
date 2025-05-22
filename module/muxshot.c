@@ -58,7 +58,7 @@ static void create_screenshot_items() {
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot) *last_dot = '\0';
 
-            add_item(&items, &item_count, tf->d_name, tf->d_name, "", ROM);
+            add_item(&items, &item_count, tf->d_name, tf->d_name, "", ITEM);
         }
     }
 

@@ -91,7 +91,7 @@ static void create_snapshot_items() {
 
         ui_count++;
 
-        add_item(&items, &item_count, base_filename, snapshot_store, "snapshot", ROM);
+        add_item(&items, &item_count, base_filename, snapshot_store, "snapshot", ITEM);
 
         lv_obj_t *ui_pnlSnapshot = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(ui_pnlSnapshot);

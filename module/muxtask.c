@@ -48,7 +48,7 @@ static void create_task_items() {
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot && !strcasecmp(last_dot, ".sh")) {
                 *last_dot = '\0';
-                add_item(&items, &item_count, tf->d_name, tf->d_name, filename, ROM);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, filename, ITEM);
             }
         }
     }

@@ -1281,7 +1281,7 @@ void apply_theme_list_glyph(struct theme_config *theme, lv_obj_t *ui_lblItemGlyp
     lv_obj_add_style(ui_lblItemGlyph, &style_list_glyph_focused, LV_PART_MAIN | LV_STATE_FOCUSED);
 }
 
-void apply_theme_list_value(struct theme_config *theme, lv_obj_t *ui_lblItemValue, char *item_text) {
+void apply_theme_list_value(struct theme_config *theme, lv_obj_t *ui_lblItemValue, const char *item_text) {
     lv_label_set_text(ui_lblItemValue, item_text);
 
     lv_obj_set_width(ui_lblItemValue, theme->MISC.CONTENT.WIDTH);

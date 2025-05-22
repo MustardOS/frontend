@@ -41,6 +41,7 @@
 #include "muxsplash.h"
 #include "muxstorage.h"
 #include "muxsysinfo.h"
+#include "muxtag.h"
 #include "muxtask.h"
 #include "muxtester.h"
 #include "muxtimezone.h"
@@ -234,6 +235,10 @@ static void module_governor() {
     module_run("option", muxgov_main);
 }
 
+static void module_tag() {
+    module_run("option", muxtag_main);
+}
+
 static void module_option() {
     module_run("explore", muxoption_main);
 }
@@ -319,6 +324,7 @@ static const ModuleEntry modules[] = {
         {"shutdown",   NULL, NULL, NULL, module_shutdown},
         {"assign",     NULL, NULL, NULL, module_assign},
         {"governor",   NULL, NULL, NULL, module_governor},
+        {"tag",        NULL, NULL, NULL, module_tag},
         {"explore",    NULL, NULL, NULL, module_explore},
         {"collection", NULL, NULL, NULL, module_collection},
         {"history",    NULL, NULL, NULL, module_history},

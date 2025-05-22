@@ -46,6 +46,10 @@ struct grid_info {
 
 extern struct grid_info grid_info;
 
+enum parse_mode {
+    LINES, TOKENS
+};
+
 enum wall_type {
     APPLICATION, ARCHIVE, GENERAL, TASK
 };
@@ -119,6 +123,10 @@ int str_replace_segment(const char *orig, const char *prefix, const char *suffix
                         const char *with, char **replacement);
 
 int str_extract(const char *orig, const char *prefix, const char *suffix, char **extraction);
+
+char *str_capital(char *text);
+
+char *str_capital_all(char *text);
 
 char *str_tolower(char *text);
 
@@ -305,6 +313,10 @@ char *get_directory_governor(char *rom_dir);
 
 char *get_file_governor(char *rom_dir, char *rom_name);
 
+char *get_directory_tag(char *rom_dir);
+
+char *get_file_tag(char *rom_dir, char *rom_name);
+
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size);
 
@@ -340,3 +352,5 @@ void update_bootlogo();
 int brightness_to_percent(int val);
 
 int volume_to_percent(int val);
+
+char **str_parse_file(const char *filename, int *count, enum parse_mode mode);

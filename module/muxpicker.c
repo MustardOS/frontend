@@ -101,7 +101,7 @@ static void create_picker_items() {
             char *last_dot = strrchr(tf->d_name, '.');
             if (last_dot && !strcasecmp(last_dot, file_ext)) {
                 *last_dot = '\0';
-                add_item(&items, &item_count, tf->d_name, tf->d_name, "", ROM);
+                add_item(&items, &item_count, tf->d_name, tf->d_name, "", ITEM);
             }
         }
     }

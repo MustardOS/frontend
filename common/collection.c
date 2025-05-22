@@ -41,6 +41,7 @@ content_item *add_item(content_item **content_items, size_t *count, const char *
     (*content_items)[*count].sort_name = strdup(sort_name);
     (*content_items)[*count].content_type = content_type;
     (*content_items)[*count].extra_data = strdup(extra_data);
+    (*content_items)[*count].use_module = strdup(mux_module);
 
     if (config.VISUAL.THETITLEFORMAT) {
         reformat_display_name((*content_items)[*count].display_name);
