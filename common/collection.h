@@ -14,6 +14,7 @@ typedef struct {
     content_type content_type;
     char *extra_data;
     char *glyph_icon;
+    char *use_module;
 } content_item;
 
 content_item *add_item(content_item **content_items, size_t *count, const char *name, const char *sort_name,

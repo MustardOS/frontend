@@ -372,6 +372,21 @@ char *str_capital(char *text) {
     return text;
 }
 
+char *str_capital_all(char *text) {
+    int new_word = 1;
+
+    for (char *p = text; p && *p != '\0'; ++p) {
+        if (isspace((unsigned char) *p)) {
+            new_word = 1;
+        } else if (new_word) {
+            *p = toupper((unsigned char) *p);
+            new_word = 0;
+        }
+    }
+
+    return text;
+}
+
 char *get_last_subdir(char *text, char separator, int n) {
     char *ptr = text;
     int count = 0;

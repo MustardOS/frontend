@@ -45,13 +45,19 @@ static void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-static void add_info_item(int index, const char *item_text, const char *glyph_name, bool add_bottom_border) {
+static void add_info_item(int index, const char *item_label, const char *item_value,
+                          const char *glyph_name, bool add_bottom_border) {
     lv_obj_t *ui_pnlInfoItem = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(ui_pnlInfoItem);
+
     lv_obj_t *ui_lblInfoItem = lv_label_create(ui_pnlInfoItem);
-    apply_theme_list_item(&theme, ui_lblInfoItem, item_text);
+    apply_theme_list_item(&theme, ui_lblInfoItem, item_label);
+
     lv_obj_t *ui_icoInfoItem = lv_img_create(ui_pnlInfoItem);
     apply_theme_list_glyph(&theme, ui_icoInfoItem, mux_module, glyph_name);
+
+    lv_obj_t *ui_lblInfoItemValue = lv_label_create(ui_pnlInfoItem);
+    apply_theme_list_value(&theme, ui_lblInfoItemValue, item_value);
 
     if (add_bottom_border) {
         lv_obj_set_height(ui_pnlInfoItem, 1);
@@ -64,54 +70,29 @@ static void add_info_item(int index, const char *item_text, const char *glyph_na
         lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM,
                                      LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+
     lv_obj_move_to_index(ui_pnlInfoItem, index);
 }
 
 static void add_info_item_type(int *line_index, const char *label, const char *get_file, const char *get_dir,
-                               const char *opt_type, bool gen_glyph) {
-    char label_buf[FILENAME_MAX];
-    char glyph_buf[128];
+                               const char *opt_type, bool cap_label) {
     const char *value = get_file;
-    const char *suffix = NULL;
 
-    if (!*value) {
-        value = get_dir;
-        suffix = *value ? lang.MUXOPTION.DIRECTORY : NULL;
-    } else {
-        suffix = lang.MUXOPTION.INDIVIDUAL;
-    }
+    if (!*value) value = get_dir;
+    if (!*value) value = !strcmp(opt_type, "tag") ? lang.MUXOPTION.NONE : lang.MUXOPTION.NOT_ASSIGNED;
 
-    if (!*value) {
-        value = lang.MUXOPTION.NOT_ASSIGNED;
-        suffix = NULL;
-    }
+    char cap_value[MAX_BUFFER_SIZE];
+    snprintf(cap_value, sizeof(cap_value), "%s", value);
 
-    if (gen_glyph && *value) {
-        strncpy(glyph_buf, value, sizeof(glyph_buf) - 1);
-        glyph_buf[sizeof(glyph_buf) - 1] = '\0';
-        opt_type = str_trim(str_tolower(str_remchar(glyph_buf, ' ')));
-    }
-
-    snprintf(label_buf, sizeof(label_buf), "%s:  %s%s%s%s",
-             label, value,
-             suffix ? "  (" : "",
-             suffix ? suffix : "",
-             suffix ? ")" : "");
-
-    add_info_item((*line_index)++, label_buf, opt_type, false);
+    add_info_item((*line_index)++, label, cap_label ? str_capital_all(cap_value) : cap_value, opt_type, false);
 }
 
 static void add_info_items() {
-    char buffer[FILENAME_MAX];
     int line_index = 0;
 
-    snprintf(buffer, sizeof(buffer), "%s:  %s",
-             lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4));
-    add_info_item(line_index++, buffer, "folder", false);
-
-    snprintf(buffer, sizeof(buffer), "%s:  %s",
-             lang.MUXOPTION.NAME, rom_name);
-    add_info_item(line_index++, buffer, "rom", false);
+    add_info_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
+    add_info_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
+    add_info_item(line_index++, "", "", "", true);
 
     const char *dot = strrchr(rom_name, '.');
     if ((dot && dot != rom_name)) {
@@ -123,15 +104,15 @@ static void add_info_items() {
         add_info_item_type(&line_index, lang.MUXOPTION.GOVERNOR,
                            get_file_governor(rom_dir, rom_name),
                            get_directory_governor(rom_dir),
-                           "governor", false);
+                           "governor", true);
 
         add_info_item_type(&line_index, lang.MUXOPTION.TAG,
                            get_file_tag(rom_dir, rom_name),
                            get_directory_tag(rom_dir),
                            "tag", true);
-    }
 
-    add_info_item(line_index, "", "", true);
+        add_info_item(line_index++, "", "", "", true);
+    }
 }
 
 static void init_navigation_group() {

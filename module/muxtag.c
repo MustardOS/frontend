@@ -34,6 +34,7 @@ static void assign_tag_single(char *core_dir, const char *tag, char *rom) {
              core_dir, strip_ext(rom));
 
     if (file_exist(rom_path)) remove(rom_path);
+    if (!strcasecmp(tag, "none")) return;
 
     FILE *rom_file = fopen(rom_path, "w");
     if (!rom_file) {
@@ -46,8 +47,13 @@ static void assign_tag_single(char *core_dir, const char *tag, char *rom) {
     fclose(rom_file);
 }
 
-static void assign_tag_directory(char *core_dir, const char *tag) {
-    delete_files_of_type(core_dir, "/core.tag", NULL, 0);
+static void assign_tag_directory(char *core_dir, const char *tag, int purge) {
+    if (purge) {
+        delete_files_of_type(core_dir, "/core.tag", NULL, 0);
+        delete_files_of_type(core_dir, "tag", NULL, 0);
+    }
+
+    if (!strcasecmp(tag, "none")) return;
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s/core.tag",
@@ -64,7 +70,12 @@ static void assign_tag_directory(char *core_dir, const char *tag) {
 }
 
 static void assign_tag_parent(char *core_dir, const char *tag) {
-    assign_tag_directory(core_dir, tag);
+    delete_files_of_type(core_dir, "/core.tag", NULL, 1);
+    delete_files_of_type(core_dir, "tag", NULL, 1);
+
+    if (!strcasecmp(tag, "none")) return;
+
+    assign_tag_directory(core_dir, tag, 0);
 
     char **subdirs = get_subdirectories(rom_dir);
     if (subdirs) {
@@ -83,6 +94,7 @@ static void assign_tag_parent(char *core_dir, const char *tag) {
             fprintf(subdir_file_handle, "%s", tag);
             fclose(subdir_file_handle);
         }
+
         free_subdirectories(subdirs);
     }
 }
@@ -102,13 +114,11 @@ static void create_tag_assignment(const char *tag, char *rom, enum tag_gen_type 
             assign_tag_parent(core_dir, tag);
             break;
         case DIRECTORY:
-            assign_tag_directory(core_dir, tag);
+            assign_tag_directory(core_dir, tag, 1);
             break;
     }
 
-    if (file_exist(MUOS_SAG_LOAD)) {
-        remove(MUOS_SAG_LOAD);
-    }
+    if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 }
 
 static void generate_available_tags() {
@@ -138,7 +148,7 @@ static void generate_available_tags() {
         apply_theme_list_item(&theme, ui_lblTagItem, cap_name);
 
         lv_obj_t *ui_lblTagItemGlyph = lv_img_create(ui_pnlTag);
-        apply_theme_list_glyph(&theme, ui_lblTagItemGlyph, mux_module, raw_name);
+        apply_theme_list_glyph(&theme, ui_lblTagItemGlyph, mux_module, str_remchar(raw_name, ' '));
 
         lv_group_add_obj(ui_group, ui_lblTagItem);
         lv_group_add_obj(ui_group_glyph, ui_lblTagItemGlyph);
@@ -193,8 +203,8 @@ static void handle_a() {
     LOG_INFO(mux_module, "Single Tag Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    char *tag = lv_label_get_text(lv_group_get_focused(ui_group));
-    create_tag_assignment(tag, rom_name, SINGLE);
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    create_tag_assignment(selected, rom_name, SINGLE);
 
     close_input();
     mux_input_stop();
@@ -222,8 +232,8 @@ static void handle_x() {
     LOG_INFO(mux_module, "Directory Tag Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    char *tag = lv_label_get_text(lv_group_get_focused(ui_group));
-    create_tag_assignment(tag, rom_name, DIRECTORY);
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    create_tag_assignment(selected, rom_name, DIRECTORY);
 
     close_input();
     mux_input_stop();
@@ -235,8 +245,8 @@ static void handle_y() {
     LOG_INFO(mux_module, "Parent Tag Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    char *tag = lv_label_get_text(lv_group_get_focused(ui_group));
-    create_tag_assignment(tag, rom_name, PARENT);
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    create_tag_assignment(selected, rom_name, PARENT);
 
     close_input();
     mux_input_stop();

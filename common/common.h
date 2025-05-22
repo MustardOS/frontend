@@ -126,6 +126,8 @@ int str_extract(const char *orig, const char *prefix, const char *suffix, char *
 
 char *str_capital(char *text);
 
+char *str_capital_all(char *text);
+
 char *str_tolower(char *text);
 
 char *get_last_subdir(char *text, char separator, int n);

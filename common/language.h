@@ -420,6 +420,7 @@ struct mux_lang {
         char CORE[MAX_BUFFER_SIZE];
         char GOVERNOR[MAX_BUFFER_SIZE];
         char TAG[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];
         struct {
             char ASSIGN_CORE[MAX_BUFFER_SIZE];

@@ -431,7 +431,7 @@ void apply_theme_list_panel(lv_obj_t *ui_pnlList);
 
 void apply_theme_list_item(struct theme_config *theme, lv_obj_t *ui_lblItem, const char *item_text);
 
-void apply_theme_list_value(struct theme_config *lv_theme, lv_obj_t *ui_lblItemValue, char *item_text);
+void apply_theme_list_value(struct theme_config *lv_theme, lv_obj_t *ui_lblItemValue, const char *item_text);
 
 void apply_theme_list_drop_down(struct theme_config *d_theme, lv_obj_t *ui_lblItemValue, char *options);
 

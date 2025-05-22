@@ -2,7 +2,6 @@
 #include "muxgov.h"
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 #include <linux/limits.h>
 #include "../common/init.h"
@@ -50,9 +49,7 @@ static void assign_gov_single(char *core_dir, const char *gov, char *rom) {
 }
 
 static void assign_gov_directory(char *core_dir, const char *gov, int purge) {
-    if (purge) {
-        delete_files_of_type(core_dir, "/core.gov", NULL, 0);
-    }
+    if (purge) delete_files_of_type(core_dir, "/core.gov", NULL, 0);
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s/core.gov",
@@ -69,7 +66,8 @@ static void assign_gov_directory(char *core_dir, const char *gov, int purge) {
 }
 
 static void assign_gov_parent(char *core_dir, const char *gov) {
-    assign_gov_directory(core_dir, gov, 1);
+    delete_files_of_type(core_dir, "/core.gov", NULL, 1);
+    assign_gov_directory(core_dir, gov, 0);
 
     char **subdirs = get_subdirectories(rom_dir);
     if (subdirs) {
@@ -88,6 +86,7 @@ static void assign_gov_parent(char *core_dir, const char *gov) {
             fprintf(subdir_file_handle, "%s", gov);
             fclose(subdir_file_handle);
         }
+
         free_subdirectories(subdirs);
     }
 }
@@ -115,9 +114,7 @@ static void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type 
             break;
     }
 
-    if (file_exist(MUOS_SAG_LOAD)) {
-        remove(MUOS_SAG_LOAD);
-    }
+    if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 }
 
 static void generate_available_governors(const char *default_governor) {
@@ -148,7 +145,7 @@ static void generate_available_governors(const char *default_governor) {
 
         lv_obj_t *ui_lblGovItemGlyph = lv_img_create(ui_pnlGov);
 
-        char *glyph = !strcasecmp(raw_name, default_governor) ? "default" : raw_name;
+        char *glyph = !strcasecmp(raw_name, default_governor) ? "default" : str_remchar(raw_name, ' ');
         apply_theme_list_glyph(&theme, ui_lblGovItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblGovItem);
@@ -186,7 +183,7 @@ static void create_gov_items(const char *target) {
 
     char *use_governor;
     char *local_governor = get_ini_string(local_config, target_default, "governor", "none");
-    if (!strcmp(local_governor, "none")) {
+    if (strcmp(local_governor, "none") != 0) {
         use_governor = local_governor;
     } else {
         use_governor = get_ini_string(global_config, "global", "governor", device.CPU.DEFAULT);
@@ -241,7 +238,8 @@ static void handle_a() {
     LOG_INFO(mux_module, "Single Governor Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, SINGLE);
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    create_gov_assignment(selected, rom_name, SINGLE);
 
     close_input();
     mux_input_stop();
@@ -269,7 +267,8 @@ static void handle_x() {
     LOG_INFO(mux_module, "Directory Governor Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, DIRECTORY);
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    create_gov_assignment(selected, rom_name, DIRECTORY);
 
     close_input();
     mux_input_stop();
@@ -281,7 +280,8 @@ static void handle_y() {
     LOG_INFO(mux_module, "Parent Governor Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    create_gov_assignment(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))), rom_name, PARENT);
+    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    create_gov_assignment(selected, rom_name, PARENT);
 
     close_input();
     mux_input_stop();
@@ -503,8 +503,10 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
     }
 
     char title[MAX_BUFFER_SIZE];
-    snprintf(title, sizeof(title), "%s - %s", lang.MUXGOV.TITLE, get_last_dir(rom_dir));
+    snprintf(title, sizeof(title), "%s - %s", lang.MUXGOV.TITLE, get_last_dir(dir));
     lv_label_set_text(ui_lblTitle, title);
+
+    printf("ROM SYSTEM IS: %s\n", rom_system);
 
     create_gov_items(rom_system);
 
