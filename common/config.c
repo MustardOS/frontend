@@ -42,6 +42,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.OVERDRIVE, "settings/advanced/overdrive", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAPFILE, "settings/advanced/swapfile", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ZRAMFILE, "settings/advanced/zramfile", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.PARENTLOCK, "settings/advanced/parentlock", 0)
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.CARDMODE, "settings/advanced/cardmode", "deadline")
 
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HIDDEN, "settings/general/hidden", 0)

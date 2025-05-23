@@ -435,6 +435,10 @@ struct mux_lang {
     } MUXPASS;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+    } MUXPARENTLOCK;
+
+    struct {
         char CUSTOM[MAX_BUFFER_SIZE];
         char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
@@ -658,6 +662,7 @@ struct mux_lang {
         char THERMAL[MAX_BUFFER_SIZE];
         char OFFSET[MAX_BUFFER_SIZE];
         char LOCK[MAX_BUFFER_SIZE];
+        char PARENTLOCK[MAX_BUFFER_SIZE];
         char LED[MAX_BUFFER_SIZE];
         char RANDOM[MAX_BUFFER_SIZE];
         char NET_WAIT[MAX_BUFFER_SIZE];
@@ -700,6 +705,7 @@ struct mux_lang {
             char THERMAL[MAX_BUFFER_SIZE];
             char OFFSET[MAX_BUFFER_SIZE];
             char LOCK[MAX_BUFFER_SIZE];
+            char PARENTLOCK[MAX_BUFFER_SIZE];
             char LED[MAX_BUFFER_SIZE];
             char RANDOM[MAX_BUFFER_SIZE];
             char NET_WAIT[MAX_BUFFER_SIZE];

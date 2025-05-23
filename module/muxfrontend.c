@@ -30,6 +30,7 @@
 #include "muxnetwork.h"
 #include "muxoption.h"
 #include "muxpass.h"
+#include "muxparentlock.h"
 #include "muxpicker.h"
 #include "muxpower.h"
 #include "muxplore.h"
@@ -104,6 +105,9 @@ static void process_content_action(char *action, char *module) {
 }
 
 static void last_index_check() {
+    process_content_action(MUOS_ASS_LOAD, "assign");
+    process_content_action(MUOS_GOV_LOAD, "governor");
+
     last_index = 0;
     if (file_exist(MUOS_IDX_LOAD) && !file_exist(ADD_MODE_WORK)) {
         last_index = safe_atoi(read_line_char_from(MUOS_IDX_LOAD, 1));
@@ -153,10 +157,14 @@ static void module_exit(char *splash, int sound) {
 }
 
 static void module_shutdown() {
+    if (config.SETTINGS.ADVANCED.PARENTLOCK && file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
+    if (file_exist(MUX_PARENTLOCK_TRACKING)) muxparentlock_savetracker();
+
     module_exit("shutdown", SND_SHUTDOWN);
 }
 
 static void module_reboot() {
+    if (config.SETTINGS.ADVANCED.PARENTLOCK && file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
     module_exit("reboot", SND_REBOOT);
 }
 
@@ -294,9 +302,20 @@ static void module_config() {
             write_text_to_file(MUX_AUTH, "w", CHAR, "");
             exec_mux("launcher", "muxconfig", muxconfig_main);
         }
+    } else if (config.SETTINGS.ADVANCED.PARENTLOCK && !file_exist(MUX_PARENTAUTH) &&
+        strcmp(previous_module, "muxtweakgen") != 0) {
+        load_mux("launcher");
+
+        if (muxparentlock_main("unlock") == 1) {
+            cleanup_screen();
+
+            write_text_to_file(MUX_PARENTAUTH, "w", CHAR, "");
+            exec_mux("launcher", "muxconfig", muxconfig_main);
+        }
     } else {
         exec_mux("launcher", "muxconfig", muxconfig_main);
     }
+    if (config.SETTINGS.ADVANCED.PARENTLOCK && file_exist(MUX_PARENTAUTH)) remove(MUX_PARENTAUTH);
 }
 
 static void module_tweakadv() {
@@ -306,6 +325,17 @@ static void module_tweakadv() {
         if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
         if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
     }
+    if (!config.SETTINGS.ADVANCED.PARENTLOCK) {
+        if (file_exist(MUX_PARENTAUTH)) {
+        	remove(MUX_PARENTAUTH);
+        }
+        // Disable time tracker
+       	muxparentlock_savetracker();
+    } else {
+        // Start the time tracker anyway
+    	muxparentlock_process();
+    }
+    
 }
 
 static void module_rtc() {
@@ -383,8 +413,7 @@ void init_audio() {
         usleep(delay);
     }
 
-    if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
-    write_text_to_file(CHIME_DONE, "w", CHAR, "");
+    if (config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
 }
 
 int main() {
@@ -410,9 +439,17 @@ int main() {
             safe_quit(0);
             break;
         }
-        // Process content association and governor actions
-        process_content_action(MUOS_ASS_LOAD, "assign");
-        process_content_action(MUOS_GOV_LOAD, "governor");
+
+        // Check if parental control is enabled, and start it in that case (if not done yet)
+        if (muxparentlock_process() == 2) {
+        	if (muxparentlock_main("unlock") == 1) {
+            	cleanup_screen();
+
+            	write_text_to_file(MUX_PARENTAUTH, "w", CHAR, "");
+	        } 
+	        // QUESTION: How can we stop the console if the code is never correct here?
+	        else continue;
+        }
 
         if (file_exist(MUOS_ACT_LOAD)) {
             if (refresh_config) {
