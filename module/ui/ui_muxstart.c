@@ -1,7 +1,6 @@
 #include "ui_muxstart.h"
 #include "../../common/device.h"
 #include "../../common/theme.h"
-#include "../../font/notosans.h"
 #include "../../common/img/nothing.h"
 
 lv_obj_t *ui_scrStart;
@@ -23,7 +22,6 @@ void init_muxstart(void) {
     lv_obj_set_style_bg_color(ui_scrStart, lv_color_hex(theme.VERBOSE_BOOT.BACKGROUND),
                               LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_scrStart, theme.VERBOSE_BOOT.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_scrStart, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_pnlWall = lv_obj_create(ui_scrStart);
     lv_obj_set_width(ui_pnlWall, device.MUX.WIDTH);

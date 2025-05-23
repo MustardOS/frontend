@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include "../font/notosans.h"
 #include "img/nothing.h"
 #include "common.h"
 #include "language.h"
@@ -233,7 +232,6 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_screen_container = lv_obj_create(NULL);
     if (ui_screen_temp == NULL) ui_screen_temp = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_screen_container, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_text_font(ui_screen_container, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     apply_gradient_to_ui_screen(ui_screen_container, theme, device);
 
@@ -251,7 +249,6 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
                                        ? theme->SYSTEM.BACKGROUND_ALPHA : 0,
                             LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_set_style_text_font(ui_screen, &ui_font_NotoSans, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_width(ui_screen, device->MUX.WIDTH);
     lv_obj_set_height(ui_screen, device->MUX.HEIGHT);
     lv_obj_set_align(ui_screen, LV_ALIGN_CENTER);

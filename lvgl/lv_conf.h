@@ -330,6 +330,9 @@ extern uint32_t mux_tick(void);
  *   FONT USAGE
  *===================*/
 
+ #define LV_USE_TINY_TTF 1
+ #define LV_TINY_TTF_FILE_SUPPORT 0
+
 /*Montserrat fonts with ASCII range and some symbols using bpp = 4
  *https://fonts.google.com/specimen/Montserrat*/
 #define LV_FONT_MONTSERRAT_8 0
