@@ -250,7 +250,7 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     snprintf(local_core, sizeof(local_core), "%s/%s.ini",
              assign_dir, selected_item);
     mini_t *local_ini = mini_load(local_core);
-    LOG_INFO(mux_module, "Global Core Path: %s", local_core)
+    LOG_INFO(mux_module, "Local Core Path: %s", local_core)
 
     static char core_catalogue[MAX_BUFFER_SIZE];
     char *use_local_catalogue = get_ini_string(local_ini, selected_item, "catalogue", "none");
@@ -261,6 +261,15 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     }
     LOG_INFO(mux_module, "Content Core Catalogue: %s", core_catalogue)
 
+    static char core_governor[MAX_BUFFER_SIZE];
+    char *use_local_governor = get_ini_string(local_ini, selected_item, "governor", "none");
+    if (strcmp(use_local_governor, "none") != 0) {
+        strcpy(core_governor, use_local_governor);
+    } else {
+        strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
+    }
+    LOG_INFO(mux_module, "Content Core Governor: %s", core_governor)
+
     static int core_lookup;
     int use_local_lookup = get_ini_int(local_ini, selected_item, "lookup", 0);
     core_lookup = use_local_lookup ? use_local_lookup : get_ini_int(global_ini, "global", "lookup", 0);
@@ -270,7 +279,8 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     strcpy(core_launch, get_ini_string(local_ini, selected_item, "core", "none"));
     LOG_INFO(mux_module, "Content Core Launcher: %s", core_launch)
 
-    create_core_assignment(rom_dir, core_launch, core_catalogue, rom_name, core_lookup, assignment_mode);
+    create_core_assignment(rom_dir, core_launch, core_catalogue, rom_name,
+                           core_governor, core_lookup, assignment_mode);
 
     mini_free(global_ini);
     mini_free(local_ini);

@@ -1,4 +1,3 @@
-#include <dirent.h>
 #include "miniz/miniz.h"
 #include "json/json.h"
 #include "common.h"
@@ -32,189 +31,111 @@ char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
     return get_directory_core(rom_dir, 2);
 }
 
-void free_lines(char *lines[], int line_count) {
-    for (int i = 0; i < line_count; i++) {
-        free(lines[i]);
-    }
-}
-
-void modify_cfg_file(const char *filename, const char *core, const char *sys, const char *cache) {
-    printf("Updating file: %s\n", filename);
-    FILE *file = fopen(filename, "r");
-    if (!file) {
+void write_core_file(char *path, char *core, char *sys, int lookup, char *rom_name, char *rom_base, char *rom_full) {
+    FILE *f = fopen(path, "w");
+    if (!f) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
-    int max_lines = 10;
-    char *lines[max_lines];
-    int line_count = 0;
-
-    char line[MAX_BUFFER_SIZE];
-    while (fgets(line, sizeof(line), file)) {
-        if (line_count >= max_lines) {
-            fprintf(stderr, "File too large, exceeding max lines limit\n");
-            fclose(file);
-            return;
-        }
-        size_t len = strlen(line);
-        if (len > 0 && line[len - 1] == '\n') line[len - 1] = '\0';
-        lines[line_count] = strdup(line);
-        line_count++;
-    }
-    fclose(file);
-
-    if (line_count >= 2) {
-        free(lines[1]);
-        lines[1] = strdup(core);
-    }
-    if (line_count >= 3) {
-        free(lines[2]);
-        lines[2] = strdup(sys);
-    }
-    if (line_count >= 4) {
-        free(lines[3]);
-        lines[3] = strdup(cache);
+    if (rom_name) {
+        fprintf(f, "%s\n%s\n%s\n%d\n%s\n%s\n%s",
+                rom_name, core, sys, lookup, rom_base, rom_full, strip_ext(rom_full));
+        LOG_INFO(mux_module, "Assign Content (Single): %s|%s|%s|%d|%s|%s|%s",
+                 rom_name, core, sys, lookup, rom_base, rom_full, strip_ext(rom_full))
+    } else {
+        fprintf(f, "%s\n%s\n%d", core, sys, lookup);
+        LOG_INFO(mux_module, "Assign Content: %s|%s|%d", core, sys, lookup)
     }
 
-    if (remove(filename) != 0) {
-        perror(lang.SYSTEM.FAIL_DELETE_FILE);
-        free_lines(lines, line_count);
-        return;
-    }
-
-    FILE *new_file = fopen(filename, "w");
-    if (!new_file) {
-        perror(lang.SYSTEM.FAIL_CREATE_FILE);
-        free_lines(lines, line_count);
-        return;
-    }
-
-    for (int i = 0; i < line_count; i++) {
-        fprintf(new_file, "%s\n", lines[i]);
-    }
-    free_lines(lines, line_count);
-
-    fclose(new_file);
+    fclose(f);
 }
 
-// Function to scan the directory and find .cfg files
-void update_cfg_files(const char *dirpath, const char *core, const char *sys, const int cache) {
-    char cache_char[MAX_BUFFER_SIZE];
-    snprintf(cache_char, sizeof(cache_char), "%d", cache);
-
-    DIR *dir = opendir(dirpath);
-    if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
-        return;
-    }
-
-    struct dirent *entry;
-    while ((entry = readdir(dir))) {
-        if (strstr(entry->d_name, ".cfg") && strcmp(entry->d_name, "core.cfg") != 0) {
-            char filepath[PATH_MAX];
-            snprintf(filepath, sizeof(filepath), "%s/%s", dirpath, entry->d_name);
-            modify_cfg_file(filepath, core, sys, cache_char);
-        }
-    }
-
-    closedir(dir);
-}
-
-void assign_core_single(char *rom_dir, char *core_dir, const char *core, char *sys, char *rom, int cache) {
-    char rom_path[MAX_BUFFER_SIZE];
-    snprintf(rom_path, sizeof(rom_path), "%s/%s.cfg",
-             core_dir, strip_ext(rom));
-
-    if (file_exist(rom_path)) remove(rom_path);
-
-    FILE *rom_file = fopen(rom_path, "w");
-    if (!rom_file) {
+void write_gov_file(char *path, char *gov, char *rom_name) {
+    FILE *f = fopen(path, "w");
+    if (!f) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
-    char rom_content[MAX_BUFFER_SIZE]; /* tis a confusing one! */
-    snprintf(rom_content, sizeof(rom_content), "%s\n%s\n%s\n%d\n%s\n%s\n%s",
-             strip_ext(rom),
-             core,
-             str_trim(sys),
-             cache,
-             str_replace(rom_dir, get_last_subdir(rom_dir, '/', 4), ""),
-             get_last_subdir(rom_dir, '/', 4),
-             rom
-    );
+    if (rom_name) {
+        fprintf(f, "%s", gov);
+        LOG_INFO(mux_module, "Assign Governor (Single): %s", gov)
+    } else {
+        fprintf(f, "%s", gov);
+        LOG_INFO(mux_module, "Assign Governor: %s", gov)
+    }
 
-    LOG_INFO(mux_module, "Assign Content (Single): %s", str_replace(rom_content, "\n", "|"))
-    fprintf(rom_file, "%s", rom_content);
-    fclose(rom_file);
+    fclose(f);
 }
 
-void assign_core_directory(char *core_dir, const char *core, char *sys, int cache, int purge) {
-    if (purge) {
-        delete_files_of_type(core_dir, "/core.cfg", NULL, 0);
-        update_cfg_files(core_dir, core, str_trim(sys), cache);
-    }
+void assign_core_single(char *rom_dir, char *core_dir, char *core, char *sys, char *rom, char *gov, int lookup) {
+    char base_path[MAX_BUFFER_SIZE];
+    char *rom_no_ext = strip_ext(rom);
+
+    snprintf(base_path, sizeof(base_path), "%s/%s", core_dir, rom_no_ext);
+
+    char cfg_path[MAX_BUFFER_SIZE];
+    char gov_path[MAX_BUFFER_SIZE];
+
+    snprintf(cfg_path, sizeof(cfg_path), "%s.cfg", base_path);
+    snprintf(gov_path, sizeof(gov_path), "%s.gov", base_path);
+
+    char *paths[] = {cfg_path, gov_path};
+    for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); ++i) if (file_exist(paths[i])) remove(paths[i]);
+
+    char *last_sub = get_last_subdir(rom_dir, '/', 4);
+    char *rom_base = str_replace(rom_dir, last_sub, "");
+    char *trimmed_sys = str_trim(sys);
+
+    write_core_file(cfg_path, core, trimmed_sys, lookup, rom_no_ext, rom_base, rom);
+    write_gov_file(gov_path, gov, rom_no_ext);
+
+    free(rom_base);
+}
+
+void assign_core_directory(char *core_dir, char *core, char *sys, char *gov, int lookup) {
+    delete_files_of_type(core_dir, ".cfg", NULL, 0);
+    delete_files_of_type(core_dir, ".gov", NULL, 0);
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/core.cfg", core_dir);
+    write_core_file(core_file, core, str_trim(sys), lookup, NULL, NULL, NULL);
 
-    FILE *file = fopen(core_file, "w");
-    if (!file) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
-        return;
-    }
-
-    char content[MAX_BUFFER_SIZE];
-    snprintf(content, sizeof(content), "%s\n%s\n%d",
-             core,
-             str_trim(sys),
-             cache
-    );
-
-    LOG_INFO(mux_module, "Assign Content (Directory): %s", str_replace(content, "\n", "|"))
-    fprintf(file, "%s", content);
-    fclose(file);
+    char gov_file[MAX_BUFFER_SIZE];
+    snprintf(gov_file, sizeof(gov_file), "%s/core.gov", core_dir);
+    write_gov_file(gov_file, gov, NULL);
 }
 
-void assign_core_parent(char *rom_dir, char *core_dir, const char *core, char *sys, int cache) {
-    assign_core_directory(core_dir, core, sys, cache, 1);
+void assign_core_parent(char *rom_dir, char *core_dir, char *core, char *sys, char *gov, int lookup) {
+    delete_files_of_type(core_dir, ".cfg", NULL, 1);
+    delete_files_of_type(core_dir, ".gov", NULL, 1);
+
+    assign_core_directory(core_dir, core, sys, gov, lookup);
 
     char **subdirs = get_subdirectories(rom_dir);
-    if (subdirs) {
-        for (int i = 0; subdirs[i]; i++) {
-            char subdir_file[MAX_BUFFER_SIZE];
-            snprintf(subdir_file, sizeof(subdir_file), "%s/%s/core.cfg", core_dir, subdirs[i]);
+    if (!subdirs) return;
 
-            create_directories(strip_dir(subdir_file));
+    for (int i = 0; subdirs[i]; i++) {
+        char subdir_path[MAX_BUFFER_SIZE];
+        snprintf(subdir_path, sizeof(subdir_path), "%s/%s", core_dir, subdirs[i]);
 
-            FILE *subdir_file_handle = fopen(subdir_file, "w");
-            if (!subdir_file_handle) {
-                perror(lang.SYSTEM.FAIL_FILE_OPEN);
-                continue;
-            }
+        create_directories(subdir_path);
 
-            char content[MAX_BUFFER_SIZE];
-            snprintf(content, sizeof(content), "%s\n%s\n%d",
-                     core,
-                     str_trim(sys),
-                     cache
-            );
+        char subdir_core[MAX_BUFFER_SIZE];
+        snprintf(subdir_core, sizeof(subdir_core), "%s/%s/core.cfg", core_dir, subdirs[i]);
+        write_core_file(subdir_core, core, str_trim(sys), lookup, NULL, NULL, NULL);
 
-            LOG_INFO(mux_module, "Assign Content (Recursive): %s", str_replace(content, "\n", "|"))
-            fprintf(subdir_file_handle, "%s", content);
-            fclose(subdir_file_handle);
-
-            char core_dir_path[MAX_BUFFER_SIZE];
-            snprintf(core_dir_path, sizeof(core_dir_path), "%s%s", core_dir, subdirs[i]);
-            update_cfg_files(core_dir_path, core, str_trim(sys), cache);
-        }
-        free_subdirectories(subdirs);
+        char subdir_gov[MAX_BUFFER_SIZE];
+        snprintf(subdir_gov, sizeof(subdir_gov), "%s/%s/core.gov", core_dir, subdirs[i]);
+        write_gov_file(subdir_gov, gov, NULL);
     }
+
+    free_subdirectories(subdirs);
 }
 
-void
-create_core_assignment(char *rom_dir, const char *core, char *sys, char *rom, int cache, enum core_gen_type method) {
+void create_core_assignment(char *rom_dir, char *core, char *sys, char *rom,
+                            char *gov, int lookup, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
@@ -223,17 +144,13 @@ create_core_assignment(char *rom_dir, const char *core, char *sys, char *rom, in
 
     switch (method) {
         case SINGLE:
-            assign_core_single(rom_dir, core_dir, core, sys, rom, cache);
+            assign_core_single(rom_dir, core_dir, core, sys, rom, gov, lookup);
             break;
         case PARENT:
-            assign_core_parent(rom_dir, core_dir, core, sys, cache);
+            assign_core_parent(rom_dir, core_dir, core, sys, gov, lookup);
             break;
         case DIRECTORY:
-            assign_core_directory(core_dir, core, sys, cache, 1);
-            break;
-        case DIRECTORY_NO_WIPE:
-        default:
-            assign_core_directory(core_dir, core, sys, cache, 0);
+            assign_core_directory(core_dir, core, sys, gov, lookup);
             break;
     }
 
@@ -301,6 +218,7 @@ bool automatic_assign_core(char *rom_dir) {
                     LOG_INFO(mux_module, "\tAssigned Core To: %s", auto_core)
 
                     static char core_catalogue[MAX_BUFFER_SIZE];
+                    static char core_governor[MAX_BUFFER_SIZE];
                     static int core_lookup;
 
                     char *use_local_catalogue = get_ini_string(core_ini, def_core, "catalogue", "none");
@@ -312,6 +230,15 @@ bool automatic_assign_core(char *rom_dir) {
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Catalogue: %s", core_catalogue)
                     }
 
+                    char *use_local_governor = get_ini_string(core_ini, def_core, "governor", "none");
+                    if (strcmp(use_local_governor, "none") != 0) {
+                        strcpy(core_governor, use_local_governor);
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor)
+                    } else {
+                        strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor)
+                    }
+
                     int use_local_lookup = get_ini_int(core_ini, def_core, "lookup", 0);
                     if (use_local_lookup) {
                         core_lookup = use_local_lookup;
@@ -321,7 +248,8 @@ bool automatic_assign_core(char *rom_dir) {
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Lookup: %d", core_lookup)
                     }
 
-                    create_core_assignment(rom_dir, auto_core, core_catalogue, "", core_lookup, DIRECTORY_NO_WIPE);
+                    create_core_assignment(rom_dir, auto_core, core_catalogue, "",
+                                           core_governor, core_lookup, DIRECTORY);
 
                     auto_assign_good = 1;
                     LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful")

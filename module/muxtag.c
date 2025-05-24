@@ -28,78 +28,61 @@ static void show_help() {
                      lang.MUXTAG.TITLE, lang.MUXTAG.HELP);
 }
 
-static void assign_tag_single(char *core_dir, const char *tag, char *rom) {
-    char rom_path[MAX_BUFFER_SIZE];
-    snprintf(rom_path, sizeof(rom_path), "%s/%s.tag",
-             core_dir, strip_ext(rom));
-
-    if (file_exist(rom_path)) remove(rom_path);
+static void write_tag_file(char *path, char *tag, char *log) {
     if (!strcasecmp(tag, "none")) return;
 
-    FILE *rom_file = fopen(rom_path, "w");
-    if (!rom_file) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
-        return;
-    }
-
-    LOG_INFO(mux_module, "Single Tag Content: %s", tag)
-    fprintf(rom_file, "%s", tag);
-    fclose(rom_file);
-}
-
-static void assign_tag_directory(char *core_dir, const char *tag, int purge) {
-    if (purge) {
-        delete_files_of_type(core_dir, "/core.tag", NULL, 0);
-        delete_files_of_type(core_dir, "tag", NULL, 0);
-    }
-
-    if (!strcasecmp(tag, "none")) return;
-
-    char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s/core.tag",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
-
-    FILE *file = fopen(core_file, "w");
+    FILE *file = fopen(path, "w");
     if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
+    LOG_INFO(mux_module, "%s: %s", log, tag)
+
     fprintf(file, "%s", tag);
     fclose(file);
 }
 
-static void assign_tag_parent(char *core_dir, const char *tag) {
-    delete_files_of_type(core_dir, "/core.tag", NULL, 1);
-    delete_files_of_type(core_dir, "tag", NULL, 1);
+static void assign_tag_single(char *core_dir, char *tag, char *rom) {
+    char tag_path[MAX_BUFFER_SIZE];
+    snprintf(tag_path, sizeof(tag_path), "%s/%s.tag", core_dir, strip_ext(rom));
+
+    if (file_exist(tag_path)) remove(tag_path);
+    write_tag_file(tag_path, tag, "Single Tag Content");
+}
+
+static void assign_tag_directory(char *core_dir, char *tag, int purge) {
+    if (purge) delete_files_of_type(core_dir, ".tag", NULL, 0);
+
+    char tag_path[MAX_BUFFER_SIZE];
+    snprintf(tag_path, sizeof(tag_path), "%s/%s/core.tag",
+             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+
+    write_tag_file(tag_path, tag, "Directory Tag Content");
+}
+
+static void assign_tag_parent(char *core_dir, char *tag) {
+    delete_files_of_type(core_dir, ".tag", NULL, 1);
 
     if (!strcasecmp(tag, "none")) return;
 
     assign_tag_directory(core_dir, tag, 0);
 
     char **subdirs = get_subdirectories(rom_dir);
-    if (subdirs) {
-        for (int i = 0; subdirs[i]; i++) {
-            char subdir_file[MAX_BUFFER_SIZE];
-            snprintf(subdir_file, sizeof(subdir_file), "%s%s/core.tag", core_dir, subdirs[i]);
+    if (!subdirs) return;
 
-            create_directories(strip_dir(subdir_file));
+    for (int i = 0; subdirs[i]; i++) {
+        char tag_path[MAX_BUFFER_SIZE];
+        snprintf(tag_path, sizeof(tag_path), "%s%s/core.tag", core_dir, subdirs[i]);
 
-            FILE *subdir_file_handle = fopen(subdir_file, "w");
-            if (!subdir_file_handle) {
-                perror(lang.SYSTEM.FAIL_FILE_OPEN);
-                continue;
-            }
-
-            fprintf(subdir_file_handle, "%s", tag);
-            fclose(subdir_file_handle);
-        }
-
-        free_subdirectories(subdirs);
+        create_directories(strip_dir(tag_path));
+        write_tag_file(tag_path, tag, "Recursive Tag Content");
     }
+
+    free_subdirectories(subdirs);
 }
 
-static void create_tag_assignment(const char *tag, char *rom, enum tag_gen_type method) {
+static void create_tag_assignment(char *tag, char *rom, enum tag_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s/",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
@@ -117,8 +100,6 @@ static void create_tag_assignment(const char *tag, char *rom, enum tag_gen_type 
             assign_tag_directory(core_dir, tag, 1);
             break;
     }
-
-    if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 }
 
 static void generate_available_tags() {
@@ -203,7 +184,7 @@ static void handle_a() {
     LOG_INFO(mux_module, "Single Tag Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, SINGLE);
 
     close_input();
@@ -232,7 +213,7 @@ static void handle_x() {
     LOG_INFO(mux_module, "Directory Tag Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, DIRECTORY);
 
     close_input();
@@ -245,7 +226,7 @@ static void handle_y() {
     LOG_INFO(mux_module, "Parent Tag Assignment Triggered")
     play_sound(SND_CONFIRM, 0);
 
-    const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
+    char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, PARENT);
 
     close_input();

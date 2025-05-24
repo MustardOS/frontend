@@ -2351,63 +2351,63 @@ void run_exec(const char *args[], size_t size, int background) {
     }
 }
 
-char *get_directory_core(char *rom_dir, size_t line_number) {
+char *get_directory_core(char *dir, size_t line) {
     char content_core[MAX_BUFFER_SIZE];
     snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
-    if (file_exist(content_core)) {
-        return read_line_char_from(content_core, line_number);
-    }
+             INFO_COR_PATH, get_last_subdir(dir, '/', 4));
+
+    if (file_exist(content_core)) return read_line_char_from(content_core, line);
+
     return "";
 }
 
-char *get_file_core(char *rom_dir, char *rom_name) {
+char *get_file_core(char *dir, char *name) {
     char content_core[MAX_BUFFER_SIZE];
     snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
-    if (file_exist(content_core)) {
-        return read_line_char_from(content_core, 2);
-    }
+             INFO_COR_PATH, get_last_subdir(dir, '/', 4), strip_ext(name));
+
+    if (file_exist(content_core)) return read_line_char_from(content_core, 2);
+
     return "";
 }
 
-char *get_directory_governor(char *rom_dir) {
+char *get_directory_governor(char *dir) {
     char content_governor[MAX_BUFFER_SIZE];
     snprintf(content_governor, sizeof(content_governor), "%s/%s/core.gov",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
-    if (file_exist(content_governor)) {
-        return read_line_char_from(content_governor, 1);
-    }
+             INFO_COR_PATH, get_last_subdir(dir, '/', 4));
+
+    if (file_exist(content_governor)) return read_line_char_from(content_governor, 1);
+
     return "";
 }
 
-char *get_file_governor(char *rom_dir, char *rom_name) {
+char *get_file_governor(char *dir, char *name) {
     char content_governor[MAX_BUFFER_SIZE];
     snprintf(content_governor, sizeof(content_governor), "%s/%s/%s.gov",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
-    if (file_exist(content_governor)) {
-        return read_line_char_from(content_governor, 1);
-    }
+             INFO_COR_PATH, get_last_subdir(dir, '/', 4), strip_ext(name));
+
+    if (file_exist(content_governor)) return read_line_char_from(content_governor, 1);
+
     return "";
 }
 
-char *get_directory_tag(char *rom_dir) {
+char *get_directory_tag(char *dir) {
     char content_tag[MAX_BUFFER_SIZE];
     snprintf(content_tag, sizeof(content_tag), "%s/%s/core.tag",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
-    if (file_exist(content_tag)) {
-        return read_line_char_from(content_tag, 1);
-    }
+             INFO_COR_PATH, get_last_subdir(dir, '/', 4));
+
+    if (file_exist(content_tag)) return read_line_char_from(content_tag, 1);
+
     return "";
 }
 
-char *get_file_tag(char *rom_dir, char *rom_name) {
+char *get_file_tag(char *dir, char *name) {
     char content_tag[MAX_BUFFER_SIZE];
     snprintf(content_tag, sizeof(content_tag), "%s/%s/%s.tag",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4), strip_ext(rom_name));
-    if (file_exist(content_tag)) {
-        return read_line_char_from(content_tag, 1);
-    }
+             INFO_COR_PATH, get_last_subdir(dir, '/', 4), strip_ext(name));
+
+    if (file_exist(content_tag)) return read_line_char_from(content_tag, 1);
+
     return "";
 }
 

@@ -6,26 +6,32 @@
 void load_device(struct mux_device *device) {
     char buffer[MAX_BUFFER_SIZE];
 
-#define DEV_INT_FIELD(field, path)                                  \
-    snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path); \
-    field = (int)({                                                 \
-        char *ep;                                                   \
-        long val = strtol(read_all_char_from(buffer), &ep, 10);    \
-        *ep ? 0 : val;                                              \
-    });
+#define DEV_INT_FIELD(field, path)                                      \
+    do {                                                                \
+        snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path); \
+        field = (int)({                                                 \
+            char *ep;                                                   \
+            long val = strtol(read_all_char_from(buffer), &ep, 10);     \
+            *ep ? 0 : val;                                              \
+        });                                                             \
+    } while (0);
 
-#define DEV_FLO_FIELD(field, path)                                   \
-    snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path);  \
-    field = (float)({                                                \
-        char *ep;                                                    \
-        double val = strtod(read_all_char_from(buffer), &ep);       \
-        *ep ? 1.0 : val;                                             \
-    });
+#define DEV_FLO_FIELD(field, path)                                      \
+    do {                                                                \
+        snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path); \
+        field = (float)({                                               \
+            char *ep;                                                   \
+            double val = strtod(read_all_char_from(buffer), &ep);       \
+            *ep ? 1.0 : val;                                            \
+        });                                                             \
+    } while (0);
 
-#define DEV_STR_FIELD(field, path)                                    \
-    snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path);   \
-    strncpy(field, read_all_char_from(buffer), MAX_BUFFER_SIZE - 1); \
-    field[MAX_BUFFER_SIZE - 1] = '\0';
+#define DEV_STR_FIELD(field, path)                                       \
+    do {                                                                 \
+        snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path);  \
+        strncpy(field, read_all_char_from(buffer), MAX_BUFFER_SIZE - 1); \
+        field[MAX_BUFFER_SIZE - 1] = '\0';                               \
+    } while (0);
 
 #define DEV_MNT_FIELD(field, path)                                            \
     DEV_INT_FIELD(device->STORAGE.field.PARTITION, "storage/" path "/num"  ); \

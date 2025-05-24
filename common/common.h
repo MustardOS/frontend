@@ -305,17 +305,17 @@ char *kiosk_nope();
 
 void run_exec(const char *args[], size_t size, int background);
 
-char *get_directory_core(char *rom_dir, size_t line_number);
+char *get_directory_core(char *dir, size_t line);
 
-char *get_file_core(char *rom_dir, char *rom_name);
+char *get_file_core(char *dir, char *name);
 
-char *get_directory_governor(char *rom_dir);
+char *get_directory_governor(char *dir);
 
-char *get_file_governor(char *rom_dir, char *rom_name);
+char *get_file_governor(char *dir, char *name);
 
-char *get_directory_tag(char *rom_dir);
+char *get_directory_tag(char *dir);
 
-char *get_file_tag(char *rom_dir, char *rom_name);
+char *get_file_tag(char *dir, char *name);
 
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size);
