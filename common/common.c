@@ -2460,30 +2460,13 @@ char *get_content_explorer_glyph_name(char *file_path) {
     return "rom";
 }
 
-uint32_t set_fnv1a_hash(const char *str) {
+uint32_t fnv1a_hash(const char *str) {
     uint32_t hash = 2166136261U; // FNV offset basis
-
     for (const char *p = str; *p; p++) {
         hash ^= (uint8_t) (*p);
         hash *= 16777619; // FNV prime
     }
-
     return hash;
-}
-
-bool has_fnv1a_hash(const char *filename, uint32_t *hash) {
-    size_t len = strlen(filename);
-    if (len < 13) return false;
-
-    const char *suffix = filename + len - 13;
-    if (suffix[0] != '-' || strcasecmp(suffix + 9, ".cfg") != 0) return false;
-
-    char hex[9] = {0};
-    strncpy(hex, suffix + 1, 8);
-    for (int i = 0; i < 8; ++i) if (!isxdigit(hex[i])) return false;
-
-    if (hash) sscanf(hex, "%x", hash);
-    return true;
 }
 
 bool get_glyph_path(const char *mux_module, const char *glyph_name,
