@@ -104,7 +104,6 @@
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
-#define MUOS_GVR_LOAD "/tmp/gvr_go" // Governor Runtime
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String
 #define MUOS_PIK_LOAD "/tmp/pik_go" // Customisation Picker Launch
 #define MUOS_PIN_LOAD "/tmp/pin_go" // Customisation Picker Last Index

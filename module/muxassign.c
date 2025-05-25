@@ -136,8 +136,8 @@ static void create_core_items(const char *target) {
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
-        char *directory_core = get_directory_core(rom_dir, 1);
-        char *file_core = get_file_core(rom_dir, rom_name);
+        char *directory_core = get_content_line(rom_dir, NULL, "cfg", 1);
+        char *file_core = get_content_line(rom_dir, rom_name, "cfg", 2);
 
         char display_name[MAX_BUFFER_SIZE];
         if (strcasecmp(file_core, directory_core) != 0 && !strcasecmp(file_core, items[i].extra_data)) {

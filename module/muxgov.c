@@ -118,7 +118,7 @@ static void generate_available_governors(const char *default_governor) {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    for (int i = 0; i < governor_count; i++) {
+    for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
         char *cap_name = str_capital(items[i].display_name);

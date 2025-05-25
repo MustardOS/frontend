@@ -28,7 +28,8 @@ void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name
 char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
     char rom_dir[MAX_BUFFER_SIZE];
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", sys_dir, content_label);
-    return get_directory_core(rom_dir, 2);
+
+    return get_content_line(rom_dir, NULL, "cfg", 2);
 }
 
 void write_core_file(char *path, char *core, char *sys, int lookup,

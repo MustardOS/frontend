@@ -727,13 +727,11 @@ void nav_move(lv_group_t *group, int direction) {
 }
 
 void nav_prev(lv_group_t *group, int count) {
-    int i;
-    for (i = 0; i < count; i++) lv_group_focus_prev(group);
+    for (int i = 0; i < count; i++) lv_group_focus_prev(group);
 }
 
 void nav_next(lv_group_t *group, int count) {
-    int i;
-    for (i = 0; i < count; i++) lv_group_focus_next(group);
+    for (int i = 0; i < count; i++) lv_group_focus_next(group);
 }
 
 char *get_datetime() {
@@ -751,49 +749,20 @@ void datetime_task(lv_timer_t *timer) {
 }
 
 char *get_capacity() {
-    char *battery_glyph_name = read_line_int_from(device.BATTERY.CHARGER, 1) ? "capacity_charging_" : "capacity_";
+    static char capacity[MAX_BUFFER_SIZE];
+    const char *prefix = read_line_int_from(device.BATTERY.CHARGER, 1)
+                         ? "capacity_charging_"
+                         : "capacity_";
 
-    static char capacity_str[MAX_BUFFER_SIZE];
-    switch (battery_capacity) {
-        case -255 ... 5:
-            snprintf(capacity_str, sizeof(capacity_str), "%s0", battery_glyph_name);
-            break;
-        case 6 ... 10:
-            snprintf(capacity_str, sizeof(capacity_str), "%s10", battery_glyph_name);
-            break;
-        case 11 ... 20:
-            snprintf(capacity_str, sizeof(capacity_str), "%s20", battery_glyph_name);
-            break;
-        case 21 ... 30:
-            snprintf(capacity_str, sizeof(capacity_str), "%s30", battery_glyph_name);
-            break;
-        case 31 ... 40:
-            snprintf(capacity_str, sizeof(capacity_str), "%s40", battery_glyph_name);
-            break;
-        case 41 ... 50:
-            snprintf(capacity_str, sizeof(capacity_str), "%s50", battery_glyph_name);
-            break;
-        case 51 ... 60:
-            snprintf(capacity_str, sizeof(capacity_str), "%s60", battery_glyph_name);
-            break;
-        case 61 ... 70:
-            snprintf(capacity_str, sizeof(capacity_str), "%s70", battery_glyph_name);
-            break;
-        case 71 ... 80:
-            snprintf(capacity_str, sizeof(capacity_str), "%s80", battery_glyph_name);
-            break;
-        case 81 ... 90:
-            snprintf(capacity_str, sizeof(capacity_str), "%s90", battery_glyph_name);
-            break;
-        case 91 ... 255:
-            snprintf(capacity_str, sizeof(capacity_str), "%s100", battery_glyph_name);
-            break;
-        default:
-            snprintf(capacity_str, sizeof(capacity_str), "%s0", battery_glyph_name);
-            break;
-    }
+    int level = battery_capacity;
+    if (level < 0) level = 0;
+    if (level > 100) level = 100;
 
-    return capacity_str;
+    // Round down to nearest multiple of 10
+    int rounded = (level / 10) * 10;
+
+    snprintf(capacity, sizeof(capacity), "%s%d", prefix, rounded);
+    return capacity;
 }
 
 void capacity_task() {
@@ -834,17 +803,6 @@ void decrease_option_value(lv_obj_t *element) {
 
 void load_assign(const char *rom, const char *dir, const char *sys, int forced) {
     FILE *file = fopen(MUOS_ASS_LOAD, "w");
-    if (file == NULL) {
-        perror(lang.SYSTEM.FAIL_FILE_OPEN);
-        return;
-    }
-
-    fprintf(file, "%s\n%s\n%s\n%d", rom, dir, sys, forced);
-    fclose(file);
-}
-
-void load_gov(const char *rom, const char *dir, const char *sys, int forced) {
-    FILE *file = fopen(MUOS_GOV_LOAD, "w");
     if (file == NULL) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
@@ -2351,62 +2309,17 @@ void run_exec(const char *args[], size_t size, int background) {
     }
 }
 
-char *get_directory_core(char *dir, size_t line) {
-    char content_core[MAX_BUFFER_SIZE];
-    snprintf(content_core, sizeof(content_core), "%s/%s/core.cfg",
-             INFO_COR_PATH, get_last_subdir(dir, '/', 4));
+char *get_content_line(char *dir, char *name, char *ext, size_t line) {
+    static char path[MAX_BUFFER_SIZE];
+    const char *subdir = get_last_subdir(dir, '/', 4);
 
-    if (file_exist(content_core)) return read_line_char_from(content_core, line);
+    if (name == NULL) {
+        snprintf(path, sizeof(path), "%s/%s/core.%s", INFO_COR_PATH, subdir, ext);
+    } else {
+        snprintf(path, sizeof(path), "%s/%s/%s.%s", INFO_COR_PATH, subdir, strip_ext(name), ext);
+    }
 
-    return "";
-}
-
-char *get_file_core(char *dir, char *name) {
-    char content_core[MAX_BUFFER_SIZE];
-    snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
-             INFO_COR_PATH, get_last_subdir(dir, '/', 4), strip_ext(name));
-
-    if (file_exist(content_core)) return read_line_char_from(content_core, 2);
-
-    return "";
-}
-
-char *get_directory_governor(char *dir) {
-    char content_governor[MAX_BUFFER_SIZE];
-    snprintf(content_governor, sizeof(content_governor), "%s/%s/core.gov",
-             INFO_COR_PATH, get_last_subdir(dir, '/', 4));
-
-    if (file_exist(content_governor)) return read_line_char_from(content_governor, 1);
-
-    return "";
-}
-
-char *get_file_governor(char *dir, char *name) {
-    char content_governor[MAX_BUFFER_SIZE];
-    snprintf(content_governor, sizeof(content_governor), "%s/%s/%s.gov",
-             INFO_COR_PATH, get_last_subdir(dir, '/', 4), strip_ext(name));
-
-    if (file_exist(content_governor)) return read_line_char_from(content_governor, 1);
-
-    return "";
-}
-
-char *get_directory_tag(char *dir) {
-    char content_tag[MAX_BUFFER_SIZE];
-    snprintf(content_tag, sizeof(content_tag), "%s/%s/core.tag",
-             INFO_COR_PATH, get_last_subdir(dir, '/', 4));
-
-    if (file_exist(content_tag)) return read_line_char_from(content_tag, 1);
-
-    return "";
-}
-
-char *get_file_tag(char *dir, char *name) {
-    char content_tag[MAX_BUFFER_SIZE];
-    snprintf(content_tag, sizeof(content_tag), "%s/%s/%s.tag",
-             INFO_COR_PATH, get_last_subdir(dir, '/', 4), strip_ext(name));
-
-    if (file_exist(content_tag)) return read_line_char_from(content_tag, 1);
+    if (file_exist(path)) return read_line_char_from(path, line);
 
     return "";
 }

@@ -194,8 +194,6 @@ void decrease_option_value(lv_obj_t *element);
 
 void load_assign(const char *rom, const char *dir, const char *sys, int forced);
 
-void load_gov(const char *rom, const char *dir, const char *sys, int forced);
-
 void load_mux(const char *value);
 
 void play_sound(int sound, int wait);
@@ -305,17 +303,7 @@ char *kiosk_nope();
 
 void run_exec(const char *args[], size_t size, int background);
 
-char *get_directory_core(char *dir, size_t line);
-
-char *get_file_core(char *dir, char *name);
-
-char *get_directory_governor(char *dir);
-
-char *get_file_governor(char *dir, char *name);
-
-char *get_directory_tag(char *dir);
-
-char *get_file_tag(char *dir, char *name);
+char *get_content_line(char *dir, char *name, char *ext, size_t line);
 
 int load_image_catalogue(const char *catalogue_name, const char *program, const char *program_fallback,
                          const char *mux_dimension, const char *image_type, char *image_path, size_t path_size);

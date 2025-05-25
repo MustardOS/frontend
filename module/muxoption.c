@@ -96,20 +96,18 @@ static void add_info_items() {
 
     const char *dot = strrchr(rom_name, '.');
     if ((dot && dot != rom_name)) {
-        add_info_item_type(&line_index, lang.MUXOPTION.CORE,
-                           get_file_core(rom_dir, rom_name),
-                           get_directory_core(rom_dir, 1),
-                           "core", false);
+        const char *core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
+        const char *core_dir = get_content_line(rom_dir, NULL, "cfg", 1);
 
-        add_info_item_type(&line_index, lang.MUXOPTION.GOVERNOR,
-                           get_file_governor(rom_dir, rom_name),
-                           get_directory_governor(rom_dir),
-                           "governor", true);
+        const char *gov_file = get_content_line(rom_dir, rom_name, "gov", 1);
+        const char *gov_dir = get_content_line(rom_dir, NULL, "gov", 1);
 
-        add_info_item_type(&line_index, lang.MUXOPTION.TAG,
-                           get_file_tag(rom_dir, rom_name),
-                           get_directory_tag(rom_dir),
-                           "tag", true);
+        const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
+        const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
+
+        add_info_item_type(&line_index, lang.MUXOPTION.CORE, core_file, core_dir, "core", false);
+        add_info_item_type(&line_index, lang.MUXOPTION.GOVERNOR, gov_file, gov_dir, "governor", true);
+        add_info_item_type(&line_index, lang.MUXOPTION.TAG, tag_file, tag_dir, "tag", true);
 
         add_info_item(line_index++, "", "", "", true);
     }

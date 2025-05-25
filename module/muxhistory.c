@@ -433,7 +433,7 @@ static int load_content(const char *content_name) {
 
         write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
         write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, 1));
-        write_text_to_file(MUOS_GVR_LOAD, "w", CHAR, assigned_gov);
+        write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
         return 1;
     }
