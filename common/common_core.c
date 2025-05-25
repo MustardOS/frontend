@@ -31,7 +31,8 @@ char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
     return get_directory_core(rom_dir, 2);
 }
 
-void write_core_file(char *path, char *core, char *sys, int lookup, char *rom_name, char *rom_base, char *rom_full) {
+void write_core_file(char *path, char *core, char *sys, int lookup,
+                     char *rom_name, char *rom_mount, char *rom_base, char *rom_full) {
     FILE *f = fopen(path, "w");
     if (!f) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
@@ -40,9 +41,9 @@ void write_core_file(char *path, char *core, char *sys, int lookup, char *rom_na
 
     if (rom_name) {
         fprintf(f, "%s\n%s\n%s\n%d\n%s\n%s\n%s",
-                rom_name, core, sys, lookup, rom_base, rom_full, strip_ext(rom_full));
+                rom_name, core, sys, lookup, rom_mount, rom_base, rom_full);
         LOG_INFO(mux_module, "Assign Content (Single): %s|%s|%s|%d|%s|%s|%s",
-                 rom_name, core, sys, lookup, rom_base, rom_full, strip_ext(rom_full))
+                 rom_name, core, sys, lookup, rom_mount, rom_base, rom_full)
     } else {
         fprintf(f, "%s\n%s\n%d", core, sys, lookup);
         LOG_INFO(mux_module, "Assign Content: %s|%s|%d", core, sys, lookup)
@@ -85,13 +86,10 @@ void assign_core_single(char *rom_dir, char *core_dir, char *core, char *sys, ch
     for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); ++i) if (file_exist(paths[i])) remove(paths[i]);
 
     char *last_sub = get_last_subdir(rom_dir, '/', 4);
-    char *rom_base = str_replace(rom_dir, last_sub, "");
     char *trimmed_sys = str_trim(sys);
 
-    write_core_file(cfg_path, core, trimmed_sys, lookup, rom_no_ext, rom_base, rom);
+    write_core_file(cfg_path, core, trimmed_sys, lookup, rom_no_ext, str_replace(rom_dir, last_sub, ""), last_sub, rom);
     write_gov_file(gov_path, gov, rom_no_ext);
-
-    free(rom_base);
 }
 
 void assign_core_directory(char *core_dir, char *core, char *sys, char *gov, int lookup) {
@@ -100,7 +98,7 @@ void assign_core_directory(char *core_dir, char *core, char *sys, char *gov, int
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/core.cfg", core_dir);
-    write_core_file(core_file, core, str_trim(sys), lookup, NULL, NULL, NULL);
+    write_core_file(core_file, core, str_trim(sys), lookup, NULL, NULL, NULL, NULL);
 
     char gov_file[MAX_BUFFER_SIZE];
     snprintf(gov_file, sizeof(gov_file), "%s/core.gov", core_dir);
@@ -124,7 +122,7 @@ void assign_core_parent(char *rom_dir, char *core_dir, char *core, char *sys, ch
 
         char subdir_core[MAX_BUFFER_SIZE];
         snprintf(subdir_core, sizeof(subdir_core), "%s/%s/core.cfg", core_dir, subdirs[i]);
-        write_core_file(subdir_core, core, str_trim(sys), lookup, NULL, NULL, NULL);
+        write_core_file(subdir_core, core, str_trim(sys), lookup, NULL, NULL, NULL, NULL);
 
         char subdir_gov[MAX_BUFFER_SIZE];
         snprintf(subdir_gov, sizeof(subdir_gov), "%s/%s/core.gov", core_dir, subdirs[i]);

@@ -74,7 +74,8 @@ static void display_refresh() {
 
 static void display_create(monitor_t *m) {
     m->window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                 device.SCREEN.WIDTH, device.SCREEN.HEIGHT, SDL_WINDOW_FULLSCREEN);
+                                 device.SCREEN.WIDTH, device.SCREEN.HEIGHT,
+                                 SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_ALLOW_HIGHDPI);
     m->renderer = SDL_CreateRenderer(m->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     m->texture = SDL_CreateTexture(m->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
                                    device.MUX.WIDTH, device.MUX.HEIGHT);
