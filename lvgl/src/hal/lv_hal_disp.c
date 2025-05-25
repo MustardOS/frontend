@@ -237,8 +237,7 @@ void lv_disp_drv_update(lv_disp_t *disp, lv_disp_drv_t *new_drv) {
     disp->driver = new_drv;
 
     if (disp->driver->full_refresh &&
-        disp->driver->draw_buf->size < (uint32_t)
-                                               disp->driver->hor_res * disp->driver->ver_res) {
+        disp->driver->draw_buf->size < (uint32_t) disp->driver->hor_res * disp->driver->ver_res) {
         disp->driver->full_refresh = 0;
         LV_LOG_WARN("full_refresh requires at least screen sized draw buffer(s)");
     }
@@ -636,8 +635,7 @@ static void set_px_alpha_generic(lv_img_dsc_t *d, lv_coord_t x, lv_coord_t y, lv
     uint8_t br = lv_color_brightness(color);
     if (opa < LV_OPA_MAX) {
         uint8_t bg = lv_img_buf_get_px_alpha(d, x, y);
-        br = (uint16_t) ((uint16_t)
-                                 br * opa + (bg * (255 - opa))) >> 8;
+        br = (uint16_t) ((uint16_t) br * opa + (bg * (255 - opa))) >> 8;
     }
 
     lv_img_buf_set_px_alpha(d, x, y, br);

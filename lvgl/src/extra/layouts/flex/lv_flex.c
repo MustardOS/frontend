@@ -221,7 +221,7 @@ static void flex_update(lv_obj_t *cont, void *user_data) {
                        lv_obj_get_scroll_x(cont);
 
     lv_flex_align_t track_cross_place = f.track_place;
-    lv_coord_t * cross_pos = (f.row ? &abs_y : &abs_x);
+    lv_coord_t *cross_pos = (f.row ? &abs_y : &abs_x);
 
     lv_coord_t w_set = lv_obj_get_style_width(cont, LV_PART_MAIN);
     lv_coord_t h_set = lv_obj_get_style_height(cont, LV_PART_MAIN);
@@ -310,10 +310,8 @@ static int32_t find_track_end(lv_obj_t *cont, flex_t *f, int32_t item_start_id, 
     if (f->wrap && ((f->row && w_set == LV_SIZE_CONTENT) || (!f->row && h_set == LV_SIZE_CONTENT))) {
         f->wrap = false;
     }
-    lv_coord_t(*get_main_size)(
-    const lv_obj_t *) = (f->row ? lv_obj_get_width : lv_obj_get_height);
-    lv_coord_t(*get_cross_size)(
-    const lv_obj_t *) = (!f->row ? lv_obj_get_width : lv_obj_get_height);
+    lv_coord_t (*get_main_size)(const lv_obj_t *) = (f->row ? lv_obj_get_width : lv_obj_get_height);
+    lv_coord_t (*get_cross_size)(const lv_obj_t *) = (!f->row ? lv_obj_get_width : lv_obj_get_height);
 
     t->track_main_size = 0;
     t->track_fix_main_size = 0;
@@ -393,10 +391,8 @@ static int32_t find_track_end(lv_obj_t *cont, flex_t *f, int32_t item_start_id, 
 static void children_repos(lv_obj_t *cont, flex_t *f, int32_t item_first_id, int32_t item_last_id, lv_coord_t abs_x,
                            lv_coord_t abs_y, lv_coord_t max_main_size, lv_coord_t item_gap, track_t *t) {
     void (*area_set_main_size)(lv_area_t *, lv_coord_t) = (f->row ? lv_area_set_width : lv_area_set_height);
-    lv_coord_t(*area_get_main_size)(
-    const lv_area_t *) = (f->row ? lv_area_get_width : lv_area_get_height);
-    lv_coord_t(*area_get_cross_size)(
-    const lv_area_t *) = (!f->row ? lv_area_get_width : lv_area_get_height);
+    lv_coord_t (*area_get_main_size)(const lv_area_t *) = (f->row ? lv_area_get_width : lv_area_get_height);
+    lv_coord_t (*area_get_cross_size)(const lv_area_t *) = (!f->row ? lv_area_get_width : lv_area_get_height);
 
     /*Calculate the size of grow items first*/
     uint32_t i;

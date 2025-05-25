@@ -7,7 +7,6 @@
  *      INCLUDES
  *********************/
 #include "lv_ffmpeg.h"
-
 #if LV_USE_FFMPEG != 0
 
 #include <libavcodec/avcodec.h>
@@ -21,17 +20,17 @@
  *      DEFINES
  *********************/
 #if LV_COLOR_DEPTH == 1 || LV_COLOR_DEPTH == 8
-#define AV_PIX_FMT_TRUE_COLOR AV_PIX_FMT_RGB8
+    #define AV_PIX_FMT_TRUE_COLOR AV_PIX_FMT_RGB8
 #elif LV_COLOR_DEPTH == 16
-#if LV_COLOR_16_SWAP == 0
-#define AV_PIX_FMT_TRUE_COLOR AV_PIX_FMT_RGB565LE
-#else
-#define AV_PIX_FMT_TRUE_COLOR AV_PIX_FMT_RGB565BE
-#endif
+    #if LV_COLOR_16_SWAP == 0
+        #define AV_PIX_FMT_TRUE_COLOR AV_PIX_FMT_RGB565LE
+    #else
+        #define AV_PIX_FMT_TRUE_COLOR AV_PIX_FMT_RGB565BE
+    #endif
 #elif LV_COLOR_DEPTH == 32
-#define AV_PIX_FMT_TRUE_COLOR AV_PIX_FMT_BGR0
+    #define AV_PIX_FMT_TRUE_COLOR AV_PIX_FMT_BGR0
 #else
-#error Unsupported  LV_COLOR_DEPTH
+    #error Unsupported  LV_COLOR_DEPTH
 #endif
 
 #define MY_CLASS &lv_ffmpeg_player_class

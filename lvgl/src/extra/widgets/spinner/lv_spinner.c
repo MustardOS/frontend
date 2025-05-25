@@ -7,7 +7,6 @@
  *      INCLUDES
  *********************/
 #include "lv_spinner.h"
-
 #if LV_USE_SPINNER
 
 /*********************

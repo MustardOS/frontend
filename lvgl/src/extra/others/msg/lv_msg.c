@@ -7,7 +7,6 @@
  *      INCLUDES
  *********************/
 #include "lv_msg.h"
-
 #if LV_USE_MSG
 
 #include "../../../misc/lv_assert.h"

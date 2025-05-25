@@ -10,7 +10,6 @@ This implementation can be also considered as a reference implementation, for co
 develop accelerated drawing functions with other APIs such as OpenGL/OpenGL ES.
 
 ## Caveats
-
 `lv_draw_arc`, `lv_draw_line` is not enabled, due to incomplete implementation. So lines and arcs will
 have significant impact to drawing performances.
 

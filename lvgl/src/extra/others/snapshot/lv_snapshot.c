@@ -7,7 +7,6 @@
  *      INCLUDES
  *********************/
 #include "lv_snapshot.h"
-
 #if LV_USE_SNAPSHOT
 
 #include <stdbool.h>

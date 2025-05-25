@@ -407,7 +407,6 @@ static void lv_img_destructor(const lv_obj_class_t *class_p, lv_obj_t *obj) {
 static lv_point_t lv_img_get_transformed_size(lv_obj_t *obj) {
     lv_img_t *img = (lv_img_t *) obj;
 
-
     lv_area_t area_transform;
     _lv_img_buf_get_transformed_area(&area_transform, img->w, img->h,
                                      img->angle, img->zoom, &img->pivot);
@@ -442,7 +441,7 @@ static void lv_img_event(const lv_obj_class_t *class_p, lv_event_t *e) {
         }
     } else if (code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
 
-        lv_coord_t * s = lv_event_get_param(e);
+        lv_coord_t *s = lv_event_get_param(e);
 
         /*If the image has angle provide enough room for the rotated corners*/
         if (img->angle || img->zoom != LV_IMG_ZOOM_NONE) {

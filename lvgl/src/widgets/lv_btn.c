@@ -8,7 +8,6 @@
  *********************/
 
 #include "lv_btn.h"
-
 #if LV_USE_BTN != 0
 
 #include "../extra/layouts/flex/lv_flex.h"

@@ -288,9 +288,8 @@ static void draw_indic(lv_event_t *e) {
 
     lv_coord_t anim_cur_value_x, anim_start_value_x;
 
-    lv_coord_t * axis1, *axis2;
-    lv_coord_t(*indic_length_calc)(
-    const lv_area_t *area);
+    lv_coord_t *axis1, *axis2;
+    lv_coord_t (*indic_length_calc)(const lv_area_t *area);
 
     if (hor) {
         axis1 = &bar->indic_area.x1;
@@ -332,7 +331,7 @@ static void draw_indic(lv_event_t *e) {
     lv_base_dir_t base_dir = lv_obj_get_style_base_dir(obj, LV_PART_MAIN);
     if (hor && base_dir == LV_BASE_DIR_RTL) {
         /*Swap axes*/
-        lv_coord_t * tmp;
+        lv_coord_t *tmp;
         tmp = axis1;
         axis1 = axis2;
         axis2 = tmp;
@@ -512,7 +511,7 @@ static void lv_bar_event(const lv_obj_class_t *class_p, lv_event_t *e) {
         indic_size = lv_obj_calculate_ext_draw_size(obj, LV_PART_INDICATOR);
 
         /*Bg size is handled by lv_obj*/
-        lv_coord_t * s = lv_event_get_param(e);
+        lv_coord_t *s = lv_event_get_param(e);
         *s = LV_MAX(*s, indic_size);
 
         /*Calculate the indicator area*/

@@ -42,12 +42,19 @@ static int32_t kern_pair_8_compare(const void *ref, const void *element);
 static int32_t kern_pair_16_compare(const void *ref, const void *element);
 
 #if LV_USE_FONT_COMPRESSED
-static void decompress(const uint8_t * in, uint8_t * out, lv_coord_t w, lv_coord_t h, uint8_t bpp, bool prefilter);
-static inline void decompress_line(uint8_t * out, lv_coord_t w);
-static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len);
-static inline void bits_write(uint8_t * out, uint32_t bit_pos, uint8_t val, uint8_t len);
-static inline void rle_init(const uint8_t * in,  uint8_t bpp);
+
+static void decompress(const uint8_t *in, uint8_t *out, lv_coord_t w, lv_coord_t h, uint8_t bpp, bool prefilter);
+
+static inline void decompress_line(uint8_t *out, lv_coord_t w);
+
+static inline uint8_t get_bits(const uint8_t *in, uint32_t bit_pos, uint8_t len);
+
+static inline void bits_write(uint8_t *out, uint32_t bit_pos, uint8_t val, uint8_t len);
+
+static inline void rle_init(const uint8_t *in, uint8_t bpp);
+
 static inline uint8_t rle_next(void);
+
 #endif /*LV_USE_FONT_COMPRESSED*/
 
 /**********************
@@ -55,7 +62,7 @@ static inline uint8_t rle_next(void);
  **********************/
 #if LV_USE_FONT_COMPRESSED
 static uint32_t rle_rdp;
-static const uint8_t * rle_in;
+static const uint8_t *rle_in;
 static uint8_t rle_bpp;
 static uint8_t rle_prev_v;
 static uint8_t rle_cnt;
@@ -96,14 +103,14 @@ const uint8_t *lv_font_get_bitmap_fmt_txt(const lv_font_t *font, uint32_t unicod
     else {
 #if LV_USE_FONT_COMPRESSED
         static size_t last_buf_size = 0;
-        if(LV_GC_ROOT(_lv_font_decompr_buf) == NULL) last_buf_size = 0;
+        if (LV_GC_ROOT(_lv_font_decompr_buf) == NULL) last_buf_size = 0;
 
         uint32_t gsize = gdsc->box_w * gdsc->box_h;
-        if(gsize == 0) return NULL;
+        if (gsize == 0) return NULL;
 
         uint32_t buf_size = gsize;
         /*Compute memory size needed to hold decompressed glyph, rounding up*/
-        switch(fdsc->bpp) {
+        switch (fdsc->bpp) {
             case 1:
                 buf_size = (gsize + 7) >> 3;
                 break;
@@ -118,17 +125,17 @@ const uint8_t *lv_font_get_bitmap_fmt_txt(const lv_font_t *font, uint32_t unicod
                 break;
         }
 
-        if(last_buf_size < buf_size) {
-            uint8_t * tmp = lv_mem_realloc(LV_GC_ROOT(_lv_font_decompr_buf), buf_size);
+        if (last_buf_size < buf_size) {
+            uint8_t *tmp = lv_mem_realloc(LV_GC_ROOT(_lv_font_decompr_buf), buf_size);
             LV_ASSERT_MALLOC(tmp);
-            if(tmp == NULL) return NULL;
+            if (tmp == NULL) return NULL;
             LV_GC_ROOT(_lv_font_decompr_buf) = tmp;
             last_buf_size = buf_size;
         }
 
         bool prefilter = fdsc->bitmap_format == LV_FONT_FMT_TXT_COMPRESSED ? true : false;
         decompress(&fdsc->glyph_bitmap[gdsc->bitmap_index], LV_GC_ROOT(_lv_font_decompr_buf), gdsc->box_w, gdsc->box_h,
-                   (uint8_t)fdsc->bpp, prefilter);
+                   (uint8_t) fdsc->bpp, prefilter);
         return LV_GC_ROOT(_lv_font_decompr_buf);
 #else /*!LV_USE_FONT_COMPRESSED*/
         LV_LOG_WARN("Compressed fonts is used but LV_USE_FONT_COMPRESSED is not enabled in lv_conf.h");
@@ -183,8 +190,7 @@ bool lv_font_get_glyph_dsc_fmt_txt(const lv_font_t *font, lv_font_glyph_dsc_t *d
     dsc_out->box_w = gdsc->box_w;
     dsc_out->ofs_x = gdsc->ofs_x;
     dsc_out->ofs_y = gdsc->ofs_y;
-    dsc_out->bpp = (uint8_t)
-            fdsc->bpp;
+    dsc_out->bpp = (uint8_t) fdsc->bpp;
     dsc_out->is_placeholder = false;
 
     if (is_tab) dsc_out->box_w = dsc_out->box_w * 2;
@@ -197,7 +203,7 @@ bool lv_font_get_glyph_dsc_fmt_txt(const lv_font_t *font, lv_font_glyph_dsc_t *d
  */
 void _lv_font_clean_up_fmt_txt(void) {
 #if LV_USE_FONT_COMPRESSED
-    if(LV_GC_ROOT(_lv_font_decompr_buf)) {
+    if (LV_GC_ROOT(_lv_font_decompr_buf)) {
         lv_mem_free(LV_GC_ROOT(_lv_font_decompr_buf));
         LV_GC_ROOT(_lv_font_decompr_buf) = NULL;
     }
@@ -337,6 +343,7 @@ static int32_t kern_pair_16_compare(const void *ref, const void *element) {
 }
 
 #if LV_USE_FONT_COMPRESSED
+
 /**
  * The compress a glyph's bitmap
  * @param in the compressed bitmap
@@ -345,19 +352,18 @@ static int32_t kern_pair_16_compare(const void *ref, const void *element) {
  * @param bpp bit per pixel (bpp = 3 will be converted to bpp = 4)
  * @param prefilter true: the lines are XORed
  */
-static void decompress(const uint8_t * in, uint8_t * out, lv_coord_t w, lv_coord_t h, uint8_t bpp, bool prefilter)
-{
+static void decompress(const uint8_t *in, uint8_t *out, lv_coord_t w, lv_coord_t h, uint8_t bpp, bool prefilter) {
     uint32_t wrp = 0;
     uint8_t wr_size = bpp;
-    if(bpp == 3) wr_size = 4;
+    if (bpp == 3) wr_size = 4;
 
     rle_init(in, bpp);
 
-    uint8_t * line_buf1 = lv_mem_buf_get(w);
+    uint8_t *line_buf1 = lv_mem_buf_get(w);
 
-    uint8_t * line_buf2 = NULL;
+    uint8_t *line_buf2 = NULL;
 
-    if(prefilter) {
+    if (prefilter) {
         line_buf2 = lv_mem_buf_get(w);
     }
 
@@ -366,25 +372,24 @@ static void decompress(const uint8_t * in, uint8_t * out, lv_coord_t w, lv_coord
     lv_coord_t y;
     lv_coord_t x;
 
-    for(x = 0; x < w; x++) {
+    for (x = 0; x < w; x++) {
         bits_write(out, wrp, line_buf1[x], bpp);
         wrp += wr_size;
     }
 
-    for(y = 1; y < h; y++) {
-        if(prefilter) {
+    for (y = 1; y < h; y++) {
+        if (prefilter) {
             decompress_line(line_buf2, w);
 
-            for(x = 0; x < w; x++) {
+            for (x = 0; x < w; x++) {
                 line_buf1[x] = line_buf2[x] ^ line_buf1[x];
                 bits_write(out, wrp, line_buf1[x], bpp);
                 wrp += wr_size;
             }
-        }
-        else {
+        } else {
             decompress_line(line_buf1, w);
 
-            for(x = 0; x < w; x++) {
+            for (x = 0; x < w; x++) {
                 bits_write(out, wrp, line_buf1[x], bpp);
                 wrp += wr_size;
             }
@@ -400,10 +405,9 @@ static void decompress(const uint8_t * in, uint8_t * out, lv_coord_t w, lv_coord
  * @param out output buffer
  * @param w width of the line in pixel count
  */
-static inline void decompress_line(uint8_t * out, lv_coord_t w)
-{
+static inline void decompress_line(uint8_t *out, lv_coord_t w) {
     lv_coord_t i;
-    for(i = 0; i < w; i++) {
+    for (i = 0; i < w; i++) {
         out[i] = rle_next();
     }
 }
@@ -415,10 +419,9 @@ static inline void decompress_line(uint8_t * out, lv_coord_t w)
  * @param len number of bits to read (must be <= 8).
  * @return the read bits
  */
-static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len)
-{
+static inline uint8_t get_bits(const uint8_t *in, uint32_t bit_pos, uint8_t len) {
     uint8_t bit_mask;
-    switch(len) {
+    switch (len) {
         case 1:
             bit_mask = 0x1;
             break;
@@ -435,17 +438,16 @@ static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len
             bit_mask = 0xFF;
             break;
         default:
-            bit_mask = (uint16_t)((uint16_t) 1 << len) - 1;
+            bit_mask = (uint16_t) ((uint16_t) 1 << len) - 1;
     }
 
     uint32_t byte_pos = bit_pos >> 3;
     bit_pos = bit_pos & 0x7;
 
-    if(bit_pos + len >= 8) {
+    if (bit_pos + len >= 8) {
         uint16_t in16 = (in[byte_pos] << 8) + in[byte_pos + 1];
         return (in16 >> (16 - bit_pos - len)) & bit_mask;
-    }
-    else {
+    } else {
         return (in[byte_pos] >> (8 - bit_pos - len)) & bit_mask;
     }
 }
@@ -458,11 +460,10 @@ static inline uint8_t get_bits(const uint8_t * in, uint32_t bit_pos, uint8_t len
  * @param len length of bits to write from `val`. (Counted from the LSB).
  * @note `len == 3` will be converted to `len = 4` and `val` will be upscaled too
  */
-static inline void bits_write(uint8_t * out, uint32_t bit_pos, uint8_t val, uint8_t len)
-{
-    if(len == 3) {
+static inline void bits_write(uint8_t *out, uint32_t bit_pos, uint8_t val, uint8_t len) {
+    if (len == 3) {
         len = 4;
-        switch(val) {
+        switch (val) {
             case 0:
                 val = 0;
                 break;
@@ -494,13 +495,12 @@ static inline void bits_write(uint8_t * out, uint32_t bit_pos, uint8_t val, uint
     bit_pos = bit_pos & 0x7;
     bit_pos = 8 - bit_pos - len;
 
-    uint8_t bit_mask = (uint16_t)((uint16_t) 1 << len) - 1;
+    uint8_t bit_mask = (uint16_t) ((uint16_t) 1 << len) - 1;
     out[byte_pos] &= ((~bit_mask) << bit_pos);
     out[byte_pos] |= (val << bit_pos);
 }
 
-static inline void rle_init(const uint8_t * in,  uint8_t bpp)
-{
+static inline void rle_init(const uint8_t *in, uint8_t bpp) {
     rle_in = in;
     rle_bpp = bpp;
     rle_state = RLE_STATE_SINGLE;
@@ -509,53 +509,48 @@ static inline void rle_init(const uint8_t * in,  uint8_t bpp)
     rle_cnt = 0;
 }
 
-static inline uint8_t rle_next(void)
-{
+static inline uint8_t rle_next(void) {
     uint8_t v = 0;
     uint8_t ret = 0;
 
-    if(rle_state == RLE_STATE_SINGLE) {
+    if (rle_state == RLE_STATE_SINGLE) {
         ret = get_bits(rle_in, rle_rdp, rle_bpp);
-        if(rle_rdp != 0 && rle_prev_v == ret) {
+        if (rle_rdp != 0 && rle_prev_v == ret) {
             rle_cnt = 0;
             rle_state = RLE_STATE_REPEATE;
         }
 
         rle_prev_v = ret;
         rle_rdp += rle_bpp;
-    }
-    else if(rle_state == RLE_STATE_REPEATE) {
+    } else if (rle_state == RLE_STATE_REPEATE) {
         v = get_bits(rle_in, rle_rdp, 1);
         rle_cnt++;
         rle_rdp += 1;
-        if(v == 1) {
+        if (v == 1) {
             ret = rle_prev_v;
-            if(rle_cnt == 11) {
+            if (rle_cnt == 11) {
                 rle_cnt = get_bits(rle_in, rle_rdp, 6);
                 rle_rdp += 6;
-                if(rle_cnt != 0) {
+                if (rle_cnt != 0) {
                     rle_state = RLE_STATE_COUNTER;
-                }
-                else {
+                } else {
                     ret = get_bits(rle_in, rle_rdp, rle_bpp);
                     rle_prev_v = ret;
                     rle_rdp += rle_bpp;
                     rle_state = RLE_STATE_SINGLE;
                 }
             }
-        }
-        else {
+        } else {
             ret = get_bits(rle_in, rle_rdp, rle_bpp);
             rle_prev_v = ret;
             rle_rdp += rle_bpp;
             rle_state = RLE_STATE_SINGLE;
         }
 
-    }
-    else if(rle_state == RLE_STATE_COUNTER) {
+    } else if (rle_state == RLE_STATE_COUNTER) {
         ret = rle_prev_v;
         rle_cnt--;
-        if(rle_cnt == 0) {
+        if (rle_cnt == 0) {
             ret = get_bits(rle_in, rle_rdp, rle_bpp);
             rle_prev_v = ret;
             rle_rdp += rle_bpp;
@@ -565,6 +560,7 @@ static inline uint8_t rle_next(void)
 
     return ret;
 }
+
 #endif /*LV_USE_FONT_COMPRESSED*/
 
 /** Code Comparator.
@@ -581,7 +577,5 @@ static inline uint8_t rle_next(void)
  *
  */
 static int32_t unicode_list_compare(const void *ref, const void *element) {
-    return ((int32_t) (*(uint16_t *)
-            ref)) - ((int32_t) (*(uint16_t *)
-            element));
+    return ((int32_t) (*(uint16_t *) ref)) - ((int32_t) (*(uint16_t *) element));
 }

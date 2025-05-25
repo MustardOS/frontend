@@ -14,7 +14,6 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "../../../core/lv_obj.h"
-
 #if LV_USE_MSG
 
 /*********************

@@ -217,10 +217,10 @@ void LV_ATTRIBUTE_FAST_MEM lv_draw_label(lv_draw_ctx_t *draw_ctx, const lv_draw_
         cmd_state = CMD_STATE_WAIT;
         i = 0;
 #if LV_USE_BIDI
-        char * bidi_txt = lv_mem_buf_get(line_end - line_start + 1);
+        char *bidi_txt = lv_mem_buf_get(line_end - line_start + 1);
         _lv_bidi_process_paragraph(txt + line_start, bidi_txt, line_end - line_start, base_dir, NULL, 0);
 #else
-        const char *bidi_txt = txt + line_start;
+        const char * bidi_txt = txt + line_start;
 #endif
 
         while (i < line_end - line_start) {
@@ -361,7 +361,6 @@ void lv_draw_letter(lv_draw_ctx_t *draw_ctx, const lv_draw_label_dsc_t *dsc, con
     draw_ctx->draw_letter(draw_ctx, dsc, pos_p, letter);
 }
 
-
 /**********************
  *   STATIC FUNCTIONS
  **********************/
@@ -406,4 +405,3 @@ static uint8_t hex_char_to_num(char hex) {
 
     return result;
 }
-

@@ -86,6 +86,7 @@ lv_disp_t *_lv_refr_get_disp_refreshing(void);
 void _lv_refr_set_disp_refreshing(lv_disp_t *disp);
 
 #if LV_USE_PERF_MONITOR
+
 /**
  * Reset FPS counter
  */
@@ -96,6 +97,7 @@ void lv_refr_reset_fps_counter(void);
  * @return the average FPS
  */
 uint32_t lv_refr_get_fps_avg(void);
+
 #endif
 
 /**

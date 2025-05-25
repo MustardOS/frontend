@@ -226,7 +226,7 @@ lv_coord_t lv_obj_get_scroll_right(lv_obj_t *obj) {
 }
 
 void lv_obj_get_scroll_end(struct _lv_obj_t *obj, lv_point_t *end) {
-    lv_anim_t * a;
+    lv_anim_t *a;
     a = lv_anim_get(obj, scroll_x_anim);
     end->x = a ? -a->end_value : lv_obj_get_scroll_x(obj);
 
@@ -283,7 +283,6 @@ void lv_obj_scroll_by_bounded(lv_obj_t *obj, lv_coord_t dx, lv_coord_t dy, lv_an
         lv_obj_scroll_by(obj, dx, dy, anim_en);
     }
 }
-
 
 void lv_obj_scroll_by(lv_obj_t *obj, lv_coord_t dx, lv_coord_t dy, lv_anim_enable_t anim_en) {
     if (dx == 0 && dy == 0) return;
@@ -402,7 +401,6 @@ lv_res_t _lv_obj_scroll_by_raw(lv_obj_t *obj, lv_coord_t x, lv_coord_t y) {
     return LV_RES_OK;
 }
 
-
 bool lv_obj_is_scrolling(const lv_obj_t *obj) {
     lv_indev_t *indev = lv_indev_get_next(NULL);
     while (indev) {
@@ -453,7 +451,6 @@ void lv_obj_get_scrollbar_area(lv_obj_t *obj, lv_area_t *hor_area, lv_area_t *ve
          (sm == LV_SCROLLBAR_MODE_ACTIVE && lv_indev_get_scroll_dir(indev) == LV_DIR_VER))) {
         ver_draw = true;
     }
-
 
     bool hor_draw = false;
     if ((dir & LV_DIR_HOR) &&
@@ -633,7 +630,6 @@ void lv_obj_readjust_scroll(lv_obj_t *obj, lv_anim_enable_t anim_en) {
 /**********************
  *   STATIC FUNCTIONS
  **********************/
-
 
 static void scroll_x_anim(void *obj, int32_t v) {
     _lv_obj_scroll_by_raw(obj, v + lv_obj_get_scroll_x(obj), 0);

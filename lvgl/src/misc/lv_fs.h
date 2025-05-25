@@ -57,7 +57,6 @@ enum {
 };
 typedef uint8_t lv_fs_mode_t;
 
-
 /**
  * Seek modes.
  */
@@ -70,29 +69,21 @@ typedef enum {
 typedef struct _lv_fs_drv_t {
     char letter;
     uint16_t cache_size;
+    bool (*ready_cb)(struct _lv_fs_drv_t * drv);
 
-    bool (*ready_cb)(struct _lv_fs_drv_t *drv);
+    void * (*open_cb)(struct _lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode);
+    lv_fs_res_t (*close_cb)(struct _lv_fs_drv_t * drv, void * file_p);
+    lv_fs_res_t (*read_cb)(struct _lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br);
+    lv_fs_res_t (*write_cb)(struct _lv_fs_drv_t * drv, void * file_p, const void * buf, uint32_t btw, uint32_t * bw);
+    lv_fs_res_t (*seek_cb)(struct _lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs_whence_t whence);
+    lv_fs_res_t (*tell_cb)(struct _lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p);
 
-    void *(*open_cb)(struct _lv_fs_drv_t *drv, const char *path, lv_fs_mode_t mode);
-
-    lv_fs_res_t (*close_cb)(struct _lv_fs_drv_t *drv, void *file_p);
-
-    lv_fs_res_t (*read_cb)(struct _lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br);
-
-    lv_fs_res_t (*write_cb)(struct _lv_fs_drv_t *drv, void *file_p, const void *buf, uint32_t btw, uint32_t *bw);
-
-    lv_fs_res_t (*seek_cb)(struct _lv_fs_drv_t *drv, void *file_p, uint32_t pos, lv_fs_whence_t whence);
-
-    lv_fs_res_t (*tell_cb)(struct _lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p);
-
-    void *(*dir_open_cb)(struct _lv_fs_drv_t *drv, const char *path);
-
-    lv_fs_res_t (*dir_read_cb)(struct _lv_fs_drv_t *drv, void *rddir_p, char *fn);
-
-    lv_fs_res_t (*dir_close_cb)(struct _lv_fs_drv_t *drv, void *rddir_p);
+    void * (*dir_open_cb)(struct _lv_fs_drv_t * drv, const char * path);
+    lv_fs_res_t (*dir_read_cb)(struct _lv_fs_drv_t * drv, void * rddir_p, char * fn);
+    lv_fs_res_t (*dir_close_cb)(struct _lv_fs_drv_t * drv, void * rddir_p);
 
 #if LV_USE_USER_DATA
-    void *user_data; /**< Custom file user data*/
+    void * user_data; /**< Custom file user data*/
 #endif
 } lv_fs_drv_t;
 
@@ -100,18 +91,18 @@ typedef struct {
     uint32_t start;
     uint32_t end;
     uint32_t file_position;
-    void *buffer;
+    void * buffer;
 } lv_fs_file_cache_t;
 
 typedef struct {
-    void *file_d;
-    lv_fs_drv_t *drv;
-    lv_fs_file_cache_t *cache;
+    void * file_d;
+    lv_fs_drv_t * drv;
+    lv_fs_file_cache_t * cache;
 } lv_fs_file_t;
 
 typedef struct {
-    void *dir_d;
-    lv_fs_drv_t *drv;
+    void * dir_d;
+    lv_fs_drv_t * drv;
 } lv_fs_dir_t;
 
 /**********************
@@ -129,7 +120,7 @@ void _lv_fs_init(void);
  * After it you can set the fields.
  * @param drv     pointer to driver variable to initialize
  */
-void lv_fs_drv_init(lv_fs_drv_t *drv);
+void lv_fs_drv_init(lv_fs_drv_t * drv);
 
 /**
  * Add a new drive
@@ -137,14 +128,14 @@ void lv_fs_drv_init(lv_fs_drv_t *drv);
  *                  corresponding function pointers. Only pointer is saved, so the
  *                  driver should be static or dynamically allocated.
  */
-void lv_fs_drv_register(lv_fs_drv_t *drv);
+void lv_fs_drv_register(lv_fs_drv_t * drv);
 
 /**
  * Give a pointer to a driver from its letter
  * @param letter    the driver letter
  * @return          pointer to a driver or NULL if not found
  */
-lv_fs_drv_t *lv_fs_get_drv(char letter);
+lv_fs_drv_t * lv_fs_get_drv(char letter);
 
 /**
  * Test if a drive is ready or not. If the `ready` function was not initialized `true` will be
@@ -161,14 +152,14 @@ bool lv_fs_is_ready(char letter);
  * @param mode      read: FS_MODE_RD, write: FS_MODE_WR, both: FS_MODE_RD | FS_MODE_WR
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_open(lv_fs_file_t *file_p, const char *path, lv_fs_mode_t mode);
+lv_fs_res_t lv_fs_open(lv_fs_file_t * file_p, const char * path, lv_fs_mode_t mode);
 
 /**
  * Close an already opened file
  * @param file_p    pointer to a lv_fs_file_t variable
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_close(lv_fs_file_t *file_p);
+lv_fs_res_t lv_fs_close(lv_fs_file_t * file_p);
 
 /**
  * Read from a file
@@ -178,7 +169,7 @@ lv_fs_res_t lv_fs_close(lv_fs_file_t *file_p);
  * @param br        the number of real read bytes (Bytes Read). NULL if unused.
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_read(lv_fs_file_t *file_p, void *buf, uint32_t btr, uint32_t *br);
+lv_fs_res_t lv_fs_read(lv_fs_file_t * file_p, void * buf, uint32_t btr, uint32_t * br);
 
 /**
  * Write into a file
@@ -188,7 +179,7 @@ lv_fs_res_t lv_fs_read(lv_fs_file_t *file_p, void *buf, uint32_t btr, uint32_t *
  * @param bw        the number of real written bytes (Bytes Written). NULL if unused.
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_write(lv_fs_file_t *file_p, const void *buf, uint32_t btw, uint32_t *bw);
+lv_fs_res_t lv_fs_write(lv_fs_file_t * file_p, const void * buf, uint32_t btw, uint32_t * bw);
 
 /**
  * Set the position of the 'cursor' (read write pointer) in a file
@@ -197,7 +188,7 @@ lv_fs_res_t lv_fs_write(lv_fs_file_t *file_p, const void *buf, uint32_t btw, uin
  * @param whence    tells from where set the position. See @lv_fs_whence_t
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_seek(lv_fs_file_t *file_p, uint32_t pos, lv_fs_whence_t whence);
+lv_fs_res_t lv_fs_seek(lv_fs_file_t * file_p, uint32_t pos, lv_fs_whence_t whence);
 
 /**
  * Give the position of the read write pointer
@@ -205,7 +196,7 @@ lv_fs_res_t lv_fs_seek(lv_fs_file_t *file_p, uint32_t pos, lv_fs_whence_t whence
  * @param pos_p     pointer to store the position of the read write pointer
  * @return          LV_FS_RES_OK or any error from 'fs_res_t'
  */
-lv_fs_res_t lv_fs_tell(lv_fs_file_t *file_p, uint32_t *pos);
+lv_fs_res_t lv_fs_tell(lv_fs_file_t * file_p, uint32_t * pos);
 
 /**
  * Initialize a 'fs_dir_t' variable for directory reading
@@ -213,7 +204,7 @@ lv_fs_res_t lv_fs_tell(lv_fs_file_t *file_p, uint32_t *pos);
  * @param path      path to a directory
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_dir_open(lv_fs_dir_t *rddir_p, const char *path);
+lv_fs_res_t lv_fs_dir_open(lv_fs_dir_t * rddir_p, const char * path);
 
 /**
  * Read the next filename form a directory.
@@ -222,42 +213,42 @@ lv_fs_res_t lv_fs_dir_open(lv_fs_dir_t *rddir_p, const char *path);
  * @param fn        pointer to a buffer to store the filename
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_dir_read(lv_fs_dir_t *rddir_p, char *fn);
+lv_fs_res_t lv_fs_dir_read(lv_fs_dir_t * rddir_p, char * fn);
 
 /**
  * Close the directory reading
  * @param rddir_p   pointer to an initialized 'fs_dir_t' variable
  * @return          LV_FS_RES_OK or any error from lv_fs_res_t enum
  */
-lv_fs_res_t lv_fs_dir_close(lv_fs_dir_t *rddir_p);
+lv_fs_res_t lv_fs_dir_close(lv_fs_dir_t * rddir_p);
 
 /**
  * Fill a buffer with the letters of existing drivers
  * @param buf       buffer to store the letters ('\0' added after the last letter)
  * @return          the buffer
  */
-char *lv_fs_get_letters(char *buf);
+char * lv_fs_get_letters(char * buf);
 
 /**
  * Return with the extension of the filename
  * @param fn        string with a filename
  * @return          pointer to the beginning extension or empty string if no extension
  */
-const char *lv_fs_get_ext(const char *fn);
+const char * lv_fs_get_ext(const char * fn);
 
 /**
  * Step up one level
  * @param path      pointer to a file name
  * @return          the truncated file name
  */
-char *lv_fs_up(char *path);
+char * lv_fs_up(char * path);
 
 /**
  * Get the last element of a path (e.g. U:/folder/file -> file)
  * @param path      pointer to a file name
  * @return          pointer to the beginning of the last element in the path
  */
-const char *lv_fs_get_last(const char *path);
+const char * lv_fs_get_last(const char * path);
 
 /**********************
  *      MACROS

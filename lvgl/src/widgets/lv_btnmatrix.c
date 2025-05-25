@@ -505,7 +505,6 @@ static void lv_btnmatrix_event(const lv_obj_class_t *class_p, lv_event_t *e) {
                 if (btnm->one_check) make_one_button_checked(obj, btnm->btn_id_sel);
             }
 
-
             if ((button_is_click_trig(btnm->ctrl_bits[btnm->btn_id_sel]) == true ||
                  button_is_popover(btnm->ctrl_bits[btnm->btn_id_sel]) == true) &&
                 button_is_inactive(btnm->ctrl_bits[btnm->btn_id_sel]) == false &&
@@ -711,8 +710,8 @@ static void draw_main(lv_event_t *e) {
     lv_coord_t pright = lv_obj_get_style_pad_right(obj, LV_PART_MAIN);
 
 #if LV_USE_ARABIC_PERSIAN_CHARS
-    const size_t txt_ap_size = 256 ;
-    char * txt_ap = lv_mem_buf_get(txt_ap_size);
+    const size_t txt_ap_size = 256;
+    char *txt_ap = lv_mem_buf_get(txt_ap_size);
 #endif
 
     lv_obj_draw_part_dsc_t part_draw_dsc;
@@ -772,7 +771,6 @@ static void draw_main(lv_event_t *e) {
         if (recolor) draw_label_dsc_act.flag |= LV_TEXT_FLAG_RECOLOR;
         else draw_label_dsc_act.flag &= ~LV_TEXT_FLAG_RECOLOR;
 
-
         part_draw_dsc.draw_area = &btn_area;
         part_draw_dsc.id = btn_i;
         lv_event_send(obj, LV_EVENT_DRAW_PART_BEGIN, &part_draw_dsc);
@@ -805,7 +803,7 @@ static void draw_main(lv_event_t *e) {
 #if LV_USE_ARABIC_PERSIAN_CHARS
         /*Get the size of the Arabic text and process it*/
         size_t len_ap = _lv_txt_ap_calc_bytes_cnt(txt);
-        if(len_ap < txt_ap_size) {
+        if (len_ap < txt_ap_size) {
             _lv_txt_ap_proc(txt, txt_ap);
             txt = txt_ap;
         }

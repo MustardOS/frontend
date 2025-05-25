@@ -8,7 +8,6 @@
  *      INCLUDES
  *********************/
 #include "lv_colorwheel.h"
-
 #if LV_USE_COLORWHEEL
 
 #include "../../../misc/lv_assert.h"

@@ -38,16 +38,16 @@ lv_font_t * lv_tiny_ttf_create_file_ex(const char * path, lv_coord_t font_size, 
 #endif /*LV_TINY_TTF_FILE_SUPPORT*/
 
 /* create a font from the specified data pointer with the specified line height.*/
-lv_font_t * lv_tiny_ttf_create_data(const void * data, size_t data_size, lv_coord_t font_size);
+lv_font_t *lv_tiny_ttf_create_data(const void *data, size_t data_size, lv_coord_t font_size);
 
 /* create a font from the specified data pointer with the specified line height and the specified cache size.*/
-lv_font_t * lv_tiny_ttf_create_data_ex(const void * data, size_t data_size, lv_coord_t font_size, size_t cache_size);
+lv_font_t *lv_tiny_ttf_create_data_ex(const void *data, size_t data_size, lv_coord_t font_size, size_t cache_size);
 
 /* set the size of the font to a new font_size*/
-void lv_tiny_ttf_set_size(lv_font_t * font, lv_coord_t font_size);
+void lv_tiny_ttf_set_size(lv_font_t *font, lv_coord_t font_size);
 
 /* destroy a font previously created with lv_tiny_ttf_create_xxxx()*/
-void lv_tiny_ttf_destroy(lv_font_t * font);
+void lv_tiny_ttf_destroy(lv_font_t *font);
 
 /**********************
  *      MACROS

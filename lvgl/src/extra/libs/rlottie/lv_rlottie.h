@@ -14,7 +14,6 @@ extern "C" {
  *      INCLUDES
  *********************/
 #include "../../../lvgl.h"
-
 #if LV_USE_RLOTTIE
 
 /*********************

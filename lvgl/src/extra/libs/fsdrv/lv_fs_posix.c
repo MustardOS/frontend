@@ -13,10 +13,10 @@
 #include <fcntl.h>
 #include <stdio.h>
 #ifndef WIN32
-#include <dirent.h>
-#include <unistd.h>
+    #include <dirent.h>
+    #include <unistd.h>
 #else
-#include <windows.h>
+    #include <windows.h>
 #endif
 
 /*********************
@@ -24,7 +24,7 @@
  *********************/
 
 #if LV_FS_POSIX_LETTER == '\0'
-#error "LV_FS_POSIX_LETTER must be an upper case ASCII letter"
+    #error "LV_FS_POSIX_LETTER must be an upper case ASCII letter"
 #endif
 
 /**********************
@@ -312,7 +312,7 @@ static lv_fs_res_t fs_dir_close(lv_fs_drv_t * drv, void * dir_p)
 #else /*LV_USE_FS_POSIX == 0*/
 
 #if defined(LV_FS_POSIX_LETTER) && LV_FS_POSIX_LETTER != '\0'
-#warning "LV_USE_FS_POSIX is not enabled but LV_FS_POSIX_LETTER is set"
+    #warning "LV_USE_FS_POSIX is not enabled but LV_FS_POSIX_LETTER is set"
 #endif
 
 #endif /*LV_USE_FS_POSIX*/

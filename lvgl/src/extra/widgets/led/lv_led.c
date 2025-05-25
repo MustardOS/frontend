@@ -7,7 +7,6 @@
  *      INCLUDES
  *********************/
 #include "lv_led.h"
-
 #if LV_USE_LED
 
 #include "../../../misc/lv_assert.h"

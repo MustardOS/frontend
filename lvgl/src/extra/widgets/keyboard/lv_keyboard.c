@@ -8,7 +8,6 @@
  *      INCLUDES
  *********************/
 #include "lv_keyboard.h"
-
 #if LV_USE_KEYBOARD
 
 #include "../../../widgets/lv_textarea.h"

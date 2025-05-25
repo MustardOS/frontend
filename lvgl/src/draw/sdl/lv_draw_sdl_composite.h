@@ -54,11 +54,11 @@ typedef enum lv_draw_sdl_composite_texture_id_t {
  * @param apply_area Area of actual composited texture will be drawn
  * @return true if there are any mask needs to be drawn, false otherwise
  */
-bool lv_draw_sdl_composite_begin(lv_draw_sdl_ctx_t *ctx, const lv_area_t *coords_in, const lv_area_t *clip_in,
-                                 const lv_area_t *extension, lv_blend_mode_t blend_mode, lv_area_t *coords_out,
-                                 lv_area_t *clip_out, lv_area_t *apply_area);
+bool lv_draw_sdl_composite_begin(lv_draw_sdl_ctx_t * ctx, const lv_area_t * coords_in, const lv_area_t * clip_in,
+                                 const lv_area_t * extension, lv_blend_mode_t blend_mode, lv_area_t * coords_out,
+                                 lv_area_t * clip_out, lv_area_t * apply_area);
 
-void lv_draw_sdl_composite_end(lv_draw_sdl_ctx_t *ctx, const lv_area_t *apply_area, lv_blend_mode_t blend_mode);
+void lv_draw_sdl_composite_end(lv_draw_sdl_ctx_t * ctx, const lv_area_t * apply_area, lv_blend_mode_t blend_mode);
 
 /**
  *
@@ -70,8 +70,8 @@ void lv_draw_sdl_composite_end(lv_draw_sdl_ctx_t *ctx, const lv_area_t *apply_ar
  * by yourself
  * @return Obtained texture
  */
-SDL_Texture *lv_draw_sdl_composite_texture_obtain(lv_draw_sdl_ctx_t *ctx, lv_draw_sdl_composite_texture_id_t id,
-                                                  lv_coord_t w, lv_coord_t h, bool *texture_in_cache);
+SDL_Texture * lv_draw_sdl_composite_texture_obtain(lv_draw_sdl_ctx_t * ctx, lv_draw_sdl_composite_texture_id_t id,
+                                                   lv_coord_t w, lv_coord_t h, bool * texture_in_cache);
 
 /**********************
  *      MACROS

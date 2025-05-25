@@ -7,7 +7,6 @@
  *      INCLUDES
  *********************/
 #include "lv_ime_pinyin.h"
-
 #if LV_USE_IME_PINYIN != 0
 
 #include <stdio.h>

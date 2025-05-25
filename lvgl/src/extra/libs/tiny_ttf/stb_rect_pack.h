@@ -69,9 +69,9 @@
 #define STB_RECT_PACK_VERSION  1
 
 #ifdef STBRP_STATIC
-#define STBRP_DEF static
+    #define STBRP_DEF static
 #else
-#define STBRP_DEF extern
+    #define STBRP_DEF extern
 #endif
 
 #ifdef __cplusplus
@@ -83,11 +83,11 @@ extern "C" {
  *  Tells Doxygen to ignore a duplicate declaration
  */
 typedef struct stbrp_context stbrp_context;
-typedef struct stbrp_node stbrp_node;
-typedef struct stbrp_rect stbrp_rect;
+typedef struct stbrp_node    stbrp_node;
+typedef struct stbrp_rect    stbrp_rect;
 /// @endcond
 
-typedef int stbrp_coord;
+typedef int            stbrp_coord;
 
 #define STBRP__MAXVAL  0x7fffffff
 // Mostly for internal use, but this is the maximum supported coordinate value.
@@ -97,7 +97,7 @@ typedef int stbrp_coord;
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 
-STBRP_DEF int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, int num_rects);
+STBRP_DEF int stbrp_pack_rects(stbrp_context * context, stbrp_rect * rects, int num_rects);
 // Assign packed locations to rectangles. The rectangles are of type
 // 'stbrp_rect' defined below, stored in the array 'rects', and there
 // are 'num_rects' many of them.
@@ -124,18 +124,18 @@ STBRP_DEF int stbrp_pack_rects(stbrp_context *context, stbrp_rect *rects, int nu
 
 struct stbrp_rect {
     // reserved for your use:
-    int id;
+    int            id;
 
     // input:
-    stbrp_coord w, h;
+    stbrp_coord    w, h;
 
     // output:
-    stbrp_coord x, y;
-    int was_packed;  // non-zero if valid packing
+    stbrp_coord    x, y;
+    int            was_packed;  // non-zero if valid packing
 
 }; // 16 bytes, nominally
 
-STBRP_DEF void stbrp_init_target(stbrp_context *context, int width, int height, stbrp_node *nodes, int num_nodes);
+STBRP_DEF void stbrp_init_target(stbrp_context * context, int width, int height, stbrp_node * nodes, int num_nodes);
 // Initialize a rectangle packer to:
 //    pack a rectangle that is 'width' by 'height' in dimensions
 //    using temporary storage provided by the array 'nodes', which is 'num_nodes' long
@@ -156,12 +156,12 @@ STBRP_DEF void stbrp_init_target(stbrp_context *context, int width, int height, 
 // If you do #2, then the non-quantized algorithm will be used, but the algorithm
 // may run out of temporary storage and be unable to pack some rectangles.
 
-STBRP_DEF void stbrp_setup_allow_out_of_mem(stbrp_context *context, int allow_out_of_mem);
+STBRP_DEF void stbrp_setup_allow_out_of_mem(stbrp_context * context, int allow_out_of_mem);
 // Optionally call this function after init but before doing any packing to
 // change the handling of the out-of-temp-memory scenario, described above.
 // If you call init again, this will be reset to the default (false).
 
-STBRP_DEF void stbrp_setup_heuristic(stbrp_context *context, int heuristic);
+STBRP_DEF void stbrp_setup_heuristic(stbrp_context * context, int heuristic);
 // Optionally select which packing heuristic the library should use. Different
 // heuristics will produce better/worse results for different data sets.
 // If you call init again, this will be reset to the default.
@@ -178,8 +178,8 @@ enum {
 // be visible so you can handle the memory allocations for them
 
 struct stbrp_node {
-    stbrp_coord x, y;
-    stbrp_node *next;
+    stbrp_coord  x, y;
+    stbrp_node * next;
 };
 
 struct stbrp_context {
@@ -189,8 +189,8 @@ struct stbrp_context {
     int init_mode;
     int heuristic;
     int num_nodes;
-    stbrp_node *active_head;
-    stbrp_node *free_head;
+    stbrp_node * active_head;
+    stbrp_node * free_head;
     stbrp_node extra[2]; // we allocate two extra nodes so optimal user-node-count is 'width' not 'width+2'
 };
 
@@ -207,21 +207,21 @@ struct stbrp_context {
 
 #ifdef STB_RECT_PACK_IMPLEMENTATION
 #ifndef STBRP_SORT
-#include <stdlib.h>
-#define STBRP_SORT qsort
+    #include <stdlib.h>
+    #define STBRP_SORT qsort
 #endif
 
 #ifndef STBRP_ASSERT
-#include <assert.h>
-#define STBRP_ASSERT assert
+    #include <assert.h>
+    #define STBRP_ASSERT assert
 #endif
 
 #ifdef _MSC_VER
-#define STBRP__NOTUSED(v)  (void)(v)
-#define STBRP__CDECL       __cdecl
+    #define STBRP__NOTUSED(v)  (void)(v)
+    #define STBRP__CDECL       __cdecl
 #else
-#define STBRP__NOTUSED(v)  (void)sizeof(v)
-#define STBRP__CDECL
+    #define STBRP__NOTUSED(v)  (void)sizeof(v)
+    #define STBRP__CDECL
 #endif
 
 enum {
@@ -587,7 +587,7 @@ STBRP_DEF int stbrp_pack_rects(stbrp_context * context, stbrp_rect * rects, int 
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
 #endif
 
 /*

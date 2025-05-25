@@ -32,7 +32,6 @@ static lv_res_t event_send_core(lv_event_t *e);
 
 static bool event_is_bubbled(lv_event_t *e);
 
-
 /**********************
  *  STATIC VARIABLES
  **********************/
@@ -81,7 +80,6 @@ lv_res_t lv_event_send(lv_obj_t *obj, lv_event_code_t event_code, void *param) {
     return res;
 }
 
-
 lv_res_t lv_obj_event_base(const lv_obj_class_t *class_p, lv_event_t *e) {
     const lv_obj_class_t *base;
     if (class_p == NULL) base = e->current_target->class_p;
@@ -103,7 +101,6 @@ lv_res_t lv_obj_event_base(const lv_obj_class_t *class_p, lv_event_t *e) {
 
     return res;
 }
-
 
 lv_obj_t *lv_event_get_target(lv_event_t *e) {
     return e->target;
@@ -133,7 +130,6 @@ void lv_event_stop_processing(lv_event_t *e) {
     e->stop_processing = 1;
 }
 
-
 uint32_t lv_event_register_id(void) {
     static uint32_t last_id = _LV_EVENT_LAST;
     last_id++;
@@ -148,7 +144,6 @@ void _lv_event_mark_deleted(lv_obj_t *obj) {
         e = e->prev;
     }
 }
-
 
 struct _lv_event_dsc_t *lv_obj_add_event_cb(lv_obj_t *obj, lv_event_cb_t event_cb, lv_event_code_t filter,
                                             void *user_data) {
@@ -213,7 +208,6 @@ bool lv_obj_remove_event_cb_with_user_data(lv_obj_t *obj, lv_event_cb_t event_cb
     /*No event handler found*/
     return false;
 }
-
 
 bool lv_obj_remove_event_dsc(lv_obj_t *obj, struct _lv_event_dsc_t *event_dsc) {
     LV_ASSERT_OBJ(obj, MY_CLASS);
@@ -309,7 +303,7 @@ const lv_area_t *lv_event_get_old_size(lv_event_t *e) {
 
 uint32_t lv_event_get_key(lv_event_t *e) {
     if (e->code == LV_EVENT_KEY) {
-        uint32_t * k = lv_event_get_param(e);
+        uint32_t *k = lv_event_get_param(e);
         if (k) return *k;
         else return 0;
     } else {
@@ -329,7 +323,7 @@ lv_anim_t *lv_event_get_scroll_anim(lv_event_t *e) {
 
 void lv_event_set_ext_draw_size(lv_event_t *e, lv_coord_t size) {
     if (e->code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
-        lv_coord_t * cur_size = lv_event_get_param(e);
+        lv_coord_t *cur_size = lv_event_get_param(e);
         *cur_size = LV_MAX(*cur_size, size);
     } else {
         LV_LOG_WARN("Not interpreted with this event code");

@@ -92,7 +92,7 @@ lv_font_t *lv_font_load(const char *font_name) {
     if (res != LV_FS_RES_OK)
         return NULL;
 
-    lv_font_t * font = lv_mem_alloc(sizeof(lv_font_t));
+    lv_font_t *font = lv_mem_alloc(sizeof(lv_font_t));
     if (font) {
         memset(font, 0, sizeof(lv_font_t));
         if (!lvgl_load_font(&file, font)) {
@@ -273,8 +273,7 @@ static bool load_cmaps_tables(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
             case LV_FONT_FMT_TXT_CMAP_SPARSE_FULL:
             case LV_FONT_FMT_TXT_CMAP_SPARSE_TINY: {
                 uint32_t list_size = sizeof(uint16_t) * cmap_table[i].data_entries_count;
-                uint16_t * unicode_list = (uint16_t *)
-                        lv_mem_alloc(list_size);
+                uint16_t *unicode_list = (uint16_t *) lv_mem_alloc(list_size);
 
                 cmap->unicode_list = unicode_list;
                 cmap->list_length = cmap_table[i].data_entries_count;
@@ -284,7 +283,7 @@ static bool load_cmaps_tables(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
                 }
 
                 if (cmap_table[i].format_type == LV_FONT_FMT_TXT_CMAP_SPARSE_FULL) {
-                    uint16_t * buf = lv_mem_alloc(sizeof(uint16_t) * cmap->list_length);
+                    uint16_t *buf = lv_mem_alloc(sizeof(uint16_t) * cmap->list_length);
 
                     cmap->glyph_id_ofs_list = buf;
 
@@ -390,8 +389,7 @@ static int32_t load_glyph(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
         }
 
         int nbits = header->advance_width_bits + 2 * header->xy_bits + 2 * header->wh_bits;
-        int next_offset = (i < loca_count - 1) ? glyph_offset[i + 1] : (uint32_t)
-                glyph_length;
+        int next_offset = (i < loca_count - 1) ? glyph_offset[i + 1] : (uint32_t) glyph_length;
         int bmp_size = next_offset - glyph_offset[i] - nbits / 8;
 
         if (i == 0) {
@@ -408,8 +406,7 @@ static int32_t load_glyph(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
         }
     }
 
-    uint8_t *glyph_bmp = (uint8_t *)
-            lv_mem_alloc(sizeof(uint8_t) * cur_bmp_size);
+    uint8_t *glyph_bmp = (uint8_t *) lv_mem_alloc(sizeof(uint8_t) * cur_bmp_size);
 
     font_dsc->glyph_bitmap = glyph_bmp;
 
@@ -433,8 +430,7 @@ static int32_t load_glyph(lv_fs_file_t *fp, lv_font_fmt_txt_dsc_t *font_dsc,
             continue;
         }
 
-        int next_offset = (i < loca_count - 1) ? glyph_offset[i + 1] : (uint32_t)
-                glyph_length;
+        int next_offset = (i < loca_count - 1) ? glyph_offset[i + 1] : (uint32_t) glyph_length;
         int bmp_size = next_offset - glyph_offset[i] - nbits / 8;
 
         if (nbits % 8 == 0) {  /*Fast path*/
@@ -526,7 +522,7 @@ static bool lvgl_load_font(lv_fs_file_t *fp, lv_font_t *font) {
     }
 
     bool failed = false;
-    uint32_t * glyph_offset = lv_mem_alloc(sizeof(uint32_t) * (loca_count + 1));
+    uint32_t *glyph_offset = lv_mem_alloc(sizeof(uint32_t) * (loca_count + 1));
 
     if (font_header.index_to_loc_format == 0) {
         for (unsigned int i = 0; i < loca_count; ++i) {

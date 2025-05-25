@@ -1,5 +1,4 @@
 #include "../lv_conf_internal.h"
-
 #if LV_MEM_CUSTOM == 0
 
 #include <limits.h>
@@ -14,13 +13,13 @@
 #define TLSF_MAX_POOL_SIZE LV_MEM_SIZE
 
 #if !defined(_DEBUG)
-#define _DEBUG 0
+    #define _DEBUG 0
 #endif
 
 #if defined(__cplusplus)
-#define tlsf_decl inline
+    #define tlsf_decl inline
 #else
-#define tlsf_decl static
+    #define tlsf_decl static
 #endif
 
 /*
@@ -47,7 +46,7 @@
 */
 #if defined (__alpha__) || defined (__ia64__) || defined (__x86_64__) \
     || defined (_WIN64) || defined (__LP64__) || defined (__LLP64__)
-#define TLSF_64BIT
+    #define TLSF_64BIT
 #endif
 
 /*
@@ -55,9 +54,9 @@
 ** or if n is zero, returns zero.
 */
 #ifdef TLSF_64BIT
-#define TLSF_FLS(n) ((n) & 0xffffffff00000000ull ? 32 + TLSF_FLS32((size_t)(n) >> 32) : TLSF_FLS32(n))
+    #define TLSF_FLS(n) ((n) & 0xffffffff00000000ull ? 32 + TLSF_FLS32((size_t)(n) >> 32) : TLSF_FLS32(n))
 #else
-#define TLSF_FLS(n) TLSF_FLS32(n)
+    #define TLSF_FLS(n) TLSF_FLS32(n)
 #endif
 
 #define TLSF_FLS32(n) ((n) & 0xffff0000 ? 16 + TLSF_FLS16((n) >> 16) : TLSF_FLS16(n))
@@ -282,7 +281,7 @@ enum tlsf_private {
 #define tlsf_assert LV_ASSERT
 
 #if !defined (tlsf_assert)
-#define tlsf_assert assert
+    #define tlsf_assert assert
 #endif
 
 /*
@@ -358,7 +357,6 @@ static const size_t block_start_offset =
 static const size_t block_size_min =
     sizeof(block_header_t) - sizeof(block_header_t *);
 static const size_t block_size_max = tlsf_cast(size_t, 1) << FL_INDEX_MAX;
-
 
 /* The TLSF control structure. */
 typedef struct control_t {

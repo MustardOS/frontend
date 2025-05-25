@@ -20,7 +20,9 @@
 #include "../extra/others/snapshot/lv_snapshot.h"
 
 #if LV_USE_PERF_MONITOR || LV_USE_MEM_MONITOR
+
 #include "../widgets/lv_label.h"
+
 #endif
 
 /*********************
@@ -74,10 +76,14 @@ static void draw_buf_flush(lv_disp_t *disp);
 static void call_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_p);
 
 #if LV_USE_PERF_MONITOR
-static void perf_monitor_init(perf_monitor_t * perf_monitor);
+
+static void perf_monitor_init(perf_monitor_t *perf_monitor);
+
 #endif
 #if LV_USE_MEM_MONITOR
-static void mem_monitor_init(mem_monitor_t * mem_monitor);
+
+static void mem_monitor_init(mem_monitor_t *mem_monitor);
+
 #endif
 
 /**********************
@@ -87,11 +93,11 @@ static uint32_t px_num;
 static lv_disp_t *disp_refr; /*Display being refreshed*/
 
 #if LV_USE_PERF_MONITOR
-static perf_monitor_t   perf_monitor;
+static perf_monitor_t perf_monitor;
 #endif
 
 #if LV_USE_MEM_MONITOR
-static mem_monitor_t    mem_monitor;
+static mem_monitor_t mem_monitor;
 #endif
 
 /**********************
@@ -200,7 +206,6 @@ void lv_obj_redraw(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj) {
 
     draw_ctx->clip_area = clip_area_ori;
 }
-
 
 /**
  * Invalidate an area on display to redraw it
@@ -360,8 +365,8 @@ void _lv_disp_refr_timer(lv_timer_t *tmr) {
 #endif
 
 #if LV_USE_PERF_MONITOR && LV_USE_LABEL
-    lv_obj_t * perf_label = perf_monitor.perf_label;
-    if(perf_label == NULL) {
+    lv_obj_t *perf_label = perf_monitor.perf_label;
+    if (perf_label == NULL) {
         perf_label = lv_label_create(lv_layer_sys());
         lv_obj_set_style_bg_opa(perf_label, LV_OPA_50, 0);
         lv_obj_set_style_bg_color(perf_label, lv_color_black(), 0);
@@ -376,41 +381,38 @@ void _lv_disp_refr_timer(lv_timer_t *tmr) {
         perf_monitor.perf_label = perf_label;
     }
 
-    if(lv_tick_elaps(perf_monitor.perf_last_time) < 300) {
-        if(px_num > 5000) {
+    if (lv_tick_elaps(perf_monitor.perf_last_time) < 300) {
+        if (px_num > 5000) {
             perf_monitor.elaps_sum += elaps;
-            perf_monitor.frame_cnt ++;
+            perf_monitor.frame_cnt++;
         }
-    }
-    else {
+    } else {
         perf_monitor.perf_last_time = lv_tick_get();
         uint32_t fps_limit;
         uint32_t fps;
 
-        if(disp_refr->refr_timer) {
+        if (disp_refr->refr_timer) {
             fps_limit = 1000 / disp_refr->refr_timer->period;
-        }
-        else {
+        } else {
             fps_limit = 1000 / LV_DISP_DEF_REFR_PERIOD;
         }
 
-        if(perf_monitor.elaps_sum == 0) {
+        if (perf_monitor.elaps_sum == 0) {
             perf_monitor.elaps_sum = 1;
         }
-        if(perf_monitor.frame_cnt == 0) {
+        if (perf_monitor.frame_cnt == 0) {
             fps = fps_limit;
-        }
-        else {
+        } else {
             fps = (1000 * perf_monitor.frame_cnt) / perf_monitor.elaps_sum;
         }
         perf_monitor.elaps_sum = 0;
         perf_monitor.frame_cnt = 0;
-        if(fps > fps_limit) {
+        if (fps > fps_limit) {
             fps = fps_limit;
         }
 
         perf_monitor.fps_sum_all += fps;
-        perf_monitor.fps_sum_cnt ++;
+        perf_monitor.fps_sum_cnt++;
         uint32_t cpu = 100 - lv_timer_get_idle();
         lv_label_set_text_fmt(perf_label, "%"LV_PRIu32" FPS\n%"LV_PRIu32"%% CPU", fps, cpu);
     }
@@ -451,21 +453,20 @@ void _lv_disp_refr_timer(lv_timer_t *tmr) {
 }
 
 #if LV_USE_PERF_MONITOR
-void lv_refr_reset_fps_counter(void)
-{
+
+void lv_refr_reset_fps_counter(void) {
     perf_monitor.fps_sum_all = 0;
     perf_monitor.fps_sum_cnt = 0;
 }
 
-uint32_t lv_refr_get_fps_avg(void)
-{
-    if(perf_monitor.fps_sum_cnt == 0) {
+uint32_t lv_refr_get_fps_avg(void) {
+    if (perf_monitor.fps_sum_cnt == 0) {
         return 0;
     }
     return perf_monitor.fps_sum_all / perf_monitor.fps_sum_cnt;
 }
-#endif
 
+#endif
 
 /**********************
  *   STATIC FUNCTIONS
@@ -698,8 +699,7 @@ static void refr_area_part(lv_draw_ctx_t *draw_ctx) {
     /* Below the `area_p` area will be redrawn into the draw buffer.
      * In single buffered mode wait here until the buffer is freed.
      * In full double buffered mode wait here while the buffers are swapped and a buffer becomes available*/
-    bool full_sized = draw_buf->size == (uint32_t)
-                                                disp_refr->driver->hor_res * disp_refr->driver->ver_res;
+    bool full_sized = draw_buf->size == (uint32_t) disp_refr->driver->hor_res * disp_refr->driver->ver_res;
     if ((draw_buf->buf1 && !draw_buf->buf2) ||
         (draw_buf->buf1 && draw_buf->buf2 && full_sized)) {
         while (draw_buf->flushing) {
@@ -878,7 +878,6 @@ static void refr_obj_and_children(lv_draw_ctx_t *draw_ctx, lv_obj_t *top_obj) {
     }
 }
 
-
 static lv_res_t layer_get_area(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj, lv_layer_type_t layer_type,
                                lv_area_t *layer_area_out) {
     lv_coord_t ext_draw_size = _lv_obj_get_ext_draw_size(obj);
@@ -946,7 +945,6 @@ static void layer_alpha_test(lv_obj_t *obj, lv_draw_ctx_t *draw_ctx, lv_draw_lay
     if (layer_ctx->area_act.y2 > layer_ctx->area_full.y2) layer_ctx->area_act.y2 = layer_ctx->area_full.y2;
     lv_draw_layer_adjust(draw_ctx, layer_ctx, has_alpha ? LV_DRAW_LAYER_FLAG_HAS_ALPHA : LV_DRAW_LAYER_FLAG_NONE);
 }
-
 
 void refr_obj(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj) {
     /*Do not refresh hidden objects*/
@@ -1031,11 +1029,8 @@ void refr_obj(lv_draw_ctx_t *draw_ctx, lv_obj_t *obj) {
     }
 }
 
-
 static uint32_t get_max_row(lv_disp_t *disp, lv_coord_t area_w, lv_coord_t area_h) {
-    int32_t
-            max_row = (uint32_t)
-                              disp->driver->draw_buf->size / area_w;
+    int32_t max_row = (uint32_t) disp->driver->draw_buf->size / area_w;
 
     if (max_row > area_h) max_row = area_h;
 
@@ -1167,7 +1162,7 @@ static void draw_buf_rotate(lv_area_t *area, lv_color_t *color_p) {
         call_flush_cb(drv, area, color_p);
     } else if (drv->rotated == LV_DISP_ROT_90 || drv->rotated == LV_DISP_ROT_270) {
         /*Allocate a temporary buffer to store rotated image*/
-        lv_color_t * rot_buf = NULL;
+        lv_color_t *rot_buf = NULL;
         lv_disp_draw_buf_t *draw_buf = lv_disp_get_draw_buf(disp_refr);
         lv_coord_t area_w = lv_area_get_width(area);
         lv_coord_t area_h = lv_area_get_height(area);
@@ -1247,8 +1242,7 @@ static void draw_buf_flush(lv_disp_t *disp) {
 
     /* In partial double buffered mode wait until the other buffer is freed
      * and driver is ready to receive the new buffer */
-    bool full_sized = draw_buf->size == (uint32_t)
-                                                disp_refr->driver->hor_res * disp_refr->driver->ver_res;
+    bool full_sized = draw_buf->size == (uint32_t) disp_refr->driver->hor_res * disp_refr->driver->ver_res;
     if (draw_buf->buf1 && draw_buf->buf2 && !full_sized) {
         while (draw_buf->flushing) {
             if (disp_refr->driver->wait_cb) disp_refr->driver->wait_cb(disp_refr->driver);
@@ -1295,8 +1289,8 @@ static void call_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t 
 }
 
 #if LV_USE_PERF_MONITOR
-static void perf_monitor_init(perf_monitor_t * _perf_monitor)
-{
+
+static void perf_monitor_init(perf_monitor_t *_perf_monitor) {
     LV_ASSERT_NULL(_perf_monitor);
     _perf_monitor->elaps_sum = 0;
     _perf_monitor->fps_sum_all = 0;
@@ -1305,14 +1299,15 @@ static void perf_monitor_init(perf_monitor_t * _perf_monitor)
     _perf_monitor->perf_last_time = 0;
     _perf_monitor->perf_label = NULL;
 }
+
 #endif
 
 #if LV_USE_MEM_MONITOR
-static void mem_monitor_init(mem_monitor_t * _mem_monitor)
-{
+
+static void mem_monitor_init(mem_monitor_t *_mem_monitor) {
     LV_ASSERT_NULL(_mem_monitor);
     _mem_monitor->mem_last_time = 0;
     _mem_monitor->mem_label = NULL;
 }
-#endif
 
+#endif

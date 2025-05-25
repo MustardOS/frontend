@@ -7,7 +7,6 @@
  *      INCLUDES
  *********************/
 #include "lv_slider.h"
-
 #if LV_USE_SLIDER != 0
 
 #include "../misc/lv_assert.h"
