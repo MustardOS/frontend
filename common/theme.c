@@ -1113,6 +1113,9 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     // Adjusts height if user picks a height that is not evenly divisible by item count.
     // Prevents seeing a few pixels of the next game.
     theme->MISC.CONTENT.HEIGHT = theme->MUX.ITEM.PANEL * theme->MUX.ITEM.COUNT;
+
+    //Disable Animations
+    theme->MISC.ANIMATED_BACKGROUND = 0;
 }
 
 void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, char *item_text) {
