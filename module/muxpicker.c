@@ -224,6 +224,9 @@ static void handle_confirm() {
 
         if (exec) {
             config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+            if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "theme")) {
+                play_silence_bgm();
+            }
             run_exec(exec, exec_count, 0);
         }
         free(exec);
@@ -269,6 +272,9 @@ static void handle_confirm_force() {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
+        if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "theme")) {
+            play_silence_bgm();
+        }
         run_exec(exec, exec_count, 0);
     }
     free(exec);
