@@ -170,7 +170,7 @@ static void update_file_counter() {
         char counter_text[MAX_BUFFER_SIZE];
         snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR,
                  ui_count);
-        fade_label(ui_lblCounter, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
+        counter_message(ui_lblCounter, counter_text, theme.COUNTER.TEXT_FADE_TIME * 60);
     } else {
         lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
     }
@@ -917,7 +917,7 @@ static void handle_a() {
     }
 
     if (load_message) {
-        toast_message(lang.GENERIC.LOADING, 0, 0);
+        toast_message(lang.GENERIC.LOADING, 0);
         lv_obj_move_foreground(ui_pnlMessage);
 
         // Refresh and add a small delay to actually display the message!
@@ -956,7 +956,7 @@ static void handle_b() {
 static void handle_x() {
     if (msgbox_active || !ui_count) return;
 
-    toast_message(lang.MUXPLORE.REFRESH_RUN, 0, 0);
+    toast_message(lang.MUXPLORE.REFRESH_RUN, 0);
     lv_obj_move_foreground(ui_pnlMessage);
 
     const char *args[] = {(INTERNAL_PATH "script/mount/union.sh"), "restart", NULL};
@@ -974,11 +974,11 @@ static void handle_y() {
 
     if (items[current_item_index].content_type == FOLDER) {
         play_sound(SND_ERROR, 0);
-        toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, 1000, 1000);
+        toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, 1000);
     } else {
         if (!load_content(1)) {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXPLORE.ERROR.NO_CORE, 1000, 1000);
+            toast_message(lang.MUXPLORE.ERROR.NO_CORE, 1000);
         }
     }
 }
@@ -1237,7 +1237,7 @@ int muxplore_main(int index, char *dir) {
 
     if (file_exist(ADD_MODE_DONE)) {
         if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {
-            toast_message(lang.GENERIC.ADD_COLLECT, 1000, 1000);
+            toast_message(lang.GENERIC.ADD_COLLECT, 1000);
         }
         remove(ADD_MODE_DONE);
     }

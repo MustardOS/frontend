@@ -368,7 +368,7 @@ bool handle_navigate(void) {
             }
         } else {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000, 1000);
+            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000);
         }
         return true;
     } else if (element_focused == ui_lblType_network) {
@@ -391,7 +391,7 @@ bool handle_navigate(void) {
             }
         } else {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000, 1000);
+            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000);
         }
         return true;
     }
@@ -458,7 +458,7 @@ static void handle_confirm(void) {
                 literally_just_connected = 1;
             } else {
                 play_sound(SND_ERROR, 0);
-                toast_message(lang.MUXNETWORK.CHECK, 1000, 1000);
+                toast_message(lang.MUXNETWORK.CHECK, 1000);
             }
         }
     } else {
@@ -504,7 +504,7 @@ static void handle_confirm(void) {
             }
         } else {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000, 1000);
+            toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000);
         }
     }
 }
@@ -512,7 +512,7 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     play_sound(SND_BACK, 0);
 
-    toast_message(lang.GENERIC.SAVING, 0, 0);
+    toast_message(lang.GENERIC.SAVING, 0);
     refresh_screen(ui_screen);
 
     save_network_config();

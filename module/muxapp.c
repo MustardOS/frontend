@@ -236,7 +236,7 @@ static void handle_a() {
             if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
                 if (*(elements[i].kiosk_flag)) {
                     play_sound(SND_ERROR, 0);
-                    toast_message(kiosk_nope(), 1000, 1000);
+                    toast_message(kiosk_nope(), 1000);
                     refresh_screen(ui_screen);
 
                     return;
@@ -249,7 +249,7 @@ static void handle_a() {
         play_sound(SND_CONFIRM, 0);
 
         if (!skip_toast) {
-            toast_message(lang.MUXAPP.LOAD_APP, 0, 0);
+            toast_message(lang.MUXAPP.LOAD_APP, 0);
             refresh_screen(ui_screen);
         }
 

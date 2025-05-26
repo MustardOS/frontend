@@ -520,7 +520,7 @@ static void handle_a() {
     if (element_focused == ui_lblHostname_netinfo) {
         if (is_network_connected()) {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXNETINFO.ERROR.EDIT, 1000, 1000);
+            toast_message(lang.MUXNETINFO.ERROR.EDIT, 1000);
             return;
         }
 
@@ -536,7 +536,7 @@ static void handle_a() {
     } else if (element_focused == ui_lblMAC_netinfo) {
         if (is_network_connected()) {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXNETINFO.ERROR.CHANGE, 1000, 1000);
+            toast_message(lang.MUXNETINFO.ERROR.CHANGE, 1000);
             return;
         }
 

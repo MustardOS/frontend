@@ -104,7 +104,7 @@ static void update_file_counter() {
         char counter_text[MAX_BUFFER_SIZE];
         snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR,
                  ui_count);
-        fade_label(ui_lblCounter_collect, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
+        counter_message(ui_lblCounter_collect, counter_text, theme.COUNTER.TEXT_FADE_TIME * 60);
     } else {
         lv_obj_add_flag(ui_lblCounter_collect, LV_OBJ_FLAG_HIDDEN);
     }
@@ -569,7 +569,7 @@ static int load_content(const char *content_name) {
         return 1;
     }
 
-    toast_message(lang.MUXCOLLECT.ERROR.LOAD, 1000, 1000);
+    toast_message(lang.MUXCOLLECT.ERROR.LOAD, 1000);
     LOG_ERROR(mux_module, "Cache Pointer Not Found: %s", cache_file)
 
     return 0;
@@ -750,7 +750,7 @@ static void handle_a() {
     }
 
     if (load_message) {
-        toast_message(lang.GENERIC.LOADING, 0, 0);
+        toast_message(lang.GENERIC.LOADING, 0);
         lv_obj_move_foreground(ui_pnlMessage);
 
         // Refresh and add a small delay to actually display the message!
@@ -821,7 +821,7 @@ static void handle_x() {
     if (items[current_item_index].content_type == FOLDER) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name) > 0) {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, 1000, 1000);
+            toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, 1000);
             return;
         } else {
             char empty_dir[MAX_BUFFER_SIZE];

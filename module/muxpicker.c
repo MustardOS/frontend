@@ -186,7 +186,7 @@ static void handle_confirm() {
     } else {
         if (!strcasecmp(picker_type, "theme") && !version_check()) {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXPICKER.INVALID_VER, 1000, 1000);
+            toast_message(lang.MUXPICKER.INVALID_VER, 1000);
             return;
         }
 
@@ -195,7 +195,7 @@ static void handle_confirm() {
                  sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
         if (!strcasecmp(picker_type, "theme") && !resolution_check(picker_archive)) {
             play_sound(SND_ERROR, 0);
-            toast_message(lang.MUXPICKER.INVALID_RES, 1000, 1000);
+            toast_message(lang.MUXPICKER.INVALID_RES, 1000);
             return;
         }
 

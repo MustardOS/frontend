@@ -315,7 +315,7 @@ static void adjust_option(int direction) {
 }
 
 static void save_and_exit(char *message) {
-    toast_message(message, 0, 0);
+    toast_message(message, 0);
     refresh_screen(ui_screen);
 
     save_clock_settings(rtc.year, rtc.month, rtc.day, rtc.hour, rtc.minute, rtc.notation);

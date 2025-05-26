@@ -483,7 +483,7 @@ static void save_options() {
     }
 
     if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0, 0);
+        toast_message(lang.GENERIC.SAVING, 0);
         refresh_screen(ui_screen);
     }
 
@@ -565,7 +565,7 @@ static void handle_confirm() {
         } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 play_sound(SND_ERROR, 0);
-                toast_message(kiosk_nope(), 1000, 1000);
+                toast_message(kiosk_nope(), 1000);
                 refresh_screen(ui_screen);
                 return;
             }

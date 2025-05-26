@@ -390,7 +390,7 @@ static void handle_a() {
                         "\x64\x6F\x20\x79\x6F"
                         "\x75\x20\x77\x61\x6E"
                         "\x74\x3F",
-                        1000, 1000
+                        1000
                 );
                 break;
             case 10:
@@ -400,7 +400,7 @@ static void handle_a() {
                         "\x72\x65\x20\x70\x65"
                         "\x72\x73\x69\x73\x74"
                         "\x65\x6E\x74\x21",
-                        1000, 1000
+                        1000
                 );
                 break;
             case 20:
@@ -410,7 +410,7 @@ static void handle_a() {
                         "\x6F\x75\x20\x65\x78"
                         "\x70\x65\x63\x74\x69"
                         "\x6E\x67\x3F",
-                        1000, 1000
+                        1000
                 );
                 break;
             case 30:
@@ -420,7 +420,7 @@ static void handle_a() {
                         "\x6E\x20\x68\x65\x72"
                         "\x65\x20\x79\x6F\x75"
                         "\x2E\x2E\x2E",
-                        1000, 1000
+                        1000
                 );
                 break;
             case 40:
@@ -431,7 +431,7 @@ static void handle_a() {
                         "\x73\x74\x20\x77\x61"
                         "\x72\x6E\x69\x6E\x67"
                         "\x21",
-                        1000, 1000
+                        1000
                 );
                 break;
             case 50:
@@ -442,7 +442,7 @@ static void handle_a() {
                         "\x73\x6B\x65\x64\x20"
                         "\x66\x6F\x72\x20\x69"
                         "\x74",
-                        1000, 1000
+                        1000
                 );
                 break;
             default:
@@ -452,7 +452,7 @@ static void handle_a() {
                         "\x66\x6F\x72\x20\x75"
                         "\x73\x69\x6E\x67\x20"
                         "\x6D\x75\x4F\x53\x21",
-                        1000, 1000
+                        1000
                 );
                 break;
         }
@@ -481,11 +481,11 @@ static void handle_a() {
 
     if (lv_group_get_focused(ui_group) == ui_lblMemory_sysinfo) {
         write_text_to_file("/proc/sys/vm/drop_caches", "w", INT, 3);
-        toast_message(lang.MUXSYSINFO.MEMORY.DROP, 1000, 1000);
+        toast_message(lang.MUXSYSINFO.MEMORY.DROP, 1000);
     }
 
     if (lv_group_get_focused(ui_group) == ui_lblKernel_sysinfo) {
-        toast_message(hostname, 1000, 1000);
+        toast_message(hostname, 1000);
     }
 
     refresh_screen(ui_screen);

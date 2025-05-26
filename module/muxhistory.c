@@ -86,7 +86,7 @@ static void update_file_counter() {
         char counter_text[MAX_BUFFER_SIZE];
         snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR,
                  ui_count);
-        fade_label(ui_lblCounter_history, counter_text, 100, theme.COUNTER.TEXT_FADE_TIME * 60);
+        counter_message(ui_lblCounter_history, counter_text, theme.COUNTER.TEXT_FADE_TIME * 60);
     } else {
         lv_obj_add_flag(ui_lblCounter_history, LV_OBJ_FLAG_HIDDEN);
     }
@@ -381,7 +381,7 @@ static void remove_from_history() {
         mux_input_stop();
     } else {
         play_sound(SND_ERROR, 0);
-        toast_message(lang.MUXHISTORY.ERROR.REMOVE, 1000, 1000);
+        toast_message(lang.MUXHISTORY.ERROR.REMOVE, 1000);
     }
 }
 
@@ -439,7 +439,7 @@ static int load_content(const char *content_name) {
         return 1;
     }
 
-    toast_message(lang.MUXHISTORY.ERROR.LOAD, 1000, 1000);
+    toast_message(lang.MUXHISTORY.ERROR.LOAD, 1000);
     LOG_ERROR(mux_module, "Cache Pointer Not Found: %s", cache_file)
 
     return 0;
@@ -754,7 +754,7 @@ int muxhistory_main(int his_index) {
 
     if (file_exist(ADD_MODE_DONE)) {
         if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {
-            toast_message(lang.GENERIC.ADD_COLLECT, 1000, 1000);
+            toast_message(lang.GENERIC.ADD_COLLECT, 1000);
             refresh_screen(ui_screen);
         }
         remove(ADD_MODE_DONE);

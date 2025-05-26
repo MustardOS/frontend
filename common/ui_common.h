@@ -1,5 +1,8 @@
 #pragma once
 
+extern lv_timer_t *toast_timer;
+extern lv_timer_t *counter_timer;
+
 struct theme_config;
 struct mux_device;
 struct mux_lang;
@@ -39,9 +42,9 @@ void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *the
 
 void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, int force_glyph);
 
-void toast_message(const char *msg, uint32_t delay, uint32_t fade_duration);
+void toast_message(const char *msg, uint32_t delay);
 
-void fade_label(lv_obj_t *ui_lbl, const char *msg, uint32_t delay, uint32_t fade_duration);
+void counter_message(lv_obj_t *ui_lblCounter, const char *msg, uint32_t delay);
 
 void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels);
 

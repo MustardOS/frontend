@@ -36,20 +36,17 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
 
     static lv_color_t *t_buf0 = NULL;
     static lv_color_t *t_buf1 = NULL;
-    static lv_color_t *t_buf2 = NULL;
     static int buffers_initialized = 0;
     if (!buffers_initialized) {
         t_buf0 = malloc(device.MUX.WIDTH * device.MUX.HEIGHT * sizeof(lv_color_t));
         t_buf1 = malloc(device.MUX.WIDTH * device.MUX.HEIGHT * sizeof(lv_color_t));
-        t_buf2 = malloc(device.MUX.WIDTH * device.MUX.HEIGHT * sizeof(lv_color_t));
         buffers_initialized = 1;
     }
 
-    static lv_color_t *t_buf[3] = {NULL, NULL, NULL};
+    static lv_color_t *t_buf[2] = {NULL, NULL};
     if (t_buf[0] == NULL) {
         t_buf[0] = t_buf0;
         t_buf[1] = t_buf1;
-        t_buf[2] = t_buf2;
     }
 
     static int t_buf_index = 0;
@@ -61,7 +58,7 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
     monitor.refresh = true;
 
     if (lv_disp_flush_is_last(disp_drv)) display_refresh();
-    t_buf_index = (t_buf_index + 1) % 3;
+    t_buf_index = (t_buf_index + 1) % 2;
     lv_disp_flush_ready(disp_drv);
 }
 

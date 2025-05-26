@@ -70,6 +70,16 @@ typedef struct {
 } ModuleEntry;
 
 static void cleanup_screen() {
+    if (toast_timer != NULL) {
+        lv_timer_del(toast_timer);
+        toast_timer = NULL;
+    }
+
+    if (counter_timer != NULL) {
+        lv_timer_del(counter_timer);
+        counter_timer = NULL;
+    }
+
     if (ui_screen_container == NULL) return;
 
     init_dispose();

@@ -105,7 +105,7 @@ static void handle_confirm() {
 
     play_sound(SND_CONFIRM, 0);
 
-    toast_message(lang.GENERIC.SAVING, 0, 0);
+    toast_message(lang.GENERIC.SAVING, 0);
     refresh_screen(ui_screen);
 
     write_text_to_file((RUN_GLOBAL_PATH "settings/general/language"), "w", CHAR,

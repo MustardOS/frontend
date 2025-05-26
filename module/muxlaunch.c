@@ -210,7 +210,7 @@ static void handle_a() {
         if (!strcasecmp(u_data, elements[i].glyph_name)) {
             if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 play_sound(SND_ERROR, 0);
-                toast_message(kiosk_nope(), 1000, 1000);
+                toast_message(kiosk_nope(), 1000);
                 refresh_screen(ui_screen);
                 return;
             }
@@ -454,7 +454,7 @@ static void handle_kiosk_toggle() {
 
         int kiosk_cfg = snprintf(kiosk_storage, sizeof(kiosk_storage), "%s/MUOS/kiosk.ini", device.STORAGE.ROM.MOUNT);
         if (kiosk_cfg < 0 || kiosk_cfg >= (int) sizeof(kiosk_storage)) {
-            toast_message(lang.MUXLAUNCH.KIOSK.ERROR, 1000, 1000);
+            toast_message(lang.MUXLAUNCH.KIOSK.ERROR, 1000);
             return;
         }
 
@@ -470,12 +470,10 @@ static void handle_kiosk_toggle() {
                 const char *args_init[] = {(INTERNAL_PATH "script/var/init/kiosk.sh"), "init", NULL};
                 run_exec(args_init, A_SIZE(args_init), 0);
 
-                toast_message(lang.MUXLAUNCH.KIOSK.PROCESS, 1000, 1000);
-                sleep(1); /* not really needed but it's a good buffer... */
-
+                toast_message(lang.MUXLAUNCH.KIOSK.PROCESS, 1000);
                 handle_b();
             } else {
-                toast_message(lang.MUXLAUNCH.KIOSK.ERROR, 1000, 1000);
+                toast_message(lang.MUXLAUNCH.KIOSK.ERROR, 1000);
             }
         }
     }

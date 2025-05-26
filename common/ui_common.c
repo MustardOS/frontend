@@ -69,6 +69,9 @@ lv_obj_t *ui_pnlProgressVolume;
 lv_obj_t *ui_icoProgressVolume;
 lv_obj_t *ui_barProgressVolume;
 
+lv_timer_t *toast_timer = NULL;
+lv_timer_t *counter_timer = NULL;
+
 static int brightness_changed = 0;
 static int volume_changed = 0;
 static int last_brightness = -1;
@@ -1130,26 +1133,39 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, 
     }
 }
 
-void toast_message(const char *msg, uint32_t delay, uint32_t fade_duration) {
-    lv_label_set_text(ui_lblMessage, msg);
-    lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_set_style_opa(ui_pnlMessage, LV_OPA_COVER, 0);
+static void hide_message(lv_timer_t *msg_timer) {
+    lv_obj_t *target_obj = (lv_obj_t *) msg_timer->user_data;
+    lv_obj_set_style_opa(target_obj, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    if (delay <= 0 || fade_duration <= 0) return;
-
-    lv_anim_del(ui_pnlMessage, NULL);
-    lv_obj_fade_out(ui_pnlMessage, fade_duration, delay);
+    if (target_obj == ui_pnlMessage && toast_timer == msg_timer) {
+        toast_timer = NULL;
+    } else if (counter_timer == msg_timer) {
+        counter_timer = NULL;
+    }
 }
 
-void fade_label(lv_obj_t *ui_lbl, const char *msg, uint32_t delay, uint32_t fade_duration) {
-    lv_label_set_text(ui_lbl, msg);
-    lv_obj_clear_flag(ui_lbl, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_set_style_opa(ui_lbl, LV_OPA_COVER, 0);
+static void show_message(lv_obj_t *panel, lv_obj_t *label, const char *msg, uint32_t delay, lv_timer_t **msg_timer) {
+    lv_label_set_text(label, msg);
+    lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_opa(panel, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    if (delay <= 0 || fade_duration <= 0) return;
+    if (*msg_timer != NULL) {
+        lv_timer_del(*msg_timer);
+        *msg_timer = NULL;
+    }
 
-    lv_anim_del(ui_lbl, NULL);
-    lv_obj_fade_out(ui_lbl, fade_duration, delay);
+    if (delay > 0) {
+        *msg_timer = lv_timer_create(hide_message, delay, panel);
+        lv_timer_set_repeat_count(*msg_timer, 1);
+    }
+}
+
+void toast_message(const char *msg, uint32_t delay) {
+    show_message(ui_pnlMessage, ui_lblMessage, msg, delay, &toast_timer);
+}
+
+void counter_message(lv_obj_t *label, const char *msg, uint32_t delay) {
+    show_message(label, label, msg, delay, &counter_timer);
 }
 
 void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels) {
@@ -1215,33 +1231,33 @@ int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_t
     return 1;
 }
 
-void fade_to_black(lv_obj_t *ui_screen) {
+static void fade_black(lv_obj_t *ui_screen, int start_opa, int end_opa, int step, int destroy) {
     lv_obj_t *black = lv_obj_create(ui_screen);
 
-    lv_obj_set_width(black, device.MUX.WIDTH);
-    lv_obj_set_height(black, device.MUX.HEIGHT);
-
+    lv_obj_set_size(black, device.MUX.WIDTH, device.MUX.HEIGHT);
     lv_obj_set_style_bg_color(black, lv_color_hex(0x000000), 0);
-    lv_obj_set_style_bg_opa(black, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(black, start_opa, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_center(black);
     lv_obj_move_foreground(black);
 
-    unload_image_animation();
-    for (unsigned int i = 0; i <= 255; i += 25) {
+    if (start_opa < end_opa) unload_image_animation();
+
+    for (int i = start_opa; (step > 0) ? (i <= end_opa) : (i >= end_opa); i += step) {
         lv_obj_set_style_bg_opa(black, i, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_task_handler();
         usleep(128);
     }
+
+    if (destroy) lv_obj_del_async(black);
 }
 
-void fade_from_black(lv_obj_t *ui_black) {
-    for (unsigned int i = 255; i >= 1; i -= 25) {
-        lv_obj_set_style_bg_opa(ui_black, i, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_task_handler();
-        usleep(128);
-    }
-    lv_obj_del_async(ui_black);
+void fade_to_black(lv_obj_t *ui_screen) {
+    fade_black(ui_screen, 0, 255, 25, 0);
+}
+
+void fade_from_black(lv_obj_t *ui_screen) {
+    fade_black(ui_screen, 255, 0, -25, 1);
 }
 
 void create_grid_panel(struct theme_config *theme, int item_count) {
