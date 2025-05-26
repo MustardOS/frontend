@@ -656,21 +656,16 @@ static void handle_keyboard_press(void) {
 }
 
 static void add_collection_item() {
-    char *base_filename = read_line_char_from(ADD_MODE_WORK, 1);
+    char *base_file_name = read_line_char_from(ADD_MODE_WORK, 1);
     char *cache_file = read_line_char_from(ADD_MODE_WORK, 2);
 
     char collection_content[MAX_BUFFER_SIZE];
     snprintf(collection_content, sizeof(collection_content), "%s\n%s\n%s",
              cache_file, read_line_char_from(ADD_MODE_WORK, 3), strip_ext(read_line_char_from(cache_file, 7)));
 
-    char *collect_filename = strip_ext(base_filename);
-
-    uint32_t hash;
-    if (!has_fnv1a_hash(collect_filename, &hash)) hash = set_fnv1a_hash(cache_file);
-
     char collection_file[MAX_BUFFER_SIZE];
     snprintf(collection_file, sizeof(collection_file), "%s/%s-%08X.cfg",
-             sys_dir, collect_filename, set_fnv1a_hash(cache_file));
+             sys_dir, strip_ext(base_file_name), fnv1a_hash(cache_file));
 
     write_text_to_file(collection_file, "w", CHAR, collection_content);
 

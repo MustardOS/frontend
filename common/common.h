@@ -318,9 +318,7 @@ int at_base(char *sys_dir, char *base_name);
 
 int search_for_config(const char *base_path, const char *file_name, const char *system_name);
 
-uint32_t set_fnv1a_hash(const char *str);
-
-bool has_fnv1a_hash(const char *filename, uint32_t *hash);
+uint32_t fnv1a_hash(const char *str);
 
 bool get_glyph_path(const char *mux_module, const char *glyph_name,
                     char *glyph_image_embed, size_t glyph_image_embed_size);

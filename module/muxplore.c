@@ -751,11 +751,7 @@ static int load_content(int add_collection) {
             snprintf(content, sizeof(content), "%s.cfg", content_name);
             add_to_collection(content, pointer);
         } else {
-            uint32_t hash;
-            if (!has_fnv1a_hash(content_name, &hash)) hash = set_fnv1a_hash(cache_file);
-
-            snprintf(content, sizeof(content), "%s/%s-%08X.cfg", INFO_HIS_PATH, content_name, hash);
-
+            snprintf(content, sizeof(content), "%s/%s-%08X.cfg", INFO_HIS_PATH, content_name, fnv1a_hash(cache_file));
             write_text_to_file(content, "w", CHAR, pointer);
             write_text_to_file(LAST_PLAY_FILE, "w", CHAR, cache_file);
             write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
