@@ -390,7 +390,7 @@ static void add_to_collection() {
     snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
              items[current_item_index].name);
 
-    const char *cache_file = read_line_char_from(pointer_file, 1);
+    char *cache_file = read_line_char_from(pointer_file, 1);
     char history_content[MAX_BUFFER_SIZE];
     snprintf(history_content, sizeof(history_content), "%s\n%s\n%s",
              get_last_dir(cache_file),

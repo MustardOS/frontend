@@ -1169,9 +1169,9 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
                 break;
             case GENERAL:
             default:
-                char *active_element = strcmp(program, "muxlaunch") == 0 ? element : "default";
                 if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "static",
-                                                 active_element, "default", "png", static_image_path,
+                                                 !strcmp(program, "muxlaunch") ? element : "default",
+                                                 "default", "png", static_image_path,
                                                  sizeof(static_image_path))) {
 
                     int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s",

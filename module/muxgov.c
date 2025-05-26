@@ -30,7 +30,7 @@ static void show_help() {
                      lang.MUXGOV.TITLE, lang.MUXGOV.HELP);
 }
 
-static void write_gov_file(char *path, char *gov, char *log) {
+static void write_gov_file(char *path, const char *gov, char *log) {
     FILE *file = fopen(path, "w");
     if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
@@ -43,7 +43,7 @@ static void write_gov_file(char *path, char *gov, char *log) {
     fclose(file);
 }
 
-static void assign_gov_single(char *core_dir, char *gov, char *rom) {
+static void assign_gov_single(char *core_dir, const char *gov, char *rom) {
     char gov_path[MAX_BUFFER_SIZE];
     snprintf(gov_path, sizeof(gov_path), "%s/%s.gov", core_dir, strip_ext(rom));
 
@@ -52,7 +52,7 @@ static void assign_gov_single(char *core_dir, char *gov, char *rom) {
     write_gov_file(gov_path, gov, "Assign Governor (Single)");
 }
 
-static void assign_gov_directory(char *core_dir, char *gov, int purge) {
+static void assign_gov_directory(char *core_dir, const char *gov, int purge) {
     if (purge) delete_files_of_type(core_dir, ".gov", NULL, 0);
 
     char gov_path[MAX_BUFFER_SIZE];
@@ -62,7 +62,7 @@ static void assign_gov_directory(char *core_dir, char *gov, int purge) {
     write_gov_file(gov_path, gov, "Assign Governor");
 }
 
-static void assign_gov_parent(char *core_dir, char *gov) {
+static void assign_gov_parent(char *core_dir, const char *gov) {
     delete_files_of_type(core_dir, ".gov", NULL, 1);
     assign_gov_directory(core_dir, gov, 0);
 
@@ -80,7 +80,7 @@ static void assign_gov_parent(char *core_dir, char *gov) {
     free_subdirectories(subdirs);
 }
 
-static void create_gov_assignment(char *gov, char *rom, enum gov_gen_type method) {
+static void create_gov_assignment(const char *gov, char *rom, enum gov_gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s/",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
