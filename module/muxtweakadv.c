@@ -721,6 +721,10 @@ static void init_elements() {
 
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image);
+
+    // Removal of random theme because it is causing a number of issues
+    lv_obj_add_flag(ui_pnlTheme_tweakadv, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    ui_count -= 1;
 }
 
 static void ui_refresh_task() {
