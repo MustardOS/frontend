@@ -724,7 +724,9 @@ static void init_elements() {
 
     // Removal of random theme because it is causing a number of issues
     lv_obj_add_flag(ui_pnlTheme_tweakadv, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    ui_count -= 1;
+    // Removal of verbose messages due to changes to muterm not playing ball
+    lv_obj_add_flag(ui_pnlVerbose_tweakadv, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    ui_count -= 2;
 }
 
 static void ui_refresh_task() {
