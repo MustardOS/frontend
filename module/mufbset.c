@@ -85,12 +85,6 @@ int destroy_fb(fb_info * fb) {
     return 0;
 }
 
-void wait_for_vsync(fb_info * fb) {
-    uint32_t dummy = 0;
-    if (ioctl(fb->fd, FBIO_WAITFORVSYNC, &dummy) < 0) {
-        perror("Waiting for V-Sync failed");
-    }
-}
 
 int clear_framebuffer() {
     fb_info fb;
@@ -232,14 +226,7 @@ static pid_t find_pid_using (const char * filename) {
     return 0;
 }
 
-uint32_t dumb_hash(const void* data, size_t nbytes, uint32_t h /*= 0xcc9e2d51 */) {
-    size_t nwords = nbytes / 4;
-    while(nwords--) h ^= ((uint32_t*)data)[nwords];
-    return h;
-}
-
-
-int overlay_framebuffer(const char * overlay_filename, const int pos_x, const int pos_y, const int delay, const int pause) {
+int overlay_framebuffer(const char * overlay_filename, const int pos_x, const int pos_y, const int delay) {
     // Then perform the overlay action here
     pid_t process = find_pid_using(device.SCREEN.DEVICE);
 
@@ -292,7 +279,7 @@ int overlay_framebuffer(const char * overlay_filename, const int pos_x, const in
     get_active_area_framebuffer(&fb, &offset, &size, &stride, 0);
 
     // Pause process if asked to
-    if (pause) kill(process, SIGSTOP);
+    if (process) kill(process, SIGSTOP);
 
     // Save the current framebuffer content to restore afterward
     uint32_t * saved_pixels = malloc(fb.size);
@@ -304,99 +291,45 @@ int overlay_framebuffer(const char * overlay_filename, const int pos_x, const in
         return -1;
     }
     memcpy(saved_pixels, fb.mem, fb.size);
-      uint32_t * out = ((uint32_t*)fb.mem) + offset, * in = saved_pixels + offset, * content = (uint32_t*)rgba;
-      out += stride * pos_y; in += stride * pos_y;
 
-    time_t start = time(NULL);
-    uint32_t csum = 0;
-    uint32_t frames = 0;
-    do
-    {
-        // Prevent corrupting the screen if the process is still running
-        if (!pause)
-        {
-              uint32_t actual_height = (height + pos_y) < fb.vinfo.yres ? height : (fb.vinfo.yres - pos_y);
-/*
-            size_t newoff = 0;
-               get_active_area_framebuffer(&fb, &newoff, &size, &stride, 1); // Some core use offset for double buffering
-               if (newoff != offset) {
-                // Restore previous picture to back buffer
-                out = ((uint32_t*)fb.mem) + offset; in = saved_pixels + offset;
-                out += stride * pos_y; in += stride * pos_y;
-                memcpy(out, in, stride * actual_height * (fb.vinfo.bits_per_pixel / 8));
-                offset = newoff;
-            }
-*/
-            out = ((uint32_t*)fb.mem) + offset; in = saved_pixels + offset;
-            out += stride * pos_y; in += stride * pos_y; content = (uint32_t*)rgba;
-            memcpy(in, out, stride * actual_height * (fb.vinfo.bits_per_pixel / 8));
+    uint32_t * out = ((uint32_t*)fb.mem) + offset, * in = saved_pixels + offset, * content = (uint32_t*)rgba;
+    out += stride * pos_y; in += stride * pos_y;
+    for (size_t y = pos_y; y < (height + pos_y) && y < fb.vinfo.yres; ++y) {
+        for (size_t x = pos_x; x < (width + pos_x) && x < fb.vinfo.xres; ++x) {
+            uint32_t c = content[x - pos_x], i = in[x];
+            uint8_t a = (c & 0xFF000000) >> 24;
+            uint8_t b = (c & 0x00FF0000) >> 16;
+            uint8_t g = (c & 0x0000FF00) >> 8;
+            uint8_t r = (c & 0x000000FF) >> 0;
+
+            uint8_t ia = (i >> fb.vinfo.transp.offset) & ((1 << fb.vinfo.transp.length) - 1);
+            uint8_t ir = (i >> fb.vinfo.red.offset) & ((1 << fb.vinfo.red.length) - 1);
+            uint8_t ig = (i >> fb.vinfo.green.offset) & ((1 << fb.vinfo.green.length) - 1);
+            uint8_t ib = (i >> fb.vinfo.blue.offset) & ((1 << fb.vinfo.blue.length) - 1);
+
+            // Alpha blend pixels now
+            r = (r * a + ir * (255 - a)) / 255;
+            g = (g * a + ig * (255 - a)) / 255;
+            b = (b * a + ib * (255 - a)) / 255;
+
+            // And output them
+            c = ((ia & ((1 << fb.vinfo.transp.length) - 1)) << fb.vinfo.transp.offset)
+                | ((r & ((1 << fb.vinfo.red.length) - 1)) << fb.vinfo.red.offset)
+                | ((g & ((1 << fb.vinfo.green.length) - 1)) << fb.vinfo.green.offset)
+                | ((b & ((1 << fb.vinfo.blue.length) - 1)) << fb.vinfo.blue.offset);
+
+            out[x] = c;
         }
-
-#if UseChecksum
-        // Compute the part of the picture checksum and skip overlaying if it's the same as before
-        uint32_t crc = 0;
-        if (!pause) {
-             crc = dumb_hash(in, stride * height * 4, 0xcc9e2d51);
-             printf("crc: %08X\n", crc);
-        }
-
-        if (crc != csum) {
-#endif
-            for (size_t y = pos_y; y < (height + pos_y) && y < fb.vinfo.yres; ++y) {
-                for (size_t x = pos_x; x < (width + pos_x) && x < fb.vinfo.xres; ++x) {
-                    uint32_t c = content[x - pos_x], i = in[x];
-                    uint8_t a = (c & 0xFF000000) >> 24;
-                    uint8_t b = (c & 0x00FF0000) >> 16;
-                    uint8_t g = (c & 0x0000FF00) >> 8;
-                    uint8_t r = (c & 0x000000FF) >> 0;
-
-                    uint8_t ia = (i >> fb.vinfo.transp.offset) & ((1 << fb.vinfo.transp.length) - 1);
-                    uint8_t ir = (i >> fb.vinfo.red.offset) & ((1 << fb.vinfo.red.length) - 1);
-                    uint8_t ig = (i >> fb.vinfo.green.offset) & ((1 << fb.vinfo.green.length) - 1);
-                    uint8_t ib = (i >> fb.vinfo.blue.offset) & ((1 << fb.vinfo.blue.length) - 1);
-
-                    // Alpha blend pixels now
-                    r = (r * a + ir * (255 - a)) / 255;
-                    g = (g * a + ig * (255 - a)) / 255;
-                    b = (b * a + ib * (255 - a)) / 255;
-
-                    // And output them
-                    c = ((ia & ((1 << fb.vinfo.transp.length) - 1)) << fb.vinfo.transp.offset)
-                      | ((r & ((1 << fb.vinfo.red.length) - 1)) << fb.vinfo.red.offset)
-                      | ((g & ((1 << fb.vinfo.green.length) - 1)) << fb.vinfo.green.offset)
-                      | ((b & ((1 << fb.vinfo.blue.length) - 1)) << fb.vinfo.blue.offset);
-
-                    out[x] = c;
-                }
-                content += width;
-                in += stride;
-                out += stride;
-            }
-#if UseChecksum
-            csum = crc;
-        }
-#endif
-
-        if (pause)
-            sleep(delay);
-        else {
-            // Dump method to check if a pixel was changed by the process
-            wait_for_vsync(&fb);
-            frames++;
-        }
-
-    } while((time(NULL) - start) < delay);
-
-    // Finally restore the framebuffer to what we expected
-    if (!pause) {
-        kill(process, SIGSTOP);
-          uint32_t actual_height = (height + pos_y) < fb.vinfo.yres ? height : (fb.vinfo.yres - pos_y);
-        memcpy(((uint32_t*)fb.mem) + offset, saved_pixels + offset, stride * actual_height * (fb.vinfo.bits_per_pixel / 8));
-        printf("Drawn %d frames in %d = %.3ffps\n", frames, delay, (double)frames/delay);
-    } else {
-        memcpy(fb.mem, saved_pixels, fb.size);
+        content += width;
+        in += stride;
+        out += stride;
     }
-    kill(process, SIGCONT);
+
+    sleep(delay);
+
+    // Finally restore the framebuffer to what it was before
+    memcpy(fb.mem, saved_pixels, fb.size);
+    if (process) kill(process, SIGCONT);
 
     free(rgba);
     free(saved_pixels);
@@ -481,7 +414,6 @@ void print_help(const char *progname) {
     printf("  -o, --overlay <FILE>      Overlay the given file onto the framebuffer\n");
     printf("  -p, --pos <X,Y>           Top left position to display the overlay\n");
     printf("  -t, --time <SEC>          The duration to display the overlay\n");
-    printf("  -k, --pause               Pause the process using the framebuffer if overlay is active\n");
     printf("  -H, --help                Show this help message\n");
     printf("\nExamples:\n");
     printf("  %s -w 640 -h 480 -d 32 -c  Clear and set resolution to 640x480 with 32bpp\n", progname);
@@ -495,7 +427,6 @@ int main(int argc, char *argv[]) {
     int hsync_len = 0, vsync_len = 0, ignore_dh = 2;
     int show_modes = 0, clear_screen = 0;
     int delay = 0, pos_x = 0, pos_y = 0;
-    int pause_required = 0;
     const char * save_filename = NULL;
     const char * overlay_filename = NULL;
 
@@ -512,12 +443,11 @@ int main(int argc, char *argv[]) {
             {"ignore",  no_argument,       0, 'i'},
             {"modes",   no_argument,       0, 'm'},
             {"clear",   no_argument,       0, 'c'},
-            {"pause",   no_argument,	   0, 'k'},
             {"help",    no_argument,       0, 'H'},
             {0, 0,                        0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "w:h:d:x:y:s:o:p:t:imckH", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "w:h:d:x:y:s:o:p:t:imcH", long_options, NULL)) != -1) {
         switch (opt) {
             case 'w':
                 width = safe_atoi(optarg);
@@ -563,9 +493,6 @@ int main(int argc, char *argv[]) {
             case 'c':
                 clear_screen = 1;
                 break;
-            case 'k':
-                pause_required = 1;
-                break;
             case 'H':
                 print_help(argv[0]);
                 return 0;
@@ -598,7 +525,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (overlay_filename) {
-        if (overlay_framebuffer(overlay_filename, pos_x, pos_y, delay, pause_required) < 0) {
+        if (overlay_framebuffer(overlay_filename, pos_x, pos_y, delay) < 0) {
             fprintf(stderr, "Failed to overlay on the framebuffer.\n");
             return 1;
         }
