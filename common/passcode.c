@@ -30,6 +30,10 @@ void load_passcode(struct mux_passcode *passcode, struct mux_device *device) {
             MAX_BUFFER_SIZE - 1);
     passcode->CODE.SETTING[MAX_BUFFER_SIZE - 1] = '\0';
 
+    strncpy(passcode->CODE.PARENT, get_ini_string(muos_pass, "code", "parent", "000000"),
+            MAX_BUFFER_SIZE - 1);
+    passcode->CODE.PARENT[MAX_BUFFER_SIZE - 1] = '\0';
+
     strncpy(passcode->MESSAGE.BOOT, get_ini_string(muos_pass, "message", "boot", ""),
             MAX_BUFFER_SIZE - 1);
     passcode->MESSAGE.BOOT[MAX_BUFFER_SIZE - 1] = '\0';
@@ -41,6 +45,10 @@ void load_passcode(struct mux_passcode *passcode, struct mux_device *device) {
     strncpy(passcode->MESSAGE.SETTING, get_ini_string(muos_pass, "message", "setting", ""),
             MAX_BUFFER_SIZE - 1);
     passcode->MESSAGE.SETTING[MAX_BUFFER_SIZE - 1] = '\0';
+
+    strncpy(passcode->MESSAGE.PARENT, get_ini_string(muos_pass, "message", "parent", ""),
+            MAX_BUFFER_SIZE - 1);
+    passcode->MESSAGE.PARENT[MAX_BUFFER_SIZE - 1] = '\0';
 
     mini_free(muos_pass);
 }
