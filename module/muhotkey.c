@@ -156,7 +156,7 @@ static void handle_idle(void) {
     if (idle_display.tick != mux_input_tick()) {
         // Allow the shell scripts to temporarily inhibit idle detection. (We could check those
         // conditions here, but it's more flexible to leave that externally controllable.)
-        switch (read_line_int_from((RUN_SYSTEM_PATH "idle_inhibit"), 1)) {
+        switch (read_line_int_from((CONF_CONFIG_PATH "system/idle_inhibit"), 1)) {
             case IDLE_INHIBIT_BOTH:
                 idle_display.tick = mux_input_tick();
                 // fallthrough

@@ -239,97 +239,97 @@ static void save_tweak_options() {
 
     if (lv_dropdown_get_selected(ui_droAccelerate_tweakadv) != accelerate_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/accelerate"), "w", INT, idx_accelerate);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/accelerate"), "w", INT, idx_accelerate);
     }
 
     if (lv_dropdown_get_selected(ui_droSwap_tweakadv) != swap_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/swap"), "w", INT, idx_swap);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/swap"), "w", INT, idx_swap);
     }
 
     if (lv_dropdown_get_selected(ui_droThermal_tweakadv) != thermal_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/thermal"), "w", INT, idx_thermal);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/thermal"), "w", INT, idx_thermal);
     }
 
     if (lv_dropdown_get_selected(ui_droVolume_tweakadv) != volume_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/volume"), "w", CHAR, idx_volume);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/volume"), "w", CHAR, idx_volume);
     }
 
     if (lv_dropdown_get_selected(ui_droBrightness_tweakadv) != brightness_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/brightness"), "w", CHAR, idx_brightness);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/brightness"), "w", CHAR, idx_brightness);
     }
 
     if (lv_dropdown_get_selected(ui_droOffset_tweakadv) != offset_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/offset"), "w", INT, idx_offset);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/offset"), "w", INT, idx_offset);
     }
 
     if (lv_dropdown_get_selected(ui_droPasscode_tweakadv) != lockdown_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/lock"), "w", INT, idx_lockdown);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/lock"), "w", INT, idx_lockdown);
     }
 
     if (lv_dropdown_get_selected(ui_droLED_tweakadv) != led_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/led"), "w", INT, idx_led);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/led"), "w", INT, idx_led);
     }
 
     if (lv_dropdown_get_selected(ui_droTheme_tweakadv) != random_theme_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/random_theme"), "w", INT, idx_random_theme);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/random_theme"), "w", INT, idx_random_theme);
     }
 
     if (lv_dropdown_get_selected(ui_droRetroWait_tweakadv) != retrowait_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/retrowait"), "w", INT, idx_retrowait);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/retrowait"), "w", INT, idx_retrowait);
     }
 
     if (lv_dropdown_get_selected(ui_droState_tweakadv) != state_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/state"), "w", CHAR, idx_state);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/state"), "w", CHAR, idx_state);
     }
 
     if (lv_dropdown_get_selected(ui_droVerbose_tweakadv) != verbose_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/verbose"), "w", INT, idx_verbose);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/verbose"), "w", INT, idx_verbose);
     }
 
     if (lv_dropdown_get_selected(ui_droRumble_tweakadv) != rumble_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/rumble"), "w", INT, idx_rumble);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/rumble"), "w", INT, idx_rumble);
     }
 
     if (lv_dropdown_get_selected(ui_droUserInit_tweakadv) != user_init_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/user_init"), "w", INT, idx_user_init);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/user_init"), "w", INT, idx_user_init);
     }
 
     if (lv_dropdown_get_selected(ui_droDPADSwap_tweakadv) != dpad_swap_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/dpad_swap"), "w", INT, idx_dpad_swap);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/dpad_swap"), "w", INT, idx_dpad_swap);
     }
 
     if (lv_dropdown_get_selected(ui_droOverdrive_tweakadv) != overdrive_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/overdrive"), "w", INT, idx_overdrive);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/overdrive"), "w", INT, idx_overdrive);
     }
 
     if (lv_dropdown_get_selected(ui_droSwap_tweakadvfile) != swapfile_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/swapfile"), "w", INT, idx_swapfile);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/swapfile"), "w", INT, idx_swapfile);
     }
 
     if (lv_dropdown_get_selected(ui_droZramfile_tweakadv) != zramfile_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/zramfile"), "w", INT, idx_zramfile);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/zramfile"), "w", INT, idx_zramfile);
     }
 
     if (lv_dropdown_get_selected(ui_droCardMode_tweakadv) != cardmode_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/cardmode"), "w", CHAR, idx_cardmode);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/cardmode"), "w", CHAR, idx_cardmode);
     }
 
     if (is_modified > 0) {

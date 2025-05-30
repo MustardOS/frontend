@@ -25,8 +25,6 @@ static lv_obj_t *ui_icons[UI_COUNT];
 
 static lv_obj_t *ui_mux_panels[7];
 
-static int literally_just_connected = 0;
-
 struct help_msg {
     lv_obj_t *element;
     char *message;
@@ -84,7 +82,7 @@ static void can_scan_check(int forced_disconnect) {
 static void get_current_ip() {
     char address_file[MAX_BUFFER_SIZE];
     snprintf(address_file, sizeof(address_file),
-             "%s/config/address.txt", INTERNAL_PATH);
+             CONF_CONFIG_PATH "/network/address");
 
     char *curr_ip = read_all_char_from(address_file);
     static char net_message[MAX_BUFFER_SIZE];
@@ -146,18 +144,26 @@ static void save_network_config() {
     if (!strcasecmp(lv_label_get_text(ui_lblType_networkValue), lang.MUXNETWORK.STATIC)) idx_type = 1;
     if (!strcasecmp(lv_label_get_text(ui_lblScan_networkValue), lang.GENERIC.ENABLED)) idx_scan = 1;
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/type"), "w", INT, idx_type);
-    write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, idx_scan);
-    write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR, lv_label_get_text(ui_lblIdentifier_networkValue));
+    write_text_to_file((CONF_CONFIG_PATH "network/type"), "w", INT, idx_type);
+    write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, idx_scan);
+    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR,
+                       lv_label_get_text(ui_lblIdentifier_networkValue));
 
     if (strcasecmp(lv_label_get_text(ui_lblPassword_networkValue), PASS_ENCODE) != 0) {
-        write_text_to_file((RUN_GLOBAL_PATH "network/pass"), "w", CHAR, lv_label_get_text(ui_lblPassword_networkValue));
+        write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR,
+                           lv_label_get_text(ui_lblPassword_networkValue));
     }
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/address"), "w", CHAR, lv_label_get_text(ui_lblAddress_networkValue));
-    write_text_to_file((RUN_GLOBAL_PATH "network/subnet"), "w", CHAR, lv_label_get_text(ui_lblSubnet_networkValue));
-    write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR, lv_label_get_text(ui_lblGateway_networkValue));
-    write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, lv_label_get_text(ui_lblDNS_networkValue));
+    if (config.NETWORK.TYPE) {
+        write_text_to_file((CONF_CONFIG_PATH "network/address"), "w", CHAR,
+                           lv_label_get_text(ui_lblAddress_networkValue));
+        write_text_to_file((CONF_CONFIG_PATH "network/subnet"), "w", CHAR,
+                           lv_label_get_text(ui_lblSubnet_networkValue));
+        write_text_to_file((CONF_CONFIG_PATH "network/gateway"), "w", CHAR,
+                           lv_label_get_text(ui_lblGateway_networkValue));
+        write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR,
+                           lv_label_get_text(ui_lblDNS_networkValue));
+    }
 
     refresh_config = 1;
 }
@@ -360,10 +366,10 @@ bool handle_navigate(void) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
             play_sound(SND_NAVIGATE, 0);
             if (!strcasecmp(lv_label_get_text(ui_lblScan_networkValue), lang.GENERIC.ENABLED)) {
-                write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 0);
+                write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, 0);
                 lv_label_set_text(ui_lblScan_networkValue, lang.GENERIC.DISABLED);
             } else {
-                write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 1);
+                write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, 1);
                 lv_label_set_text(ui_lblScan_networkValue, lang.GENERIC.ENABLED);
             }
         } else {
@@ -455,7 +461,6 @@ static void handle_confirm(void) {
                 lv_task_handler();
 
                 get_current_ip();
-                literally_just_connected = 1;
             } else {
                 play_sound(SND_ERROR, 0);
                 toast_message(lang.MUXNETWORK.CHECK, 1000);
@@ -466,10 +471,10 @@ static void handle_confirm(void) {
             play_sound(SND_CONFIRM, 0);
             if (element_focused == ui_lblScan_network) {
                 if (!strcasecmp(lv_label_get_text(ui_lblScan_networkValue), lang.GENERIC.ENABLED)) {
-                    write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 0);
+                    write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, 0);
                     lv_label_set_text(ui_lblScan_networkValue, lang.GENERIC.DISABLED);
                 } else {
-                    write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT, 1);
+                    write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, 1);
                     lv_label_set_text(ui_lblScan_networkValue, lang.GENERIC.ENABLED);
                 }
             } else {

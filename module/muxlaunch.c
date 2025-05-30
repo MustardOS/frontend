@@ -440,7 +440,7 @@ static void handle_kiosk_purge() {
 
         char path[MAX_BUFFER_SIZE];
         for (size_t i = 0; i < sizeof(kiosk_paths) / sizeof(kiosk_paths[0]); i++) {
-            snprintf(path, sizeof(path), (RUN_KIOSK_PATH "%s"), kiosk_paths[i]);
+            snprintf(path, sizeof(path), (CONF_KIOSK_PATH "%s"), kiosk_paths[i]);
             write_text_to_file(path, "w", INT, 0);
         }
 

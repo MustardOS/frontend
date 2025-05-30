@@ -100,13 +100,13 @@ static void handle_confirm(void) {
     if (msgbox_active) return;
 
     play_sound(SND_CONFIRM, 0);
-    write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR,
+    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR,
                        lv_label_get_text(lv_group_get_focused(ui_group)));
-    write_text_to_file((RUN_GLOBAL_PATH "network/pass"), "w", CHAR, "");
-    write_text_to_file((RUN_GLOBAL_PATH "network/address"), "w", CHAR, "");
-    write_text_to_file((RUN_GLOBAL_PATH "network/subnet"), "w", CHAR, "");
-    write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR, "");
-    write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR, "");
+    write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR, "");
+    write_text_to_file((CONF_CONFIG_PATH "network/address"), "w", CHAR, "");
+    write_text_to_file((CONF_CONFIG_PATH "network/subnet"), "w", CHAR, "");
+    write_text_to_file((CONF_CONFIG_PATH "network/gateway"), "w", CHAR, "");
+    write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR, "");
 
     refresh_config = 1;
 

@@ -79,12 +79,12 @@ static void save_options() {
 
     int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
     if (lv_dropdown_get_selected(ui_droBluetooth) != bluetooth_original) {
-        write_text_to_file((RUN_GLOBAL_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
+        write_text_to_file((CONF_CONFIG_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
     }
 
     if (lv_dropdown_get_selected(ui_droUSBFunction) != usbfunction_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
     }
 
     if (is_modified > 0) {

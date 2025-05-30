@@ -202,6 +202,17 @@ char *str_tolower(char *text) {
     return text;
 }
 
+char *str_toupper(char *text) {
+    char *ptr = text;
+
+    while (*ptr) {
+        *ptr = toupper((unsigned char) *ptr);
+        ptr++;
+    }
+
+    return text;
+}
+
 char *str_remchar(char *text, char c) {
     char *r_ptr = text;
     char *w_ptr = text;
@@ -2532,7 +2543,7 @@ int theme_compat() {
 
     if (file_exist(theme_version_file)) {
         char *theme_version = read_line_char_from(theme_version_file, 1);
-        char *internal_version = read_line_char_from((INTERNAL_PATH "config/version.txt"), 1);
+        char *internal_version = read_line_char_from(MUOS_VERSION, 1);
         if (strstr(internal_version, theme_version)) {
             return 1;
         } else {

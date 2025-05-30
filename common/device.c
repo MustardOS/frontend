@@ -6,29 +6,29 @@
 void load_device(struct mux_device *device) {
     char buffer[MAX_BUFFER_SIZE];
 
-#define DEV_INT_FIELD(field, path)                                      \
-    do {                                                                \
-        snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path); \
-        field = (int)({                                                 \
-            char *ep;                                                   \
-            long val = strtol(read_all_char_from(buffer), &ep, 10);     \
-            *ep ? 0 : val;                                              \
-        });                                                             \
+#define DEV_INT_FIELD(field, path)                                       \
+    do {                                                                 \
+        snprintf(buffer, sizeof(buffer), (CONF_DEVICE_PATH "%s"), path); \
+        field = (int)({                                                  \
+            char *ep;                                                    \
+            long val = strtol(read_all_char_from(buffer), &ep, 10);      \
+            *ep ? 0 : val;                                               \
+        });                                                              \
     } while (0);
 
-#define DEV_FLO_FIELD(field, path)                                      \
-    do {                                                                \
-        snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path); \
-        field = (float)({                                               \
-            char *ep;                                                   \
-            double val = strtod(read_all_char_from(buffer), &ep);       \
-            *ep ? 1.0 : val;                                            \
-        });                                                             \
+#define DEV_FLO_FIELD(field, path)                                       \
+    do {                                                                 \
+        snprintf(buffer, sizeof(buffer), (CONF_DEVICE_PATH "%s"), path); \
+        field = (float)({                                                \
+            char *ep;                                                    \
+            double val = strtod(read_all_char_from(buffer), &ep);        \
+            *ep ? 1.0 : val;                                             \
+        });                                                              \
     } while (0);
 
 #define DEV_STR_FIELD(field, path)                                       \
     do {                                                                 \
-        snprintf(buffer, sizeof(buffer), (RUN_DEVICE_PATH "%s"), path);  \
+        snprintf(buffer, sizeof(buffer), (CONF_DEVICE_PATH "%s"), path); \
         strncpy(field, read_all_char_from(buffer), MAX_BUFFER_SIZE - 1); \
         field[MAX_BUFFER_SIZE - 1] = '\0';                               \
     } while (0);
@@ -120,10 +120,10 @@ void load_device(struct mux_device *device) {
     DEV_INT_FIELD(device->SCREEN.HEIGHT, "screen/height")
 
     DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/rotate")
-    if (file_exist("/run/muos/device/screen/s_rotate")) DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/s_rotate");
+    if (file_exist(CONF_DEVICE_PATH "screen/s_rotate")) DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/s_rotate");
 
     DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/zoom")
-    if (file_exist("/run/muos/device/screen/s_zoom")) DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/s_zoom");
+    if (file_exist(CONF_DEVICE_PATH "screen/s_zoom")) DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/s_zoom");
 
     DEV_INT_FIELD(device->SCREEN.INTERNAL.WIDTH, "screen/internal/width")
     DEV_INT_FIELD(device->SCREEN.INTERNAL.HEIGHT, "screen/internal/height")

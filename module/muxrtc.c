@@ -41,7 +41,7 @@ static void confirm_rtc_config() {
     const char *notation_type = lv_label_get_text(ui_lblNotationValue);
     int idx_notation = (notation_type && strcmp(notation_type, notation[1]) == TIME_12H) ? TIME_24H : TIME_12H;
 
-    write_text_to_file((RUN_GLOBAL_PATH "clock/notation"), "w", INT, idx_notation);
+    write_text_to_file((CONF_CONFIG_PATH "clock/notation"), "w", INT, idx_notation);
 
     const char *args[] = {"hwclock", "-w", NULL};
     run_exec(args, A_SIZE(args), 1);
@@ -351,7 +351,7 @@ static void handle_b() {
     play_sound(SND_BACK, 0);
 
     if (config.BOOT.FACTORY_RESET) {
-        write_text_to_file((RUN_GLOBAL_PATH "boot/clock_setup"), "w", INT, 0);
+        write_text_to_file((CONF_CONFIG_PATH "boot/clock_setup"), "w", INT, 0);
     } else {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "clock");
     }

@@ -433,52 +433,52 @@ static void save_options() {
 
     if (lv_dropdown_get_selected(ui_droBGM) != bgm_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/bgm"), "w", INT, idx_bgm);
+        write_text_to_file((CONF_CONFIG_PATH "settings/general/bgm"), "w", INT, idx_bgm);
     }
 
     if (lv_dropdown_get_selected(ui_droSound) != sound_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/sound"), "w", INT, idx_sound);
+        write_text_to_file((CONF_CONFIG_PATH "settings/general/sound"), "w", INT, idx_sound);
     }
 
     if (lv_dropdown_get_selected(ui_droChime) != chime_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/chime"), "w", INT, idx_chime);
+        write_text_to_file((CONF_CONFIG_PATH "settings/general/chime"), "w", INT, idx_chime);
     }
 
     if (lv_dropdown_get_selected(ui_droBoxArt) != boxart_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "visual/boxart"), "w", INT, idx_boxart);
+        write_text_to_file((CONF_CONFIG_PATH "visual/boxart"), "w", INT, idx_boxart);
     }
 
     if (lv_dropdown_get_selected(ui_droBoxArtAlign) != boxartalign_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "visual/boxartalign"), "w", INT, idx_boxartalign);
+        write_text_to_file((CONF_CONFIG_PATH "visual/boxartalign"), "w", INT, idx_boxartalign);
     }
 
     if (lv_dropdown_get_selected(ui_droBackgroundAnimation) != background_animation_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "visual/backgroundanimation"), "w", INT, idx_backgroundanimation);
+        write_text_to_file((CONF_CONFIG_PATH "visual/backgroundanimation"), "w", INT, idx_backgroundanimation);
     }
 
     if (lv_dropdown_get_selected(ui_droLaunchSplash) != launch_splash_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "visual/launchsplash"), "w", INT, idx_launchsplash);
+        write_text_to_file((CONF_CONFIG_PATH "visual/launchsplash"), "w", INT, idx_launchsplash);
     }
 
     if (lv_dropdown_get_selected(ui_droBlackFade) != black_fade_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "visual/blackfade"), "w", INT, idx_blackfade);
+        write_text_to_file((CONF_CONFIG_PATH "visual/blackfade"), "w", INT, idx_blackfade);
     }
 
     if (lv_dropdown_get_selected(ui_droFont) != font_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/advanced/font"), "w", INT, idx_font);
+        write_text_to_file((CONF_CONFIG_PATH "settings/advanced/font"), "w", INT, idx_font);
     }
 
     if (lv_dropdown_get_selected(ui_droThemeResolution) != theme_resolution_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/theme_resolution"), "w", INT, idx_theme_resolution);
+        write_text_to_file((CONF_CONFIG_PATH "settings/general/theme_resolution"), "w", INT, idx_theme_resolution);
         refresh_resolution = 1;
     }
 
@@ -490,7 +490,7 @@ static void save_options() {
     if (!lv_obj_has_flag(ui_pnlThemeAlternate, LV_OBJ_FLAG_HIDDEN)) {
         char theme_alt[MAX_BUFFER_SIZE];
         lv_dropdown_get_selected_str(ui_droThemeAlternate, theme_alt, sizeof(theme_alt));
-        printf("attempt updating file: %s\n", (STORAGE_THEME "/active.txt"));
+
         if (strcasecmp(theme_alt, theme_alt_original) != 0) {
             write_text_to_file((STORAGE_THEME "/active.txt"), "w", CHAR, theme_alt);
 

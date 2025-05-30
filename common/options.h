@@ -42,8 +42,9 @@
 #define INTERNAL_OVERLAY INTERNAL_PATH "share/overlay"
 
 #define KIOSK_CONFIG   INTERNAL_PATH "config/kiosk.ini"
-#define LAST_PLAY_FILE INTERNAL_PATH "config/lastplay.txt"
-#define MUOS_VERSION   INTERNAL_PATH "config/version.txt"
+#define LAST_PLAY_FILE INTERNAL_PATH "config/boot/last_play"
+#define MUOS_VERSION   INTERNAL_PATH "config/system/version"
+#define MUOS_BUILD     INTERNAL_PATH "config/system/build"
 #define BGM_SILENCE    INTERNAL_PATH "share/media/silence.ogg"
 
 #define RUN_PATH "/run/muos/"
@@ -51,13 +52,14 @@
 #define ADD_MODE_WORK "/tmp/add_mode_work"
 #define ADD_MODE_DONE "/tmp/add_mode_done"
 #define ADD_MODE_FROM "/tmp/add_mode_from"
+
 #define COLLECTION_DIR "/tmp/collection_dir"
 
-#define RUN_DEVICE_PATH  RUN_PATH "device/"
-#define RUN_GLOBAL_PATH  RUN_PATH "global/"
-#define RUN_KIOSK_PATH   RUN_PATH "kiosk/"
+#define CONF_DEVICE_PATH INTERNAL_PATH "device/config/"
+#define CONF_CONFIG_PATH INTERNAL_PATH "config/"
+#define CONF_KIOSK_PATH  INTERNAL_PATH "kiosk/"
+
 #define RUN_STORAGE_PATH RUN_PATH "storage/"
-#define RUN_SYSTEM_PATH  RUN_PATH "system/"
 
 #define STORAGE_THEME RUN_STORAGE_PATH "theme/active"
 #define STORAGE_SHOTS RUN_STORAGE_PATH "screenshot"
@@ -128,15 +130,15 @@
 #define FONT_HEADER_FOLDER "header"
 #define FONT_FOOTER_FOLDER "footer"
 
-#define CFG_INT_FIELD(field, path, def)                             \
-    snprintf(buffer, sizeof(buffer), (RUN_GLOBAL_PATH "%s"), path); \
-    field = (int)({                                                 \
-        char *ep;                                                   \
-        long val = strtol(read_all_char_from(buffer), &ep, 10);    \
-        *ep ? def : val;                                            \
+#define CFG_INT_FIELD(field, path, def)                              \
+    snprintf(buffer, sizeof(buffer), (CONF_CONFIG_PATH "%s"), path); \
+    field = (int)({                                                  \
+        char *ep;                                                    \
+        long val = strtol(read_all_char_from(buffer), &ep, 10);      \
+        *ep ? def : val;                                             \
     });
 
-#define CFG_STR_FIELD(field, path, def)                                      \
-    snprintf(buffer, sizeof(buffer), (RUN_GLOBAL_PATH "%s"), path);          \
+#define CFG_STR_FIELD(field, path, def)                                     \
+    snprintf(buffer, sizeof(buffer), (CONF_CONFIG_PATH "%s"), path);        \
     strncpy(field, read_all_char_from(buffer) ?: def, MAX_BUFFER_SIZE - 1); \
     field[MAX_BUFFER_SIZE - 1] = '\0';

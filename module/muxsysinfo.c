@@ -192,15 +192,15 @@ const char *get_battery_cap() {
 const char *get_build_version() {
     static char build_version[32];
     snprintf(build_version, sizeof(build_version), "%s (%s)",
-             str_replace(read_line_char_from((INTERNAL_PATH "config/version.txt"), 1), "_", " "),
-             read_line_char_from((INTERNAL_PATH "config/version.txt"), 2));
+             str_replace(read_line_char_from(MUOS_VERSION, 1), "_", " "),
+             read_line_char_from(MUOS_BUILD, 1));
     return build_version;
 }
 
 const char *get_device_info() {
     static char device_info[32];
     snprintf(device_info, sizeof(device_info), "%s",
-             read_line_char_from((INTERNAL_PATH "config/device.txt"), 1));
+             str_toupper(read_line_char_from((CONF_DEVICE_PATH "board/name"), 1)));
     return device_info;
 }
 
@@ -466,8 +466,8 @@ static void handle_a() {
             snprintf(s_zoom_str, sizeof(s_zoom_str), "%.2f",
                      (float) ((float[]) {0.45f, 0.50f, 0.55f, 0.60f, 0.65f, 0.70f, 0.75f})[random() % 7]);
 
-            write_text_to_file("/run/muos/device/screen/s_rotate", "w", CHAR, s_rotate_str);
-            write_text_to_file("/run/muos/device/screen/s_zoom", "w", CHAR, s_zoom_str);
+            write_text_to_file(CONF_DEVICE_PATH "screen/s_rotate", "w", CHAR, s_rotate_str);
+            write_text_to_file(CONF_DEVICE_PATH "screen/s_zoom", "w", CHAR, s_zoom_str);
 
             load_mux("launcher");
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "");

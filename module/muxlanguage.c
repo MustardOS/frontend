@@ -108,7 +108,7 @@ static void handle_confirm() {
     toast_message(lang.GENERIC.SAVING, 0);
     refresh_screen(ui_screen);
 
-    write_text_to_file((RUN_GLOBAL_PATH "settings/general/language"), "w", CHAR,
+    write_text_to_file((CONF_CONFIG_PATH "settings/general/language"), "w", CHAR,
                        items[current_item_index].name);
 
     refresh_config = 1;

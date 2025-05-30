@@ -24,7 +24,7 @@ static void set_brightness(int brightness) {
     char bright_value[8];
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
 
-    const char *args[] = {(INTERNAL_PATH "device/current/input/bright.sh"), bright_value, NULL};
+    const char *args[] = {(INTERNAL_PATH "device/input/bright.sh"), bright_value, NULL};
     run_exec(args, A_SIZE(args), 0);
 
     load_config(&config);

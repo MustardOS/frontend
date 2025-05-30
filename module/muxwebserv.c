@@ -82,37 +82,37 @@ static void save_web_options() {
 
     if (lv_dropdown_get_selected(ui_droSSHD) != sshd_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "web/sshd"), "w", INT, idx_sshd);
+        write_text_to_file((CONF_CONFIG_PATH "web/sshd"), "w", INT, idx_sshd);
     }
 
     if (lv_dropdown_get_selected(ui_droSFTPGo) != sftpgo_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "web/sftpgo"), "w", INT, idx_sftpgo);
+        write_text_to_file((CONF_CONFIG_PATH "web/sftpgo"), "w", INT, idx_sftpgo);
     }
 
     if (lv_dropdown_get_selected(ui_droTTYD) != ttyd_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "web/ttyd"), "w", INT, idx_ttyd);
+        write_text_to_file((CONF_CONFIG_PATH "web/ttyd"), "w", INT, idx_ttyd);
     }
 
     if (lv_dropdown_get_selected(ui_droSyncthing) != syncthing_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "web/syncthing"), "w", INT, idx_syncthing);
+        write_text_to_file((CONF_CONFIG_PATH "web/syncthing"), "w", INT, idx_syncthing);
     }
 
     if (lv_dropdown_get_selected(ui_droRSLSync) != rslsync_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "web/rslsync"), "w", INT, idx_rslsync);
+        write_text_to_file((CONF_CONFIG_PATH "web/rslsync"), "w", INT, idx_rslsync);
     }
 
     if (lv_dropdown_get_selected(ui_droNTP) != ntp_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "web/ntp"), "w", INT, idx_ntp);
+        write_text_to_file((CONF_CONFIG_PATH "web/ntp"), "w", INT, idx_ntp);
     }
 
     if (lv_dropdown_get_selected(ui_droTailscaled) != tailscaled_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "web/tailscaled"), "w", INT, idx_tailscaled);
+        write_text_to_file((CONF_CONFIG_PATH "web/tailscaled"), "w", INT, idx_tailscaled);
     }
 
     if (is_modified > 0) {

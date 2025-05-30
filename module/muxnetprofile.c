@@ -50,28 +50,28 @@ static void load_profile(char *name) {
 
     mini_t *net_profile = mini_try_load(profile_file);
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/type"), "w", INT,
+    write_text_to_file((CONF_CONFIG_PATH "network/type"), "w", INT,
                        (!strcasecmp(mini_get_string(net_profile, "network", "type", "dhcp"), "static")) ? 1 : 0);
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/ssid"), "w", CHAR,
+    write_text_to_file((CONF_CONFIG_PATH "network/ssid"), "w", CHAR,
                        mini_get_string(net_profile, "network", "ssid", ""));
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/scan"), "w", INT,
+    write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT,
                        mini_get_int(net_profile, "network", "scan", 0));
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/pass"), "w", CHAR,
+    write_text_to_file((CONF_CONFIG_PATH "network/pass"), "w", CHAR,
                        mini_get_string(net_profile, "network", "pass", ""));
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/address"), "w", CHAR,
+    write_text_to_file((CONF_CONFIG_PATH "network/address"), "w", CHAR,
                        mini_get_string(net_profile, "network", "address", ""));
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/subnet"), "w", CHAR,
+    write_text_to_file((CONF_CONFIG_PATH "network/subnet"), "w", CHAR,
                        mini_get_string(net_profile, "network", "subnet", ""));
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/gateway"), "w", CHAR,
+    write_text_to_file((CONF_CONFIG_PATH "network/gateway"), "w", CHAR,
                        mini_get_string(net_profile, "network", "gateway", ""));
 
-    write_text_to_file((RUN_GLOBAL_PATH "network/dns"), "w", CHAR,
+    write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR,
                        mini_get_string(net_profile, "network", "dns", ""));
 
     mini_free(net_profile);
@@ -81,14 +81,14 @@ static int save_profile() {
     toast_message(lang.GENERIC.SAVING, 0);
     refresh_screen(ui_screen);
 
-    const char *p_type = read_all_char_from((RUN_GLOBAL_PATH "network/type"));
-    const char *p_ssid = read_all_char_from((RUN_GLOBAL_PATH "network/ssid"));
-    const char *p_pass = read_all_char_from((RUN_GLOBAL_PATH "network/pass"));
-    const char *p_scan = read_all_char_from((RUN_GLOBAL_PATH "network/scan"));
-    const char *p_address = read_all_char_from((RUN_GLOBAL_PATH "network/address"));
-    const char *p_subnet = read_all_char_from((RUN_GLOBAL_PATH "network/subnet"));
-    const char *p_gateway = read_all_char_from((RUN_GLOBAL_PATH "network/gateway"));
-    const char *p_dns = read_all_char_from((RUN_GLOBAL_PATH "network/dns"));
+    const char *p_type = read_all_char_from((CONF_CONFIG_PATH "network/type"));
+    const char *p_ssid = read_all_char_from((CONF_CONFIG_PATH "network/ssid"));
+    const char *p_pass = read_all_char_from((CONF_CONFIG_PATH "network/pass"));
+    const char *p_scan = read_all_char_from((CONF_CONFIG_PATH "network/scan"));
+    const char *p_address = read_all_char_from((CONF_CONFIG_PATH "network/address"));
+    const char *p_subnet = read_all_char_from((CONF_CONFIG_PATH "network/subnet"));
+    const char *p_gateway = read_all_char_from((CONF_CONFIG_PATH "network/gateway"));
+    const char *p_dns = read_all_char_from((CONF_CONFIG_PATH "network/dns"));
 
     if (!p_ssid || !strlen(p_ssid)) {
         toast_message(lang.MUXNETPROFILE.INVALID_SSID, 1000);
