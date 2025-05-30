@@ -22,7 +22,9 @@
 #define TIME_STRING_24 "%H:%M"
 
 #define LOCAL_TIME "/etc/localtime"
+
 #define USED_RESET "/opt/muos/config/system/used_reset"
+#define DONE_RESET "/tmp/done_reset"
 
 #define OSK_UPPER "ABC"
 #define OSK_LOWER "abc"

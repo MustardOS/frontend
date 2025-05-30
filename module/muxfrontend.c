@@ -416,16 +416,18 @@ int main() {
     init_theme(0, 0);
     init_display();
 
-    if (file_exist(USED_RESET)) {
-        if (read_line_int_from(USED_RESET, 1)) {
-            write_text_to_file(USED_RESET, "w", INT, 0);
-            if (set_alert_image_path()) muxsplash_main(alert_image_path);
-            sleep(3);
-        } else {
-            write_text_to_file(USED_RESET, "w", INT, 1);
-        }
+    int show_alert = 0;
+    if (!file_exist(DONE_RESET) && read_line_int_from(USED_RESET, 1)) show_alert = 1;
+
+    write_text_to_file(USED_RESET, "w", INT, 1);
+    write_text_to_file(DONE_RESET, "w", INT, 1);
+
+    if (show_alert && set_alert_image_path()) {
+        muxsplash_main(alert_image_path);
+        sleep(3);
     }
 
+    sync();
     init_audio();
 
     while (1) {
