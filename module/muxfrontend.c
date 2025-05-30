@@ -426,6 +426,7 @@ int main() {
 
         if (file_exist(MUOS_ACT_LOAD)) {
             if (refresh_config) {
+                sync();
                 load_config(&config);
                 refresh_config = 0;
             }
