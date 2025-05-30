@@ -421,6 +421,8 @@ int main() {
             write_text_to_file(USED_RESET, "w", INT, 0);
             if (set_alert_image_path()) muxsplash_main(alert_image_path);
             sleep(3);
+        } else {
+            write_text_to_file(USED_RESET, "w", INT, 1);
         }
     }
 
