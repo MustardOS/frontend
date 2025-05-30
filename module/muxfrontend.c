@@ -58,6 +58,7 @@ static char forced_flag[PATH_MAX];
 
 static char previous_module[MAX_BUFFER_SIZE];
 static char splash_image_path[MAX_BUFFER_SIZE];
+static char alert_image_path[MAX_BUFFER_SIZE];
 
 typedef struct {
     char *action;
@@ -139,6 +140,15 @@ static int set_splash_image_path(char *splash_image_name) {
         (snprintf(splash_image_path, sizeof(splash_image_path), "%s/image/%s.png",
                   theme, splash_image_name) >= 0 && file_exist(splash_image_path))
             )
+        return 1;
+
+    return 0;
+}
+
+static int set_alert_image_path() {
+    if ((snprintf(alert_image_path, sizeof(alert_image_path),
+                  INTERNAL_PATH "share/media/alert-%s.png", device.SCREEN.HEIGHT < 720 ? "small" : "big") >= 0 &&
+         file_exist(alert_image_path)))
         return 1;
 
     return 0;
@@ -405,6 +415,14 @@ int main() {
 
     init_theme(0, 0);
     init_display();
+
+    if (file_exist(USED_RESET)) {
+        if (read_line_int_from(USED_RESET, 1)) {
+            write_text_to_file(USED_RESET, "w", INT, 0);
+            if (set_alert_image_path()) muxsplash_main(alert_image_path);
+            sleep(3);
+        }
+    }
 
     init_audio();
 
