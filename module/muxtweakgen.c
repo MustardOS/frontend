@@ -95,7 +95,7 @@ static void restore_tweak_options() {
 
 static void set_setting_value(const char *script_name, int value, int offset) {
     char script_path[MAX_BUFFER_SIZE];
-    snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/current/input/%s.sh", script_name);
+    snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/input/%s.sh", script_name);
 
     char value_str[8];
     snprintf(value_str, sizeof(value_str), "%d", value + offset);
@@ -142,12 +142,12 @@ static void save_tweak_options() {
 
     if (lv_dropdown_get_selected(ui_droStartup_tweakgen) != startup_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/startup"), "w", CHAR, idx_startup);
+        write_text_to_file((CONF_CONFIG_PATH "settings/general/startup"), "w", CHAR, idx_startup);
     }
 
     if (lv_dropdown_get_selected(ui_droColour_tweakgen) != colour_original) {
         is_modified++;
-        write_text_to_file((RUN_GLOBAL_PATH "settings/general/colour"), "w", INT, idx_colour);
+        write_text_to_file((CONF_CONFIG_PATH "settings/general/colour"), "w", INT, idx_colour);
     }
 
     if (lv_dropdown_get_selected(ui_droBrightness_tweakgen) != brightness_original) {
