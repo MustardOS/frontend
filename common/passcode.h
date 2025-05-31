@@ -10,12 +10,14 @@ struct mux_passcode {
         char BOOT[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
         char SETTING[MAX_BUFFER_SIZE];
+        char PARENT[MAX_BUFFER_SIZE];
     } CODE;
 
     struct {
         char BOOT[MAX_BUFFER_SIZE];
         char LAUNCH[MAX_BUFFER_SIZE];
         char SETTING[MAX_BUFFER_SIZE];
+        char PARENT[MAX_BUFFER_SIZE];
     } MESSAGE;
 };
 

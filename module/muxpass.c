@@ -9,6 +9,7 @@
 #include "../common/passcode.h"
 
 static int exit_status_muxpass = 0;
+static int shutdown_on_b = 0;
 
 struct mux_passcode passcode;
 static char *p_code;
@@ -60,6 +61,9 @@ static void handle_confirm(void) {
 static void handle_back(void) {
     play_sound(SND_BACK, 0);
 
+    if (shutdown_on_b) {
+        load_mux("shutdown");
+    }
     exit_status_muxpass = 2;
     close_input();
     mux_input_stop();
@@ -111,8 +115,8 @@ static void init_elements() {
     process_visual_element(BATTERY, ui_staCapacity);
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
-    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
-
+    lv_label_set_text(ui_lblNavB, shutdown_on_b ? lang.MUXLAUNCH.SHORT.SHUTDOWN : lang.GENERIC.BACK);
+    
     lv_obj_t *nav_hide[] = {
             ui_lblNavAGlyph,
             ui_lblNavA,
@@ -137,22 +141,28 @@ static void init_elements() {
 
 int muxpass_main(char *p_type) {
     exit_status_muxpass = 0;
+    shutdown_on_b = 0;
     char *cmd_help = "\nmuOS Extras - Passcode\nUsage: %s <-t>\n\nOptions:\n"
                      "\t-t Type of passcode lock <boot|launch|setting>\n\n";
 
     init_module("muxpass");
-
     load_passcode(&passcode, &device);
 
     if (strcasecmp(p_type, "boot") == 0) {
         p_code = passcode.CODE.BOOT;
         p_msg = passcode.MESSAGE.BOOT;
+        shutdown_on_b = 1;
     } else if (strcasecmp(p_type, "launch") == 0) {
         p_code = passcode.CODE.LAUNCH;
         p_msg = passcode.MESSAGE.LAUNCH;
     } else if (strcasecmp(p_type, "setting") == 0) {
         p_code = passcode.CODE.SETTING;
         p_msg = passcode.MESSAGE.SETTING;
+        shutdown_on_b = 1;
+    } else if (strcasecmp(p_type, "parent") == 0) {
+        p_code = passcode.CODE.PARENT;
+        p_msg = passcode.MESSAGE.PARENT;
+        shutdown_on_b = 1;
     } else {
         fprintf(stderr, cmd_help, p_type);
         return 2;
@@ -164,13 +174,13 @@ int muxpass_main(char *p_type) {
 
     init_theme(0, 0);
 
-    init_ui_common_screen(&theme, &device, &lang, lang.MUXPASS.TITLE);
+    // The message replaces the title and avoid an ugly toast and a useless "Password" title
+    init_ui_common_screen(&theme, &device, &lang, strlen(p_msg) ? p_msg : lang.MUXPASS.TITLE);
     init_muxpass(ui_pnlContent);
     init_elements();
 
-    if (strlen(p_msg) > 1) toast_message(p_msg, 0);
-
-    lv_obj_set_user_data(ui_screen, mux_module);
+    // If shutdown is required, change the module name so the theme can react to load the right wallpaper
+    lv_obj_set_user_data(ui_screen, shutdown_on_b ? "muxpass_s" : mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     apply_pass_theme(ui_rolComboOne, ui_rolComboTwo, ui_rolComboThree,
