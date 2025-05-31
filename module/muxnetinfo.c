@@ -417,7 +417,7 @@ static void init_navigation_group() {
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
         if (direction < 0) {
@@ -484,7 +484,7 @@ static void handle_keyboard_OK_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (strcasecmp(is_key, OSK_DONE) == 0) {
@@ -501,7 +501,7 @@ static void handle_keyboard_press(void) {
 }
 
 static void handle_back(void) {
-    play_sound(SND_BACK, 0);
+    play_sound(SND_BACK);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "netinfo");
 
     close_input();
@@ -519,7 +519,7 @@ static void handle_a() {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblHostname_netinfo) {
         if (is_network_connected()) {
-            play_sound(SND_ERROR, 0);
+            play_sound(SND_ERROR);
             toast_message(lang.MUXNETINFO.ERROR.EDIT, 1000);
             return;
         }
@@ -535,7 +535,7 @@ static void handle_a() {
         lv_textarea_set_text(ui_txtEntry_netinfo, lv_label_get_text(lv_group_get_focused(ui_group_value)));
     } else if (element_focused == ui_lblMAC_netinfo) {
         if (is_network_connected()) {
-            play_sound(SND_ERROR, 0);
+            play_sound(SND_ERROR);
             toast_message(lang.MUXNETINFO.ERROR.CHANGE, 1000);
             return;
         }
@@ -547,7 +547,7 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -584,7 +584,7 @@ static void handle_help(void) {
     if (msgbox_active || key_show) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         show_help(lv_group_get_focused(ui_group));
     }
 }

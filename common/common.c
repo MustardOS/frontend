@@ -785,7 +785,7 @@ void increase_option_value(lv_obj_t *element) {
     if (total <= 1) return;
     uint16_t current = lv_dropdown_get_selected(element);
 
-    play_sound(SND_OPTION, 0);
+    play_sound(SND_OPTION);
 
     if (current < (total - 1)) {
         current++;
@@ -801,7 +801,7 @@ void decrease_option_value(lv_obj_t *element) {
     if (total <= 1) return;
     uint16_t current = lv_dropdown_get_selected(element);
 
-    play_sound(SND_OPTION, 0);
+    play_sound(SND_OPTION);
 
     if (current > 0) {
         current--;
@@ -834,13 +834,12 @@ void load_mux(const char *value) {
     fclose(file);
 }
 
-void play_sound(int sound, int wait) {
+void play_sound(int sound) {
     if (!fe_snd || sound < 0 || sound >= SOUND_TOTAL) return;
 
     CachedSound *cs = &sound_cache[sound];
     if (cs->chunk) {
-        int channel = Mix_PlayChannel(-1, cs->chunk, 0);
-        if (wait) while (Mix_Playing(channel)) SDL_Delay(5);
+        Mix_PlayChannel(-1, cs->chunk, 0);
     } else {
         LOG_ERROR("sound", "Sound not found or cached: %s.wav", snd_names[sound])
     }
@@ -2287,7 +2286,7 @@ int get_grid_row_item_count(int current_item_index) {
 }
 
 char *kiosk_nope() {
-    play_sound(SND_ERROR, 0);
+    play_sound(SND_ERROR);
     return lang.GENERIC.KIOSK_DISABLE;
 }
 

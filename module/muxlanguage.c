@@ -43,7 +43,7 @@ static void populate_languages() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -103,7 +103,7 @@ static void create_language_items() {
 static void handle_confirm() {
     if (msgbox_active) return;
 
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
 
     toast_message(lang.GENERIC.SAVING, 0);
     refresh_screen(ui_screen);
@@ -119,14 +119,14 @@ static void handle_confirm() {
 
 static void handle_back() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, 0);
+    play_sound(SND_BACK);
 
     close_input();
     mux_input_stop();
@@ -136,7 +136,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         show_help();
     }
 }

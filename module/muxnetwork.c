@@ -264,7 +264,7 @@ static void init_navigation_group() {
 }
 
 static void list_nav_move(int steps, int direction) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
         if (direction < 0) {
@@ -334,7 +334,7 @@ static void handle_keyboard_OK_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     const char *is_key;
     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
@@ -364,7 +364,7 @@ bool handle_navigate(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblScan_network) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
-            play_sound(SND_NAVIGATE, 0);
+            play_sound(SND_NAVIGATE);
             if (!strcasecmp(lv_label_get_text(ui_lblScan_networkValue), lang.GENERIC.ENABLED)) {
                 write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, 0);
                 lv_label_set_text(ui_lblScan_networkValue, lang.GENERIC.DISABLED);
@@ -373,13 +373,13 @@ bool handle_navigate(void) {
                 lv_label_set_text(ui_lblScan_networkValue, lang.GENERIC.ENABLED);
             }
         } else {
-            play_sound(SND_ERROR, 0);
+            play_sound(SND_ERROR);
             toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000);
         }
         return true;
     } else if (element_focused == ui_lblType_network) {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
-            play_sound(SND_NAVIGATE, 0);
+            play_sound(SND_NAVIGATE);
             if (!strcasecmp(lv_label_get_text(ui_lblType_networkValue), lang.MUXNETWORK.STATIC)) {
                 lv_label_set_text(ui_lblType_networkValue, lang.MUXNETWORK.DHCP);
                 ui_count = UI_DHCP;
@@ -396,7 +396,7 @@ bool handle_navigate(void) {
                 lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
             }
         } else {
-            play_sound(SND_ERROR, 0);
+            play_sound(SND_ERROR);
             toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000);
         }
         return true;
@@ -410,7 +410,7 @@ static void handle_confirm(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblConnect_network) {
         if (lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
-            play_sound(SND_CONFIRM, 0);
+            play_sound(SND_CONFIRM);
             run_exec(net_d_args, A_SIZE(net_d_args), 0);
             can_scan_check(1);
         } else {
@@ -439,7 +439,7 @@ static void handle_confirm(void) {
             }
 
             if (valid_info) {
-                play_sound(SND_CONFIRM, 0);
+                play_sound(SND_CONFIRM);
                 save_network_config();
 
                 if (strlen(cv_pass) > 0) {
@@ -462,13 +462,13 @@ static void handle_confirm(void) {
 
                 get_current_ip();
             } else {
-                play_sound(SND_ERROR, 0);
+                play_sound(SND_ERROR);
                 toast_message(lang.MUXNETWORK.CHECK, 1000);
             }
         }
     } else {
         if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
-            play_sound(SND_CONFIRM, 0);
+            play_sound(SND_CONFIRM);
             if (element_focused == ui_lblScan_network) {
                 if (!strcasecmp(lv_label_get_text(ui_lblScan_networkValue), lang.GENERIC.ENABLED)) {
                     write_text_to_file((CONF_CONFIG_PATH "network/scan"), "w", INT, 0);
@@ -508,14 +508,14 @@ static void handle_confirm(void) {
                 }
             }
         } else {
-            play_sound(SND_ERROR, 0);
+            play_sound(SND_ERROR);
             toast_message(lang.MUXNETWORK.DENY_MODIFY, 1000);
         }
     }
 }
 
 static void handle_back(void) {
-    play_sound(SND_BACK, 0);
+    play_sound(SND_BACK);
 
     toast_message(lang.GENERIC.SAVING, 0);
     refresh_screen(ui_screen);
@@ -529,7 +529,7 @@ static void handle_back(void) {
 
 static void handle_scan(void) {
     if (!lv_obj_has_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN)) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
 
         save_network_config();
         load_mux("net_scan");
@@ -542,7 +542,7 @@ static void handle_scan(void) {
 }
 
 static void handle_profiles(void) {
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
 
     save_network_config();
     run_exec(pass_args, A_SIZE(pass_args), 0);
@@ -568,7 +568,7 @@ static void handle_a(void) {
 
 static void handle_b(void) {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -613,7 +613,7 @@ static void handle_help(void) {
     if (msgbox_active || key_show) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         show_help(lv_group_get_focused(ui_group));
     }
 }

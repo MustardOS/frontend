@@ -277,7 +277,7 @@ void reset_osk(lv_obj_t *osk) {
 }
 
 void close_osk(lv_obj_t *osk, lv_group_t *ui, lv_obj_t *entry, lv_obj_t *panel) {
-    play_sound(SND_KEYPRESS, 0);
+    play_sound(SND_KEYPRESS);
     key_show = 0;
     reset_osk(osk);
     lv_textarea_set_text(entry, "");
@@ -286,7 +286,7 @@ void close_osk(lv_obj_t *osk, lv_group_t *ui, lv_obj_t *entry, lv_obj_t *panel) 
 }
 
 void key_up() {
-    play_sound(SND_KEYPRESS, 0);
+    play_sound(SND_KEYPRESS);
 
     if (key_curr >= 1) {
         switch (key_curr) {
@@ -331,7 +331,7 @@ void key_up() {
 }
 
 void key_down() {
-    play_sound(SND_KEYPRESS, 0);
+    play_sound(SND_KEYPRESS);
 
     int max_key;
     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
@@ -385,7 +385,7 @@ void key_down() {
 }
 
 void key_left() {
-    play_sound(SND_KEYPRESS, 0);
+    play_sound(SND_KEYPRESS);
 
     if (key_curr >= 1) {
         key_curr--;
@@ -401,7 +401,7 @@ void key_left() {
 }
 
 void key_right() {
-    play_sound(SND_KEYPRESS, 0);
+    play_sound(SND_KEYPRESS);
 
     int max_key;
     if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
@@ -423,7 +423,7 @@ void key_right() {
 }
 
 void key_swap() {
-    play_sound(SND_KEYPRESS, 0);
+    play_sound(SND_KEYPRESS);
 
     if (key_show == 1) {
         switch (key_map) {
@@ -446,6 +446,6 @@ void key_swap() {
 }
 
 void key_backspace(lv_obj_t *entry) {
-    play_sound(SND_KEYPRESS, 0);
+    play_sound(SND_KEYPRESS);
     lv_textarea_del_char(entry);
 }

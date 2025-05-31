@@ -6,7 +6,6 @@
 #include "../common/ui_common.h"
 
 int muxsplash_main(char *splash_image) {
-
     init_module("muxsplash");
 
     init_theme(0, 0);

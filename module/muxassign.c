@@ -174,7 +174,7 @@ static void create_core_items(const char *target) {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -207,14 +207,14 @@ static void list_nav_next(int steps) {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, 0);
+    play_sound(SND_BACK);
     if (!strcasecmp(rom_system, "none")) {
         FILE *file = fopen(MUOS_SYS_LOAD, "w");
         fprintf(file, "%s", "");
@@ -231,7 +231,7 @@ static void handle_b() {
 
 static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     LOG_INFO(mux_module, "%s", log_msg)
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
 
     char *selected_item = str_tolower(lv_label_get_text(lv_group_get_focused(ui_group)));
     LOG_INFO(mux_module, "Selected Core: %s (%s)", selected_item, lv_label_get_text(lv_group_get_focused(ui_group)))
@@ -290,7 +290,7 @@ static void handle_a() {
     if (msgbox_active) return;
 
     if (!strcasecmp(rom_system, "none")) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         load_assign(rom_name, rom_dir, lv_label_get_text(lv_group_get_focused(ui_group)), 0);
     } else {
         handle_core_assignment("Single Core Assignment Triggered", SINGLE);
@@ -322,7 +322,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         show_help();
     }
 }

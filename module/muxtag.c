@@ -147,7 +147,7 @@ static void generate_available_tags() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -182,7 +182,7 @@ static void handle_a() {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Single Tag Assignment Triggered")
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
 
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, SINGLE);
@@ -193,14 +193,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, 0);
+    play_sound(SND_BACK);
     remove(MUOS_SAG_LOAD);
 
     close_input();
@@ -211,7 +211,7 @@ static void handle_x() {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Directory Tag Assignment Triggered")
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
 
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, DIRECTORY);
@@ -224,7 +224,7 @@ static void handle_y() {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Parent Tag Assignment Triggered")
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
 
     char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
     create_tag_assignment(selected, rom_name, PARENT);
@@ -237,7 +237,7 @@ static void handle_help() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         show_help();
     }
 }

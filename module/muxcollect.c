@@ -583,7 +583,7 @@ static void update_footer_glyph() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -639,7 +639,7 @@ static void handle_keyboard_OK_press(void) {
 }
 
 static void handle_keyboard_press(void) {
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     const char *is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
     if (strcasecmp(is_key, OSK_DONE) == 0) {
@@ -677,7 +677,7 @@ static void add_collection_item() {
 
 static void handle_a() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
@@ -695,7 +695,7 @@ static void handle_a() {
 
     if (!add_mode && !ui_count) return;
 
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
 
     int load_message;
 
@@ -771,7 +771,7 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -783,7 +783,7 @@ static void handle_b() {
         return;
     }
 
-    play_sound(SND_BACK, 0);
+    play_sound(SND_BACK);
 
     if (at_base(sys_dir, "collection")) {
         if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
@@ -820,7 +820,7 @@ static void handle_x() {
 
     if (items[current_item_index].content_type == FOLDER) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name) > 0) {
-            play_sound(SND_ERROR, 0);
+            play_sound(SND_ERROR);
             toast_message(lang.MUXCOLLECT.ERROR.REMOVE_DIR, 1000);
             return;
         } else {
@@ -870,7 +870,7 @@ static void handle_menu() {
         return;
     }
 
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
     image_refresh("preview");
 
     lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);

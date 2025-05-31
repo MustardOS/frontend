@@ -179,7 +179,7 @@ static void create_app_items() {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -235,7 +235,7 @@ static void handle_a() {
         for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
             if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
                 if (*(elements[i].kiosk_flag)) {
-                    play_sound(SND_ERROR, 0);
+                    play_sound(SND_ERROR);
                     toast_message(kiosk_nope(), 1000);
                     refresh_screen(ui_screen);
 
@@ -246,7 +246,7 @@ static void handle_a() {
             }
         }
 
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
 
         if (!skip_toast) {
             toast_message(lang.MUXAPP.LOAD_APP, 0);
@@ -263,14 +263,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, 0);
+    play_sound(SND_BACK);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "apps");
 
     close_input();
@@ -281,7 +281,7 @@ static void handle_menu() {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         show_help();
     }
 }

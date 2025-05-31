@@ -166,9 +166,11 @@ static void module_reset() {
     if (config.BOOT.FACTORY_RESET) safe_quit(0);
 }
 
-static void module_exit(char *splash, int sound) {
-    if (set_splash_image_path(splash)) muxsplash_main(splash_image_path);
-    play_sound(sound, 1);
+static void module_exit(char *module, int sound) {
+    if (set_splash_image_path(module)) muxsplash_main(splash_image_path);
+
+    play_sound(sound);
+    load_mux(module);
     safe_quit(0);
 }
 
@@ -403,7 +405,7 @@ void init_audio() {
         usleep(delay);
     }
 
-    if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP, 0);
+    if (!file_exist(CHIME_DONE) && config.SETTINGS.GENERAL.CHIME) play_sound(SND_STARTUP);
     write_text_to_file(CHIME_DONE, "w", CHAR, "");
 }
 
@@ -431,7 +433,10 @@ int main() {
     init_audio();
 
     while (1) {
-        if (file_exist(SAFE_QUIT)) break;
+        if (file_exist(SAFE_QUIT)) {
+            LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!")
+            break;
+        }
 
         char folder[MAX_BUFFER_SIZE];
         snprintf(folder, sizeof(folder), "%s/%dx%d",
@@ -439,9 +444,11 @@ int main() {
                  device.MUX.WIDTH, device.MUX.HEIGHT);
 
         if (refresh_resolution || !directory_exist(folder)) {
+            LOG_DEBUG("muxfrontend", "Resolution or Theme Refreshed... exiting!")
             safe_quit(0);
             break;
         }
+
         // Process content association and governor actions
         process_content_action(MUOS_ASS_LOAD, "assign");
         process_content_action(MUOS_GOV_LOAD, "governor");

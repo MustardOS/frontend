@@ -198,7 +198,7 @@ void load_assign(const char *rom, const char *dir, const char *sys, int forced);
 
 void load_mux(const char *value);
 
-void play_sound(int sound, int wait);
+void play_sound(int sound);
 
 void delete_files_of_type(const char *dir_path, const char *extension, const char *exception[], int recursive);
 

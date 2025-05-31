@@ -380,7 +380,7 @@ static void remove_from_history() {
         close_input();
         mux_input_stop();
     } else {
-        play_sound(SND_ERROR, 0);
+        play_sound(SND_ERROR);
         toast_message(lang.MUXHISTORY.ERROR.REMOVE, 1000);
     }
 }
@@ -448,7 +448,7 @@ static int load_content(const char *content_name) {
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
-    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
+    first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
         apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
@@ -484,7 +484,7 @@ static void handle_a() {
     if (!ui_count) return;
 
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
@@ -495,7 +495,7 @@ static void handle_a() {
         return;
     }
 
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
 
     char f_content[MAX_BUFFER_SIZE];
     snprintf(f_content, sizeof(f_content), "%s.cfg",
@@ -532,14 +532,14 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM, 0);
+        play_sound(SND_CONFIRM);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
         return;
     }
 
-    play_sound(SND_BACK, 0);
+    play_sound(SND_BACK);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "history");
     close_input();
     mux_input_stop();
@@ -548,14 +548,14 @@ static void handle_b() {
 static void handle_x() {
     if (msgbox_active || !ui_count) return;
 
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
     remove_from_history();
 }
 
 static void handle_y() {
     if (msgbox_active || !ui_count) return;
 
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
     add_to_collection();
 }
 
@@ -564,7 +564,7 @@ static void handle_menu() {
         return;
     }
 
-    play_sound(SND_CONFIRM, 0);
+    play_sound(SND_CONFIRM);
     image_refresh("preview");
 
     lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
