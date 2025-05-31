@@ -13,7 +13,7 @@ static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char rom_system[MAX_BUFFER_SIZE];
 
-#define UI_COUNT 9
+#define UI_COUNT 6
 static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
 static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -73,7 +73,7 @@ static void add_info_item(int index, const char *item_label, const char *item_va
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM,
                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else {
+    } else if (theme.MUX.ITEM.COUNT < UI_COUNT ) {
         ui_objects_panel[group_index] = ui_pnlInfoItem;
         ui_objects[group_index] = ui_lblInfoItem;
         lv_obj_set_user_data(ui_lblInfoItem, "info_item");
@@ -85,7 +85,7 @@ static void add_info_item(int index, const char *item_label, const char *item_va
     lv_obj_move_to_index(ui_pnlInfoItem, index);
 }
 
-static void add_info_item_type(int *line_index, const char *label, const char *get_file, const char *get_dir,
+static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, const char *get_dir,
                                const char *opt_type, bool cap_label) {
     const char *value = get_file;
 
@@ -95,7 +95,7 @@ static void add_info_item_type(int *line_index, const char *label, const char *g
     char cap_value[MAX_BUFFER_SIZE];
     snprintf(cap_value, sizeof(cap_value), "%s", value);
 
-    add_info_item((*line_index)++, label, cap_label ? str_capital_all(cap_value) : cap_value, opt_type, false);
+    apply_theme_list_value(&theme, ui_lblItemValue, cap_label ? str_capital_all(cap_value) : cap_value);
 }
 
 static void add_info_items() {
@@ -116,11 +116,9 @@ static void add_info_items() {
         const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
         const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
 
-        add_info_item_type(&line_index, lang.MUXOPTION.CORE, core_file, core_dir, "core", false);
-        add_info_item_type(&line_index, lang.MUXOPTION.GOVERNOR, gov_file, gov_dir, "governor", true);
-        add_info_item_type(&line_index, lang.MUXOPTION.TAG, tag_file, tag_dir, "tag", true);
-
-        add_info_item(line_index++, "", "", "", true);
+        add_info_item_type(ui_lblCore_option_value, core_file, core_dir, "core", false);
+        add_info_item_type(ui_lblGovernor_option_value, gov_file, gov_dir, "governor", true);
+        add_info_item_type(ui_lblTag_option_value, tag_file, tag_dir, "tag", true);
     }
 }
 
@@ -133,25 +131,26 @@ static lv_obj_t *get_hidden_label(lv_obj_t *parent) {
 static void init_navigation_group() {
     add_info_items();
 
-    ui_objects_panel[5] = ui_pnlSearch_option;
-    ui_objects_panel[6] = ui_pnlCore_option;
-    ui_objects_panel[7] = ui_pnlGovernor_option;
-    ui_objects_panel[8] = ui_pnlTag_option;
+    int start_index = theme.MUX.ITEM.COUNT < UI_COUNT ? 2 : 0;
+    ui_objects_panel[start_index + 0] = ui_pnlSearch_option;
+    ui_objects_panel[start_index + 1] = ui_pnlCore_option;
+    ui_objects_panel[start_index + 2] = ui_pnlGovernor_option;
+    ui_objects_panel[start_index + 3] = ui_pnlTag_option;
 
-    ui_objects[5] = ui_lblSearch_option;
-    ui_objects[6] = ui_lblCore_option;
-    ui_objects[7] = ui_lblGovernor_option;
-    ui_objects[8] = ui_lblTag_option;
+    ui_objects[start_index + 0] = ui_lblSearch_option;
+    ui_objects[start_index + 1] = ui_lblCore_option;
+    ui_objects[start_index + 2] = ui_lblGovernor_option;
+    ui_objects[start_index + 3] = ui_lblTag_option;
 
-    ui_objects_glyph[5] = ui_icoSearch_option;
-    ui_objects_glyph[6] = ui_icoCore_option;
-    ui_objects_glyph[7] = ui_icoGovernor_option;
-    ui_objects_glyph[8] = ui_icoTag_option;
+    ui_objects_glyph[start_index + 0] = ui_icoSearch_option;
+    ui_objects_glyph[start_index + 1] = ui_icoCore_option;
+    ui_objects_glyph[start_index + 2] = ui_icoGovernor_option;
+    ui_objects_glyph[start_index + 3] = ui_icoTag_option;
 
-    ui_objects_value[5] = get_hidden_label(ui_pnlSearch_option);
-    ui_objects_value[6] = get_hidden_label(ui_pnlCore_option);
-    ui_objects_value[7] = get_hidden_label(ui_pnlGovernor_option);
-    ui_objects_value[8] = get_hidden_label(ui_pnlTag_option);
+    ui_objects_value[start_index + 0] = get_hidden_label(ui_pnlSearch_option);
+    ui_objects_value[start_index + 1] = ui_lblCore_option_value;
+    ui_objects_value[start_index + 2] = ui_lblGovernor_option_value;
+    ui_objects_value[start_index + 3] = ui_lblTag_option_value;
 
     apply_theme_list_panel(ui_pnlSearch_option);
     apply_theme_list_panel(ui_pnlCore_option);
@@ -159,9 +158,9 @@ static void init_navigation_group() {
     apply_theme_list_panel(ui_pnlTag_option);
 
     apply_theme_list_item(&theme, ui_lblSearch_option, lang.MUXOPTION.SEARCH);
-    apply_theme_list_item(&theme, ui_lblCore_option, lang.MUXOPTION.ASSIGN_CORE);
-    apply_theme_list_item(&theme, ui_lblGovernor_option, lang.MUXOPTION.ASSIGN_GOV);
-    apply_theme_list_item(&theme, ui_lblTag_option, lang.MUXOPTION.ASSIGN_TAG);
+    apply_theme_list_item(&theme, ui_lblCore_option, lang.MUXOPTION.CORE);
+    apply_theme_list_item(&theme, ui_lblGovernor_option, lang.MUXOPTION.GOVERNOR);
+    apply_theme_list_item(&theme, ui_lblTag_option, lang.MUXOPTION.TAG);
 
     apply_theme_list_glyph(&theme, ui_icoSearch_option, mux_module, "search");
     apply_theme_list_glyph(&theme, ui_icoCore_option, mux_module, "core");
@@ -174,19 +173,13 @@ static void init_navigation_group() {
     ui_group_value = lv_group_create();
 
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
+    if (theme.MUX.ITEM.COUNT >= UI_COUNT) ui_count -= 2;
     for (unsigned int i = 0; i < ui_count; i++) {
         lv_obj_set_user_data(ui_objects_panel[i], strdup(lv_label_get_text(ui_objects[i])));
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
-
-        if (i > 4) {
-            apply_size_to_content(&theme, ui_pnlContent, ui_objects[i],
-                                ui_objects_glyph[i], lv_label_get_text(ui_objects[i]));
-            apply_text_long_dot(&theme, ui_pnlContent,
-                                ui_objects[i], lv_label_get_text(ui_objects[i]));
-        }
     }
 }
 
@@ -194,12 +187,6 @@ static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE, 0);
 
     for (int step = 0; step < steps; ++step) {
-        if (strcmp(lv_obj_get_user_data(lv_group_get_focused(ui_group)), "info_item") == 0) {
-            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-        }
-
-
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
         } else {
@@ -213,10 +200,6 @@ static void list_nav_move(int steps, int direction) {
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    if (strcmp(lv_obj_get_user_data(lv_group_get_focused(ui_group)), "info_item") == 0) {
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
-    }
     nav_moved = 1;
 }
 
@@ -398,7 +381,7 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys) {
     init_navigation_group();
 
     load_kiosk(&kiosk);
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
+    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 

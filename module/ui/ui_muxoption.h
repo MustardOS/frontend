@@ -18,3 +18,7 @@ extern lv_obj_t *ui_icoSearch_option;
 extern lv_obj_t *ui_icoCore_option;
 extern lv_obj_t *ui_icoGovernor_option;
 extern lv_obj_t *ui_icoTag_option;
+
+extern lv_obj_t *ui_lblCore_option_value;
+extern lv_obj_t *ui_lblGovernor_option_value;
+extern lv_obj_t *ui_lblTag_option_value;
