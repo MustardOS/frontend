@@ -409,9 +409,6 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
-        char ASSIGN_CORE[MAX_BUFFER_SIZE];
-        char ASSIGN_GOV[MAX_BUFFER_SIZE];
-        char ASSIGN_TAG[MAX_BUFFER_SIZE];
         char SEARCH[MAX_BUFFER_SIZE];
         char NAME[MAX_BUFFER_SIZE];
         char CURRENT[MAX_BUFFER_SIZE];
@@ -423,9 +420,9 @@ struct mux_lang {
         char NONE[MAX_BUFFER_SIZE];
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];
         struct {
-            char ASSIGN_CORE[MAX_BUFFER_SIZE];
-            char ASSIGN_GOV[MAX_BUFFER_SIZE];
-            char ASSIGN_TAG[MAX_BUFFER_SIZE];
+            char CORE[MAX_BUFFER_SIZE];
+            char GOV[MAX_BUFFER_SIZE];
+            char TAG[MAX_BUFFER_SIZE];
             char SEARCH[MAX_BUFFER_SIZE];
         } HELP;
     } MUXOPTION;

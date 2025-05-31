@@ -31,9 +31,9 @@ struct help_msg {
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblSearch_option,   lang.MUXOPTION.HELP.SEARCH},
-            {ui_lblCore_option,     lang.MUXOPTION.HELP.ASSIGN_CORE},
-            {ui_lblGovernor_option, lang.MUXOPTION.HELP.ASSIGN_GOV},
-            {ui_lblTag_option,      lang.MUXOPTION.HELP.ASSIGN_TAG},
+            {ui_lblCore_option,     lang.MUXOPTION.HELP.CORE},
+            {ui_lblGovernor_option, lang.MUXOPTION.HELP.GOV},
+            {ui_lblTag_option,      lang.MUXOPTION.HELP.TAG},
     };
 
     char message[MAX_BUFFER_SIZE];
@@ -73,7 +73,7 @@ static void add_info_item(int index, const char *item_label, const char *item_va
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_obj_set_style_border_side(ui_pnlInfoItem, LV_BORDER_SIDE_BOTTOM,
                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-    } else if (theme.MUX.ITEM.COUNT < UI_COUNT ) {
+    } else if (theme.MUX.ITEM.COUNT < UI_COUNT) {
         ui_objects_panel[group_index] = ui_pnlInfoItem;
         ui_objects[group_index] = ui_lblInfoItem;
         lv_obj_set_user_data(ui_lblInfoItem, "info_item");
@@ -103,7 +103,7 @@ static void add_info_items() {
 
     add_info_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
     add_info_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
-    add_info_item(line_index++, "", "", "", true);
+    add_info_item(line_index, "", "", "", true);
 
     const char *dot = strrchr(rom_name, '.');
     if ((dot && dot != rom_name)) {
@@ -350,7 +350,7 @@ static void ui_refresh_task() {
 
 int muxoption_main(int nothing, char *name, char *dir, char *sys) {
     (void) nothing;
-    
+
     group_index = 0;
 
     snprintf(rom_name, sizeof(rom_name), "%s", name);
