@@ -748,7 +748,6 @@ int muxtweakadv_main() {
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTWEAKADV.TITLE);
     init_muxtweakadv(ui_pnlContent);
-    init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -757,6 +756,7 @@ int muxtweakadv_main() {
 
     init_fonts();
     init_navigation_group();
+    init_elements();
 
     restore_tweak_options();
     init_dropdown_settings();
