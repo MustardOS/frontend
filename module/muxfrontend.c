@@ -422,7 +422,7 @@ int main() {
     write_text_to_file(USED_RESET, "w", INT, 1);
     write_text_to_file(DONE_RESET, "w", INT, 1);
 
-    if (show_alert && set_alert_image_path()) {
+    if (!config.BOOT.FACTORY_RESET && show_alert && set_alert_image_path()) {
         muxsplash_main(alert_image_path);
         sleep(3);
     }
