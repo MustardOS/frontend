@@ -1238,26 +1238,24 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
 }
 
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
-    if (kiosk.ENABLE) {
-        const char *program = lv_obj_get_user_data(ui_screen);
+    const char *program = lv_obj_get_user_data(ui_screen);
 
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+    char mux_dimension[15];
+    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
-        static char static_image_path[MAX_BUFFER_SIZE];
-        static char static_image_embed[MAX_BUFFER_SIZE];
+    static char static_image_path[MAX_BUFFER_SIZE];
+    static char static_image_embed[MAX_BUFFER_SIZE];
 
-        if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "kiosk", "png",
-                                 static_image_path, sizeof(static_image_path)) ||
-            load_image_specifics(STORAGE_THEME, "", program, "kiosk", "png",
-                                 static_image_path, sizeof(static_image_path))) {
+    if (load_image_specifics(STORAGE_THEME, mux_dimension, program, "kiosk", "png",
+                             static_image_path, sizeof(static_image_path)) ||
+        load_image_specifics(STORAGE_THEME, "", program, "kiosk", "png",
+                             static_image_path, sizeof(static_image_path))) {
 
-            int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
-            if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
+        int written = snprintf(static_image_embed, sizeof(static_image_embed), "M:%s", static_image_path);
+        if (written < 0 || (size_t) written >= sizeof(static_image_embed)) return;
 
-            lv_img_set_src(kiosk_image, static_image_embed);
-            lv_obj_move_foreground(kiosk_image);
-        }
+        lv_img_set_src(kiosk_image, static_image_embed);
+        lv_obj_move_foreground(kiosk_image);
     }
 }
 

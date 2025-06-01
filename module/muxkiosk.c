@@ -147,7 +147,7 @@ static void restore_kiosk_options() {
 static void save_kiosk_options() {
     int is_modified = 0;
 
-#define CHECK_AND_SAVE(name, file) \
+#define CHECK_AND_SAVE(name, file)                                             \
         do {                                                                   \
             int current = lv_dropdown_get_selected(ui_dro##name##_kiosk);      \
             if (current != name##_original) {                                  \
@@ -193,7 +193,7 @@ static void save_kiosk_options() {
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
         refresh_screen(ui_screen);
-        refresh_config = 1;
+        refresh_kiosk = 1;
     }
 }
 
@@ -323,7 +323,6 @@ static void handle_back(void) {
     play_sound(SND_BACK);
 
     save_kiosk_options();
-    refresh_kiosk = 1;
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "launcher");
 
@@ -412,8 +411,10 @@ static void init_elements() {
     display_testing_message(ui_screen);
 #endif
 
-    kiosk_image = lv_img_create(ui_screen);
-    load_kiosk_image(ui_screen, kiosk_image);
+    if (kiosk.ENABLE) {
+        kiosk_image = lv_img_create(ui_screen);
+        load_kiosk_image(ui_screen, kiosk_image);
+    }
 
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image);

@@ -234,8 +234,10 @@ static void init_elements() {
     lv_img_set_src(ui_imgScreenshot, &ui_image_Nothing);
     lv_obj_set_style_img_opa(ui_imgScreenshot, 25, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    kiosk_image = lv_img_create(ui_screen);
-    load_kiosk_image(ui_screen, kiosk_image);
+    if (kiosk.ENABLE) {
+        kiosk_image = lv_img_create(ui_screen);
+        load_kiosk_image(ui_screen, kiosk_image);
+    }
 
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image);

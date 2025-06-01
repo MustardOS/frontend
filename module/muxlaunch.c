@@ -208,7 +208,7 @@ static void handle_a() {
 
     for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
         if (!strcasecmp(u_data, elements[i].glyph_name)) {
-            if (elements[i].kiosk_flag && *elements[i].kiosk_flag) {
+            if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 play_sound(SND_ERROR);
                 toast_message(kiosk_nope(), 1000);
                 refresh_screen(ui_screen);
@@ -460,8 +460,10 @@ static void init_elements() {
     display_testing_message(ui_screen);
 #endif
 
-    kiosk_image = lv_img_create(ui_screen);
-    load_kiosk_image(ui_screen, kiosk_image);
+    if (kiosk.ENABLE) {
+        kiosk_image = lv_img_create(ui_screen);
+        load_kiosk_image(ui_screen, kiosk_image);
+    }
 
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image);

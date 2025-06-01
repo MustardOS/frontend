@@ -189,8 +189,10 @@ static void init_elements() {
     display_testing_message(ui_screen);
 #endif
 
-    kiosk_image = lv_img_create(ui_screen);
-    load_kiosk_image(ui_screen, kiosk_image);
+    if (kiosk.ENABLE) {
+        kiosk_image = lv_img_create(ui_screen);
+        load_kiosk_image(ui_screen, kiosk_image);
+    }
 
     overlay_image = lv_img_create(ui_screen);
     load_overlay_image(ui_screen, overlay_image);
