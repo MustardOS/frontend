@@ -11,6 +11,12 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
+#define MIN_YEAR 1970
+#define MAX_YEAR 2199
+#define MONTHS_IN_YEAR 12
+#define HOURS_IN_DAY 24
+#define MINUTES_IN_HOUR 60
+
 typedef struct {
     int year;
     int month;
@@ -53,33 +59,72 @@ static void set_dt_label(lv_obj_t *label, const char *format, int value) {
     lv_label_set_text(label, rtc_buffer);
 }
 
+static int days_in_month(int year, int month)
+{
+    int max_days;
+    switch (month)
+    {
+    case 2: // February
+        max_days = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 ? 29 : 28;
+        break;
+    case 4:  // April
+    case 6:  // June
+    case 9:  // September
+    case 11: // November
+        max_days = 30;
+        break;
+    default:
+        max_days = 31;
+        break;
+    }
+    return max_days;
+}
+
 static void restore_clock_settings() {
-    int year, month, day, hour, minute;
     time_t now = time(NULL);
-    if (now == (time_t) -1) {
-        LOG_ERROR(mux_module, "Failed to retrieve current time")
-        return;
+    struct tm *tm_now;
+    bool is_error = false;
+
+    if (now == (time_t)-1) {
+        is_error = true;
+        LOG_ERROR(mux_module, "Failed to get current time");
+    } else {
+        tm_now = localtime(&now);
     }
 
-    struct tm *tm_now = localtime(&now);
-    if (!tm_now) {
-        LOG_ERROR(mux_module, "Failed to convert current time")
-        return;
+    if (!is_error && !tm_now) {
+        is_error = true;
+        LOG_ERROR(mux_module, "Failed to convert time to local time");
     }
 
-    rtc.year = year = tm_now->tm_year + 1900;
-    rtc.month = month = tm_now->tm_mon + 1;
-    rtc.day = day = tm_now->tm_mday;
-    rtc.hour = hour = tm_now->tm_hour;
-    rtc.minute = minute = tm_now->tm_min;
+    if (is_error) {
+        LOG_WARN(mux_module, "Using default date and time");
+        rtc.year = 2025;
+        rtc.month = 1;
+        rtc.day = 1;
+        rtc.hour = 0;
+        rtc.minute = 0;
+    } else {
+        rtc.year = tm_now->tm_year + 1900;
+        rtc.month = tm_now->tm_mon + 1;
+        rtc.day = tm_now->tm_mday;
+        rtc.hour = tm_now->tm_hour;
+        rtc.minute = tm_now->tm_min;
+    }
 
-    set_dt_label(ui_lblYearValue, "%04d", year);
-    set_dt_label(ui_lblMonthValue, "%02d", month);
-    set_dt_label(ui_lblDayValue, "%02d", day);
-    set_dt_label(ui_lblHourValue, "%02d", hour);
-    set_dt_label(ui_lblMinuteValue, "%02d", minute);
+    set_dt_label(ui_lblYearValue, "%04d", rtc.year);
+    set_dt_label(ui_lblMonthValue, "%02d", rtc.month);
+    set_dt_label(ui_lblDayValue, "%02d", rtc.day);
+    set_dt_label(ui_lblHourValue, "%02d", rtc.hour);
+    set_dt_label(ui_lblMinuteValue, "%02d", rtc.minute);
 
-    rtc.notation = config.CLOCK.NOTATION;
+    if (config.CLOCK.NOTATION < 0 || config.CLOCK.NOTATION > 1) {
+        LOG_WARN(mux_module, "Invalid notation value, defaulting to 24-hour format");
+        rtc.notation = TIME_24H;
+    } else {
+        rtc.notation = config.CLOCK.NOTATION;
+    }
+
     lv_label_set_text(ui_lblNotationValue, notation[rtc.notation]);
 }
 
@@ -127,25 +172,6 @@ static void save_clock_settings(int year, int month, int day, int hour, int minu
 
     LOG_ERROR(mux_module, "Attempt to set system date failed")
     refresh_config = 1;
-}
-
-static int days_in_month(int year, int month) {
-    int max_days;
-    switch (month) {
-        case 2:  // February
-            max_days = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 ? 29 : 28;
-            break;
-        case 4:  // April
-        case 6:  // June
-        case 9:  // September
-        case 11: // November
-            max_days = 30;
-            break;
-        default:
-            max_days = 31;
-            break;
-    }
-    return max_days;
 }
 
 static void init_navigation_group() {
@@ -274,50 +300,161 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
+// Trickle down validation functions to ensure the RTC state is always valid
+static void validate_notation()
+{
+    if (rtc.notation < 0)
+        rtc.notation = 1;
+    if (rtc.notation > 1)
+        rtc.notation = 0;
+}
+
+static void validate_minute()
+{
+    if (rtc.minute < 0)
+        rtc.minute = MINUTES_IN_HOUR - 1;
+    if (rtc.minute >= MINUTES_IN_HOUR)
+        rtc.minute = 0;
+
+    validate_notation();
+}
+
+static void validate_hour()
+{
+    if (rtc.hour < 0)
+        rtc.hour = HOURS_IN_DAY - 1;
+    if (rtc.hour >= HOURS_IN_DAY)
+        rtc.hour = 0;
+
+    validate_minute();
+}
+
+static void validate_day()
+{
+    int max_days = days_in_month(rtc.year, rtc.month);
+    if (rtc.day < 1)
+        rtc.day = max_days;
+    if (rtc.day > max_days)
+        rtc.day = 1;
+
+    validate_hour();
+}
+
+static void validate_month()
+{
+    if (rtc.month < 1)
+        rtc.month = MONTHS_IN_YEAR;
+    if (rtc.month > MONTHS_IN_YEAR)
+        rtc.month = 1;
+
+    validate_day();
+}
+
+#define validate_time() validate_year()
+static void validate_year()
+{
+    if (rtc.year < MIN_YEAR)
+        rtc.year = MIN_YEAR;
+    if (rtc.year > MAX_YEAR)
+        rtc.year = MAX_YEAR;
+
+    validate_month();
+}
+
+// Adjust functions to modify the RTC state and validate it
+static void adjust_year(int direction) {
+    rtc.year += direction;
+    validate_year();
+}
+
+static void adjust_month(int direction) {
+    rtc.month += direction;
+    validate_month();
+}
+
+static void adjust_day(int direction) {
+    rtc.day += direction;
+    validate_day();
+}
+
+static void adjust_hour(int direction)
+{
+    rtc.hour += direction;
+    validate_hour();
+}
+
+static void adjust_minute(int direction)
+{
+    rtc.minute += direction;
+    validate_minute();
+}
+
+static void adjust_notation(int direction)
+{
+    rtc.notation += direction;
+    validate_notation();
+}
+
+// If we change the RTC state, we need to update all of the UI labels accordingly
+static void check_rtc_state(rtc_state_t *rtc, rtc_state_t *old_rtc)
+{
+    if (rtc->year != old_rtc->year) {
+        set_dt_label(ui_lblYearValue, "%04d", rtc->year);
+    }
+
+    if (rtc->month != old_rtc->month) {
+        set_dt_label(ui_lblMonthValue, "%02d", rtc->month);
+    }
+
+    if (rtc->day != old_rtc->day) {
+        set_dt_label(ui_lblDayValue, "%02d", rtc->day);
+    }
+
+    if (rtc->hour != old_rtc->hour) {
+        set_dt_label(ui_lblHourValue, "%02d", rtc->hour);
+    }
+
+    if (rtc->minute != old_rtc->minute) {
+        set_dt_label(ui_lblMinuteValue, "%02d", rtc->minute);
+    }
+
+    if (rtc->notation != old_rtc->notation) {
+        lv_label_set_text(ui_lblNotationValue, notation[rtc->notation]);
+    }
+}
+
+// Adjust the focused option based on the direction of navigation
 static void adjust_option(int direction) {
-    if (msgbox_active) return;
+    if (msgbox_active) 
+        return;
+    
+    rtc_state_t old_rtc = rtc;
     play_sound(SND_OPTION);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblYear) {
-        if ((direction < 0 && rtc.year > 1970) ||
-            (direction > 0 && rtc.year < 2199)) {
-            rtc.year += direction;
-        }
-        set_dt_label(ui_lblYearValue, "%04d", rtc.year);
-        set_dt_label(ui_lblDayValue, "%02d", 1);
+        adjust_year(direction);
     } else if (element_focused == ui_lblMonth) {
-        rtc.month += direction;
-        if (rtc.month > 12) rtc.month = 1;
-        if (rtc.month < 1) rtc.month = 12;
-        set_dt_label(ui_lblMonthValue, "%02d", rtc.month);
-        set_dt_label(ui_lblDayValue, "%02d", 1);
+        adjust_month(direction);
     } else if (element_focused == ui_lblDay) {
-        int max_days = days_in_month(rtc.year, rtc.month);
-        rtc.day += direction;
-        if (rtc.day > max_days) rtc.day = 1;
-        if (rtc.day < 1) rtc.day = max_days;
-        set_dt_label(ui_lblDayValue, "%02d", rtc.day);
+        adjust_day(direction);
     } else if (element_focused == ui_lblHour) {
-        rtc.hour = (rtc.hour + direction + 24) % 24;
-        set_dt_label(ui_lblHourValue, "%02d", rtc.hour);
+        adjust_hour(direction);
     } else if (element_focused == ui_lblMinute) {
-        rtc.minute = (rtc.minute + direction + 60) % 60;
-        set_dt_label(ui_lblMinuteValue, "%02d", rtc.minute);
+        adjust_minute(direction);
     } else if (element_focused == ui_lblNotation) {
-        rtc.notation += direction;
-
-        if (rtc.notation < 0) rtc.notation = 1;
-        if (rtc.notation > 1) rtc.notation = 0;
-
-        lv_label_set_text(ui_lblNotationValue, notation[rtc.notation]);
+        adjust_notation(direction);
     }
+
+    check_rtc_state(&rtc, &old_rtc);
 }
 
 static void save_and_exit(char *message) {
     toast_message(message, 0);
     refresh_screen(ui_screen);
 
+    // Validate the final RTC state before saving
+    validate_time();
     save_clock_settings(rtc.year, rtc.month, rtc.day, rtc.hour, rtc.minute, rtc.notation);
 
     close_input();
