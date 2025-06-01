@@ -403,79 +403,14 @@ static void handle_right() {
     }
 }
 
-static void handle_kiosk_purge() {
-    if (current_item_index == 6) { /* reboot */
-        if (file_exist(KIOSK_CONFIG)) remove(KIOSK_CONFIG);
+static void launch_kiosk() {
+    if (msgbox_active) return;
 
-        const char *kiosk_paths[] = {
-                "application/archive",
-                "application/task",
-                "config/customisation",
-                "config/language",
-                "config/network",
-                "config/storage",
-                "config/webserv",
-                "content/core",
-                "content/governor",
-                "content/option",
-                "content/retroarch",
-                "content/search",
-                "custom/catalogue",
-                "custom/configuration",
-                "custom/theme",
-                "datetime/clock",
-                "datetime/timezone",
-                "launch/application",
-                "launch/config",
-                "launch/explore",
-                "launch/collection",
-                "launch/history",
-                "launch/info",
-                "setting/advanced",
-                "setting/general",
-                "setting/hdmi",
-                "setting/power",
-                "setting/visual"
-        };
+    if (current_item_index == 5) { /* config */
+        load_mux("kiosk");
 
-        char path[MAX_BUFFER_SIZE];
-        for (size_t i = 0; i < sizeof(kiosk_paths) / sizeof(kiosk_paths[0]); i++) {
-            snprintf(path, sizeof(path), (CONF_KIOSK_PATH "%s"), kiosk_paths[i]);
-            write_text_to_file(path, "w", INT, 0);
-        }
-
-        handle_b();
-    }
-}
-
-static void handle_kiosk_toggle() {
-    if (current_item_index == 6) { /* reboot */
-        char kiosk_storage[MAX_BUFFER_SIZE];
-
-        int kiosk_cfg = snprintf(kiosk_storage, sizeof(kiosk_storage), "%s/MUOS/kiosk.ini", device.STORAGE.ROM.MOUNT);
-        if (kiosk_cfg < 0 || kiosk_cfg >= (int) sizeof(kiosk_storage)) {
-            toast_message(lang.MUXLAUNCH.KIOSK.ERROR, 1000);
-            return;
-        }
-
-        if (file_exist(KIOSK_CONFIG)) {
-            const char *args[] = {"mv", KIOSK_CONFIG, kiosk_storage, NULL};
-            run_exec(args, A_SIZE(args), 0);
-            handle_kiosk_purge();
-        } else {
-            if (file_exist(kiosk_storage)) {
-                const char *args_mv[] = {"mv", kiosk_storage, KIOSK_CONFIG, NULL};
-                run_exec(args_mv, A_SIZE(args_mv), 0);
-
-                const char *args_init[] = {(INTERNAL_PATH "script/var/init/kiosk.sh"), "init", NULL};
-                run_exec(args_init, A_SIZE(args_init), 0);
-
-                toast_message(lang.MUXLAUNCH.KIOSK.PROCESS, 1000);
-                handle_b();
-            } else {
-                toast_message(lang.MUXLAUNCH.KIOSK.ERROR, 1000);
-            }
-        }
+        close_input();
+        mux_input_stop();
     }
 }
 
@@ -558,7 +493,6 @@ int muxlaunch_main() {
     init_fonts();
     init_navigation_group();
 
-    load_kiosk(&kiosk);
     list_nav_next(direct_to_previous(ui_objects, UI_COUNT, &nav_moved));
 
     if (config.BOOT.DEVICE_MODE && !file_exist("/tmp/hdmi_out")) {
@@ -588,14 +522,9 @@ int muxlaunch_main() {
             },
             .combo = {
                     {
-                            .type_mask = BIT(MUX_INPUT_L1) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_X),
-                            .press_handler = handle_kiosk_purge,
-                            .hold_handler = handle_kiosk_purge,
-                    },
-                    {
                             .type_mask = BIT(MUX_INPUT_L1) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_Y),
-                            .press_handler = handle_kiosk_toggle,
-                            .hold_handler = handle_kiosk_toggle,
+                            .press_handler = launch_kiosk,
+                            .hold_handler = launch_kiosk,
                     },
                     {
                             .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),

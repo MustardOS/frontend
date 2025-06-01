@@ -455,8 +455,6 @@ int muxassign_main(int auto_assign, char *name, char *dir, char *sys) {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXASSIGN.NONE);
     }
 
-    load_kiosk(&kiosk);
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

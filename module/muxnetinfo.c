@@ -783,7 +783,6 @@ int muxnetinfo_main() {
     update_network_info();
 
     init_osk(ui_pnlEntry_netinfo, ui_txtEntry_netinfo, false);
-    load_kiosk(&kiosk);
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, update_network_info);

@@ -220,9 +220,9 @@ static void handle_confirm() {
         int16_t *kiosk_flag;
     } elements[] = {
             {"search",   "search",   &kiosk.CONTENT.SEARCH},
-            {"core",     "assign",   &kiosk.CONTENT.ASSIGN_CORE},
-            {"governor", "governor", &kiosk.CONTENT.ASSIGN_GOVERNOR},
-            {"tag",      "tag",      &kiosk.CONTENT.ASSIGN_TAG}
+            {"core",     "assign",   &kiosk.CONTENT.CORE},
+            {"governor", "governor", &kiosk.CONTENT.GOVERNOR},
+            {"tag",      "tag",      &kiosk.CONTENT.TAG}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -380,7 +380,6 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys) {
     init_fonts();
     init_navigation_group();
 
-    load_kiosk(&kiosk);
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);

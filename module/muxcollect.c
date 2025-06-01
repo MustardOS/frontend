@@ -1217,7 +1217,6 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     update_file_counter();
     init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false);
-    load_kiosk(&kiosk);
 
     init_timer(ui_refresh_task, NULL);
 

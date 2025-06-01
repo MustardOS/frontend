@@ -390,8 +390,6 @@ int muxapp_main() {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXAPP.NO_APP);
     }
 
-    load_kiosk(&kiosk);
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

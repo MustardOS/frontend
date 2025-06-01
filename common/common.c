@@ -33,6 +33,7 @@
 #include "options.h"
 #include "config.h"
 #include "device.h"
+#include "kiosk.h"
 #include "theme.h"
 #include "mini/mini.h"
 
@@ -1237,7 +1238,7 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
 }
 
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
-    if (file_exist(KIOSK_CONFIG)) {
+    if (kiosk.ENABLE) {
         const char *program = lv_obj_get_user_data(ui_screen);
 
         char mux_dimension[15];

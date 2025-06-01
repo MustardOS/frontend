@@ -345,8 +345,6 @@ int muxarchive_main() {
     };
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
-    load_kiosk(&kiosk);
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

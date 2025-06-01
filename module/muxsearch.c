@@ -890,7 +890,6 @@ int muxsearch_main(char *dir) {
     }
 
     init_osk(ui_pnlEntry_search, ui_txtEntry_search, false);
-    load_kiosk(&kiosk);
 
     init_timer(ui_refresh_task, NULL);
 

@@ -58,8 +58,8 @@ static void init_dropdown_settings() {
 
 static void update_volume_and_brightness() {
     char buffer[MAX_BUFFER_SIZE];
-    CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 90)
-    CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, "settings/general/volume", 75)
+    CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
+    CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75)
 
     lv_dropdown_set_selected(ui_droBrightness_tweakgen, config.SETTINGS.GENERAL.BRIGHTNESS - 1);
 
@@ -501,7 +501,6 @@ int muxtweakgen_main() {
     restore_tweak_options();
     init_dropdown_settings();
 
-    load_kiosk(&kiosk);
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, update_volume_and_brightness);

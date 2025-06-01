@@ -30,12 +30,12 @@ EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-ffast-math -funroll-loops -falign-functions
 
 MODULES = muxapp muxarchive muxassign muxcollect muxconfig muxconnect \
-          muxcustom muxgov muxhdmi muxhistory muxinfo muxlanguage \
-          muxlaunch muxnetinfo muxnetprofile muxnetscan muxnetwork muxoption \
-          muxpass muxpicker muxpower muxplore muxrtc muxsearch \
-          muxshot muxsnapshot muxspace muxsplash muxstorage muxsysinfo \
-          muxtag muxtask muxtester muxtimezone muxtweakadv muxtweakgen \
-          muxvisual muxwebserv muxshare
+          muxcustom muxgov muxhdmi muxhistory muxinfo muxkiosk \
+          muxlanguage muxlaunch muxnetinfo muxnetprofile muxnetscan muxnetwork \
+          muxoption muxpass muxpicker muxpower muxplore muxrtc \
+          muxsearch muxshot muxsnapshot muxspace muxsplash muxstorage \
+          muxsysinfo muxtag muxtask muxtester muxtimezone muxtweakadv \
+          muxtweakgen muxvisual muxwebserv muxshare
 MODULE_DIR = .
 
 SRCS := $(foreach mod,$(MODULES), \

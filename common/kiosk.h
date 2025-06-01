@@ -5,6 +5,8 @@
 extern struct mux_kiosk kiosk;
 
 struct mux_kiosk {
+    int16_t ENABLE;
+
     struct {
         int16_t ARCHIVE;
         int16_t TASK;
@@ -20,9 +22,9 @@ struct mux_kiosk {
     } CONFIG;
 
     struct {
-        int16_t ASSIGN_CORE;
-        int16_t ASSIGN_GOVERNOR;
-        int16_t ASSIGN_TAG;
+        int16_t CORE;
+        int16_t GOVERNOR;
+        int16_t TAG;
         int16_t OPTION;
         int16_t RETROARCH;
         int16_t SEARCH;

@@ -352,8 +352,6 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys) {
         lv_label_set_text(ui_lblScreenMessage, lang.MUXTAG.NONE);
     }
 
-    load_kiosk(&kiosk);
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

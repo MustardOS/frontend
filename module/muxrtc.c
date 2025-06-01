@@ -472,7 +472,6 @@ int muxrtc_main() {
     init_navigation_group();
     restore_clock_settings();
 
-    load_kiosk(&kiosk);
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);

@@ -506,8 +506,6 @@ int muxstorage_main() {
         if (sin_index > -1 && sin_index <= ui_count && current_item_index < ui_count) list_nav_move(sin_index, +1);
     }
 
-    load_kiosk(&kiosk);
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

@@ -382,7 +382,6 @@ int muxhdmi_main() {
     restore_hdmi_options();
     init_dropdown_settings();
 
-    load_kiosk(&kiosk);
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);

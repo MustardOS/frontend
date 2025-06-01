@@ -369,7 +369,6 @@ int muxpower_main() {
     restore_tweak_options();
     init_dropdown_settings();
 
-    load_kiosk(&kiosk);
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);

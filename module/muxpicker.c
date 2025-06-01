@@ -491,8 +491,6 @@ int muxpicker_main(char *type, char *ex_dir) {
         lv_label_set_text(ui_lblScreenMessage, message_text);
     }
 
-    load_kiosk(&kiosk);
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

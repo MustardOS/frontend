@@ -9,17 +9,12 @@
 extern size_t item_count;
 extern content_item *items;
 
+extern int refresh_kiosk;
 extern int refresh_config;
 extern int refresh_resolution;
 
 extern int bar_header;
 extern int bar_footer;
-
-extern struct mux_lang lang;
-extern struct mux_config config;
-extern struct mux_device device;
-extern struct mux_kiosk kiosk;
-extern struct theme_config theme;
 
 extern int nav_moved;
 extern int current_item_index;

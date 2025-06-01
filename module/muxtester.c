@@ -138,7 +138,6 @@ int muxtester_main() {
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
     init_fonts();
-    load_kiosk(&kiosk);
 
     init_timer(NULL, NULL);
 

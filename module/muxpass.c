@@ -182,8 +182,6 @@ int muxpass_main(char *p_type) {
     init_fonts();
     init_navigation_group();
 
-    load_kiosk(&kiosk);
-
     init_timer(NULL, NULL);
 
     mux_input_options input_opts = {

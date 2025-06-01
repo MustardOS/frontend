@@ -1233,7 +1233,6 @@ int muxplore_main(int index, char *dir) {
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
     update_file_counter();
-    load_kiosk(&kiosk);
 
     if (file_exist(ADD_MODE_DONE)) {
         if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {

@@ -44,7 +44,6 @@
 #define INTERNAL_THEME   INTERNAL_PATH "default/MUOS/theme/active"
 #define INTERNAL_OVERLAY INTERNAL_PATH "share/overlay"
 
-#define KIOSK_CONFIG   INTERNAL_PATH "config/kiosk.ini"
 #define LAST_PLAY_FILE INTERNAL_PATH "config/boot/last_play"
 #define MUOS_VERSION   INTERNAL_PATH "config/system/version"
 #define MUOS_BUILD     INTERNAL_PATH "config/system/build"
@@ -133,15 +132,15 @@
 #define FONT_HEADER_FOLDER "header"
 #define FONT_FOOTER_FOLDER "footer"
 
-#define CFG_INT_FIELD(field, path, def)                              \
-    snprintf(buffer, sizeof(buffer), (CONF_CONFIG_PATH "%s"), path); \
-    field = (int)({                                                  \
-        char *ep;                                                    \
-        long val = strtol(read_all_char_from(buffer), &ep, 10);      \
-        *ep ? def : val;                                             \
+#define CFG_INT_FIELD(field, path, def)                         \
+    snprintf(buffer, sizeof(buffer), "%s", path);               \
+    field = (int)({                                             \
+        char *ep;                                               \
+        long val = strtol(read_all_char_from(buffer), &ep, 10); \
+        *ep ? def : val;                                        \
     });
 
 #define CFG_STR_FIELD(field, path, def)                                     \
-    snprintf(buffer, sizeof(buffer), (CONF_CONFIG_PATH "%s"), path);        \
+    snprintf(buffer, sizeof(buffer), "%s", path);                           \
     strncpy(field, read_all_char_from(buffer) ?: def, MAX_BUFFER_SIZE - 1); \
     field[MAX_BUFFER_SIZE - 1] = '\0';

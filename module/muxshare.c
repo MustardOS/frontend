@@ -3,6 +3,7 @@
 size_t item_count = 0;
 content_item *items = NULL;
 
+int refresh_kiosk = 0;
 int refresh_config = 0;
 int refresh_resolution = 0;
 

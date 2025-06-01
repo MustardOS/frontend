@@ -22,6 +22,7 @@
 #include "muxhdmi.h"
 #include "muxhistory.h"
 #include "muxinfo.h"
+#include "muxkiosk.h"
 #include "muxlanguage.h"
 #include "muxlaunch.h"
 #include "muxnetinfo.h"
@@ -366,13 +367,14 @@ static const ModuleEntry modules[] = {
         {"tweakgen",    "config",   "muxtweakgen",   muxtweakgen_main,   NULL},
         {"connect",     "config",   "muxconnect",    muxconnect_main,    NULL},
         {"custom",      "config",   "muxcustom",     muxcustom_main,     NULL},
-        {"network",     "connect",  "muxnetwork",    muxnetwork_main,    NULL},
         {"language",    "config",   "muxlanguage",   muxlanguage_main,   NULL},
+        {"network",     "connect",  "muxnetwork",    muxnetwork_main,    NULL},
         {"webserv",     "connect",  "muxwebserv",    muxwebserv_main,    NULL},
         {"hdmi",        "tweakgen", "muxhdmi",       muxhdmi_main,       NULL},
         {"storage",     "config",   "muxstorage",    muxstorage_main,    NULL},
         {"power",       "config",   "muxpower",      muxpower_main,      NULL},
         {"visual",      "config",   "muxvisual",     muxvisual_main,     NULL},
+        {"kiosk",       "config",   "muxkiosk",      muxkiosk_main,      NULL},
         {"net_profile", "network",  "muxnetprofile", muxnetprofile_main, NULL},
         {"net_scan",    "network",  "muxnetscan",    muxnetscan_main,    NULL},
         {"timezone",    "rtc",      "muxtimezone",   muxtimezone_main,   NULL},
@@ -413,6 +415,7 @@ int main() {
 
     load_device(&device);
     load_config(&config);
+    load_kiosk(&kiosk);
 
     init_theme(0, 0);
     init_display();
@@ -453,6 +456,12 @@ int main() {
         process_content_action(MUOS_GOV_LOAD, "governor");
 
         if (file_exist(MUOS_ACT_LOAD)) {
+            if (refresh_kiosk) {
+                sync();
+                load_kiosk(&kiosk);
+                refresh_kiosk = 0;
+            }
+
             if (refresh_config) {
                 sync();
                 load_config(&config);

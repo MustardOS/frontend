@@ -889,7 +889,7 @@ void ui_common_handle_idle() {
         brightness_changed = 0;
 
         char buffer[MAX_BUFFER_SIZE];
-        CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, "settings/general/brightness", 90)
+        CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
 
         lv_task_handler();
         return;
@@ -902,7 +902,7 @@ void ui_common_handle_idle() {
         volume_changed = 0;
 
         char buffer[MAX_BUFFER_SIZE];
-        CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, "settings/general/volume", 75)
+        CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75)
 
         lv_task_handler();
         return;

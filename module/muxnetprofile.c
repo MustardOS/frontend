@@ -434,8 +434,6 @@ int muxnetprofile_main() {
     create_profile_items();
     if (!ui_count) lv_label_set_text(ui_lblScreenMessage, lang.MUXNETPROFILE.NONE);
 
-    load_kiosk(&kiosk);
-
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {

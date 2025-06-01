@@ -227,7 +227,6 @@ int muxnetscan_main() {
     create_network_items();
 
     lv_label_set_text(ui_lblScreenMessage, !ui_count ? lang.MUXNETSCAN.NONE : "");
-    load_kiosk(&kiosk);
 
     init_timer(ui_refresh_task, NULL);
 
