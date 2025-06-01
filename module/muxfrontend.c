@@ -166,20 +166,19 @@ static void module_reset() {
     if (config.BOOT.FACTORY_RESET) safe_quit(0);
 }
 
-static void module_exit(char *module, int sound) {
+static void module_exit(char *module) {
     if (set_splash_image_path(module)) muxsplash_main(splash_image_path);
 
-    play_sound(sound);
     load_mux(module);
     safe_quit(0);
 }
 
 static void module_shutdown() {
-    module_exit("shutdown", SND_SHUTDOWN);
+    module_exit("shutdown");
 }
 
 static void module_reboot() {
-    module_exit("reboot", SND_REBOOT);
+    module_exit("reboot");
 }
 
 static void module_quit() {
