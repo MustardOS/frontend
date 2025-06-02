@@ -198,7 +198,6 @@ static void save_kiosk_options() {
 }
 
 static void init_navigation_group() {
-
     char options[MAX_BUFFER_SIZE];
     snprintf(options, sizeof(options), "%s\n%s",
              lang.GENERIC.DISABLED, lang.GENERIC.ENABLED);

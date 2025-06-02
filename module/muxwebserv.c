@@ -8,11 +8,10 @@
 #include "../common/ui_common.h"
 #include "../common/input/list_nav.h"
 
-static int sshd_original, sftpgo_original, ttyd_original, syncthing_original,
-        rslsync_original, ntp_original, tailscaled_original;
+static int SSHD_original, SFTPGo_original, TTYD_original, Syncthing_original,
+        RSLSync_original, NTP_original, Tailscaled_original;
 
 #define UI_COUNT 7
-static lv_obj_t *ui_objects[UI_COUNT];
 
 #define UI_PANEL 5
 static lv_obj_t *ui_mux_panels[UI_PANEL];
@@ -24,13 +23,13 @@ struct help_msg {
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblSSHD,              lang.MUXWEBSERV.HELP.SHELL},
-            {ui_lblSFTPGo,            lang.MUXWEBSERV.HELP.SFTP},
-            {ui_lblTTYD,              lang.MUXWEBSERV.HELP.TERMINAL},
-            {ui_lblSyncthing_webserv, lang.MUXWEBSERV.HELP.SYNCTHING},
-            {ui_lblRSLSync,           lang.MUXWEBSERV.HELP.RESILIO},
-            {ui_lblNTP,               lang.MUXWEBSERV.HELP.NTP},
-            {ui_lblTailscaled,        lang.MUXWEBSERV.HELP.TAILSCALE},
+            {ui_lblSSHD_webserv,       lang.MUXWEBSERV.HELP.SHELL},
+            {ui_lblSFTPGo_webserv,     lang.MUXWEBSERV.HELP.SFTP},
+            {ui_lblTTYD_webserv,       lang.MUXWEBSERV.HELP.TERMINAL},
+            {ui_lblSyncthing_webserv,  lang.MUXWEBSERV.HELP.SYNCTHING},
+            {ui_lblRSLSync_webserv,    lang.MUXWEBSERV.HELP.RESILIO},
+            {ui_lblNTP_webserv,        lang.MUXWEBSERV.HELP.NTP},
+            {ui_lblTailscaled_webserv, lang.MUXWEBSERV.HELP.TAILSCALE},
     };
 
     char *message = lang.GENERIC.NO_HELP;
@@ -50,70 +49,46 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_dropdown_settings() {
-    sshd_original = lv_dropdown_get_selected(ui_droSSHD);
-    sftpgo_original = lv_dropdown_get_selected(ui_droSFTPGo);
-    ttyd_original = lv_dropdown_get_selected(ui_droTTYD);
-    syncthing_original = lv_dropdown_get_selected(ui_droSyncthing);
-    rslsync_original = lv_dropdown_get_selected(ui_droRSLSync);
-    ntp_original = lv_dropdown_get_selected(ui_droNTP);
-    tailscaled_original = lv_dropdown_get_selected(ui_droTailscaled);
+    SSHD_original = lv_dropdown_get_selected(ui_droSSHD_webserv);
+    SFTPGo_original = lv_dropdown_get_selected(ui_droSFTPGo_webserv);
+    TTYD_original = lv_dropdown_get_selected(ui_droTTYD_webserv);
+    Syncthing_original = lv_dropdown_get_selected(ui_droSyncthing_webserv);
+    RSLSync_original = lv_dropdown_get_selected(ui_droRSLSync_webserv);
+    NTP_original = lv_dropdown_get_selected(ui_droNTP_webserv);
+    Tailscaled_original = lv_dropdown_get_selected(ui_droTailscaled_webserv);
 }
 
 static void restore_web_options() {
-    lv_dropdown_set_selected(ui_droSSHD, config.WEB.SSHD);
-    lv_dropdown_set_selected(ui_droSFTPGo, config.WEB.SFTPGO);
-    lv_dropdown_set_selected(ui_droTTYD, config.WEB.TTYD);
-    lv_dropdown_set_selected(ui_droSyncthing, config.WEB.SYNCTHING);
-    lv_dropdown_set_selected(ui_droRSLSync, config.WEB.RSLSYNC);
-    lv_dropdown_set_selected(ui_droNTP, config.WEB.NTP);
-    lv_dropdown_set_selected(ui_droTailscaled, config.WEB.TAILSCALED);
+    lv_dropdown_set_selected(ui_droSSHD_webserv, config.WEB.SSHD);
+    lv_dropdown_set_selected(ui_droSFTPGo_webserv, config.WEB.SFTPGO);
+    lv_dropdown_set_selected(ui_droTTYD_webserv, config.WEB.TTYD);
+    lv_dropdown_set_selected(ui_droSyncthing_webserv, config.WEB.SYNCTHING);
+    lv_dropdown_set_selected(ui_droRSLSync_webserv, config.WEB.RSLSYNC);
+    lv_dropdown_set_selected(ui_droNTP_webserv, config.WEB.NTP);
+    lv_dropdown_set_selected(ui_droTailscaled_webserv, config.WEB.TAILSCALED);
 }
 
 static void save_web_options() {
-    int idx_sshd = lv_dropdown_get_selected(ui_droSSHD);
-    int idx_sftpgo = lv_dropdown_get_selected(ui_droSFTPGo);
-    int idx_ttyd = lv_dropdown_get_selected(ui_droTTYD);
-    int idx_syncthing = lv_dropdown_get_selected(ui_droSyncthing);
-    int idx_rslsync = lv_dropdown_get_selected(ui_droRSLSync);
-    int idx_ntp = lv_dropdown_get_selected(ui_droNTP);
-    int idx_tailscaled = lv_dropdown_get_selected(ui_droTailscaled);
-
     int is_modified = 0;
 
-    if (lv_dropdown_get_selected(ui_droSSHD) != sshd_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "web/sshd"), "w", INT, idx_sshd);
-    }
+#define CHECK_AND_SAVE(name, file)                                              \
+        do {                                                                    \
+            int current = lv_dropdown_get_selected(ui_dro##name##_webserv);     \
+            if (current != name##_original) {                                   \
+                is_modified++;                                                  \
+                write_text_to_file((CONF_CONFIG_PATH file), "w", INT, current); \
+            }                                                                   \
+        } while (0)
 
-    if (lv_dropdown_get_selected(ui_droSFTPGo) != sftpgo_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "web/sftpgo"), "w", INT, idx_sftpgo);
-    }
+    CHECK_AND_SAVE(SSHD, "web/sshd");
+    CHECK_AND_SAVE(SFTPGo, "web/sftpgo");
+    CHECK_AND_SAVE(TTYD, "web/ttyd");
+    CHECK_AND_SAVE(Syncthing, "web/syncthing");
+    CHECK_AND_SAVE(RSLSync, "web/rslsync");
+    CHECK_AND_SAVE(NTP, "web/ntp");
+    CHECK_AND_SAVE(Tailscaled, "web/tailscaled");
 
-    if (lv_dropdown_get_selected(ui_droTTYD) != ttyd_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "web/ttyd"), "w", INT, idx_ttyd);
-    }
-
-    if (lv_dropdown_get_selected(ui_droSyncthing) != syncthing_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "web/syncthing"), "w", INT, idx_syncthing);
-    }
-
-    if (lv_dropdown_get_selected(ui_droRSLSync) != rslsync_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "web/rslsync"), "w", INT, idx_rslsync);
-    }
-
-    if (lv_dropdown_get_selected(ui_droNTP) != ntp_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "web/ntp"), "w", INT, idx_ntp);
-    }
-
-    if (lv_dropdown_get_selected(ui_droTailscaled) != tailscaled_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "web/tailscaled"), "w", INT, idx_tailscaled);
-    }
+#undef CHECK_AND_SAVE
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
@@ -126,85 +101,47 @@ static void save_web_options() {
 }
 
 static void init_navigation_group() {
-    lv_obj_t *ui_objects_panel[] = {
-            ui_pnlSSHD,
-            ui_pnlSFTPGo,
-            ui_pnlTTYD,
-            ui_pnlSyncthing_webserv,
-            ui_pnlRSLSync,
-            ui_pnlNTP,
-            ui_pnlTailscaled,
-    };
-
-    ui_objects[0] = ui_lblSSHD;
-    ui_objects[1] = ui_lblSFTPGo;
-    ui_objects[2] = ui_lblTTYD;
-    ui_objects[3] = ui_lblSyncthing_webserv;
-    ui_objects[4] = ui_lblRSLSync;
-    ui_objects[5] = ui_lblNTP;
-    ui_objects[6] = ui_lblTailscaled;
-
-    lv_obj_t *ui_objects_value[] = {
-            ui_droSSHD,
-            ui_droSFTPGo,
-            ui_droTTYD,
-            ui_droSyncthing,
-            ui_droRSLSync,
-            ui_droNTP,
-            ui_droTailscaled
-    };
-
-    lv_obj_t *ui_objects_glyph[] = {
-            ui_icoSSHD,
-            ui_icoSFTPGo,
-            ui_icoTTYD,
-            ui_icoSyncthing_webserv,
-            ui_icoRSLSync,
-            ui_icoNTP,
-            ui_icoTailscaled
-    };
-
-    apply_theme_list_panel(ui_pnlSSHD);
-    apply_theme_list_panel(ui_pnlSFTPGo);
-    apply_theme_list_panel(ui_pnlTTYD);
-    apply_theme_list_panel(ui_pnlSyncthing_webserv);
-    apply_theme_list_panel(ui_pnlRSLSync);
-    apply_theme_list_panel(ui_pnlNTP);
-    apply_theme_list_panel(ui_pnlTailscaled);
-
-    apply_theme_list_item(&theme, ui_lblSSHD, lang.MUXWEBSERV.SHELL);
-    apply_theme_list_item(&theme, ui_lblSFTPGo, lang.MUXWEBSERV.SFTP);
-    apply_theme_list_item(&theme, ui_lblTTYD, lang.MUXWEBSERV.TERMINAL);
-    apply_theme_list_item(&theme, ui_lblSyncthing_webserv, lang.MUXWEBSERV.SYNCTHING);
-    apply_theme_list_item(&theme, ui_lblRSLSync, lang.MUXWEBSERV.RESILIO);
-    apply_theme_list_item(&theme, ui_lblNTP, lang.MUXWEBSERV.NTP);
-    apply_theme_list_item(&theme, ui_lblTailscaled, lang.MUXWEBSERV.TAILSCALE);
-
-    apply_theme_list_glyph(&theme, ui_icoSSHD, mux_module, "sshd");
-    apply_theme_list_glyph(&theme, ui_icoSFTPGo, mux_module, "sftpgo");
-    apply_theme_list_glyph(&theme, ui_icoTTYD, mux_module, "ttyd");
-    apply_theme_list_glyph(&theme, ui_icoSyncthing_webserv, mux_module, "syncthing");
-    apply_theme_list_glyph(&theme, ui_icoRSLSync, mux_module, "rslsync");
-    apply_theme_list_glyph(&theme, ui_icoNTP, mux_module, "ntp");
-    apply_theme_list_glyph(&theme, ui_icoTailscaled, mux_module, "tailscaled");
-
     char options[MAX_BUFFER_SIZE];
     snprintf(options, sizeof(options), "%s\n%s",
              lang.GENERIC.DISABLED, lang.GENERIC.ENABLED);
-    apply_theme_list_drop_down(&theme, ui_droSSHD, options);
-    apply_theme_list_drop_down(&theme, ui_droSFTPGo, options);
-    apply_theme_list_drop_down(&theme, ui_droTTYD, options);
-    apply_theme_list_drop_down(&theme, ui_droSyncthing, options);
-    apply_theme_list_drop_down(&theme, ui_droRSLSync, options);
-    apply_theme_list_drop_down(&theme, ui_droNTP, options);
-    apply_theme_list_drop_down(&theme, ui_droTailscaled, options);
+
+    static lv_obj_t *ui_objects[UI_COUNT];
+    static lv_obj_t *ui_objects_value[UI_COUNT];
+    static lv_obj_t *ui_objects_glyph[UI_COUNT];
+    static lv_obj_t *ui_objects_panel[UI_COUNT];
+
+    int ui_index = 0;
+
+#define INIT_NAV_ITEM(Name, label, glyph)                                          \
+    do {                                                                           \
+        apply_theme_list_panel(ui_pnl##Name##_webserv);                            \
+        apply_theme_list_item(&theme, ui_lbl##Name##_webserv, label);              \
+        apply_theme_list_glyph(&theme, ui_ico##Name##_webserv, mux_module, glyph); \
+        apply_theme_list_drop_down(&theme, ui_dro##Name##_webserv, options);       \
+        ui_objects[ui_index] = ui_lbl##Name##_webserv;                             \
+        ui_objects_value[ui_index] = ui_dro##Name##_webserv;                       \
+        ui_objects_glyph[ui_index] = ui_ico##Name##_webserv;                       \
+        ui_objects_panel[ui_index] = ui_pnl##Name##_webserv;                       \
+        ui_index++;                                                                \
+    } while (0)
+
+    INIT_NAV_ITEM(SSHD, lang.MUXWEBSERV.SHELL, "sshd");
+    INIT_NAV_ITEM(SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo");
+    INIT_NAV_ITEM(TTYD, lang.MUXWEBSERV.TERMINAL, "ttyd");
+    INIT_NAV_ITEM(Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing");
+    INIT_NAV_ITEM(RSLSync, lang.MUXWEBSERV.RESILIO, "rslsync");
+    INIT_NAV_ITEM(NTP, lang.MUXWEBSERV.NTP, "ntp");
+    INIT_NAV_ITEM(Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled");
+
+#undef INIT_NAV_ITEM
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
+    ui_count = ui_index;
+
     for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
@@ -316,13 +253,13 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblSSHD, "sshd");
-    lv_obj_set_user_data(ui_lblSFTPGo, "sftpgo");
-    lv_obj_set_user_data(ui_lblTTYD, "ttyd");
+    lv_obj_set_user_data(ui_lblSSHD_webserv, "sshd");
+    lv_obj_set_user_data(ui_lblSFTPGo_webserv, "sftpgo");
+    lv_obj_set_user_data(ui_lblTTYD_webserv, "ttyd");
     lv_obj_set_user_data(ui_lblSyncthing_webserv, "syncthing");
-    lv_obj_set_user_data(ui_lblRSLSync, "rslsync");
-    lv_obj_set_user_data(ui_lblNTP, "ntp");
-    lv_obj_set_user_data(ui_lblTailscaled, "tailscaled");
+    lv_obj_set_user_data(ui_lblRSLSync_webserv, "rslsync");
+    lv_obj_set_user_data(ui_lblNTP_webserv, "ntp");
+    lv_obj_set_user_data(ui_lblTailscaled_webserv, "tailscaled");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -368,8 +305,6 @@ int muxwebserv_main() {
 
     restore_web_options();
     init_dropdown_settings();
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 

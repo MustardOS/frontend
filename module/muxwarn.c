@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 #include "muxshare.h"
 #include "../common/init.h"
 #include "../common/common.h"
