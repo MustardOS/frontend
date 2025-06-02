@@ -25,6 +25,7 @@ typedef struct {
     int minute;
     int notation;
 } rtc_state_t;
+
 static rtc_state_t rtc = {
         2025, 1, 1, 0, 0, 0
 };
@@ -87,18 +88,18 @@ static void restore_clock_settings() {
 
     if (now == (time_t)-1) {
         is_error = true;
-        LOG_ERROR(mux_module, "Failed to get current time");
+        LOG_ERROR(mux_module, "Failed to get current time")
     } else {
         tm_now = localtime(&now);
     }
 
     if (!is_error && !tm_now) {
         is_error = true;
-        LOG_ERROR(mux_module, "Failed to convert time to local time");
+        LOG_ERROR(mux_module, "Failed to convert time to local time")
     }
 
     if (is_error) {
-        LOG_WARN(mux_module, "Using default date and time");
+        LOG_WARN(mux_module, "Using default date and time")
         rtc.year = 2025;
         rtc.month = 1;
         rtc.day = 1;
@@ -119,7 +120,7 @@ static void restore_clock_settings() {
     set_dt_label(ui_lblMinuteValue, "%02d", rtc.minute);
 
     if (config.CLOCK.NOTATION < 0 || config.CLOCK.NOTATION > 1) {
-        LOG_WARN(mux_module, "Invalid notation value, defaulting to 24-hour format");
+        LOG_WARN(mux_module, "Invalid notation value, defaulting to 24-hour format")
         rtc.notation = TIME_24H;
     } else {
         rtc.notation = config.CLOCK.NOTATION;
@@ -350,7 +351,6 @@ static void validate_month()
     validate_day();
 }
 
-#define validate_time() validate_year()
 static void validate_year()
 {
     if (rtc.year < MIN_YEAR)
@@ -454,7 +454,7 @@ static void save_and_exit(char *message) {
     refresh_screen(ui_screen);
 
     // Validate the final RTC state before saving
-    validate_time();
+    validate_year();
     save_clock_settings(rtc.year, rtc.month, rtc.day, rtc.hour, rtc.minute, rtc.notation);
 
     close_input();
