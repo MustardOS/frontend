@@ -1,13 +1,13 @@
 #pragma once
 
-#define CREATE_ELEMENT_ITEM(module, name) do {                                                       \
-        ui_pnl##name##_##module = lv_obj_create(ui_pnlContent);                                      \
-        ui_lbl##name##_##module = lv_label_create(ui_pnl##name##_##module);                          \
-        lv_label_set_text(ui_lbl##name##_##module, "");                                              \
-        ui_ico##name##_##module = lv_img_create(ui_pnl##name##_##module);                            \
-        ui_dro##name##_##module = lv_dropdown_create(ui_pnl##name##_##module);                       \
-        lv_dropdown_clear_options(ui_dro##name##_##module);                                          \
-        lv_obj_set_style_text_opa(ui_dro##name##_##module, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
+#define CREATE_ELEMENT_ITEM(MODULE, NAME) do {                                                       \
+        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                      \
+        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                          \
+        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                              \
+        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                            \
+        ui_dro##NAME##_##MODULE = lv_dropdown_create(ui_pnl##NAME##_##MODULE);                       \
+        lv_dropdown_clear_options(ui_dro##NAME##_##MODULE);                                          \
+        lv_obj_set_style_text_opa(ui_dro##NAME##_##MODULE, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
     } while (0)
 
 #define KIOSK_ELEMENTS \
@@ -42,6 +42,15 @@
     KIOSK(HDMI)        \
     KIOSK(Power)       \
     KIOSK(Visual)
+
+#define TWEAKGEN_ELEMENTS \
+    TWEAKGEN(RTC)         \
+    TWEAKGEN(HDMI)        \
+    TWEAKGEN(Advanced)    \
+    TWEAKGEN(Brightness)  \
+    TWEAKGEN(Volume)      \
+    TWEAKGEN(Colour)      \
+    TWEAKGEN(Startup)     \
 
 #define TWEAKADV_ELEMENTS \
     TWEAKADV(Accelerate)  \
