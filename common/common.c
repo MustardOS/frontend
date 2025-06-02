@@ -33,7 +33,6 @@
 #include "options.h"
 #include "config.h"
 #include "device.h"
-#include "kiosk.h"
 #include "theme.h"
 #include "mini/mini.h"
 
@@ -64,6 +63,11 @@ char **bgm_files = NULL;
 size_t bgm_file_count = 0;
 int current_brightness = 0;
 int current_volume = 0;
+
+char *disabled_enabled[] = {
+        lang.GENERIC.DISABLED,
+        lang.GENERIC.ENABLED
+};
 
 const char *snd_names[SOUND_TOTAL] = {
         "confirm", "back", "keypress", "navigate",

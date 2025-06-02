@@ -11,8 +11,6 @@
 static int SSHD_original, SFTPGo_original, TTYD_original, Syncthing_original,
         RSLSync_original, NTP_original, Tailscaled_original;
 
-#define UI_COUNT 7
-
 #define UI_PANEL 5
 static lv_obj_t *ui_mux_panels[UI_PANEL];
 
@@ -71,24 +69,13 @@ static void restore_web_options() {
 static void save_web_options() {
     int is_modified = 0;
 
-#define CHECK_AND_SAVE(name, file)                                              \
-        do {                                                                    \
-            int current = lv_dropdown_get_selected(ui_dro##name##_webserv);     \
-            if (current != name##_original) {                                   \
-                is_modified++;                                                  \
-                write_text_to_file((CONF_CONFIG_PATH file), "w", INT, current); \
-            }                                                                   \
-        } while (0)
-
-    CHECK_AND_SAVE(SSHD, "web/sshd");
-    CHECK_AND_SAVE(SFTPGo, "web/sftpgo");
-    CHECK_AND_SAVE(TTYD, "web/ttyd");
-    CHECK_AND_SAVE(Syncthing, "web/syncthing");
-    CHECK_AND_SAVE(RSLSync, "web/rslsync");
-    CHECK_AND_SAVE(NTP, "web/ntp");
-    CHECK_AND_SAVE(Tailscaled, "web/tailscaled");
-
-#undef CHECK_AND_SAVE
+    CHECK_AND_SAVE_STD(webserv, SSHD, "web/sshd", INT);
+    CHECK_AND_SAVE_STD(webserv, SFTPGo, "web/sftpgo", INT);
+    CHECK_AND_SAVE_STD(webserv, TTYD, "web/ttyd", INT);
+    CHECK_AND_SAVE_STD(webserv, Syncthing, "web/syncthing", INT);
+    CHECK_AND_SAVE_STD(webserv, RSLSync, "web/rslsync", INT);
+    CHECK_AND_SAVE_STD(webserv, NTP, "web/ntp", INT);
+    CHECK_AND_SAVE_STD(webserv, Tailscaled, "web/tailscaled", INT);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
@@ -96,14 +83,13 @@ static void save_web_options() {
 
         const char *args[] = {(INTERNAL_PATH "script/web/service.sh"), NULL};
         run_exec(args, A_SIZE(args), 1);
+
         refresh_config = 1;
     }
 }
 
 static void init_navigation_group() {
-    char options[MAX_BUFFER_SIZE];
-    snprintf(options, sizeof(options), "%s\n%s",
-             lang.GENERIC.DISABLED, lang.GENERIC.ENABLED);
+#define UI_COUNT 7
 
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
@@ -112,28 +98,13 @@ static void init_navigation_group() {
 
     int ui_index = 0;
 
-#define INIT_NAV_ITEM(Name, label, glyph)                                          \
-    do {                                                                           \
-        apply_theme_list_panel(ui_pnl##Name##_webserv);                            \
-        apply_theme_list_item(&theme, ui_lbl##Name##_webserv, label);              \
-        apply_theme_list_glyph(&theme, ui_ico##Name##_webserv, mux_module, glyph); \
-        apply_theme_list_drop_down(&theme, ui_dro##Name##_webserv, options);       \
-        ui_objects[ui_index] = ui_lbl##Name##_webserv;                             \
-        ui_objects_value[ui_index] = ui_dro##Name##_webserv;                       \
-        ui_objects_glyph[ui_index] = ui_ico##Name##_webserv;                       \
-        ui_objects_panel[ui_index] = ui_pnl##Name##_webserv;                       \
-        ui_index++;                                                                \
-    } while (0)
-
-    INIT_NAV_ITEM(SSHD, lang.MUXWEBSERV.SHELL, "sshd");
-    INIT_NAV_ITEM(SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo");
-    INIT_NAV_ITEM(TTYD, lang.MUXWEBSERV.TERMINAL, "ttyd");
-    INIT_NAV_ITEM(Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing");
-    INIT_NAV_ITEM(RSLSync, lang.MUXWEBSERV.RESILIO, "rslsync");
-    INIT_NAV_ITEM(NTP, lang.MUXWEBSERV.NTP, "ntp");
-    INIT_NAV_ITEM(Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled");
-
-#undef INIT_NAV_ITEM
+    INIT_NAV_ITEM(webserv, SSHD, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
+    INIT_NAV_ITEM(webserv, SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
+    INIT_NAV_ITEM(webserv, TTYD, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
+    INIT_NAV_ITEM(webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
+    INIT_NAV_ITEM(webserv, RSLSync, lang.MUXWEBSERV.RESILIO, "rslsync", disabled_enabled, 2);
+    INIT_NAV_ITEM(webserv, NTP, lang.MUXWEBSERV.NTP, "ntp", disabled_enabled, 2);
+    INIT_NAV_ITEM(webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled", disabled_enabled, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

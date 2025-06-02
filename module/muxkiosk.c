@@ -15,8 +15,6 @@ static int Enable_original, Archive_original, Task_original, Custom_original, La
         History_original, Info_original, Advanced_original, General_original, HDMI_original, Power_original,
         Visual_original;
 
-#define UI_COUNT 31
-
 #define UI_PANEL 5
 static lv_obj_t *ui_mux_panels[UI_PANEL];
 
@@ -147,48 +145,37 @@ static void restore_kiosk_options() {
 static void save_kiosk_options() {
     int is_modified = 0;
 
-#define CHECK_AND_SAVE(name, file)                                             \
-        do {                                                                   \
-            int current = lv_dropdown_get_selected(ui_dro##name##_kiosk);      \
-            if (current != name##_original) {                                  \
-                is_modified++;                                                 \
-                write_text_to_file((CONF_KIOSK_PATH file), "w", INT, current); \
-            }                                                                  \
-        } while (0)
-
-    CHECK_AND_SAVE(Enable, "enable");
-    CHECK_AND_SAVE(Archive, "application/archive");
-    CHECK_AND_SAVE(Task, "application/task");
-    CHECK_AND_SAVE(Custom, "config/customisation");
-    CHECK_AND_SAVE(Language, "config/language");
-    CHECK_AND_SAVE(Network, "config/network");
-    CHECK_AND_SAVE(Storage, "config/storage");
-    CHECK_AND_SAVE(WebServ, "config/webserv");
-    CHECK_AND_SAVE(Core, "content/core");
-    CHECK_AND_SAVE(Governor, "content/governor");
-    CHECK_AND_SAVE(Option, "content/option");
-    CHECK_AND_SAVE(RetroArch, "content/retroarch");
-    CHECK_AND_SAVE(Search, "content/search");
-    CHECK_AND_SAVE(Tag, "content/tag");
-    CHECK_AND_SAVE(Bootlogo, "custom/bootlogo");
-    CHECK_AND_SAVE(Catalogue, "custom/catalogue");
-    CHECK_AND_SAVE(RAConfig, "custom/raconfig");
-    CHECK_AND_SAVE(Theme, "custom/theme");
-    CHECK_AND_SAVE(Clock, "datetime/clock");
-    CHECK_AND_SAVE(Timezone, "datetime/timezone");
-    CHECK_AND_SAVE(Apps, "launch/apps");
-    CHECK_AND_SAVE(Config, "launch/config");
-    CHECK_AND_SAVE(Explore, "launch/explore");
-    CHECK_AND_SAVE(Collection, "launch/collection");
-    CHECK_AND_SAVE(History, "launch/history");
-    CHECK_AND_SAVE(Info, "launch/info");
-    CHECK_AND_SAVE(Advanced, "setting/advanced");
-    CHECK_AND_SAVE(General, "setting/general");
-    CHECK_AND_SAVE(HDMI, "setting/hdmi");
-    CHECK_AND_SAVE(Power, "setting/power");
-    CHECK_AND_SAVE(Visual, "setting/visual");
-
-#undef CHECK_AND_SAVE
+    CHECK_AND_SAVE_KSK(kiosk, Enable, "enable", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Archive, "application/archive", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Task, "application/task", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Custom, "config/customisation", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Language, "config/language", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Network, "config/network", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Storage, "config/storage", INT);
+    CHECK_AND_SAVE_KSK(kiosk, WebServ, "config/webserv", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Core, "content/core", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Governor, "content/governor", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Option, "content/option", INT);
+    CHECK_AND_SAVE_KSK(kiosk, RetroArch, "content/retroarch", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Search, "content/search", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Tag, "content/tag", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Bootlogo, "custom/bootlogo", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Catalogue, "custom/catalogue", INT);
+    CHECK_AND_SAVE_KSK(kiosk, RAConfig, "custom/raconfig", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Theme, "custom/theme", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Clock, "datetime/clock", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Timezone, "datetime/timezone", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Apps, "launch/apps", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Config, "launch/config", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Explore, "launch/explore", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Collection, "launch/collection", INT);
+    CHECK_AND_SAVE_KSK(kiosk, History, "launch/history", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Info, "launch/info", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Advanced, "setting/advanced", INT);
+    CHECK_AND_SAVE_KSK(kiosk, General, "setting/general", INT);
+    CHECK_AND_SAVE_KSK(kiosk, HDMI, "setting/hdmi", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Power, "setting/power", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Visual, "setting/visual", INT);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
@@ -198,9 +185,7 @@ static void save_kiosk_options() {
 }
 
 static void init_navigation_group() {
-    char options[MAX_BUFFER_SIZE];
-    snprintf(options, sizeof(options), "%s\n%s",
-             lang.GENERIC.DISABLED, lang.GENERIC.ENABLED);
+#define UI_COUNT 31
 
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
@@ -209,52 +194,37 @@ static void init_navigation_group() {
 
     int ui_index = 0;
 
-#define INIT_NAV_ITEM(Name, label, glyph)                                        \
-    do {                                                                         \
-        apply_theme_list_panel(ui_pnl##Name##_kiosk);                            \
-        apply_theme_list_item(&theme, ui_lbl##Name##_kiosk, label);              \
-        apply_theme_list_glyph(&theme, ui_ico##Name##_kiosk, mux_module, glyph); \
-        apply_theme_list_drop_down(&theme, ui_dro##Name##_kiosk, options);       \
-        ui_objects[ui_index] = ui_lbl##Name##_kiosk;                             \
-        ui_objects_value[ui_index] = ui_dro##Name##_kiosk;                       \
-        ui_objects_glyph[ui_index] = ui_ico##Name##_kiosk;                       \
-        ui_objects_panel[ui_index] = ui_pnl##Name##_kiosk;                       \
-        ui_index++;                                                              \
-    } while (0)
-
-    INIT_NAV_ITEM(Enable, lang.MUXKIOSK.ENABLE, "enable");
-    INIT_NAV_ITEM(Archive, lang.MUXKIOSK.ARCHIVE, "archive");
-    INIT_NAV_ITEM(Task, lang.MUXKIOSK.TASK, "task");
-    INIT_NAV_ITEM(Custom, lang.MUXKIOSK.CUSTOM, "custom");
-    INIT_NAV_ITEM(Language, lang.MUXKIOSK.LANGUAGE, "language");
-    INIT_NAV_ITEM(Network, lang.MUXKIOSK.NETWORK, "network");
-    INIT_NAV_ITEM(Storage, lang.MUXKIOSK.STORAGE, "storage");
-    INIT_NAV_ITEM(WebServ, lang.MUXKIOSK.WEBSERV, "webserv");
-    INIT_NAV_ITEM(Core, lang.MUXKIOSK.CORE, "core");
-    INIT_NAV_ITEM(Governor, lang.MUXKIOSK.GOVERNOR, "governor");
-    INIT_NAV_ITEM(Option, lang.MUXKIOSK.OPTION, "option");
-    INIT_NAV_ITEM(RetroArch, lang.MUXKIOSK.RETROARCH, "retroarch");
-    INIT_NAV_ITEM(Search, lang.MUXKIOSK.SEARCH, "sarch");
-    INIT_NAV_ITEM(Tag, lang.MUXKIOSK.TAG, "tag");
-    INIT_NAV_ITEM(Bootlogo, lang.MUXKIOSK.BOOTLOGO, "bootlogo");
-    INIT_NAV_ITEM(Catalogue, lang.MUXKIOSK.CATALOGUE, "catalogue");
-    INIT_NAV_ITEM(RAConfig, lang.MUXKIOSK.RACONFIG, "raconfig");
-    INIT_NAV_ITEM(Theme, lang.MUXKIOSK.THEME, "theme");
-    INIT_NAV_ITEM(Clock, lang.MUXKIOSK.CLOCK, "clock");
-    INIT_NAV_ITEM(Timezone, lang.MUXKIOSK.TIMEZONE, "timezone");
-    INIT_NAV_ITEM(Apps, lang.MUXKIOSK.APPS, "apps");
-    INIT_NAV_ITEM(Config, lang.MUXKIOSK.CONFIG, "config");
-    INIT_NAV_ITEM(Explore, lang.MUXKIOSK.EXPLORE, "explore");
-    INIT_NAV_ITEM(Collection, lang.MUXKIOSK.COLLECTION, "collection");
-    INIT_NAV_ITEM(History, lang.MUXKIOSK.HISTORY, "history");
-    INIT_NAV_ITEM(Info, lang.MUXKIOSK.INFO, "info");
-    INIT_NAV_ITEM(Advanced, lang.MUXKIOSK.ADVANCED, "advanced");
-    INIT_NAV_ITEM(General, lang.MUXKIOSK.GENERAL, "general");
-    INIT_NAV_ITEM(HDMI, lang.MUXKIOSK.HDMI, "hdmi");
-    INIT_NAV_ITEM(Power, lang.MUXKIOSK.POWER, "power");
-    INIT_NAV_ITEM(Visual, lang.MUXKIOSK.VISUAL, "visual");
-
-#undef INIT_NAV_ITEM
+    INIT_NAV_ITEM(kiosk, Enable, lang.MUXKIOSK.ENABLE, "enable", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Archive, lang.MUXKIOSK.ARCHIVE, "archive", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Task, lang.MUXKIOSK.TASK, "task", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Custom, lang.MUXKIOSK.CUSTOM, "custom", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Language, lang.MUXKIOSK.LANGUAGE, "language", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Network, lang.MUXKIOSK.NETWORK, "network", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Storage, lang.MUXKIOSK.STORAGE, "storage", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, WebServ, lang.MUXKIOSK.WEBSERV, "webserv", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Core, lang.MUXKIOSK.CORE, "core", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Governor, lang.MUXKIOSK.GOVERNOR, "governor", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Option, lang.MUXKIOSK.OPTION, "option", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, RetroArch, lang.MUXKIOSK.RETROARCH, "retroarch", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Search, lang.MUXKIOSK.SEARCH, "search", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Tag, lang.MUXKIOSK.TAG, "tag", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Bootlogo, lang.MUXKIOSK.BOOTLOGO, "bootlogo", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Catalogue, lang.MUXKIOSK.CATALOGUE, "catalogue", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, RAConfig, lang.MUXKIOSK.RACONFIG, "raconfig", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Theme, lang.MUXKIOSK.THEME, "theme", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Clock, lang.MUXKIOSK.CLOCK, "clock", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Timezone, lang.MUXKIOSK.TIMEZONE, "timezone", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Apps, lang.MUXKIOSK.APPS, "apps", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Config, lang.MUXKIOSK.CONFIG, "config", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Explore, lang.MUXKIOSK.EXPLORE, "explore", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Collection, lang.MUXKIOSK.COLLECTION, "collection", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, History, lang.MUXKIOSK.HISTORY, "history", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Info, lang.MUXKIOSK.INFO, "info", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Advanced, lang.MUXKIOSK.ADVANCED, "advanced", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, General, lang.MUXKIOSK.GENERAL, "general", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, HDMI, lang.MUXKIOSK.HDMI, "hdmi", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Power, lang.MUXKIOSK.POWER, "power", disabled_enabled, 2);
+    INIT_NAV_ITEM(kiosk, Visual, lang.MUXKIOSK.VISUAL, "visual", disabled_enabled, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

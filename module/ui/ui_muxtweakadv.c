@@ -1,3 +1,4 @@
+#include "../../common/options.h"
 #include "ui_muxtweakadv.h"
 
 lv_obj_t *ui_pnlAccelerate_tweakadv;
@@ -16,7 +17,7 @@ lv_obj_t *ui_pnlRumble_tweakadv;
 lv_obj_t *ui_pnlUserInit_tweakadv;
 lv_obj_t *ui_pnlDPADSwap_tweakadv;
 lv_obj_t *ui_pnlOverdrive_tweakadv;
-lv_obj_t *ui_pnlSwap_tweakadvfile;
+lv_obj_t *ui_pnlSwapfile_tweakadv;
 lv_obj_t *ui_pnlZramfile_tweakadv;
 lv_obj_t *ui_pnlCardMode_tweakadv;
 
@@ -36,7 +37,7 @@ lv_obj_t *ui_lblRumble_tweakadv;
 lv_obj_t *ui_lblUserInit_tweakadv;
 lv_obj_t *ui_lblDPADSwap_tweakadv;
 lv_obj_t *ui_lblOverdrive_tweakadv;
-lv_obj_t *ui_lblSwap_tweakadvfile;
+lv_obj_t *ui_lblSwapfile_tweakadv;
 lv_obj_t *ui_lblZramfile_tweakadv;
 lv_obj_t *ui_lblCardMode_tweakadv;
 
@@ -56,7 +57,7 @@ lv_obj_t *ui_icoRumble_tweakadv;
 lv_obj_t *ui_icoUserInit_tweakadv;
 lv_obj_t *ui_icoDPADSwap_tweakadv;
 lv_obj_t *ui_icoOverdrive_tweakadv;
-lv_obj_t *ui_icoSwap_tweakadvfile;
+lv_obj_t *ui_icoSwapfile_tweakadv;
 lv_obj_t *ui_icoZramfile_tweakadv;
 lv_obj_t *ui_icoCardMode_tweakadv;
 
@@ -76,145 +77,56 @@ lv_obj_t *ui_droRumble_tweakadv;
 lv_obj_t *ui_droUserInit_tweakadv;
 lv_obj_t *ui_droDPADSwap_tweakadv;
 lv_obj_t *ui_droOverdrive_tweakadv;
-lv_obj_t *ui_droSwap_tweakadvfile;
+lv_obj_t *ui_droSwapfile_tweakadv;
 lv_obj_t *ui_droZramfile_tweakadv;
 lv_obj_t *ui_droCardMode_tweakadv;
 
 void init_muxtweakadv(lv_obj_t *ui_pnlContent) {
-    ui_pnlSwap_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlOverdrive_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlOffset_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlBrightness_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlRumble_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlCardMode_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlDPADSwap_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlLED_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlAccelerate_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlThermal_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlPasscode_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlTheme_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlRetroWait_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlState_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlSwap_tweakadvfile = lv_obj_create(ui_pnlContent);
-    ui_pnlZramfile_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlUserInit_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlVerbose_tweakadv = lv_obj_create(ui_pnlContent);
-    ui_pnlVolume_tweakadv = lv_obj_create(ui_pnlContent);
-
-    ui_lblAccelerate_tweakadv = lv_label_create(ui_pnlAccelerate_tweakadv);
-    lv_label_set_text(ui_lblAccelerate_tweakadv, "");
-    ui_lblSwap_tweakadv = lv_label_create(ui_pnlSwap_tweakadv);
-    lv_label_set_text(ui_lblSwap_tweakadv, "");
-    ui_lblThermal_tweakadv = lv_label_create(ui_pnlThermal_tweakadv);
-    lv_label_set_text(ui_lblThermal_tweakadv, "");
-    ui_lblVolume_tweakadv = lv_label_create(ui_pnlVolume_tweakadv);
-    lv_label_set_text(ui_lblVolume_tweakadv, "");
-    ui_lblBrightness_tweakadv = lv_label_create(ui_pnlBrightness_tweakadv);
-    lv_label_set_text(ui_lblBrightness_tweakadv, "");
-    ui_lblOffset_tweakadv = lv_label_create(ui_pnlOffset_tweakadv);
-    lv_label_set_text(ui_lblOffset_tweakadv, "");
-    ui_lblPasscode_tweakadv = lv_label_create(ui_pnlPasscode_tweakadv);
-    lv_label_set_text(ui_lblPasscode_tweakadv, "");
-    ui_lblLED_tweakadv = lv_label_create(ui_pnlLED_tweakadv);
-    lv_label_set_text(ui_lblLED_tweakadv, "");
-    ui_lblTheme_tweakadv = lv_label_create(ui_pnlTheme_tweakadv);
-    lv_label_set_text(ui_lblTheme_tweakadv, "");
-    ui_lblRetroWait_tweakadv = lv_label_create(ui_pnlRetroWait_tweakadv);
-    lv_label_set_text(ui_lblRetroWait_tweakadv, "");
-    ui_lblState_tweakadv = lv_label_create(ui_pnlState_tweakadv);
-    lv_label_set_text(ui_lblState_tweakadv, "");
-    ui_lblVerbose_tweakadv = lv_label_create(ui_pnlVerbose_tweakadv);
-    lv_label_set_text(ui_lblVerbose_tweakadv, "");
-    ui_lblRumble_tweakadv = lv_label_create(ui_pnlRumble_tweakadv);
-    lv_label_set_text(ui_lblRumble_tweakadv, "");
-    ui_lblUserInit_tweakadv = lv_label_create(ui_pnlUserInit_tweakadv);
-    lv_label_set_text(ui_lblUserInit_tweakadv, "");
-    ui_lblDPADSwap_tweakadv = lv_label_create(ui_pnlDPADSwap_tweakadv);
-    lv_label_set_text(ui_lblDPADSwap_tweakadv, "");
-    ui_lblOverdrive_tweakadv = lv_label_create(ui_pnlOverdrive_tweakadv);
-    lv_label_set_text(ui_lblOverdrive_tweakadv, "");
-    ui_lblSwap_tweakadvfile = lv_label_create(ui_pnlSwap_tweakadvfile);
-    lv_label_set_text(ui_lblSwap_tweakadvfile, "");
-    ui_lblZramfile_tweakadv = lv_label_create(ui_pnlZramfile_tweakadv);
-    lv_label_set_text(ui_lblZramfile_tweakadv, "");
-    ui_lblCardMode_tweakadv = lv_label_create(ui_pnlCardMode_tweakadv);
-    lv_label_set_text(ui_lblCardMode_tweakadv, "");
-
-    ui_icoAccelerate_tweakadv = lv_img_create(ui_pnlAccelerate_tweakadv);
-    ui_icoSwap_tweakadv = lv_img_create(ui_pnlSwap_tweakadv);
-    ui_icoThermal_tweakadv = lv_img_create(ui_pnlThermal_tweakadv);
-    ui_icoVolume_tweakadv = lv_img_create(ui_pnlVolume_tweakadv);
-    ui_icoBrightness_tweakadv = lv_img_create(ui_pnlBrightness_tweakadv);
-    ui_icoOffset_tweakadv = lv_img_create(ui_pnlOffset_tweakadv);
-    ui_icoPasscode_tweakadv = lv_img_create(ui_pnlPasscode_tweakadv);
-    ui_icoLED_tweakadv = lv_img_create(ui_pnlLED_tweakadv);
-    ui_icoTheme_tweakadv = lv_img_create(ui_pnlTheme_tweakadv);
-    ui_icoRetroWait_tweakadv = lv_img_create(ui_pnlRetroWait_tweakadv);
-    ui_icoState_tweakadv = lv_img_create(ui_pnlState_tweakadv);
-    ui_icoVerbose_tweakadv = lv_img_create(ui_pnlVerbose_tweakadv);
-    ui_icoRumble_tweakadv = lv_img_create(ui_pnlRumble_tweakadv);
-    ui_icoUserInit_tweakadv = lv_img_create(ui_pnlUserInit_tweakadv);
-    ui_icoDPADSwap_tweakadv = lv_img_create(ui_pnlDPADSwap_tweakadv);
-    ui_icoOverdrive_tweakadv = lv_img_create(ui_pnlOverdrive_tweakadv);
-    ui_icoSwap_tweakadvfile = lv_img_create(ui_pnlSwap_tweakadvfile);
-    ui_icoZramfile_tweakadv = lv_img_create(ui_pnlZramfile_tweakadv);
-    ui_icoCardMode_tweakadv = lv_img_create(ui_pnlCardMode_tweakadv);
-
-    ui_droAccelerate_tweakadv = lv_dropdown_create(ui_pnlAccelerate_tweakadv);
-    lv_dropdown_clear_options(ui_droAccelerate_tweakadv);
-    lv_obj_set_style_text_opa(ui_droAccelerate_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droSwap_tweakadv = lv_dropdown_create(ui_pnlSwap_tweakadv);
-    lv_dropdown_clear_options(ui_droSwap_tweakadv);
-    lv_obj_set_style_text_opa(ui_droSwap_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droThermal_tweakadv = lv_dropdown_create(ui_pnlThermal_tweakadv);
-    lv_dropdown_clear_options(ui_droThermal_tweakadv);
-    lv_obj_set_style_text_opa(ui_droThermal_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droVolume_tweakadv = lv_dropdown_create(ui_pnlVolume_tweakadv);
-    lv_dropdown_clear_options(ui_droVolume_tweakadv);
-    lv_obj_set_style_text_opa(ui_droVolume_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droBrightness_tweakadv = lv_dropdown_create(ui_pnlBrightness_tweakadv);
-    lv_dropdown_clear_options(ui_droBrightness_tweakadv);
-    lv_obj_set_style_text_opa(ui_droBrightness_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droOffset_tweakadv = lv_dropdown_create(ui_pnlOffset_tweakadv);
-    lv_dropdown_clear_options(ui_droOffset_tweakadv);
-    lv_obj_set_style_text_opa(ui_droOffset_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droPasscode_tweakadv = lv_dropdown_create(ui_pnlPasscode_tweakadv);
-    lv_dropdown_clear_options(ui_droPasscode_tweakadv);
-    lv_obj_set_style_text_opa(ui_droPasscode_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droLED_tweakadv = lv_dropdown_create(ui_pnlLED_tweakadv);
-    lv_dropdown_clear_options(ui_droLED_tweakadv);
-    lv_obj_set_style_text_opa(ui_droLED_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droTheme_tweakadv = lv_dropdown_create(ui_pnlTheme_tweakadv);
-    lv_dropdown_clear_options(ui_droTheme_tweakadv);
-    lv_obj_set_style_text_opa(ui_droTheme_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droRetroWait_tweakadv = lv_dropdown_create(ui_pnlRetroWait_tweakadv);
-    lv_dropdown_clear_options(ui_droRetroWait_tweakadv);
-    lv_obj_set_style_text_opa(ui_droRetroWait_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droState_tweakadv = lv_dropdown_create(ui_pnlState_tweakadv);
-    lv_dropdown_clear_options(ui_droState_tweakadv);
-    lv_obj_set_style_text_opa(ui_droState_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droVerbose_tweakadv = lv_dropdown_create(ui_pnlVerbose_tweakadv);
-    lv_dropdown_clear_options(ui_droVerbose_tweakadv);
-    lv_obj_set_style_text_opa(ui_droVerbose_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droRumble_tweakadv = lv_dropdown_create(ui_pnlRumble_tweakadv);
-    lv_dropdown_clear_options(ui_droRumble_tweakadv);
-    lv_obj_set_style_text_opa(ui_droRumble_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droUserInit_tweakadv = lv_dropdown_create(ui_pnlUserInit_tweakadv);
-    lv_dropdown_clear_options(ui_droUserInit_tweakadv);
-    lv_obj_set_style_text_opa(ui_droUserInit_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droDPADSwap_tweakadv = lv_dropdown_create(ui_pnlDPADSwap_tweakadv);
-    lv_dropdown_clear_options(ui_droDPADSwap_tweakadv);
-    lv_obj_set_style_text_opa(ui_droDPADSwap_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droOverdrive_tweakadv = lv_dropdown_create(ui_pnlOverdrive_tweakadv);
-    lv_dropdown_clear_options(ui_droOverdrive_tweakadv);
-    lv_obj_set_style_text_opa(ui_droOverdrive_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droSwap_tweakadvfile = lv_dropdown_create(ui_pnlSwap_tweakadvfile);
-    lv_dropdown_clear_options(ui_droSwap_tweakadvfile);
-    lv_obj_set_style_text_opa(ui_droSwap_tweakadvfile, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droZramfile_tweakadv = lv_dropdown_create(ui_pnlZramfile_tweakadv);
-    lv_dropdown_clear_options(ui_droZramfile_tweakadv);
-    lv_obj_set_style_text_opa(ui_droZramfile_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    ui_droCardMode_tweakadv = lv_dropdown_create(ui_pnlCardMode_tweakadv);
-    lv_dropdown_clear_options(ui_droCardMode_tweakadv);
-    lv_obj_set_style_text_opa(ui_droCardMode_tweakadv, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    CREATE_ELEMENT_ITEM(tweakadv, Accelerate);
+    CREATE_ELEMENT_ITEM(tweakadv, Swap);
+    CREATE_ELEMENT_ITEM(tweakadv, Thermal);
+    CREATE_ELEMENT_ITEM(tweakadv, Volume);
+    CREATE_ELEMENT_ITEM(tweakadv, Brightness);
+    CREATE_ELEMENT_ITEM(tweakadv, Offset);
+    CREATE_ELEMENT_ITEM(tweakadv, Passcode);
+    CREATE_ELEMENT_ITEM(tweakadv, LED);
+    CREATE_ELEMENT_ITEM(tweakadv, Theme);
+    CREATE_ELEMENT_ITEM(tweakadv, RetroWait);
+    CREATE_ELEMENT_ITEM(tweakadv, State);
+    CREATE_ELEMENT_ITEM(tweakadv, Verbose);
+    CREATE_ELEMENT_ITEM(tweakadv, Rumble);
+    CREATE_ELEMENT_ITEM(tweakadv, UserInit);
+    CREATE_ELEMENT_ITEM(tweakadv, DPADSwap);
+    CREATE_ELEMENT_ITEM(tweakadv, Overdrive);
+    CREATE_ELEMENT_ITEM(tweakadv, Swapfile);
+    CREATE_ELEMENT_ITEM(tweakadv, Zramfile);
+    CREATE_ELEMENT_ITEM(tweakadv, CardMode);
 }
+
+const char *volume_values[] = {
+        "previous", "silent", "soft", "loud"
+};
+
+const char *brightness_values[] = {
+        "previous", "low", "medium", "high"
+};
+
+const char *state_values[] = {
+        "mem", "freeze"
+};
+
+const char *cardmode_values[] = {
+        "deadline", "noop"
+};
+
+const int accelerate_values[] = {
+        32767, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256
+};
+
+const int swap_values[] = {
+        0, 64, 128, 192, 256, 320, 384, 448, 512
+};
+
+const int zram_values[] = {
+        0, 64, 128, 192, 256, 320, 384, 448, 512
+};

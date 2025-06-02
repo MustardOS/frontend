@@ -1,3 +1,4 @@
+#include "../../common/options.h"
 #include "ui_muxkiosk.h"
 
 lv_obj_t *ui_pnlEnable_kiosk;
@@ -129,16 +130,6 @@ lv_obj_t *ui_droPower_kiosk;
 lv_obj_t *ui_droVisual_kiosk;
 
 void init_muxkiosk(lv_obj_t *ui_pnlContent) {
-#define CREATE_ELEMENT_ITEM(module, name) do {                                                       \
-        ui_pnl##name##_##module = lv_obj_create(ui_pnlContent);                                      \
-        ui_lbl##name##_##module = lv_label_create(ui_pnl##name##_##module);                          \
-        lv_label_set_text(ui_lbl##name##_##module, "");                                              \
-        ui_ico##name##_##module = lv_img_create(ui_pnl##name##_##module);                            \
-        ui_dro##name##_##module = lv_dropdown_create(ui_pnl##name##_##module);                       \
-        lv_dropdown_clear_options(ui_dro##name##_##module);                                          \
-        lv_obj_set_style_text_opa(ui_dro##name##_##module, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
-    } while (0)
-
     CREATE_ELEMENT_ITEM(kiosk, Enable);
     CREATE_ELEMENT_ITEM(kiosk, Archive);
     CREATE_ELEMENT_ITEM(kiosk, Task);
@@ -170,6 +161,4 @@ void init_muxkiosk(lv_obj_t *ui_pnlContent) {
     CREATE_ELEMENT_ITEM(kiosk, HDMI);
     CREATE_ELEMENT_ITEM(kiosk, Power);
     CREATE_ELEMENT_ITEM(kiosk, Visual);
-
-#undef CREATE_ELEMENT_ITEM
 }

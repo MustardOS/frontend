@@ -24,6 +24,8 @@ extern Mix_Music *current_bgm;
 extern int current_brightness;
 extern int current_volume;
 
+extern char *disabled_enabled[];
+
 #define SOUND_TOTAL 12
 
 struct ImageSettings {

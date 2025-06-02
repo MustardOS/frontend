@@ -132,15 +132,77 @@
 #define FONT_HEADER_FOLDER "header"
 #define FONT_FOOTER_FOLDER "footer"
 
-#define CFG_INT_FIELD(field, path, def)                         \
-    snprintf(buffer, sizeof(buffer), "%s", path);               \
-    field = (int)({                                             \
-        char *ep;                                               \
-        long val = strtol(read_all_char_from(buffer), &ep, 10); \
-        *ep ? def : val;                                        \
+#define CFG_INT_FIELD(FIELD, PATH, DEFAULT)                       \
+    snprintf(buffer, sizeof(buffer), "%s", PATH);                 \
+    FIELD = (int)({                                               \
+        char *ep;                                                 \
+        long value = strtol(read_all_char_from(buffer), &ep, 10); \
+        *ep ? DEFAULT : value;                                    \
     });
 
-#define CFG_STR_FIELD(field, path, def)                                     \
-    snprintf(buffer, sizeof(buffer), "%s", path);                           \
-    strncpy(field, read_all_char_from(buffer) ?: def, MAX_BUFFER_SIZE - 1); \
-    field[MAX_BUFFER_SIZE - 1] = '\0';
+#define CFG_STR_FIELD(FIELD, PATH, DEFAULT)                                     \
+    snprintf(buffer, sizeof(buffer), "%s", PATH);                               \
+    strncpy(FIELD, read_all_char_from(buffer) ?: DEFAULT, MAX_BUFFER_SIZE - 1); \
+    FIELD[MAX_BUFFER_SIZE - 1] = '\0';
+
+#define CREATE_ELEMENT_ITEM(module, name) do {                                                       \
+        ui_pnl##name##_##module = lv_obj_create(ui_pnlContent);                                      \
+        ui_lbl##name##_##module = lv_label_create(ui_pnl##name##_##module);                          \
+        lv_label_set_text(ui_lbl##name##_##module, "");                                              \
+        ui_ico##name##_##module = lv_img_create(ui_pnl##name##_##module);                            \
+        ui_dro##name##_##module = lv_dropdown_create(ui_pnl##name##_##module);                       \
+        lv_dropdown_clear_options(ui_dro##name##_##module);                                          \
+        lv_obj_set_style_text_opa(ui_dro##name##_##module, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
+    } while (0)
+
+#define INIT_NAV_ITEM(MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)                    \
+    do {                                                                            \
+        apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                            \
+        apply_theme_list_item(&theme, ui_lbl##NAME##_##MODULE, LABEL);              \
+        apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH); \
+        apply_theme_list_drop_down(&theme, ui_dro##NAME##_##MODULE, NULL);          \
+        if ((OPTION) != NULL && (COUNT) > 0)                                        \
+            add_drop_down_options(ui_dro##NAME##_##MODULE, OPTION, COUNT);          \
+        ui_objects[ui_index] = ui_lbl##NAME##_##MODULE;                             \
+        ui_objects_value[ui_index] = ui_dro##NAME##_##MODULE;                       \
+        ui_objects_glyph[ui_index] = ui_ico##NAME##_##MODULE;                       \
+        ui_objects_panel[ui_index] = ui_pnl##NAME##_##MODULE;                       \
+        ui_index++;                                                                 \
+    } while (0)
+
+#define CHECK_AND_SAVE_KSK(MODULE, NAME, FILE, TYPE)                         \
+    do {                                                                     \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);     \
+        if (current != NAME##_original) {                                    \
+            is_modified++;                                                   \
+            write_text_to_file((CONF_KIOSK_PATH FILE), "w", TYPE, current);  \
+        }                                                                    \
+    } while (0)
+
+#define CHECK_AND_SAVE_STD(MODULE, NAME, FILE, TYPE)                         \
+    do {                                                                     \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);     \
+        if (current != NAME##_original) {                                    \
+            is_modified++;                                                   \
+            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, current); \
+        }                                                                    \
+    } while (0)
+
+#define CHECK_AND_SAVE_VAL(MODULE, NAME, FILE, TYPE, VALUES)                         \
+    do {                                                                             \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
+        if (current != NAME##_original) {                                            \
+            is_modified++;                                                           \
+            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, VALUES[current]); \
+        }                                                                            \
+    } while (0)
+
+#define CHECK_AND_SAVE_MAP(MODULE, NAME, FILE, VALUES, COUNT, DEFAULT)            \
+    do {                                                                          \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);          \
+        if (current != NAME##_original) {                                         \
+            int mapped = map_drop_down_to_value(current, VALUES, COUNT, DEFAULT); \
+            is_modified++;                                                        \
+            write_text_to_file((CONF_CONFIG_PATH FILE), "w", INT, mapped);        \
+        }                                                                         \
+    } while (0)

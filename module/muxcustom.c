@@ -302,7 +302,6 @@ static void init_navigation_group() {
             lang.MUXCUSTOM.FONT.LANG,
             lang.MUXCUSTOM.FONT.THEME}, 2);
 
-    char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
     add_drop_down_options(ui_droBackgroundAnimation, disabled_enabled, 2);
     add_drop_down_options(ui_droLaunchSplash, disabled_enabled, 2);
     add_drop_down_options(ui_droBlackFade, disabled_enabled, 2);

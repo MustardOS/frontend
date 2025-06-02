@@ -16,8 +16,6 @@ static int Battery_original, Clock_original, Network_original, Name_original, Da
         MenuCounterFolder_original, MenuCounterFile_original, Hidden_original, OverlayImage_original,
         OverlayTransparency_original;
 
-#define UI_COUNT 15
-
 #define UI_PANEL 5
 static lv_obj_t *ui_mux_panels[UI_PANEL];
 
@@ -100,30 +98,21 @@ static void restore_visual_options() {
 static void save_visual_options() {
     int is_modified = 0;
 
-#define CHECK_AND_SAVE(name, file)                                              \
-        do {                                                                    \
-            int current = lv_dropdown_get_selected(ui_dro##name##_visual);      \
-            if (current != name##_original) {                                   \
-                is_modified++;                                                  \
-                write_text_to_file((CONF_CONFIG_PATH file), "w", INT, current); \
-            }                                                                   \
-        } while (0)
-
-    CHECK_AND_SAVE(Battery, "visual/battery");
-    CHECK_AND_SAVE(Clock, "visual/clock");
-    CHECK_AND_SAVE(Network, "visual/network");
-    CHECK_AND_SAVE(Name, "visual/name");
-    CHECK_AND_SAVE(Dash, "visual/dash");
-    CHECK_AND_SAVE(FriendlyFolder, "visual/friendlyfolder");
-    CHECK_AND_SAVE(TheTitleFormat, "visual/thetitleformat");
-    CHECK_AND_SAVE(TitleIncludeRootDrive, "visual/titleincluderootdrive");
-    CHECK_AND_SAVE(FolderItemCount, "visual/folderitemcount");
-    CHECK_AND_SAVE(DisplayEmptyFolder, "visual/folderempty");
-    CHECK_AND_SAVE(MenuCounterFolder, "visual/counterfolder");
-    CHECK_AND_SAVE(MenuCounterFile, "visual/counterfile");
-    CHECK_AND_SAVE(Hidden, "settings/general/hidden");
-    CHECK_AND_SAVE(OverlayImage, "visual/overlayimage");
-    CHECK_AND_SAVE(OverlayTransparency, "visual/overlaytransparency");
+    CHECK_AND_SAVE_STD(visual, Battery, "visual/battery", INT);
+    CHECK_AND_SAVE_STD(visual, Clock, "visual/clock", INT);
+    CHECK_AND_SAVE_STD(visual, Network, "visual/network", INT);
+    CHECK_AND_SAVE_STD(visual, Name, "visual/name", INT);
+    CHECK_AND_SAVE_STD(visual, Dash, "visual/dash", INT);
+    CHECK_AND_SAVE_STD(visual, FriendlyFolder, "visual/friendlyfolder", INT);
+    CHECK_AND_SAVE_STD(visual, TheTitleFormat, "visual/thetitleformat", INT);
+    CHECK_AND_SAVE_STD(visual, TitleIncludeRootDrive, "visual/titleincluderootdrive", INT);
+    CHECK_AND_SAVE_STD(visual, FolderItemCount, "visual/folderitemcount", INT);
+    CHECK_AND_SAVE_STD(visual, DisplayEmptyFolder, "visual/folderempty", INT);
+    CHECK_AND_SAVE_STD(visual, MenuCounterFolder, "visual/counterfolder", INT);
+    CHECK_AND_SAVE_STD(visual, MenuCounterFile, "visual/counterfile", INT);
+    CHECK_AND_SAVE_STD(visual, Hidden, "settings/general/hidden", INT);
+    CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT);
+    CHECK_AND_SAVE_STD(visual, OverlayTransparency, "visual/overlaytransparency", INT);
 
 #undef CHECK_AND_SAVE
 
@@ -135,17 +124,7 @@ static void save_visual_options() {
 }
 
 static void init_navigation_group() {
-    char *disabled_enabled[] = {
-            lang.GENERIC.DISABLED,
-            lang.GENERIC.ENABLED
-    };
-
-    char *visual_names[] = {
-            lang.MUXVISUAL.NAME.FULL,
-            lang.MUXVISUAL.NAME.REM_SQ,
-            lang.MUXVISUAL.NAME.REM_PA,
-            lang.MUXVISUAL.NAME.REM_SQPA
-    };
+#define UI_COUNT 15
 
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
@@ -154,38 +133,28 @@ static void init_navigation_group() {
 
     int ui_index = 0;
 
-#define INIT_NAV_ITEM(Name, label, glyph, options, count)                         \
-    do {                                                                          \
-        apply_theme_list_panel(ui_pnl##Name##_visual);                            \
-        apply_theme_list_item(&theme, ui_lbl##Name##_visual, label);              \
-        apply_theme_list_glyph(&theme, ui_ico##Name##_visual, mux_module, glyph); \
-        apply_theme_list_drop_down(&theme, ui_dro##Name##_visual, NULL);          \
-        if ((options) != NULL && (count) > 0)                                     \
-            add_drop_down_options(ui_dro##Name##_visual, options, count);         \
-        ui_objects[ui_index] = ui_lbl##Name##_visual;                             \
-        ui_objects_value[ui_index] = ui_dro##Name##_visual;                       \
-        ui_objects_glyph[ui_index] = ui_ico##Name##_visual;                       \
-        ui_objects_panel[ui_index] = ui_pnl##Name##_visual;                       \
-        ui_index++;                                                               \
-    } while (0)
+    char *visual_names[] = {
+            lang.MUXVISUAL.NAME.FULL,
+            lang.MUXVISUAL.NAME.REM_SQ,
+            lang.MUXVISUAL.NAME.REM_PA,
+            lang.MUXVISUAL.NAME.REM_SQPA
+    };
 
-    INIT_NAV_ITEM(Battery, lang.MUXVISUAL.BATTERY, "battery", disabled_enabled, 2);
-    INIT_NAV_ITEM(Clock, lang.MUXVISUAL.CLOCK, "clock", disabled_enabled, 2);
-    INIT_NAV_ITEM(Network, lang.MUXVISUAL.NETWORK, "network", disabled_enabled, 2);
-    INIT_NAV_ITEM(Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
-    INIT_NAV_ITEM(Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
-    INIT_NAV_ITEM(FriendlyFolder, lang.MUXVISUAL.FRIENDLY, "friendlyfolder", disabled_enabled, 2);
-    INIT_NAV_ITEM(TheTitleFormat, lang.MUXVISUAL.REFORMAT, "thetitleformat", disabled_enabled, 2);
-    INIT_NAV_ITEM(TitleIncludeRootDrive, lang.MUXVISUAL.ROOT, "titleincluderootdrive", disabled_enabled, 2);
-    INIT_NAV_ITEM(FolderItemCount, lang.MUXVISUAL.COUNT, "folderitemcount", disabled_enabled, 2);
-    INIT_NAV_ITEM(DisplayEmptyFolder, lang.MUXVISUAL.EMPTY, "folderempty", disabled_enabled, 2);
-    INIT_NAV_ITEM(MenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER, "counterfolder", disabled_enabled, 2);
-    INIT_NAV_ITEM(MenuCounterFile, lang.MUXVISUAL.COUNT_FILE, "counterfile", disabled_enabled, 2);
-    INIT_NAV_ITEM(Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
-    INIT_NAV_ITEM(OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
-    INIT_NAV_ITEM(OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
-
-#undef INIT_NAV_ITEM
+    INIT_NAV_ITEM(visual, Battery, lang.MUXVISUAL.BATTERY, "battery", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, Clock, lang.MUXVISUAL.CLOCK, "clock", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, Network, lang.MUXVISUAL.NETWORK, "network", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
+    INIT_NAV_ITEM(visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLY, "friendlyfolder", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, TheTitleFormat, lang.MUXVISUAL.REFORMAT, "thetitleformat", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, TitleIncludeRootDrive, lang.MUXVISUAL.ROOT, "titleincluderootdrive", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, FolderItemCount, lang.MUXVISUAL.COUNT, "folderitemcount", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, DisplayEmptyFolder, lang.MUXVISUAL.EMPTY, "folderempty", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, MenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER, "counterfolder", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, MenuCounterFile, lang.MUXVISUAL.COUNT_FILE, "counterfile", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
+    INIT_NAV_ITEM(visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
+    INIT_NAV_ITEM(visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
 
     overlay_count = load_overlay_set(ui_droOverlayImage_visual);
 

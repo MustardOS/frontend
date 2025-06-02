@@ -1,3 +1,4 @@
+#include "../../common/options.h"
 #include "ui_muxwebserv.h"
 
 lv_obj_t *ui_pnlSSHD_webserv;
@@ -33,16 +34,6 @@ lv_obj_t *ui_droNTP_webserv;
 lv_obj_t *ui_droTailscaled_webserv;
 
 void init_muxwebserv(lv_obj_t *ui_pnlContent) {
-#define CREATE_ELEMENT_ITEM(module, name) do {                                                       \
-        ui_pnl##name##_##module = lv_obj_create(ui_pnlContent);                                      \
-        ui_lbl##name##_##module = lv_label_create(ui_pnl##name##_##module);                          \
-        lv_label_set_text(ui_lbl##name##_##module, "");                                              \
-        ui_ico##name##_##module = lv_img_create(ui_pnl##name##_##module);                            \
-        ui_dro##name##_##module = lv_dropdown_create(ui_pnl##name##_##module);                       \
-        lv_dropdown_clear_options(ui_dro##name##_##module);                                          \
-        lv_obj_set_style_text_opa(ui_dro##name##_##module, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
-    } while (0)
-
     CREATE_ELEMENT_ITEM(webserv, SSHD);
     CREATE_ELEMENT_ITEM(webserv, SFTPGo);
     CREATE_ELEMENT_ITEM(webserv, TTYD);
@@ -50,6 +41,4 @@ void init_muxwebserv(lv_obj_t *ui_pnlContent) {
     CREATE_ELEMENT_ITEM(webserv, RSLSync);
     CREATE_ELEMENT_ITEM(webserv, NTP);
     CREATE_ELEMENT_ITEM(webserv, Tailscaled);
-
-#undef CREATE_ELEMENT_ITEM
 }

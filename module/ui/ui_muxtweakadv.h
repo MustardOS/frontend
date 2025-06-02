@@ -20,7 +20,7 @@ extern lv_obj_t *ui_pnlRumble_tweakadv;
 extern lv_obj_t *ui_pnlUserInit_tweakadv;
 extern lv_obj_t *ui_pnlDPADSwap_tweakadv;
 extern lv_obj_t *ui_pnlOverdrive_tweakadv;
-extern lv_obj_t *ui_pnlSwap_tweakadvfile;
+extern lv_obj_t *ui_pnlSwapfile_tweakadv;
 extern lv_obj_t *ui_pnlZramfile_tweakadv;
 extern lv_obj_t *ui_pnlCardMode_tweakadv;
 
@@ -40,7 +40,7 @@ extern lv_obj_t *ui_lblRumble_tweakadv;
 extern lv_obj_t *ui_lblUserInit_tweakadv;
 extern lv_obj_t *ui_lblDPADSwap_tweakadv;
 extern lv_obj_t *ui_lblOverdrive_tweakadv;
-extern lv_obj_t *ui_lblSwap_tweakadvfile;
+extern lv_obj_t *ui_lblSwapfile_tweakadv;
 extern lv_obj_t *ui_lblZramfile_tweakadv;
 extern lv_obj_t *ui_lblCardMode_tweakadv;
 
@@ -60,7 +60,7 @@ extern lv_obj_t *ui_icoRumble_tweakadv;
 extern lv_obj_t *ui_icoUserInit_tweakadv;
 extern lv_obj_t *ui_icoDPADSwap_tweakadv;
 extern lv_obj_t *ui_icoOverdrive_tweakadv;
-extern lv_obj_t *ui_icoSwap_tweakadvfile;
+extern lv_obj_t *ui_icoSwapfile_tweakadv;
 extern lv_obj_t *ui_icoZramfile_tweakadv;
 extern lv_obj_t *ui_icoCardMode_tweakadv;
 
@@ -80,6 +80,20 @@ extern lv_obj_t *ui_droRumble_tweakadv;
 extern lv_obj_t *ui_droUserInit_tweakadv;
 extern lv_obj_t *ui_droDPADSwap_tweakadv;
 extern lv_obj_t *ui_droOverdrive_tweakadv;
-extern lv_obj_t *ui_droSwap_tweakadvfile;
+extern lv_obj_t *ui_droSwapfile_tweakadv;
 extern lv_obj_t *ui_droZramfile_tweakadv;
 extern lv_obj_t *ui_droCardMode_tweakadv;
+
+extern const char *volume_values[];
+
+extern const char *brightness_values[];
+
+extern const char *state_values[];
+
+extern const char *cardmode_values[];
+
+extern const int accelerate_values[];
+
+extern const int swap_values[];
+
+extern const int zram_values[];

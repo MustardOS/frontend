@@ -126,8 +126,6 @@ static void init_navigation_group() {
     ui_objects[3] = ui_lblUSBFunction;
     ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
 
-    char *disabled_enabled[] = {lang.GENERIC.DISABLED, lang.GENERIC.ENABLED};
-
     add_connect_item(ui_pnlNetwork, ui_lblNetwork, ui_icoNetwork, ui_droNetwork_connect, lang.MUXCONNECT.WIFI,
                      "network");
     add_connect_item(ui_pnlServices, ui_lblServices, ui_icoServices, ui_droServices, lang.MUXCONNECT.WEB, "service");
