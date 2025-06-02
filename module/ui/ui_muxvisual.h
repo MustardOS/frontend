@@ -52,9 +52,9 @@ extern lv_obj_t *ui_icoHidden_visual;
 extern lv_obj_t *ui_icoOverlayImage_visual;
 extern lv_obj_t *ui_icoOverlayTransparency_visual;
 
-extern lv_obj_t *ui_droBattery_visual_visual;
+extern lv_obj_t *ui_droBattery_visual;
 extern lv_obj_t *ui_droClock_visual;
-extern lv_obj_t *ui_droNetwork_visual_visual;
+extern lv_obj_t *ui_droNetwork_visual;
 extern lv_obj_t *ui_droName_visual;
 extern lv_obj_t *ui_droDash_visual;
 extern lv_obj_t *ui_droFriendlyFolder_visual;
