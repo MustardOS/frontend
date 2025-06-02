@@ -526,11 +526,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSHOT.HELP, "View your current screenshots");
     SPECIFIC_FIELD(lang->MUXSHOT.NONE, "No Screenshots Found");
 
-    // muxsnapshot
-    SPECIFIC_FIELD(lang->MUXSNAPSHOT.TITLE, "SAVE SNAPSHOT");
-    SPECIFIC_FIELD(lang->MUXSNAPSHOT.HELP, "Restore your saved game progress from a previous snapshot");
-    SPECIFIC_FIELD(lang->MUXSNAPSHOT.NONE, "No Save Snapshots Found");
-
     // muxspace
     SPECIFIC_FIELD(lang->MUXSPACE.TITLE, "STORAGE SPACE");
     SPECIFIC_FIELD(lang->MUXSPACE.HELP, "View the current used space of the mounted storage devices");

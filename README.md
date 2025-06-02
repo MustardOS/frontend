@@ -33,6 +33,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxhdmi`: HDMI Configuration
 * `muxhistory`: Content History Menu
 * `muxinfo`: Information Menu
+* `muxkiosk`: Kiosk Mode Management
 * `muxlanguage`: Language Selector
 * `muxlaunch`: Main Menu
 * `muxnetprofile`: Network Profile Manager

@@ -37,7 +37,6 @@
 #include "muxrtc.h"
 #include "muxsearch.h"
 #include "muxshot.h"
-// #include "muxsnapshot.h" - i'll get around to doing this one day!
 #include "muxspace.h"
 #include "muxsplash.h"
 #include "muxstorage.h"
