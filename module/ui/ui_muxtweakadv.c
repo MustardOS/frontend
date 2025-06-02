@@ -11,7 +11,7 @@ TWEAKADV_ELEMENTS
 #undef TWEAKADV
 
 void init_muxtweakadv(lv_obj_t *ui_pnlContent) {
-#define TWEAKADV(NAME) CREATE_ELEMENT_ITEM(tweakadv, NAME);
+#define TWEAKADV(NAME) CREATE_OPTION_ITEM(tweakadv, NAME);
     TWEAKADV_ELEMENTS
 #undef TWEAKADV
 }

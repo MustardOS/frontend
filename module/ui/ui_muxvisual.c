@@ -11,7 +11,7 @@ VISUAL_ELEMENTS
 #undef VISUAL
 
 void init_muxvisual(lv_obj_t *ui_pnlContent) {
-#define VISUAL(NAME) CREATE_ELEMENT_ITEM(visual, NAME);
+#define VISUAL(NAME) CREATE_OPTION_ITEM(visual, NAME);
     VISUAL_ELEMENTS
 #undef VISUAL
 }

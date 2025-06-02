@@ -11,7 +11,7 @@ TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 
 void init_muxtweakgen(lv_obj_t *ui_pnlContent) {
-#define TWEAKGEN(NAME) CREATE_ELEMENT_ITEM(tweakgen, NAME);
+#define TWEAKGEN(NAME) CREATE_OPTION_ITEM(tweakgen, NAME);
     TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 }

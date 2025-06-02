@@ -145,7 +145,7 @@
     strncpy(FIELD, read_all_char_from(buffer) ?: DEFAULT, MAX_BUFFER_SIZE - 1); \
     FIELD[MAX_BUFFER_SIZE - 1] = '\0';
 
-#define INIT_NAV_ITEM(MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)                    \
+#define INIT_OPTION_ITEM(MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)                 \
     do {                                                                            \
         apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                            \
         apply_theme_list_item(&theme, ui_lbl##NAME##_##MODULE, LABEL);              \
@@ -155,6 +155,19 @@
             add_drop_down_options(ui_dro##NAME##_##MODULE, OPTION, COUNT);          \
         ui_objects[ui_index] = ui_lbl##NAME##_##MODULE;                             \
         ui_objects_value[ui_index] = ui_dro##NAME##_##MODULE;                       \
+        ui_objects_glyph[ui_index] = ui_ico##NAME##_##MODULE;                       \
+        ui_objects_panel[ui_index] = ui_pnl##NAME##_##MODULE;                       \
+        ui_index++;                                                                 \
+    } while (0)
+
+#define INIT_VALUE_ITEM(MODULE, NAME, LABEL, GLYPH, VALUE)                          \
+    do {                                                                            \
+        apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                            \
+        apply_theme_list_item(&theme, ui_lbl##NAME##_##MODULE, LABEL);              \
+        apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH); \
+        apply_theme_list_value(&theme, ui_lbl##NAME##Value_##MODULE, VALUE);        \
+        ui_objects[ui_index] = ui_lbl##NAME##_##MODULE;                             \
+        ui_objects_value[ui_index] = ui_lbl##NAME##Value_##MODULE;                  \
         ui_objects_glyph[ui_index] = ui_ico##NAME##_##MODULE;                       \
         ui_objects_panel[ui_index] = ui_pnl##NAME##_##MODULE;                       \
         ui_index++;                                                                 \

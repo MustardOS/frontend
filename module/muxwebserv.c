@@ -98,13 +98,13 @@ static void init_navigation_group() {
 
     int ui_index = 0;
 
-    INIT_NAV_ITEM(webserv, SSHD, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
-    INIT_NAV_ITEM(webserv, SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
-    INIT_NAV_ITEM(webserv, TTYD, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
-    INIT_NAV_ITEM(webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
-    INIT_NAV_ITEM(webserv, RSLSync, lang.MUXWEBSERV.RESILIO, "rslsync", disabled_enabled, 2);
-    INIT_NAV_ITEM(webserv, NTP, lang.MUXWEBSERV.NTP, "ntp", disabled_enabled, 2);
-    INIT_NAV_ITEM(webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled", disabled_enabled, 2);
+    INIT_OPTION_ITEM(webserv, SSHD, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(webserv, SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
+    INIT_OPTION_ITEM(webserv, TTYD, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
+    INIT_OPTION_ITEM(webserv, RSLSync, lang.MUXWEBSERV.RESILIO, "rslsync", disabled_enabled, 2);
+    INIT_OPTION_ITEM(webserv, NTP, lang.MUXWEBSERV.NTP, "ntp", disabled_enabled, 2);
+    INIT_OPTION_ITEM(webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled", disabled_enabled, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

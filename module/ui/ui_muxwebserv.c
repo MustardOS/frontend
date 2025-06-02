@@ -11,7 +11,7 @@ WEBSERV_ELEMENTS
 #undef WEBSERV
 
 void init_muxwebserv(lv_obj_t *ui_pnlContent) {
-#define WEBSERV(NAME) CREATE_ELEMENT_ITEM(webserv, NAME);
+#define WEBSERV(NAME) CREATE_OPTION_ITEM(webserv, NAME);
     WEBSERV_ELEMENTS
 #undef WEBSERV
 }

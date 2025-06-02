@@ -1,121 +1,17 @@
+#include "ui_muxshare.h"
 #include "ui_muxsysinfo.h"
 
-lv_obj_t *ui_pnlVersion_sysinfo;
-lv_obj_t *ui_pnlDevice_sysinfo;
-lv_obj_t *ui_pnlKernel_sysinfo;
-lv_obj_t *ui_pnlUptime_sysinfo;
-lv_obj_t *ui_pnlCPU_sysinfo;
-lv_obj_t *ui_pnlSpeed_sysinfo;
-lv_obj_t *ui_pnlGovernor_sysinfo;
-lv_obj_t *ui_pnlMemory_sysinfo;
-lv_obj_t *ui_pnlTemp_sysinfo;
-lv_obj_t *ui_pnlCapacity_sysinfo;
-lv_obj_t *ui_pnlVoltage_sysinfo;
+#define SYSINFO(NAME)                      \
+    lv_obj_t *ui_pnl##NAME##_sysinfo;      \
+    lv_obj_t *ui_lbl##NAME##_sysinfo;      \
+    lv_obj_t *ui_ico##NAME##_sysinfo;      \
+    lv_obj_t *ui_lbl##NAME##Value_sysinfo;
 
-lv_obj_t *ui_lblVersion_sysinfo;
-lv_obj_t *ui_lblDevice_sysinfo;
-lv_obj_t *ui_lblKernel_sysinfo;
-lv_obj_t *ui_lblUptime_sysinfo;
-lv_obj_t *ui_lblCPU_sysinfo;
-lv_obj_t *ui_lblSpeed_sysinfo;
-lv_obj_t *ui_lblGovernor_sysinfo;
-lv_obj_t *ui_lblMemory_sysinfo;
-lv_obj_t *ui_lblTemp_sysinfo;
-lv_obj_t *ui_lblCapacity_sysinfo;
-lv_obj_t *ui_lblVoltage_sysinfo;
-
-lv_obj_t *ui_icoVersion_sysinfo;
-lv_obj_t *ui_icoDevice_sysinfo;
-lv_obj_t *ui_icoKernel_sysinfo;
-lv_obj_t *ui_icoUptime_sysinfo;
-lv_obj_t *ui_icoCPU_sysinfo;
-lv_obj_t *ui_icoSpeed_sysinfo;
-lv_obj_t *ui_icoGovernor_sysinfo;
-lv_obj_t *ui_icoMemory_sysinfo;
-lv_obj_t *ui_icoTemp_sysinfo;
-lv_obj_t *ui_icoCapacity_sysinfo;
-lv_obj_t *ui_icoVoltage_sysinfo;
-
-lv_obj_t *ui_lblVersionValue_sysinfo;
-lv_obj_t *ui_lblDeviceValue_sysinfo;
-lv_obj_t *ui_lblKernelValue_sysinfo;
-lv_obj_t *ui_lblUptimeValue_sysinfo;
-lv_obj_t *ui_lblCPUValue_sysinfo;
-lv_obj_t *ui_lblSpeedValue_sysinfo;
-lv_obj_t *ui_lblGovernorValue_sysinfo;
-lv_obj_t *ui_lblMemoryValue_sysinfo;
-lv_obj_t *ui_lblTempValue_sysinfo;
-lv_obj_t *ui_lblCapacityValue_sysinfo;
-lv_obj_t *ui_lblVoltageValue_sysinfo;
+SYSINFO_ELEMENTS
+#undef SYSINFO
 
 void init_muxsysinfo(lv_obj_t *ui_pnlContent) {
-    ui_pnlVersion_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlDevice_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlKernel_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlUptime_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlCPU_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlSpeed_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlGovernor_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlMemory_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlTemp_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlCapacity_sysinfo = lv_obj_create(ui_pnlContent);
-    ui_pnlVoltage_sysinfo = lv_obj_create(ui_pnlContent);
-
-    ui_lblVersion_sysinfo = lv_label_create(ui_pnlVersion_sysinfo);
-    lv_label_set_text(ui_lblVersion_sysinfo, "");
-    ui_lblDevice_sysinfo = lv_label_create(ui_pnlDevice_sysinfo);
-    lv_label_set_text(ui_lblDevice_sysinfo, "");
-    ui_lblKernel_sysinfo = lv_label_create(ui_pnlKernel_sysinfo);
-    lv_label_set_text(ui_lblKernel_sysinfo, "");
-    ui_lblUptime_sysinfo = lv_label_create(ui_pnlUptime_sysinfo);
-    lv_label_set_text(ui_lblUptime_sysinfo, "");
-    ui_lblCPU_sysinfo = lv_label_create(ui_pnlCPU_sysinfo);
-    lv_label_set_text(ui_lblCPU_sysinfo, "");
-    ui_lblSpeed_sysinfo = lv_label_create(ui_pnlSpeed_sysinfo);
-    lv_label_set_text(ui_lblSpeed_sysinfo, "");
-    ui_lblGovernor_sysinfo = lv_label_create(ui_pnlGovernor_sysinfo);
-    lv_label_set_text(ui_lblGovernor_sysinfo, "");
-    ui_lblMemory_sysinfo = lv_label_create(ui_pnlMemory_sysinfo);
-    lv_label_set_text(ui_lblMemory_sysinfo, "");
-    ui_lblTemp_sysinfo = lv_label_create(ui_pnlTemp_sysinfo);
-    lv_label_set_text(ui_lblTemp_sysinfo, "");
-    ui_lblCapacity_sysinfo = lv_label_create(ui_pnlCapacity_sysinfo);
-    lv_label_set_text(ui_lblCapacity_sysinfo, "");
-    ui_lblVoltage_sysinfo = lv_label_create(ui_pnlVoltage_sysinfo);
-    lv_label_set_text(ui_lblVoltage_sysinfo, "");
-
-    ui_icoVersion_sysinfo = lv_img_create(ui_pnlVersion_sysinfo);
-    ui_icoDevice_sysinfo = lv_img_create(ui_pnlDevice_sysinfo);
-    ui_icoKernel_sysinfo = lv_img_create(ui_pnlKernel_sysinfo);
-    ui_icoUptime_sysinfo = lv_img_create(ui_pnlUptime_sysinfo);
-    ui_icoCPU_sysinfo = lv_img_create(ui_pnlCPU_sysinfo);
-    ui_icoSpeed_sysinfo = lv_img_create(ui_pnlSpeed_sysinfo);
-    ui_icoGovernor_sysinfo = lv_img_create(ui_pnlGovernor_sysinfo);
-    ui_icoMemory_sysinfo = lv_img_create(ui_pnlMemory_sysinfo);
-    ui_icoTemp_sysinfo = lv_img_create(ui_pnlTemp_sysinfo);
-    ui_icoCapacity_sysinfo = lv_img_create(ui_pnlCapacity_sysinfo);
-    ui_icoVoltage_sysinfo = lv_img_create(ui_pnlVoltage_sysinfo);
-
-    ui_lblVersionValue_sysinfo = lv_label_create(ui_pnlVersion_sysinfo);
-    lv_label_set_text(ui_lblVersionValue_sysinfo, "");
-    ui_lblDeviceValue_sysinfo = lv_label_create(ui_pnlDevice_sysinfo);
-    lv_label_set_text(ui_lblDeviceValue_sysinfo, "");
-    ui_lblKernelValue_sysinfo = lv_label_create(ui_pnlKernel_sysinfo);
-    lv_label_set_text(ui_lblKernelValue_sysinfo, "");
-    ui_lblUptimeValue_sysinfo = lv_label_create(ui_pnlUptime_sysinfo);
-    lv_label_set_text(ui_lblUptimeValue_sysinfo, "");
-    ui_lblCPUValue_sysinfo = lv_label_create(ui_pnlCPU_sysinfo);
-    lv_label_set_text(ui_lblCPUValue_sysinfo, "");
-    ui_lblSpeedValue_sysinfo = lv_label_create(ui_pnlSpeed_sysinfo);
-    lv_label_set_text(ui_lblSpeedValue_sysinfo, "");
-    ui_lblGovernorValue_sysinfo = lv_label_create(ui_pnlGovernor_sysinfo);
-    lv_label_set_text(ui_lblGovernorValue_sysinfo, "");
-    ui_lblMemoryValue_sysinfo = lv_label_create(ui_pnlMemory_sysinfo);
-    lv_label_set_text(ui_lblMemoryValue_sysinfo, "");
-    ui_lblTempValue_sysinfo = lv_label_create(ui_pnlTemp_sysinfo);
-    lv_label_set_text(ui_lblTempValue_sysinfo, "");
-    ui_lblCapacityValue_sysinfo = lv_label_create(ui_pnlCapacity_sysinfo);
-    lv_label_set_text(ui_lblCapacityValue_sysinfo, "");
-    ui_lblVoltageValue_sysinfo = lv_label_create(ui_pnlVoltage_sysinfo);
-    lv_label_set_text(ui_lblVoltageValue_sysinfo, "");
+#define SYSINFO(NAME) CREATE_VALUE_ITEM(sysinfo, NAME);
+    SYSINFO_ELEMENTS
+#undef SYSINFO
 }

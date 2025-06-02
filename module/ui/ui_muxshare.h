@@ -1,6 +1,6 @@
 #pragma once
 
-#define CREATE_ELEMENT_ITEM(MODULE, NAME) do {                                                       \
+#define CREATE_OPTION_ITEM(MODULE, NAME) do {                                                        \
         ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                      \
         ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                          \
         lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                              \
@@ -8,6 +8,15 @@
         ui_dro##NAME##_##MODULE = lv_dropdown_create(ui_pnl##NAME##_##MODULE);                       \
         lv_dropdown_clear_options(ui_dro##NAME##_##MODULE);                                          \
         lv_obj_set_style_text_opa(ui_dro##NAME##_##MODULE, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
+    } while (0)
+
+#define CREATE_VALUE_ITEM(MODULE, NAME) do {                                     \
+        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                  \
+        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);      \
+        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                          \
+        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);        \
+        ui_lbl##NAME##Value_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE); \
+        lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                     \
     } while (0)
 
 #define KIOSK_ELEMENTS \
@@ -43,6 +52,19 @@
     KIOSK(Power)       \
     KIOSK(Visual)
 
+#define SYSINFO_ELEMENTS \
+    SYSINFO(Version)     \
+    SYSINFO(Device)      \
+    SYSINFO(Kernel)      \
+    SYSINFO(Uptime)      \
+    SYSINFO(CPU)         \
+    SYSINFO(Speed)       \
+    SYSINFO(Governor)    \
+    SYSINFO(Memory)      \
+    SYSINFO(Temp)        \
+    SYSINFO(Capacity)    \
+    SYSINFO(Voltage)
+
 #define TWEAKGEN_ELEMENTS \
     TWEAKGEN(RTC)         \
     TWEAKGEN(HDMI)        \
@@ -50,7 +72,7 @@
     TWEAKGEN(Brightness)  \
     TWEAKGEN(Volume)      \
     TWEAKGEN(Colour)      \
-    TWEAKGEN(Startup)     \
+    TWEAKGEN(Startup)
 
 #define TWEAKADV_ELEMENTS \
     TWEAKADV(Accelerate)  \
@@ -71,7 +93,7 @@
     TWEAKADV(Overdrive)   \
     TWEAKADV(Swapfile)    \
     TWEAKADV(Zramfile)    \
-    TWEAKADV(CardMode)    \
+    TWEAKADV(CardMode)
 
 #define VISUAL_ELEMENTS           \
     VISUAL(Battery)               \

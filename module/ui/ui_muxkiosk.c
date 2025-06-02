@@ -11,7 +11,7 @@ KIOSK_ELEMENTS
 #undef KIOSK
 
 void init_muxkiosk(lv_obj_t *ui_pnlContent) {
-#define KIOSK(NAME) CREATE_ELEMENT_ITEM(kiosk, NAME);
+#define KIOSK(NAME) CREATE_OPTION_ITEM(kiosk, NAME);
     KIOSK_ELEMENTS
 #undef KIOSK
 }
