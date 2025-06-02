@@ -145,16 +145,6 @@
     strncpy(FIELD, read_all_char_from(buffer) ?: DEFAULT, MAX_BUFFER_SIZE - 1); \
     FIELD[MAX_BUFFER_SIZE - 1] = '\0';
 
-#define CREATE_ELEMENT_ITEM(module, name) do {                                                       \
-        ui_pnl##name##_##module = lv_obj_create(ui_pnlContent);                                      \
-        ui_lbl##name##_##module = lv_label_create(ui_pnl##name##_##module);                          \
-        lv_label_set_text(ui_lbl##name##_##module, "");                                              \
-        ui_ico##name##_##module = lv_img_create(ui_pnl##name##_##module);                            \
-        ui_dro##name##_##module = lv_dropdown_create(ui_pnl##name##_##module);                       \
-        lv_dropdown_clear_options(ui_dro##name##_##module);                                          \
-        lv_obj_set_style_text_opa(ui_dro##name##_##module, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
-    } while (0)
-
 #define INIT_NAV_ITEM(MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)                    \
     do {                                                                            \
         apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                            \
