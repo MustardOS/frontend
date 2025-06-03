@@ -3,10 +3,11 @@
 
 #define UI_COUNT 6
 
-static int resolution_original, space_original,
-        depth_original, range_original, scan_original, audio_original;
+#define HDMI(NAME, UDATA) static int NAME##_original;
+HDMI_ELEMENTS
+#undef HDMI
 
-static lv_obj_t *ui_objects[UI_COUNT];
+int hdmi_index[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
@@ -23,17 +24,13 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_dropdown_settings() {
-    resolution_original = lv_dropdown_get_selected(ui_droResolution_hdmi);
-    space_original = lv_dropdown_get_selected(ui_droSpace_hdmi);
-    depth_original = lv_dropdown_get_selected(ui_droDepth_hdmi);
-    range_original = lv_dropdown_get_selected(ui_droRange_hdmi);
-    scan_original = lv_dropdown_get_selected(ui_droScan_hdmi);
-    audio_original = lv_dropdown_get_selected(ui_droAudio_hdmi);
+#define HDMI(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_hdmi);
+    HDMI_ELEMENTS
+#undef HDMI
 }
 
 static void restore_hdmi_options() {
-    map_drop_down_to_index(ui_droResolution_hdmi, config.SETTINGS.HDMI.RESOLUTION,
-                           (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 11, 0);
+    map_drop_down_to_index(ui_droResolution_hdmi, config.SETTINGS.HDMI.RESOLUTION, hdmi_index, 11, 0);
     lv_dropdown_set_selected(ui_droSpace_hdmi, config.SETTINGS.HDMI.SPACE);
     lv_dropdown_set_selected(ui_droDepth_hdmi, config.SETTINGS.HDMI.DEPTH);
     lv_dropdown_set_selected(ui_droRange_hdmi, config.SETTINGS.HDMI.RANGE);
@@ -42,123 +39,29 @@ static void restore_hdmi_options() {
 }
 
 static void save_hdmi_options() {
-    int idx_resolution = map_drop_down_to_value(lv_dropdown_get_selected(ui_droResolution_hdmi),
-                                                (int[]) {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 12, 0);
-
-    int idx_space = lv_dropdown_get_selected(ui_droSpace_hdmi);
-    int idx_depth = lv_dropdown_get_selected(ui_droDepth_hdmi);
-    int idx_range = lv_dropdown_get_selected(ui_droRange_hdmi);
-    int idx_scan = lv_dropdown_get_selected(ui_droScan_hdmi);
-    int idx_audio = lv_dropdown_get_selected(ui_droAudio_hdmi);
-
     int is_modified = 0;
 
-    if (lv_dropdown_get_selected(ui_droResolution_hdmi) != resolution_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/hdmi/resolution"), "w", INT, idx_resolution);
-    }
-
-    if (lv_dropdown_get_selected(ui_droSpace_hdmi) != space_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/hdmi/space"), "w", INT, idx_space);
-    }
-
-    if (lv_dropdown_get_selected(ui_droDepth_hdmi) != depth_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/hdmi/depth"), "w", INT, idx_depth);
-    }
-
-    if (lv_dropdown_get_selected(ui_droRange_hdmi) != range_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/hdmi/range"), "w", INT, idx_range);
-    }
-
-    if (lv_dropdown_get_selected(ui_droScan_hdmi) != scan_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/hdmi/scan"), "w", INT, idx_scan);
-    }
-
-    if (lv_dropdown_get_selected(ui_droAudio_hdmi) != audio_original) {
-        is_modified++;
-        write_text_to_file((CONF_CONFIG_PATH "settings/hdmi/audio"), "w", INT, idx_audio);
-    }
+    CHECK_AND_SAVE_MAP(hdmi, Resolution, "settings/hdmi/resolution", hdmi_index, 11, 0);
+    CHECK_AND_SAVE_STD(hdmi, Space, "settings/hdmi/space", INT);
+    CHECK_AND_SAVE_STD(hdmi, Depth, "settings/hdmi/depth", INT);
+    CHECK_AND_SAVE_STD(hdmi, Range, "settings/hdmi/range", INT);
+    CHECK_AND_SAVE_STD(hdmi, Scan, "settings/hdmi/scan", INT);
+    CHECK_AND_SAVE_STD(hdmi, Audio, "settings/hdmi/audio", INT);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
         refresh_screen(ui_screen);
+        refresh_config = 1;
     }
-
-    refresh_config = 1;
 }
 
 static void init_navigation_group() {
-    lv_obj_t *ui_objects_panel[] = {
-            ui_pnlResolution_hdmi,
-            ui_pnlSpace_hdmi,
-            ui_pnlDepth_hdmi,
-            ui_pnlRange_hdmi,
-            ui_pnlScan_hdmi,
-            ui_pnlAudio_hdmi
-    };
+    static lv_obj_t *ui_objects[UI_COUNT];
+    static lv_obj_t *ui_objects_value[UI_COUNT];
+    static lv_obj_t *ui_objects_glyph[UI_COUNT];
+    static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    ui_objects[0] = ui_lblResolution_hdmi;
-    ui_objects[1] = ui_lblSpace_hdmi;
-    ui_objects[2] = ui_lblDepth_hdmi;
-    ui_objects[3] = ui_lblRange_hdmi;
-    ui_objects[4] = ui_lblScan_hdmi;
-    ui_objects[5] = ui_lblAudio_hdmi;
-
-    lv_obj_t *ui_objects_value[] = {
-            ui_droResolution_hdmi,
-            ui_droSpace_hdmi,
-            ui_droDepth_hdmi,
-            ui_droRange_hdmi,
-            ui_droScan_hdmi,
-            ui_droAudio_hdmi
-    };
-
-    lv_obj_t *ui_objects_glyph[] = {
-            ui_icoResolution_hdmi,
-            ui_icoSpace_hdmi,
-            ui_icoDepth_hdmi,
-            ui_icoRange_hdmi,
-            ui_icoScan_hdmi,
-            ui_icoAudio_hdmi
-    };
-
-    apply_theme_list_panel(ui_pnlResolution_hdmi);
-    apply_theme_list_panel(ui_pnlSpace_hdmi);
-    apply_theme_list_panel(ui_pnlDepth_hdmi);
-    apply_theme_list_panel(ui_pnlRange_hdmi);
-    apply_theme_list_panel(ui_pnlScan_hdmi);
-    apply_theme_list_panel(ui_pnlAudio_hdmi);
-
-    apply_theme_list_item(&theme, ui_lblResolution_hdmi, lang.MUXHDMI.RESOLUTION);
-    apply_theme_list_item(&theme, ui_lblSpace_hdmi, lang.MUXHDMI.COLOUR.SPACE);
-    apply_theme_list_item(&theme, ui_lblDepth_hdmi, lang.MUXHDMI.COLOUR.DEPTH);
-    apply_theme_list_item(&theme, ui_lblRange_hdmi, lang.MUXHDMI.COLOUR.RANGE.TITLE);
-    apply_theme_list_item(&theme, ui_lblScan_hdmi, lang.MUXHDMI.SCAN_SCALE.TITLE);
-    apply_theme_list_item(&theme, ui_lblAudio_hdmi, lang.MUXHDMI.AUDIO_OUTPUT.TITLE);
-
-    apply_theme_list_glyph(&theme, ui_icoResolution_hdmi, mux_module, "resolution");
-    apply_theme_list_glyph(&theme, ui_icoSpace_hdmi, mux_module, "space");
-    apply_theme_list_glyph(&theme, ui_icoDepth_hdmi, mux_module, "depth");
-    apply_theme_list_glyph(&theme, ui_icoRange_hdmi, mux_module, "range");
-    apply_theme_list_glyph(&theme, ui_icoScan_hdmi, mux_module, "scan");
-    apply_theme_list_glyph(&theme, ui_icoAudio_hdmi, mux_module, "audio");
-
-    apply_theme_list_drop_down(&theme, ui_droResolution_hdmi, NULL);
-    apply_theme_list_drop_down(&theme, ui_droSpace_hdmi, NULL);
-
-    char *depth_string = generate_number_string(8, 16, 2, NULL, NULL, NULL, 0);
-    apply_theme_list_drop_down(&theme, ui_droDepth_hdmi, depth_string);
-    free(depth_string);
-
-    apply_theme_list_drop_down(&theme, ui_droRange_hdmi, NULL);
-    apply_theme_list_drop_down(&theme, ui_droScan_hdmi, NULL);
-    apply_theme_list_drop_down(&theme, ui_droAudio_hdmi, NULL);
-
-    add_drop_down_options(ui_droResolution_hdmi, (char *[]) {
+    char *hdmi_resolution[] = {
             "480i",
             "576i",
             "480p",
@@ -169,26 +72,47 @@ static void init_navigation_group() {
             "1080i + 60hz",
             "1080p + 24hz",
             "1080p + 50hz",
-            "1080p + 60hz"}, 11);
+            "1080p + 60hz"
+    };
 
-    add_drop_down_options(ui_droSpace_hdmi, (char *[]) {
+    char *hdmi_space[] = {
             "RGB",
             "YUV444",
             "YUV422",
-            "YUV420"}, 4);
-    add_drop_down_options(ui_droRange_hdmi, (char *[]) {
-            lang.MUXHDMI.COLOUR.RANGE.LIMITED, lang.MUXHDMI.COLOUR.RANGE.FULL}, 2);
-    add_drop_down_options(ui_droScan_hdmi, (char *[]) {
-            lang.MUXHDMI.SCAN_SCALE.OVER, lang.MUXHDMI.SCAN_SCALE.UNDER}, 2);
-    add_drop_down_options(ui_droAudio_hdmi, (char *[]) {
-            lang.MUXHDMI.AUDIO_OUTPUT.EXTERNAL, lang.MUXHDMI.AUDIO_OUTPUT.INTERNAL}, 2);
+            "YUV420"
+    };
+
+    char *hdmi_range[] = {
+            lang.MUXHDMI.COLOUR.RANGE.LIMITED,
+            lang.MUXHDMI.COLOUR.RANGE.FULL
+    };
+
+    char *hdmi_scan[] = {
+            lang.MUXHDMI.SCAN_SCALE.OVER,
+            lang.MUXHDMI.SCAN_SCALE.UNDER
+    };
+
+    char *hdmi_audio[] = {
+            lang.MUXHDMI.AUDIO_OUTPUT.EXTERNAL,
+            lang.MUXHDMI.AUDIO_OUTPUT.INTERNAL
+    };
+
+    INIT_OPTION_ITEM(-1, hdmi, Resolution, lang.MUXHDMI.RESOLUTION, "resolution", hdmi_resolution, 11);
+    INIT_OPTION_ITEM(-1, hdmi, Space, lang.MUXHDMI.COLOUR.SPACE, "space", hdmi_space, 4);
+    INIT_OPTION_ITEM(-1, hdmi, Depth, lang.MUXHDMI.COLOUR.DEPTH, "depth", NULL, 0);
+    INIT_OPTION_ITEM(-1, hdmi, Range, lang.MUXHDMI.COLOUR.RANGE.TITLE, "range", hdmi_range, 2);
+    INIT_OPTION_ITEM(-1, hdmi, Scan, lang.MUXHDMI.SCAN_SCALE.TITLE, "scan", hdmi_scan, 2);
+    INIT_OPTION_ITEM(-1, hdmi, Audio, lang.MUXHDMI.AUDIO_OUTPUT.TITLE, "audio", hdmi_audio, 2);
+
+    char *depth_string = generate_number_string(8, 16, 2, NULL, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droDepth_hdmi, depth_string);
+    free(depth_string);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
@@ -306,12 +230,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblResolution_hdmi, "resolution");
-    lv_obj_set_user_data(ui_lblSpace_hdmi, "space");
-    lv_obj_set_user_data(ui_lblDepth_hdmi, "depth");
-    lv_obj_set_user_data(ui_lblRange_hdmi, "range");
-    lv_obj_set_user_data(ui_lblScan_hdmi, "scan");
-    lv_obj_set_user_data(ui_lblAudio_hdmi, "audio");
+#define HDMI(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_hdmi, UDATA);
+    HDMI_ELEMENTS
+#undef HDMI
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -357,8 +278,6 @@ int muxhdmi_main() {
 
     restore_hdmi_options();
     init_dropdown_settings();
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 

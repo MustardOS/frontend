@@ -68,6 +68,14 @@
     INFO(NetInfo,    "netinfo")    \
     INFO(Credit,     "credit")
 
+#define HDMI_ELEMENTS              \
+    HDMI(Resolution, "resolution") \
+    HDMI(Space,      "space")      \
+    HDMI(Depth,      "depth")      \
+    HDMI(Range,      "range")      \
+    HDMI(Scan,       "scan")       \
+    HDMI(Audio,      "audio")
+
 #define KIOSK_ELEMENTS              \
     KIOSK(Enable,     "enable")     \
     KIOSK(Archive,    "archive")    \
