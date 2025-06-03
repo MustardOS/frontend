@@ -10,7 +10,7 @@ struct storage {
 
 struct storage storage_path[UI_COUNT];
 
-void list_nav_move(int steps, int direction);
+static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
@@ -163,7 +163,7 @@ static void init_navigation_group() {
     }
 }
 
-void list_nav_move(int steps, int direction) {
+static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
