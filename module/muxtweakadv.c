@@ -31,20 +31,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblCardMode_tweakadv,   lang.MUXTWEAKADV.HELP.TUNING},
     };
 
-    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-
-    for (int i = 0; i < num_messages; i++) {
-        if (element_focused == help_messages[i].element) {
-            message = help_messages[i].message;
-            break;
-        }
-    }
-
-    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
-
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), message);
+    gen_help(element_focused, help_messages, num_messages);
 }
 
 static void init_dropdown_settings() {

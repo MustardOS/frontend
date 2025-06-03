@@ -8,6 +8,11 @@ struct mux_device;
 struct mux_lang;
 struct footer_glyph;
 
+struct help_msg {
+    lv_obj_t *element;
+    char *message;
+};
+
 void apply_gradient_to_ui_screen(lv_obj_t *ui_screen, struct theme_config *theme, struct mux_device *device);
 
 void init_ui_common_screen(struct theme_config *theme, struct mux_device *device,
@@ -36,6 +41,8 @@ int load_header_glyph(const char *theme_base, const char *mux_dimension, const c
 int generate_image_embed(const char *base_path, const char *dimension, const char *glyph_folder, const char *glyph_name,
                          char *image_path, size_t path_size, char *image_embed, size_t embed_size);
 
+void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name);
+
 void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *theme);
 
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme);
@@ -61,7 +68,7 @@ void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *
 
 void scroll_help_content(int direction, bool page_down);
 
-void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name);
+void gen_help(lv_obj_t *element_focused, struct help_msg *help_messages, int num_messages);
 
 extern lv_obj_t *ui_screen_container;
 extern lv_obj_t *ui_screen_temp;

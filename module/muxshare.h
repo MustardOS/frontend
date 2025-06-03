@@ -43,11 +43,6 @@
 #include "../font/notosans_big_hd.h"
 #include "../lookup/lookup.h"
 
-struct help_msg {
-    lv_obj_t *element;
-    char *message;
-};
-
 extern lv_obj_t *ui_mux_minimal_panels[2];
 extern lv_obj_t *ui_mux_standard_panels[5];
 extern lv_obj_t *ui_mux_extra_panels[7];

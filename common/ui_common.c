@@ -1482,3 +1482,18 @@ void scroll_help_content(int direction, bool page_down) {
         lv_obj_scroll_by(ui_pnlHelpContent, 0, total_line_height * direction, LV_ANIM_ON);
     }
 }
+
+void gen_help(lv_obj_t *element_focused, struct help_msg *help_messages, int num_messages) {
+    char *message = lang.GENERIC.NO_HELP;
+
+    for (int i = 0; i < num_messages; i++) {
+        if (element_focused == help_messages[i].element) {
+            message = help_messages[i].message;
+            break;
+        }
+    }
+
+    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
+
+    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(lv_label_get_text(element_focused)), message);
+}
