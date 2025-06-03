@@ -675,8 +675,6 @@ int muxnetinfo_main() {
     init_fonts();
     init_navigation_group();
 
-    update_network_info();
-
     init_osk(ui_pnlEntry_netinfo, ui_txtEntry_netinfo, false);
 
     init_timer(ui_refresh_task, update_network_info);

@@ -485,8 +485,6 @@ int muxsysinfo_main() {
     init_fonts();
     init_navigation_group();
 
-    update_system_info();
-
     init_timer(ui_refresh_task, update_system_info);
 
     mux_input_options input_opts = {
