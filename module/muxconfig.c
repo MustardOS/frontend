@@ -2,67 +2,53 @@
 #include "ui/ui_muxconfig.h"
 
 #define UI_COUNT 7
-static lv_obj_t *ui_objects[UI_COUNT];
+
+static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblTweakGeneral, lang.MUXCONFIG.HELP.GENERAL},
-            {ui_lblConnect,      lang.MUXCONFIG.HELP.CONNECTIVITY},
-            {ui_lblCustom,       lang.MUXCONFIG.HELP.CUSTOM},
-            {ui_lblInterface,    lang.MUXCONFIG.HELP.VISUAL},
-            {ui_lblLanguage,     lang.MUXCONFIG.HELP.LANGUAGE},
-            {ui_lblPower,        lang.MUXCONFIG.HELP.POWER},
-            {ui_lblStorage,      lang.MUXCONFIG.HELP.STORAGE},
+            {ui_lblGeneral_config,   lang.MUXCONFIG.HELP.GENERAL},
+            {ui_lblConnect_config,   lang.MUXCONFIG.HELP.CONNECTIVITY},
+            {ui_lblCustom_config,    lang.MUXCONFIG.HELP.CUSTOM},
+            {ui_lblInterface_config, lang.MUXCONFIG.HELP.VISUAL},
+            {ui_lblLanguage_config,  lang.MUXCONFIG.HELP.LANGUAGE},
+            {ui_lblPower_config,     lang.MUXCONFIG.HELP.POWER},
+            {ui_lblStorage_config,   lang.MUXCONFIG.HELP.STORAGE},
     };
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
     gen_help(element_focused, help_messages, num_messages);
 }
 
-static void add_config_item(lv_obj_t *ui_pnl, lv_obj_t *ui_lbl, lv_obj_t *ui_ico, char *item_text, char *glyph_name) {
-    apply_theme_list_panel(ui_pnl);
-    apply_theme_list_item(&theme, ui_lbl, item_text);
-    apply_theme_list_glyph(&theme, ui_ico, mux_module, glyph_name);
-
-    lv_obj_set_user_data(ui_pnl, strdup(item_text));
-    lv_group_add_obj(ui_group, ui_lbl);
-    lv_group_add_obj(ui_group_glyph, ui_ico);
-    lv_group_add_obj(ui_group_panel, ui_pnl);
-
-    apply_size_to_content(&theme, ui_pnlContent, ui_lbl, ui_ico, item_text);
-    apply_text_long_dot(&theme, ui_pnlContent, ui_lbl, item_text);
-}
-
 static void init_navigation_group() {
+    static lv_obj_t *ui_objects[UI_COUNT];
+    static lv_obj_t *ui_objects_glyph[UI_COUNT];
+    static lv_obj_t *ui_objects_panel[UI_COUNT];
+
+    INIT_STATIC_ITEM(-1, config, General, lang.MUXCONFIG.GENERAL, "general");
+    INIT_STATIC_ITEM(-1, config, Connect, lang.MUXCONFIG.CONNECTIVITY, "connect");
+    INIT_STATIC_ITEM(-1, config, Custom, lang.MUXCONFIG.CUSTOM, "custom");
+    INIT_STATIC_ITEM(-1, config, Interface, lang.MUXCONFIG.VISUAL, "interface");
+    INIT_STATIC_ITEM(-1, config, Language, lang.MUXCONFIG.LANGUAGE, "language");
+    INIT_STATIC_ITEM(-1, config, Power, lang.MUXCONFIG.POWER, "power");
+    INIT_STATIC_ITEM(-1, config, Storage, lang.MUXCONFIG.STORAGE, "storage");
+
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_objects[0] = ui_lblTweakGeneral;
-    ui_objects[1] = ui_lblConnect;
-    ui_objects[2] = ui_lblCustom;
-    ui_objects[3] = ui_lblInterface;
-    ui_objects[4] = ui_lblLanguage;
-    ui_objects[5] = ui_lblPower;
-    ui_objects[6] = ui_lblStorage;
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
+    for (unsigned int i = 0; i < ui_count; i++) {
+        lv_group_add_obj(ui_group, ui_objects[i]);
+        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
+        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
+    }
 
-    add_config_item(ui_pnlTweakGeneral, ui_lblTweakGeneral, ui_icoTweakGeneral, lang.MUXCONFIG.GENERAL, "general");
-    add_config_item(ui_pnlConnect, ui_lblConnect, ui_icoConnect, lang.MUXCONFIG.CONNECTIVITY, "connect");
-    add_config_item(ui_pnlCustom, ui_lblCustom, ui_icoCustom, lang.MUXCONFIG.CUSTOM, "custom");
-    add_config_item(ui_pnlInterface, ui_lblInterface, ui_icoInterface, lang.MUXCONFIG.VISUAL, "interface");
-    add_config_item(ui_pnlLanguage, ui_lblLanguage, ui_icoLanguage, lang.MUXCONFIG.LANGUAGE, "language");
-    add_config_item(ui_pnlPower, ui_lblPower, ui_icoPower, lang.MUXCONFIG.POWER, "power");
-    add_config_item(ui_pnlStorage, ui_lblStorage, ui_icoStorage, lang.MUXCONFIG.STORAGE, "storage");
-
-    char SD2[MAX_BUFFER_SIZE];
-    snprintf(SD2, sizeof(SD2), "%s/ROMS/", device.STORAGE.SDCARD.MOUNT);
-    if (!directory_exist(SD2)) {
-        lv_obj_add_flag(ui_pnlStorage, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblStorage, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoStorage, LV_OBJ_FLAG_HIDDEN);
+    if (!is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) {
+        lv_obj_add_flag(ui_pnlStorage_config, LV_OBJ_FLAG_HIDDEN);
         ui_count -= 1;
     }
+
+    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -197,13 +183,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblTweakGeneral, "general");
-    lv_obj_set_user_data(ui_lblConnect, "connect");
-    lv_obj_set_user_data(ui_lblCustom, "custom");
-    lv_obj_set_user_data(ui_lblInterface, "interface");
-    lv_obj_set_user_data(ui_lblLanguage, "language");
-    lv_obj_set_user_data(ui_lblPower, "power");
-    lv_obj_set_user_data(ui_lblStorage, "storage");
+#define CONFIG(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_config, UDATA);
+    CONFIG_ELEMENTS
+#undef CONFIG
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -246,8 +228,6 @@ int muxconfig_main() {
 
     init_fonts();
     init_navigation_group();
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 

@@ -45,6 +45,15 @@
     lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
 } while (0)
 
+#define CONFIG_ELEMENTS            \
+    CONFIG(General,   "general")   \
+    CONFIG(Connect,   "connect")   \
+    CONFIG(Custom,    "custom")    \
+    CONFIG(Interface, "interface") \
+    CONFIG(Language,  "language")  \
+    CONFIG(Power,     "power")     \
+    CONFIG(Storage,   "storage")
+
 #define INFO_ELEMENTS              \
     INFO(Screenshot, "screenshot") \
     INFO(Space,      "space")      \
