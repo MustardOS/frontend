@@ -45,6 +45,12 @@
     lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
 } while (0)
 
+#define CONNECT_ELEMENTS                \
+    CONNECT(Network,     "network")     \
+    CONNECT(Services,    "service")     \
+    CONNECT(Bluetooth,   "bluetooth")   \
+    CONNECT(USBFunction, "usbfunction")
+
 #define CONFIG_ELEMENTS            \
     CONFIG(General,   "general")   \
     CONFIG(Connect,   "connect")   \

@@ -142,6 +142,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONNECT.USB, "USB Function");
     SPECIFIC_FIELD(lang->MUXCONNECT.WEB, "Web Services");
     SPECIFIC_FIELD(lang->MUXCONNECT.WIFI, "Wi-Fi Network");
+    SPECIFIC_FIELD(lang->MUXCONNECT.ADB, "Android Debug Bridge");
+    SPECIFIC_FIELD(lang->MUXCONNECT.MTP, "Media Transfer Protocol");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WEB, "Toggle a range of configurable services you can access via an active network");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.USB, "Toggle between ADB and MTP USB functionality");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");

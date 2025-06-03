@@ -3,16 +3,18 @@
 
 #define UI_COUNT 4
 
-static int bluetooth_original, usbfunction_original;
+#define CONNECT(NAME, UDATA) static int NAME##_original;
+CONNECT_ELEMENTS
+#undef CONNECT
 
-static lv_obj_t *ui_objects[UI_COUNT];
+static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblNetwork,     lang.MUXCONNECT.HELP.WIFI},
-            {ui_lblServices,    lang.MUXCONNECT.HELP.WEB},
-            {ui_lblBluetooth,   lang.MUXCONNECT.HELP.BLUETOOTH},
-            {ui_lblUSBFunction, lang.MUXCONNECT.HELP.USB},
+            {ui_lblNetwork_connect,     lang.MUXCONNECT.HELP.WIFI},
+            {ui_lblServices_connect,    lang.MUXCONNECT.HELP.WEB},
+            {ui_lblBluetooth_connect,   lang.MUXCONNECT.HELP.BLUETOOTH},
+            {ui_lblUSBFunction_connect, lang.MUXCONNECT.HELP.USB},
     };
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
@@ -20,25 +22,26 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_dropdown_settings() {
-    usbfunction_original = lv_dropdown_get_selected(ui_droUSBFunction);
-    bluetooth_original = lv_dropdown_get_selected(ui_droBluetooth);
+#define CONNECT(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_connect);
+    CONNECT_ELEMENTS
+#undef CONNECT
 }
 
 static void restore_options() {
     const char *usb_type = config.SETTINGS.ADVANCED.USBFUNCTION;
     if (!strcasecmp(usb_type, "adb")) {
-        lv_dropdown_set_selected(ui_droUSBFunction, 1);
+        lv_dropdown_set_selected(ui_droUSBFunction_connect, 1);
     } else if (!strcasecmp(usb_type, "mtp")) {
-        lv_dropdown_set_selected(ui_droUSBFunction, 2);
+        lv_dropdown_set_selected(ui_droUSBFunction_connect, 2);
     } else {
-        lv_dropdown_set_selected(ui_droUSBFunction, 0);
+        lv_dropdown_set_selected(ui_droUSBFunction_connect, 0);
     }
-    lv_dropdown_set_selected(ui_droBluetooth, config.VISUAL.BLUETOOTH);
+    lv_dropdown_set_selected(ui_droBluetooth_connect, config.VISUAL.BLUETOOTH);
 }
 
 static void save_options() {
     char *idx_usbfunction;
-    switch (lv_dropdown_get_selected(ui_droUSBFunction)) {
+    switch (lv_dropdown_get_selected(ui_droUSBFunction_connect)) {
         case 1:
             idx_usbfunction = "adb";
             break;
@@ -52,12 +55,12 @@ static void save_options() {
 
     int is_modified = 0;
 
-    int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth);
-    if (lv_dropdown_get_selected(ui_droBluetooth) != bluetooth_original) {
+    int idx_bluetooth = lv_dropdown_get_selected(ui_droBluetooth_connect);
+    if (lv_dropdown_get_selected(ui_droBluetooth_connect) != Bluetooth_original) {
         write_text_to_file((CONF_CONFIG_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
     }
 
-    if (lv_dropdown_get_selected(ui_droUSBFunction) != usbfunction_original) {
+    if (lv_dropdown_get_selected(ui_droUSBFunction_connect) != USBFunction_original) {
         is_modified++;
         write_text_to_file((CONF_CONFIG_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
     }
@@ -73,63 +76,47 @@ static void save_options() {
     }
 }
 
-static void add_connect_item(lv_obj_t *ui_pnl, lv_obj_t *ui_lbl, lv_obj_t *ui_ico, lv_obj_t *ui_dro, char *item_text,
-                             char *glyph_name) {
-    apply_theme_list_panel(ui_pnl);
-    apply_theme_list_drop_down(&theme, ui_dro, "");
-    apply_theme_list_item(&theme, ui_lbl, item_text);
-    apply_theme_list_glyph(&theme, ui_ico, mux_module, glyph_name);
-
-    lv_obj_set_user_data(ui_pnl, strdup(item_text));
-    lv_group_add_obj(ui_group, ui_lbl);
-    lv_group_add_obj(ui_group_value, ui_dro);
-    lv_group_add_obj(ui_group_glyph, ui_ico);
-    lv_group_add_obj(ui_group_panel, ui_pnl);
-
-    apply_text_long_dot(&theme, ui_pnlContent, ui_lbl, item_text);
-}
-
 static void init_navigation_group() {
+    static lv_obj_t *ui_objects[UI_COUNT];
+    static lv_obj_t *ui_objects_value[UI_COUNT];
+    static lv_obj_t *ui_objects_glyph[UI_COUNT];
+    static lv_obj_t *ui_objects_panel[UI_COUNT];
+
+    char *usb_functions[] = {
+            lang.GENERIC.DISABLED,
+            lang.MUXCONNECT.ADB,
+            lang.MUXCONNECT.MTP
+    };
+
+    INIT_OPTION_ITEM(-1, connect, Network, lang.MUXCONNECT.WIFI, "network", NULL, 0);
+    INIT_OPTION_ITEM(-1, connect, Services, lang.MUXCONNECT.WEB, "service", NULL, 0);
+    INIT_OPTION_ITEM(-1, connect, Bluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth", NULL, 0);
+    INIT_OPTION_ITEM(-1, connect, USBFunction, lang.MUXCONNECT.USB, "usbfunction", usb_functions, 3);
+
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_objects[0] = ui_lblNetwork;
-    ui_objects[1] = ui_lblServices;
-    ui_objects[2] = ui_lblBluetooth;
-    ui_objects[3] = ui_lblUSBFunction;
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
-
-    add_connect_item(ui_pnlNetwork, ui_lblNetwork, ui_icoNetwork, ui_droNetwork_connect, lang.MUXCONNECT.WIFI,
-                     "network");
-    add_connect_item(ui_pnlServices, ui_lblServices, ui_icoServices, ui_droServices, lang.MUXCONNECT.WEB, "service");
-    add_connect_item(ui_pnlBluetooth, ui_lblBluetooth, ui_icoBluetooth, ui_droBluetooth, lang.MUXCONNECT.BLUETOOTH,
-                     "bluetooth");
-    add_drop_down_options(ui_droBluetooth, disabled_enabled, 2);
-    add_connect_item(ui_pnlUSBFunction, ui_lblUSBFunction, ui_icoUSBFunction, ui_droUSBFunction, lang.MUXCONNECT.USB,
-                     "usbfunction");
-    add_drop_down_options(ui_droUSBFunction, (char *[]) {lang.GENERIC.DISABLED, "ADB", "MTP"}, 3);
+    for (unsigned int i = 0; i < ui_count; i++) {
+        lv_group_add_obj(ui_group, ui_objects[i]);
+        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
+        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
+        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
+    }
 
     if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoNetwork, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droNetwork_connect, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_pnlServices, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblServices, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoServices, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droServices, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlNetwork_connect, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pnlServices_connect, LV_OBJ_FLAG_HIDDEN);
         ui_count -= 2;
     }
 
-    if (!device.DEVICE.HAS_BLUETOOTH || true) { //TODO: remove true when bluetooth is implemented
-        lv_obj_add_flag(ui_pnlBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_lblBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_icoBluetooth, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_droBluetooth, LV_OBJ_FLAG_HIDDEN);
+    if (!device.DEVICE.HAS_BLUETOOTH || true) { // TODO: remove true when bluetooth is implemented
+        lv_obj_add_flag(ui_pnlBluetooth_connect, LV_OBJ_FLAG_HIDDEN);
         ui_count -= 1;
     }
+
+    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -152,8 +139,8 @@ static void list_nav_move(int steps, int direction) {
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+
     nav_moved = 1;
 }
 
@@ -280,10 +267,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblNetwork, "network");
-    lv_obj_set_user_data(ui_lblServices, "service");
-    lv_obj_set_user_data(ui_lblBluetooth, "bluetooth");
-    lv_obj_set_user_data(ui_lblUSBFunction, "usbfunction");
+#define CONNECT(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_connect, UDATA);
+    CONNECT_ELEMENTS
+#undef CONNECT
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -329,8 +315,6 @@ int muxconnect_main() {
 
     restore_options();
     init_dropdown_settings();
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 

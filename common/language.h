@@ -137,6 +137,8 @@ struct mux_lang {
         char WEB[MAX_BUFFER_SIZE];
         char USB[MAX_BUFFER_SIZE];
         char WIFI[MAX_BUFFER_SIZE];
+        char ADB[MAX_BUFFER_SIZE];
+        char MTP[MAX_BUFFER_SIZE];
         struct {
             char BLUETOOTH[MAX_BUFFER_SIZE];
             char WEB[MAX_BUFFER_SIZE];
