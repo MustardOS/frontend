@@ -22,11 +22,11 @@ static rtc_state_t rtc = {
         2025, 1, 1, 0, 0, 0
 };
 
-static lv_obj_t *ui_objects[UI_COUNT];
-
 const char *notation[] = {
         NULL, NULL
 };
+
+static void list_nav_move(int steps, int direction);
 
 static void show_help() {
     show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
@@ -34,7 +34,7 @@ static void show_help() {
 }
 
 static void confirm_rtc_config() {
-    const char *notation_type = lv_label_get_text(ui_lblNotationValue);
+    const char *notation_type = lv_label_get_text(ui_lblNotationValue_rtc);
     int idx_notation = (notation_type && strcmp(notation_type, notation[1]) == TIME_12H) ? TIME_24H : TIME_12H;
 
     write_text_to_file((CONF_CONFIG_PATH "clock/notation"), "w", INT, idx_notation);
@@ -49,23 +49,21 @@ static void set_dt_label(lv_obj_t *label, const char *format, int value) {
     lv_label_set_text(label, rtc_buffer);
 }
 
-static int days_in_month(int year, int month)
-{
+static int days_in_month(int year, int month) {
     int max_days;
-    switch (month)
-    {
-    case 2: // February
-        max_days = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 ? 29 : 28;
-        break;
-    case 4:  // April
-    case 6:  // June
-    case 9:  // September
-    case 11: // November
-        max_days = 30;
-        break;
-    default:
-        max_days = 31;
-        break;
+    switch (month) {
+        case 2: // February
+            max_days = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 ? 29 : 28;
+            break;
+        case 4:  // April
+        case 6:  // June
+        case 9:  // September
+        case 11: // November
+            max_days = 30;
+            break;
+        default:
+            max_days = 31;
+            break;
     }
     return max_days;
 }
@@ -75,7 +73,7 @@ static void restore_clock_settings() {
     struct tm *tm_now;
     bool is_error = false;
 
-    if (now == (time_t)-1) {
+    if (now == (time_t) -1) {
         is_error = true;
         LOG_ERROR(mux_module, "Failed to get current time")
     } else {
@@ -102,11 +100,11 @@ static void restore_clock_settings() {
         rtc.minute = tm_now->tm_min;
     }
 
-    set_dt_label(ui_lblYearValue, "%04d", rtc.year);
-    set_dt_label(ui_lblMonthValue, "%02d", rtc.month);
-    set_dt_label(ui_lblDayValue, "%02d", rtc.day);
-    set_dt_label(ui_lblHourValue, "%02d", rtc.hour);
-    set_dt_label(ui_lblMinuteValue, "%02d", rtc.minute);
+    set_dt_label(ui_lblYearValue_rtc, "%04d", rtc.year);
+    set_dt_label(ui_lblMonthValue_rtc, "%02d", rtc.month);
+    set_dt_label(ui_lblDayValue_rtc, "%02d", rtc.day);
+    set_dt_label(ui_lblHourValue_rtc, "%02d", rtc.hour);
+    set_dt_label(ui_lblMinuteValue_rtc, "%02d", rtc.minute);
 
     if (config.CLOCK.NOTATION < 0 || config.CLOCK.NOTATION > 1) {
         LOG_WARN(mux_module, "Invalid notation value, defaulting to 24-hour format")
@@ -115,7 +113,7 @@ static void restore_clock_settings() {
         rtc.notation = config.CLOCK.NOTATION;
     }
 
-    lv_label_set_text(ui_lblNotationValue, notation[rtc.notation]);
+    lv_label_set_text(ui_lblNotationValue_rtc, notation[rtc.notation]);
 }
 
 static void save_clock_settings(int year, int month, int day, int hour, int minute, int notation) {
@@ -165,88 +163,32 @@ static void save_clock_settings(int year, int month, int day, int hour, int minu
 }
 
 static void init_navigation_group() {
-    lv_obj_t *ui_objects_panel[] = {
-            ui_pnlYear,
-            ui_pnlMonth,
-            ui_pnlDay,
-            ui_pnlHour,
-            ui_pnlMinute,
-            ui_pnlNotation,
-            ui_pnlTimezone,
-    };
+    static lv_obj_t *ui_objects[UI_COUNT];
+    static lv_obj_t *ui_objects_value[UI_COUNT];
+    static lv_obj_t *ui_objects_glyph[UI_COUNT];
+    static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    ui_objects[0] = ui_lblYear;
-    ui_objects[1] = ui_lblMonth;
-    ui_objects[2] = ui_lblDay;
-    ui_objects[3] = ui_lblHour;
-    ui_objects[4] = ui_lblMinute;
-    ui_objects[5] = ui_lblNotation;
-    ui_objects[6] = ui_lblTimezone;
-
-    lv_obj_t *ui_objects_value[] = {
-            ui_lblYearValue,
-            ui_lblMonthValue,
-            ui_lblDayValue,
-            ui_lblHourValue,
-            ui_lblMinuteValue,
-            ui_lblNotationValue,
-            ui_lblTimezoneValue
-    };
-
-    lv_obj_t *ui_objects_glyph[] = {
-            ui_icoYear,
-            ui_icoMonth,
-            ui_icoDay,
-            ui_icoHour,
-            ui_icoMinute,
-            ui_icoNotation,
-            ui_icoTimezone
-    };
-
-    apply_theme_list_panel(ui_pnlYear);
-    apply_theme_list_panel(ui_pnlMonth);
-    apply_theme_list_panel(ui_pnlDay);
-    apply_theme_list_panel(ui_pnlHour);
-    apply_theme_list_panel(ui_pnlMinute);
-    apply_theme_list_panel(ui_pnlNotation);
-    apply_theme_list_panel(ui_pnlTimezone);
-
-    apply_theme_list_item(&theme, ui_lblYear, lang.MUXRTC.YEAR);
-    apply_theme_list_item(&theme, ui_lblMonth, lang.MUXRTC.MONTH);
-    apply_theme_list_item(&theme, ui_lblDay, lang.MUXRTC.DAY);
-    apply_theme_list_item(&theme, ui_lblHour, lang.MUXRTC.HOUR);
-    apply_theme_list_item(&theme, ui_lblMinute, lang.MUXRTC.MINUTE);
-    apply_theme_list_item(&theme, ui_lblNotation, lang.MUXRTC.NOTATION);
-    apply_theme_list_item(&theme, ui_lblTimezone, lang.MUXRTC.TIMEZONE);
-
-    apply_theme_list_glyph(&theme, ui_icoYear, mux_module, "year");
-    apply_theme_list_glyph(&theme, ui_icoMonth, mux_module, "month");
-    apply_theme_list_glyph(&theme, ui_icoDay, mux_module, "day");
-    apply_theme_list_glyph(&theme, ui_icoHour, mux_module, "hour");
-    apply_theme_list_glyph(&theme, ui_icoMinute, mux_module, "minute");
-    apply_theme_list_glyph(&theme, ui_icoNotation, mux_module, "notation");
-    apply_theme_list_glyph(&theme, ui_icoTimezone, mux_module, "timezone");
-
-    apply_theme_list_value(&theme, ui_lblYearValue, "");
-    apply_theme_list_value(&theme, ui_lblMonthValue, "");
-    apply_theme_list_value(&theme, ui_lblDayValue, "");
-    apply_theme_list_value(&theme, ui_lblHourValue, "");
-    apply_theme_list_value(&theme, ui_lblMinuteValue, "");
-    apply_theme_list_value(&theme, ui_lblNotationValue, "");
-    apply_theme_list_value(&theme, ui_lblTimezoneValue, "");
+    INIT_VALUE_ITEM(rtc, Year, lang.MUXRTC.YEAR, "year", "");
+    INIT_VALUE_ITEM(rtc, Month, lang.MUXRTC.MONTH, "month", "");
+    INIT_VALUE_ITEM(rtc, Day, lang.MUXRTC.DAY, "day", "");
+    INIT_VALUE_ITEM(rtc, Hour, lang.MUXRTC.HOUR, "hour", "");
+    INIT_VALUE_ITEM(rtc, Minute, lang.MUXRTC.MINUTE, "minute", "");
+    INIT_VALUE_ITEM(rtc, Notation, lang.MUXRTC.NOTATION, "notation", "");
+    INIT_VALUE_ITEM(rtc, Timezone, lang.MUXRTC.TIMEZONE, "timezone", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
+
+    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -269,7 +211,7 @@ static void list_nav_move(int steps, int direction) {
     nav_moved = 1;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblTimezone) {
+    if (element_focused == ui_lblTimezone_rtc) {
         lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
@@ -291,16 +233,14 @@ static void list_nav_next(int steps) {
 }
 
 // Trickle down validation functions to ensure the RTC state is always valid
-static void validate_notation()
-{
+static void validate_notation() {
     if (rtc.notation < 0)
         rtc.notation = 1;
     if (rtc.notation > 1)
         rtc.notation = 0;
 }
 
-static void validate_minute()
-{
+static void validate_minute() {
     if (rtc.minute < 0)
         rtc.minute = MINUTES_IN_HOUR - 1;
     if (rtc.minute >= MINUTES_IN_HOUR)
@@ -309,8 +249,7 @@ static void validate_minute()
     validate_notation();
 }
 
-static void validate_hour()
-{
+static void validate_hour() {
     if (rtc.hour < 0)
         rtc.hour = HOURS_IN_DAY - 1;
     if (rtc.hour >= HOURS_IN_DAY)
@@ -319,8 +258,7 @@ static void validate_hour()
     validate_minute();
 }
 
-static void validate_day()
-{
+static void validate_day() {
     int max_days = days_in_month(rtc.year, rtc.month);
     if (rtc.day < 1)
         rtc.day = max_days;
@@ -330,8 +268,7 @@ static void validate_day()
     validate_hour();
 }
 
-static void validate_month()
-{
+static void validate_month() {
     if (rtc.month < 1)
         rtc.month = MONTHS_IN_YEAR;
     if (rtc.month > MONTHS_IN_YEAR)
@@ -340,8 +277,7 @@ static void validate_month()
     validate_day();
 }
 
-static void validate_year()
-{
+static void validate_year() {
     if (rtc.year < MIN_YEAR)
         rtc.year = MIN_YEAR;
     if (rtc.year > MAX_YEAR)
@@ -366,72 +302,68 @@ static void adjust_day(int direction) {
     validate_day();
 }
 
-static void adjust_hour(int direction)
-{
+static void adjust_hour(int direction) {
     rtc.hour += direction;
     validate_hour();
 }
 
-static void adjust_minute(int direction)
-{
+static void adjust_minute(int direction) {
     rtc.minute += direction;
     validate_minute();
 }
 
-static void adjust_notation(int direction)
-{
+static void adjust_notation(int direction) {
     rtc.notation += direction;
     validate_notation();
 }
 
 // If we change the RTC state, we need to update all of the UI labels accordingly
-static void check_rtc_state(rtc_state_t *rtc, rtc_state_t *old_rtc)
-{
+static void check_rtc_state(rtc_state_t *rtc, rtc_state_t *old_rtc) {
     if (rtc->year != old_rtc->year) {
-        set_dt_label(ui_lblYearValue, "%04d", rtc->year);
+        set_dt_label(ui_lblYearValue_rtc, "%04d", rtc->year);
     }
 
     if (rtc->month != old_rtc->month) {
-        set_dt_label(ui_lblMonthValue, "%02d", rtc->month);
+        set_dt_label(ui_lblMonthValue_rtc, "%02d", rtc->month);
     }
 
     if (rtc->day != old_rtc->day) {
-        set_dt_label(ui_lblDayValue, "%02d", rtc->day);
+        set_dt_label(ui_lblDayValue_rtc, "%02d", rtc->day);
     }
 
     if (rtc->hour != old_rtc->hour) {
-        set_dt_label(ui_lblHourValue, "%02d", rtc->hour);
+        set_dt_label(ui_lblHourValue_rtc, "%02d", rtc->hour);
     }
 
     if (rtc->minute != old_rtc->minute) {
-        set_dt_label(ui_lblMinuteValue, "%02d", rtc->minute);
+        set_dt_label(ui_lblMinuteValue_rtc, "%02d", rtc->minute);
     }
 
     if (rtc->notation != old_rtc->notation) {
-        lv_label_set_text(ui_lblNotationValue, notation[rtc->notation]);
+        lv_label_set_text(ui_lblNotationValue_rtc, notation[rtc->notation]);
     }
 }
 
 // Adjust the focused option based on the direction of navigation
 static void adjust_option(int direction) {
-    if (msgbox_active) 
+    if (msgbox_active)
         return;
-    
+
     rtc_state_t old_rtc = rtc;
     play_sound(SND_OPTION);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblYear) {
+    if (element_focused == ui_lblYear_rtc) {
         adjust_year(direction);
-    } else if (element_focused == ui_lblMonth) {
+    } else if (element_focused == ui_lblMonth_rtc) {
         adjust_month(direction);
-    } else if (element_focused == ui_lblDay) {
+    } else if (element_focused == ui_lblDay_rtc) {
         adjust_day(direction);
-    } else if (element_focused == ui_lblHour) {
+    } else if (element_focused == ui_lblHour_rtc) {
         adjust_hour(direction);
-    } else if (element_focused == ui_lblMinute) {
+    } else if (element_focused == ui_lblMinute_rtc) {
         adjust_minute(direction);
-    } else if (element_focused == ui_lblNotation) {
+    } else if (element_focused == ui_lblNotation_rtc) {
         adjust_notation(direction);
     }
 
@@ -453,7 +385,7 @@ static void save_and_exit(char *message) {
 static void handle_a() {
     if (msgbox_active) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lblTimezone) {
+    if (lv_group_get_focused(ui_group) == ui_lblTimezone_rtc) {
         if (kiosk.DATETIME.TIMEZONE) return;
 
         play_sound(SND_CONFIRM);
@@ -545,13 +477,13 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblYear, "year");
-    lv_obj_set_user_data(ui_lblMonth, "month");
-    lv_obj_set_user_data(ui_lblDay, "day");
-    lv_obj_set_user_data(ui_lblHour, "hour");
-    lv_obj_set_user_data(ui_lblMinute, "minute");
-    lv_obj_set_user_data(ui_lblNotation, "notation");
-    lv_obj_set_user_data(ui_lblTimezone, "timezone");
+    lv_obj_set_user_data(ui_lblYear_rtc, "year");
+    lv_obj_set_user_data(ui_lblMonth_rtc, "month");
+    lv_obj_set_user_data(ui_lblDay_rtc, "day");
+    lv_obj_set_user_data(ui_lblHour_rtc, "hour");
+    lv_obj_set_user_data(ui_lblMinute_rtc, "minute");
+    lv_obj_set_user_data(ui_lblNotation_rtc, "notation");
+    lv_obj_set_user_data(ui_lblTimezone_rtc, "timezone");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -599,8 +531,6 @@ int muxrtc_main() {
 
     init_navigation_group();
     restore_clock_settings();
-
-    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 

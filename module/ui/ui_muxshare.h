@@ -71,6 +71,15 @@
     KIOSK(Power)       \
     KIOSK(Visual)
 
+#define RTC_ELEMENTS \
+    RTC(Year)     \
+    RTC(Month)    \
+    RTC(Day)      \
+    RTC(Hour)     \
+    RTC(Minute)   \
+    RTC(Notation) \
+    RTC(Timezone)
+
 #define SEARCH_ELEMENTS  \
     SEARCH(Lookup)       \
     SEARCH(SearchLocal)  \
