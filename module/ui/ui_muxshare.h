@@ -71,6 +71,12 @@
     KIOSK(Power)       \
     KIOSK(Visual)
 
+#define POWER_ELEMENTS \
+    POWER(Shutdown)    \
+    POWER(Battery)     \
+    POWER(IdleDisplay) \
+    POWER(IdleSleep)
+
 #define RTC_ELEMENTS \
     RTC(Year)     \
     RTC(Month)    \

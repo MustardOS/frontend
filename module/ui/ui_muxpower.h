@@ -1,25 +1,15 @@
 #pragma once
 
+#include "ui_muxshare.h"
 #include "../../lvgl/lvgl.h"
 
 void init_muxpower(lv_obj_t *ui_pnlContent);
 
-extern lv_obj_t *ui_pnlShutdown;
-extern lv_obj_t *ui_pnlBattery;
-extern lv_obj_t *ui_pnlIdleDisplay;
-extern lv_obj_t *ui_pnlIdleSleep;
+#define POWER(NAME)                        \
+    extern lv_obj_t *ui_pnl##NAME##_power; \
+    extern lv_obj_t *ui_lbl##NAME##_power; \
+    extern lv_obj_t *ui_ico##NAME##_power; \
+    extern lv_obj_t *ui_dro##NAME##_power;
 
-extern lv_obj_t *ui_lblShutdown;
-extern lv_obj_t *ui_lblBattery;
-extern lv_obj_t *ui_lblIdleDisplay;
-extern lv_obj_t *ui_lblIdleSleep;
-
-extern lv_obj_t *ui_icoShutdown;
-extern lv_obj_t *ui_icoBattery;
-extern lv_obj_t *ui_icoIdleDisplay;
-extern lv_obj_t *ui_icoIdleSleep;
-
-extern lv_obj_t *ui_droShutdown;
-extern lv_obj_t *ui_droBattery_power;
-extern lv_obj_t *ui_droIdleDisplay;
-extern lv_obj_t *ui_droIdleSleep;
+POWER_ELEMENTS
+#undef POWER
