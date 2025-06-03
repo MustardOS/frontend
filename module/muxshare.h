@@ -148,3 +148,70 @@ int muxtweakgen_main();
 int muxvisual_main();
 
 int muxwebserv_main();
+
+#define INIT_OPTION_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)          \
+    do {                                                                            \
+        int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                 \
+        apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                            \
+        apply_theme_list_item(&theme, ui_lbl##NAME##_##MODULE, LABEL);              \
+        apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH); \
+        apply_theme_list_drop_down(&theme, ui_dro##NAME##_##MODULE, NULL);          \
+        if ((OPTION) != NULL && (COUNT) > 0)                                        \
+            add_drop_down_options(ui_dro##NAME##_##MODULE, OPTION, COUNT);          \
+        ui_objects[_idx] = ui_lbl##NAME##_##MODULE;                                 \
+        ui_objects_value[_idx] = ui_dro##NAME##_##MODULE;                           \
+        ui_objects_glyph[_idx] = ui_ico##NAME##_##MODULE;                           \
+        ui_objects_panel[_idx] = ui_pnl##NAME##_##MODULE;                           \
+        ui_count++;                                                                 \
+    } while (0)
+
+#define INIT_VALUE_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, VALUE)                   \
+    do {                                                                            \
+        int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                 \
+        apply_theme_list_panel(ui_pnl##NAME##_##MODULE);                            \
+        apply_theme_list_item(&theme, ui_lbl##NAME##_##MODULE, LABEL);              \
+        apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH); \
+        apply_theme_list_value(&theme, ui_lbl##NAME##Value_##MODULE, VALUE);        \
+        ui_objects[_idx] = ui_lbl##NAME##_##MODULE;                                 \
+        ui_objects_value[_idx] = ui_lbl##NAME##Value_##MODULE;                      \
+        ui_objects_glyph[_idx] = ui_ico##NAME##_##MODULE;                           \
+        ui_objects_panel[_idx] = ui_pnl##NAME##_##MODULE;                           \
+        ui_count++;                                                                 \
+} while (0)
+
+#define CHECK_AND_SAVE_KSK(MODULE, NAME, FILE, TYPE)                         \
+    do {                                                                     \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);     \
+        if (current != NAME##_original) {                                    \
+            is_modified++;                                                   \
+            write_text_to_file((CONF_KIOSK_PATH FILE), "w", TYPE, current);  \
+        }                                                                    \
+    } while (0)
+
+#define CHECK_AND_SAVE_STD(MODULE, NAME, FILE, TYPE)                         \
+    do {                                                                     \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);     \
+        if (current != NAME##_original) {                                    \
+            is_modified++;                                                   \
+            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, current); \
+        }                                                                    \
+    } while (0)
+
+#define CHECK_AND_SAVE_VAL(MODULE, NAME, FILE, TYPE, VALUES)                         \
+    do {                                                                             \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);             \
+        if (current != NAME##_original) {                                            \
+            is_modified++;                                                           \
+            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, VALUES[current]); \
+        }                                                                            \
+    } while (0)
+
+#define CHECK_AND_SAVE_MAP(MODULE, NAME, FILE, VALUES, COUNT, DEFAULT)            \
+    do {                                                                          \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);          \
+        if (current != NAME##_original) {                                         \
+            int mapped = map_drop_down_to_value(current, VALUES, COUNT, DEFAULT); \
+            is_modified++;                                                        \
+            write_text_to_file((CONF_CONFIG_PATH FILE), "w", INT, mapped);        \
+        }                                                                         \
+    } while (0)
