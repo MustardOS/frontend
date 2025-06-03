@@ -1,109 +1,23 @@
+#include "ui_muxshare.h"
 #include "ui_muxnetwork.h"
 #include "../../common/device.h"
 
-lv_obj_t *ui_scrNetwork_network;
+#define NETWORK(NAME)                      \
+    lv_obj_t *ui_pnl##NAME##_network;      \
+    lv_obj_t *ui_lbl##NAME##_network;      \
+    lv_obj_t *ui_ico##NAME##_network;      \
+    lv_obj_t *ui_lbl##NAME##Value_network;
 
-lv_obj_t *ui_pnlIdentifier_network;
-lv_obj_t *ui_pnlPassword_network;
-lv_obj_t *ui_pnlScan_network;
-lv_obj_t *ui_pnlType_network;
-lv_obj_t *ui_pnlAddress_network;
-lv_obj_t *ui_pnlSubnet_network;
-lv_obj_t *ui_pnlGateway_network;
-lv_obj_t *ui_pnlDNS_network;
-lv_obj_t *ui_pnlConnect_network;
-
-lv_obj_t *ui_lblIdentifier_network;
-lv_obj_t *ui_lblPassword_network;
-lv_obj_t *ui_lblScan_network;
-lv_obj_t *ui_lblType_network;
-lv_obj_t *ui_lblAddress_network;
-lv_obj_t *ui_lblSubnet_network;
-lv_obj_t *ui_lblGateway_network;
-lv_obj_t *ui_lblDNS_network;
-lv_obj_t *ui_lblConnect_network;
-
-lv_obj_t *ui_icoIdentifier_network;
-lv_obj_t *ui_icoPassword_network;
-lv_obj_t *ui_icoScan_network;
-lv_obj_t *ui_icoType_network;
-lv_obj_t *ui_icoAddress_network;
-lv_obj_t *ui_icoSubnet_network;
-lv_obj_t *ui_icoGateway_network;
-lv_obj_t *ui_icoDNS_network;
-lv_obj_t *ui_icoConnect_network;
-
-lv_obj_t *ui_lblIdentifier_networkValue;
-lv_obj_t *ui_lblPassword_networkValue;
-lv_obj_t *ui_lblScan_networkValue;
-lv_obj_t *ui_lblType_networkValue;
-lv_obj_t *ui_lblAddress_networkValue;
-lv_obj_t *ui_lblSubnet_networkValue;
-lv_obj_t *ui_lblGateway_networkValue;
-lv_obj_t *ui_lblDNS_networkValue;
-lv_obj_t *ui_lblConnect_networkValue;
+NETWORK_ELEMENTS
+#undef NETWORK
 
 lv_obj_t *ui_pnlEntry_network;
 lv_obj_t *ui_txtEntry_network;
 
 void init_muxnetwork(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
-    ui_pnlIdentifier_network = lv_obj_create(ui_pnlContent);
-    ui_pnlPassword_network = lv_obj_create(ui_pnlContent);
-    ui_pnlScan_network = lv_obj_create(ui_pnlContent);
-    ui_pnlType_network = lv_obj_create(ui_pnlContent);
-    ui_pnlAddress_network = lv_obj_create(ui_pnlContent);
-    ui_pnlSubnet_network = lv_obj_create(ui_pnlContent);
-    ui_pnlGateway_network = lv_obj_create(ui_pnlContent);
-    ui_pnlDNS_network = lv_obj_create(ui_pnlContent);
-    ui_pnlConnect_network = lv_obj_create(ui_pnlContent);
-
-    ui_lblIdentifier_network = lv_label_create(ui_pnlIdentifier_network);
-    lv_label_set_text(ui_lblIdentifier_network, "");
-    ui_lblPassword_network = lv_label_create(ui_pnlPassword_network);
-    lv_label_set_text(ui_lblPassword_network, "");
-    ui_lblScan_network = lv_label_create(ui_pnlScan_network);
-    lv_label_set_text(ui_lblScan_network, "");
-    ui_lblType_network = lv_label_create(ui_pnlType_network);
-    lv_label_set_text(ui_lblType_network, "");
-    ui_lblAddress_network = lv_label_create(ui_pnlAddress_network);
-    lv_label_set_text(ui_lblAddress_network, "");
-    ui_lblSubnet_network = lv_label_create(ui_pnlSubnet_network);
-    lv_label_set_text(ui_lblSubnet_network, "");
-    ui_lblGateway_network = lv_label_create(ui_pnlGateway_network);
-    lv_label_set_text(ui_lblGateway_network, "");
-    ui_lblDNS_network = lv_label_create(ui_pnlDNS_network);
-    lv_label_set_text(ui_lblDNS_network, "");
-    ui_lblConnect_network = lv_label_create(ui_pnlConnect_network);
-    lv_label_set_text(ui_lblConnect_network, "");
-
-    ui_icoIdentifier_network = lv_img_create(ui_pnlIdentifier_network);
-    ui_icoPassword_network = lv_img_create(ui_pnlPassword_network);
-    ui_icoScan_network = lv_img_create(ui_pnlScan_network);
-    ui_icoType_network = lv_img_create(ui_pnlType_network);
-    ui_icoAddress_network = lv_img_create(ui_pnlAddress_network);
-    ui_icoSubnet_network = lv_img_create(ui_pnlSubnet_network);
-    ui_icoGateway_network = lv_img_create(ui_pnlGateway_network);
-    ui_icoDNS_network = lv_img_create(ui_pnlDNS_network);
-    ui_icoConnect_network = lv_img_create(ui_pnlConnect_network);
-
-    ui_lblIdentifier_networkValue = lv_label_create(ui_pnlIdentifier_network);
-    lv_label_set_text(ui_lblIdentifier_networkValue, "");
-    ui_lblPassword_networkValue = lv_label_create(ui_pnlPassword_network);
-    lv_label_set_text(ui_lblPassword_networkValue, "");
-    ui_lblScan_networkValue = lv_label_create(ui_pnlScan_network);
-    lv_label_set_text(ui_lblScan_networkValue, "");
-    ui_lblType_networkValue = lv_label_create(ui_pnlType_network);
-    lv_label_set_text(ui_lblType_networkValue, "");
-    ui_lblAddress_networkValue = lv_label_create(ui_pnlAddress_network);
-    lv_label_set_text(ui_lblAddress_networkValue, "");
-    ui_lblSubnet_networkValue = lv_label_create(ui_pnlSubnet_network);
-    lv_label_set_text(ui_lblSubnet_networkValue, "");
-    ui_lblGateway_networkValue = lv_label_create(ui_pnlGateway_network);
-    lv_label_set_text(ui_lblGateway_networkValue, "");
-    ui_lblDNS_networkValue = lv_label_create(ui_pnlDNS_network);
-    lv_label_set_text(ui_lblDNS_networkValue, "");
-    ui_lblConnect_networkValue = lv_label_create(ui_pnlConnect_network);
-    lv_label_set_text(ui_lblConnect_networkValue, "");
+#define NETWORK(NAME) CREATE_VALUE_ITEM(network, NAME);
+    NETWORK_ELEMENTS
+#undef NETWORK
 
     ui_pnlEntry_network = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlEntry_network, device.MUX.WIDTH);

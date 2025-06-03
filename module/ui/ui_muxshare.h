@@ -71,6 +71,17 @@
     KIOSK(Power)       \
     KIOSK(Visual)
 
+#define NETWORK_ELEMENTS \
+    NETWORK(Identifier)  \
+    NETWORK(Password)    \
+    NETWORK(Scan)        \
+    NETWORK(Type)        \
+    NETWORK(Address)     \
+    NETWORK(Subnet)      \
+    NETWORK(Gateway)     \
+    NETWORK(DNS)         \
+    NETWORK(Connect)
+
 #define OPTION_ELEMENTS \
     OPTION(Search)      \
     OPTION(Core)        \
