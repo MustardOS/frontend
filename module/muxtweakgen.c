@@ -3,19 +3,21 @@
 
 #define UI_COUNT 7
 
-static int Startup_original, Colour_original, Brightness_original, Volume_original;
+#define TWEAKGEN(NAME, UDATA) static int NAME##_original;
+    TWEAKGEN_ELEMENTS
+#undef TWEAKGEN
 
 static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblStartup_tweakgen,    lang.MUXTWEAKGEN.HELP.STARTUP},
-            {ui_lblColour_tweakgen,     lang.MUXTWEAKGEN.HELP.TEMP},
             {ui_lblRTC_tweakgen,        lang.MUXTWEAKGEN.HELP.DATETIME},
-            {ui_lblBrightness_tweakgen, lang.MUXTWEAKGEN.HELP.BRIGHT},
-            {ui_lblVolume_tweakgen,     lang.MUXTWEAKGEN.HELP.VOLUME},
             {ui_lblHDMI_tweakgen,       lang.MUXTWEAKGEN.HELP.HDMI},
             {ui_lblAdvanced_tweakgen,   lang.MUXTWEAKGEN.HELP.ADVANCED},
+            {ui_lblBrightness_tweakgen, lang.MUXTWEAKGEN.HELP.BRIGHT},
+            {ui_lblVolume_tweakgen,     lang.MUXTWEAKGEN.HELP.VOLUME},
+            {ui_lblColour_tweakgen,     lang.MUXTWEAKGEN.HELP.TEMP},
+            {ui_lblStartup_tweakgen,    lang.MUXTWEAKGEN.HELP.STARTUP},
     };
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
@@ -23,10 +25,9 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_dropdown_settings() {
-    Startup_original = lv_dropdown_get_selected(ui_droStartup_tweakgen);
-    Colour_original = lv_dropdown_get_selected(ui_droColour_tweakgen);
-    Brightness_original = lv_dropdown_get_selected(ui_droBrightness_tweakgen);
-    Volume_original = lv_dropdown_get_selected(ui_droVolume_tweakgen);
+#define TWEAKGEN(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_tweakgen);
+    TWEAKGEN_ELEMENTS
+#undef TWEAKGEN
 }
 
 static void update_volume_and_brightness() {
@@ -346,13 +347,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblStartup_tweakgen, "startup");
-    lv_obj_set_user_data(ui_lblColour_tweakgen, "colour");
-    lv_obj_set_user_data(ui_lblRTC_tweakgen, "clock");
-    lv_obj_set_user_data(ui_lblBrightness_tweakgen, "brightness");
-    lv_obj_set_user_data(ui_lblVolume_tweakgen, "volume");
-    lv_obj_set_user_data(ui_lblHDMI_tweakgen, "hdmi");
-    lv_obj_set_user_data(ui_lblAdvanced_tweakgen, "advanced");
+#define TWEAKGEN(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_tweakgen, UDATA);
+    TWEAKGEN_ELEMENTS
+#undef TWEAKGEN
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -370,7 +367,8 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
+        adjust_panel_priority(ui_mux_standard_panels,
+                              sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 

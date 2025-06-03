@@ -1,7 +1,7 @@
 #include "ui_muxshare.h"
 #include "ui_muxrtc.h"
 
-#define RTC(NAME)                      \
+#define RTC(NAME, UDATA)               \
     lv_obj_t *ui_pnl##NAME##_rtc;      \
     lv_obj_t *ui_lbl##NAME##_rtc;      \
     lv_obj_t *ui_ico##NAME##_rtc;      \
@@ -11,7 +11,7 @@ RTC_ELEMENTS
 #undef RTC
 
 void init_muxrtc(lv_obj_t *ui_pnlContent) {
-#define RTC(NAME) CREATE_VALUE_ITEM(rtc, NAME);
+#define RTC(NAME, UDATA) CREATE_VALUE_ITEM(rtc, NAME);
     RTC_ELEMENTS
 #undef RTC
 }

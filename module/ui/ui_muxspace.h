@@ -5,7 +5,7 @@
 
 void init_muxspace(lv_obj_t *ui_pnlContent);
 
-#define SPACE(NAME)                             \
+#define SPACE(NAME, UDATA)                      \
     extern lv_obj_t *ui_pnl##NAME##_space;      \
     extern lv_obj_t *ui_lbl##NAME##_space;      \
     extern lv_obj_t *ui_ico##NAME##_space;      \

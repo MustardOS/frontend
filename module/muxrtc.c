@@ -477,13 +477,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblYear_rtc, "year");
-    lv_obj_set_user_data(ui_lblMonth_rtc, "month");
-    lv_obj_set_user_data(ui_lblDay_rtc, "day");
-    lv_obj_set_user_data(ui_lblHour_rtc, "hour");
-    lv_obj_set_user_data(ui_lblMinute_rtc, "minute");
-    lv_obj_set_user_data(ui_lblNotation_rtc, "notation");
-    lv_obj_set_user_data(ui_lblTimezone_rtc, "timezone");
+#define RTC(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_rtc, UDATA);
+    RTC_ELEMENTS
+#undef RTC
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

@@ -64,10 +64,10 @@ static void get_storage_info(const char *partition, double *total, double *free,
 
 static void update_storage_info() {
     struct mount storage_info[] = {
-            {ui_pnlSD1_space, ui_pnlSD1Bar_space, ui_lblSD1Value_space, ui_barSD1_space, device.STORAGE.ROM.MOUNT},
-            {ui_pnlSD2_space, ui_pnlSD2Bar_space, ui_lblSD2Value_space, ui_barSD2_space, device.STORAGE.SDCARD.MOUNT},
-            {ui_pnlUSB_space, ui_pnlUSBBar_space, ui_lblUSBValue_space, ui_barUSB_space, device.STORAGE.USB.MOUNT},
-            {ui_pnlRFS_space, ui_pnlRFSBar_space, ui_lblRFSValue_space, ui_barRFS_space, device.STORAGE.ROOT.MOUNT}
+            {ui_pnlPrimary_space, ui_pnlPrimaryBar_space, ui_lblPrimaryValue_space, ui_barPrimary_space, device.STORAGE.ROM.MOUNT},
+            {ui_pnlSecondary_space, ui_pnlSecondaryBar_space, ui_lblSecondaryValue_space, ui_barSecondary_space, device.STORAGE.SDCARD.MOUNT},
+            {ui_pnlExternal_space, ui_pnlExternalBar_space, ui_lblExternalValue_space, ui_barExternal_space, device.STORAGE.USB.MOUNT},
+            {ui_pnlSystem_space, ui_pnlSystemBar_space, ui_lblSystemValue_space, ui_barSystem_space, device.STORAGE.ROOT.MOUNT}
     };
 
     for (size_t i = 0; i < sizeof(storage_info) / sizeof(storage_info[0]); i++) {
@@ -105,10 +105,10 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(-1, space, SD1, "SD1", "sd1", "");
-    INIT_VALUE_ITEM(-1, space, SD2, "SD2", "sd2", "");
-    INIT_VALUE_ITEM(-1, space, USB, "USB", "usb", "");
-    INIT_VALUE_ITEM(-1, space, RFS, "ROOTFS", "rfs", "");
+    INIT_VALUE_ITEM(-1, space, Primary, lang.MUXSPACE.PRIMARY, "primary", "");
+    INIT_VALUE_ITEM(-1, space, Secondary, lang.MUXSPACE.SECONDARY, "secondary", "");
+    INIT_VALUE_ITEM(-1, space, External, lang.MUXSPACE.EXTERNAL, "external", "");
+    INIT_VALUE_ITEM(-1, space, System, lang.MUXSPACE.SYSTEM, "system", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -209,10 +209,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblSD1_space, "sd1");
-    lv_obj_set_user_data(ui_lblSD2_space, "sd2");
-    lv_obj_set_user_data(ui_lblUSB_space, "usb");
-    lv_obj_set_user_data(ui_lblRFS_space, "rfs");
+#define SPACE(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_space, UDATA);
+    SPACE_ELEMENTS
+#undef SPACE
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

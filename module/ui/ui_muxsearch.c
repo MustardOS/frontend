@@ -2,7 +2,7 @@
 #include "ui_muxsearch.h"
 #include "../../common/device.h"
 
-#define SEARCH(NAME)                      \
+#define SEARCH(NAME, UDATA)               \
     lv_obj_t *ui_pnl##NAME##_search;      \
     lv_obj_t *ui_lbl##NAME##_search;      \
     lv_obj_t *ui_ico##NAME##_search;      \
@@ -15,7 +15,7 @@ lv_obj_t *ui_pnlEntry_search;
 lv_obj_t *ui_txtEntry_search;
 
 void init_muxsearch(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
-#define SEARCH(NAME) CREATE_VALUE_ITEM(search, NAME);
+#define SEARCH(NAME, UDATA) CREATE_VALUE_ITEM(search, NAME);
     SEARCH_ELEMENTS
 #undef SEARCH
 

@@ -5,7 +5,7 @@
 
 void init_muxtweakgen(lv_obj_t *ui_pnlContent);
 
-#define TWEAKGEN(NAME)                        \
+#define TWEAKGEN(NAME, UDATA)                 \
     extern lv_obj_t *ui_pnl##NAME##_tweakgen; \
     extern lv_obj_t *ui_lbl##NAME##_tweakgen; \
     extern lv_obj_t *ui_ico##NAME##_tweakgen; \

@@ -3,8 +3,9 @@
 
 #define UI_COUNT 7
 
-static int SSHD_original, SFTPGo_original, TTYD_original, Syncthing_original,
-        RSLSync_original, NTP_original, Tailscaled_original;
+#define WEBSERV(NAME, UDATA) static int NAME##_original;
+    WEBSERV_ELEMENTS
+#undef WEBSERV
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
@@ -22,13 +23,9 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_dropdown_settings() {
-    SSHD_original = lv_dropdown_get_selected(ui_droSSHD_webserv);
-    SFTPGo_original = lv_dropdown_get_selected(ui_droSFTPGo_webserv);
-    TTYD_original = lv_dropdown_get_selected(ui_droTTYD_webserv);
-    Syncthing_original = lv_dropdown_get_selected(ui_droSyncthing_webserv);
-    RSLSync_original = lv_dropdown_get_selected(ui_droRSLSync_webserv);
-    NTP_original = lv_dropdown_get_selected(ui_droNTP_webserv);
-    Tailscaled_original = lv_dropdown_get_selected(ui_droTailscaled_webserv);
+#define WEBSERV(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_webserv);
+    WEBSERV_ELEMENTS
+#undef WEBSERV
 }
 
 static void restore_web_options() {
@@ -193,13 +190,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblSSHD_webserv, "sshd");
-    lv_obj_set_user_data(ui_lblSFTPGo_webserv, "sftpgo");
-    lv_obj_set_user_data(ui_lblTTYD_webserv, "ttyd");
-    lv_obj_set_user_data(ui_lblSyncthing_webserv, "syncthing");
-    lv_obj_set_user_data(ui_lblRSLSync_webserv, "rslsync");
-    lv_obj_set_user_data(ui_lblNTP_webserv, "ntp");
-    lv_obj_set_user_data(ui_lblTailscaled_webserv, "tailscaled");
+#define WEBSERV(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_webserv, UDATA);
+    WEBSERV_ELEMENTS
+#undef WEBSERV
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

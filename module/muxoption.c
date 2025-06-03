@@ -263,11 +263,6 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblSearch_option, "search");
-    lv_obj_set_user_data(ui_lblCore_option, "core");
-    lv_obj_set_user_data(ui_lblGovernor_option, "governor");
-    lv_obj_set_user_data(ui_lblTag_option, "tag");
-
     const char *dot = strrchr(rom_name, '.');
     if (!(dot && dot != rom_name)) {
         lv_obj_add_flag(ui_pnlCore_option, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
@@ -275,6 +270,10 @@ static void init_elements() {
         lv_obj_add_flag(ui_pnlTag_option, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         ui_count -= 3;
     }
+
+#define OPTION(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);
+    OPTION_ELEMENTS
+#undef OPTION
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

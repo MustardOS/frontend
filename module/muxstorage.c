@@ -284,25 +284,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblBIOS_storage, "bios");
-    lv_obj_set_user_data(ui_lblCatalogue_storage, "catalogue");
-    lv_obj_set_user_data(ui_lblName_storage, "name");
-    lv_obj_set_user_data(ui_lblRetroArch_storage, "retroarch");
-    lv_obj_set_user_data(ui_lblConfig_storage, "config");
-    lv_obj_set_user_data(ui_lblCore_storage, "core");
-    lv_obj_set_user_data(ui_lblCollection_storage, "collection");
-    lv_obj_set_user_data(ui_lblHistory_storage, "history");
-    lv_obj_set_user_data(ui_lblMusic_storage, "music");
-    lv_obj_set_user_data(ui_lblSave_storage, "save");
-    lv_obj_set_user_data(ui_lblScreenshot_storage, "screenshot");
-    lv_obj_set_user_data(ui_lblTheme_storage, "theme");
-    lv_obj_set_user_data(ui_lblCataloguePackage_storage, "pack-catalogue");
-    lv_obj_set_user_data(ui_lblConfigPackage_storage, "pack-config");
-    lv_obj_set_user_data(ui_lblBootlogoPackage_storage, "pack-bootlogo");
-    lv_obj_set_user_data(ui_lblLanguage_storage, "language");
-    lv_obj_set_user_data(ui_lblNetwork_storage, "network");
-    lv_obj_set_user_data(ui_lblSyncthing_storage, "syncthing");
-    lv_obj_set_user_data(ui_lblUserInit_storage, "userinit");
+#define STORAGE(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_storage, UDATA);
+    STORAGE_ELEMENTS
+#undef STORAGE
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

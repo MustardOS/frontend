@@ -610,16 +610,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblHostname_netinfo, "hostname");
-    lv_obj_set_user_data(ui_lblMac_netinfo, "mac");
-    lv_obj_set_user_data(ui_lblIp_netinfo, "ip");
-    lv_obj_set_user_data(ui_lblSsid_netinfo, "ssid");
-    lv_obj_set_user_data(ui_lblGateway_netinfo, "gateway");
-    lv_obj_set_user_data(ui_lblDns_netinfo, "dns");
-    lv_obj_set_user_data(ui_lblSignal_netinfo, "signal");
-    lv_obj_set_user_data(ui_lblChannel_netinfo, "channel");
-    lv_obj_set_user_data(ui_lblAcTraffic_netinfo, "actraffic");
-    lv_obj_set_user_data(ui_lblTpTraffic_netinfo, "tptraffic");
+#define NETINFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_netinfo, UDATA);
+    NETINFO_ELEMENTS
+#undef NETINFO
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

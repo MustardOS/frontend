@@ -102,7 +102,7 @@ static void restore_network_values() {
     lv_label_set_text(ui_lblAddressValue_network, config.NETWORK.ADDRESS);
     lv_label_set_text(ui_lblSubnetValue_network, config.NETWORK.SUBNET);
     lv_label_set_text(ui_lblGatewayValue_network, config.NETWORK.GATEWAY);
-    lv_label_set_text(ui_lblDNSValue_network, config.NETWORK.DNS);
+    lv_label_set_text(ui_lblDnsValue_network, config.NETWORK.DNS);
 
     if (strlen(config.NETWORK.PASS) >= 64) lv_label_set_text(ui_lblPasswordValue_network, PASS_ENCODE);
 
@@ -134,7 +134,7 @@ static void save_network_config() {
         write_text_to_file((CONF_CONFIG_PATH "network/gateway"), "w", CHAR,
                            lv_label_get_text(ui_lblGatewayValue_network));
         write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR,
-                           lv_label_get_text(ui_lblDNSValue_network));
+                           lv_label_get_text(ui_lblDnsValue_network));
     }
 
     refresh_config = 1;
@@ -153,7 +153,7 @@ static void init_navigation_group() {
     INIT_VALUE_ITEM(-1, network, Address, lang.MUXNETWORK.IP, "address", "");
     INIT_VALUE_ITEM(-1, network, Subnet, lang.MUXNETWORK.CIDR, "subnet", "");
     INIT_VALUE_ITEM(-1, network, Gateway, lang.MUXNETWORK.GATEWAY, "gateway", "");
-    INIT_VALUE_ITEM(-1, network, DNS, lang.MUXNETWORK.DNS, "dns", "");
+    INIT_VALUE_ITEM(-1, network, Dns, lang.MUXNETWORK.DNS, "dns", "");
     INIT_VALUE_ITEM(-1, network, Connect, lang.MUXNETWORK.CONNECT, "connect", "");
 
     ui_group = lv_group_create();
@@ -226,8 +226,8 @@ static void handle_keyboard_OK_press(void) {
     } else if (element_focused == ui_lblGateway_network) {
         lv_label_set_text(ui_lblGatewayValue_network,
                           lv_textarea_get_text(ui_txtEntry_network));
-    } else if (element_focused == ui_lblDNS_network) {
-        lv_label_set_text(ui_lblDNSValue_network, lv_textarea_get_text(ui_txtEntry_network));
+    } else if (element_focused == ui_lblDns_network) {
+        lv_label_set_text(ui_lblDnsValue_network, lv_textarea_get_text(ui_txtEntry_network));
     }
 
     if (lv_obj_has_state(key_entry, LV_STATE_DISABLED)) {
@@ -294,14 +294,14 @@ bool handle_navigate(void) {
                 lv_obj_add_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
                 lv_obj_add_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
                 lv_obj_add_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-                lv_obj_add_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+                lv_obj_add_flag(ui_pnlDns_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
             } else {
                 lv_label_set_text(ui_lblTypeValue_network, lang.MUXNETWORK.STATIC);
                 ui_count = UI_STATIC;
                 lv_obj_clear_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
                 lv_obj_clear_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
                 lv_obj_clear_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-                lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+                lv_obj_clear_flag(ui_pnlDns_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
             }
         } else {
             play_sound(SND_ERROR);
@@ -333,7 +333,7 @@ static void handle_confirm(void) {
                 const char *cv_address = lv_label_get_text(ui_lblAddressValue_network);
                 const char *cv_subnet = lv_label_get_text(ui_lblSubnetValue_network);
                 const char *cv_gateway = lv_label_get_text(ui_lblGatewayValue_network);
-                const char *cv_dns = lv_label_get_text(ui_lblDNSValue_network);
+                const char *cv_dns = lv_label_get_text(ui_lblDnsValue_network);
 
                 if (strlen(cv_ssid) > 0 && cv_pass_ok &&
                     strlen(cv_address) > 0 && strlen(cv_subnet) > 0 &&
@@ -652,16 +652,6 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblIdentifier_network, "identifier");
-    lv_obj_set_user_data(ui_lblPassword_network, "password");
-    lv_obj_set_user_data(ui_lblScan_network, "scan");
-    lv_obj_set_user_data(ui_lblType_network, "type");
-    lv_obj_set_user_data(ui_lblAddress_network, "address");
-    lv_obj_set_user_data(ui_lblSubnet_network, "subnet");
-    lv_obj_set_user_data(ui_lblGateway_network, "gateway");
-    lv_obj_set_user_data(ui_lblDNS_network, "dns");
-    lv_obj_set_user_data(ui_lblConnect_network, "connect");
-
     lv_obj_clear_flag(ui_pnlIdentifier_network, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlPassword_network, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ui_pnlScan_network, LV_OBJ_FLAG_HIDDEN);
@@ -676,13 +666,17 @@ static void init_elements() {
         lv_obj_add_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlDns_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     } else {
         lv_obj_clear_flag(ui_pnlAddress_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_pnlSubnet_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_pnlGateway_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_pnlDNS_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_pnlDns_network, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
+
+#define NETWORK(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_network, UDATA);
+    NETWORK_ELEMENTS
+#undef NETWORK
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

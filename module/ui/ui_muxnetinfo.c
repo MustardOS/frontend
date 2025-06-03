@@ -2,7 +2,7 @@
 #include "ui_muxnetinfo.h"
 #include "../../common/device.h"
 
-#define NETINFO(NAME)                      \
+#define NETINFO(NAME, UDATA)               \
     lv_obj_t *ui_pnl##NAME##_netinfo;      \
     lv_obj_t *ui_lbl##NAME##_netinfo;      \
     lv_obj_t *ui_ico##NAME##_netinfo;      \
@@ -15,7 +15,7 @@ lv_obj_t *ui_pnlEntry_netinfo;
 lv_obj_t *ui_txtEntry_netinfo;
 
 void init_muxnetinfo(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
-#define NETINFO(NAME) CREATE_VALUE_ITEM(netinfo, NAME);
+#define NETINFO(NAME, UDATA) CREATE_VALUE_ITEM(netinfo, NAME);
     NETINFO_ELEMENTS
 #undef NETINFO
 

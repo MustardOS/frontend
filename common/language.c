@@ -529,6 +529,10 @@ void load_lang(struct mux_lang *lang) {
     // muxspace
     SPECIFIC_FIELD(lang->MUXSPACE.TITLE, "STORAGE SPACE");
     SPECIFIC_FIELD(lang->MUXSPACE.HELP, "View the current used space of the mounted storage devices");
+    SPECIFIC_FIELD(lang->MUXSPACE.PRIMARY, "Primary Storage");
+    SPECIFIC_FIELD(lang->MUXSPACE.SECONDARY, "Secondary Storage");
+    SPECIFIC_FIELD(lang->MUXSPACE.EXTERNAL, "External Storage");
+    SPECIFIC_FIELD(lang->MUXSPACE.SYSTEM, "System Storage");
 
     // muxstorage
     SPECIFIC_FIELD(lang->MUXSTORAGE.TITLE, "STORAGE");

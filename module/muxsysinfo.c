@@ -431,17 +431,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblVersion_sysinfo, "version");
-    lv_obj_set_user_data(ui_lblDevice_sysinfo, "device");
-    lv_obj_set_user_data(ui_lblKernel_sysinfo, "kernel");
-    lv_obj_set_user_data(ui_lblUptime_sysinfo, "uptime");
-    lv_obj_set_user_data(ui_lblCPU_sysinfo, "cpu");
-    lv_obj_set_user_data(ui_lblSpeed_sysinfo, "speed");
-    lv_obj_set_user_data(ui_lblGovernor_sysinfo, "governor");
-    lv_obj_set_user_data(ui_lblMemory_sysinfo, "memory");
-    lv_obj_set_user_data(ui_lblTemp_sysinfo, "temp");
-    lv_obj_set_user_data(ui_lblCapacity_sysinfo, "capacity");
-    lv_obj_set_user_data(ui_lblVoltage_sysinfo, "voltage");
+#define SYSINFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_sysinfo, UDATA);
+    SYSINFO_ELEMENTS
+#undef SYSINFO
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

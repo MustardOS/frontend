@@ -3,12 +3,9 @@
 
 #define UI_COUNT 31
 
-static int Enable_original, Archive_original, Task_original, Custom_original, Language_original, Network_original,
-        Storage_original, WebServ_original, Core_original, Governor_original, Option_original, RetroArch_original,
-        Search_original, Tag_original, Bootlogo_original, Catalogue_original, RAConfig_original, Theme_original,
-        Clock_original, Timezone_original, Apps_original, Config_original, Explore_original, Collection_original,
-        History_original, Info_original, Advanced_original, General_original, HDMI_original, Power_original,
-        Visual_original;
+#define KIOSK(NAME, UDATA) static int NAME##_original;
+    KIOSK_ELEMENTS
+#undef KIOSK
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
@@ -50,37 +47,9 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_dropdown_settings() {
-    Enable_original = lv_dropdown_get_selected(ui_droEnable_kiosk);
-    Archive_original = lv_dropdown_get_selected(ui_droArchive_kiosk);
-    Task_original = lv_dropdown_get_selected(ui_droTask_kiosk);
-    Custom_original = lv_dropdown_get_selected(ui_droCustom_kiosk);
-    Language_original = lv_dropdown_get_selected(ui_droLanguage_kiosk);
-    Network_original = lv_dropdown_get_selected(ui_droNetwork_kiosk);
-    Storage_original = lv_dropdown_get_selected(ui_droStorage_kiosk);
-    WebServ_original = lv_dropdown_get_selected(ui_droWebServ_kiosk);
-    Core_original = lv_dropdown_get_selected(ui_droCore_kiosk);
-    Governor_original = lv_dropdown_get_selected(ui_droGovernor_kiosk);
-    Option_original = lv_dropdown_get_selected(ui_droOption_kiosk);
-    RetroArch_original = lv_dropdown_get_selected(ui_droRetroArch_kiosk);
-    Search_original = lv_dropdown_get_selected(ui_droSearch_kiosk);
-    Tag_original = lv_dropdown_get_selected(ui_droTag_kiosk);
-    Bootlogo_original = lv_dropdown_get_selected(ui_droBootlogo_kiosk);
-    Catalogue_original = lv_dropdown_get_selected(ui_droCatalogue_kiosk);
-    RAConfig_original = lv_dropdown_get_selected(ui_droRAConfig_kiosk);
-    Theme_original = lv_dropdown_get_selected(ui_droTheme_kiosk);
-    Clock_original = lv_dropdown_get_selected(ui_droClock_kiosk);
-    Timezone_original = lv_dropdown_get_selected(ui_droTimezone_kiosk);
-    Apps_original = lv_dropdown_get_selected(ui_droApps_kiosk);
-    Config_original = lv_dropdown_get_selected(ui_droConfig_kiosk);
-    Explore_original = lv_dropdown_get_selected(ui_droExplore_kiosk);
-    Collection_original = lv_dropdown_get_selected(ui_droCollection_kiosk);
-    History_original = lv_dropdown_get_selected(ui_droHistory_kiosk);
-    Info_original = lv_dropdown_get_selected(ui_droInfo_kiosk);
-    Advanced_original = lv_dropdown_get_selected(ui_droAdvanced_kiosk);
-    General_original = lv_dropdown_get_selected(ui_droGeneral_kiosk);
-    HDMI_original = lv_dropdown_get_selected(ui_droHDMI_kiosk);
-    Power_original = lv_dropdown_get_selected(ui_droPower_kiosk);
-    Visual_original = lv_dropdown_get_selected(ui_droVisual_kiosk);
+#define KIOSK(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_kiosk);
+    KIOSK_ELEMENTS
+#undef KIOSK
 }
 
 static void restore_kiosk_options() {
@@ -313,37 +282,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblEnable_kiosk, "enable");
-    lv_obj_set_user_data(ui_lblArchive_kiosk, "archive");
-    lv_obj_set_user_data(ui_lblTask_kiosk, "task");
-    lv_obj_set_user_data(ui_lblCustom_kiosk, "custom");
-    lv_obj_set_user_data(ui_lblLanguage_kiosk, "language");
-    lv_obj_set_user_data(ui_lblNetwork_kiosk, "network");
-    lv_obj_set_user_data(ui_lblStorage_kiosk, "storage");
-    lv_obj_set_user_data(ui_lblWebServ_kiosk, "webserv");
-    lv_obj_set_user_data(ui_lblCore_kiosk, "core");
-    lv_obj_set_user_data(ui_lblGovernor_kiosk, "governor");
-    lv_obj_set_user_data(ui_lblOption_kiosk, "option");
-    lv_obj_set_user_data(ui_lblRetroArch_kiosk, "retroarch");
-    lv_obj_set_user_data(ui_lblSearch_kiosk, "search");
-    lv_obj_set_user_data(ui_lblTag_kiosk, "tag");
-    lv_obj_set_user_data(ui_lblBootlogo_kiosk, "bootlogo");
-    lv_obj_set_user_data(ui_lblCatalogue_kiosk, "catalogue");
-    lv_obj_set_user_data(ui_lblRAConfig_kiosk, "raconfig");
-    lv_obj_set_user_data(ui_lblTheme_kiosk, "theme");
-    lv_obj_set_user_data(ui_lblClock_kiosk, "clock");
-    lv_obj_set_user_data(ui_lblTimezone_kiosk, "timezone");
-    lv_obj_set_user_data(ui_lblApps_kiosk, "apps");
-    lv_obj_set_user_data(ui_lblConfig_kiosk, "config");
-    lv_obj_set_user_data(ui_lblExplore_kiosk, "explore");
-    lv_obj_set_user_data(ui_lblCollection_kiosk, "collection");
-    lv_obj_set_user_data(ui_lblHistory_kiosk, "history");
-    lv_obj_set_user_data(ui_lblInfo_kiosk, "info");
-    lv_obj_set_user_data(ui_lblAdvanced_kiosk, "advanced");
-    lv_obj_set_user_data(ui_lblGeneral_kiosk, "general");
-    lv_obj_set_user_data(ui_lblHDMI_kiosk, "hdmi");
-    lv_obj_set_user_data(ui_lblPower_kiosk, "power");
-    lv_obj_set_user_data(ui_lblVisual_kiosk, "visual");
+#define KIOSK(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_kiosk, UDATA);
+    KIOSK_ELEMENTS
+#undef KIOSK
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

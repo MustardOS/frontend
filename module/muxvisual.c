@@ -3,10 +3,9 @@
 
 #define UI_COUNT 15
 
-static int Battery_original, Clock_original, Network_original, Name_original, Dash_original, FriendlyFolder_original,
-        TheTitleFormat_original, TitleIncludeRootDrive_original, FolderItemCount_original,
-        DisplayEmptyFolder_original, MenuCounterFolder_original, MenuCounterFile_original, Hidden_original,
-        OverlayImage_original, OverlayTransparency_original;
+#define VISUAL(NAME, UDATA) static int NAME##_original;
+    VISUAL_ELEMENTS
+#undef VISUAL
 
 static int overlay_count;
 
@@ -34,21 +33,9 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_dropdown_settings() {
-    Battery_original = lv_dropdown_get_selected(ui_droBattery_visual);
-    Clock_original = lv_dropdown_get_selected(ui_droClock_visual);
-    Network_original = lv_dropdown_get_selected(ui_droNetwork_visual);
-    Name_original = lv_dropdown_get_selected(ui_droName_visual);
-    Dash_original = lv_dropdown_get_selected(ui_droDash_visual);
-    FriendlyFolder_original = lv_dropdown_get_selected(ui_droFriendlyFolder_visual);
-    TheTitleFormat_original = lv_dropdown_get_selected(ui_droTheTitleFormat_visual);
-    TitleIncludeRootDrive_original = lv_dropdown_get_selected(ui_droTitleIncludeRootDrive_visual);
-    FolderItemCount_original = lv_dropdown_get_selected(ui_droFolderItemCount_visual);
-    DisplayEmptyFolder_original = lv_dropdown_get_selected(ui_droDisplayEmptyFolder_visual);
-    MenuCounterFolder_original = lv_dropdown_get_selected(ui_droMenuCounterFolder_visual);
-    MenuCounterFile_original = lv_dropdown_get_selected(ui_droMenuCounterFile_visual);
-    Hidden_original = lv_dropdown_get_selected(ui_droHidden_visual);
-    OverlayImage_original = lv_dropdown_get_selected(ui_droOverlayImage_visual);
-    OverlayTransparency_original = lv_dropdown_get_selected(ui_droOverlayTransparency_visual);
+#define VISUAL(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_visual);
+    VISUAL_ELEMENTS
+#undef VISUAL
 }
 
 static void restore_visual_options() {
@@ -253,21 +240,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblBattery_visual, "battery");
-    lv_obj_set_user_data(ui_lblClock_visual, "clock");
-    lv_obj_set_user_data(ui_lblNetwork_visual, "network");
-    lv_obj_set_user_data(ui_lblName_visual, "name");
-    lv_obj_set_user_data(ui_lblDash_visual, "dash");
-    lv_obj_set_user_data(ui_lblFriendlyFolder_visual, "friendlyfolder");
-    lv_obj_set_user_data(ui_lblTheTitleFormat_visual, "thetitleformat");
-    lv_obj_set_user_data(ui_lblTitleIncludeRootDrive_visual, "titleincluderootdrive");
-    lv_obj_set_user_data(ui_lblFolderItemCount_visual, "folderitemcount");
-    lv_obj_set_user_data(ui_lblDisplayEmptyFolder_visual, "folderempty");
-    lv_obj_set_user_data(ui_lblMenuCounterFolder_visual, "counterfolder");
-    lv_obj_set_user_data(ui_lblMenuCounterFile_visual, "counterfile");
-    lv_obj_set_user_data(ui_lblHidden_visual, "hidden");
-    lv_obj_set_user_data(ui_lblOverlayImage_visual, "overlayimage");
-    lv_obj_set_user_data(ui_lblOverlayTransparency_visual, "overlaytransparency");
+#define VISUAL(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_visual, UDATA);
+    VISUAL_ELEMENTS
+#undef VISUAL
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

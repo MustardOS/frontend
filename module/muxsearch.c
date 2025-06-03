@@ -737,9 +737,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblLookup_search, "lookup");
-    lv_obj_set_user_data(ui_lblSearchLocal_search, "local");
-    lv_obj_set_user_data(ui_lblSearchGlobal_search, "global");
+#define SEARCH(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_search, UDATA);
+    SEARCH_ELEMENTS
+#undef SEARCH
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

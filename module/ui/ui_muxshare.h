@@ -38,180 +38,180 @@
     lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
 } while (0)
 
-#define KIOSK_ELEMENTS \
-    KIOSK(Enable)      \
-    KIOSK(Archive)     \
-    KIOSK(Task)        \
-    KIOSK(Custom)      \
-    KIOSK(Language)    \
-    KIOSK(Network)     \
-    KIOSK(Storage)     \
-    KIOSK(WebServ)     \
-    KIOSK(Core)        \
-    KIOSK(Governor)    \
-    KIOSK(Option)      \
-    KIOSK(RetroArch)   \
-    KIOSK(Search)      \
-    KIOSK(Tag)         \
-    KIOSK(Bootlogo)    \
-    KIOSK(Catalogue)   \
-    KIOSK(RAConfig)    \
-    KIOSK(Theme)       \
-    KIOSK(Clock)       \
-    KIOSK(Timezone)    \
-    KIOSK(Apps)        \
-    KIOSK(Config)      \
-    KIOSK(Explore)     \
-    KIOSK(Collection)  \
-    KIOSK(History)     \
-    KIOSK(Info)        \
-    KIOSK(Advanced)    \
-    KIOSK(General)     \
-    KIOSK(HDMI)        \
-    KIOSK(Power)       \
-    KIOSK(Visual)
+#define KIOSK_ELEMENTS              \
+    KIOSK(Enable,     "enable")     \
+    KIOSK(Archive,    "archive")    \
+    KIOSK(Task,       "task")       \
+    KIOSK(Custom,     "custom")     \
+    KIOSK(Language,   "language")   \
+    KIOSK(Network,    "network")    \
+    KIOSK(Storage,    "storage")    \
+    KIOSK(WebServ,    "webserv")    \
+    KIOSK(Core,       "core")       \
+    KIOSK(Governor,   "governor")   \
+    KIOSK(Option,     "option")     \
+    KIOSK(RetroArch,  "retroarch")  \
+    KIOSK(Search,     "search")     \
+    KIOSK(Tag,        "tag")        \
+    KIOSK(Bootlogo,   "bootlogo")   \
+    KIOSK(Catalogue,  "catalogue")  \
+    KIOSK(RAConfig,   "raconfig")   \
+    KIOSK(Theme,      "theme")      \
+    KIOSK(Clock,      "clock")      \
+    KIOSK(Timezone,   "timezone")   \
+    KIOSK(Apps,       "apps")       \
+    KIOSK(Config,     "config")     \
+    KIOSK(Explore,    "explore")    \
+    KIOSK(Collection, "collection") \
+    KIOSK(History,    "history")    \
+    KIOSK(Info,       "info")       \
+    KIOSK(Advanced,   "advanced")   \
+    KIOSK(General,    "general")    \
+    KIOSK(HDMI,       "hdmi")       \
+    KIOSK(Power,      "power")      \
+    KIOSK(Visual,     "visual")
 
-#define NETINFO_ELEMENTS \
-    NETINFO(Hostname)    \
-    NETINFO(Mac)         \
-    NETINFO(Ip)          \
-    NETINFO(Ssid)        \
-    NETINFO(Gateway)     \
-    NETINFO(Dns)         \
-    NETINFO(Signal)      \
-    NETINFO(Channel)     \
-    NETINFO(AcTraffic)   \
-    NETINFO(TpTraffic)
+#define NETINFO_ELEMENTS            \
+    NETINFO(Hostname,  "hostname")  \
+    NETINFO(Mac,       "mac")       \
+    NETINFO(Ip,        "ip")        \
+    NETINFO(Ssid,      "ssid")      \
+    NETINFO(Gateway,   "gateway")   \
+    NETINFO(Dns,       "dns")       \
+    NETINFO(Signal,    "signal")    \
+    NETINFO(Channel,   "channel")   \
+    NETINFO(AcTraffic, "actraffic") \
+    NETINFO(TpTraffic, "tptraffic")
 
-#define NETWORK_ELEMENTS \
-    NETWORK(Identifier)  \
-    NETWORK(Password)    \
-    NETWORK(Scan)        \
-    NETWORK(Type)        \
-    NETWORK(Address)     \
-    NETWORK(Subnet)      \
-    NETWORK(Gateway)     \
-    NETWORK(DNS)         \
-    NETWORK(Connect)
+#define NETWORK_ELEMENTS              \
+    NETWORK(Identifier, "identifier") \
+    NETWORK(Password,   "password")   \
+    NETWORK(Scan,       "scan")       \
+    NETWORK(Type,       "type")       \
+    NETWORK(Address,    "address")    \
+    NETWORK(Subnet,     "subnet")     \
+    NETWORK(Gateway,    "gateway")    \
+    NETWORK(Dns,        "dns")        \
+    NETWORK(Connect,    "connect")
 
-#define OPTION_ELEMENTS \
-    OPTION(Search)      \
-    OPTION(Core)        \
-    OPTION(Governor)    \
-    OPTION(Tag)
+#define OPTION_ELEMENTS          \
+    OPTION(Search,   "search")   \
+    OPTION(Core,     "core")     \
+    OPTION(Governor, "governor") \
+    OPTION(Tag,      "tag")
 
 #define POWER_ELEMENTS \
-    POWER(Shutdown)    \
-    POWER(Battery)     \
-    POWER(IdleDisplay) \
-    POWER(IdleSleep)
+    POWER(Shutdown,    "shutdown")     \
+    POWER(Battery,     "battery")      \
+    POWER(IdleDisplay, "idle_display") \
+    POWER(IdleSleep,   "idle_sleep")
 
-#define RTC_ELEMENTS \
-    RTC(Year)     \
-    RTC(Month)    \
-    RTC(Day)      \
-    RTC(Hour)     \
-    RTC(Minute)   \
-    RTC(Notation) \
-    RTC(Timezone)
+#define RTC_ELEMENTS          \
+    RTC(Year,     "year")     \
+    RTC(Month,    "month")    \
+    RTC(Day,      "day")      \
+    RTC(Hour,     "hour")     \
+    RTC(Minute,   "minute")   \
+    RTC(Notation, "notation") \
+    RTC(Timezone, "timezone")
 
-#define SEARCH_ELEMENTS  \
-    SEARCH(Lookup)       \
-    SEARCH(SearchLocal)  \
-    SEARCH(SearchGlobal)
+#define SEARCH_ELEMENTS            \
+    SEARCH(Lookup,       "lookup") \
+    SEARCH(SearchLocal,  "local")  \
+    SEARCH(SearchGlobal, "global")
 
-#define SPACE_ELEMENTS \
-    SPACE(SD1)         \
-    SPACE(SD2)         \
-    SPACE(USB)         \
-    SPACE(RFS)
+#define SPACE_ELEMENTS            \
+    SPACE(Primary,   "primary")   \
+    SPACE(Secondary, "secondary") \
+    SPACE(External,  "external")  \
+    SPACE(System,    "system")
 
-#define STORAGE_ELEMENTS      \
-    STORAGE(BIOS)             \
-    STORAGE(Catalogue)        \
-    STORAGE(Name)             \
-    STORAGE(RetroArch)        \
-    STORAGE(Config)           \
-    STORAGE(Core)             \
-    STORAGE(Collection)       \
-    STORAGE(History)          \
-    STORAGE(Music)            \
-    STORAGE(Save)             \
-    STORAGE(Screenshot)       \
-    STORAGE(Theme)            \
-    STORAGE(CataloguePackage) \
-    STORAGE(ConfigPackage)    \
-    STORAGE(BootlogoPackage)  \
-    STORAGE(Language)         \
-    STORAGE(Network)          \
-    STORAGE(Syncthing)        \
-    STORAGE(UserInit)
+#define STORAGE_ELEMENTS                        \
+    STORAGE(BIOS,             "bios")           \
+    STORAGE(Catalogue,        "catalogue")      \
+    STORAGE(Name,             "name")           \
+    STORAGE(RetroArch,        "retroarch")      \
+    STORAGE(Config,           "config")         \
+    STORAGE(Core,             "core")           \
+    STORAGE(Collection,       "collection")     \
+    STORAGE(History,          "history")        \
+    STORAGE(Music,            "music")          \
+    STORAGE(Save,             "save")           \
+    STORAGE(Screenshot,       "screenshot")     \
+    STORAGE(Theme,            "theme")          \
+    STORAGE(CataloguePackage, "pack-catalogue") \
+    STORAGE(ConfigPackage,    "pack-config")    \
+    STORAGE(BootlogoPackage,  "pack-bootlogo")  \
+    STORAGE(Language,         "language")       \
+    STORAGE(Network,          "network")        \
+    STORAGE(Syncthing,        "syncthing")      \
+    STORAGE(UserInit,         "userinit")
 
-#define SYSINFO_ELEMENTS \
-    SYSINFO(Version)     \
-    SYSINFO(Device)      \
-    SYSINFO(Kernel)      \
-    SYSINFO(Uptime)      \
-    SYSINFO(CPU)         \
-    SYSINFO(Speed)       \
-    SYSINFO(Governor)    \
-    SYSINFO(Memory)      \
-    SYSINFO(Temp)        \
-    SYSINFO(Capacity)    \
-    SYSINFO(Voltage)
+#define SYSINFO_ELEMENTS          \
+    SYSINFO(Version,  "version")  \
+    SYSINFO(Device,   "device")   \
+    SYSINFO(Kernel,   "kernel")   \
+    SYSINFO(Uptime,   "uptime")   \
+    SYSINFO(CPU,      "cpu")      \
+    SYSINFO(Speed,    "speed")    \
+    SYSINFO(Governor, "governor") \
+    SYSINFO(Memory,   "memory")   \
+    SYSINFO(Temp,     "temp")     \
+    SYSINFO(Capacity, "capacity") \
+    SYSINFO(Voltage,  "voltage")
 
-#define TWEAKGEN_ELEMENTS \
-    TWEAKGEN(RTC)         \
-    TWEAKGEN(HDMI)        \
-    TWEAKGEN(Advanced)    \
-    TWEAKGEN(Brightness)  \
-    TWEAKGEN(Volume)      \
-    TWEAKGEN(Colour)      \
-    TWEAKGEN(Startup)
+#define TWEAKADV_ELEMENTS              \
+    TWEAKADV(Accelerate, "accelerate") \
+    TWEAKADV(Swap,       "swap")       \
+    TWEAKADV(Thermal,    "thermal")    \
+    TWEAKADV(Volume,     "volume")     \
+    TWEAKADV(Brightness, "brightness") \
+    TWEAKADV(Offset,     "offset")     \
+    TWEAKADV(Passcode,   "lock")       \
+    TWEAKADV(LED,        "led")        \
+    TWEAKADV(Theme,      "theme")      \
+    TWEAKADV(RetroWait,  "retrowait")  \
+    TWEAKADV(State,      "state")      \
+    TWEAKADV(Verbose,    "verbose")    \
+    TWEAKADV(Rumble,     "rumble")     \
+    TWEAKADV(UserInit,   "userinit")   \
+    TWEAKADV(DPADSwap,   "dpadswap")   \
+    TWEAKADV(Overdrive,  "overdrive")  \
+    TWEAKADV(Swapfile,   "swapfile")   \
+    TWEAKADV(Zramfile,   "zramfile")   \
+    TWEAKADV(CardMode,   "cardmode")
 
-#define TWEAKADV_ELEMENTS \
-    TWEAKADV(Accelerate)  \
-    TWEAKADV(Swap)        \
-    TWEAKADV(Thermal)     \
-    TWEAKADV(Volume)      \
-    TWEAKADV(Brightness)  \
-    TWEAKADV(Offset)      \
-    TWEAKADV(Passcode)    \
-    TWEAKADV(LED)         \
-    TWEAKADV(Theme)       \
-    TWEAKADV(RetroWait)   \
-    TWEAKADV(State)       \
-    TWEAKADV(Verbose)     \
-    TWEAKADV(Rumble)      \
-    TWEAKADV(UserInit)    \
-    TWEAKADV(DPADSwap)    \
-    TWEAKADV(Overdrive)   \
-    TWEAKADV(Swapfile)    \
-    TWEAKADV(Zramfile)    \
-    TWEAKADV(CardMode)
+#define TWEAKGEN_ELEMENTS              \
+    TWEAKGEN(RTC,        "rtc")        \
+    TWEAKGEN(HDMI,       "hdmi")       \
+    TWEAKGEN(Advanced,   "advanced")   \
+    TWEAKGEN(Brightness, "brightness") \
+    TWEAKGEN(Volume,     "volume")     \
+    TWEAKGEN(Colour,     "colour")     \
+    TWEAKGEN(Startup,    "startup")
 
-#define VISUAL_ELEMENTS           \
-    VISUAL(Battery)               \
-    VISUAL(Clock)                 \
-    VISUAL(Network)               \
-    VISUAL(Name)                  \
-    VISUAL(Dash)                  \
-    VISUAL(FriendlyFolder)        \
-    VISUAL(TheTitleFormat)        \
-    VISUAL(TitleIncludeRootDrive) \
-    VISUAL(FolderItemCount)       \
-    VISUAL(DisplayEmptyFolder)    \
-    VISUAL(MenuCounterFolder)     \
-    VISUAL(MenuCounterFile)       \
-    VISUAL(Hidden)                \
-    VISUAL(OverlayImage)          \
-    VISUAL(OverlayTransparency)
+#define VISUAL_ELEMENTS                                    \
+    VISUAL(Battery,               "battery")               \
+    VISUAL(Clock,                 "clock")                 \
+    VISUAL(Network,               "network")               \
+    VISUAL(Name,                  "name")                  \
+    VISUAL(Dash,                  "dash")                  \
+    VISUAL(FriendlyFolder,        "friendlyfolder")        \
+    VISUAL(TheTitleFormat,        "thetitleformat")        \
+    VISUAL(TitleIncludeRootDrive, "titleincluderootdrive") \
+    VISUAL(FolderItemCount,       "folderitemcount")       \
+    VISUAL(DisplayEmptyFolder,    "folderempty")           \
+    VISUAL(MenuCounterFolder,     "counterfolder")         \
+    VISUAL(MenuCounterFile,       "counterfile")           \
+    VISUAL(Hidden,                "hidden")                \
+    VISUAL(OverlayImage,          "overlayimage")          \
+    VISUAL(OverlayTransparency,   "overlaytransparency")
 
-#define WEBSERV_ELEMENTS \
-    WEBSERV(SSHD)        \
-    WEBSERV(SFTPGo)      \
-    WEBSERV(TTYD)        \
-    WEBSERV(Syncthing)   \
-    WEBSERV(RSLSync)     \
-    WEBSERV(NTP)         \
-    WEBSERV(Tailscaled)
+#define WEBSERV_ELEMENTS              \
+    WEBSERV(SSHD,       "sshd")       \
+    WEBSERV(SFTPGo,     "sftpgo")     \
+    WEBSERV(TTYD,       "ttyd")       \
+    WEBSERV(Syncthing,  "syncthing")  \
+    WEBSERV(RSLSync,    "rslsync")    \
+    WEBSERV(NTP,        "ntp")        \
+    WEBSERV(Tailscaled, "tailscaled")

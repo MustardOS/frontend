@@ -603,6 +603,10 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char HELP[MAX_BUFFER_SIZE];
+        char PRIMARY[MAX_BUFFER_SIZE];
+        char SECONDARY[MAX_BUFFER_SIZE];
+        char EXTERNAL[MAX_BUFFER_SIZE];
+        char SYSTEM[MAX_BUFFER_SIZE];
     } MUXSPACE;
 
     struct {

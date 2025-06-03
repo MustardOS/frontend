@@ -6,7 +6,7 @@
 
 void init_muxnetinfo(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme);
 
-#define NETINFO(NAME)                             \
+#define NETINFO(NAME, UDATA)                      \
     extern lv_obj_t *ui_pnl##NAME##_netinfo;      \
     extern lv_obj_t *ui_lbl##NAME##_netinfo;      \
     extern lv_obj_t *ui_ico##NAME##_netinfo;      \
