@@ -71,6 +71,18 @@
     KIOSK(Power)       \
     KIOSK(Visual)
 
+#define NETINFO_ELEMENTS \
+    NETINFO(Hostname)    \
+    NETINFO(Mac)         \
+    NETINFO(Ip)          \
+    NETINFO(Ssid)        \
+    NETINFO(Gateway)     \
+    NETINFO(Dns)         \
+    NETINFO(Signal)      \
+    NETINFO(Channel)     \
+    NETINFO(AcTraffic)   \
+    NETINFO(TpTraffic)
+
 #define NETWORK_ELEMENTS \
     NETWORK(Identifier)  \
     NETWORK(Password)    \
