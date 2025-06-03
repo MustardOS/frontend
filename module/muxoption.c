@@ -11,6 +11,7 @@ static lv_obj_t *ui_objects[UI_COUNT];
 static lv_obj_t *ui_objects_panel[UI_COUNT];
 static lv_obj_t *ui_objects_glyph[UI_COUNT];
 static lv_obj_t *ui_objects_value[UI_COUNT];
+
 static int group_index = 0;
 
 static void show_help(lv_obj_t *element_focused) {
@@ -101,64 +102,29 @@ static void add_info_items() {
         const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
         const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
 
-        add_info_item_type(ui_lblCore_option_value, core_file, core_dir, "core", false);
-        add_info_item_type(ui_lblGovernor_option_value, gov_file, gov_dir, "governor", true);
-        add_info_item_type(ui_lblTag_option_value, tag_file, tag_dir, "tag", true);
+        add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
+        add_info_item_type(ui_lblGovernorValue_option, gov_file, gov_dir, "governor", true);
+        add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
     }
-}
-
-static lv_obj_t *get_hidden_label(lv_obj_t *parent) {
-    lv_obj_t *lbl = lv_label_create(parent);
-    lv_label_set_text(lbl, "");
-    return lbl;
 }
 
 static void init_navigation_group() {
     add_info_items();
 
     int start_index = theme.MUX.ITEM.COUNT < UI_COUNT ? 2 : 0;
-    ui_objects_panel[start_index + 0] = ui_pnlSearch_option;
-    ui_objects_panel[start_index + 1] = ui_pnlCore_option;
-    ui_objects_panel[start_index + 2] = ui_pnlGovernor_option;
-    ui_objects_panel[start_index + 3] = ui_pnlTag_option;
 
-    ui_objects[start_index + 0] = ui_lblSearch_option;
-    ui_objects[start_index + 1] = ui_lblCore_option;
-    ui_objects[start_index + 2] = ui_lblGovernor_option;
-    ui_objects[start_index + 3] = ui_lblTag_option;
-
-    ui_objects_glyph[start_index + 0] = ui_icoSearch_option;
-    ui_objects_glyph[start_index + 1] = ui_icoCore_option;
-    ui_objects_glyph[start_index + 2] = ui_icoGovernor_option;
-    ui_objects_glyph[start_index + 3] = ui_icoTag_option;
-
-    ui_objects_value[start_index + 0] = get_hidden_label(ui_pnlSearch_option);
-    ui_objects_value[start_index + 1] = ui_lblCore_option_value;
-    ui_objects_value[start_index + 2] = ui_lblGovernor_option_value;
-    ui_objects_value[start_index + 3] = ui_lblTag_option_value;
-
-    apply_theme_list_panel(ui_pnlSearch_option);
-    apply_theme_list_panel(ui_pnlCore_option);
-    apply_theme_list_panel(ui_pnlGovernor_option);
-    apply_theme_list_panel(ui_pnlTag_option);
-
-    apply_theme_list_item(&theme, ui_lblSearch_option, lang.MUXOPTION.SEARCH);
-    apply_theme_list_item(&theme, ui_lblCore_option, lang.MUXOPTION.CORE);
-    apply_theme_list_item(&theme, ui_lblGovernor_option, lang.MUXOPTION.GOVERNOR);
-    apply_theme_list_item(&theme, ui_lblTag_option, lang.MUXOPTION.TAG);
-
-    apply_theme_list_glyph(&theme, ui_icoSearch_option, mux_module, "search");
-    apply_theme_list_glyph(&theme, ui_icoCore_option, mux_module, "core");
-    apply_theme_list_glyph(&theme, ui_icoGovernor_option, mux_module, "governor");
-    apply_theme_list_glyph(&theme, ui_icoTag_option, mux_module, "tag");
+    INIT_VALUE_ITEM(start_index + 0, option, Search, lang.MUXOPTION.SEARCH, "search", "");
+    INIT_VALUE_ITEM(start_index + 1, option, Core, lang.MUXOPTION.CORE, "core", "");
+    INIT_VALUE_ITEM(start_index + 2, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
+    INIT_VALUE_ITEM(start_index + 3, option, Tag, lang.MUXOPTION.TAG, "tag", "");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
     ui_group_value = lv_group_create();
 
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
     if (theme.MUX.ITEM.COUNT >= UI_COUNT) ui_count -= 2;
+
     for (unsigned int i = 0; i < ui_count; i++) {
         lv_obj_set_user_data(ui_objects_panel[i], strdup(lv_label_get_text(ui_objects[i])));
         lv_group_add_obj(ui_group, ui_objects[i]);
@@ -326,7 +292,8 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
+        adjust_panel_priority(ui_mux_standard_panels,
+                              sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 

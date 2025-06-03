@@ -111,21 +111,21 @@ static void init_navigation_group() {
             lang.MUXVISUAL.NAME.REM_SQPA
     };
 
-    INIT_OPTION_ITEM(visual, Battery, lang.MUXVISUAL.BATTERY, "battery", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, Clock, lang.MUXVISUAL.CLOCK, "clock", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, Network, lang.MUXVISUAL.NETWORK, "network", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
-    INIT_OPTION_ITEM(visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLY, "friendlyfolder", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, TheTitleFormat, lang.MUXVISUAL.REFORMAT, "thetitleformat", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, TitleIncludeRootDrive, lang.MUXVISUAL.ROOT, "titleincluderootdrive", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, FolderItemCount, lang.MUXVISUAL.COUNT, "folderitemcount", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, DisplayEmptyFolder, lang.MUXVISUAL.EMPTY, "folderempty", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, MenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER, "counterfolder", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, MenuCounterFile, lang.MUXVISUAL.COUNT_FILE, "counterfile", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
-    INIT_OPTION_ITEM(visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
-    INIT_OPTION_ITEM(visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
+    INIT_OPTION_ITEM(-1, visual, Battery, lang.MUXVISUAL.BATTERY, "battery", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, Clock, lang.MUXVISUAL.CLOCK, "clock", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, Network, lang.MUXVISUAL.NETWORK, "network", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, Name, lang.MUXVISUAL.NAME.TITLE, "name", visual_names, 4);
+    INIT_OPTION_ITEM(-1, visual, Dash, lang.MUXVISUAL.DASH, "dash", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, FriendlyFolder, lang.MUXVISUAL.FRIENDLY, "friendlyfolder", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, TheTitleFormat, lang.MUXVISUAL.REFORMAT, "thetitleformat", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, TitleIncludeRootDrive, lang.MUXVISUAL.ROOT, "titleincluderootdrive", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, FolderItemCount, lang.MUXVISUAL.COUNT, "folderitemcount", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, DisplayEmptyFolder, lang.MUXVISUAL.EMPTY, "folderempty", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, MenuCounterFolder, lang.MUXVISUAL.COUNT_FOLDER, "counterfolder", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, MenuCounterFile, lang.MUXVISUAL.COUNT_FILE, "counterfile", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, Hidden, lang.MUXVISUAL.HIDDEN, "hidden", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, visual, OverlayImage, lang.MUXVISUAL.OVERLAY.IMAGE, "overlayimage", NULL, 0);
+    INIT_OPTION_ITEM(-1, visual, OverlayTransparency, lang.MUXVISUAL.OVERLAY.TRANSPARENCY, "overlaytransparency", NULL, 0);
 
     overlay_count = load_overlay_set(ui_droOverlayImage_visual);
 

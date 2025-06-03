@@ -168,13 +168,13 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(rtc, Year, lang.MUXRTC.YEAR, "year", "");
-    INIT_VALUE_ITEM(rtc, Month, lang.MUXRTC.MONTH, "month", "");
-    INIT_VALUE_ITEM(rtc, Day, lang.MUXRTC.DAY, "day", "");
-    INIT_VALUE_ITEM(rtc, Hour, lang.MUXRTC.HOUR, "hour", "");
-    INIT_VALUE_ITEM(rtc, Minute, lang.MUXRTC.MINUTE, "minute", "");
-    INIT_VALUE_ITEM(rtc, Notation, lang.MUXRTC.NOTATION, "notation", "");
-    INIT_VALUE_ITEM(rtc, Timezone, lang.MUXRTC.TIMEZONE, "timezone", "");
+    INIT_VALUE_ITEM(-1, rtc, Year, lang.MUXRTC.YEAR, "year", "");
+    INIT_VALUE_ITEM(-1, rtc, Month, lang.MUXRTC.MONTH, "month", "");
+    INIT_VALUE_ITEM(-1, rtc, Day, lang.MUXRTC.DAY, "day", "");
+    INIT_VALUE_ITEM(-1, rtc, Hour, lang.MUXRTC.HOUR, "hour", "");
+    INIT_VALUE_ITEM(-1, rtc, Minute, lang.MUXRTC.MINUTE, "minute", "");
+    INIT_VALUE_ITEM(-1, rtc, Notation, lang.MUXRTC.NOTATION, "notation", "");
+    INIT_VALUE_ITEM(-1, rtc, Timezone, lang.MUXRTC.TIMEZONE, "timezone", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

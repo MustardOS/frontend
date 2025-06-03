@@ -206,17 +206,17 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(sysinfo, Version, lang.MUXSYSINFO.VERSION, "version", get_build_version());
-    INIT_VALUE_ITEM(sysinfo, Device, lang.MUXSYSINFO.DEVICE, "device", get_device_info());
-    INIT_VALUE_ITEM(sysinfo, Kernel, lang.MUXSYSINFO.KERNEL, "kernel", get_kernel_version());
-    INIT_VALUE_ITEM(sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_uptime());
-    INIT_VALUE_ITEM(sysinfo, CPU, lang.MUXSYSINFO.CPU.INFO, "cpu", get_cpu_model());
-    INIT_VALUE_ITEM(sysinfo, Speed, lang.MUXSYSINFO.CPU.SPEED, "speed", get_current_frequency());
-    INIT_VALUE_ITEM(sysinfo, Governor, lang.MUXSYSINFO.CPU.GOV, "governor", get_scaling_governor());
-    INIT_VALUE_ITEM(sysinfo, Memory, lang.MUXSYSINFO.MEMORY.INFO, "memory", get_memory_usage());
-    INIT_VALUE_ITEM(sysinfo, Temp, lang.MUXSYSINFO.TEMP, "temp", get_temperature());
-    INIT_VALUE_ITEM(sysinfo, Capacity, lang.MUXSYSINFO.CAPACITY, "capacity", get_battery_cap());
-    INIT_VALUE_ITEM(sysinfo, Voltage, lang.MUXSYSINFO.VOLTAGE, "voltage", read_battery_voltage());
+    INIT_VALUE_ITEM(-1, sysinfo, Version, lang.MUXSYSINFO.VERSION, "version", get_build_version());
+    INIT_VALUE_ITEM(-1, sysinfo, Device, lang.MUXSYSINFO.DEVICE, "device", get_device_info());
+    INIT_VALUE_ITEM(-1, sysinfo, Kernel, lang.MUXSYSINFO.KERNEL, "kernel", get_kernel_version());
+    INIT_VALUE_ITEM(-1, sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_uptime());
+    INIT_VALUE_ITEM(-1, sysinfo, CPU, lang.MUXSYSINFO.CPU.INFO, "cpu", get_cpu_model());
+    INIT_VALUE_ITEM(-1, sysinfo, Speed, lang.MUXSYSINFO.CPU.SPEED, "speed", get_current_frequency());
+    INIT_VALUE_ITEM(-1, sysinfo, Governor, lang.MUXSYSINFO.CPU.GOV, "governor", get_scaling_governor());
+    INIT_VALUE_ITEM(-1, sysinfo, Memory, lang.MUXSYSINFO.MEMORY.INFO, "memory", get_memory_usage());
+    INIT_VALUE_ITEM(-1, sysinfo, Temp, lang.MUXSYSINFO.TEMP, "temp", get_temperature());
+    INIT_VALUE_ITEM(-1, sysinfo, Capacity, lang.MUXSYSINFO.CAPACITY, "capacity", get_battery_cap());
+    INIT_VALUE_ITEM(-1, sysinfo, Voltage, lang.MUXSYSINFO.VOLTAGE, "voltage", read_battery_voltage());
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

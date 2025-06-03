@@ -71,6 +71,12 @@
     KIOSK(Power)       \
     KIOSK(Visual)
 
+#define OPTION_ELEMENTS \
+    OPTION(Search)      \
+    OPTION(Core)        \
+    OPTION(Governor)    \
+    OPTION(Tag)
+
 #define POWER_ELEMENTS \
     POWER(Shutdown)    \
     POWER(Battery)     \

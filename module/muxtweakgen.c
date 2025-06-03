@@ -131,13 +131,13 @@ static void init_navigation_group() {
             lang.MUXTWEAKGEN.STARTUP.RESUME
     };
 
-    INIT_OPTION_ITEM(tweakgen, RTC, lang.MUXTWEAKGEN.DATETIME, "clock", NULL, 0);
-    INIT_OPTION_ITEM(tweakgen, HDMI, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
-    INIT_OPTION_ITEM(tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
-    INIT_OPTION_ITEM(tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHT, "brightness", NULL, 0);
-    INIT_OPTION_ITEM(tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
-    INIT_OPTION_ITEM(tweakgen, Colour, lang.MUXTWEAKGEN.TEMP, "colour", NULL, 0);
-    INIT_OPTION_ITEM(tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
+    INIT_OPTION_ITEM(-1, tweakgen, RTC, lang.MUXTWEAKGEN.DATETIME, "clock", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, HDMI, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHT, "brightness", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Colour, lang.MUXTWEAKGEN.TEMP, "colour", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
 
     char *brightness_values = generate_number_string(1, device.SCREEN.BRIGHT, 1, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droBrightness_tweakgen, brightness_values);

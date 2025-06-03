@@ -39,9 +39,9 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(search, Lookup, lang.MUXSEARCH.LOOKUP, "lookup", "");
-    INIT_VALUE_ITEM(search, SearchLocal, lang.MUXSEARCH.LOCAL, "local", "");
-    INIT_VALUE_ITEM(search, SearchGlobal, lang.MUXSEARCH.GLOBAL, "global", "");
+    INIT_VALUE_ITEM(-1, search, Lookup, lang.MUXSEARCH.LOOKUP, "lookup", "");
+    INIT_VALUE_ITEM(-1, search, SearchLocal, lang.MUXSEARCH.LOCAL, "local", "");
+    INIT_VALUE_ITEM(-1, search, SearchGlobal, lang.MUXSEARCH.GLOBAL, "global", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

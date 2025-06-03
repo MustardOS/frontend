@@ -105,10 +105,10 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(space, SD1, "SD1", "sd1", "");
-    INIT_VALUE_ITEM(space, SD2, "SD2", "sd2", "");
-    INIT_VALUE_ITEM(space, USB, "USB", "usb", "");
-    INIT_VALUE_ITEM(space, RFS, "ROOTFS", "rfs", "");
+    INIT_VALUE_ITEM(-1, space, SD1, "SD1", "sd1", "");
+    INIT_VALUE_ITEM(-1, space, SD2, "SD2", "sd2", "");
+    INIT_VALUE_ITEM(-1, space, USB, "USB", "usb", "");
+    INIT_VALUE_ITEM(-1, space, RFS, "ROOTFS", "rfs", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

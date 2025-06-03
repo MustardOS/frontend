@@ -1,24 +1,15 @@
 #pragma once
 
+#include "ui_muxshare.h"
 #include "../../lvgl/lvgl.h"
 
 void init_muxoption(lv_obj_t *ui_pnlContent);
 
-extern lv_obj_t *ui_pnlSearch_option;
-extern lv_obj_t *ui_pnlCore_option;
-extern lv_obj_t *ui_pnlGovernor_option;
-extern lv_obj_t *ui_pnlTag_option;
+#define OPTION(NAME)                        \
+    extern lv_obj_t *ui_pnl##NAME##_option; \
+    extern lv_obj_t *ui_lbl##NAME##_option; \
+    extern lv_obj_t *ui_ico##NAME##_option; \
+    extern lv_obj_t *ui_lbl##NAME##Value_option;
 
-extern lv_obj_t *ui_lblSearch_option;
-extern lv_obj_t *ui_lblCore_option;
-extern lv_obj_t *ui_lblGovernor_option;
-extern lv_obj_t *ui_lblTag_option;
-
-extern lv_obj_t *ui_icoSearch_option;
-extern lv_obj_t *ui_icoCore_option;
-extern lv_obj_t *ui_icoGovernor_option;
-extern lv_obj_t *ui_icoTag_option;
-
-extern lv_obj_t *ui_lblCore_option_value;
-extern lv_obj_t *ui_lblGovernor_option_value;
-extern lv_obj_t *ui_lblTag_option_value;
+OPTION_ELEMENTS
+#undef OPTION

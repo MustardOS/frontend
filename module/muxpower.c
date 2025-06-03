@@ -118,10 +118,10 @@ static void init_navigation_group() {
             lang.MUXPOWER.IDLE.t10m, lang.MUXPOWER.IDLE.t15m, lang.MUXPOWER.IDLE.t30m
     };
 
-    INIT_OPTION_ITEM(power, Shutdown, lang.MUXPOWER.SLEEP.TITLE, "shutdown", sleep_timer, SHUTDOWN_COUNT);
-    INIT_OPTION_ITEM(power, Battery, lang.MUXPOWER.LOW_BATTERY, "battery", NULL, 0);
-    INIT_OPTION_ITEM(power, IdleDisplay, lang.MUXPOWER.IDLE.DISPLAY, "idle_display", idle_timer, IDLE_COUNT);
-    INIT_OPTION_ITEM(power, IdleSleep, lang.MUXPOWER.IDLE.SLEEP, "idle_sleep", idle_timer, IDLE_COUNT);
+    INIT_OPTION_ITEM(-1, power, Shutdown, lang.MUXPOWER.SLEEP.TITLE, "shutdown", sleep_timer, SHUTDOWN_COUNT);
+    INIT_OPTION_ITEM(-1, power, Battery, lang.MUXPOWER.LOW_BATTERY, "battery", NULL, 0);
+    INIT_OPTION_ITEM(-1, power, IdleDisplay, lang.MUXPOWER.IDLE.DISPLAY, "idle_display", idle_timer, IDLE_COUNT);
+    INIT_OPTION_ITEM(-1, power, IdleSleep, lang.MUXPOWER.IDLE.SLEEP, "idle_sleep", idle_timer, IDLE_COUNT);
 
     char *battery_string = generate_number_string(5, 50, 5, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_string);

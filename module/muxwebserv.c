@@ -69,13 +69,13 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_OPTION_ITEM(webserv, SSHD, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
-    INIT_OPTION_ITEM(webserv, SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
-    INIT_OPTION_ITEM(webserv, TTYD, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
-    INIT_OPTION_ITEM(webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
-    INIT_OPTION_ITEM(webserv, RSLSync, lang.MUXWEBSERV.RESILIO, "rslsync", disabled_enabled, 2);
-    INIT_OPTION_ITEM(webserv, NTP, lang.MUXWEBSERV.NTP, "ntp", disabled_enabled, 2);
-    INIT_OPTION_ITEM(webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, SSHD, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, TTYD, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, RSLSync, lang.MUXWEBSERV.RESILIO, "rslsync", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, NTP, lang.MUXWEBSERV.NTP, "ntp", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled", disabled_enabled, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

@@ -13,5 +13,5 @@ STORAGE_ELEMENTS
 void init_muxstorage(lv_obj_t *ui_pnlContent) {
 #define STORAGE(NAME) CREATE_VALUE_ITEM(storage, NAME);
     STORAGE_ELEMENTS
-#undef KIOSK
+#undef STORAGE
 }
