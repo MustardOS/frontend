@@ -1,10 +1,5 @@
-#include <string.h>
 #include "muxshare.h"
 #include "ui/ui_muxcredits.h"
-#include "../common/init.h"
-#include "../common/common.h"
-#include "../font/notosans_big.h"
-#include "../font/notosans_big_hd.h"
 
 static void timeout_task() {
     close_input();

@@ -1,13 +1,5 @@
 #include "muxshare.h"
-#include "muxnetwork.h"
 #include "ui/ui_muxnetwork.h"
-#include <unistd.h>
-#include <stdio.h>
-#include "../common/init.h"
-#include "../common/common.h"
-#include "../common/ui_common.h"
-#include "../common/osk.h"
-#include "../common/input/list_nav.h"
 
 const char *pass_args[] = {(INTERNAL_PATH "script/web/password.sh"), NULL};
 const char *net_c_args[] = {(INTERNAL_PATH "script/system/network.sh"), "connect", NULL};
@@ -22,13 +14,6 @@ lv_obj_t *ui_panels[UI_COUNT];
 static lv_obj_t *ui_objects[UI_COUNT];
 lv_obj_t *ui_values[UI_COUNT];
 static lv_obj_t *ui_icons[UI_COUNT];
-
-static lv_obj_t *ui_mux_panels[7];
-
-struct help_msg {
-    lv_obj_t *element;
-    char *message;
-};
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
@@ -703,15 +688,15 @@ static void handle_r1(void) {
 }
 
 static void init_elements() {
-    ui_mux_panels[0] = ui_pnlFooter;
-    ui_mux_panels[1] = ui_pnlHeader;
-    ui_mux_panels[2] = ui_pnlHelp;
-    ui_mux_panels[3] = ui_pnlEntry_network;
-    ui_mux_panels[4] = ui_pnlProgressBrightness;
-    ui_mux_panels[5] = ui_pnlProgressVolume;
-    ui_mux_panels[6] = ui_pnlMessage;
+    ui_mux_extra_panels[0] = ui_pnlFooter;
+    ui_mux_extra_panels[1] = ui_pnlHeader;
+    ui_mux_extra_panels[2] = ui_pnlHelp;
+    ui_mux_extra_panels[3] = ui_pnlEntry_network;
+    ui_mux_extra_panels[4] = ui_pnlProgressBrightness;
+    ui_mux_extra_panels[5] = ui_pnlProgressVolume;
+    ui_mux_extra_panels[6] = ui_pnlMessage;
 
-    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+    adjust_panel_priority(ui_mux_extra_panels, sizeof(ui_mux_extra_panels) / sizeof(ui_mux_extra_panels[0]));
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -792,7 +777,7 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+        adjust_panel_priority(ui_mux_extra_panels, sizeof(ui_mux_extra_panels) / sizeof(ui_mux_extra_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 

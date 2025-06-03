@@ -52,6 +52,27 @@
     KIOSK(Power)       \
     KIOSK(Visual)
 
+#define STORAGE_ELEMENTS      \
+    STORAGE(BIOS)             \
+    STORAGE(Catalogue)        \
+    STORAGE(Name)             \
+    STORAGE(RetroArch)        \
+    STORAGE(Config)           \
+    STORAGE(Core)             \
+    STORAGE(Collection)       \
+    STORAGE(History)          \
+    STORAGE(Music)            \
+    STORAGE(Save)             \
+    STORAGE(Screenshot)       \
+    STORAGE(Theme)            \
+    STORAGE(CataloguePackage) \
+    STORAGE(ConfigPackage)    \
+    STORAGE(BootlogoPackage)  \
+    STORAGE(Language)         \
+    STORAGE(Network)          \
+    STORAGE(Syncthing)        \
+    STORAGE(UserInit)
+
 #define SYSINFO_ELEMENTS \
     SYSINFO(Version)     \
     SYSINFO(Device)      \

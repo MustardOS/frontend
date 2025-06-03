@@ -1,9 +1,4 @@
 #include "muxshare.h"
-#include "muxsplash.h"
-#include <stdio.h>
-#include "../common/init.h"
-#include "../common/common.h"
-#include "../common/ui_common.h"
 
 int muxsplash_main(char *splash_image) {
     init_module("muxsplash");

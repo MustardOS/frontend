@@ -1,12 +1,5 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
 #include "muxshare.h"
 #include "ui/ui_muxstart.h"
-#include "../common/init.h"
-#include "../common/common.h"
 
 char **messages = NULL;
 int message_count = 0;

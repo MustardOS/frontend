@@ -1,24 +1,9 @@
 #include "muxshare.h"
-#include "muxspace.h"
 #include "ui/ui_muxspace.h"
-#include <string.h>
-#include <stdio.h>
-#include <sys/statvfs.h>
-#include "../common/init.h"
-#include "../common/common.h"
-#include "../common/ui_common.h"
-#include "../common/input/list_nav.h"
 
 #define UI_COUNT 4
+
 static lv_obj_t *ui_objects[UI_COUNT];
-#define UI_PANEL 5
-static lv_obj_t *ui_mux_panels[UI_PANEL];
-
-struct help_msg {
-    lv_obj_t *element;
-    char *message;
-};
-
 struct mount {
     lv_obj_t *value_panel;
     lv_obj_t *bar_panel;
@@ -230,13 +215,13 @@ static void handle_menu() {
 }
 
 static void init_elements() {
-    ui_mux_panels[0] = ui_pnlFooter;
-    ui_mux_panels[1] = ui_pnlHeader;
-    ui_mux_panels[2] = ui_pnlHelp;
-    ui_mux_panels[3] = ui_pnlProgressBrightness;
-    ui_mux_panels[4] = ui_pnlProgressVolume;
+    ui_mux_standard_panels[0] = ui_pnlFooter;
+    ui_mux_standard_panels[1] = ui_pnlHeader;
+    ui_mux_standard_panels[2] = ui_pnlHelp;
+    ui_mux_standard_panels[3] = ui_pnlProgressBrightness;
+    ui_mux_standard_panels[4] = ui_pnlProgressVolume;
 
-    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+    adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -283,7 +268,7 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 

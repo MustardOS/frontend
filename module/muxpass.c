@@ -1,12 +1,7 @@
 #include "muxshare.h"
-#include "muxpass.h"
 #include "ui/ui_muxpass.h"
-#include <string.h>
-#include <stdio.h>
-#include "../common/init.h"
-#include "../common/common.h"
-#include "../common/ui_common.h"
-#include "../common/passcode.h"
+
+#define UI_COUNT 6
 
 static int exit_status_muxpass = 0;
 
@@ -14,10 +9,7 @@ struct mux_passcode passcode;
 static char *p_code;
 static char *p_msg;
 
-#define UI_COUNT 6
 static lv_obj_t *ui_objects[UI_COUNT];
-
-static lv_obj_t *ui_mux_panels[2];
 
 static void init_navigation_group() {
     ui_objects[0] = ui_rolComboOne;
@@ -94,10 +86,10 @@ static void handle_right(void) {
 }
 
 static void init_elements() {
-    ui_mux_panels[0] = ui_pnlFooter;
-    ui_mux_panels[1] = ui_pnlHeader;
+    ui_mux_minimal_panels[0] = ui_pnlFooter;
+    ui_mux_minimal_panels[1] = ui_pnlHeader;
 
-    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+    adjust_panel_priority(ui_mux_minimal_panels, sizeof(ui_mux_minimal_panels) / sizeof(ui_mux_minimal_panels[0]));
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

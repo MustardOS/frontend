@@ -626,6 +626,7 @@ struct mux_lang {
             char THEME[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
+            char BOOTLOGO[MAX_BUFFER_SIZE];
         } PACKAGE;
         struct {
             char BIOS[MAX_BUFFER_SIZE];
@@ -647,6 +648,7 @@ struct mux_lang {
                 char THEME[MAX_BUFFER_SIZE];
                 char CATALOGUE[MAX_BUFFER_SIZE];
                 char RA_CONFIG[MAX_BUFFER_SIZE];
+                char BOOTLOGO[MAX_BUFFER_SIZE];
             } PACKAGE;
         } HELP;
     } MUXSTORAGE;

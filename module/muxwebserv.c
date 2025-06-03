@@ -1,23 +1,10 @@
 #include "muxshare.h"
-#include "muxwebserv.h"
 #include "ui/ui_muxwebserv.h"
-#include <string.h>
-#include <stdio.h>
-#include "../common/init.h"
-#include "../common/common.h"
-#include "../common/ui_common.h"
-#include "../common/input/list_nav.h"
+
+#define UI_COUNT 7
 
 static int SSHD_original, SFTPGo_original, TTYD_original, Syncthing_original,
         RSLSync_original, NTP_original, Tailscaled_original;
-
-#define UI_PANEL 5
-static lv_obj_t *ui_mux_panels[UI_PANEL];
-
-struct help_msg {
-    lv_obj_t *element;
-    char *message;
-};
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
@@ -89,14 +76,10 @@ static void save_web_options() {
 }
 
 static void init_navigation_group() {
-#define UI_COUNT 7
-
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
-
-    int ui_index = 0;
 
     INIT_OPTION_ITEM(webserv, SSHD, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
     INIT_OPTION_ITEM(webserv, SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
@@ -110,8 +93,6 @@ static void init_navigation_group() {
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
-
-    ui_count = ui_index;
 
     for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
@@ -189,13 +170,13 @@ static void handle_help(void) {
 }
 
 static void init_elements() {
-    ui_mux_panels[0] = ui_pnlFooter;
-    ui_mux_panels[1] = ui_pnlHeader;
-    ui_mux_panels[2] = ui_pnlHelp;
-    ui_mux_panels[3] = ui_pnlProgressBrightness;
-    ui_mux_panels[4] = ui_pnlProgressVolume;
+    ui_mux_standard_panels[0] = ui_pnlFooter;
+    ui_mux_standard_panels[1] = ui_pnlHeader;
+    ui_mux_standard_panels[2] = ui_pnlHelp;
+    ui_mux_standard_panels[3] = ui_pnlProgressBrightness;
+    ui_mux_standard_panels[4] = ui_pnlProgressVolume;
 
-    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+    adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -248,7 +229,7 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 

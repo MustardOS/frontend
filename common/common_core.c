@@ -93,9 +93,11 @@ void assign_core_single(char *rom_dir, char *core_dir, char *core, char *sys, ch
     write_gov_file(gov_path, gov, rom_no_ext);
 }
 
-void assign_core_directory(char *core_dir, char *core, char *sys, char *gov, int lookup) {
-    delete_files_of_type(core_dir, ".cfg", NULL, 0);
-    delete_files_of_type(core_dir, ".gov", NULL, 0);
+void assign_core_directory(char *core_dir, char *core, char *sys, char *gov, int lookup, int purge) {
+    if (purge) {
+        delete_files_of_type(core_dir, ".cfg", NULL, 0);
+        delete_files_of_type(core_dir, ".gov", NULL, 0);
+    }
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/core.cfg", core_dir);
@@ -110,7 +112,7 @@ void assign_core_parent(char *rom_dir, char *core_dir, char *core, char *sys, ch
     delete_files_of_type(core_dir, ".cfg", NULL, 1);
     delete_files_of_type(core_dir, ".gov", NULL, 1);
 
-    assign_core_directory(core_dir, core, sys, gov, lookup);
+    assign_core_directory(core_dir, core, sys, gov, lookup, 1);
 
     char **subdirs = get_subdirectories(rom_dir);
     if (!subdirs) return;
@@ -149,7 +151,10 @@ void create_core_assignment(char *rom_dir, char *core, char *sys, char *rom,
             assign_core_parent(rom_dir, core_dir, core, sys, gov, lookup);
             break;
         case DIRECTORY:
-            assign_core_directory(core_dir, core, sys, gov, lookup);
+            assign_core_directory(core_dir, core, sys, gov, lookup, 1);
+            break;
+        case DIRECTORY_NO_WIPE:
+            assign_core_directory(core_dir, core, sys, gov, lookup, 0);
             break;
     }
 

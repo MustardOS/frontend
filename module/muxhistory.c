@@ -1,25 +1,8 @@
 #include "muxshare.h"
-#include "muxhistory.h"
 #include "ui/ui_muxhistory.h"
-#include <unistd.h>
-#include <dirent.h>
-#include <string.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "../common/init.h"
-#include "../common/img/nothing.h"
-#include "../common/common.h"
-#include "../common/ui_common.h"
-#include "../common/json/json.h"
-#include "../common/input/list_nav.h"
-#include "../common/log.h"
-#include "../lookup/lookup.h"
 
 static lv_obj_t *ui_imgSplash;
-
 static lv_obj_t *ui_viewport_objects[7];
-static lv_obj_t *ui_mux_panels[7];
 
 static int exit_status = 0;
 static int file_count = 0;
@@ -613,15 +596,15 @@ static void init_elements() {
             break;
     }
 
-    ui_mux_panels[0] = ui_pnlFooter;
-    ui_mux_panels[1] = ui_pnlHeader;
-    ui_mux_panels[2] = ui_lblCounter_history;
-    ui_mux_panels[3] = ui_pnlHelp;
-    ui_mux_panels[4] = ui_pnlProgressBrightness;
-    ui_mux_panels[5] = ui_pnlProgressVolume;
-    ui_mux_panels[6] = ui_pnlMessage;
+    ui_mux_extra_panels[0] = ui_pnlFooter;
+    ui_mux_extra_panels[1] = ui_pnlHeader;
+    ui_mux_extra_panels[2] = ui_lblCounter_history;
+    ui_mux_extra_panels[3] = ui_pnlHelp;
+    ui_mux_extra_panels[4] = ui_pnlProgressBrightness;
+    ui_mux_extra_panels[5] = ui_pnlProgressVolume;
+    ui_mux_extra_panels[6] = ui_pnlMessage;
 
-    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+    adjust_panel_priority(ui_mux_extra_panels, sizeof(ui_mux_extra_panels) / sizeof(ui_mux_extra_panels[0]));
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -672,7 +655,7 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
-        adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+        adjust_panel_priority(ui_mux_extra_panels, sizeof(ui_mux_extra_panels) / sizeof(ui_mux_extra_panels[0]));
 
         const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         snprintf(current_content_label, sizeof(current_content_label), "%s", content_label);

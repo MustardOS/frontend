@@ -550,6 +550,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.PACKAGE.THEME, "Themes");
     SPECIFIC_FIELD(lang->MUXSTORAGE.PACKAGE.CATALOGUE, "Catalogue Packages");
     SPECIFIC_FIELD(lang->MUXSTORAGE.PACKAGE.RA_CONFIG, "RetroArch Config Packages");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.PACKAGE.BOOTLOGO, "Bootlogo Packages");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.BIOS, "Location of system BIOS files");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.CATALOGUE, "Location of content images and text");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.FRIENDLY, "Location of friendly name configurations");
@@ -568,6 +569,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.PACKAGE.THEME, "Location of themes");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.PACKAGE.CATALOGUE, "Location of catalogue packages");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.PACKAGE.RA_CONFIG, "Location of RetroArch configuration packages");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.PACKAGE.BOOTLOGO, "Location of bootlogo packages");
 
     // muxsysinfo
     SPECIFIC_FIELD(lang->MUXSYSINFO.TITLE, "SYSTEM DETAILS");

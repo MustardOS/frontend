@@ -1,10 +1,4 @@
 #include "muxshare.h"
-#include "muxtester.h"
-#include <string.h>
-#include "../common/init.h"
-#include "../common/img/nothing.h"
-#include "../common/common.h"
-#include "../common/ui_common.h"
 
 lv_obj_t *ui_imgButton;
 

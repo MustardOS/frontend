@@ -5,7 +5,8 @@
 enum gen_type {
     SINGLE,
     DIRECTORY,
-    PARENT
+    PARENT,
+    DIRECTORY_NO_WIPE
 };
 
 void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, size_t catalogue_name_size);

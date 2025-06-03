@@ -13,3 +13,9 @@ void init_muxkiosk(lv_obj_t *ui_pnlContent);
 
 KIOSK_ELEMENTS
 #undef KIOSK
+
+#define DECLARE_ORIGINAL(NAME) \
+    static int NAME##_original;
+
+#define STORE_ORIGINAL(NAME) \
+    NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_kiosk);

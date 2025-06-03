@@ -1,10 +1,4 @@
-#include <string.h>
-#include <unistd.h>
 #include "muxshare.h"
-#include "../common/init.h"
-#include "../common/common.h"
-#include "../font/notosans_big.h"
-#include "../font/notosans_big_hd.h"
 
 int main(void) {
     init_module("muxwarn");

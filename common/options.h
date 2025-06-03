@@ -89,6 +89,7 @@
 #define STORE_LOC_THEM "MUOS/theme"
 #define STORE_LOC_PCAT "MUOS/package/catalogue"
 #define STORE_LOC_PCON "MUOS/package/config"
+#define STORE_LOC_PLOG "MUOS/package/bootlogo"
 #define STORE_LOC_LANG "MUOS/language"
 #define STORE_LOC_NETW "MUOS/network"
 #define STORE_LOC_SYCT "MUOS/syncthing"
@@ -153,11 +154,11 @@
         apply_theme_list_drop_down(&theme, ui_dro##NAME##_##MODULE, NULL);          \
         if ((OPTION) != NULL && (COUNT) > 0)                                        \
             add_drop_down_options(ui_dro##NAME##_##MODULE, OPTION, COUNT);          \
-        ui_objects[ui_index] = ui_lbl##NAME##_##MODULE;                             \
-        ui_objects_value[ui_index] = ui_dro##NAME##_##MODULE;                       \
-        ui_objects_glyph[ui_index] = ui_ico##NAME##_##MODULE;                       \
-        ui_objects_panel[ui_index] = ui_pnl##NAME##_##MODULE;                       \
-        ui_index++;                                                                 \
+        ui_objects[ui_count] = ui_lbl##NAME##_##MODULE;                             \
+        ui_objects_value[ui_count] = ui_dro##NAME##_##MODULE;                       \
+        ui_objects_glyph[ui_count] = ui_ico##NAME##_##MODULE;                       \
+        ui_objects_panel[ui_count] = ui_pnl##NAME##_##MODULE;                       \
+        ui_count++;                                                                 \
     } while (0)
 
 #define INIT_VALUE_ITEM(MODULE, NAME, LABEL, GLYPH, VALUE)                          \
@@ -166,11 +167,11 @@
         apply_theme_list_item(&theme, ui_lbl##NAME##_##MODULE, LABEL);              \
         apply_theme_list_glyph(&theme, ui_ico##NAME##_##MODULE, mux_module, GLYPH); \
         apply_theme_list_value(&theme, ui_lbl##NAME##Value_##MODULE, VALUE);        \
-        ui_objects[ui_index] = ui_lbl##NAME##_##MODULE;                             \
-        ui_objects_value[ui_index] = ui_lbl##NAME##Value_##MODULE;                  \
-        ui_objects_glyph[ui_index] = ui_ico##NAME##_##MODULE;                       \
-        ui_objects_panel[ui_index] = ui_pnl##NAME##_##MODULE;                       \
-        ui_index++;                                                                 \
+        ui_objects[ui_count] = ui_lbl##NAME##_##MODULE;                             \
+        ui_objects_value[ui_count] = ui_lbl##NAME##Value_##MODULE;                  \
+        ui_objects_glyph[ui_count] = ui_ico##NAME##_##MODULE;                       \
+        ui_objects_panel[ui_count] = ui_pnl##NAME##_##MODULE;                       \
+        ui_count++;                                                                 \
     } while (0)
 
 #define CHECK_AND_SAVE_KSK(MODULE, NAME, FILE, TYPE)                         \

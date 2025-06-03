@@ -1,15 +1,7 @@
 #include "muxshare.h"
-#include "muxrtc.h"
 #include "ui/ui_muxrtc.h"
-#include <unistd.h>
-#include <time.h>
-#include <sys/time.h>
-#include <stdio.h>
-#include "../common/init.h"
-#include "../common/log.h"
-#include "../common/common.h"
-#include "../common/ui_common.h"
-#include "../common/input/list_nav.h"
+
+#define UI_COUNT 7
 
 #define MIN_YEAR 1970
 #define MAX_YEAR 2199
@@ -30,10 +22,7 @@ static rtc_state_t rtc = {
         2025, 1, 1, 0, 0, 0
 };
 
-#define UI_COUNT 7
-#define UI_PANEL 5
 static lv_obj_t *ui_objects[UI_COUNT];
-static lv_obj_t *ui_mux_panels[UI_PANEL];
 
 const char *notation[] = {
         NULL, NULL
@@ -514,13 +503,13 @@ static void handle_menu() {
 }
 
 static void init_elements() {
-    ui_mux_panels[0] = ui_pnlFooter;
-    ui_mux_panels[1] = ui_pnlHeader;
-    ui_mux_panels[2] = ui_pnlHelp;
-    ui_mux_panels[3] = ui_pnlProgressBrightness;
-    ui_mux_panels[4] = ui_pnlProgressVolume;
+    ui_mux_standard_panels[0] = ui_pnlFooter;
+    ui_mux_standard_panels[1] = ui_pnlHeader;
+    ui_mux_standard_panels[2] = ui_pnlHelp;
+    ui_mux_standard_panels[3] = ui_pnlProgressBrightness;
+    ui_mux_standard_panels[4] = ui_pnlProgressVolume;
 
-    adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+    adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -580,7 +569,7 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_panels, sizeof(ui_mux_panels) / sizeof(ui_mux_panels[0]));
+        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 

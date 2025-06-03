@@ -1,10 +1,5 @@
 #include "muxshare.h"
 #include "ui/ui_muxcharge.h"
-#include <string.h>
-#include <stdio.h>
-#include "../common/init.h"
-#include "../common/common.h"
-#include "../common/log.h"
 
 static int exit_status = -1;
 static int was_blank = 0;
