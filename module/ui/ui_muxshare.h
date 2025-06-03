@@ -19,6 +19,25 @@
         lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                     \
     } while (0)
 
+#define CREATE_BAR_ITEM(MODULE, NAME) do { \
+    ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent); \
+    ui_pnl##NAME##Bar_##MODULE = lv_obj_create(ui_pnlContent); \
+    ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE); \
+    ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE); \
+    ui_lbl##NAME##Value_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE); \
+    ui_bar##NAME##_##MODULE = lv_bar_create(ui_pnl##NAME##Bar_##MODULE); \
+    lv_label_set_text(ui_lbl##NAME##_##MODULE, ""); \
+    lv_label_set_text(ui_lbl##NAME##Value_##MODULE, ""); \
+    lv_obj_set_height(ui_pnl##NAME##Bar_##MODULE, 10); \
+    lv_obj_set_width(ui_pnl##NAME##Bar_##MODULE, lv_pct(100)); \
+    lv_obj_set_width(ui_bar##NAME##_##MODULE, lv_pct(100)); \
+    lv_bar_set_range(ui_bar##NAME##_##MODULE, 0, device.MUX.WIDTH); \
+    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT); \
+    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 25, LV_PART_MAIN | LV_STATE_DEFAULT); \
+    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), LV_PART_INDICATOR | LV_STATE_DEFAULT); \
+    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
+} while (0)
+
 #define KIOSK_ELEMENTS \
     KIOSK(Enable)      \
     KIOSK(Archive)     \
@@ -51,6 +70,12 @@
     KIOSK(HDMI)        \
     KIOSK(Power)       \
     KIOSK(Visual)
+
+#define SPACE_ELEMENTS \
+    SPACE(SD1)         \
+    SPACE(SD2)         \
+    SPACE(USB)         \
+    SPACE(RFS)
 
 #define STORAGE_ELEMENTS      \
     STORAGE(BIOS)             \

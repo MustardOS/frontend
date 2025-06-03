@@ -3,7 +3,6 @@
 
 #define UI_COUNT 4
 
-static lv_obj_t *ui_objects[UI_COUNT];
 struct mount {
     lv_obj_t *value_panel;
     lv_obj_t *bar_panel;
@@ -65,10 +64,10 @@ static void get_storage_info(const char *partition, double *total, double *free,
 
 static void update_storage_info() {
     struct mount storage_info[] = {
-            {ui_pnlSD1, ui_pnlSD1Bar, ui_lblSD1Value, ui_barSD1, device.STORAGE.ROM.MOUNT},
-            {ui_pnlSD2, ui_pnlSD2Bar, ui_lblSD2Value, ui_barSD2, device.STORAGE.SDCARD.MOUNT},
-            {ui_pnlUSB, ui_pnlUSBBar, ui_lblUSBValue, ui_barUSB, device.STORAGE.USB.MOUNT},
-            {ui_pnlRFS, ui_pnlRFSBar, ui_lblRFSValue, ui_barRFS, device.STORAGE.ROOT.MOUNT}
+            {ui_pnlSD1_space, ui_pnlSD1Bar_space, ui_lblSD1Value_space, ui_barSD1_space, device.STORAGE.ROM.MOUNT},
+            {ui_pnlSD2_space, ui_pnlSD2Bar_space, ui_lblSD2Value_space, ui_barSD2_space, device.STORAGE.SDCARD.MOUNT},
+            {ui_pnlUSB_space, ui_pnlUSBBar_space, ui_lblUSBValue_space, ui_barUSB_space, device.STORAGE.USB.MOUNT},
+            {ui_pnlRFS_space, ui_pnlRFSBar_space, ui_lblRFSValue_space, ui_barRFS_space, device.STORAGE.ROOT.MOUNT}
     };
 
     for (size_t i = 0; i < sizeof(storage_info) / sizeof(storage_info[0]); i++) {
@@ -101,58 +100,21 @@ static void update_storage_info() {
 }
 
 static void init_navigation_group() {
-    lv_obj_t *ui_objects_panel[] = {
-            ui_pnlSD1,
-            ui_pnlSD2,
-            ui_pnlUSB,
-            ui_pnlRFS
-    };
+    static lv_obj_t *ui_objects[UI_COUNT];
+    static lv_obj_t *ui_objects_value[UI_COUNT];
+    static lv_obj_t *ui_objects_glyph[UI_COUNT];
+    static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    ui_objects[0] = ui_lblSD1;
-    ui_objects[1] = ui_lblSD2;
-    ui_objects[2] = ui_lblUSB;
-    ui_objects[3] = ui_lblRFS;
-
-    lv_obj_t *ui_objects_value[] = {
-            ui_lblSD1Value,
-            ui_lblSD2Value,
-            ui_lblUSBValue,
-            ui_lblRFSValue
-    };
-
-    lv_obj_t *ui_objects_glyph[] = {
-            ui_icoSD1,
-            ui_icoSD2,
-            ui_icoUSB,
-            ui_icoRFS
-    };
-
-    apply_theme_list_panel(ui_pnlSD1);
-    apply_theme_list_panel(ui_pnlSD2);
-    apply_theme_list_panel(ui_pnlUSB);
-    apply_theme_list_panel(ui_pnlRFS);
-
-    apply_theme_list_item(&theme, ui_lblSD1, "SD1");
-    apply_theme_list_item(&theme, ui_lblSD2, "SD2");
-    apply_theme_list_item(&theme, ui_lblUSB, "USB");
-    apply_theme_list_item(&theme, ui_lblRFS, "ROOTFS");
-
-    apply_theme_list_glyph(&theme, ui_icoSD1, mux_module, "sd1");
-    apply_theme_list_glyph(&theme, ui_icoSD2, mux_module, "sd2");
-    apply_theme_list_glyph(&theme, ui_icoUSB, mux_module, "usb");
-    apply_theme_list_glyph(&theme, ui_icoRFS, mux_module, "rfs");
-
-    apply_theme_list_value(&theme, ui_lblSD1Value, "");
-    apply_theme_list_value(&theme, ui_lblSD2Value, "");
-    apply_theme_list_value(&theme, ui_lblUSBValue, "");
-    apply_theme_list_value(&theme, ui_lblRFSValue, "");
+    INIT_VALUE_ITEM(space, SD1, "SD1", "sd1", "");
+    INIT_VALUE_ITEM(space, SD2, "SD2", "sd2", "");
+    INIT_VALUE_ITEM(space, USB, "USB", "usb", "");
+    INIT_VALUE_ITEM(space, RFS, "ROOTFS", "rfs", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
@@ -247,10 +209,10 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblSD1, "sd1");
-    lv_obj_set_user_data(ui_lblSD2, "sd2");
-    lv_obj_set_user_data(ui_lblUSB, "usb");
-    lv_obj_set_user_data(ui_lblRFS, "rfs");
+    lv_obj_set_user_data(ui_lblSD1_space, "sd1");
+    lv_obj_set_user_data(ui_lblSD2_space, "sd2");
+    lv_obj_set_user_data(ui_lblUSB_space, "usb");
+    lv_obj_set_user_data(ui_lblRFS_space, "rfs");
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -268,7 +230,8 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
+        adjust_panel_priority(ui_mux_standard_panels,
+                              sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 
@@ -295,8 +258,6 @@ int muxspace_main() {
     init_navigation_group();
 
     update_storage_info();
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, update_storage_info);
 
