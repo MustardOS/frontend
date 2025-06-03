@@ -16,52 +16,6 @@ static void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), lang.MUXSPACE.HELP);
 }
 
-static int is_partition_mounted(const char *partition) {
-    if (strcmp(partition, "/") == 0) return 1; // this is rootfs so I mean it should always be mounted
-
-    FILE *fp = fopen("/proc/mounts", "r");
-    if (!fp) {
-        perror("fopen /proc/mounts");
-        return 0;
-    }
-
-    char line[MAX_BUFFER_SIZE];
-    int mounted = 0;
-
-    while (fgets(line, sizeof(line), fp)) {
-        if (strstr(line, partition)) {
-            mounted = 1;
-            break;
-        }
-    }
-
-    fclose(fp);
-    return mounted;
-}
-
-static void get_storage_info(const char *partition, double *total, double *free, double *used) {
-    struct statvfs stat;
-
-    if (!is_partition_mounted(partition)) {
-        *total = 0.0;
-        *free = 0.0;
-        *used = 0.0;
-        return;
-    }
-
-    if (statvfs(partition, &stat) != 0) {
-        perror("statvfs");
-        *total = 0.0;
-        *free = 0.0;
-        *used = 0.0;
-        return;
-    }
-
-    *total = (double) (stat.f_blocks * stat.f_frsize) / (1024 * 1024 * 1024);
-    *free = (double) (stat.f_bavail * stat.f_frsize) / (1024 * 1024 * 1024);
-    *used = *total - *free;
-}
-
 static void update_storage_info() {
     struct mount storage_info[] = {
             {ui_pnlPrimary_space, ui_pnlPrimaryBar_space, ui_lblPrimaryValue_space, ui_barPrimary_space, device.STORAGE.ROM.MOUNT},

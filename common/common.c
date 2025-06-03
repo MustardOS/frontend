@@ -13,6 +13,7 @@
 #include <fnmatch.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/statvfs.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "../lvgl/lvgl.h"
@@ -2651,4 +2652,50 @@ char **str_parse_file(const char *filename, int *count, enum parse_mode mode) {
     }
 
     return list;
+}
+
+int is_partition_mounted(const char *partition) {
+    if (strcmp(partition, "/") == 0) return 1; // this is rootfs so I mean it should always be mounted
+
+    FILE *fp = fopen("/proc/mounts", "r");
+    if (!fp) {
+        perror("fopen /proc/mounts");
+        return 0;
+    }
+
+    char line[MAX_BUFFER_SIZE];
+    int mounted = 0;
+
+    while (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, partition)) {
+            mounted = 1;
+            break;
+        }
+    }
+
+    fclose(fp);
+    return mounted;
+}
+
+void get_storage_info(const char *partition, double *total, double *free, double *used) {
+    struct statvfs stat;
+
+    if (!is_partition_mounted(partition)) {
+        *total = 0.0;
+        *free = 0.0;
+        *used = 0.0;
+        return;
+    }
+
+    if (statvfs(partition, &stat) != 0) {
+        perror("statvfs");
+        *total = 0.0;
+        *free = 0.0;
+        *used = 0.0;
+        return;
+    }
+
+    *total = (double) (stat.f_blocks * stat.f_frsize) / (1024 * 1024 * 1024);
+    *free = (double) (stat.f_bavail * stat.f_frsize) / (1024 * 1024 * 1024);
+    *used = *total - *free;
 }

@@ -346,3 +346,7 @@ int brightness_to_percent(int val);
 int volume_to_percent(int val);
 
 char **str_parse_file(const char *filename, int *count, enum parse_mode mode);
+
+int is_partition_mounted(const char *partition);
+
+void get_storage_info(const char *partition, double *total, double *free, double *used);
