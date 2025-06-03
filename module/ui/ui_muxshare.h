@@ -45,6 +45,14 @@
     lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
 } while (0)
 
+#define INFO_ELEMENTS              \
+    INFO(Screenshot, "screenshot") \
+    INFO(Space,      "space")      \
+    INFO(Tester,     "tester")     \
+    INFO(SysInfo,    "sysinfo")    \
+    INFO(NetInfo,    "netinfo")    \
+    INFO(Credit,     "credit")
+
 #define KIOSK_ELEMENTS              \
     KIOSK(Enable,     "enable")     \
     KIOSK(Archive,    "archive")    \

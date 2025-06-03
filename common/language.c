@@ -237,14 +237,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.TITLE, "INFORMATION");
     SPECIFIC_FIELD(lang->MUXINFO.SYSINFO, "System Details");
     SPECIFIC_FIELD(lang->MUXINFO.NETINFO, "Network Details");
-    SPECIFIC_FIELD(lang->MUXINFO.ACTIVITY, "Activity Tracker");
     SPECIFIC_FIELD(lang->MUXINFO.SCREENSHOT, "Screenshots");
     SPECIFIC_FIELD(lang->MUXINFO.SPACE, "Storage Space");
     SPECIFIC_FIELD(lang->MUXINFO.INPUT, "Input Tester");
     SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SYSINFO, "Access version information and system details");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.NETINFO, "Access network information");
-    SPECIFIC_FIELD(lang->MUXINFO.HELP.ACTIVITY, "Access statistics of played content and other activity");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SCREENSHOT, "View all of the screenshots taken on the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SPACE, "View the current used space of the mounted storage devices");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.INPUT, "Test the controls of the device");

@@ -3,18 +3,16 @@
 
 #define UI_COUNT 6
 
-static lv_obj_t *ui_objects[UI_COUNT];
-static lv_obj_t *ui_icons[UI_COUNT];
+static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblTracker,    lang.MUXINFO.HELP.ACTIVITY},
-            {ui_lblScreenshot, lang.MUXINFO.HELP.SCREENSHOT},
-            {ui_lblSpace,      lang.MUXINFO.HELP.SPACE},
-            {ui_lblTester,     lang.MUXINFO.HELP.INPUT},
-            {ui_lblSysinfo,    lang.MUXINFO.HELP.SYSINFO},
-            {ui_lblNetinfo,    lang.MUXINFO.HELP.NETINFO},
-            {ui_lblCredits,    lang.MUXINFO.HELP.CREDIT},
+            {ui_lblScreenshot_info, lang.MUXINFO.HELP.SCREENSHOT},
+            {ui_lblSpace_info,      lang.MUXINFO.HELP.SPACE},
+            {ui_lblTester_info,     lang.MUXINFO.HELP.INPUT},
+            {ui_lblSysInfo_info,    lang.MUXINFO.HELP.SYSINFO},
+            {ui_lblNetInfo_info,    lang.MUXINFO.HELP.NETINFO},
+            {ui_lblCredit_info,     lang.MUXINFO.HELP.CREDIT},
     };
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
@@ -22,67 +20,33 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_navigation_group() {
-    lv_obj_t *ui_objects_panel[] = {
-            ui_pnlScreenshot,
-            ui_pnlSpace,
-            ui_pnlTester,
-            ui_pnlSysinfo,
-            ui_pnlNetinfo,
-            ui_pnlCredits,
-    };
+    static lv_obj_t *ui_objects[UI_COUNT];
+    static lv_obj_t *ui_objects_glyph[UI_COUNT];
+    static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    ui_objects[0] = ui_lblScreenshot;
-    ui_objects[1] = ui_lblSpace;
-    ui_objects[2] = ui_lblTester;
-    ui_objects[3] = ui_lblSysinfo;
-    ui_objects[4] = ui_lblNetinfo;
-    ui_objects[5] = ui_lblCredits;
-
-    ui_icons[0] = ui_icoScreenshot;
-    ui_icons[1] = ui_icoSpace;
-    ui_icons[2] = ui_icoTester;
-    ui_icons[3] = ui_icoSysinfo;
-    ui_icons[4] = ui_icoNetinfo;
-    ui_icons[5] = ui_icoCredits;
-
-    apply_theme_list_panel(ui_pnlTracker);
-    apply_theme_list_panel(ui_pnlScreenshot);
-    apply_theme_list_panel(ui_pnlSpace);
-    apply_theme_list_panel(ui_pnlTester);
-    apply_theme_list_panel(ui_pnlSysinfo);
-    apply_theme_list_panel(ui_pnlNetinfo);
-    apply_theme_list_panel(ui_pnlCredits);
-
-    //apply_theme_list_item(&theme, ui_lblTracker, lang.MUXINFO.ACTIVITY);
-    apply_theme_list_item(&theme, ui_lblScreenshot, lang.MUXINFO.SCREENSHOT);
-    apply_theme_list_item(&theme, ui_lblSpace, lang.MUXINFO.SPACE);
-    apply_theme_list_item(&theme, ui_lblTester, lang.MUXINFO.INPUT);
-    apply_theme_list_item(&theme, ui_lblSysinfo, lang.MUXINFO.SYSINFO);
-    apply_theme_list_item(&theme, ui_lblNetinfo, lang.MUXINFO.NETINFO);
-    apply_theme_list_item(&theme, ui_lblCredits, lang.MUXINFO.CREDIT);
-
-    //apply_theme_list_glyph(&theme, ui_icoTracker, mux_module, "tracker");
-    apply_theme_list_glyph(&theme, ui_icoScreenshot, mux_module, "screenshot");
-    apply_theme_list_glyph(&theme, ui_icoSpace, mux_module, "space");
-    apply_theme_list_glyph(&theme, ui_icoTester, mux_module, "tester");
-    apply_theme_list_glyph(&theme, ui_icoSysinfo, mux_module, "sysinfo");
-    apply_theme_list_glyph(&theme, ui_icoNetinfo, mux_module, "netinfo");
-    apply_theme_list_glyph(&theme, ui_icoCredits, mux_module, "credit");
+    INIT_STATIC_ITEM(-1, info, Screenshot, lang.MUXINFO.SCREENSHOT, "screenshot");
+    INIT_STATIC_ITEM(-1, info, Space, lang.MUXINFO.SPACE, "space");
+    INIT_STATIC_ITEM(-1, info, Tester, lang.MUXINFO.INPUT, "tester");
+    INIT_STATIC_ITEM(-1, info, SysInfo, lang.MUXINFO.SYSINFO, "sysinfo");
+    INIT_STATIC_ITEM(-1, info, NetInfo, lang.MUXINFO.NETINFO, "netinfo");
+    INIT_STATIC_ITEM(-1, info, Credit, lang.MUXINFO.CREDIT, "credit");
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_count = sizeof(ui_objects) / sizeof(ui_objects[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
-        lv_obj_set_user_data(ui_objects_panel[i], strdup(lv_label_get_text(ui_objects[i])));
         lv_group_add_obj(ui_group, ui_objects[i]);
-        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
+        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-
-        apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], lv_label_get_text(ui_objects[i]));
-        apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], lv_label_get_text(ui_objects[i]));
     }
+
+    if (!device.DEVICE.HAS_NETWORK) {
+        lv_obj_add_flag(ui_pnlNetInfo_info, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        ui_count -= 1;
+    }
+
+    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -124,17 +88,17 @@ static void handle_a() {
 
     play_sound(SND_CONFIRM);
 
-    if (element_focused == ui_lblScreenshot) {
+    if (element_focused == ui_lblScreenshot_info) {
         load_mux("screenshot");
-    } else if (element_focused == ui_lblSpace) {
+    } else if (element_focused == ui_lblSpace_info) {
         load_mux("space");
-    } else if (element_focused == ui_lblTester) {
+    } else if (element_focused == ui_lblTester_info) {
         load_mux("tester");
-    } else if (element_focused == ui_lblSysinfo) {
+    } else if (element_focused == ui_lblSysInfo_info) {
         load_mux("sysinfo");
-    } else if (element_focused == ui_lblNetinfo) {
+    } else if (element_focused == ui_lblNetInfo_info) {
         load_mux("netinfo");
-    } else if (element_focused == ui_lblCredits) {
+    } else if (element_focused == ui_lblCredit_info) {
         load_mux("credits");
     }
 
@@ -203,20 +167,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblTracker, "tracker");
-    lv_obj_set_user_data(ui_lblScreenshot, "screenshot");
-    lv_obj_set_user_data(ui_lblSpace, "space");
-    lv_obj_set_user_data(ui_lblTester, "tester");
-    lv_obj_set_user_data(ui_lblSysinfo, "sysinfo");
-    lv_obj_set_user_data(ui_lblNetinfo, "netinfo");
-    lv_obj_set_user_data(ui_lblCredits, "credit");
-
-    if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlNetinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNetinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_icoNetinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        ui_count -= 1;
-    }
+#define INFO(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_info, UDATA);
+    INFO_ELEMENTS
+#undef INFO
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -234,7 +187,8 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
+        adjust_panel_priority(ui_mux_standard_panels,
+                              sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 
@@ -259,8 +213,6 @@ int muxinfo_main() {
 
     init_fonts();
     init_navigation_group();
-
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 
