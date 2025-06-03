@@ -71,6 +71,11 @@
     KIOSK(Power)       \
     KIOSK(Visual)
 
+#define SEARCH_ELEMENTS  \
+    SEARCH(Lookup)       \
+    SEARCH(SearchLocal)  \
+    SEARCH(SearchGlobal)
+
 #define SPACE_ELEMENTS \
     SPACE(SD1)         \
     SPACE(SD2)         \

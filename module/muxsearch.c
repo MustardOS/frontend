@@ -1,6 +1,8 @@
 #include "muxshare.h"
 #include "ui/ui_muxsearch.h"
 
+#define UI_COUNT 3
+
 static int starter_image = 0;
 static int got_results = 0;
 
@@ -44,57 +46,25 @@ static void show_help(lv_obj_t *element_focused) {
 }
 
 static void init_navigation_group() {
-    lv_obj_t *ui_panels[] = {
-            ui_pnlLookup_search,
-            ui_pnlSearchLocal_search,
-            ui_pnlSearchGlobal_search,
-    };
+    static lv_obj_t *ui_objects[UI_COUNT];
+    static lv_obj_t *ui_objects_value[UI_COUNT];
+    static lv_obj_t *ui_objects_glyph[UI_COUNT];
+    static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    lv_obj_t *ui_labels[] = {
-            ui_lblLookup_search,
-            ui_lblSearchLocal_search,
-            ui_lblSearchGlobal_search,
-    };
-
-    lv_obj_t *ui_values[] = {
-            ui_lblLookupValue_search,
-            ui_lblSearchLocalValue_search,
-            ui_lblSearchGlobalValue_search,
-    };
-
-    lv_obj_t *ui_icons[] = {
-            ui_icoLookup_search,
-            ui_icoSearchLocal_search,
-            ui_icoSearchGlobal_search,
-    };
-
-    apply_theme_list_panel(ui_pnlLookup_search);
-    apply_theme_list_panel(ui_pnlSearchLocal_search);
-    apply_theme_list_panel(ui_pnlSearchGlobal_search);
-
-    apply_theme_list_item(&theme, ui_lblLookup_search, lang.MUXSEARCH.LOOKUP);
-    apply_theme_list_item(&theme, ui_lblSearchLocal_search, lang.MUXSEARCH.LOCAL);
-    apply_theme_list_item(&theme, ui_lblSearchGlobal_search, lang.MUXSEARCH.GLOBAL);
-
-    apply_theme_list_glyph(&theme, ui_icoLookup_search, mux_module, "lookup");
-    apply_theme_list_glyph(&theme, ui_icoSearchLocal_search, mux_module, "local");
-    apply_theme_list_glyph(&theme, ui_icoSearchGlobal_search, mux_module, "global");
-
-    apply_theme_list_value(&theme, ui_lblLookupValue_search, "");
-    apply_theme_list_value(&theme, ui_lblSearchLocalValue_search, "");
-    apply_theme_list_value(&theme, ui_lblSearchGlobalValue_search, "");
+    INIT_VALUE_ITEM(search, Lookup, lang.MUXSEARCH.LOOKUP, "lookup", "");
+    INIT_VALUE_ITEM(search, SearchLocal, lang.MUXSEARCH.LOCAL, "local", "");
+    INIT_VALUE_ITEM(search, SearchGlobal, lang.MUXSEARCH.GLOBAL, "global", "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    ui_count = sizeof(ui_panels) / sizeof(ui_panels[0]);
     for (unsigned int i = 0; i < ui_count; i++) {
-        lv_group_add_obj(ui_group, ui_labels[i]);
-        lv_group_add_obj(ui_group_value, ui_values[i]);
-        lv_group_add_obj(ui_group_glyph, ui_icons[i]);
-        lv_group_add_obj(ui_group_panel, ui_panels[i]);
+        lv_group_add_obj(ui_group, ui_objects[i]);
+        lv_group_add_obj(ui_group_value, ui_objects_value[i]);
+        lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
+        lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 }
 

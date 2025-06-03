@@ -1,49 +1,23 @@
+#include "ui_muxshare.h"
 #include "ui_muxsearch.h"
 #include "../../common/device.h"
 
-lv_obj_t *ui_scrSearch_search;
+#define SEARCH(NAME)                      \
+    lv_obj_t *ui_pnl##NAME##_search;      \
+    lv_obj_t *ui_lbl##NAME##_search;      \
+    lv_obj_t *ui_ico##NAME##_search;      \
+    lv_obj_t *ui_lbl##NAME##Value_search;
 
-lv_obj_t *ui_pnlLookup_search;
-lv_obj_t *ui_pnlSearchLocal_search;
-lv_obj_t *ui_pnlSearchGlobal_search;
-
-lv_obj_t *ui_lblLookup_search;
-lv_obj_t *ui_lblSearchLocal_search;
-lv_obj_t *ui_lblSearchGlobal_search;
-
-lv_obj_t *ui_icoLookup_search;
-lv_obj_t *ui_icoSearchLocal_search;
-lv_obj_t *ui_icoSearchGlobal_search;
-
-lv_obj_t *ui_lblLookupValue_search;
-lv_obj_t *ui_lblSearchLocalValue_search;
-lv_obj_t *ui_lblSearchGlobalValue_search;
+SEARCH_ELEMENTS
+#undef SEARCH
 
 lv_obj_t *ui_pnlEntry_search;
 lv_obj_t *ui_txtEntry_search;
 
 void init_muxsearch(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct theme_config *theme) {
-    ui_pnlLookup_search = lv_obj_create(ui_pnlContent);
-    ui_pnlSearchLocal_search = lv_obj_create(ui_pnlContent);
-    ui_pnlSearchGlobal_search = lv_obj_create(ui_pnlContent);
-
-    ui_lblLookup_search = lv_label_create(ui_pnlLookup_search);
-    lv_label_set_text(ui_lblLookup_search, "");
-    ui_lblSearchLocal_search = lv_label_create(ui_pnlSearchLocal_search);
-    lv_label_set_text(ui_lblSearchLocal_search, "");
-    ui_lblSearchGlobal_search = lv_label_create(ui_pnlSearchGlobal_search);
-    lv_label_set_text(ui_lblSearchGlobal_search, "");
-
-    ui_icoLookup_search = lv_img_create(ui_pnlLookup_search);
-    ui_icoSearchLocal_search = lv_img_create(ui_pnlSearchLocal_search);
-    ui_icoSearchGlobal_search = lv_img_create(ui_pnlSearchGlobal_search);
-
-    ui_lblLookupValue_search = lv_label_create(ui_pnlLookup_search);
-    lv_label_set_text(ui_lblLookupValue_search, "");
-    ui_lblSearchLocalValue_search = lv_label_create(ui_pnlSearchLocal_search);
-    lv_label_set_text(ui_lblSearchLocalValue_search, "");
-    ui_lblSearchGlobalValue_search = lv_label_create(ui_pnlSearchGlobal_search);
-    lv_label_set_text(ui_lblSearchGlobalValue_search, "");
+#define SEARCH(NAME) CREATE_VALUE_ITEM(search, NAME);
+    SEARCH_ELEMENTS
+#undef SEARCH
 
     ui_pnlEntry_search = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlEntry_search, device.MUX.WIDTH);
