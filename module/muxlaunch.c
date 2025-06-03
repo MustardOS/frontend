@@ -3,30 +3,22 @@
 
 #define UI_COUNT 8
 
-lv_obj_t *ui_objects_panel[UI_COUNT];
 static lv_obj_t *ui_objects[UI_COUNT];
-static lv_obj_t *ui_icons[UI_COUNT];
 
 static void show_help(lv_obj_t *element_focused) {
-    char *help_messages[UI_COUNT] = {
-            lang.MUXLAUNCH.HELP.EXPLORE,
-            lang.MUXLAUNCH.HELP.COLLECTION,
-            lang.MUXLAUNCH.HELP.HISTORY,
-            lang.MUXLAUNCH.HELP.APP,
-            lang.MUXLAUNCH.HELP.INFO,
-            lang.MUXLAUNCH.HELP.CONFIG,
-            lang.MUXLAUNCH.HELP.REBOOT,
-            lang.MUXLAUNCH.HELP.SHUTDOWN
+    struct help_msg help_messages[] = {
+            {ui_lblExplore_launch,    lang.MUXLAUNCH.HELP.EXPLORE},
+            {ui_lblCollection_launch, lang.MUXLAUNCH.HELP.COLLECTION},
+            {ui_lblHistory_launch,    lang.MUXLAUNCH.HELP.HISTORY},
+            {ui_lblApps_launch,       lang.MUXLAUNCH.HELP.APP},
+            {ui_lblInfo_launch,       lang.MUXLAUNCH.HELP.INFO},
+            {ui_lblConfig_launch,     lang.MUXLAUNCH.HELP.CONFIG},
+            {ui_lblReboot_launch,     lang.MUXLAUNCH.HELP.REBOOT},
+            {ui_lblShutdown_launch,   lang.MUXLAUNCH.HELP.SHUTDOWN},
     };
 
-    char *message = lang.GENERIC.NO_HELP;
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    if (current_item_index < num_messages) message = help_messages[current_item_index];
-
-    if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
-
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), message);
+    gen_help(element_focused, help_messages, num_messages);
 }
 
 static void init_navigation_group_grid(char *item_labels[], char *glyph_names[]) {
@@ -67,73 +59,59 @@ static void init_navigation_group_grid(char *item_labels[], char *glyph_names[])
 }
 
 static void init_navigation_group() {
-    ui_group = lv_group_create();
-    ui_group_glyph = lv_group_create();
-    ui_group_panel = lv_group_create();
+    char *item_labels[] = {lang.MUXLAUNCH.EXPLORE,
+                           lang.MUXLAUNCH.COLLECTION,
+                           lang.MUXLAUNCH.HISTORY,
+                           lang.MUXLAUNCH.APP,
+                           lang.MUXLAUNCH.INFO,
+                           lang.MUXLAUNCH.CONFIG,
+                           lang.MUXLAUNCH.REBOOT,
+                           lang.MUXLAUNCH.SHUTDOWN};
 
-    char *item_labels[] = {lang.MUXLAUNCH.EXPLORE, lang.MUXLAUNCH.COLLECTION, lang.MUXLAUNCH.HISTORY,
-                           lang.MUXLAUNCH.APP, lang.MUXLAUNCH.INFO, lang.MUXLAUNCH.CONFIG,
-                           lang.MUXLAUNCH.REBOOT, lang.MUXLAUNCH.SHUTDOWN};
+    char *item_labels_short[] = {lang.MUXLAUNCH.SHORT.EXPLORE,
+                                 lang.MUXLAUNCH.SHORT.COLLECTION,
+                                 lang.MUXLAUNCH.SHORT.HISTORY,
+                                 lang.MUXLAUNCH.SHORT.APP,
+                                 lang.MUXLAUNCH.SHORT.INFO,
+                                 lang.MUXLAUNCH.SHORT.CONFIG,
+                                 lang.MUXLAUNCH.SHORT.REBOOT,
+                                 lang.MUXLAUNCH.SHORT.SHUTDOWN};
 
-    char *item_labels_short[] = {lang.MUXLAUNCH.SHORT.EXPLORE, lang.MUXLAUNCH.SHORT.COLLECTION,
-                                 lang.MUXLAUNCH.SHORT.HISTORY, lang.MUXLAUNCH.SHORT.APP,
-                                 lang.MUXLAUNCH.SHORT.INFO, lang.MUXLAUNCH.SHORT.CONFIG,
-                                 lang.MUXLAUNCH.SHORT.REBOOT, lang.MUXLAUNCH.SHORT.SHUTDOWN};
-
-    char *glyph_names[] = {"explore", "collection", "history",
-                           "apps", "info", "config",
-                           "reboot", "shutdown"};
+    char *glyph_names[] = {"explore",
+                           "collection",
+                           "history",
+                           "apps",
+                           "info",
+                           "config",
+                           "reboot",
+                           "shutdown"};
 
     if (theme.GRID.ENABLED) {
         init_navigation_group_grid(item_labels_short, glyph_names);
         lv_label_set_text(ui_lblGridCurrentItem, item_labels_short[0]);
         set_label_long_mode(&theme, ui_objects[0], item_labels_short[0]);
     } else {
-        lv_obj_t *ui_objects_panel[] = {
-                ui_pnlExplore_launch,
-                ui_pnlCollection_launch,
-                ui_pnlHistory_launch,
-                ui_pnlApps_launch,
-                ui_pnlInfo_launch,
-                ui_pnlConfig_launch,
-                ui_pnlReboot_launch,
-                ui_pnlShutdown_launch,
-        };
+        static lv_obj_t *ui_objects_glyph[UI_COUNT];
+        static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-        ui_objects[0] = ui_lblContent_launch;
-        ui_objects[1] = ui_lblCollection_launch;
-        ui_objects[2] = ui_lblHistory_launch;
-        ui_objects[3] = ui_lblApps_launch;
-        ui_objects[4] = ui_lblInfo_launch;
-        ui_objects[5] = ui_lblConfig_launch;
-        ui_objects[6] = ui_lblReboot_launch;
-        ui_objects[7] = ui_lblShutdown_launch;
+        INIT_STATIC_ITEM(-1, launch, Explore, item_labels[0], glyph_names[0]);
+        INIT_STATIC_ITEM(-1, launch, Collection, item_labels[1], glyph_names[1]);
+        INIT_STATIC_ITEM(-1, launch, History, item_labels[2], glyph_names[2]);
+        INIT_STATIC_ITEM(-1, launch, Apps, item_labels[3], glyph_names[3]);
+        INIT_STATIC_ITEM(-1, launch, Info, item_labels[4], glyph_names[4]);
+        INIT_STATIC_ITEM(-1, launch, Config, item_labels[5], glyph_names[5]);
+        INIT_STATIC_ITEM(-1, launch, Reboot, item_labels[6], glyph_names[6]);
+        INIT_STATIC_ITEM(-1, launch, Shutdown, item_labels[7], glyph_names[7]);
 
-        ui_icons[0] = ui_icoContent_launch;
-        ui_icons[1] = ui_icoCollection_launch;
-        ui_icons[2] = ui_icoHistory_launch;
-        ui_icons[3] = ui_icoApps_launch;
-        ui_icons[4] = ui_icoInfo_launch;
-        ui_icons[5] = ui_icoConfig_launch;
-        ui_icons[6] = ui_icoReboot_launch;
-        ui_icons[7] = ui_icoShutdown_launch;
+        ui_group = lv_group_create();
+        ui_group_glyph = lv_group_create();
+        ui_group_panel = lv_group_create();
 
-        for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
-            apply_theme_list_panel(ui_objects_panel[i]);
-            apply_theme_list_item(&theme, ui_objects[i], item_labels[i]);
-            apply_theme_list_glyph(&theme, ui_icons[i], mux_module, glyph_names[i]);
-
+        for (unsigned int i = 0; i < ui_count; i++) {
             lv_group_add_obj(ui_group, ui_objects[i]);
-            lv_group_add_obj(ui_group_glyph, ui_icons[i]);
-            lv_obj_set_user_data(ui_objects_panel[i], strdup(item_labels[i]));
+            lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
             lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-
-            apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_icons[i], item_labels[i]);
-            apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], item_labels[i]);
         }
-
-        lv_label_set_text(ui_lblGridCurrentItem, item_labels[0]);
-        set_label_long_mode(&theme, ui_objects[0], item_labels[0]);
     }
 }
 
@@ -438,14 +416,9 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    lv_obj_set_user_data(ui_lblContent_launch, "explore");
-    lv_obj_set_user_data(ui_lblCollection_launch, "collection");
-    lv_obj_set_user_data(ui_lblHistory_launch, "history");
-    lv_obj_set_user_data(ui_lblApps_launch, "apps");
-    lv_obj_set_user_data(ui_lblInfo_launch, "info");
-    lv_obj_set_user_data(ui_lblConfig_launch, "config");
-    lv_obj_set_user_data(ui_lblReboot_launch, "reboot");
-    lv_obj_set_user_data(ui_lblShutdown_launch, "shutdown");
+#define LAUNCH(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_launch, UDATA);
+    LAUNCH_ELEMENTS
+#undef LAUNCH
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);

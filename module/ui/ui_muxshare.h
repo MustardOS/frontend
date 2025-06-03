@@ -10,6 +10,13 @@
         lv_obj_set_style_text_opa(ui_dro##NAME##_##MODULE, 0, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
     } while (0)
 
+#define CREATE_STATIC_ITEM(MODULE, NAME) do {                                                        \
+        ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                      \
+        ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                          \
+        lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                              \
+        ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                            \
+    } while (0)
+
 #define CREATE_VALUE_ITEM(MODULE, NAME) do {                                     \
         ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                  \
         ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);      \
@@ -70,6 +77,16 @@
     KIOSK(HDMI,       "hdmi")       \
     KIOSK(Power,      "power")      \
     KIOSK(Visual,     "visual")
+
+#define LAUNCH_ELEMENTS              \
+    LAUNCH(Explore,    "explore")    \
+    LAUNCH(Collection, "collection") \
+    LAUNCH(History,    "history")    \
+    LAUNCH(Apps,       "apps")       \
+    LAUNCH(Info,       "info")       \
+    LAUNCH(Config,     "config")     \
+    LAUNCH(Reboot,     "reboot")     \
+    LAUNCH(Shutdown,   "shutdown")
 
 #define NETINFO_ELEMENTS            \
     NETINFO(Hostname,  "hostname")  \
