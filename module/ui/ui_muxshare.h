@@ -60,6 +60,23 @@
     CONFIG(Power,     "power")     \
     CONFIG(Storage,   "storage")
 
+#define CUSTOM_ELEMENTS                   \
+    CUSTOM(Bootlogo,        "bootlogo")   \
+    CUSTOM(Catalogue,       "catalogue")  \
+    CUSTOM(Config,          "config")     \
+    CUSTOM(Theme,           "theme")      \
+    CUSTOM(ThemeResolution, "resolution") \
+    CUSTOM(ThemeAlternate,  "alternate")  \
+    CUSTOM(Animation,       "animation")  \
+    CUSTOM(Music,           "music")      \
+    CUSTOM(BlackFade,       "blackfade")  \
+    CUSTOM(BoxArtImage,     "boxart")     \
+    CUSTOM(BoxArtAlign,     "align")      \
+    CUSTOM(LaunchSplash,    "splash")     \
+    CUSTOM(Font,            "font")       \
+    CUSTOM(Sound,           "sound")      \
+    CUSTOM(Chime,           "chime")
+
 #define INFO_ELEMENTS              \
     INFO(Screenshot, "screenshot") \
     INFO(Space,      "space")      \
