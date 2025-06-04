@@ -39,18 +39,16 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, num_messages);
 }
 
-static void populate_theme_alternates() {
+static int populate_theme_alternates() {
     lv_dropdown_clear_options(ui_droThemeAlternate_custom);
+
     char alt_path[MAX_BUFFER_SIZE];
     snprintf(alt_path, sizeof(alt_path), "%s/alternate", STORAGE_THEME);
 
     struct dirent *entry;
     DIR *dir = opendir(alt_path);
 
-    if (dir == NULL) {
-        perror("Unable to open directory");
-    } else {
-
+    if (dir != NULL) {
         while ((entry = readdir(dir)) != NULL) {
             char *filename = entry->d_name;
             size_t len = strlen(filename);
@@ -66,16 +64,15 @@ static void populate_theme_alternates() {
 
         closedir(dir);
         sort_items(items, item_count);
+
         for (int i = 0; i < item_count; i++) {
             lv_dropdown_add_option(ui_droThemeAlternate_custom, items[i].display_name, LV_DROPDOWN_POS_LAST);
         }
+
         free_items(&items, &item_count);
     }
 
-    if (lv_dropdown_get_option_cnt(ui_droThemeAlternate_custom) == 0) {
-        lv_obj_add_flag(ui_pnlThemeAlternate_custom, LV_OBJ_FLAG_HIDDEN);
-        ui_count -= 1;
-    }
+    return lv_dropdown_get_option_cnt(ui_droThemeAlternate_custom);
 }
 
 static void init_dropdown_settings() {
@@ -141,7 +138,13 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEME_RESOLUTION, "resolution", NULL, 0);
-    INIT_OPTION_ITEM(-1, custom, ThemeAlternate, lang.MUXCUSTOM.THEME_ALTERNATE, "alternate", NULL, 0);
+
+    if (populate_theme_alternates() > 0) {
+        INIT_OPTION_ITEM(-1, custom, ThemeAlternate, lang.MUXCUSTOM.THEME_ALTERNATE, "alternate", NULL, 0);
+    } else {
+        lv_obj_add_flag(ui_pnlThemeAlternate_custom, LV_OBJ_FLAG_HIDDEN);
+    }
+
     INIT_OPTION_ITEM(-1, custom, Animation, lang.MUXCUSTOM.ANIMATION, "animation", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Music, lang.MUXCUSTOM.MUSIC.TITLE, "music", music_options, 3);
     INIT_OPTION_ITEM(-1, custom, BlackFade, lang.MUXCUSTOM.FADE, "blackfade", disabled_enabled, 2);
@@ -151,8 +154,6 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, custom, Font, lang.MUXCUSTOM.FONT.TITLE, "font", font_options, 2);
     INIT_OPTION_ITEM(-1, custom, Sound, lang.MUXCUSTOM.SOUND.TITLE, "sound", sound_options, 3);
     INIT_OPTION_ITEM(-1, custom, Chime, lang.MUXCUSTOM.CHIME, "chime", disabled_enabled, 2);
-
-    populate_theme_alternates();
 
     lv_dropdown_clear_options(ui_droThemeResolution_custom);
     lv_dropdown_add_option(ui_droThemeResolution_custom, lang.MUXCUSTOM.SCREEN, LV_DROPDOWN_POS_LAST);
