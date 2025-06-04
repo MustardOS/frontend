@@ -26,30 +26,30 @@
         lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                     \
     } while (0)
 
-#define CREATE_BAR_ITEM(MODULE, NAME) do { \
-    ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent); \
-    ui_pnl##NAME##Bar_##MODULE = lv_obj_create(ui_pnlContent); \
-    ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE); \
-    ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE); \
-    ui_lbl##NAME##Value_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE); \
-    ui_bar##NAME##_##MODULE = lv_bar_create(ui_pnl##NAME##Bar_##MODULE); \
-    lv_label_set_text(ui_lbl##NAME##_##MODULE, ""); \
-    lv_label_set_text(ui_lbl##NAME##Value_##MODULE, ""); \
-    lv_obj_set_height(ui_pnl##NAME##Bar_##MODULE, 10); \
-    lv_obj_set_width(ui_pnl##NAME##Bar_##MODULE, lv_pct(100)); \
-    lv_obj_set_width(ui_bar##NAME##_##MODULE, lv_pct(100)); \
-    lv_bar_set_range(ui_bar##NAME##_##MODULE, 0, device.MUX.WIDTH); \
-    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT); \
-    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 25, LV_PART_MAIN | LV_STATE_DEFAULT); \
+#define CREATE_BAR_ITEM(MODULE, NAME) do {                                                                                           \
+    ui_pnl##NAME##_##MODULE = lv_obj_create(ui_pnlContent);                                                                          \
+    ui_pnl##NAME##Bar_##MODULE = lv_obj_create(ui_pnlContent);                                                                       \
+    ui_lbl##NAME##_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                                                              \
+    ui_ico##NAME##_##MODULE = lv_img_create(ui_pnl##NAME##_##MODULE);                                                                \
+    ui_lbl##NAME##Value_##MODULE = lv_label_create(ui_pnl##NAME##_##MODULE);                                                         \
+    ui_bar##NAME##_##MODULE = lv_bar_create(ui_pnl##NAME##Bar_##MODULE);                                                             \
+    lv_label_set_text(ui_lbl##NAME##_##MODULE, "");                                                                                  \
+    lv_label_set_text(ui_lbl##NAME##Value_##MODULE, "");                                                                             \
+    lv_obj_set_height(ui_pnl##NAME##Bar_##MODULE, 10);                                                                               \
+    lv_obj_set_width(ui_pnl##NAME##Bar_##MODULE, lv_pct(100));                                                                       \
+    lv_obj_set_width(ui_bar##NAME##_##MODULE, lv_pct(100));                                                                          \
+    lv_bar_set_range(ui_bar##NAME##_##MODULE, 0, device.MUX.WIDTH);                                                                  \
+    lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);      \
+    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 25, LV_PART_MAIN | LV_STATE_DEFAULT);                                           \
     lv_obj_set_style_bg_color(ui_bar##NAME##_##MODULE, lv_color_hex(theme.VERBOSE_BOOT.TEXT), LV_PART_INDICATOR | LV_STATE_DEFAULT); \
-    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT); \
+    lv_obj_set_style_bg_opa(ui_bar##NAME##_##MODULE, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);                                     \
 } while (0)
 
 #define CONNECT_ELEMENTS                \
     CONNECT(Network,     "network")     \
     CONNECT(Services,    "service")     \
     CONNECT(Bluetooth,   "bluetooth")   \
-    CONNECT(USBFunction, "usbfunction")
+    CONNECT(UsbFunction, "usbfunction")
 
 #define CONFIG_ELEMENTS            \
     CONFIG(General,   "general")   \
@@ -122,7 +122,7 @@
     KIOSK(Info,       "info")       \
     KIOSK(Advanced,   "advanced")   \
     KIOSK(General,    "general")    \
-    KIOSK(HDMI,       "hdmi")       \
+    KIOSK(Hdmi,       "hdmi")       \
     KIOSK(Power,      "power")      \
     KIOSK(Visual,     "visual")
 
@@ -192,7 +192,7 @@
     SPACE(System,    "system")
 
 #define STORAGE_ELEMENTS                        \
-    STORAGE(BIOS,             "bios")           \
+    STORAGE(Bios,             "bios")           \
     STORAGE(Catalogue,        "catalogue")      \
     STORAGE(Name,             "name")           \
     STORAGE(RetroArch,        "retroarch")      \
@@ -217,7 +217,7 @@
     SYSINFO(Device,   "device")   \
     SYSINFO(Kernel,   "kernel")   \
     SYSINFO(Uptime,   "uptime")   \
-    SYSINFO(CPU,      "cpu")      \
+    SYSINFO(Cpu,      "cpu")      \
     SYSINFO(Speed,    "speed")    \
     SYSINFO(Governor, "governor") \
     SYSINFO(Memory,   "memory")   \
@@ -233,22 +233,22 @@
     TWEAKADV(Brightness, "brightness") \
     TWEAKADV(Offset,     "offset")     \
     TWEAKADV(Passcode,   "lock")       \
-    TWEAKADV(LED,        "led")        \
+    TWEAKADV(Led,        "led")        \
     TWEAKADV(Theme,      "theme")      \
     TWEAKADV(RetroWait,  "retrowait")  \
     TWEAKADV(State,      "state")      \
     TWEAKADV(Verbose,    "verbose")    \
     TWEAKADV(Rumble,     "rumble")     \
     TWEAKADV(UserInit,   "userinit")   \
-    TWEAKADV(DPADSwap,   "dpadswap")   \
+    TWEAKADV(DpadSwap,   "dpadswap")   \
     TWEAKADV(Overdrive,  "overdrive")  \
     TWEAKADV(Swapfile,   "swapfile")   \
     TWEAKADV(Zramfile,   "zramfile")   \
     TWEAKADV(CardMode,   "cardmode")
 
 #define TWEAKGEN_ELEMENTS              \
-    TWEAKGEN(RTC,        "rtc")        \
-    TWEAKGEN(HDMI,       "hdmi")       \
+    TWEAKGEN(Rtc,        "rtc")        \
+    TWEAKGEN(Hdmi,       "hdmi")       \
     TWEAKGEN(Advanced,   "advanced")   \
     TWEAKGEN(Brightness, "brightness") \
     TWEAKGEN(Volume,     "volume")     \
@@ -273,10 +273,10 @@
     VISUAL(OverlayTransparency,   "overlaytransparency")
 
 #define WEBSERV_ELEMENTS              \
-    WEBSERV(SSHD,       "sshd")       \
-    WEBSERV(SFTPGo,     "sftpgo")     \
-    WEBSERV(TTYD,       "ttyd")       \
+    WEBSERV(Sshd,       "sshd")       \
+    WEBSERV(SftpGo,     "sftpgo")     \
+    WEBSERV(Ttyd,       "ttyd")       \
     WEBSERV(Syncthing,  "syncthing")  \
-    WEBSERV(RSLSync,    "rslsync")    \
-    WEBSERV(NTP,        "ntp")        \
+    WEBSERV(RslSync,    "rslsync")    \
+    WEBSERV(Ntp,        "ntp")        \
     WEBSERV(Tailscaled, "tailscaled")

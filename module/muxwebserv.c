@@ -9,12 +9,12 @@
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblSSHD_webserv,       lang.MUXWEBSERV.HELP.SHELL},
-            {ui_lblSFTPGo_webserv,     lang.MUXWEBSERV.HELP.SFTP},
-            {ui_lblTTYD_webserv,       lang.MUXWEBSERV.HELP.TERMINAL},
+            {ui_lblSshd_webserv,       lang.MUXWEBSERV.HELP.SHELL},
+            {ui_lblSftpGo_webserv,     lang.MUXWEBSERV.HELP.SFTP},
+            {ui_lblTtyd_webserv,       lang.MUXWEBSERV.HELP.TERMINAL},
             {ui_lblSyncthing_webserv,  lang.MUXWEBSERV.HELP.SYNCTHING},
-            {ui_lblRSLSync_webserv,    lang.MUXWEBSERV.HELP.RESILIO},
-            {ui_lblNTP_webserv,        lang.MUXWEBSERV.HELP.NTP},
+            {ui_lblRslSync_webserv,    lang.MUXWEBSERV.HELP.RESILIO},
+            {ui_lblNtp_webserv,        lang.MUXWEBSERV.HELP.NTP},
             {ui_lblTailscaled_webserv, lang.MUXWEBSERV.HELP.TAILSCALE},
     };
 
@@ -29,24 +29,24 @@ static void init_dropdown_settings() {
 }
 
 static void restore_web_options() {
-    lv_dropdown_set_selected(ui_droSSHD_webserv, config.WEB.SSHD);
-    lv_dropdown_set_selected(ui_droSFTPGo_webserv, config.WEB.SFTPGO);
-    lv_dropdown_set_selected(ui_droTTYD_webserv, config.WEB.TTYD);
+    lv_dropdown_set_selected(ui_droSshd_webserv, config.WEB.SSHD);
+    lv_dropdown_set_selected(ui_droSftpGo_webserv, config.WEB.SFTPGO);
+    lv_dropdown_set_selected(ui_droTtyd_webserv, config.WEB.TTYD);
     lv_dropdown_set_selected(ui_droSyncthing_webserv, config.WEB.SYNCTHING);
-    lv_dropdown_set_selected(ui_droRSLSync_webserv, config.WEB.RSLSYNC);
-    lv_dropdown_set_selected(ui_droNTP_webserv, config.WEB.NTP);
+    lv_dropdown_set_selected(ui_droRslSync_webserv, config.WEB.RSLSYNC);
+    lv_dropdown_set_selected(ui_droNtp_webserv, config.WEB.NTP);
     lv_dropdown_set_selected(ui_droTailscaled_webserv, config.WEB.TAILSCALED);
 }
 
 static void save_web_options() {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(webserv, SSHD, "web/sshd", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, SFTPGo, "web/sftpgo", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, TTYD, "web/ttyd", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, Sshd, "web/sshd", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, SftpGo, "web/sftpgo", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, Ttyd, "web/ttyd", INT, 0);
     CHECK_AND_SAVE_STD(webserv, Syncthing, "web/syncthing", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, RSLSync, "web/rslsync", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, NTP, "web/ntp", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, RslSync, "web/rslsync", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, Ntp, "web/ntp", INT, 0);
     CHECK_AND_SAVE_STD(webserv, Tailscaled, "web/tailscaled", INT, 0);
 
     if (is_modified > 0) {
@@ -66,12 +66,12 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_OPTION_ITEM(-1, webserv, SSHD, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, SFTPGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, TTYD, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, Sshd, lang.MUXWEBSERV.SHELL, "sshd", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, SftpGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, Ttyd, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, RSLSync, lang.MUXWEBSERV.RESILIO, "rslsync", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, NTP, lang.MUXWEBSERV.NTP, "ntp", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, RslSync, lang.MUXWEBSERV.RESILIO, "rslsync", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, webserv, Ntp, lang.MUXWEBSERV.NTP, "ntp", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled", disabled_enabled, 2);
 
     ui_group = lv_group_create();

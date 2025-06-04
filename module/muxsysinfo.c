@@ -12,7 +12,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblDevice_sysinfo,   lang.MUXSYSINFO.HELP.DEVICE},
             {ui_lblKernel_sysinfo,   lang.MUXSYSINFO.HELP.KERNEL},
             {ui_lblUptime_sysinfo,   lang.MUXSYSINFO.HELP.UPTIME},
-            {ui_lblCPU_sysinfo,      lang.MUXSYSINFO.HELP.CPU.INFO},
+            {ui_lblCpu_sysinfo,      lang.MUXSYSINFO.HELP.CPU.INFO},
             {ui_lblSpeed_sysinfo,    lang.MUXSYSINFO.HELP.CPU.SPEED},
             {ui_lblGovernor_sysinfo, lang.MUXSYSINFO.HELP.CPU.GOV},
             {ui_lblMemory_sysinfo,   lang.MUXSYSINFO.HELP.MEMORY},
@@ -191,7 +191,7 @@ static void update_system_info() {
     lv_label_set_text(ui_lblDeviceValue_sysinfo, get_device_info());
     lv_label_set_text(ui_lblKernelValue_sysinfo, get_kernel_version());
     lv_label_set_text(ui_lblUptimeValue_sysinfo, get_uptime());
-    lv_label_set_text(ui_lblCPUValue_sysinfo, get_cpu_model());
+    lv_label_set_text(ui_lblCpuValue_sysinfo, get_cpu_model());
     lv_label_set_text(ui_lblSpeedValue_sysinfo, get_current_frequency());
     lv_label_set_text(ui_lblGovernorValue_sysinfo, get_scaling_governor());
     lv_label_set_text(ui_lblMemoryValue_sysinfo, get_memory_usage());
@@ -210,7 +210,7 @@ static void init_navigation_group() {
     INIT_VALUE_ITEM(-1, sysinfo, Device, lang.MUXSYSINFO.DEVICE, "device", get_device_info());
     INIT_VALUE_ITEM(-1, sysinfo, Kernel, lang.MUXSYSINFO.KERNEL, "kernel", get_kernel_version());
     INIT_VALUE_ITEM(-1, sysinfo, Uptime, lang.MUXSYSINFO.UPTIME, "uptime", get_uptime());
-    INIT_VALUE_ITEM(-1, sysinfo, CPU, lang.MUXSYSINFO.CPU.INFO, "cpu", get_cpu_model());
+    INIT_VALUE_ITEM(-1, sysinfo, Cpu, lang.MUXSYSINFO.CPU.INFO, "cpu", get_cpu_model());
     INIT_VALUE_ITEM(-1, sysinfo, Speed, lang.MUXSYSINFO.CPU.SPEED, "speed", get_current_frequency());
     INIT_VALUE_ITEM(-1, sysinfo, Governor, lang.MUXSYSINFO.CPU.GOV, "governor", get_scaling_governor());
     INIT_VALUE_ITEM(-1, sysinfo, Memory, lang.MUXSYSINFO.MEMORY.INFO, "memory", get_memory_usage());

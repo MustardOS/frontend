@@ -14,7 +14,7 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBIOS_storage,             lang.MUXSTORAGE.HELP.BIOS},
+            {ui_lblBios_storage,             lang.MUXSTORAGE.HELP.BIOS},
             {ui_lblCatalogue_storage,        lang.MUXSTORAGE.HELP.CATALOGUE},
             {ui_lblName_storage,             lang.MUXSTORAGE.HELP.FRIENDLY},
             {ui_lblRetroArch_storage,        lang.MUXSTORAGE.HELP.RA_SYSTEM},
@@ -45,7 +45,7 @@ static void update_storage_info() {
      * If it's not on SD1 then you have bigger problems!
     */
     storage_path[0].path_suffix = STORE_LOC_BIOS;
-    storage_path[0].ui_label = ui_lblBIOSValue_storage;
+    storage_path[0].ui_label = ui_lblBiosValue_storage;
 
     storage_path[1].path_suffix = STORE_LOC_CLOG;
     storage_path[1].ui_label = ui_lblCatalogueValue_storage;
@@ -120,7 +120,7 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(-1, storage, BIOS, lang.MUXSTORAGE.BIOS, "bios", "");
+    INIT_VALUE_ITEM(-1, storage, Bios, lang.MUXSTORAGE.BIOS, "bios", "");
     INIT_VALUE_ITEM(-1, storage, Catalogue, lang.MUXSTORAGE.CATALOGUE, "catalogue", "");
     INIT_VALUE_ITEM(-1, storage, Name, lang.MUXSTORAGE.FRIENDLY, "name", "");
     INIT_VALUE_ITEM(-1, storage, RetroArch, lang.MUXSTORAGE.RA_SYSTEM, "retroarch", "");

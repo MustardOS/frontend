@@ -11,8 +11,8 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblRTC_tweakgen,        lang.MUXTWEAKGEN.HELP.DATETIME},
-            {ui_lblHDMI_tweakgen,       lang.MUXTWEAKGEN.HELP.HDMI},
+            {ui_lblRtc_tweakgen,        lang.MUXTWEAKGEN.HELP.DATETIME},
+            {ui_lblHdmi_tweakgen,       lang.MUXTWEAKGEN.HELP.HDMI},
             {ui_lblAdvanced_tweakgen,   lang.MUXTWEAKGEN.HELP.ADVANCED},
             {ui_lblBrightness_tweakgen, lang.MUXTWEAKGEN.HELP.BRIGHT},
             {ui_lblVolume_tweakgen,     lang.MUXTWEAKGEN.HELP.VOLUME},
@@ -132,8 +132,8 @@ static void init_navigation_group() {
             lang.MUXTWEAKGEN.STARTUP.RESUME
     };
 
-    INIT_OPTION_ITEM(-1, tweakgen, RTC, lang.MUXTWEAKGEN.DATETIME, "clock", NULL, 0);
-    INIT_OPTION_ITEM(-1, tweakgen, HDMI, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Rtc, lang.MUXTWEAKGEN.DATETIME, "clock", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Hdmi, lang.MUXTWEAKGEN.HDMI, "hdmi", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Advanced, lang.MUXTWEAKGEN.ADVANCED, "advanced", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHT, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
@@ -165,7 +165,7 @@ static void init_navigation_group() {
     }
 
     if (!device.DEVICE.HAS_HDMI) {
-        lv_obj_add_flag(ui_pnlHDMI_tweakgen, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlHdmi_tweakgen, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         ui_count -= 1;
     }
 
@@ -192,7 +192,7 @@ static void list_nav_move(int steps, int direction) {
     nav_moved = 1;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblRTC_tweakgen || element_focused == ui_lblAdvanced_tweakgen) {
+    if (element_focused == ui_lblRtc_tweakgen || element_focused == ui_lblAdvanced_tweakgen) {
         lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
         lv_obj_add_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);

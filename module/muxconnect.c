@@ -14,7 +14,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblNetwork_connect,     lang.MUXCONNECT.HELP.WIFI},
             {ui_lblServices_connect,    lang.MUXCONNECT.HELP.WEB},
             {ui_lblBluetooth_connect,   lang.MUXCONNECT.HELP.BLUETOOTH},
-            {ui_lblUSBFunction_connect, lang.MUXCONNECT.HELP.USB},
+            {ui_lblUsbFunction_connect, lang.MUXCONNECT.HELP.USB},
     };
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
@@ -30,18 +30,18 @@ static void init_dropdown_settings() {
 static void restore_options() {
     const char *usb_type = config.SETTINGS.ADVANCED.USBFUNCTION;
     if (!strcasecmp(usb_type, "adb")) {
-        lv_dropdown_set_selected(ui_droUSBFunction_connect, 1);
+        lv_dropdown_set_selected(ui_droUsbFunction_connect, 1);
     } else if (!strcasecmp(usb_type, "mtp")) {
-        lv_dropdown_set_selected(ui_droUSBFunction_connect, 2);
+        lv_dropdown_set_selected(ui_droUsbFunction_connect, 2);
     } else {
-        lv_dropdown_set_selected(ui_droUSBFunction_connect, 0);
+        lv_dropdown_set_selected(ui_droUsbFunction_connect, 0);
     }
     lv_dropdown_set_selected(ui_droBluetooth_connect, config.VISUAL.BLUETOOTH);
 }
 
 static void save_options() {
     char *idx_usbfunction;
-    switch (lv_dropdown_get_selected(ui_droUSBFunction_connect)) {
+    switch (lv_dropdown_get_selected(ui_droUsbFunction_connect)) {
         case 1:
             idx_usbfunction = "adb";
             break;
@@ -60,7 +60,7 @@ static void save_options() {
         write_text_to_file((CONF_CONFIG_PATH "visual/bluetooth"), "w", INT, idx_bluetooth);
     }
 
-    if (lv_dropdown_get_selected(ui_droUSBFunction_connect) != USBFunction_original) {
+    if (lv_dropdown_get_selected(ui_droUsbFunction_connect) != UsbFunction_original) {
         is_modified++;
         write_text_to_file((CONF_CONFIG_PATH "settings/advanced/usb_function"), "w", CHAR, idx_usbfunction);
     }
@@ -91,7 +91,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, connect, Network, lang.MUXCONNECT.WIFI, "network", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, Services, lang.MUXCONNECT.WEB, "service", NULL, 0);
     INIT_OPTION_ITEM(-1, connect, Bluetooth, lang.MUXCONNECT.BLUETOOTH, "bluetooth", NULL, 0);
-    INIT_OPTION_ITEM(-1, connect, USBFunction, lang.MUXCONNECT.USB, "usbfunction", usb_functions, 3);
+    INIT_OPTION_ITEM(-1, connect, UsbFunction, lang.MUXCONNECT.USB, "usbfunction", usb_functions, 3);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

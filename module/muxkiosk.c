@@ -37,7 +37,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblInfo_kiosk,       lang.MUXKIOSK.HELP.INFO},
             {ui_lblAdvanced_kiosk,   lang.MUXKIOSK.HELP.ADVANCED},
             {ui_lblGeneral_kiosk,    lang.MUXKIOSK.HELP.GENERAL},
-            {ui_lblHDMI_kiosk,       lang.MUXKIOSK.HELP.HDMI},
+            {ui_lblHdmi_kiosk,       lang.MUXKIOSK.HELP.HDMI},
             {ui_lblPower_kiosk,      lang.MUXKIOSK.HELP.POWER},
             {ui_lblVisual_kiosk,     lang.MUXKIOSK.HELP.VISUAL},
     };
@@ -81,7 +81,7 @@ static void restore_kiosk_options() {
     lv_dropdown_set_selected(ui_droInfo_kiosk, kiosk.LAUNCH.INFORMATION);
     lv_dropdown_set_selected(ui_droAdvanced_kiosk, kiosk.SETTING.ADVANCED);
     lv_dropdown_set_selected(ui_droGeneral_kiosk, kiosk.SETTING.GENERAL);
-    lv_dropdown_set_selected(ui_droHDMI_kiosk, kiosk.SETTING.HDMI);
+    lv_dropdown_set_selected(ui_droHdmi_kiosk, kiosk.SETTING.HDMI);
     lv_dropdown_set_selected(ui_droPower_kiosk, kiosk.SETTING.POWER);
     lv_dropdown_set_selected(ui_droVisual_kiosk, kiosk.SETTING.VISUAL);
 }
@@ -117,7 +117,7 @@ static void save_kiosk_options() {
     CHECK_AND_SAVE_KSK(kiosk, Info, "launch/info", INT);
     CHECK_AND_SAVE_KSK(kiosk, Advanced, "setting/advanced", INT);
     CHECK_AND_SAVE_KSK(kiosk, General, "setting/general", INT);
-    CHECK_AND_SAVE_KSK(kiosk, HDMI, "setting/hdmi", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Hdmi, "setting/hdmi", INT);
     CHECK_AND_SAVE_KSK(kiosk, Power, "setting/power", INT);
     CHECK_AND_SAVE_KSK(kiosk, Visual, "setting/visual", INT);
 
@@ -162,7 +162,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, kiosk, Info, lang.MUXKIOSK.INFO, "info", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, kiosk, Advanced, lang.MUXKIOSK.ADVANCED, "advanced", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, kiosk, General, lang.MUXKIOSK.GENERAL, "general", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, HDMI, lang.MUXKIOSK.HDMI, "hdmi", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Hdmi, lang.MUXKIOSK.HDMI, "hdmi", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, kiosk, Power, lang.MUXKIOSK.POWER, "power", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, kiosk, Visual, lang.MUXKIOSK.VISUAL, "visual", disabled_enabled, 2);
 
