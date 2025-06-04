@@ -24,9 +24,9 @@ static lv_obj_t *ui_viewport_objects[7];
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblLookup_search,       lang.MUXSEARCH.LOOKUP},
-            {ui_lblSearchLocal_search,  lang.MUXSEARCH.LOCAL},
-            {ui_lblSearchGlobal_search, lang.MUXSEARCH.GLOBAL},
+            {ui_lblLookup_search,       lang.MUXSEARCH.HELP.LOOKUP},
+            {ui_lblSearchLocal_search,  lang.MUXSEARCH.HELP.LOCAL},
+            {ui_lblSearchGlobal_search, lang.MUXSEARCH.HELP.GLOBAL},
     };
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
@@ -263,6 +263,7 @@ static void list_nav_move(int steps, int direction) {
         nav_move(ui_group_glyph, direction);
         nav_move(ui_group_panel, direction);
     }
+
     scroll_object_to_middle(ui_pnlContent, lv_group_get_focused(ui_group_panel));
 
     if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
@@ -757,8 +758,7 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
-        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
-
+        adjust_panel_priority(ui_mux_extra_panels, sizeof(ui_mux_extra_panels) / sizeof(ui_mux_extra_panels[0]));
         lv_obj_move_foreground(overlay_image);
 
         nav_moved = 0;
