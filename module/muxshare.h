@@ -200,13 +200,13 @@ int muxwebserv_main();
         }                                                                    \
     } while (0)
 
-#define CHECK_AND_SAVE_STD(MODULE, NAME, FILE, TYPE)                         \
-    do {                                                                     \
-        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);     \
-        if (current != NAME##_original) {                                    \
-            is_modified++;                                                   \
-            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, current); \
-        }                                                                    \
+#define CHECK_AND_SAVE_STD(MODULE, NAME, FILE, TYPE, OFFSET)                          \
+    do {                                                                              \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);              \
+        if (current != NAME##_original) {                                             \
+            is_modified++;                                                            \
+            write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, current + OFFSET); \
+        }                                                                             \
     } while (0)
 
 #define CHECK_AND_SAVE_VAL(MODULE, NAME, FILE, TYPE, VALUES)                         \

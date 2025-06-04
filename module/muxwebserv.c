@@ -41,13 +41,13 @@ static void restore_web_options() {
 static void save_web_options() {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(webserv, SSHD, "web/sshd", INT);
-    CHECK_AND_SAVE_STD(webserv, SFTPGo, "web/sftpgo", INT);
-    CHECK_AND_SAVE_STD(webserv, TTYD, "web/ttyd", INT);
-    CHECK_AND_SAVE_STD(webserv, Syncthing, "web/syncthing", INT);
-    CHECK_AND_SAVE_STD(webserv, RSLSync, "web/rslsync", INT);
-    CHECK_AND_SAVE_STD(webserv, NTP, "web/ntp", INT);
-    CHECK_AND_SAVE_STD(webserv, Tailscaled, "web/tailscaled", INT);
+    CHECK_AND_SAVE_STD(webserv, SSHD, "web/sshd", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, SFTPGo, "web/sftpgo", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, TTYD, "web/ttyd", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, Syncthing, "web/syncthing", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, RSLSync, "web/rslsync", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, NTP, "web/ntp", INT, 0);
+    CHECK_AND_SAVE_STD(webserv, Tailscaled, "web/tailscaled", INT, 0);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);

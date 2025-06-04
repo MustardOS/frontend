@@ -60,21 +60,21 @@ static void restore_visual_options() {
 static void save_visual_options() {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(visual, Battery, "visual/battery", INT);
-    CHECK_AND_SAVE_STD(visual, Clock, "visual/clock", INT);
-    CHECK_AND_SAVE_STD(visual, Network, "visual/network", INT);
-    CHECK_AND_SAVE_STD(visual, Name, "visual/name", INT);
-    CHECK_AND_SAVE_STD(visual, Dash, "visual/dash", INT);
-    CHECK_AND_SAVE_STD(visual, FriendlyFolder, "visual/friendlyfolder", INT);
-    CHECK_AND_SAVE_STD(visual, TheTitleFormat, "visual/thetitleformat", INT);
-    CHECK_AND_SAVE_STD(visual, TitleIncludeRootDrive, "visual/titleincluderootdrive", INT);
-    CHECK_AND_SAVE_STD(visual, FolderItemCount, "visual/folderitemcount", INT);
-    CHECK_AND_SAVE_STD(visual, DisplayEmptyFolder, "visual/folderempty", INT);
-    CHECK_AND_SAVE_STD(visual, MenuCounterFolder, "visual/counterfolder", INT);
-    CHECK_AND_SAVE_STD(visual, MenuCounterFile, "visual/counterfile", INT);
-    CHECK_AND_SAVE_STD(visual, Hidden, "settings/general/hidden", INT);
-    CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT);
-    CHECK_AND_SAVE_STD(visual, OverlayTransparency, "visual/overlaytransparency", INT);
+    CHECK_AND_SAVE_STD(visual, Battery, "visual/battery", INT, 0);
+    CHECK_AND_SAVE_STD(visual, Clock, "visual/clock", INT, 0);
+    CHECK_AND_SAVE_STD(visual, Network, "visual/network", INT, 0);
+    CHECK_AND_SAVE_STD(visual, Name, "visual/name", INT, 0);
+    CHECK_AND_SAVE_STD(visual, Dash, "visual/dash", INT, 0);
+    CHECK_AND_SAVE_STD(visual, FriendlyFolder, "visual/friendlyfolder", INT, 0);
+    CHECK_AND_SAVE_STD(visual, TheTitleFormat, "visual/thetitleformat", INT, 0);
+    CHECK_AND_SAVE_STD(visual, TitleIncludeRootDrive, "visual/titleincluderootdrive", INT, 0);
+    CHECK_AND_SAVE_STD(visual, FolderItemCount, "visual/folderitemcount", INT, 0);
+    CHECK_AND_SAVE_STD(visual, DisplayEmptyFolder, "visual/folderempty", INT, 0);
+    CHECK_AND_SAVE_STD(visual, MenuCounterFolder, "visual/counterfolder", INT, 0);
+    CHECK_AND_SAVE_STD(visual, MenuCounterFile, "visual/counterfile", INT, 0);
+    CHECK_AND_SAVE_STD(visual, Hidden, "settings/general/hidden", INT, 0);
+    CHECK_AND_SAVE_STD(visual, OverlayImage, "visual/overlayimage", INT, 0);
+    CHECK_AND_SAVE_STD(visual, OverlayTransparency, "visual/overlaytransparency", INT, 0);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);

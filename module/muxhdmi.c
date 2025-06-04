@@ -42,11 +42,11 @@ static void save_hdmi_options() {
     int is_modified = 0;
 
     CHECK_AND_SAVE_MAP(hdmi, Resolution, "settings/hdmi/resolution", hdmi_index, 11, 0);
-    CHECK_AND_SAVE_STD(hdmi, Space, "settings/hdmi/space", INT);
-    CHECK_AND_SAVE_STD(hdmi, Depth, "settings/hdmi/depth", INT);
-    CHECK_AND_SAVE_STD(hdmi, Range, "settings/hdmi/range", INT);
-    CHECK_AND_SAVE_STD(hdmi, Scan, "settings/hdmi/scan", INT);
-    CHECK_AND_SAVE_STD(hdmi, Audio, "settings/hdmi/audio", INT);
+    CHECK_AND_SAVE_STD(hdmi, Space, "settings/hdmi/space", INT, 0);
+    CHECK_AND_SAVE_STD(hdmi, Depth, "settings/hdmi/depth", INT, 0);
+    CHECK_AND_SAVE_STD(hdmi, Range, "settings/hdmi/range", INT, 0);
+    CHECK_AND_SAVE_STD(hdmi, Scan, "settings/hdmi/scan", INT, 0);
+    CHECK_AND_SAVE_STD(hdmi, Audio, "settings/hdmi/audio", INT, 0);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);

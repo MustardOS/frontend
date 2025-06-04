@@ -75,18 +75,18 @@ static void restore_tweak_options() {
 static void save_tweak_options() {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(tweakadv, Swap, "settings/advanced/swap", INT);
-    CHECK_AND_SAVE_STD(tweakadv, Thermal, "settings/advanced/thermal", INT);
-    CHECK_AND_SAVE_STD(tweakadv, Offset, "settings/advanced/offset", INT);
-    CHECK_AND_SAVE_STD(tweakadv, Passcode, "settings/advanced/lock", INT);
-    CHECK_AND_SAVE_STD(tweakadv, LED, "settings/advanced/led", INT);
-    CHECK_AND_SAVE_STD(tweakadv, Theme, "settings/advanced/random_theme", INT);
-    CHECK_AND_SAVE_STD(tweakadv, RetroWait, "settings/advanced/retrowait", INT);
-    CHECK_AND_SAVE_STD(tweakadv, Verbose, "settings/advanced/verbose", INT);
-    CHECK_AND_SAVE_STD(tweakadv, Rumble, "settings/advanced/rumble", INT);
-    CHECK_AND_SAVE_STD(tweakadv, UserInit, "settings/advanced/user_init", INT);
-    CHECK_AND_SAVE_STD(tweakadv, DPADSwap, "settings/advanced/dpad_swap", INT);
-    CHECK_AND_SAVE_STD(tweakadv, Overdrive, "settings/advanced/overdrive", INT);
+    CHECK_AND_SAVE_STD(tweakadv, Swap, "settings/advanced/swap", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Thermal, "settings/advanced/thermal", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Offset, "settings/advanced/offset", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Passcode, "settings/advanced/lock", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, LED, "settings/advanced/led", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Theme, "settings/advanced/random_theme", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, RetroWait, "settings/advanced/retrowait", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Verbose, "settings/advanced/verbose", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Rumble, "settings/advanced/rumble", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, UserInit, "settings/advanced/user_init", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, DPADSwap, "settings/advanced/dpad_swap", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, Overdrive, "settings/advanced/overdrive", INT, 0);
 
     CHECK_AND_SAVE_VAL(tweakadv, Volume, "settings/advanced/volume", CHAR, volume_values);
     CHECK_AND_SAVE_VAL(tweakadv, Brightness, "settings/advanced/brightness", CHAR, brightness_values);
