@@ -14,6 +14,8 @@ static lv_obj_t *ui_objects_value[UI_COUNT];
 
 static int group_index = 0;
 
+static void list_nav_move(int steps, int direction);
+
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblSearch_option,   lang.MUXOPTION.HELP.SEARCH},
@@ -35,8 +37,8 @@ static void show_help(lv_obj_t *element_focused) {
                      TS(lv_label_get_text(element_focused)), message);
 }
 
-static void add_info_item(int index, const char *item_label, const char *item_value,
-                          const char *glyph_name, bool add_bottom_border) {
+static void add_static_item(int index, const char *item_label, const char *item_value,
+                            const char *glyph_name, bool add_bottom_border) {
     lv_obj_t *ui_pnlInfoItem = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(ui_pnlInfoItem);
 
@@ -85,53 +87,50 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
 }
 
 static void add_info_items() {
-    int line_index = 0;
+    const char *core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
+    const char *core_dir = get_content_line(rom_dir, NULL, "cfg", 1);
+    add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
 
-    add_info_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
-    add_info_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
-    add_info_item(line_index, "", "", "", true);
+    const char *gov_file = get_content_line(rom_dir, rom_name, "gov", 1);
+    const char *gov_dir = get_content_line(rom_dir, NULL, "gov", 1);
+    add_info_item_type(ui_lblGovernorValue_option, gov_file, gov_dir, "governor", true);
 
-    const char *dot = strrchr(rom_name, '.');
-    if ((dot && dot != rom_name)) {
-        const char *core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
-        const char *core_dir = get_content_line(rom_dir, NULL, "cfg", 1);
-
-        const char *gov_file = get_content_line(rom_dir, rom_name, "gov", 1);
-        const char *gov_dir = get_content_line(rom_dir, NULL, "gov", 1);
-
-        const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
-        const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
-
-        add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
-        add_info_item_type(ui_lblGovernorValue_option, gov_file, gov_dir, "governor", true);
-        add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
-    }
+    const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
+    const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
+    add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
 }
 
 static void init_navigation_group() {
-    add_info_items();
+    int line_index = 0;
 
-    int start_index = theme.MUX.ITEM.COUNT < UI_COUNT ? 2 : 0;
+    add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
+    add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
+    add_static_item(line_index, "", "", "", true);
 
-    INIT_VALUE_ITEM(start_index + 0, option, Search, lang.MUXOPTION.SEARCH, "search", "");
-    INIT_VALUE_ITEM(start_index + 1, option, Core, lang.MUXOPTION.CORE, "core", "");
-    INIT_VALUE_ITEM(start_index + 2, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
-    INIT_VALUE_ITEM(start_index + 3, option, Tag, lang.MUXOPTION.TAG, "tag", "");
+    INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
+
+    const char *dot = strrchr(rom_name, '.');
+    if ((dot && dot != rom_name)) {
+        INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
+        INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
+        INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
+
+        add_info_items();
+    }
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
     ui_group_value = lv_group_create();
 
-    if (theme.MUX.ITEM.COUNT >= UI_COUNT) ui_count -= 2;
-
     for (unsigned int i = 0; i < ui_count; i++) {
-        lv_obj_set_user_data(ui_objects_panel[i], strdup(lv_label_get_text(ui_objects[i])));
         lv_group_add_obj(ui_group, ui_objects[i]);
         lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
         lv_group_add_obj(ui_group_value, ui_objects_value[i]);
     }
+
+    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -263,14 +262,6 @@ static void init_elements() {
         lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
     }
 
-    const char *dot = strrchr(rom_name, '.');
-    if (!(dot && dot != rom_name)) {
-        lv_obj_add_flag(ui_pnlCore_option, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlGovernor_option, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlTag_option, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        ui_count -= 3;
-    }
-
 #define OPTION(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_option, UDATA);
     OPTION_ELEMENTS
 #undef OPTION
@@ -291,8 +282,7 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
-        adjust_panel_priority(ui_mux_standard_panels,
-                              sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
+        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
 
         lv_obj_move_foreground(overlay_image);
 
@@ -332,8 +322,6 @@ int muxoption_main(int nothing, char *name, char *dir, char *sys) {
 
     init_fonts();
     init_navigation_group();
-
-    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 
     init_timer(ui_refresh_task, NULL);
 
