@@ -100,24 +100,18 @@ static void init_navigation_group() {
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
 
-    int no_item_gen = theme.GRID.ENABLED ? 1 : 0;
-
-    INIT_STATIC_ITEM(-1, launch, Explore, item_labels[0], glyph_names[0], no_item_gen);
-    INIT_STATIC_ITEM(-1, launch, Collection, item_labels[1], glyph_names[1], no_item_gen);
-    INIT_STATIC_ITEM(-1, launch, History, item_labels[2], glyph_names[2], no_item_gen);
-    INIT_STATIC_ITEM(-1, launch, Apps, item_labels[3], glyph_names[3], no_item_gen);
-    INIT_STATIC_ITEM(-1, launch, Info, item_labels[4], glyph_names[4], no_item_gen);
-    INIT_STATIC_ITEM(-1, launch, Config, item_labels[5], glyph_names[5], no_item_gen);
-    INIT_STATIC_ITEM(-1, launch, Reboot, item_labels[6], glyph_names[6], no_item_gen);
-    INIT_STATIC_ITEM(-1, launch, Shutdown, item_labels[7], glyph_names[7], no_item_gen);
-
     if (theme.GRID.ENABLED) {
-        for (unsigned int i = 0; i < ui_count; i++) {
-            lv_group_add_obj(ui_group, ui_objects[i]);
-        }
-
         init_navigation_group_grid(ui_objects, item_labels_short, glyph_names);
     } else {
+        INIT_STATIC_ITEM(-1, launch, Explore, item_labels[0], glyph_names[0], 0);
+        INIT_STATIC_ITEM(-1, launch, Collection, item_labels[1], glyph_names[1], 0);
+        INIT_STATIC_ITEM(-1, launch, History, item_labels[2], glyph_names[2], 0);
+        INIT_STATIC_ITEM(-1, launch, Apps, item_labels[3], glyph_names[3], 0);
+        INIT_STATIC_ITEM(-1, launch, Info, item_labels[4], glyph_names[4], 0);
+        INIT_STATIC_ITEM(-1, launch, Config, item_labels[5], glyph_names[5], 0);
+        INIT_STATIC_ITEM(-1, launch, Reboot, item_labels[6], glyph_names[6], 0);
+        INIT_STATIC_ITEM(-1, launch, Shutdown, item_labels[7], glyph_names[7], 0);
+
         for (unsigned int i = 0; i < ui_count; i++) {
             lv_group_add_obj(ui_group, ui_objects[i]);
             lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
