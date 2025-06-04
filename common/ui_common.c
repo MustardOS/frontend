@@ -1351,9 +1351,7 @@ void grid_item_focus_event_cb(lv_event_t *e) {
 }
 
 void create_grid_item(struct theme_config *theme, lv_obj_t *cell_pnl, lv_obj_t *cell_label, lv_obj_t *cell_image,
-                      int16_t col, int16_t row,
-                      char *item_image_path, char *item_image_focused_path, char *item_text) {
-
+                      int16_t col, int16_t row, char *item_image_path, char *item_image_focused_path, char *item_text) {
     lv_obj_set_width(cell_pnl, theme->GRID.CELL.WIDTH);
     lv_obj_set_height(cell_pnl, theme->GRID.CELL.HEIGHT);
     lv_obj_set_style_radius(cell_pnl, theme->GRID.CELL.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
