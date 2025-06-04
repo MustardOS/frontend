@@ -25,13 +25,13 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_STATIC_ITEM(-1, config, General, lang.MUXCONFIG.GENERAL, "general");
-    INIT_STATIC_ITEM(-1, config, Connect, lang.MUXCONFIG.CONNECTIVITY, "connect");
-    INIT_STATIC_ITEM(-1, config, Custom, lang.MUXCONFIG.CUSTOM, "custom");
-    INIT_STATIC_ITEM(-1, config, Interface, lang.MUXCONFIG.VISUAL, "interface");
-    INIT_STATIC_ITEM(-1, config, Language, lang.MUXCONFIG.LANGUAGE, "language");
-    INIT_STATIC_ITEM(-1, config, Power, lang.MUXCONFIG.POWER, "power");
-    INIT_STATIC_ITEM(-1, config, Storage, lang.MUXCONFIG.STORAGE, "storage");
+    INIT_STATIC_ITEM(-1, config, General, lang.MUXCONFIG.GENERAL, "general", 0);
+    INIT_STATIC_ITEM(-1, config, Connect, lang.MUXCONFIG.CONNECTIVITY, "connect", 0);
+    INIT_STATIC_ITEM(-1, config, Custom, lang.MUXCONFIG.CUSTOM, "custom", 0);
+    INIT_STATIC_ITEM(-1, config, Interface, lang.MUXCONFIG.VISUAL, "interface", 0);
+    INIT_STATIC_ITEM(-1, config, Language, lang.MUXCONFIG.LANGUAGE, "language", 0);
+    INIT_STATIC_ITEM(-1, config, Power, lang.MUXCONFIG.POWER, "power", 0);
+    INIT_STATIC_ITEM(-1, config, Storage, lang.MUXCONFIG.STORAGE, "storage", 0);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();

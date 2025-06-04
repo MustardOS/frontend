@@ -24,12 +24,12 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_STATIC_ITEM(-1, info, Screenshot, lang.MUXINFO.SCREENSHOT, "screenshot");
-    INIT_STATIC_ITEM(-1, info, Space, lang.MUXINFO.SPACE, "space");
-    INIT_STATIC_ITEM(-1, info, Tester, lang.MUXINFO.INPUT, "tester");
-    INIT_STATIC_ITEM(-1, info, SysInfo, lang.MUXINFO.SYSINFO, "sysinfo");
-    INIT_STATIC_ITEM(-1, info, NetInfo, lang.MUXINFO.NETINFO, "netinfo");
-    INIT_STATIC_ITEM(-1, info, Credit, lang.MUXINFO.CREDIT, "credit");
+    INIT_STATIC_ITEM(-1, info, Screenshot, lang.MUXINFO.SCREENSHOT, "screenshot", 0);
+    INIT_STATIC_ITEM(-1, info, Space, lang.MUXINFO.SPACE, "space", 0);
+    INIT_STATIC_ITEM(-1, info, Tester, lang.MUXINFO.INPUT, "tester", 0);
+    INIT_STATIC_ITEM(-1, info, SysInfo, lang.MUXINFO.SYSINFO, "sysinfo", 0);
+    INIT_STATIC_ITEM(-1, info, NetInfo, lang.MUXINFO.NETINFO, "netinfo", 0);
+    INIT_STATIC_ITEM(-1, info, Credit, lang.MUXINFO.CREDIT, "credit", 0);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
