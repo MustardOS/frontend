@@ -85,11 +85,16 @@ static void handle_right(void) {
     nav_next(ui_group, 1);
 }
 
-static void init_elements() {
-    ui_mux_minimal_panels[0] = ui_pnlFooter;
-    ui_mux_minimal_panels[1] = ui_pnlHeader;
+static void adjust_panels() {
+    adjust_panel_priority((lv_obj_t *[]) {
+            ui_pnlFooter,
+            ui_pnlHeader,
+            NULL
+    });
+}
 
-    adjust_panel_priority(ui_mux_minimal_panels, sizeof(ui_mux_minimal_panels) / sizeof(ui_mux_minimal_panels[0]));
+static void init_elements() {
+    adjust_panels();
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);

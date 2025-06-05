@@ -1168,8 +1168,8 @@ void counter_message(lv_obj_t *label, const char *msg, uint32_t delay) {
     show_message(label, label, msg, delay, &counter_timer);
 }
 
-void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels) {
-    for (size_t i = 0; i < num_panels; i++) {
+void adjust_panel_priority(lv_obj_t *panels[]) {
+    for (size_t i = 0; panels[i] != NULL; i++) {
         lv_obj_move_foreground(panels[i]);
     }
 }

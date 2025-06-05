@@ -1,9 +1,5 @@
 #include "muxshare.h"
 
-lv_obj_t *ui_mux_minimal_panels[2];
-lv_obj_t *ui_mux_standard_panels[5];
-lv_obj_t *ui_mux_extra_panels[7];
-
 size_t item_count = 0;
 content_item *items = NULL;
 

@@ -955,6 +955,19 @@ static void handle_r1(void) {
     handle_list_nav_page_down();
 }
 
+static void adjust_panels() {
+    adjust_panel_priority((lv_obj_t *[]) {
+            ui_pnlFooter,
+            ui_pnlHeader,
+            ui_lblCounter_collect,
+            ui_pnlHelp,
+            ui_pnlProgressBrightness,
+            ui_pnlProgressVolume,
+            ui_pnlMessage,
+            NULL
+    });
+}
+
 static void init_elements() {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
@@ -982,15 +995,7 @@ static void init_elements() {
             break;
     }
 
-    ui_mux_extra_panels[0] = ui_pnlFooter;
-    ui_mux_extra_panels[1] = ui_pnlHeader;
-    ui_mux_extra_panels[2] = ui_lblCounter_collect;
-    ui_mux_extra_panels[3] = ui_pnlHelp;
-    ui_mux_extra_panels[4] = ui_pnlProgressBrightness;
-    ui_mux_extra_panels[5] = ui_pnlProgressVolume;
-    ui_mux_extra_panels[6] = ui_pnlMessage;
-
-    adjust_panel_priority(ui_mux_extra_panels, sizeof(ui_mux_extra_panels) / sizeof(ui_mux_extra_panels[0]));
+    adjust_panels();
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1041,7 +1046,7 @@ static void init_elements() {
 static void ui_refresh_task() {
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
-        adjust_panel_priority(ui_mux_extra_panels, sizeof(ui_mux_extra_panels) / sizeof(ui_mux_extra_panels[0]));
+        adjust_panels();
 
         const char *content_label = lv_obj_get_user_data(lv_group_get_focused(ui_group));
         snprintf(current_content_label, sizeof(current_content_label), "%s", content_label);
@@ -1196,7 +1201,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     }
 
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
-    adjust_panel_priority(ui_mux_extra_panels, sizeof(ui_mux_extra_panels) / sizeof(ui_mux_extra_panels[0]));
+    adjust_panels();
 
     update_file_counter();
     init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false);

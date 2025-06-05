@@ -172,14 +172,19 @@ static void handle_help() {
     }
 }
 
-static void init_elements() {
-    ui_mux_standard_panels[0] = ui_pnlFooter;
-    ui_mux_standard_panels[1] = ui_pnlHeader;
-    ui_mux_standard_panels[2] = ui_pnlHelp;
-    ui_mux_standard_panels[3] = ui_pnlProgressBrightness;
-    ui_mux_standard_panels[4] = ui_pnlProgressVolume;
+static void adjust_panels() {
+    adjust_panel_priority((lv_obj_t *[]) {
+            ui_pnlFooter,
+            ui_pnlHeader,
+            ui_pnlHelp,
+            ui_pnlProgressBrightness,
+            ui_pnlProgressVolume,
+            NULL
+    });
+}
 
-    adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
+static void init_elements() {
+    adjust_panels();
 
     if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -233,7 +238,7 @@ static void ui_refresh_task() {
     if (ui_count > 0 && nav_moved) {
         image_refresh();
 
-        adjust_panel_priority(ui_mux_standard_panels, sizeof(ui_mux_standard_panels) / sizeof(ui_mux_standard_panels[0]));
+        adjust_panels();
 
         lv_obj_invalidate(ui_pnlBox);
         nav_moved = 0;

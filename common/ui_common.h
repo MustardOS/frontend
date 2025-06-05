@@ -53,7 +53,7 @@ void toast_message(const char *msg, uint32_t delay);
 
 void counter_message(lv_obj_t *ui_lblCounter, const char *msg, uint32_t delay);
 
-void adjust_panel_priority(lv_obj_t *panels[], size_t num_panels);
+void adjust_panel_priority(lv_obj_t *panels[]);
 
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_type);
 
