@@ -714,17 +714,15 @@ static void init_elements() {
     }
 
     adjust_panels();
+    header_and_footer_setup();
 
-    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_label_set_text(ui_lblPreviewHeader, "");
-    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
-
-    process_visual_element(CLOCK, ui_lblDatetime);
-    process_visual_element(BLUETOOTH, ui_staBluetooth);
-    process_visual_element(NETWORK, ui_staNetwork);
-    process_visual_element(BATTERY, ui_staCapacity);
+    setup_nav((struct nav_bar[]) {
+            {ui_lblNavBGlyph, "",                0},
+            {ui_lblNavB,      lang.GENERIC.BACK, 0},
+            {ui_lblNavXGlyph, "",                0},
+            {ui_lblNavX,      "",                0},
+            {NULL, NULL,                         0}
+    });
 
     lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
     lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
@@ -747,17 +745,7 @@ static void init_elements() {
     SEARCH_ELEMENTS
 #undef SEARCH
 
-#if TEST_IMAGE
-    display_testing_message(ui_screen);
-#endif
-
-    if (kiosk.ENABLE) {
-        kiosk_image = lv_img_create(ui_screen);
-        load_kiosk_image(ui_screen, kiosk_image);
-    }
-
-    overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image);
+    overlay_display();
 }
 
 static void ui_refresh_task() {

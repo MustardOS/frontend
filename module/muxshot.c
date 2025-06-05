@@ -185,36 +185,17 @@ static void adjust_panels() {
 
 static void init_elements() {
     adjust_panels();
+    header_and_footer_setup();
 
-    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_label_set_text(ui_lblPreviewHeader, "");
-    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
-
-    process_visual_element(CLOCK, ui_lblDatetime);
-    process_visual_element(BLUETOOTH, ui_staBluetooth);
-    process_visual_element(NETWORK, ui_staNetwork);
-    process_visual_element(BATTERY, ui_staCapacity);
-
-    lv_label_set_text(ui_lblMessage, "");
-
-    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
-    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
-    lv_label_set_text(ui_lblNavX, lang.GENERIC.REMOVE);
-
-    lv_obj_t *nav_hide[] = {
-            ui_lblNavAGlyph,
-            ui_lblNavA,
-            ui_lblNavBGlyph,
-            ui_lblNavB,
-            ui_lblNavXGlyph,
-            ui_lblNavX
-    };
-
-    for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
+    setup_nav((struct nav_bar[]) {
+            {ui_lblNavAGlyph, "",                  1},
+            {ui_lblNavA,      lang.GENERIC.SELECT, 1},
+            {ui_lblNavBGlyph, "",                  0},
+            {ui_lblNavB,      lang.GENERIC.BACK,   0},
+            {ui_lblNavXGlyph, "",                  1},
+            {ui_lblNavX,      lang.GENERIC.REMOVE, 1},
+            {NULL, NULL,                           0}
+    });
 
 #if TEST_IMAGE
     display_testing_message(ui_screen);
@@ -253,7 +234,6 @@ int muxshot_main() {
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXSHOT.TITLE);
-    init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -262,6 +242,7 @@ int muxshot_main() {
 
     init_fonts();
     create_screenshot_items();
+    init_elements();
 
     int nav_hidden = 0;
     if (ui_count > 0) {

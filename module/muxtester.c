@@ -83,6 +83,8 @@ static void handle_power() {
 }
 
 static void init_elements() {
+    header_and_footer_setup();
+
     ui_imgButton = lv_img_create(ui_screen);
     lv_obj_set_align(ui_imgButton, LV_ALIGN_CENTER);
     lv_img_set_src(ui_imgButton, &ui_image_Nothing);
@@ -96,27 +98,8 @@ static void init_elements() {
     lv_obj_set_y(ui_pnlMessage, -12);
 
     lv_obj_add_flag(ui_pnlFooter, LV_OBJ_FLAG_HIDDEN);
-    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_label_set_text(ui_lblPreviewHeader, "");
-    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
-
-    process_visual_element(CLOCK, ui_lblDatetime);
-    process_visual_element(BLUETOOTH, ui_staBluetooth);
-    process_visual_element(NETWORK, ui_staNetwork);
-    process_visual_element(BATTERY, ui_staCapacity);
-
-#if TEST_IMAGE
-    display_testing_message(ui_screen);
-#endif
-
-    if (kiosk.ENABLE) {
-        kiosk_image = lv_img_create(ui_screen);
-        load_kiosk_image(ui_screen, kiosk_image);
-    }
-
-    overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image);
+    overlay_display();
 }
 
 int muxtester_main() {

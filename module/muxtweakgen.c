@@ -172,6 +172,23 @@ static void init_navigation_group() {
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
+static void check_focus() {
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblHdmi_tweakgen ||
+        element_focused == ui_lblRtc_tweakgen ||
+        element_focused == ui_lblAdvanced_tweakgen) {
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    } else {
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    }
+}
+
 static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
@@ -191,18 +208,7 @@ static void list_nav_move(int steps, int direction) {
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
     nav_moved = 1;
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblRtc_tweakgen || element_focused == ui_lblAdvanced_tweakgen) {
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    } else {
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
+    check_focus();
 }
 
 static void list_nav_prev(int steps) {
@@ -321,52 +327,25 @@ static void adjust_panels() {
 
 static void init_elements() {
     adjust_panels();
+    header_and_footer_setup();
 
-    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    setup_nav((struct nav_bar[]) {
+            {ui_lblNavLRGlyph, "",                  0},
+            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
+            {ui_lblNavAGlyph,  "",                  0},
+            {ui_lblNavA,       lang.GENERIC.SELECT, 0},
+            {ui_lblNavBGlyph,  "",                  0},
+            {ui_lblNavB,       lang.GENERIC.BACK,   0},
+            {NULL, NULL,                            0}
+    });
 
-    lv_label_set_text(ui_lblPreviewHeader, "");
-    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
-
-    process_visual_element(CLOCK, ui_lblDatetime);
-    process_visual_element(BLUETOOTH, ui_staBluetooth);
-    process_visual_element(NETWORK, ui_staNetwork);
-    process_visual_element(BATTERY, ui_staCapacity);
-
-    lv_label_set_text(ui_lblMessage, "");
-
-    lv_label_set_text(ui_lblNavLR, lang.GENERIC.CHANGE);
-    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
-    lv_label_set_text(ui_lblNavB, lang.GENERIC.SAVE);
-
-    lv_obj_t *nav_hide[] = {
-            ui_lblNavLRGlyph,
-            ui_lblNavLR,
-            ui_lblNavAGlyph,
-            ui_lblNavA,
-            ui_lblNavBGlyph,
-            ui_lblNavB
-    };
-
-    for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
+    check_focus();
 
 #define TWEAKGEN(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_tweakgen, UDATA);
     TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
 
-#if TEST_IMAGE
-    display_testing_message(ui_screen);
-#endif
-
-    if (kiosk.ENABLE) {
-        kiosk_image = lv_img_create(ui_screen);
-        load_kiosk_image(ui_screen, kiosk_image);
-    }
-
-    overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image);
+    overlay_display();
 }
 
 static void ui_refresh_task() {

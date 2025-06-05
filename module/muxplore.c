@@ -1051,6 +1051,7 @@ static void adjust_panels() {
 static void init_elements() {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
+
     switch (config.VISUAL.BOX_ART) {
         case 0: // Behind
             lv_obj_move_background(ui_pnlBox);
@@ -1076,51 +1077,23 @@ static void init_elements() {
     }
 
     adjust_panels();
+    header_and_footer_setup();
 
-    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    setup_nav((struct nav_bar[]) {
+            {ui_lblNavAGlyph,    "",                    1},
+            {ui_lblNavA,         lang.GENERIC.OPEN,     1},
+            {ui_lblNavBGlyph,    "",                    0},
+            {ui_lblNavB,         lang.GENERIC.BACK,     0},
+            {ui_lblNavXGlyph,    "",                    0},
+            {ui_lblNavX,         lang.MUXPLORE.REFRESH, 0},
+            {ui_lblNavYGlyph,    "",                    1},
+            {ui_lblNavY,         lang.GENERIC.COLLECT,  1},
+            {ui_lblNavMenuGlyph, "",                    1},
+            {ui_lblNavMenu,      lang.GENERIC.INFO,     1},
+            {NULL, NULL,                                0}
+    });
 
-    process_visual_element(CLOCK, ui_lblDatetime);
-    process_visual_element(BLUETOOTH, ui_staBluetooth);
-    process_visual_element(NETWORK, ui_staNetwork);
-    process_visual_element(BATTERY, ui_staCapacity);
-
-    lv_label_set_text(ui_lblMessage, "");
-
-    lv_label_set_text(ui_lblNavA, lang.GENERIC.OPEN);
-    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
-    lv_label_set_text(ui_lblNavX, lang.MUXPLORE.REFRESH);
-    lv_label_set_text(ui_lblNavY, lang.GENERIC.COLLECT);
-    lv_label_set_text(ui_lblNavMenu, lang.GENERIC.INFO);
-
-    lv_obj_t *nav_hide[] = {
-            ui_lblNavAGlyph,
-            ui_lblNavA,
-            ui_lblNavBGlyph,
-            ui_lblNavB,
-            ui_lblNavXGlyph,
-            ui_lblNavX,
-            ui_lblNavYGlyph,
-            ui_lblNavY,
-            ui_lblNavMenuGlyph,
-            ui_lblNavMenu,
-    };
-
-    for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
-
-#if TEST_IMAGE
-    display_testing_message(ui_screen);
-#endif
-
-    if (kiosk.ENABLE) {
-        kiosk_image = lv_img_create(ui_screen);
-        load_kiosk_image(ui_screen, kiosk_image);
-    }
-
-    overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image);
+    overlay_display();
 }
 
 static void ui_refresh_task() {
@@ -1176,7 +1149,6 @@ int muxplore_main(int index, char *dir) {
     lv_label_set_text(ui_lblDatetime, get_datetime());
 
     init_fonts();
-    init_elements();
 
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
 
@@ -1189,6 +1161,7 @@ int muxplore_main(int index, char *dir) {
     load_skip_patterns();
     create_content_items();
     ui_count = (int) item_count;
+    init_elements();
 
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, get_last_dir(sys_dir));
     if (strcasecmp(read_all_char_from(MUOS_PDI_LOAD), "ROMS") == 0) {

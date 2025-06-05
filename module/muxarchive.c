@@ -247,45 +247,17 @@ static void adjust_panels() {
 
 static void init_elements() {
     adjust_panels();
+    header_and_footer_setup();
 
-    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    setup_nav((struct nav_bar[]) {
+            {ui_lblNavAGlyph, "",                   1},
+            {ui_lblNavA,      lang.GENERIC.EXTRACT, 1},
+            {ui_lblNavBGlyph, "",                   0},
+            {ui_lblNavB,      lang.GENERIC.BACK,    0},
+            {NULL, NULL,                            0}
+    });
 
-    lv_label_set_text(ui_lblPreviewHeader, "");
-    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
-
-    process_visual_element(CLOCK, ui_lblDatetime);
-    process_visual_element(BLUETOOTH, ui_staBluetooth);
-    process_visual_element(NETWORK, ui_staNetwork);
-    process_visual_element(BATTERY, ui_staCapacity);
-
-    lv_label_set_text(ui_lblMessage, "");
-
-    lv_label_set_text(ui_lblNavA, lang.GENERIC.EXTRACT);
-    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
-
-    lv_obj_t *nav_hide[] = {
-            ui_lblNavAGlyph,
-            ui_lblNavA,
-            ui_lblNavBGlyph,
-            ui_lblNavB
-    };
-
-    for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
-
-#if TEST_IMAGE
-    display_testing_message(ui_screen);
-#endif
-
-    if (kiosk.ENABLE) {
-        kiosk_image = lv_img_create(ui_screen);
-        load_kiosk_image(ui_screen, kiosk_image);
-    }
-
-    overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image);
+    overlay_display();
 }
 
 static void ui_refresh_task() {
@@ -311,7 +283,6 @@ int muxarchive_main() {
     init_theme(1, 1);
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXARCHIVE.TITLE);
-    init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -319,6 +290,8 @@ int muxarchive_main() {
 
     init_fonts();
     create_archive_items();
+
+    init_elements();
 
     int arc_index = 0;
     if (file_exist(MUOS_IDX_LOAD)) {

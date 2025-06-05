@@ -420,52 +420,23 @@ static void adjust_panels() {
 
 static void init_elements() {
     adjust_panels();
+    header_and_footer_setup();
 
-    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_label_set_text(ui_lblPreviewHeader, "");
-    lv_label_set_text(ui_lblPreviewHeaderGlyph, "");
-
-    process_visual_element(CLOCK, ui_lblDatetime);
-    process_visual_element(BLUETOOTH, ui_staBluetooth);
-    process_visual_element(NETWORK, ui_staNetwork);
-    process_visual_element(BATTERY, ui_staCapacity);
-
-    lv_label_set_text(ui_lblMessage, "");
-
-    lv_label_set_text(ui_lblNavLR, lang.GENERIC.CHANGE);
-    lv_label_set_text(ui_lblNavA, lang.GENERIC.SELECT);
-    lv_label_set_text(ui_lblNavB, lang.GENERIC.BACK);
-
-    lv_obj_t *nav_hide[] = {
-            ui_lblNavLRGlyph,
-            ui_lblNavLR,
-            ui_lblNavAGlyph,
-            ui_lblNavA,
-            ui_lblNavBGlyph,
-            ui_lblNavB
-    };
-
-    for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
+    setup_nav((struct nav_bar[]) {
+            {ui_lblNavLRGlyph, "",                  1},
+            {ui_lblNavLR,      lang.GENERIC.CHANGE, 1},
+            {ui_lblNavAGlyph,  "",                  1},
+            {ui_lblNavA,       lang.GENERIC.SELECT, 1},
+            {ui_lblNavBGlyph,  "",                  0},
+            {ui_lblNavB,       lang.GENERIC.BACK,   0},
+            {NULL, NULL,                            0}
+    });
 
 #define CUSTOM(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_custom, UDATA);
     CUSTOM_ELEMENTS
 #undef CUSTOM
 
-#if TEST_IMAGE
-    display_testing_message(ui_screen);
-#endif
-
-    if (kiosk.ENABLE) {
-        kiosk_image = lv_img_create(ui_screen);
-        load_kiosk_image(ui_screen, kiosk_image);
-    }
-
-    overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image);
+    overlay_display();
 }
 
 static void ui_refresh_task() {
@@ -487,7 +458,6 @@ int muxcustom_main() {
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCUSTOM.TITLE);
     init_muxcustom(ui_pnlContent);
-    init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -499,6 +469,8 @@ int muxcustom_main() {
 
     restore_custom_options();
     init_dropdown_settings();
+
+    init_elements();
 
     init_timer(ui_refresh_task, NULL);
 

@@ -1504,32 +1504,23 @@ int is_network_connected() {
 void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     switch (visual) {
         case CLOCK:
-            if (!config.VISUAL.CLOCK) {
-                lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
-            }
+            if (!config.VISUAL.CLOCK) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
         case BLUETOOTH:
-            if (!config.VISUAL.BLUETOOTH) {
-                lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
-            }
+            if (!config.VISUAL.BLUETOOTH) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
         case NETWORK:
-            if (!config.VISUAL.NETWORK) {
-                lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
-            }
+            if (!config.VISUAL.NETWORK) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
         case BATTERY:
-            if (!config.VISUAL.BATTERY) {
-                lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
-            }
+            if (!config.VISUAL.BATTERY) lv_obj_add_flag(element, LV_OBJ_FLAG_HIDDEN);
             break;
     }
 }
 
 void load_skip_patterns() {
     char skip_ini[MAX_BUFFER_SIZE];
-    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.SDCARD.MOUNT,
-                           MUOS_INFO_PATH);
+    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.SDCARD.MOUNT, MUOS_INFO_PATH);
     if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
 
     if (!file_exist(skip_ini)) {
