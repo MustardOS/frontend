@@ -75,7 +75,12 @@ void header_and_footer_setup();
 
 void overlay_display();
 
+void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,
+                      char *catalogue_folder, char *content_name);
+
 char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit);
+
+int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int run_skip);
 
 int muxapp_main();
 

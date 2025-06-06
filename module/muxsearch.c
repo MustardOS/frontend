@@ -56,55 +56,6 @@ static void init_navigation_group() {
     }
 }
 
-static void viewport_refresh(char *artwork_config, char *catalogue_folder, char *content_name) {
-    mini_t *artwork_config_ini = mini_try_load(artwork_config);
-
-    int device_width = device.MUX.WIDTH / 2;
-
-    int16_t viewport_width = get_ini_int(artwork_config_ini, "viewport", "WIDTH", (int16_t) device_width);
-    int16_t viewport_height = get_ini_int(artwork_config_ini, "viewport", "HEIGHT", 400);
-    int16_t column_mode = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE", 0);
-    int16_t column_mode_alignment = get_ini_int(artwork_config_ini, "viewport", "COLUMN_MODE_ALIGNMENT", 2);
-
-    lv_obj_set_width(ui_viewport_objects[0], viewport_width == 0 ? LV_SIZE_CONTENT : viewport_width);
-    lv_obj_set_height(ui_viewport_objects[0], viewport_height == 0 ? LV_SIZE_CONTENT : viewport_height);
-    if (column_mode) {
-        lv_obj_set_flex_flow(ui_viewport_objects[0], LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_flex_align(ui_viewport_objects[0], LV_FLEX_ALIGN_CENTER, column_mode_alignment,
-                              LV_FLEX_ALIGN_CENTER);
-    }
-
-    for (int index = 1; index < 6; index++) {
-        char section_name[15];
-        snprintf(section_name, sizeof(section_name), "image%d", index);
-        char *folder_name = get_ini_string(artwork_config_ini, section_name, "FOLDER", "");
-
-        char image[MAX_BUFFER_SIZE];
-        snprintf(image, sizeof(image), "%s/%s/%s/%s.png",
-                 INFO_CAT_PATH, catalogue_folder, folder_name, content_name);
-
-        if (!file_exist(image)) {
-            snprintf(image, sizeof(image), "%s/%s/%s/default.png",
-                     INFO_CAT_PATH, catalogue_folder, folder_name);
-        }
-
-        struct ImageSettings image_settings = {
-                image,
-                get_ini_int(artwork_config_ini, section_name, "ALIGN", 9),
-                get_ini_int(artwork_config_ini, section_name, "MAX_WIDTH", 0),
-                get_ini_int(artwork_config_ini, section_name, "MAX_HEIGHT", 0),
-                get_ini_int(artwork_config_ini, section_name, "PAD_LEFT", 0),
-                get_ini_int(artwork_config_ini, section_name, "PAD_RIGHT", 0),
-                get_ini_int(artwork_config_ini, section_name, "PAD_TOP", 0),
-                get_ini_int(artwork_config_ini, section_name, "PAD_BOTTOM", 0)
-        };
-
-        update_image(ui_viewport_objects[index], image_settings);
-    }
-
-    mini_free(artwork_config_ini);
-}
-
 static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
         printf("BOX ART IS SET TO DISABLED\n");
@@ -161,7 +112,7 @@ static void image_refresh(char *image_type) {
         }
 
         if (file_exist(artwork_config_path)) {
-            viewport_refresh(artwork_config_path, core_artwork, last_dir);
+            viewport_refresh(ui_viewport_objects, artwork_config_path, core_artwork, last_dir);
             snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
         } else {
             if (file_exist(image)) {
