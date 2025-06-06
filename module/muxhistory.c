@@ -38,10 +38,7 @@ static char *load_content_description() {
 }
 
 static void image_refresh(char *image_type) {
-    if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) {
-        printf("BOX ART IS SET TO DISABLED\n");
-        return;
-    }
+    if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
     char mux_dimension[15];
     get_mux_dimension(mux_dimension, sizeof(mux_dimension));
