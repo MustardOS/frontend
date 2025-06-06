@@ -292,7 +292,7 @@ static void init_navigation_group() {
     INIT_VALUE_ITEM(-1, netinfo, Dns, lang.MUXNETINFO.DNS, "dns", get_dns_servers());
     INIT_VALUE_ITEM(-1, netinfo, Signal, lang.MUXNETINFO.SIGNAL, "signal", get_signal_strength());
     INIT_VALUE_ITEM(-1, netinfo, Channel, lang.MUXNETINFO.CHANNEL, "channel", get_channel_info());
-    INIT_VALUE_ITEM(-1, netinfo, AcTraffic, lang.MUXNETINFO.ACTRAFFIC, "aptraffic", get_ac_traffic());
+    INIT_VALUE_ITEM(-1, netinfo, AcTraffic, lang.MUXNETINFO.ACTRAFFIC, "actraffic", get_ac_traffic());
     INIT_VALUE_ITEM(-1, netinfo, TpTraffic, lang.MUXNETINFO.TPTRAFFIC, "tptraffic", get_tp_traffic());
 
     ui_group = lv_group_create();
