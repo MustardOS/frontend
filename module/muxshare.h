@@ -75,6 +75,8 @@ void header_and_footer_setup();
 
 void overlay_display();
 
+char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit);
+
 int muxapp_main();
 
 int muxarchive_main();

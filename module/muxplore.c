@@ -82,43 +82,6 @@ static char *load_content_core(int force, int run_quit) {
     return NULL;
 }
 
-static char *load_content_governor(int force, int run_quit) {
-    char content_gov[MAX_BUFFER_SIZE] = {0};
-    const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
-
-    if (!strcasecmp(last_subdir, strip_dir(CONTENT_PATH))) {
-        snprintf(content_gov, sizeof(content_gov), "%s/core.gov", INFO_COR_PATH);
-    } else {
-        snprintf(content_gov, sizeof(content_gov), "%s/%s/%s.gov",
-                 INFO_COR_PATH, last_subdir, strip_ext(items[current_item_index].name));
-
-        if (file_exist(content_gov) && !force) {
-            LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
-            char *gov_text = read_all_char_from(content_gov);
-            if (gov_text) {
-                return gov_text;
-            } else {
-                LOG_ERROR(mux_module, "Failed to read individual governor")
-            }
-        }
-
-        snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov", INFO_COR_PATH, last_subdir);
-    }
-
-    if (file_exist(content_gov) && !force) {
-        LOG_SUCCESS(mux_module, "Loading Global Governor: %s", content_gov)
-        char *gov = read_all_char_from(content_gov);
-        if (gov) {
-            return gov;
-        } else {
-            LOG_ERROR(mux_module, "Failed to read global governor")
-        }
-    }
-
-    if (run_quit) mux_input_stop();
-    return NULL;
-}
-
 static char *load_content_description() {
     char content_desc[MAX_BUFFER_SIZE];
 
@@ -687,7 +650,7 @@ static int load_content(int add_collection) {
     if (assigned_core == NULL || strcasestr(assigned_core, "(null)")) return 0;
     LOG_INFO(mux_module, "Assigned Core: %s", str_replace(assigned_core, "\n", "|"))
 
-    char *assigned_gov = load_content_governor(0, 1);
+    char *assigned_gov = load_content_governor(sys_dir, NULL, 0, 1);
     if (assigned_gov == NULL && strcasestr(assigned_gov, "(null)")) {
         LOG_INFO(mux_module, "Using Default Governor: %s", device.CPU.DEFAULT)
         assigned_gov = strdup(device.CPU.DEFAULT);
@@ -999,7 +962,7 @@ static void handle_select() {
         write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
 
         load_content_core(1, 0);
-        load_content_governor(1, 0);
+        load_content_governor(sys_dir, NULL, 1, 0);
 
         load_mux("option");
     } else {

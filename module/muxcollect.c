@@ -29,30 +29,6 @@ static void check_for_disable_grid_file(char *item_curr_dir) {
     nogrid_file_exists = file_exist(no_grid_path);
 }
 
-static char *load_content_governor(char *pointer) {
-    char content_gov[MAX_BUFFER_SIZE];
-    snprintf(content_gov, sizeof(content_gov), "%s.gov",
-             strip_ext(pointer));
-
-    if (file_exist(content_gov)) {
-        LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
-        return read_all_char_from(content_gov);
-    } else {
-        snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov",
-                 INFO_COR_PATH, str_replace(get_last_subdir(pointer, '/', 6), get_last_dir(pointer), ""));
-    }
-
-    snprintf(content_gov, sizeof(content_gov), "%s", str_replace(content_gov, "//", "/"));
-
-    if (file_exist(content_gov)) {
-        LOG_SUCCESS(mux_module, "Loading Global Governor: %s", content_gov)
-        return read_all_char_from(content_gov);
-    }
-
-    LOG_INFO(mux_module, "No governor detected")
-    return NULL;
-}
-
 static char *load_content_description() {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
@@ -518,7 +494,7 @@ static int load_content(const char *content_name) {
              read_line_char_from(pointer_file, 1));
 
     char *assigned_gov = NULL;
-    assigned_gov = load_content_governor(cache_file);
+    assigned_gov = load_content_governor(NULL, cache_file, 0, 0);
     if (!assigned_gov) assigned_gov = device.CPU.DEFAULT;
 
     if (file_exist(cache_file)) {
