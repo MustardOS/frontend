@@ -360,8 +360,6 @@ void init_audio() {
 }
 
 int main() {
-    setup_background_process();
-
     load_device(&device);
     load_config(&config);
     load_kiosk(&kiosk);

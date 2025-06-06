@@ -90,7 +90,6 @@ int main() {
     load_config(&config);
 
     init_module("muxcharge");
-    //setup_background_process();
 
     init_theme(0, 0);
     init_display();
