@@ -311,12 +311,6 @@ static void gen_label(char *item_glyph, char *item_text) {
     apply_text_long_dot(&theme, ui_pnlContent, ui_lblCollectionItem, item_text);
 }
 
-static inline long long current_time_ms() {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
-}
-
 static void gen_item(char **file_names, int file_count) {
     char custom_lookup[MAX_BUFFER_SIZE];
     snprintf(custom_lookup, sizeof(custom_lookup), "%s/content.json",
@@ -365,17 +359,11 @@ static void gen_item(char **file_names, int file_count) {
 
     sort_items(items, item_count);
 
-    long long start_time, end_time;
-    start_time = current_time_ms();
-
     for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ITEM) {
             gen_label("collection", items[i].display_name);
         }
     }
-
-    end_time = current_time_ms();
-    printf("LABEL GENERATION IN %lldms\n", end_time - start_time);
 }
 
 static char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
