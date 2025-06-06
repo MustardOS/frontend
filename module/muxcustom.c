@@ -11,11 +11,6 @@ static void list_nav_move(int steps, int direction);
 
 static char theme_alt_original[MAX_BUFFER_SIZE];
 
-struct theme_resolution {
-    char *resolution;
-    int value;
-};
-
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblBootlogo_custom,        lang.MUXCUSTOM.HELP.BOOTLOGO},
@@ -178,7 +173,23 @@ static void init_navigation_group() {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
-    list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
+    list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
+}
+
+static void check_focus() {
+    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
+    if (element_focused == ui_lblBootlogo_custom || element_focused == ui_lblCatalogue_custom ||
+        element_focused == ui_lblConfig_custom || element_focused == ui_lblTheme_custom) {
+        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    } else {
+        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    }
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -205,19 +216,7 @@ static void list_nav_move(int steps, int direction) {
                         lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 
-    struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
-    if (element_focused == ui_lblBootlogo_custom || element_focused == ui_lblCatalogue_custom ||
-        element_focused == ui_lblConfig_custom || element_focused == ui_lblTheme_custom) {
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    } else {
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavLR, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavLRGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-    }
+    check_focus();
 }
 
 static void list_nav_prev(int steps) {
@@ -432,6 +431,8 @@ static void init_elements() {
             {NULL, NULL,                            0}
     });
 
+    check_focus();
+
 #define CUSTOM(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_custom, UDATA);
     CUSTOM_ELEMENTS
 #undef CUSTOM
@@ -458,6 +459,7 @@ int muxcustom_main() {
 
     init_ui_common_screen(&theme, &device, &lang, lang.MUXCUSTOM.TITLE);
     init_muxcustom(ui_pnlContent);
+    init_elements();
 
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
@@ -469,8 +471,6 @@ int muxcustom_main() {
 
     restore_custom_options();
     init_dropdown_settings();
-
-    init_elements();
 
     init_timer(ui_refresh_task, NULL);
 
