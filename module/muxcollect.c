@@ -55,18 +55,6 @@ static char *load_content_description() {
     return lang.GENERIC.NO_INFO;
 }
 
-static void update_file_counter() {
-    if ((ui_count > 0 && file_count == 0 && config.VISUAL.COUNTERFOLDER) ||
-        (file_count > 0 && config.VISUAL.COUNTERFILE)) {
-        char counter_text[MAX_BUFFER_SIZE];
-        snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR,
-                 ui_count);
-        counter_message(ui_lblCounter_collect, counter_text, theme.COUNTER.TEXT_FADE_TIME * 60);
-    } else {
-        lv_obj_add_flag(ui_lblCounter_collect, LV_OBJ_FLAG_HIDDEN);
-    }
-}
-
 static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
@@ -924,7 +912,7 @@ static void ui_refresh_task() {
             lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         }
 
-        update_file_counter();
+        update_file_counter(ui_lblCounter_collect, file_count);
         lv_obj_move_foreground(overlay_image);
 
         nav_moved = 0;
@@ -1073,7 +1061,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
     adjust_panels();
 
-    update_file_counter();
+    update_file_counter(ui_lblCounter_collect, file_count);
     init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false);
 
     init_timer(ui_refresh_task, NULL);

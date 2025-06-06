@@ -200,3 +200,15 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int
     closedir(dir);
     return dir_count;
 }
+
+void update_file_counter(lv_obj_t *counter, int file_count) {
+    if ((ui_count > 0 && !file_count && config.VISUAL.COUNTERFOLDER) ||
+        (file_count > 0 && config.VISUAL.COUNTERFILE)) {
+        char counter_text[MAX_BUFFER_SIZE];
+        snprintf(counter_text, sizeof(counter_text), "%d%s%d",
+                 current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR, ui_count);
+        counter_message(counter, counter_text, theme.COUNTER.TEXT_FADE_TIME * 60);
+    } else {
+        lv_obj_add_flag(counter, LV_OBJ_FLAG_HIDDEN);
+    }
+}

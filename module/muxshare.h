@@ -82,6 +82,8 @@ char *load_content_governor(char *sys_dir, char *pointer, int force, int run_qui
 
 int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int run_skip);
 
+void update_file_counter(lv_obj_t *counter, int file_count);
+
 int muxapp_main();
 
 int muxarchive_main();

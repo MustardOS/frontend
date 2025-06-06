@@ -109,18 +109,6 @@ static char *load_content_description() {
     return lang.GENERIC.NO_INFO;
 }
 
-static void update_file_counter() {
-    if ((ui_count > 0 && !file_count && config.VISUAL.COUNTERFOLDER) ||
-        (file_count > 0 && config.VISUAL.COUNTERFILE)) {
-        char counter_text[MAX_BUFFER_SIZE];
-        snprintf(counter_text, sizeof(counter_text), "%d%s%d", current_item_index + 1, theme.COUNTER.TEXT_SEPARATOR,
-                 ui_count);
-        counter_message(ui_lblCounter, counter_text, theme.COUNTER.TEXT_FADE_TIME * 60);
-    } else {
-        lv_obj_add_flag(ui_lblCounter, LV_OBJ_FLAG_HIDDEN);
-    }
-}
-
 static void image_refresh(char *image_type) {
     if (!strcasecmp(image_type, "box") && config.VISUAL.BOX_ART == 8) return;
 
@@ -926,7 +914,7 @@ static void adjust_panels() {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
-            ui_lblCounter,
+            ui_lblCounter_explore,
             ui_pnlHelp,
             ui_pnlProgressBrightness,
             ui_pnlProgressVolume,
@@ -995,7 +983,7 @@ static void ui_refresh_task() {
             lv_obj_add_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
         }
 
-        update_file_counter();
+        update_file_counter(ui_lblCounter_explore, file_count);
         lv_obj_move_foreground(overlay_image);
 
         nav_moved = 0;
@@ -1081,7 +1069,7 @@ int muxplore_main(int index, char *dir) {
     };
     set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
 
-    update_file_counter();
+    update_file_counter(ui_lblCounter_explore, file_count);
 
     if (file_exist(ADD_MODE_DONE)) {
         if (!strcasecmp(read_all_char_from(ADD_MODE_DONE), "DONE")) {
