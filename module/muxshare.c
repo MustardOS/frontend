@@ -7,9 +7,6 @@ int refresh_kiosk = 0;
 int refresh_config = 0;
 int refresh_resolution = 0;
 
-int bar_header = 0;
-int bar_footer = 0;
-
 struct mux_lang lang;
 struct mux_config config;
 struct mux_device device;
@@ -46,8 +43,8 @@ void setup_nav(struct nav_bar *nav_items) {
 }
 
 void header_and_footer_setup() {
-    if (bar_footer) lv_obj_set_style_bg_opa(ui_pnlFooter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    if (bar_header) lv_obj_set_style_bg_opa(ui_pnlHeader, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlHeader, theme.HEADER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_pnlFooter, theme.FOOTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_label_set_text(ui_lblPreviewHeader, "");
     lv_label_set_text(ui_lblPreviewHeaderGlyph, "");

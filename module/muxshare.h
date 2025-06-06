@@ -50,9 +50,6 @@ extern int refresh_kiosk;
 extern int refresh_config;
 extern int refresh_resolution;
 
-extern int bar_header;
-extern int bar_footer;
-
 extern int nav_moved;
 extern int current_item_index;
 extern int first_open;
