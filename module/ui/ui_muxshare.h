@@ -247,7 +247,7 @@
     TWEAKADV(CardMode,   "cardmode")
 
 #define TWEAKGEN_ELEMENTS              \
-    TWEAKGEN(Rtc,        "rtc")        \
+    TWEAKGEN(Rtc,        "clock")      \
     TWEAKGEN(Hdmi,       "hdmi")       \
     TWEAKGEN(Advanced,   "advanced")   \
     TWEAKGEN(Brightness, "brightness") \
