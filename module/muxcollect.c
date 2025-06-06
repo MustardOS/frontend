@@ -1005,11 +1005,11 @@ static void init_elements() {
             {ui_lblNavBGlyph,    "",                  0},
             {ui_lblNavB,         lang.GENERIC.BACK,   0},
             {ui_lblNavXGlyph,    "",                  0},
-            {ui_lblNavX,         lang.GENERIC.REMOVE, 1},
+            {ui_lblNavX,         lang.GENERIC.REMOVE, 0},
             {ui_lblNavYGlyph,    "",                  0},
             {ui_lblNavY,         lang.GENERIC.NEW,    0},
-            {ui_lblNavMenuGlyph, "",                  1},
-            {ui_lblNavMenu,      lang.GENERIC.INFO,   1},
+            {ui_lblNavMenuGlyph, "",                  0},
+            {ui_lblNavMenu,      lang.GENERIC.INFO,   0},
             {NULL, NULL,                              0}
     });
 
