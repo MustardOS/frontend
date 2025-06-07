@@ -444,11 +444,6 @@ int muxlaunch_main() {
     init_fonts();
     init_navigation_group();
 
-    if (config.BOOT.DEVICE_MODE && !file_exist("/tmp/hdmi_out")) {
-        write_text_to_file("/tmp/hdmi_out", "w", CHAR, "");
-        handle_b();
-    }
-
     adjust_wallpaper_element(ui_group, 0, GENERAL);
 
     init_timer(ui_refresh_task, NULL);
