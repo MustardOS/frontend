@@ -67,7 +67,7 @@ static void init_navigation_group() {
             "480p",
             "576p",
             "720p + 50hz",
-            "720p + 60hz",
+            "720p + 60hz"
 /* Unfortunately 1080 resolutions are still not possible with muX
  * since the display is refreshing the entire full screen worth
  * and that's just over 2m pixels every frame...
@@ -102,7 +102,7 @@ static void init_navigation_group() {
             lang.MUXHDMI.AUDIO_OUTPUT.INTERNAL
     };
 
-    INIT_OPTION_ITEM(-1, hdmi, Resolution, lang.MUXHDMI.RESOLUTION, "resolution", hdmi_resolution, 11);
+    INIT_OPTION_ITEM(-1, hdmi, Resolution, lang.MUXHDMI.RESOLUTION, "resolution", hdmi_resolution, 6);
     INIT_OPTION_ITEM(-1, hdmi, Space, lang.MUXHDMI.COLOUR.SPACE, "space", hdmi_space, 4);
     INIT_OPTION_ITEM(-1, hdmi, Depth, lang.MUXHDMI.COLOUR.DEPTH, "depth", NULL, 0);
     INIT_OPTION_ITEM(-1, hdmi, Range, lang.MUXHDMI.COLOUR.RANGE.TITLE, "range", hdmi_range, 2);
