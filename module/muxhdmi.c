@@ -68,11 +68,16 @@ static void init_navigation_group() {
             "576p",
             "720p + 50hz",
             "720p + 60hz",
-            "1080i + 50hz",
-            "1080i + 60hz",
-            "1080p + 24hz",
-            "1080p + 50hz",
-            "1080p + 60hz"
+/* Unfortunately 1080 resolutions are still not possible with muX
+ * since the display is refreshing the entire full screen worth
+ * and that's just over 2m pixels every frame...
+ *
+ *            "1080i + 50hz",
+ *            "1080i + 60hz",
+ *            "1080p + 24hz",
+ *            "1080p + 50hz",
+ *            "1080p + 60hz"
+ */
     };
 
     char *hdmi_space[] = {
