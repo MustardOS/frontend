@@ -13,7 +13,7 @@ struct mux_device device;
 struct mux_kiosk kiosk;
 struct theme_config theme;
 
-int nav_moved = 1;
+int nav_moved = 0;
 int current_item_index = 0;
 int first_open = 1;
 int ui_count = 0;
