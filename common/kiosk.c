@@ -15,6 +15,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->CONFIG.LANGUAGE, CONF_KIOSK_PATH "config/language", 0)
     CFG_INT_FIELD(kiosk->CONFIG.NETWORK, CONF_KIOSK_PATH "config/network", 0)
     CFG_INT_FIELD(kiosk->CONFIG.STORAGE, CONF_KIOSK_PATH "config/storage", 0)
+    CFG_INT_FIELD(kiosk->CONFIG.BACKUP, CONF_KIOSK_PATH "config/backup", 0)
     CFG_INT_FIELD(kiosk->CONFIG.WEB_SERVICES, CONF_KIOSK_PATH "config/webserv", 0)
 
     CFG_INT_FIELD(kiosk->CONTENT.CORE, CONF_KIOSK_PATH "content/core", 0)

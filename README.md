@@ -25,6 +25,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxapp`: Application List
 * `muxarchive`: Archive Manager
 * `muxassign`: Assignable System/Core for Content
+* `muxbackup`: Device Backup Menu
 * `muxcollect`: Content Collection Manager
 * `muxconfig`: Configuration Menu
 * `muxconnect`: Connectivity Menu

@@ -322,6 +322,7 @@ static const ModuleEntry modules[] = {
         {"webserv",     "connect",  "muxwebserv",    muxwebserv_main,    NULL},
         {"hdmi",        "tweakgen", "muxhdmi",       muxhdmi_main,       NULL},
         {"storage",     "config",   "muxstorage",    muxstorage_main,    NULL},
+        {"backup",      "config",   "muxbackup",     muxbackup_main,     NULL},
         {"power",       "config",   "muxpower",      muxpower_main,      NULL},
         {"visual",      "config",   "muxvisual",     muxvisual_main,     NULL},
         {"kiosk",       "launcher", "muxkiosk",      muxkiosk_main,      NULL},

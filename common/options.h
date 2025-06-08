@@ -103,10 +103,31 @@
 #define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 
+#define BACKUP_SHORTNAME_BIOS         "BIOS"
+#define BACKUP_SHORTNAME_CATALOGUE    "Catalogue"
+#define BACKUP_SHORTNAME_FRIENDLY     "FriendlyName"
+#define BACKUP_SHORTNAME_RETROARCH    "RetroArch"
+#define BACKUP_SHORTNAME_RACONFIG     "RAConfig"
+#define BACKUP_SHORTNAME_CORE         "Core"
+#define BACKUP_SHORTNAME_COLLECTION   "Collection"
+#define BACKUP_SHORTNAME_HISTORY      "History"
+#define BACKUP_SHORTNAME_MUSIC        "Music"
+#define BACKUP_SHORTNAME_SAVE         "Save"
+#define BACKUP_SHORTNAME_SCREENSHOT   "Screenshot"
+#define BACKUP_SHORTNAME_THEME        "Theme"
+#define BACKUP_SHORTNAME_CATALOGUEPKG "CataloguePkg"
+#define BACKUP_SHORTNAME_CONFIGPKG    "ConfigPkg"
+#define BACKUP_SHORTNAME_BOOTLOGOPKG  "BootlogoPkg"
+#define BACKUP_SHORTNAME_LANGUAGE     "Language"
+#define BACKUP_SHORTNAME_NETWORK      "Network"
+#define BACKUP_SHORTNAME_SYNCTHING    "Syncthing"
+#define BACKUP_SHORTNAME_USERINIT     "UserInit"
+
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
+#define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
 #define MUOS_PDI_LOAD "/tmp/pdi_go" // Last Directory String

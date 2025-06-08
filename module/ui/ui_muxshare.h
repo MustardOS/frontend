@@ -58,7 +58,8 @@
     CONFIG(Interface, "interface") \
     CONFIG(Language,  "language")  \
     CONFIG(Power,     "power")     \
-    CONFIG(Storage,   "storage")
+    CONFIG(Storage,   "storage")   \
+    CONFIG(Backup,    "backup")
 
 #define CUSTOM_ELEMENTS                   \
     CUSTOM(Bootlogo,        "bootlogo")   \
@@ -211,6 +212,29 @@
     STORAGE(Network,          "network")        \
     STORAGE(Syncthing,        "syncthing")      \
     STORAGE(UserInit,         "userinit")
+
+#define BACKUP_ELEMENTS                        \
+    BACKUP(Bios, "bios")                       \
+    BACKUP(Catalogue, "catalogue")             \
+    BACKUP(Name, "name")                       \
+    BACKUP(RetroArch, "retroarch")             \
+    BACKUP(Config, "config")                   \
+    BACKUP(Core, "core")                       \
+    BACKUP(Collection, "collection")           \
+    BACKUP(History, "history")                 \
+    BACKUP(Music, "music")                     \
+    BACKUP(Save, "save")                       \
+    BACKUP(Screenshot, "screenshot")           \
+    BACKUP(Theme, "theme")                     \
+    BACKUP(CataloguePackage, "pack-catalogue") \
+    BACKUP(ConfigPackage, "pack-config")       \
+    BACKUP(BootlogoPackage, "pack-bootlogo")   \
+    BACKUP(Language, "language")               \
+    BACKUP(Network, "network")                 \
+    BACKUP(Syncthing, "syncthing")             \
+    BACKUP(UserInit, "userinit")               \
+    BACKUP(BackupTarget, "backuptarget")      \
+    BACKUP(StartBackup, "startbackup")
 
 #define SYSINFO_ELEMENTS          \
     SYSINFO(Version,  "version")  \

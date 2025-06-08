@@ -128,6 +128,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONFIG.VISUAL, "Interface Options");
     SPECIFIC_FIELD(lang->MUXCONFIG.LANGUAGE, "Language");
     SPECIFIC_FIELD(lang->MUXCONFIG.STORAGE, "Storage");
+    SPECIFIC_FIELD(lang->MUXCONFIG.BACKUP, "Device Backup");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CONNECTIVITY, "");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.CUSTOM, "Customise your muOS setup with user created packages");
     SPECIFIC_FIELD(lang->MUXCONFIG.HELP.GENERAL, "Device specific and muOS frontend settings can be found here");
@@ -766,6 +767,51 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SFTP, "Toggle SFTP support - WebUI can be found on port 9090");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.RESILIO, "Toggle Resilio - WebUI can be found on port 6060");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TAILSCALE, "Toggle Tailscale - Need to login via SSH first to configure it");
+
+    // muxbackup
+    SPECIFIC_FIELD(lang->MUXBACKUP.TITLE, "DEVICE BACKUP");
+    SPECIFIC_FIELD(lang->MUXBACKUP.BIOS, "System BIOS");
+    SPECIFIC_FIELD(lang->MUXBACKUP.CATALOGUE, "Metadata Catalogue");
+    SPECIFIC_FIELD(lang->MUXBACKUP.FRIENDLY, "Friendly Name System");
+    SPECIFIC_FIELD(lang->MUXBACKUP.RA_SYSTEM, "RetroArch System");
+    SPECIFIC_FIELD(lang->MUXBACKUP.RA_CONFIG, "RetroArch Configs");
+    SPECIFIC_FIELD(lang->MUXBACKUP.ASSIGNED, "Assigned Core/Governor System");
+    SPECIFIC_FIELD(lang->MUXBACKUP.COLLECTION, "Content Collection");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HISTORY, "History");
+    SPECIFIC_FIELD(lang->MUXBACKUP.MUSIC, "Background Music");
+    SPECIFIC_FIELD(lang->MUXBACKUP.SAVE, "Save Games + Save States");
+    SPECIFIC_FIELD(lang->MUXBACKUP.SCREENSHOT, "Screenshots");
+    SPECIFIC_FIELD(lang->MUXBACKUP.LANGUAGE, "Languages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.NET_PROFILE, "Network Profiles");
+    SPECIFIC_FIELD(lang->MUXBACKUP.SYNCTHING, "Syncthing Configs");
+    SPECIFIC_FIELD(lang->MUXBACKUP.USER_INIT, "User Init Scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.THEME, "Themes");
+    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.CATALOGUE, "Catalogue Packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.RA_CONFIG, "RetroArch Config Packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.BOOTLOGO, "Bootlogo Packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.BACKUP_TARGET, "Backup Target");
+    SPECIFIC_FIELD(lang->MUXBACKUP.START_BACKUP, "Start Backup");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.BIOS, "Location of system BIOS files");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CATALOGUE, "Location of content images and text");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.FRIENDLY, "Location of friendly name configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.RA_SYSTEM, "Location of the RetroArch emulator");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.RA_CONFIG, "Location of RetroArch configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.ASSIGNED, "Location of assigned core and governor configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.COLLECTION, "Location of content collection");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.HISTORY, "Location of history");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MUSIC, "Location of background music");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SAVE, "Location of save states and files");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SCREENSHOT, "Location of screenshots");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.LANGUAGE, "Location of Language files");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.NET_PROFILE, "Location of Network Profiles");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SYNCTHING, "Location of Syncthing configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.USER_INIT, "Location of User Initialisation scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.THEME, "Location of themes");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.CATALOGUE, "Location of catalogue packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.RA_CONFIG, "Location of RetroArch configuration packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.BOOTLOGO, "Location of bootlogo packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.BACKUP_TARGET, "Toggle the target storage device for the backup");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.START_BACKUP, "Start the backup process for the selected items");
 
 #undef SYSTEM_FIELD
 #undef GENERIC_FIELD
