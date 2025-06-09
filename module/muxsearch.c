@@ -125,7 +125,7 @@ static void image_refresh(char *image_type) {
     }
 }
 
-static void gen_label(char *item_glyph, char *item_text, char *item_data, char *item_value) {
+static void gen_result(char *item_glyph, char *item_text, char *item_data, char *item_value) {
     lv_obj_t *ui_pnlResult = lv_obj_create(ui_pnlContent);
     apply_theme_list_panel(ui_pnlResult);
 
@@ -179,14 +179,10 @@ static void gen_label(char *item_glyph, char *item_text, char *item_data, char *
     }
 
     if (strcasecmp(item_data, "folder") == 0) {
-        lv_obj_set_style_border_width(ui_pnlResult, 1,
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_color(ui_pnlResult, lv_color_hex(theme.LIST_DEFAULT.TEXT),
-                                      LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_opa(ui_pnlResult, theme.LIST_DEFAULT.TEXT_ALPHA,
-                                    LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_border_side(ui_pnlResult, LV_BORDER_SIDE_TOP,
-                                     LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_width(ui_pnlResult, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_color(ui_pnlResult, lv_color_hex(theme.LIST_DEFAULT.TEXT), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_opa(ui_pnlResult, theme.LIST_DEFAULT.TEXT_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_border_side(ui_pnlResult, LV_BORDER_SIDE_TOP, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 }
 
@@ -296,7 +292,7 @@ static void process_results(const char *json_results) {
                 }
 
                 if (strcasecmp(folder_name_short, ".") != 0) {
-                    gen_label("folder", folder_name_short, "folder", "");
+                    gen_result("folder", folder_name_short, "folder", "");
                 }
             }
 
@@ -335,7 +331,7 @@ static void process_results(const char *json_results) {
                     if (folder_items[i].content_type == ITEM) {
                         add_item(&t_all_items, &t_all_item_count, folder_items[i].name,
                                  folder_items[i].display_name, folder_items[i].extra_data, ITEM);
-                        gen_label("content", strip_ext(folder_items[i].display_name),
+                        gen_result("content", strip_ext(folder_items[i].display_name),
                                   "content", folder_items[i].extra_data);
                     }
                 }

@@ -259,23 +259,6 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     closedir(dir);
 }
 
-static void gen_label(char *module, char *item_glyph, char *item_text) {
-    lv_obj_t *ui_pnlExplore = lv_obj_create(ui_pnlContent);
-    lv_obj_t *ui_lblExploreItem = lv_label_create(ui_pnlExplore);
-    lv_obj_t *ui_lblExploreItemGlyph = lv_img_create(ui_pnlExplore);
-
-    lv_group_add_obj(ui_group, ui_lblExploreItem);
-    lv_group_add_obj(ui_group_glyph, ui_lblExploreItemGlyph);
-    lv_group_add_obj(ui_group_panel, ui_pnlExplore);
-
-    apply_theme_list_panel(ui_pnlExplore);
-    apply_theme_list_item(&theme, ui_lblExploreItem, item_text);
-    apply_theme_list_glyph(&theme, ui_lblExploreItemGlyph, module, item_glyph);
-
-    apply_size_to_content(&theme, ui_pnlContent, ui_lblExploreItem, ui_lblExploreItemGlyph, item_text);
-    apply_text_long_dot(&theme, ui_pnlContent, ui_lblExploreItem, item_text);
-}
-
 static void gen_item(char **file_names, int file_count) {
     char init_meta_dir[MAX_BUFFER_SIZE];
 
@@ -383,43 +366,6 @@ static void gen_item(char **file_names, int file_count) {
     }
 }
 
-static char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
-    char *friendly_folder_name = (char *) malloc(MAX_BUFFER_SIZE);
-    strcpy(friendly_folder_name, folder_name);
-    if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
-
-    struct json good_name_json = json_object_get(fn_json, str_tolower(strdup(folder_name)));
-    if (json_exists(good_name_json)) json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
-
-    return friendly_folder_name;
-}
-
-static void update_title(char *folder_path, int fn_valid, struct json fn_json) {
-    char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
-    adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
-
-    char title[PATH_MAX];
-    char *label = lang.MUXPLORE.TITLE;
-    char *module_type = "";
-    char *module_path = CONTENT_PATH;
-
-    if (!config.VISUAL.TITLEINCLUDEROOTDRIVE) module_type = "";
-
-    folder_path = str_replace(folder_path, "/", "");
-    module_path = str_replace(module_path, "/", "");
-
-    if (!strcasecmp(folder_path, module_path) && label[0] != '\0') {
-        snprintf(title, sizeof(title), "%s%s",
-                 label, module_type);
-    } else {
-        snprintf(title, sizeof(title), "%s%s",
-                 display_title, module_type);
-    }
-
-    lv_label_set_text(ui_lblTitle, title);
-    free(display_title);
-}
-
 static void init_navigation_group_grid() {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
@@ -492,7 +438,7 @@ static void create_content_items() {
         free(file_content);
     }
 
-    update_title(item_curr_dir, fn_valid, fn_json);
+    update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, CONTENT_PATH);
 
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {

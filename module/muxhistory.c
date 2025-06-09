@@ -158,23 +158,6 @@ static void add_file_names(const char *base_dir, char ***file_names) {
     closedir(dir);
 }
 
-static void gen_label(char *item_glyph, char *item_text) {
-    lv_obj_t *ui_pnlHistory = lv_obj_create(ui_pnlContent);
-    lv_obj_t *ui_lblHistoryItem = lv_label_create(ui_pnlHistory);
-    lv_obj_t *ui_lblHistoryItemGlyph = lv_img_create(ui_pnlHistory);
-
-    lv_group_add_obj(ui_group, ui_lblHistoryItem);
-    lv_group_add_obj(ui_group_glyph, ui_lblHistoryItemGlyph);
-    lv_group_add_obj(ui_group_panel, ui_pnlHistory);
-
-    apply_theme_list_panel(ui_pnlHistory);
-    apply_theme_list_item(&theme, ui_lblHistoryItem, item_text);
-    apply_theme_list_glyph(&theme, ui_lblHistoryItemGlyph, mux_module, item_glyph);
-
-    apply_size_to_content(&theme, ui_pnlContent, ui_lblHistoryItem, ui_lblHistoryItemGlyph, item_text);
-    apply_text_long_dot(&theme, ui_pnlContent, ui_lblHistoryItem, item_text);
-}
-
 static char *get_glyph_name(size_t index) {
     char history_file[PATH_MAX];
     snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
@@ -242,7 +225,7 @@ static void gen_item(char **file_names, int file_count) {
 
     for (size_t i = 0; i < item_count; i++) {
         if (items[i].content_type == ITEM) {
-            gen_label(glyph_icons[i], items[i].display_name);
+            gen_label(mux_module, glyph_icons[i], items[i].display_name);
         }
     }
 }

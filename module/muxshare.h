@@ -80,6 +80,13 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int
 
 void update_file_counter(lv_obj_t *counter, int file_count);
 
+char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json);
+
+void update_title(char *folder_path, int fn_valid, struct json fn_json,
+                  const char *label, const char *module_path);
+
+void gen_label(char *module, char *item_glyph, char *item_text);
+
 int muxapp_main();
 
 int muxarchive_main();

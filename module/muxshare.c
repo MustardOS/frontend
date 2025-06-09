@@ -235,3 +235,57 @@ void update_file_counter(lv_obj_t *counter, int file_count) {
         lv_obj_add_flag(counter, LV_OBJ_FLAG_HIDDEN);
     }
 }
+
+char *get_friendly_folder_name(char *folder_name, int fn_valid, struct json fn_json) {
+    char *friendly_folder_name = (char *) malloc(MAX_BUFFER_SIZE);
+    strcpy(friendly_folder_name, folder_name);
+    if (!config.VISUAL.FRIENDLYFOLDER || !fn_valid) return friendly_folder_name;
+
+    struct json good_name_json = json_object_get(fn_json, str_tolower(strdup(folder_name)));
+    if (json_exists(good_name_json)) json_string_copy(good_name_json, friendly_folder_name, MAX_BUFFER_SIZE);
+
+    return friendly_folder_name;
+}
+
+void update_title(char *folder_path, int fn_valid, struct json fn_json,
+                  const char *label, const char *module_path) {
+    char *display_title = get_friendly_folder_name(get_last_dir(folder_path), fn_valid, fn_json);
+    adjust_visual_label(display_title, config.VISUAL.NAME, config.VISUAL.DASH);
+
+    char title[PATH_MAX];
+    const char *module_type = "";
+
+    if (!config.VISUAL.TITLEINCLUDEROOTDRIVE) module_type = "";
+
+    char *clean_folder_path = str_replace(folder_path, "/", "");
+    char *clean_module_path = str_replace(module_path, "/", "");
+
+    if (!strcasecmp(clean_folder_path, clean_module_path) && label[0] != '\0') {
+        snprintf(title, sizeof(title), "%s%s", label, module_type);
+    } else {
+        snprintf(title, sizeof(title), "%s%s", display_title, module_type);
+    }
+
+    lv_label_set_text(ui_lblTitle, title);
+
+    free(display_title);
+    free(clean_folder_path);
+    free(clean_module_path);
+}
+
+void gen_label(char *module, char *item_glyph, char *item_text) {
+    lv_obj_t *ui_pnlItem = lv_obj_create(ui_pnlContent);
+    lv_obj_t *ui_lblItem = lv_label_create(ui_pnlItem);
+    lv_obj_t *ui_lblItemGlyph = lv_img_create(ui_pnlItem);
+
+    lv_group_add_obj(ui_group, ui_lblItem);
+    lv_group_add_obj(ui_group_glyph, ui_lblItemGlyph);
+    lv_group_add_obj(ui_group_panel, ui_pnlItem);
+
+    apply_theme_list_panel(ui_pnlItem);
+    apply_theme_list_item(&theme, ui_lblItem, item_text);
+    apply_theme_list_glyph(&theme, ui_lblItemGlyph, module, item_glyph);
+
+    apply_size_to_content(&theme, ui_pnlContent, ui_lblItem, ui_lblItemGlyph, item_text);
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lblItem, item_text);
+}
