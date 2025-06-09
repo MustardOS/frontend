@@ -212,8 +212,7 @@ static void list_nav_move(int steps, int direction) {
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
     nav_moved = 1;
 
     check_focus();
@@ -422,10 +421,10 @@ static void init_elements() {
     header_and_footer_setup();
 
     setup_nav((struct nav_bar[]) {
-            {ui_lblNavLRGlyph, "",                  1},
-            {ui_lblNavLR,      lang.GENERIC.CHANGE, 1},
-            {ui_lblNavAGlyph,  "",                  1},
-            {ui_lblNavA,       lang.GENERIC.SELECT, 1},
+            {ui_lblNavLRGlyph, "",                  0},
+            {ui_lblNavLR,      lang.GENERIC.CHANGE, 0},
+            {ui_lblNavAGlyph,  "",                  0},
+            {ui_lblNavA,       lang.GENERIC.SELECT, 0},
             {ui_lblNavBGlyph,  "",                  0},
             {ui_lblNavB,       lang.GENERIC.BACK,   0},
             {NULL, NULL,                            0}
