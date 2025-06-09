@@ -242,7 +242,7 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM);
+        play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -257,12 +257,10 @@ static void handle_b() {
 }
 
 static void handle_menu() {
-    if (msgbox_active) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
-    if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM);
-        show_help();
-    }
+    play_sound(SND_INFO_OPEN);
+    show_help();
 }
 
 static void adjust_panels() {

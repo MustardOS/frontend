@@ -473,7 +473,7 @@ static void handle_a(void) {
 
 static void handle_b(void) {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM);
+        play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -515,12 +515,10 @@ static void handle_y(void) {
 }
 
 static void handle_help(void) {
-    if (msgbox_active || key_show) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || key_show) return;
 
-    if (progress_onscreen == -1) {
-        play_sound(SND_CONFIRM);
-        show_help(lv_group_get_focused(ui_group));
-    }
+    play_sound(SND_INFO_OPEN);
+    show_help(lv_group_get_focused(ui_group));
 }
 
 static void handle_up(void) {

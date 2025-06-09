@@ -222,12 +222,10 @@ static void handle_b() {
 }
 
 static void handle_menu() {
-    if (msgbox_active) return;
+    if (msgbox_active || progress_onscreen != -1) return;
 
-    if (progress_onscreen == -1) {
-        play_sound(SND_INFO_OPEN);
-        show_help(lv_group_get_focused(ui_group));
-    }
+    play_sound(SND_INFO_OPEN);
+    show_help(lv_group_get_focused(ui_group));
 }
 
 static void handle_up() {

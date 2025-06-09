@@ -488,7 +488,7 @@ static void add_collection_item() {
 
 static void handle_a() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM);
+        play_sound(SND_INFO_CLOSE);
         if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
             lv_obj_add_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
@@ -582,7 +582,7 @@ static void handle_a() {
 
 static void handle_b() {
     if (msgbox_active) {
-        play_sound(SND_CONFIRM);
+        play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
@@ -679,7 +679,7 @@ static void handle_y() {
 static void handle_menu() {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
-    play_sound(SND_CONFIRM);
+    play_sound(SND_INFO_OPEN);
     image_refresh("preview");
 
     show_info_box(items[current_item_index].display_name, load_content_description(), 1);
