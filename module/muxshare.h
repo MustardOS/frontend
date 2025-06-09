@@ -55,11 +55,8 @@ extern int current_item_index;
 extern int first_open;
 extern int ui_count;
 
-extern lv_obj_t *msgbox_element;
 extern lv_obj_t *overlay_image;
 extern lv_obj_t *kiosk_image;
-
-extern int progress_onscreen;
 
 extern lv_group_t *ui_group;
 extern lv_group_t *ui_group_glyph;
