@@ -657,7 +657,7 @@ static void init_elements() {
             lv_obj_move_foreground(ui_pnlBox);
             break;
         case 4: // Disabled
-            lv_obj_add_flag(ui_pnlBox, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+            lv_obj_add_flag(ui_pnlBox, MU_OBJ_FLAG_HIDE_FLOAT);
             break;
     }
 
@@ -686,7 +686,7 @@ static void init_elements() {
     };
 
     for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
-        lv_obj_clear_flag(nav_hide[i], LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(nav_hide[i], MU_OBJ_FLAG_HIDE_FLOAT);
     }
 
 #define SEARCH(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_search, UDATA);

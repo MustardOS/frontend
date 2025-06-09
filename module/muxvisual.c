@@ -131,7 +131,7 @@ static void init_navigation_group() {
     }
 
     if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlNetwork_visual, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlNetwork_visual, MU_OBJ_FLAG_HIDE_FLOAT);
         ui_count -= 1;
     }
 }

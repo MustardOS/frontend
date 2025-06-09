@@ -37,7 +37,7 @@ void setup_nav(struct nav_bar *nav_items) {
             lv_label_set_text(nav_items[i].item, nav_items[i].text);
         }
 
-        lv_obj_clear_flag(nav_items[i].item, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(nav_items[i].item, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_move_foreground(nav_items[i].item);
     }
 }

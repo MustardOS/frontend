@@ -308,14 +308,14 @@ static void init_navigation_group() {
     }
 
     if (!is_network_connected()) {
-        lv_obj_add_flag(ui_pnlIp_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlSsid_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlGateway_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlDns_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlSignal_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlChannel_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlAcTraffic_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_pnlTpTraffic_netinfo, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlIp_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlSsid_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlGateway_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlDns_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlSignal_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlChannel_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlAcTraffic_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_pnlTpTraffic_netinfo, MU_OBJ_FLAG_HIDE_FLOAT);
 
         ui_count -= 7;
     }
@@ -345,13 +345,13 @@ static void list_nav_move(int steps, int direction) {
         lv_label_set_text(ui_lblNavA, element_focused == ui_lblHostname_netinfo ?
                                       lang.GENERIC.EDIT : lang.GENERIC.CHANGE);
 
-        lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     } else {
         lv_label_set_text(ui_lblNavA, "");
 
-        lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
-        lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
     }
 }
 

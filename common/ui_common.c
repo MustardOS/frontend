@@ -286,7 +286,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     ui_pnlGrid = lv_obj_create(ui_screen);
     ui_lblGridCurrentItem = lv_label_create(ui_screen);
     lv_label_set_text(ui_lblGridCurrentItem, "");
-    lv_obj_add_flag(ui_lblGridCurrentItem, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+    lv_obj_add_flag(ui_lblGridCurrentItem, MU_OBJ_FLAG_HIDE_FLOAT);
 
     ui_pnlContent = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlContent, device->MUX.WIDTH);

@@ -195,15 +195,15 @@ static void init_navigation_group() {
     }
 
     if (!device.DEVICE.HAS_NETWORK) {
-        lv_obj_add_flag(ui_pnlRetroWait_tweakadv, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlRetroWait_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
         ui_count -= 1;
     }
 
     {
         // Removal of random theme because it is causing a number of issues
-        lv_obj_add_flag(ui_pnlTheme_tweakadv, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlTheme_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
         // Removal of verbose messages due to changes to muterm not playing ball
-        lv_obj_add_flag(ui_pnlVerbose_tweakadv, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(ui_pnlVerbose_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
         ui_count -= 2;
     }
 }
