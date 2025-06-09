@@ -173,6 +173,10 @@ static void init_navigation_group() {
         lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
     }
 
+    // Removal of animated background element
+    lv_obj_add_flag(ui_pnlAnimation_custom, MU_OBJ_FLAG_HIDE_FLOAT);
+    ui_count -= 1;
+
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 
