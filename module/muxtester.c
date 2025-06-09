@@ -5,9 +5,6 @@ lv_obj_t *ui_imgButton;
 static void handle_input(mux_input_type type, mux_input_action action) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
     const char *glyph[MUX_INPUT_COUNT] = {
             // Gamepad buttons:

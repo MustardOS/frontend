@@ -86,9 +86,6 @@ int main(int argc, char *argv[]) {
     lv_obj_set_user_data(ui_scrStart, mux_module);
 
     if (config.BOOT.FACTORY_RESET) {
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
         char init_wall[MAX_BUFFER_SIZE];
         snprintf(init_wall, sizeof(init_wall), "%s/%simage/wall/muxstart.png",
                  INTERNAL_THEME, mux_dimension);

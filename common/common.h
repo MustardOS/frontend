@@ -17,6 +17,7 @@ extern int fe_snd;
 extern int fe_bgm;
 extern int progress_onscreen;
 extern struct mux_config config;
+extern char mux_dimension[15];
 extern char mux_module[MAX_BUFFER_SIZE];
 extern char current_wall[MAX_BUFFER_SIZE];
 extern int is_silence_playing;
@@ -228,8 +229,6 @@ void load_image_random(lv_obj_t *ui_imgWall, char *base_image_path);
 void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_count, char *current_wall);
 
 void unload_image_animation();
-
-void get_mux_dimension(char *mux_dimension, size_t size);
 
 void load_font_text(lv_obj_t *screen);
 

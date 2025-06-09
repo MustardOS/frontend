@@ -1025,8 +1025,6 @@ void scale_theme(struct mux_device *device) {
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device) {
     char scheme[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
     // If theme does not support device resolution fallback to default but only after factory reset
     if (!config->BOOT.FACTORY_RESET) {
@@ -1038,21 +1036,18 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
             if (directory_exist(theme_device_folder)) {
                 device->MUX.WIDTH = config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH;
                 device->MUX.HEIGHT = config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT;
-                get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
                 float scale_width = (float) device->SCREEN.WIDTH / device->MUX.WIDTH;
                 float scale_height = (float) device->SCREEN.HEIGHT / device->MUX.HEIGHT;
-                device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width
-                                                                   : scale_height; // Ensure neither dimension exceeds target
+
+                // Ensure neither dimension exceeds target
+                device->SCREEN.ZOOM = (scale_width < scale_height) ? scale_width : scale_height;
                 LOG_INFO(mux_module, "Calculated Scale Factor: %.2f", device->SCREEN.ZOOM)
             }
         }
 
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s", STORAGE_THEME, mux_dimension);
-        if (!directory_exist(theme_device_folder)) {
-            scale_theme(device);
-            get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-        }
+        if (!directory_exist(theme_device_folder)) scale_theme(device);
 
         LOG_INFO("muxfrontend", "Loading Theme Resolution: %dx%d", device->MUX.WIDTH, device->MUX.HEIGHT)
     }

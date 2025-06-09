@@ -951,9 +951,6 @@ lv_obj_t *create_footer_glyph(lv_obj_t *parent, struct theme_config *theme, char
     char footer_image_path[MAX_BUFFER_SIZE];
     char footer_image_embed[MAX_BUFFER_SIZE];
 
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     if ((snprintf(footer_image_path, sizeof(footer_image_path), "%s/%sglyph/footer/%s.png",
                   STORAGE_THEME, mux_dimension, glyph_name) >= 0 &&
          file_exist(footer_image_path)) ||
@@ -1032,8 +1029,7 @@ int generate_image_embed(const char *base_path, const char *dimension, const cha
 void update_glyph(lv_obj_t *ui_img, const char *glyph_folder, const char *glyph_name) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
+
     if (generate_image_embed(STORAGE_THEME, mux_dimension, glyph_folder, glyph_name, image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
         generate_image_embed(INTERNAL_THEME, mux_dimension, glyph_folder, glyph_name, image_path,
@@ -1048,9 +1044,6 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
     char *battery_glyph_name = get_capacity();
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
     if (str_startswith(battery_glyph_name, "capacity_charging_")) {
         lv_obj_set_style_img_recolor(ui_staCapacity, lv_color_hex(theme->STATUS.BATTERY.ACTIVE),
@@ -1082,9 +1075,6 @@ void update_battery_capacity(lv_obj_t *ui_staCapacity, struct theme_config *them
 void update_bluetooth_status(lv_obj_t *ui_staBluetooth, struct theme_config *theme) {
     char image_path[MAX_BUFFER_SIZE];
     char image_embed[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
     if (generate_image_embed(STORAGE_THEME, mux_dimension, "header", "bluetooth", image_path,
                              sizeof(image_path), image_embed, sizeof(image_embed)) ||
@@ -1115,9 +1105,6 @@ void update_network_status(lv_obj_t *ui_staNetwork, struct theme_config *theme, 
 
     lv_obj_set_style_img_recolor(ui_staNetwork, status_style.color, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_img_recolor_opa(ui_staNetwork, status_style.alpha, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
     char network_status_filename[20];
     snprintf(network_status_filename, sizeof(network_status_filename), "network_%s", status_style.status);
@@ -1176,9 +1163,7 @@ void adjust_panel_priority(lv_obj_t *panels[]) {
 
 int adjust_wallpaper_element(lv_group_t *ui_group, int starter_image, int wall_type) {
     if (config.BOOT.FACTORY_RESET) {
-        char mux_dimension[15];
         char init_wall[MAX_BUFFER_SIZE];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
         snprintf(init_wall, sizeof(init_wall), "M:%s/%simage/wall/default.png", INTERNAL_THEME, mux_dimension);
         lv_img_set_src(ui_imgWall, init_wall);
     } else {

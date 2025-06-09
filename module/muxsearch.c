@@ -59,9 +59,6 @@ static void init_navigation_group() {
 static void image_refresh(char *image_type) {
     if (strcasecmp(image_type, "box") == 0 && config.VISUAL.BOX_ART == 8) return;
 
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
     char core_artwork[MAX_BUFFER_SIZE];

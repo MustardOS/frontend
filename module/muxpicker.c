@@ -42,9 +42,6 @@ static int extract_preview() {
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
 
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     char device_preview[PATH_MAX];
     snprintf(device_preview, sizeof(device_preview), "%spreview.png", mux_dimension);
     return extract_file_from_zip(picker_archive, device_preview, TEMP_PREVIEW);

@@ -42,9 +42,6 @@ static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels
 
         ui_objects[i] = cell_label;
 
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
         char grid_img[MAX_BUFFER_SIZE];
         load_element_image_specifics(STORAGE_THEME, mux_dimension, mux_module, "grid", glyph_names[i],
                                      "default", "png", grid_img, sizeof(grid_img));

@@ -38,6 +38,7 @@
 #include "mini/mini.h"
 
 char mux_module[MAX_BUFFER_SIZE];
+char mux_dimension[15];
 int msgbox_active;
 int block_input;
 int fe_snd;
@@ -1045,9 +1046,6 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
 }
 
 char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated, int random, int wall_type) {
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     const char *program = lv_obj_get_user_data(ui_screen);
 
     static char wall_image_path[MAX_BUFFER_SIZE];
@@ -1143,9 +1141,6 @@ void load_wallpaper(lv_obj_t *ui_screen, lv_group_t *ui_group, lv_obj_t *ui_pnlW
 }
 
 char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type) {
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     const char *program = lv_obj_get_user_data(ui_screen);
 
     static char static_image_path[MAX_BUFFER_SIZE];
@@ -1202,9 +1197,6 @@ char *load_static_image(lv_obj_t *ui_screen, lv_group_t *ui_group, int wall_type
 void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
     const char *program = lv_obj_get_user_data(ui_screen);
 
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     static char static_image_path[MAX_BUFFER_SIZE];
     static char static_image_embed[MAX_BUFFER_SIZE];
 
@@ -1243,9 +1235,6 @@ void load_overlay_image(lv_obj_t *ui_screen, lv_obj_t *overlay_image) {
 void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
     const char *program = lv_obj_get_user_data(ui_screen);
 
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     static char static_image_path[MAX_BUFFER_SIZE];
     static char static_image_embed[MAX_BUFFER_SIZE];
 
@@ -1263,9 +1252,6 @@ void load_kiosk_image(lv_obj_t *ui_screen, lv_obj_t *kiosk_image) {
 }
 
 int load_terminal_resource(const char *resource, const char *extension, char *buffer, size_t size) {
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     const char *dimensions[] = {mux_dimension, ""};
     const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
 
@@ -1405,10 +1391,6 @@ void load_font_text_from_file(const char *filepath, lv_obj_t *element) {
     lv_obj_set_style_text_font(element, font, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
-void get_mux_dimension(char *mux_dimension, size_t size) {
-    snprintf(mux_dimension, size, "%dx%d/", device.MUX.WIDTH, device.MUX.HEIGHT);
-}
-
 void load_font_text(lv_obj_t *screen) {
     lv_font_t *language_font = get_language_font();
 
@@ -1416,29 +1398,27 @@ void load_font_text(lv_obj_t *screen) {
         char theme_font_text_default[MAX_BUFFER_SIZE];
         char theme_font_text[MAX_BUFFER_SIZE];
 
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-        char *mux_dimensions[15] = {mux_dimension, ""};
+        char *dimensions[15] = {mux_dimension, ""};
         char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
                 if ((snprintf(theme_font_text, sizeof(theme_font_text),
-                              "%s/%sfont/%s/%s.bin", theme_location, mux_dimensions[i],
+                              "%s/%sfont/%s/%s.bin", theme_location, dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE, mux_module) >= 0 &&
                      file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                              "%s/%sfont/%s/default.bin", theme_location, mux_dimensions[i],
+                              "%s/%sfont/%s/default.bin", theme_location, dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE) >= 0 &&
                      file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text),
-                              "%s/%sfont/%s.bin", theme_location, mux_dimensions[i], mux_module) >= 0 &&
+                              "%s/%sfont/%s.bin", theme_location, dimensions[i], mux_module) >= 0 &&
                      file_exist(theme_font_text)) ||
 
                     (snprintf(theme_font_text, sizeof(theme_font_text_default),
-                              "%s/%sfont/default.bin", theme_location, mux_dimensions[i]) >= 0 &&
+                              "%s/%sfont/default.bin", theme_location, dimensions[i]) >= 0 &&
                      file_exist(theme_font_text))) {
 
                     LOG_INFO(mux_module, "Loading Main Theme Font: %s", theme_font_text)
@@ -1457,29 +1437,27 @@ void load_font_section(const char *section, lv_obj_t *element) {
     if (config.SETTINGS.ADVANCED.FONT) {
         char theme_font_section[MAX_BUFFER_SIZE];
 
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-        char *mux_dimensions[15] = {mux_dimension, ""};
+        char *dimensions[15] = {mux_dimension, ""};
         char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
 
         if (theme_compat()) {
             for (int i = 0; i < 2; i++) {
                 if ((snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s/%s.bin", theme_location, mux_dimensions[i],
+                              "%s/%sfont/%s/%s/%s.bin", theme_location, dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE, section, mux_module) >= 0 &&
                      file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s/default.bin", theme_location, mux_dimensions[i],
+                              "%s/%sfont/%s/%s/default.bin", theme_location, dimensions[i],
                               config.SETTINGS.GENERAL.LANGUAGE, section) >= 0 &&
                      file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/%s.bin", theme_location, mux_dimensions[i], section, mux_module) >= 0 &&
+                              "%s/%sfont/%s/%s.bin", theme_location, dimensions[i], section, mux_module) >= 0 &&
                      file_exist(theme_font_section)) ||
 
                     (snprintf(theme_font_section, sizeof(theme_font_section),
-                              "%s/%sfont/%s/default.bin", theme_location, mux_dimensions[i], section) >= 0 &&
+                              "%s/%sfont/%s/default.bin", theme_location, dimensions[i], section) >= 0 &&
                      file_exist(theme_font_section))) {
 
                     LOG_INFO(mux_module, "Loading Section '%s' Font: %s", section, theme_font_section)
@@ -2472,8 +2450,6 @@ uint32_t fnv1a_hash(const char *str) {
 bool get_glyph_path(const char *mux_module, const char *glyph_name,
                     char *glyph_image_embed, size_t glyph_image_embed_size) {
     char glyph_image_path[MAX_BUFFER_SIZE];
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     if ((snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/%sglyph/%s/%s.png",
                   STORAGE_THEME, mux_dimension, mux_module, glyph_name) >= 0 && file_exist(glyph_image_path)) ||
         (snprintf(glyph_image_path, sizeof(glyph_image_path), "%s/glyph/%s/%s.png",
@@ -2545,11 +2521,9 @@ int theme_compat() {
 }
 
 void update_bootlogo() {
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     char bootlogo_image[MAX_BUFFER_SIZE];
-
     snprintf(bootlogo_image, sizeof(bootlogo_image), "%s/%simage/bootlogo.bmp", STORAGE_THEME, mux_dimension);
+
     if (!file_exist(bootlogo_image)) {
         snprintf(bootlogo_image, sizeof(bootlogo_image), "%s/image/bootlogo.bmp", STORAGE_THEME);
     }

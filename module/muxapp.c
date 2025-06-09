@@ -33,9 +33,6 @@ static void init_navigation_group_grid(const char *app_path) {
 
         char *glyph_name = get_script_value(app_launcher, "ICON", "app");
 
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
         char grid_image[MAX_BUFFER_SIZE];
         load_image_catalogue("Application", glyph_name, "default", mux_dimension, "grid",
                              grid_image, sizeof(grid_image));

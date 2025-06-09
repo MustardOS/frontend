@@ -77,8 +77,6 @@ static void set_previous_module(char *module) {
 }
 
 static int set_splash_image_path(char *splash_image_name) {
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
     const char *theme = theme_compat() ? STORAGE_THEME : INTERNAL_THEME;
     if ((snprintf(splash_image_path, sizeof(splash_image_path), "%s/%simage/%s/%s.png",
                   theme, mux_dimension, config.SETTINGS.GENERAL.LANGUAGE, splash_image_name) >= 0 &&
@@ -383,6 +381,8 @@ int main() {
     init_audio();
 
     while (1) {
+        snprintf(mux_dimension, sizeof(mux_dimension), "%dx%d/", device.MUX.WIDTH, device.MUX.HEIGHT);
+
         if (file_exist(SAFE_QUIT)) {
             LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!")
             break;

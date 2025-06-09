@@ -112,9 +112,6 @@ static char *load_content_description() {
 static void image_refresh(char *image_type) {
     if (!strcasecmp(image_type, "box") && config.VISUAL.BOX_ART == 8) return;
 
-    char mux_dimension[15];
-    get_mux_dimension(mux_dimension, sizeof(mux_dimension));
-
     char image[MAX_BUFFER_SIZE];
     char image_path[MAX_BUFFER_SIZE];
     char core_artwork[MAX_BUFFER_SIZE];
@@ -381,9 +378,6 @@ static void init_navigation_group_grid() {
         lv_obj_t *cell_panel = lv_obj_create(ui_pnlGrid);
         lv_obj_t *cell_image = lv_img_create(cell_panel);
         lv_obj_t *cell_label = lv_label_create(cell_panel);
-
-        char mux_dimension[15];
-        get_mux_dimension(mux_dimension, sizeof(mux_dimension));
 
         char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[i].name);
 
