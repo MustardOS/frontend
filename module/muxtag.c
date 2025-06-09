@@ -5,8 +5,7 @@ static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXTAG.TITLE, lang.MUXTAG.HELP);
+    show_info_box(lang.MUXTAG.TITLE, lang.MUXTAG.HELP, 0);
 }
 
 static void write_tag_file(char *path, char *tag, char *log) {

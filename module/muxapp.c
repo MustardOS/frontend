@@ -8,7 +8,7 @@ static void show_help() {
              device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH, title);
 
     char *message = get_script_value(help_info, "HELP", lang.GENERIC.NO_HELP);
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
+    show_info_box(TS(title), TS(message), 0);
 }
 
 static void init_navigation_group_grid(const char *app_path) {

@@ -1,8 +1,7 @@
 #include "muxshare.h"
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXARCHIVE.TITLE, lang.MUXARCHIVE.HELP);
+    show_info_box(lang.MUXARCHIVE.TITLE, lang.MUXARCHIVE.HELP, 0);
 }
 
 static void create_archive_items() {

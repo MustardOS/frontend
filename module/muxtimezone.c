@@ -1,8 +1,7 @@
 #include "muxshare.h"
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXTIMEZONE.TITLE, lang.MUXTIMEZONE.HELP);
+    show_info_box(lang.MUXTIMEZONE.TITLE, lang.MUXTIMEZONE.HELP, 0);
 }
 
 static void create_timezone_items() {

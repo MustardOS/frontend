@@ -1,8 +1,7 @@
 #include "muxshare.h"
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXLANGUAGE.TITLE, lang.MUXLANGUAGE.HELP);
+    show_info_box(lang.MUXLANGUAGE.TITLE, lang.MUXLANGUAGE.HELP, 0);
 }
 
 static void populate_languages() {

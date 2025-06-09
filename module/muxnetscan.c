@@ -1,8 +1,7 @@
 #include "muxshare.h"
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXNETSCAN.TITLE, lang.MUXNETSCAN.HELP);
+    show_info_box(lang.MUXNETSCAN.TITLE, lang.MUXNETSCAN.HELP, 0);
 }
 
 static void scan_networks() {

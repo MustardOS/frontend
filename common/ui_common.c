@@ -1493,5 +1493,5 @@ void gen_help(lv_obj_t *element_focused, struct help_msg *help_messages, int num
 
     if (strlen(message) <= 1) message = lang.GENERIC.NO_HELP;
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(lv_label_get_text(element_focused)), message);
+    show_info_box(TS(lv_label_get_text(element_focused)), message, 0);
 }

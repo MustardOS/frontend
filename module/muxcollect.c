@@ -682,7 +682,7 @@ static void handle_menu() {
     play_sound(SND_CONFIRM);
     image_refresh("preview");
 
-    show_content_info(items[current_item_index].display_name, load_content_description());
+    show_info_box(items[current_item_index].display_name, load_content_description(), 1);
 }
 
 static void handle_random_select() {

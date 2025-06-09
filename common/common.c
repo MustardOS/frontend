@@ -715,31 +715,26 @@ void create_directories(const char *path) {
     if (mkdir(path_copy, 0777) == -1) free(path_copy);
 }
 
-void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *content_element,
-                      char *header_text, char *content_text) {
+void show_info_box(char *title, char *content, int is_content) {
     if (msgbox_active == 0) {
+        lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
+
+        if (is_content) {
+            lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
+        }
+
         msgbox_active = 1;
-        msgbox_element = panel;
-        lv_label_set_text(header_element, header_text);
-        lv_label_set_text(content_element, content_text);
-        lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
+        msgbox_element = ui_pnlHelp;
+
+        lv_label_set_text(ui_lblHelpHeader, title);
+        lv_label_set_text(ui_lblHelpContent, content);
+
+        if (is_content) lv_label_set_text(ui_lblHelpPreviewHeader, title);
+
+        lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblHelpContent);
+        lv_obj_scroll_to_y(ui_pnlItem, 0, LV_ANIM_OFF);
     }
-}
-
-void show_content_info(char *title, char *desc) {
-    lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
-
-    msgbox_active = 1;
-    msgbox_element = ui_pnlHelp;
-
-    lv_label_set_text(ui_lblHelpHeader, title);
-    lv_label_set_text(ui_lblHelpPreviewHeader, title);
-    lv_label_set_text(ui_lblHelpContent, desc);
-
-    lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblHelpContent);
-    lv_obj_scroll_to_y(ui_pnlItem, 0, LV_ANIM_OFF);
 }
 
 void nav_move(lv_group_t *group, int direction) {

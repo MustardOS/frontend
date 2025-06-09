@@ -11,7 +11,7 @@ static void show_help() {
              "%s/%s/%s.sh", device.STORAGE.ROM.MOUNT, MUOS_TASK_PATH, title);
 
     char *message = get_script_value(help_info, "HELP", lang.GENERIC.NO_HELP);
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent, TS(title), TS(message));
+    show_info_box(TS(title), TS(message), 0);
 }
 
 static void create_task_items() {

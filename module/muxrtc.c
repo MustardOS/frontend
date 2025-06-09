@@ -29,8 +29,7 @@ const char *notation[] = {
 static void list_nav_move(int steps, int direction);
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXRTC.TITLE, lang.MUXRTC.HELP);
+    show_info_box(lang.MUXRTC.TITLE, lang.MUXRTC.HELP, 0);
 }
 
 static void confirm_rtc_config() {

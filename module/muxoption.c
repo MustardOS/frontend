@@ -24,17 +24,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblTag_option,      lang.MUXOPTION.HELP.TAG},
     };
 
-    char message[MAX_BUFFER_SIZE];
-    snprintf(message, sizeof(message), "%s", lang.GENERIC.NO_HELP);
-
-    if (element_focused == help_messages[0].element) {
-        snprintf(message, sizeof(message), "%s", help_messages[0].message);
-    }
-
-    if (strlen(message) <= 1) snprintf(message, sizeof(message), "%s", lang.GENERIC.NO_HELP);
-
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(element_focused)), message);
+    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
+    gen_help(element_focused, help_messages, num_messages);
 }
 
 static void add_static_item(int index, const char *item_label, const char *item_value,

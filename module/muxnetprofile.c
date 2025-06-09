@@ -1,8 +1,7 @@
 #include "muxshare.h"
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXNETPROFILE.TITLE, lang.MUXNETPROFILE.HELP);
+    show_info_box(lang.MUXNETPROFILE.TITLE, lang.MUXNETPROFILE.HELP, 0);
 }
 
 static void sanitise_ssid_name(char *dest, const char *src) {

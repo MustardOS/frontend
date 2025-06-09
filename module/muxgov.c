@@ -5,8 +5,7 @@ static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXGOV.TITLE, lang.MUXGOV.HELP);
+    show_info_box(lang.MUXGOV.TITLE, lang.MUXGOV.HELP, 0);
 }
 
 static void write_gov_file(char *path, const char *gov, char *log) {

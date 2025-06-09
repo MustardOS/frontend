@@ -5,8 +5,7 @@ static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
 static void show_help() {
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP);
+    show_info_box(lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP, 0);
 }
 
 static void create_system_items() {

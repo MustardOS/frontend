@@ -23,8 +23,7 @@ static void show_help() {
         strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
     }
 
-    show_help_msgbox(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpContent,
-                     TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits));
+    show_info_box(TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits), 0);
 }
 
 static int version_check() {
