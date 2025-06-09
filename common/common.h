@@ -175,8 +175,7 @@ void create_directories(const char *path);
 void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *content_element,
                       char *header_text, char *content_text);
 
-void show_rom_info(lv_obj_t *panel, lv_obj_t *e_title, lv_obj_t *p_title, lv_obj_t *e_desc,
-                   char *t_title, char *t_desc);
+void show_content_info(char *title, char *desc);
 
 void nav_move(lv_group_t *group, int direction);
 

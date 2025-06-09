@@ -436,21 +436,12 @@ static void handle_y() {
 }
 
 static void handle_menu() {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) {
-        return;
-    }
+    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_CONFIRM);
     image_refresh("preview");
 
-    lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
-
-    show_rom_info(ui_pnlHelp, ui_lblHelpHeader, ui_lblHelpPreviewHeader,
-                  ui_lblHelpContent,
-                  items[current_item_index].display_name,
-                  load_content_description());
+    show_content_info(items[current_item_index].display_name, load_content_description());
 }
 
 static void handle_random_select() {

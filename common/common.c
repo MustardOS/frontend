@@ -726,17 +726,20 @@ void show_help_msgbox(lv_obj_t *panel, lv_obj_t *header_element, lv_obj_t *conte
     }
 }
 
-void show_rom_info(lv_obj_t *panel, lv_obj_t *i_title, lv_obj_t *p_title, lv_obj_t *i_desc,
-                   char *t_title, char *t_desc) {
-    if (msgbox_active == 0) {
-        msgbox_active = 1;
-        msgbox_element = panel;
-        lv_label_set_text(i_title, t_title);
-        lv_label_set_text(p_title, t_title);
-        lv_label_set_text(i_desc, t_desc);
-        lv_obj_t *ui_pnlItem = lv_obj_get_parent(i_desc);
-        lv_obj_scroll_to_y(ui_pnlItem, 0, LV_ANIM_OFF);
-    }
+void show_content_info(char *title, char *desc) {
+    lv_obj_add_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlHelpMessage, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pnlHelp, LV_OBJ_FLAG_HIDDEN);
+
+    msgbox_active = 1;
+    msgbox_element = ui_pnlHelp;
+
+    lv_label_set_text(ui_lblHelpHeader, title);
+    lv_label_set_text(ui_lblHelpPreviewHeader, title);
+    lv_label_set_text(ui_lblHelpContent, desc);
+
+    lv_obj_t *ui_pnlItem = lv_obj_get_parent(ui_lblHelpContent);
+    lv_obj_scroll_to_y(ui_pnlItem, 0, LV_ANIM_OFF);
 }
 
 void nav_move(lv_group_t *group, int direction) {
