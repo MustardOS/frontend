@@ -463,12 +463,7 @@ static void handle_profiles(void) {
 static void handle_a(void) {
     if (msgbox_active) return;
 
-    if (key_show) {
-        handle_keyboard_press();
-        return;
-    }
-
-    handle_confirm();
+    key_show ? handle_keyboard_press() : handle_confirm();
 }
 
 static void handle_b(void) {
@@ -495,23 +490,13 @@ static void handle_b(void) {
 static void handle_x(void) {
     if (msgbox_active) return;
 
-    if (key_show) {
-        key_backspace(ui_txtEntry_network);
-        return;
-    }
-
-    handle_scan();
+    key_show ? key_backspace(ui_txtEntry_network) : handle_scan();
 }
 
 static void handle_y(void) {
     if (msgbox_active) return;
 
-    if (key_show) {
-        key_swap();
-        return;
-    }
-
-    handle_profiles();
+    key_show ? key_swap() : handle_profiles();
 }
 
 static void handle_help(void) {
@@ -522,87 +507,43 @@ static void handle_help(void) {
 }
 
 static void handle_up(void) {
-    if (key_show) {
-        key_up();
-        return;
-    }
-
-    handle_list_nav_up();
+    key_show ? key_up() : handle_list_nav_up();
 }
 
 static void handle_up_hold(void) {
-    if (key_show) {
-        key_up();
-        return;
-    }
-
-    handle_list_nav_up_hold();
+    key_show ? key_up() : handle_list_nav_up_hold();
 }
 
 static void handle_down(void) {
-    if (key_show) {
-        key_down();
-        return;
-    }
-
-    handle_list_nav_down();
+    key_show ? key_down() : handle_list_nav_down();
 }
 
 static void handle_down_hold(void) {
-    if (key_show) {
-        key_down();
-        return;
-    }
-
-    handle_list_nav_down_hold();
+    key_show ? key_down() : handle_list_nav_down_hold();
 }
 
 static void handle_left(void) {
-    if (key_show) {
-        key_left();
-        return;
-    }
-
-    handle_navigate();
+    key_show ? key_left() : handle_navigate();
 }
 
 static void handle_right(void) {
-    if (key_show) {
-        key_right();
-        return;
-    }
-
-    handle_navigate();
+    key_show ? key_right() : handle_navigate();
 }
 
 static void handle_left_hold(void) {
-    if (key_show) {
-        key_left();
-        return;
-    }
+    if (key_show) key_left();
 }
 
 static void handle_right_hold(void) {
-    if (key_show) {
-        key_right();
-        return;
-    }
+    if (key_show) key_right();
 }
 
 static void handle_l1(void) {
-    if (key_show) {
-        return;
-    }
-
-    handle_list_nav_page_up();
+    if (!key_show) handle_list_nav_page_up();
 }
 
 static void handle_r1(void) {
-    if (key_show) {
-        return;
-    }
-
-    handle_list_nav_page_down();
+    if (!key_show) handle_list_nav_page_down();
 }
 
 static void adjust_panels() {

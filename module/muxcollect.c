@@ -689,85 +689,43 @@ static void handle_random_select() {
 }
 
 static void handle_up(void) {
-    if (key_show) {
-        key_up();
-        return;
-    }
-
-    handle_list_nav_up();
+    key_show ? key_up() : handle_list_nav_up();
 }
 
 static void handle_up_hold(void) {
-    if (key_show) {
-        key_up();
-        return;
-    }
-
-    handle_list_nav_up_hold();
+    key_show ? key_up() : handle_list_nav_up_hold();
 }
 
 static void handle_down(void) {
-    if (key_show) {
-        key_down();
-        return;
-    }
-
-    handle_list_nav_down();
+    key_show ? key_down() : handle_list_nav_down();
 }
 
 static void handle_down_hold(void) {
-    if (key_show) {
-        key_down();
-        return;
-    }
-
-    handle_list_nav_down_hold();
+    key_show ? key_down() : handle_list_nav_down_hold();
 }
 
 static void handle_left(void) {
-    if (key_show) {
-        key_left();
-        return;
-    }
-
-    handle_list_nav_left();
+    key_show ? key_left() : handle_list_nav_left();
 }
 
 static void handle_right(void) {
-    if (key_show) {
-        key_right();
-        return;
-    }
-
-    handle_list_nav_right();
+    key_show ? key_right() : handle_list_nav_right();
 }
 
 static void handle_left_hold(void) {
-    if (key_show) {
-        key_left();
-        return;
-    }
-
-    handle_list_nav_left_hold();
+    key_show ? key_left() : handle_list_nav_left_hold();
 }
 
 static void handle_right_hold(void) {
-    if (key_show) {
-        key_right();
-        return;
-    }
-
-    handle_list_nav_right_hold();
+    key_show ? key_right() : handle_list_nav_right_hold();
 }
 
 static void handle_l1(void) {
-    if (key_show) return;
-    handle_list_nav_page_up();
+    if (!key_show) handle_list_nav_page_up();
 }
 
 static void handle_r1(void) {
-    if (key_show) return;
-    handle_list_nav_page_down();
+    if (!key_show) handle_list_nav_page_down();
 }
 
 static void adjust_panels() {
