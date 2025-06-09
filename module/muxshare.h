@@ -63,6 +63,8 @@ extern lv_group_t *ui_group_glyph;
 extern lv_group_t *ui_group_panel;
 extern lv_group_t *ui_group_value;
 
+void adjust_box_art();
+
 void setup_nav(struct nav_bar *nav_items);
 
 void header_and_footer_setup();

@@ -927,30 +927,7 @@ static void init_elements() {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
 
-    switch (config.VISUAL.BOX_ART) {
-        case 0: // Behind
-            lv_obj_move_background(ui_pnlBox);
-            lv_obj_move_background(ui_pnlWall);
-            break;
-        case 1: // Front
-            lv_obj_move_foreground(ui_pnlBox);
-            break;
-        case 2: // Fullscreen + Behind
-            lv_obj_set_y(ui_pnlBox, 0);
-            lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-            lv_obj_move_background(ui_pnlBox);
-            lv_obj_move_background(ui_pnlWall);
-            break;
-        case 3: // Fullscreen + Front
-            lv_obj_set_y(ui_pnlBox, 0);
-            lv_obj_set_height(ui_pnlBox, device.MUX.HEIGHT);
-            lv_obj_move_foreground(ui_pnlBox);
-            break;
-        case 4: // Disabled
-            lv_obj_add_flag(ui_pnlBox, MU_OBJ_FLAG_HIDE_FLOAT);
-            break;
-    }
-
+    adjust_box_art();
     adjust_panels();
     header_and_footer_setup();
 
