@@ -473,7 +473,7 @@ static void handle_menu() {
 static void handle_random_select() {
     if (msgbox_active || !ui_count) return;
 
-    uint32_t random_select = random() % MAX_BUFFER_SIZE;
+    uint32_t random_select = random() % ui_count;
     int selected_index = (int) (random_select & INT16_MAX);
 
     !(selected_index & 1) ? list_nav_move(selected_index, +1) : list_nav_move(selected_index, -1);
