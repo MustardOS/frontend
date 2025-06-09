@@ -532,6 +532,7 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char LOW_BATTERY[MAX_BUFFER_SIZE];
+        char IDLE_ERROR[MAX_BUFFER_SIZE];
         struct {
             char DISPLAY[MAX_BUFFER_SIZE];
             char SLEEP[MAX_BUFFER_SIZE];

@@ -59,7 +59,7 @@ static void restore_tweak_options() {
     }
 }
 
-static void save_tweak_options() {
+static int save_tweak_options() {
     int is_modified = 0;
 
     int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown_power),
@@ -70,6 +70,15 @@ static void save_tweak_options() {
                                                   idle_values, IDLE_COUNT, 0);
     int idx_idle_sleep = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleSleep_power),
                                                 idle_values, IDLE_COUNT, 0);
+
+    if (idx_idle_display && idx_idle_sleep && idx_idle_display >= idx_idle_sleep) {
+        play_sound(SND_ERROR);
+        toast_message(lang.MUXPOWER.IDLE_ERROR, 2000);
+        refresh_screen(ui_screen);
+        return 0;
+    }
+
+    play_sound(SND_BACK);
 
     if (lv_dropdown_get_selected(ui_droShutdown_power) != Shutdown_original) {
         is_modified++;
@@ -102,6 +111,8 @@ static void save_tweak_options() {
 
         refresh_config = 1;
     }
+
+    return 1;
 }
 
 static void init_navigation_group() {
@@ -200,14 +211,12 @@ static void handle_back(void) {
         return;
     }
 
-    play_sound(SND_BACK);
+    if (save_tweak_options()) {
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
 
-    save_tweak_options();
-
-    write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
-
-    close_input();
-    mux_input_stop();
+        close_input();
+        mux_input_stop();
+    }
 }
 
 static void handle_help(void) {

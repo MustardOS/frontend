@@ -470,6 +470,7 @@ void load_lang(struct mux_lang *lang) {
     // muxpower
     SPECIFIC_FIELD(lang->MUXPOWER.TITLE, "POWER SETTINGS");
     SPECIFIC_FIELD(lang->MUXPOWER.LOW_BATTERY, "Low Battery Indicator");
+    SPECIFIC_FIELD(lang->MUXPOWER.IDLE_ERROR, "Idle Display must be less than Idle Sleep");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.DISPLAY, "Idle Input Display Timeout");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.SLEEP, "Idle Input Sleep Timeout");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t10s, "10s");
