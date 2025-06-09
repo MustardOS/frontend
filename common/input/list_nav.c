@@ -27,7 +27,7 @@ extern int current_item_index;
 int grid_mode_enabled = 0;
 
 void handle_list_nav_up(void) {
-    if (!ui_count || block_input) return;
+    if (ui_count < 2 || block_input) return;
     if (msgbox_active) {
         if (!swap_axis) scroll_help_content(1, false);
         return;
@@ -45,7 +45,7 @@ void handle_list_nav_up(void) {
 }
 
 void handle_list_nav_down(void) {
-    if (!ui_count || block_input) return;
+    if (ui_count < 2 || block_input) return;
     if (msgbox_active) {
         if (!swap_axis) scroll_help_content(-1, false);
         return;
@@ -62,7 +62,7 @@ void handle_list_nav_down(void) {
 }
 
 void handle_list_nav_up_hold(void) {
-    if (!ui_count || block_input) return;
+    if (ui_count < 2 || block_input) return;
     if (msgbox_active) {
         if (!swap_axis) scroll_help_content(1, false);
         return;
@@ -77,7 +77,7 @@ void handle_list_nav_up_hold(void) {
 }
 
 void handle_list_nav_down_hold(void) {
-    if (!ui_count || block_input) return;
+    if (ui_count < 2 || block_input) return;
     if (msgbox_active) {
         if (!swap_axis) scroll_help_content(-1, false);
         return;
@@ -166,7 +166,7 @@ void handle_list_nav_right_hold(void) {
 }
 
 void handle_list_nav_page_up(void) {
-    if (!ui_count || block_input) return;
+    if (ui_count < 2 || block_input) return;
     if (msgbox_active) {
         scroll_help_content(1, true);
         return;
@@ -185,7 +185,7 @@ void handle_list_nav_page_up(void) {
 }
 
 void handle_list_nav_page_down(void) {
-    if (!ui_count || block_input) return;
+    if (ui_count < 2 || block_input) return;
     if (msgbox_active) {
         scroll_help_content(-1, true);
         return;
