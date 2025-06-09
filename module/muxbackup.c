@@ -1,9 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-const char *MODE_INDIVIDUAL = "INDIVIDUAL";
-const char *MODE_BATCH = "BATCH";
-
 #define UI_COUNT 21
 #define STORAGE_COUNT UI_COUNT - 2
 #define START_BACKUP_INDEX UI_COUNT - 1
@@ -56,79 +53,79 @@ static void update_backup_info() {
     */
     backup_path[0].path_suffix = STORE_LOC_BIOS;
     backup_path[0].ui_label = ui_lblBiosValue_backup;
-    backup_path[0].shortname = BACKUP_SHORTNAME_BIOS;
+    backup_path[0].shortname = "BIOS";
 
     backup_path[1].path_suffix = STORE_LOC_CLOG;
     backup_path[1].ui_label = ui_lblCatalogueValue_backup;
-    backup_path[1].shortname = BACKUP_SHORTNAME_CATALOGUE;
+    backup_path[1].shortname = "Catalogue";
 
     backup_path[2].path_suffix = STORE_LOC_NAME;
     backup_path[2].ui_label = ui_lblNameValue_backup;
-    backup_path[2].shortname = BACKUP_SHORTNAME_FRIENDLY;
+    backup_path[2].shortname = "FriendlyName";
 
     backup_path[3].path_suffix = STORE_LOC_RARC;
     backup_path[3].ui_label = ui_lblRetroArchValue_backup;
-    backup_path[3].shortname = BACKUP_SHORTNAME_RETROARCH;
+    backup_path[3].shortname = "RetroArch";
 
     backup_path[4].path_suffix = STORE_LOC_CONF;
     backup_path[4].ui_label = ui_lblConfigValue_backup;
-    backup_path[4].shortname = BACKUP_SHORTNAME_RACONFIG;
+    backup_path[4].shortname = "RAConfig";
 
     backup_path[5].path_suffix = STORE_LOC_CORE;
     backup_path[5].ui_label = ui_lblCoreValue_backup;
-    backup_path[5].shortname = BACKUP_SHORTNAME_CORE;
+    backup_path[5].shortname = "Core";
 
     backup_path[6].path_suffix = STORE_LOC_COLL;
     backup_path[6].ui_label = ui_lblCollectionValue_backup;
-    backup_path[6].shortname = BACKUP_SHORTNAME_COLLECTION;
+    backup_path[6].shortname = "Collection";
 
     backup_path[7].path_suffix = STORE_LOC_HIST;
     backup_path[7].ui_label = ui_lblHistoryValue_backup;
-    backup_path[7].shortname = BACKUP_SHORTNAME_HISTORY;
+    backup_path[7].shortname = "History";
 
     backup_path[8].path_suffix = STORE_LOC_MUSC;
     backup_path[8].ui_label = ui_lblMusicValue_backup;
-    backup_path[8].shortname = BACKUP_SHORTNAME_MUSIC;
+    backup_path[8].shortname = "Music";
 
     backup_path[9].path_suffix = STORE_LOC_SAVE;
     backup_path[9].ui_label = ui_lblSaveValue_backup;
-    backup_path[9].shortname = BACKUP_SHORTNAME_SAVE;
+    backup_path[9].shortname = "Save";
 
     backup_path[10].path_suffix = STORE_LOC_SCRS;
     backup_path[10].ui_label = ui_lblScreenshotValue_backup;
-    backup_path[10].shortname = BACKUP_SHORTNAME_SCREENSHOT;
+    backup_path[10].shortname = "Screenshot";
 
     backup_path[11].path_suffix = STORE_LOC_THEM;
     backup_path[11].ui_label = ui_lblThemeValue_backup;
-    backup_path[11].shortname = BACKUP_SHORTNAME_THEME;
+    backup_path[11].shortname = "Theme";
 
     backup_path[12].path_suffix = STORE_LOC_PCAT;
     backup_path[12].ui_label = ui_lblCataloguePackageValue_backup;
-    backup_path[12].shortname = BACKUP_SHORTNAME_CATALOGUEPKG;
+    backup_path[12].shortname = "CataloguePkg";
 
     backup_path[13].path_suffix = STORE_LOC_PCON;
     backup_path[13].ui_label = ui_lblConfigPackageValue_backup;
-    backup_path[13].shortname = BACKUP_SHORTNAME_CONFIGPKG;
+    backup_path[13].shortname = "ConfigPkg";
 
     backup_path[14].path_suffix = STORE_LOC_PLOG;
     backup_path[14].ui_label = ui_lblBootlogoPackageValue_backup;
-    backup_path[14].shortname = BACKUP_SHORTNAME_BOOTLOGOPKG;
+    backup_path[14].shortname = "BootlogoPkg";
 
     backup_path[15].path_suffix = STORE_LOC_LANG;
     backup_path[15].ui_label = ui_lblLanguageValue_backup;
-    backup_path[15].shortname = BACKUP_SHORTNAME_LANGUAGE;
+    backup_path[15].shortname = "Language";
 
     backup_path[16].path_suffix = STORE_LOC_NETW;
     backup_path[16].ui_label = ui_lblNetworkValue_backup;
-    backup_path[16].shortname = BACKUP_SHORTNAME_NETWORK;
+    backup_path[16].shortname = "Network";
 
     backup_path[17].path_suffix = STORE_LOC_SYCT;
     backup_path[17].ui_label = ui_lblSyncthingValue_backup;
-    backup_path[17].shortname = BACKUP_SHORTNAME_SYNCTHING;
+    backup_path[17].shortname = "Syncthing";
 
     backup_path[18].path_suffix = STORE_LOC_INIT;
     backup_path[18].ui_label = ui_lblUserInitValue_backup;
-    backup_path[18].shortname = BACKUP_SHORTNAME_USERINIT;
+    backup_path[18].shortname = "UserInit";
 
     char dir[FILENAME_MAX];
     for (int i = 0; i < sizeof(backup_path) / sizeof(backup_path[0]); i++) {
@@ -290,7 +287,7 @@ static void handle_confirm(void) {
     // Write for batch backup
     if (focused_index == START_BACKUP_INDEX)
     {
-        fprintf(fp, "%s %s\n", MODE_BATCH, "SD1"); // Todo : Add SD2 support
+        fprintf(fp, "%s %s\n", "BATCH", "SD1"); // Todo : Add SD2 support
 
         for (int i = 0; i < STORAGE_COUNT; i++) {
             label_value = lv_label_get_text(backup_path[i].ui_label);
@@ -309,7 +306,7 @@ static void handle_confirm(void) {
     // For other backup paths, write the focused label and its path suffix
     else
     {
-        fprintf(fp, "%s %s\n", MODE_INDIVIDUAL, "SD1"); // Todo : Add SD2 support
+        fprintf(fp, "%s %s\n", "INDIVIDUAL", "SD1"); // Todo : Add SD2 support
 
         label_value = lv_label_get_text(backup_path[focused_index].ui_label);
         if (strcasecmp(label_value, "NONE") != 0) {
@@ -322,7 +319,7 @@ static void handle_confirm(void) {
     }
     fclose(fp);
 
-    snprintf(backup_script_path, sizeof(backup_script_path), "%sscript/mux/backup.sh", INTERNAL_PATH);
+    snprintf(backup_script_path, sizeof(backup_script_path), INTERNAL_PATH "script/mux/backup.sh");
 
     const char *args[] = {backup_script_path, NULL};
     size_t exec_count;

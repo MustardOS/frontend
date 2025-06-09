@@ -233,7 +233,7 @@
     BACKUP(Network, "network")                 \
     BACKUP(Syncthing, "syncthing")             \
     BACKUP(UserInit, "userinit")               \
-    BACKUP(BackupTarget, "backuptarget")      \
+    BACKUP(BackupTarget, "backuptarget")       \
     BACKUP(StartBackup, "startbackup")
 
 #define SYSINFO_ELEMENTS          \
