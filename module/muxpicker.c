@@ -32,9 +32,7 @@ static int version_check() {
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
     if (!extract_file_from_zip(picker_archive, "version.txt", TEMP_VERSION)) return 0;
 
-    char muos_version[MAX_BUFFER_SIZE];
-    snprintf(muos_version, sizeof(muos_version), "%s", read_line_char_from(MUOS_VERSION, 1));
-    return str_startswith(muos_version, read_line_char_from(TEMP_VERSION, 1));
+    return str_startswith(config.SYSTEM.VERSION, read_line_char_from(TEMP_VERSION, 1));
 }
 
 static int extract_preview() {

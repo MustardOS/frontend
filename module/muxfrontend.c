@@ -363,6 +363,7 @@ int main() {
     load_config(&config);
     load_kiosk(&kiosk);
 
+    LOG_SUCCESS("hello", "Welcome to the %s - %s", MUX_CALLER, get_build_version())
     init_theme(0, 0);
     init_display();
 

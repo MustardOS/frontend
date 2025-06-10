@@ -2507,8 +2507,7 @@ int theme_compat() {
 
     if (file_exist(theme_version_file)) {
         char *theme_version = read_line_char_from(theme_version_file, 1);
-        char *internal_version = read_line_char_from(MUOS_VERSION, 1);
-        if (strstr(internal_version, theme_version)) {
+        if (strstr(config.SYSTEM.VERSION, theme_version)) {
             return 1;
         } else {
             LOG_WARN(mux_module, "Incompatible Theme Detected: %s", theme_version)
@@ -2657,4 +2656,11 @@ void get_storage_info(const char *partition, double *total, double *free, double
     *total = (double) (stat.f_blocks * stat.f_frsize) / (1024 * 1024 * 1024);
     *free = (double) (stat.f_bavail * stat.f_frsize) / (1024 * 1024 * 1024);
     *used = *total - *free;
+}
+
+char *get_build_version() {
+    static char build_version[32];
+    snprintf(build_version, sizeof(build_version), "%s (%s)",
+             str_replace(config.SYSTEM.VERSION, "_", " "), config.SYSTEM.BUILD);
+    return build_version;
 }

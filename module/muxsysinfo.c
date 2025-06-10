@@ -157,14 +157,6 @@ const char *get_battery_cap() {
     return battery_cap;
 }
 
-const char *get_build_version() {
-    static char build_version[32];
-    snprintf(build_version, sizeof(build_version), "%s (%s)",
-             str_replace(read_line_char_from(MUOS_VERSION, 1), "_", " "),
-             read_line_char_from(MUOS_BUILD, 1));
-    return build_version;
-}
-
 const char *get_device_info() {
     static char device_info[32];
     snprintf(device_info, sizeof(device_info), "%s",

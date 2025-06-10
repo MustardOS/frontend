@@ -6,6 +6,11 @@ extern struct mux_config config;
 
 struct mux_config {
     struct {
+        char BUILD[MAX_BUFFER_SIZE];
+        char VERSION[MAX_BUFFER_SIZE];
+    } SYSTEM;
+
+    struct {
         int16_t FACTORY_RESET;
         int16_t DEVICE_MODE;
     } BOOT;

@@ -1,6 +1,7 @@
 #pragma once
 
 #define TEST_IMAGE 1
+#define MUX_CALLER "MustardOS FE Spectacular"
 
 #define MAX_BUFFER_SIZE 1024
 
@@ -47,8 +48,6 @@
 #define INTERNAL_OVERLAY INTERNAL_PATH "share/overlay"
 
 #define LAST_PLAY_FILE INTERNAL_PATH "config/boot/last_play"
-#define MUOS_VERSION   INTERNAL_PATH "config/system/version"
-#define MUOS_BUILD     INTERNAL_PATH "config/system/build"
 #define BGM_SILENCE    INTERNAL_PATH "share/media/silence.ogg"
 
 #define RUN_PATH "/run/muos/"
