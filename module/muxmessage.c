@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxmessage.h"
+#include "../lvgl/src/drivers/display/sdl.h"
 
 char **messages = NULL;
 int message_count = 0;
@@ -133,5 +134,6 @@ int main(int argc, char *argv[]) {
         refresh_screen(ui_scrMessage);
     }
 
+    sdl_cleanup();
     return 0;
 }

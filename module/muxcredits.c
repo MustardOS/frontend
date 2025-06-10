@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxcredits.h"
+#include "../lvgl/src/drivers/display/sdl.h"
 
 static void timeout_task() {
     close_input();
@@ -68,5 +69,6 @@ int main(void) {
     init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
+    sdl_cleanup();
     return 0;
 }

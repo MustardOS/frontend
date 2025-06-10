@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../lvgl/src/drivers/display/sdl.h"
 
 int main(void) {
     init_module("muxwarn");
@@ -81,5 +82,6 @@ int main(void) {
         lv_bar_set_value(ui_barProgress, progress, LV_ANIM_ON);
     }
 
+    sdl_cleanup();
     return 0;
 }

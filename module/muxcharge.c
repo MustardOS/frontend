@@ -1,5 +1,6 @@
 #include "muxshare.h"
 #include "ui/ui_muxcharge.h"
+#include "../lvgl/src/drivers/display/sdl.h"
 
 static int exit_status = -1;
 static int was_blank = 0;
@@ -128,5 +129,6 @@ int main() {
     init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
+    sdl_cleanup();
     return 0;
 }
