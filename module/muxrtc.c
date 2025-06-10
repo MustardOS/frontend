@@ -18,13 +18,9 @@ typedef struct {
     int notation;
 } rtc_state_t;
 
-static rtc_state_t rtc = {
-        2025, 1, 1, 0, 0, 0
-};
+static rtc_state_t rtc = {2025, 1, 1, 0, 0, 0};
 
-const char *notation[] = {
-        NULL, NULL
-};
+const char *notation[] = {NULL, NULL};
 
 static void list_nav_move(int steps, int direction);
 
@@ -40,12 +36,6 @@ static void confirm_rtc_config() {
 
     const char *args[] = {"hwclock", "-w", NULL};
     run_exec(args, A_SIZE(args), 1);
-}
-
-static void set_dt_label(lv_obj_t *label, const char *format, int value) {
-    char rtc_buffer[8];
-    snprintf(rtc_buffer, sizeof(rtc_buffer), format, value);
-    lv_label_set_text(label, rtc_buffer);
 }
 
 static int days_in_month(int year, int month) {
@@ -99,11 +89,11 @@ static void restore_clock_settings() {
         rtc.minute = tm_now->tm_min;
     }
 
-    set_dt_label(ui_lblYearValue_rtc, "%04d", rtc.year);
-    set_dt_label(ui_lblMonthValue_rtc, "%02d", rtc.month);
-    set_dt_label(ui_lblDayValue_rtc, "%02d", rtc.day);
-    set_dt_label(ui_lblHourValue_rtc, "%02d", rtc.hour);
-    set_dt_label(ui_lblMinuteValue_rtc, "%02d", rtc.minute);
+    lv_label_set_text_fmt(ui_lblYearValue_rtc, "%04d", rtc.year);
+    lv_label_set_text_fmt(ui_lblMonthValue_rtc, "%02d", rtc.month);
+    lv_label_set_text_fmt(ui_lblDayValue_rtc, "%02d", rtc.day);
+    lv_label_set_text_fmt(ui_lblHourValue_rtc, "%02d", rtc.hour);
+    lv_label_set_text_fmt(ui_lblMinuteValue_rtc, "%02d", rtc.minute);
 
     if (config.CLOCK.NOTATION < 0 || config.CLOCK.NOTATION > 1) {
         LOG_WARN(mux_module, "Invalid notation value, defaulting to 24-hour format")
@@ -318,29 +308,12 @@ static void adjust_notation(int direction) {
 
 // If we change the RTC state, we need to update all of the UI labels accordingly
 static void check_rtc_state(rtc_state_t *rtc, rtc_state_t *old_rtc) {
-    if (rtc->year != old_rtc->year) {
-        set_dt_label(ui_lblYearValue_rtc, "%04d", rtc->year);
-    }
-
-    if (rtc->month != old_rtc->month) {
-        set_dt_label(ui_lblMonthValue_rtc, "%02d", rtc->month);
-    }
-
-    if (rtc->day != old_rtc->day) {
-        set_dt_label(ui_lblDayValue_rtc, "%02d", rtc->day);
-    }
-
-    if (rtc->hour != old_rtc->hour) {
-        set_dt_label(ui_lblHourValue_rtc, "%02d", rtc->hour);
-    }
-
-    if (rtc->minute != old_rtc->minute) {
-        set_dt_label(ui_lblMinuteValue_rtc, "%02d", rtc->minute);
-    }
-
-    if (rtc->notation != old_rtc->notation) {
-        lv_label_set_text(ui_lblNotationValue_rtc, notation[rtc->notation]);
-    }
+    if (rtc->year != old_rtc->year) lv_label_set_text_fmt(ui_lblYearValue_rtc, "%04d", rtc->year);
+    if (rtc->month != old_rtc->month) lv_label_set_text_fmt(ui_lblMonthValue_rtc, "%02d", rtc->month);
+    if (rtc->day != old_rtc->day) lv_label_set_text_fmt(ui_lblDayValue_rtc, "%02d", rtc->day);
+    if (rtc->hour != old_rtc->hour) lv_label_set_text_fmt(ui_lblHourValue_rtc, "%02d", rtc->hour);
+    if (rtc->minute != old_rtc->minute) lv_label_set_text_fmt(ui_lblMinuteValue_rtc, "%02d", rtc->minute);
+    if (rtc->notation != old_rtc->notation) lv_label_set_text(ui_lblNotationValue_rtc, notation[rtc->notation]);
 }
 
 // Adjust the focused option based on the direction of navigation
