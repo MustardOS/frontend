@@ -57,19 +57,12 @@ static void get_current_ip() {
              CONF_CONFIG_PATH "/network/address");
 
     char *curr_ip = read_all_char_from(address_file);
-    static char net_message[MAX_BUFFER_SIZE];
 
     if (strlen(curr_ip) > 1) {
         if (!strcasecmp(curr_ip, "0.0.0.0")) {
             can_scan_check(1);
         } else {
-            if (config.NETWORK.TYPE) {
-                snprintf(net_message, sizeof(net_message), "%s", lang.MUXNETWORK.CONNECTED);
-                lv_label_set_text(ui_lblConnectValue_network, net_message);
-            } else {
-                snprintf(net_message, sizeof(net_message), "%s", curr_ip);
-                lv_label_set_text(ui_lblConnectValue_network, net_message);
-            }
+            lv_label_set_text(ui_lblConnectValue_network, config.NETWORK.TYPE ? lang.MUXNETWORK.CONNECTED : curr_ip);
             lv_label_set_text(ui_lblConnect_network, lang.MUXNETWORK.DISCONNECT);
 
             lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -83,19 +76,10 @@ static void get_current_ip() {
 }
 
 static void restore_network_values() {
-    if (config.NETWORK.TYPE) {
-        lv_label_set_text(ui_lblTypeValue_network, lang.MUXNETWORK.STATIC);
-        ui_count = UI_STATIC;
-    } else {
-        lv_label_set_text(ui_lblTypeValue_network, lang.MUXNETWORK.DHCP);
-        ui_count = UI_DHCP;
-    }
+    lv_label_set_text(ui_lblTypeValue_network, config.NETWORK.TYPE ? lang.MUXNETWORK.STATIC : lang.MUXNETWORK.DHCP);
+    ui_count = config.NETWORK.TYPE ? UI_STATIC : UI_DHCP;
 
-    if (config.NETWORK.SCAN) {
-        lv_label_set_text(ui_lblScanValue_network, lang.GENERIC.ENABLED);
-    } else {
-        lv_label_set_text(ui_lblScanValue_network, lang.GENERIC.DISABLED);
-    }
+    lv_label_set_text(ui_lblScanValue_network, config.NETWORK.SCAN ? lang.GENERIC.ENABLED : lang.GENERIC.DISABLED);
 
     lv_label_set_text(ui_lblIdentifierValue_network, config.NETWORK.SSID);
     lv_label_set_text(ui_lblPasswordValue_network, config.NETWORK.PASS);
@@ -240,12 +224,8 @@ static void handle_keyboard_OK_press(void) {
 static void handle_keyboard_press(void) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
-    const char *is_key;
-    if (lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN)) {
-        is_key = lv_btnmatrix_get_btn_text(num_entry, key_curr);
-    } else {
-        is_key = lv_btnmatrix_get_btn_text(key_entry, key_curr);
-    }
+    const char *is_key = lv_btnmatrix_get_btn_text(
+            lv_obj_has_flag(key_entry, LV_OBJ_FLAG_HIDDEN) ? num_entry : key_entry, key_curr);
 
     if (!strcasecmp(is_key, OSK_DONE)) {
         handle_keyboard_OK_press();
@@ -338,9 +318,7 @@ static void handle_confirm(void) {
                     valid_info = 1;
                 }
             } else {
-                if (strlen(cv_ssid) > 0 && cv_pass_ok) {
-                    valid_info = 1;
-                }
+                if (strlen(cv_ssid) > 0 && cv_pass_ok) valid_info = 1;
             }
 
             if (valid_info) {
@@ -406,11 +384,8 @@ static void handle_confirm(void) {
                 lv_obj_clear_flag(ui_pnlEntry_network, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_move_foreground(ui_pnlEntry_network);
 
-                if (element_focused == ui_lblPassword_network) {
-                    lv_textarea_set_text(ui_txtEntry_network, "");
-                } else {
-                    lv_textarea_set_text(ui_txtEntry_network, lv_label_get_text(lv_group_get_focused(ui_group_value)));
-                }
+                lv_textarea_set_text(ui_txtEntry_network, element_focused == ui_lblPassword_network ? "" :
+                                                          lv_label_get_text(lv_group_get_focused(ui_group_value)));
             }
         } else {
             play_sound(SND_ERROR);
@@ -476,11 +451,8 @@ static void handle_b(void) {
     }
 
     if (key_show) {
-        if (lv_obj_has_state(key_entry, LV_STATE_DISABLED)) {
-            close_osk(num_entry, ui_group, ui_txtEntry_network, ui_pnlEntry_network);
-        } else {
-            close_osk(key_entry, ui_group, ui_txtEntry_network, ui_pnlEntry_network);
-        }
+        close_osk(lv_obj_has_state(key_entry, LV_STATE_DISABLED) ? num_entry :
+                  key_entry, ui_group, ui_txtEntry_network, ui_pnlEntry_network);
         return;
     }
 
@@ -607,14 +579,8 @@ static void ui_refresh_task() {
 }
 
 static void on_key_event(struct input_event ev) {
-    if (ev.code == KEY_ENTER && ev.value == 1) {
-        handle_keyboard_OK_press();
-    }
-    if (ev.code == KEY_ESC && ev.value == 1) {
-        handle_b();
-    } else {
-        process_key_event(&ev, ui_txtEntry_network);
-    }
+    if (ev.code == KEY_ENTER && ev.value == 1) handle_keyboard_OK_press();
+    ev.code == KEY_ESC && ev.value == 1 ? handle_b() : process_key_event(&ev, ui_txtEntry_network);
 }
 
 int muxnetwork_main() {
