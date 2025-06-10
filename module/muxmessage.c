@@ -1,5 +1,5 @@
 #include "muxshare.h"
-#include "ui/ui_muxstart.h"
+#include "ui/ui_muxmessage.h"
 
 char **messages = NULL;
 int message_count = 0;
@@ -13,9 +13,7 @@ void load_messages(const char *filename) {
 
     char line[MAX_BUFFER_SIZE];
     int count = 0;
-    while (fgets(line, sizeof(line), file)) {
-        count++;
-    }
+    while (fgets(line, sizeof(line), file)) count++;
 
     if (count == 0) {
         fprintf(stderr, "No messages found in file: %s\n", filename);
@@ -43,9 +41,7 @@ void load_messages(const char *filename) {
 }
 
 void free_messages(void) {
-    for (int i = 0; i < message_count; i++) {
-        free(messages[i]);
-    }
+    for (int i = 0; i < message_count; i++) free(messages[i]);
     free(messages);
 }
 
@@ -76,36 +72,38 @@ int main(int argc, char *argv[]) {
     load_device(&device);
     load_config(&config);
 
-    init_module("muxstart");
+    init_module("muxmessage");
     setup_background_process();
 
     init_theme(0, 0);
-    init_display();
+    init_display(1);
 
-    init_muxstart();
-    lv_obj_set_user_data(ui_scrStart, mux_module);
+    init_muxmessage();
+    lv_obj_set_user_data(ui_scrMessage, mux_module);
 
     if (config.BOOT.FACTORY_RESET) {
         char init_wall[MAX_BUFFER_SIZE];
-        snprintf(init_wall, sizeof(init_wall), "%s/%simage/wall/muxstart.png",
-                 INTERNAL_THEME, mux_dimension);
+        snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/%simage/wall/%s.png", mux_dimension, mux_module);
+
         if (!file_exist(init_wall)) {
-            snprintf(init_wall, sizeof(init_wall), "%s/image/wall/muxstart.png",
-                     INTERNAL_THEME);
+            snprintf(init_wall, sizeof(init_wall), INTERNAL_THEME "/image/wall/%s.png", mux_module);
         }
+
         char lv_wall[MAX_BUFFER_SIZE];
         snprintf(lv_wall, sizeof(lv_wall), "M:%s", init_wall);
+
         lv_img_set_src(ui_imgWall, strdup(lv_wall));
     } else {
-        load_wallpaper(ui_scrStart, NULL, ui_pnlWall, ui_imgWall, GENERAL);
+        load_wallpaper(ui_scrMessage, NULL, ui_pnlWall, ui_imgWall, GENERAL);
     }
 
-    load_font_text(ui_scrStart);
-    overlay_image = lv_img_create(ui_scrStart);
-    load_overlay_image(ui_scrStart, overlay_image);
+    load_font_text(ui_scrMessage);
+
+    overlay_image = lv_img_create(ui_scrMessage);
+    load_overlay_image(ui_scrMessage, overlay_image);
 
     lv_obj_set_style_bg_opa(ui_barProgress, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    refresh_screen(ui_scrStart);
+    refresh_screen(ui_scrMessage);
 
     char *ext = grab_ext((char *) default_message);
     if (!strcasecmp(ext, "txt") && file_exist((char *) default_message)) is_message_file = 1;
@@ -115,20 +113,15 @@ int main(int argc, char *argv[]) {
         load_messages(default_message);
         srandom((unsigned int) (time(NULL)));
 
-        while (1) {
-            if (file_exist("/tmp/msg_finish")) break;
-
+        while (!file_exist("/tmp/msg_finish")) {
             int index = (int) (1 + (random() % (message_count - 1)));
-            char combined[MAX_BUFFER_SIZE * 2];
-
-            snprintf(combined, sizeof(combined), "%s\n\n%s", messages[0], messages[index]);
-            lv_label_set_text(ui_lblMessage, combined);
+            lv_label_set_text_fmt(ui_lblMessage, "%s\n\n%s", messages[0], messages[index]);
 
             if (file_exist("/tmp/msg_progress")) {
                 lv_bar_set_value(ui_barProgress, read_line_int_from("/tmp/msg_progress", 1), LV_ANIM_OFF);
             }
 
-            refresh_screen(ui_scrStart);
+            refresh_screen(ui_scrMessage);
             sleep(delay);
         }
 
@@ -136,6 +129,8 @@ int main(int argc, char *argv[]) {
     } else {
         lv_bar_set_value(ui_barProgress, progress, LV_ANIM_OFF);
         lv_label_set_text(ui_lblMessage, default_message);
+
+        refresh_screen(ui_scrMessage);
     }
 
     return 0;

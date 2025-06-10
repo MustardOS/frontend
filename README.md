@@ -17,7 +17,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxcharge`: Charging Information Screen
 * `muxcredits`: Supporter Credits Screen
 * `muxfrontend`: Main Frontend Specific Runner
-* `muxstart`: Information and Progress Screen
+* `muxmessage`: Information and Progress Screen
 * `muxwarn`: First Install Disclaimer Message
 
 ### Modules
