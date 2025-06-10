@@ -92,7 +92,7 @@ int main() {
     init_module("muxcharge");
 
     init_theme(0, 0);
-    init_display();
+    init_display(1);
 
     init_muxcharge();
 

@@ -366,8 +366,10 @@ int main() {
 
     LOG_SUCCESS("hello", "Welcome to the %s - %s", MUX_CALLER, get_build_version())
 
-    init_display();
+    // For future reference we need to initialise the theme before we do the display
+    // as we call upon the theme variables for specific settings within display init
     init_theme(0, 0);
+    init_display(0);
 
     int show_alert = 0;
     if (!file_exist(DONE_RESET) && read_line_int_from(USED_RESET, 1)) show_alert = 1;

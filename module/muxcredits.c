@@ -25,7 +25,7 @@ int main(void) {
     load_config(&config);
 
     init_theme(0, 0);
-    init_display();
+    init_display(0);
 
     const lv_font_t *header_font;
     if (strcasecmp(device.DEVICE.NAME, "tui-brick") == 0) {
