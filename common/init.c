@@ -106,8 +106,8 @@ void init_display() {
     disp_drv.physical_ver_res = -1;
     disp_drv.offset_x = 0;
     disp_drv.offset_y = 0;
-    disp_drv.full_refresh = 1;
-    disp_drv.direct_mode = 1;
+    disp_drv.full_refresh = 0;
+    disp_drv.direct_mode = 0;
     disp_drv.antialiasing = theme.MISC.ANTIALIASING;
     disp_drv.color_chroma_key = lv_color_hex(0xFF00FF);
 

@@ -1,4 +1,5 @@
 #include "muxshare.h"
+#include "../lvgl/src/drivers/display/sdl.h"
 
 static int last_index = 0;
 static char rom_name[PATH_MAX];
@@ -437,5 +438,6 @@ int main() {
         cleanup_screen();
     }
 
+    sdl_cleanup();
     return 0;
 }

@@ -2,6 +2,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <SDL2/SDL.h>
+#include "../../../../common/log.h"
+#include "../../../../common/options.h"
 #include "../../../../common/common.h"
 #include "../../../../common/device.h"
 #include "../../../../common/config.h"
@@ -15,120 +17,129 @@ typedef struct {
     uint32_t *pixel;
 } monitor_t;
 
-static void display_create(monitor_t *m);
+static monitor_t monitor;
 
-static void display_update(monitor_t *m);
-
-static void display_refresh();
-
-monitor_t monitor;
+int scale_width, scale_height, underscan;
 
 void sdl_init(void) {
+    SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
+    SDL_SetHint(SDL_HINT_AUDIO_RESAMPLING_MODE, "1");
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+    SDL_SetHint(SDL_HINT_APP_NAME, MUX_CALLER);
+
     SDL_Init(SDL_INIT_VIDEO);
-    display_create(&monitor);
+
+    scale_width = device.MUX.WIDTH * device.SCREEN.ZOOM;
+    scale_height = device.MUX.HEIGHT * device.SCREEN.ZOOM;
+    LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height)
+
+    underscan = (config.BOOT.DEVICE_MODE && config.SETTINGS.HDMI.SCAN) ? 16 : 0;
+    LOG_INFO("video", "Device Underscan: %d", underscan)
+
+    monitor.pixel = calloc(device.MUX.WIDTH * device.MUX.HEIGHT, sizeof(uint32_t));
+    if (!monitor.pixel) {
+        LOG_ERROR("video", "Framebuffer Allocation Failure")
+        exit(EXIT_FAILURE);
+    }
+
+    monitor.window = SDL_CreateWindow(MUX_CALLER, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                      device.SCREEN.WIDTH, device.SCREEN.HEIGHT,
+                                      SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_ALLOW_HIGHDPI);
+    if (!monitor.window) {
+        LOG_ERROR("video", "Window Creation Failed: %s", SDL_GetError())
+        exit(EXIT_FAILURE);
+    }
+
+    monitor.renderer = SDL_CreateRenderer(monitor.window, -1,
+                                          SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (!monitor.renderer) {
+        LOG_ERROR("video", "Renderer Creation Failed: %s", SDL_GetError())
+        exit(EXIT_FAILURE);
+    }
+
+    monitor.texture = SDL_CreateTexture(monitor.renderer,
+                                        SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
+                                        device.MUX.WIDTH, device.MUX.HEIGHT);
+    if (!monitor.texture) {
+        LOG_ERROR("video", "Texture Creation Failed: %s", SDL_GetError())
+        exit(EXIT_FAILURE);
+    }
+
+    SDL_SetTextureBlendMode(monitor.texture, SDL_BLENDMODE_BLEND);
+    SDL_UpdateTexture(monitor.texture, NULL, monitor.pixel, device.MUX.WIDTH * sizeof(uint32_t));
+    monitor.refresh = true;
+
+    LOG_INFO("video", "SDL Video Initialised Successfully")
+}
+
+void sdl_cleanup(void) {
+    if (monitor.texture) SDL_DestroyTexture(monitor.texture);
+    if (monitor.renderer) SDL_DestroyRenderer(monitor.renderer);
+    if (monitor.window) SDL_DestroyWindow(monitor.window);
+    free(monitor.pixel);
+    SDL_Quit();
 }
 
 void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p) {
-    if (area->x2 < 0 || area->y2 < 0 || area->x1 > device.MUX.WIDTH - 1 || area->y1 > device.MUX.HEIGHT - 1) {
+    if (!monitor.pixel || area->x2 < 0 || area->y2 < 0 ||
+        area->x1 >= device.MUX.WIDTH || area->y1 >= device.MUX.HEIGHT) {
         lv_disp_flush_ready(disp_drv);
         return;
     }
 
-    static lv_color_t *t_buf0 = NULL;
-    static lv_color_t *t_buf1 = NULL;
-    static int buffers_initialized = 0;
-    if (!buffers_initialized) {
-        t_buf0 = malloc(device.MUX.WIDTH * device.MUX.HEIGHT * sizeof(lv_color_t));
-        t_buf1 = malloc(device.MUX.WIDTH * device.MUX.HEIGHT * sizeof(lv_color_t));
-        buffers_initialized = 1;
+    // Since we've got direct mode switched off we need to clamp to the screen
+    // or we'll get lovely glitches galore all around the place
+    int x1 = LV_CLAMP(0, area->x1, device.MUX.WIDTH - 1);
+    int y1 = LV_CLAMP(0, area->y1, device.MUX.HEIGHT - 1);
+    int x2 = LV_CLAMP(0, area->x2, device.MUX.WIDTH - 1);
+    int y2 = LV_CLAMP(0, area->y2, device.MUX.HEIGHT - 1);
+
+    // Optimised full-screen flush...
+    if (x1 == 0 && y1 == 0 && x2 == device.MUX.WIDTH - 1 && y2 == device.MUX.HEIGHT - 1) {
+        memcpy(monitor.pixel, color_p, device.MUX.WIDTH * device.MUX.HEIGHT * sizeof(lv_color_t));
+    } else {
+        for (int y = y1; y <= y2; y++) {
+            memcpy(&monitor.pixel[y * device.MUX.WIDTH + x1], color_p, (x2 - x1 + 1) * sizeof(lv_color_t));
+            color_p += (x2 - x1 + 1);
+        }
     }
 
-    static lv_color_t *t_buf[2] = {NULL, NULL};
-    if (t_buf[0] == NULL) {
-        t_buf[0] = t_buf0;
-        t_buf[1] = t_buf1;
+    SDL_Rect update_rect = {x1, y1, x2 - x1 + 1, y2 - y1 + 1};
+    SDL_UpdateTexture(monitor.texture, &update_rect,
+                      &monitor.pixel[y1 * device.MUX.WIDTH + x1],
+                      device.MUX.WIDTH * sizeof(uint32_t));
+
+    // Flush the buffer only if it's the last frame however I may be reading
+    // this wrong because it's always being flushed?! No clue...
+    // Maybe somebody will notice this one day and do it better? :D
+    if (lv_disp_flush_is_last(disp_drv)) {
+        lv_disp_t *disp = _lv_refr_get_disp_refreshing();
+        if (!disp || disp->driver->full_refresh) SDL_RenderClear(monitor.renderer);
+
+        if (disp && disp->driver->screen_transp) {
+            SDL_SetRenderDrawColor(monitor.renderer, 0xff, 0, 0, 0xff);
+            SDL_Rect r = {0, 0, device.MUX.WIDTH, device.MUX.HEIGHT};
+            SDL_RenderDrawRect(monitor.renderer, &r);
+        }
+
+        SDL_Rect dest_rect = {
+                ((device.SCREEN.WIDTH - scale_width) / 2) + underscan,
+                ((device.SCREEN.HEIGHT - scale_height) / 2) + underscan,
+                scale_width - (underscan * 2),
+                scale_height - (underscan * 2)
+        };
+
+        // Simply the rendering if we aren't rotating, saves a few cycles
+        double angle = device.SCREEN.ROTATE <= 3 ? (device.SCREEN.ROTATE * 90.0) : device.SCREEN.ROTATE;
+        if (angle == 0.0) {
+            SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &dest_rect);
+        } else {
+            SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &dest_rect, angle, NULL, SDL_FLIP_NONE);
+        }
+
+        SDL_RenderPresent(monitor.renderer);
     }
 
-    static int t_buf_index = 0;
-
-    lv_color_t *dest = &t_buf[t_buf_index][area->y1 * device.MUX.WIDTH + area->x1];
-    memcpy(dest, color_p, (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1) * sizeof(lv_color_t));
-
-    monitor.pixel = (uint32_t *) t_buf[t_buf_index];
-    monitor.refresh = true;
-
-    if (lv_disp_flush_is_last(disp_drv)) display_refresh();
-    t_buf_index = (t_buf_index + 1) % 2;
     lv_disp_flush_ready(disp_drv);
-}
-
-static void display_refresh() {
-    if (monitor.refresh != false) {
-        monitor.refresh = false;
-        display_update(&monitor);
-    }
-}
-
-static void display_create(monitor_t *m) {
-    m->window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                 device.SCREEN.WIDTH, device.SCREEN.HEIGHT,
-                                 SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_ALLOW_HIGHDPI);
-    m->renderer = SDL_CreateRenderer(m->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    m->texture = SDL_CreateTexture(m->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC,
-                                   device.MUX.WIDTH, device.MUX.HEIGHT);
-
-    SDL_SetTextureBlendMode(m->texture, SDL_BLENDMODE_BLEND);
-    SDL_UpdateTexture(m->texture, NULL, m->pixel, device.MUX.WIDTH * sizeof(uint32_t));
-
-    m->refresh = true;
-}
-
-static void display_update(monitor_t *m) {
-    if (m->pixel == NULL) return;
-    SDL_UpdateTexture(m->texture, NULL, m->pixel, device.MUX.WIDTH * sizeof(uint32_t));
-    SDL_RenderClear(m->renderer);
-
-    lv_disp_t *d = _lv_refr_get_disp_refreshing();
-
-    if (d->driver->screen_transp) {
-        SDL_SetRenderDrawColor(m->renderer, 0xff, 0, 0, 0xff);
-        SDL_Rect r = {0, 0, device.MUX.WIDTH, device.MUX.HEIGHT};
-        SDL_RenderDrawRect(m->renderer, &r);
-    }
-    int scale_width = (device.MUX.WIDTH * device.SCREEN.ZOOM);
-    int scale_height = (device.MUX.HEIGHT * device.SCREEN.ZOOM);
-
-    int underscan = read_line_int_from(CONF_CONFIG_PATH "boot/device_mode", 1) &&
-                    config.SETTINGS.HDMI.SCAN == 1 ? 16 : 0;
-
-    SDL_Rect dest_rect = {
-            ((device.SCREEN.WIDTH - scale_width) / 2) + underscan,
-            ((device.SCREEN.HEIGHT - scale_height) / 2) + underscan,
-            scale_width - (underscan * 2),
-            scale_height - (underscan * 2)
-    };
-
-    double angle;
-    SDL_RendererFlip flip = SDL_FLIP_NONE;
-
-    switch (device.SCREEN.ROTATE) {
-        case 0:
-            angle = 0;
-            break;
-        case 1:
-            angle = 90;
-            break;
-        case 2:
-            angle = 180;
-            break;
-        case 3:
-            angle = 270;
-            break;
-        default:
-            angle = device.SCREEN.ROTATE;
-            break;
-    }
-
-    SDL_RenderCopyEx(m->renderer, m->texture, NULL, &dest_rect, angle, NULL, flip);
-    SDL_RenderPresent(m->renderer);
 }
