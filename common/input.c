@@ -209,6 +209,46 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     }
 }
 
+// Processes gamepad button D-pad.  // Some devices like zero28 the DPAD triggers button press events
+static void process_dpad_as_buttons(const mux_input_options *opts, const struct input_event *event) {
+    int axis;
+    int direction;
+    if (event->type == device.INPUT_TYPE.DPAD.UP &&
+        event->code == device.INPUT_CODE.DPAD.UP) {
+        // Axis: D-pad vertical
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        direction = -event->value;
+    } else if (event->type == device.INPUT_TYPE.DPAD.LEFT &&
+        event->code == device.INPUT_CODE.DPAD.LEFT) {
+        // Axis: D-pad horizontal
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        direction = -event->value;
+    } else if (event->type == device.INPUT_TYPE.DPAD.DOWN &&
+        event->code == device.INPUT_CODE.DPAD.DOWN) {
+        // Axis: D-pad vertical
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
+        direction = event->value;
+    } else if (event->type == device.INPUT_TYPE.DPAD.RIGHT &&
+        event->code == device.INPUT_CODE.DPAD.RIGHT) {
+        // Axis: D-pad horizontal
+        axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_LEFT : MUX_INPUT_DPAD_UP;
+        direction = event->value;
+    } else {
+        return;
+    }
+
+    if (direction == -1) {
+        // Direction: up/left
+        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+    } else if (direction == 1) {
+        // Direction: down/right
+        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+    } else {
+        // Direction: center
+        pressed &= ~(BIT(axis) | BIT(axis + 1));
+    }
+}
+
 // Process system buttons.
 static void process_sys(const mux_input_options *opts, const struct input_event *event) {
     if (event->type == device.INPUT_TYPE.BUTTON.POWER_SHORT && event->code == device.INPUT_CODE.BUTTON.POWER_SHORT) {
@@ -868,7 +908,12 @@ void mux_input_task(const mux_input_options *opts) {
 
             if (epoll_event[i].data.fd == opts->general_fd) {
                 if (event.type == EV_KEY) {
-                    process_key(opts, &event);
+                    if (event.code == device.INPUT_CODE.DPAD.UP || event.code == device.INPUT_CODE.DPAD.DOWN || 
+                        event.code == device.INPUT_CODE.DPAD.LEFT || event.code == device.INPUT_CODE.DPAD.RIGHT) {
+                        process_dpad_as_buttons(opts, &event);
+                    } else {
+                        process_key(opts, &event);
+                    }
                 } else if (event.type == EV_ABS) {
                     process_abs(opts, &event);
                 } else if (event.type == EV_SW) {
