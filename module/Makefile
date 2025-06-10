@@ -26,8 +26,7 @@ LDFLAGS = $(MUXLIB) -L../bin/lib -lui -llookup -lmux \
           -lSDL2 -lSDL2_mixer -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
-	-fno-unroll-loops -fmerge-all-constants -fno-ident \
-	-ffast-math -funroll-loops -falign-functions
+	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
 
 MODULES = muxapp muxarchive muxassign muxcollect muxconfig muxconnect \
           muxcustom muxgov muxhdmi muxhistory muxinfo muxkiosk \

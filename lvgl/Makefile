@@ -21,8 +21,7 @@ CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
 LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
-	-fno-unroll-loops -fmerge-all-constants -fno-ident \
-	-ffast-math -funroll-loops -falign-functions
+	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
 
 BUILD_DIR 		= ./build
 BUILD_OBJ_DIR 	= $(BUILD_DIR)/obj

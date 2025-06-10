@@ -18,8 +18,7 @@ CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
 LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
-	-fno-unroll-loops -fmerge-all-constants -fno-ident \
-	-ffast-math -funroll-loops -falign-functions
+	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
 
 SRC_DIRS = . img input json mini miniz
 SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.c))
