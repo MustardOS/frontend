@@ -382,7 +382,6 @@ int main() {
         sleep(3);
     }
 
-    sync();
     init_audio();
 
     while (1) {
