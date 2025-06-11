@@ -385,8 +385,6 @@ int main() {
     init_audio();
 
     while (1) {
-        snprintf(mux_dimension, sizeof(mux_dimension), "%dx%d/", device.MUX.WIDTH, device.MUX.HEIGHT);
-
         if (file_exist(SAFE_QUIT)) {
             LOG_DEBUG("muxfrontend", "Safe Quit Detected... exiting!")
             break;

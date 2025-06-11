@@ -120,12 +120,13 @@ void load_device(struct mux_device *device) {
     DEV_INT_FIELD(device->SCREEN.HEIGHT, "screen/height")
 
     DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/rotate")
-    if (file_exist(CONF_DEVICE_PATH "screen/s_rotate")) DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/s_rotate");
+    if (file_exist(CONF_DEVICE_PATH "screen/s_rotate")) DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/s_rotate")
+
     DEV_INT_FIELD(device->SCREEN.ROTATE_PIVOT_X, "screen/rotate_pivot_x")
     DEV_INT_FIELD(device->SCREEN.ROTATE_PIVOT_Y, "screen/rotate_pivot_y")
 
     DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/zoom")
-    if (file_exist(CONF_DEVICE_PATH "screen/s_zoom")) DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/s_zoom");
+    if (file_exist(CONF_DEVICE_PATH "screen/s_zoom")) DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/s_zoom")
 
     DEV_INT_FIELD(device->SCREEN.INTERNAL.WIDTH, "screen/internal/width")
     DEV_INT_FIELD(device->SCREEN.INTERNAL.HEIGHT, "screen/internal/height")
@@ -169,4 +170,6 @@ void load_device(struct mux_device *device) {
 #undef DEV_ALG_FIELD
 #undef DEV_DPA_FIELD
 #undef DEV_BTN_FIELD
+
+    snprintf(mux_dimension, sizeof(mux_dimension), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
 }
