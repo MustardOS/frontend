@@ -265,7 +265,8 @@ static void handle_confirm(void) {
 
     lv_obj_t* element_focused = lv_group_get_focused(ui_group_value);
     int focused_index = get_focused_element_index(element_focused);
-    char* label_value = lv_label_get_text(element_focused);
+    char *label_value = lv_label_get_text(element_focused);
+    char *target_value = lv_label_get_text(ui_lblBackupTargetValue_backup);
 
     // Return if backup set to NONE or if on Toggle Target Storage
     if (strcasecmp(label_value, "NONE") == 0 || focused_index == BACKUP_TARGET_INDEX)
@@ -287,7 +288,7 @@ static void handle_confirm(void) {
     // Write for batch backup
     if (focused_index == START_BACKUP_INDEX)
     {
-        fprintf(fp, "%s %s\n", "BATCH", "SD1"); // Todo : Add SD2 support
+        fprintf(fp, "%s %s\n", "BATCH", target_value);
 
         for (int i = 0; i < STORAGE_COUNT; i++) {
             label_value = lv_label_get_text(backup_path[i].ui_label);
@@ -306,13 +307,13 @@ static void handle_confirm(void) {
     // For other backup paths, write the focused label and its path suffix
     else
     {
-        fprintf(fp, "%s %s\n", "INDIVIDUAL", "SD1"); // Todo : Add SD2 support
+        fprintf(fp, "%s %s\n", "INDIVIDUAL", target_value);
 
         label_value = lv_label_get_text(backup_path[focused_index].ui_label);
         if (strcasecmp(label_value, "NONE") != 0) {
             fprintf(fp, 
                     "%s %s %s\n", 
-                    label_value, 
+                    label_value,
                     backup_path[focused_index].shortname, 
                     backup_path[focused_index].path_suffix);
         }
