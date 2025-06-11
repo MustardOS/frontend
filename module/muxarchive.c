@@ -30,8 +30,7 @@ static void create_archive_items() {
             {".muxzip", "ZIP"},
             {".muxthm", "THM"},
             {".muxcat", "CAT"},
-            {".muxcfg", "CFG"},
-            {".muxbak", "BAK"}
+            {".muxcfg", "CFG"}
     };
 
     for (size_t dir_index = 0; dir_index < sizeof(archive_directories) / sizeof(archive_directories[0]); ++dir_index) {
