@@ -121,6 +121,8 @@ void load_device(struct mux_device *device) {
 
     DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/rotate")
     if (file_exist(CONF_DEVICE_PATH "screen/s_rotate")) DEV_INT_FIELD(device->SCREEN.ROTATE, "screen/s_rotate");
+    DEV_INT_FIELD(device->SCREEN.ROTATE_PIVOT_X, "screen/rotate_pivot_x")
+    DEV_INT_FIELD(device->SCREEN.ROTATE_PIVOT_Y, "screen/rotate_pivot_y")
 
     DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/zoom")
     if (file_exist(CONF_DEVICE_PATH "screen/s_zoom")) DEV_FLO_FIELD(device->SCREEN.ZOOM, "screen/s_zoom");

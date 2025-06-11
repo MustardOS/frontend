@@ -135,7 +135,10 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
         if (angle == 0.0) {
             SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &dest_rect);
         } else {
-            SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &dest_rect, angle, NULL, SDL_FLIP_NONE);
+            SDL_Point pivot;
+            pivot.x = device.SCREEN.ROTATE_PIVOT_X;
+            pivot.y = device.SCREEN.ROTATE_PIVOT_Y;
+            SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &dest_rect, angle, &pivot, SDL_FLIP_NONE);
         }
 
         SDL_RenderPresent(monitor.renderer);
