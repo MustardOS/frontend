@@ -2,8 +2,28 @@
 #include "ui/ui_muxmessage.h"
 #include "../lvgl/src/drivers/display/sdl.h"
 
+#define FINISH_FILE   "/tmp/msg_finish"
+#define PROGRESS_FILE "/tmp/msg_progress"
+
 char **messages = NULL;
 int message_count = 0;
+
+char *parse_newline(const char *input) {
+    static char buffer[MAX_BUFFER_SIZE];
+    size_t j = 0;
+
+    for (size_t i = 0; input[i] != '\0' && j < sizeof(buffer) - 1; i++) {
+        if (input[i] == '\\' && input[i + 1] == 'n') {
+            buffer[j++] = '\n';
+            i++;
+        } else {
+            buffer[j++] = input[i];
+        }
+    }
+
+    buffer[j] = '\0';
+    return buffer;
+}
 
 void load_messages(const char *filename) {
     FILE *file = fopen(filename, "r");
@@ -41,20 +61,19 @@ void load_messages(const char *filename) {
     fclose(file);
 }
 
-void free_messages(void) {
-    for (int i = 0; i < message_count; i++) free(messages[i]);
-    free(messages);
-}
-
 int main(int argc, char *argv[]) {
+    char *default_message = NULL;
+    char *live_file = NULL;
+
     int progress = -1;
-    const char *default_message = NULL;
     int is_message_file = 0;
     int delay = 0;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-d") == 0 && i + 1 < argc) {
             delay = safe_atoi(argv[++i]);
+        } else if (strcmp(argv[i], "-l") == 0 && i + 1 < argc) {
+            live_file = argv[++i];
         } else if (progress == -1) {
             progress = safe_atoi(argv[i]);
         } else if (!default_message) {
@@ -65,8 +84,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (progress == -1 || !default_message) {
-        fprintf(stderr, "Usage: %s <progress> <message or message file> [-d <delay>]\n", argv[0]);
+    if (progress == -1 || (!default_message && !live_file)) {
+        fprintf(stderr, "Usage: %s <progress> <message or message file> [-d <delay>] [-l <live file>]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -110,26 +129,42 @@ int main(int argc, char *argv[]) {
     if (!strcasecmp(ext, "txt") && file_exist((char *) default_message)) is_message_file = 1;
     free(ext);
 
-    if (is_message_file && delay > 0) {
+    if (live_file) {
+        while (file_exist(live_file)) {
+            struct stat st;
+
+            if (stat(live_file, &st) == 0) {
+                lv_label_set_text_fmt(ui_lblMessage, "%s", parse_newline(read_line_char_from(live_file, 1)));
+            }
+
+            if (file_exist(PROGRESS_FILE)) {
+                lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
+            }
+
+            refresh_screen(ui_scrMessage);
+            sleep(1);
+        }
+    } else if (is_message_file && delay > 0) {
         load_messages(default_message);
         srandom((unsigned int) (time(NULL)));
 
-        while (!file_exist("/tmp/msg_finish")) {
+        while (!file_exist(FINISH_FILE)) {
             int index = (int) (1 + (random() % (message_count - 1)));
             lv_label_set_text_fmt(ui_lblMessage, "%s\n\n%s", messages[0], messages[index]);
 
-            if (file_exist("/tmp/msg_progress")) {
-                lv_bar_set_value(ui_barProgress, read_line_int_from("/tmp/msg_progress", 1), LV_ANIM_OFF);
+            if (file_exist(PROGRESS_FILE)) {
+                lv_bar_set_value(ui_barProgress, read_line_int_from(PROGRESS_FILE, 1), LV_ANIM_OFF);
             }
 
             refresh_screen(ui_scrMessage);
             sleep(delay);
         }
 
-        free_messages();
+        for (int i = 0; i < message_count; i++) free(messages[i]);
+        free(messages);
     } else {
         lv_bar_set_value(ui_barProgress, progress, LV_ANIM_OFF);
-        lv_label_set_text(ui_lblMessage, default_message);
+        lv_label_set_text(ui_lblMessage, parse_newline(default_message));
 
         refresh_screen(ui_scrMessage);
     }
