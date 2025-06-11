@@ -92,6 +92,8 @@ struct mux_device {
         char HDMI[MAX_BUFFER_SIZE];
         int16_t BRIGHT;
         int16_t ROTATE;
+        int16_t ROTATE_PIVOT_X;
+        int16_t ROTATE_PIVOT_Y;
         int16_t WAIT;
         int16_t WIDTH;
         int16_t HEIGHT;
