@@ -120,6 +120,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char POWER[MAX_BUFFER_SIZE];
         char VISUAL[MAX_BUFFER_SIZE];
+        char BACKUP[MAX_BUFFER_SIZE];
         struct {
             char CONNECTIVITY[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];
@@ -128,6 +129,7 @@ struct mux_lang {
             char STORAGE[MAX_BUFFER_SIZE];
             char POWER[MAX_BUFFER_SIZE];
             char VISUAL[MAX_BUFFER_SIZE];
+            char BACKUP[MAX_BUFFER_SIZE];
         } HELP;
     } MUXCONFIG;
 
@@ -657,6 +659,62 @@ struct mux_lang {
             } PACKAGE;
         } HELP;
     } MUXSTORAGE;
+
+    struct
+    {
+        char TITLE[MAX_BUFFER_SIZE];
+        char BIOS[MAX_BUFFER_SIZE];
+        char CATALOGUE[MAX_BUFFER_SIZE];
+        char FRIENDLY[MAX_BUFFER_SIZE];
+        char RA_SYSTEM[MAX_BUFFER_SIZE];
+        char RA_CONFIG[MAX_BUFFER_SIZE];
+        char ASSIGNED[MAX_BUFFER_SIZE];
+        char COLLECTION[MAX_BUFFER_SIZE];
+        char HISTORY[MAX_BUFFER_SIZE];
+        char MUSIC[MAX_BUFFER_SIZE];
+        char SAVE[MAX_BUFFER_SIZE];
+        char SCREENSHOT[MAX_BUFFER_SIZE];
+        char LANGUAGE[MAX_BUFFER_SIZE];
+        char NET_PROFILE[MAX_BUFFER_SIZE];
+        char SYNCTHING[MAX_BUFFER_SIZE];
+        char USER_INIT[MAX_BUFFER_SIZE];
+        char BACKUP_TARGET[MAX_BUFFER_SIZE];
+        char START_BACKUP[MAX_BUFFER_SIZE];
+        struct
+        {
+            char THEME[MAX_BUFFER_SIZE];
+            char CATALOGUE[MAX_BUFFER_SIZE];
+            char RA_CONFIG[MAX_BUFFER_SIZE];
+            char BOOTLOGO[MAX_BUFFER_SIZE];
+        } PACKAGE;
+        struct
+        {
+            char BIOS[MAX_BUFFER_SIZE];
+            char CATALOGUE[MAX_BUFFER_SIZE];
+            char FRIENDLY[MAX_BUFFER_SIZE];
+            char RA_SYSTEM[MAX_BUFFER_SIZE];
+            char RA_CONFIG[MAX_BUFFER_SIZE];
+            char ASSIGNED[MAX_BUFFER_SIZE];
+            char COLLECTION[MAX_BUFFER_SIZE];
+            char HISTORY[MAX_BUFFER_SIZE];
+            char MUSIC[MAX_BUFFER_SIZE];
+            char SAVE[MAX_BUFFER_SIZE];
+            char SCREENSHOT[MAX_BUFFER_SIZE];
+            char LANGUAGE[MAX_BUFFER_SIZE];
+            char NET_PROFILE[MAX_BUFFER_SIZE];
+            char SYNCTHING[MAX_BUFFER_SIZE];
+            char USER_INIT[MAX_BUFFER_SIZE];
+            char BACKUP_TARGET[MAX_BUFFER_SIZE];
+            char START_BACKUP[MAX_BUFFER_SIZE];
+            struct
+            {
+                char THEME[MAX_BUFFER_SIZE];
+                char CATALOGUE[MAX_BUFFER_SIZE];
+                char RA_CONFIG[MAX_BUFFER_SIZE];
+                char BOOTLOGO[MAX_BUFFER_SIZE];
+            } PACKAGE;
+        } HELP;
+    } MUXBACKUP;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

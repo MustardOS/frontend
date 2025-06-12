@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxconfig.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 8
 
 static void list_nav_move(int steps, int direction);
 
@@ -14,6 +14,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblLanguage_config,  lang.MUXCONFIG.HELP.LANGUAGE},
             {ui_lblPower_config,     lang.MUXCONFIG.HELP.POWER},
             {ui_lblStorage_config,   lang.MUXCONFIG.HELP.STORAGE},
+            {ui_lblBackup_config,    lang.MUXCONFIG.HELP.BACKUP},
     };
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
@@ -32,6 +33,7 @@ static void init_navigation_group() {
     INIT_STATIC_ITEM(-1, config, Language, lang.MUXCONFIG.LANGUAGE, "language", 0);
     INIT_STATIC_ITEM(-1, config, Power, lang.MUXCONFIG.POWER, "power", 0);
     INIT_STATIC_ITEM(-1, config, Storage, lang.MUXCONFIG.STORAGE, "storage", 0);
+    INIT_STATIC_ITEM(-1, config, Backup, lang.MUXCONFIG.BACKUP, "backup", 0);
 
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
@@ -97,7 +99,8 @@ static void handle_a() {
             {"interface", "visual",   &kiosk.SETTING.VISUAL},
             {"language",  "language", &kiosk.CONFIG.LANGUAGE},
             {"power",     "power",    &kiosk.SETTING.POWER},
-            {"storage",   "storage",  &kiosk.CONFIG.STORAGE}
+            {"storage",   "storage",  &kiosk.CONFIG.STORAGE},
+            {"backup",    "backup",   &kiosk.CONFIG.BACKUP}
     };
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
