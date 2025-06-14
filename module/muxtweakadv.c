@@ -68,8 +68,8 @@ static void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droCardMode_tweakadv, !strcasecmp(config.SETTINGS.ADVANCED.CARDMODE, "noop"));
 
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
-    map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, swap_values, 9, 0);
-    map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, zram_values, 9, 0);
+    map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, zram_swap_values, 11, 0);
+    map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, zram_swap_values, 11, 0);
 }
 
 static void save_tweak_options() {
@@ -94,8 +94,8 @@ static void save_tweak_options() {
     CHECK_AND_SAVE_VAL(tweakadv, CardMode, "settings/advanced/cardmode", CHAR, cardmode_values);
 
     CHECK_AND_SAVE_MAP(tweakadv, Accelerate, "settings/advanced/accelerate", accelerate_values, 17, 6);
-    CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", swap_values, 9, 0);
-    CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", zram_values, 9, 0);
+    CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", zram_swap_values, 11, 0);
+    CHECK_AND_SAVE_MAP(tweakadv, Zramfile, "settings/advanced/zramfile", zram_swap_values, 11, 0);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);

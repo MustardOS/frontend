@@ -24,6 +24,4 @@ extern const char *cardmode_values[];
 
 extern const int accelerate_values[];
 
-extern const int swap_values[];
-
-extern const int zram_values[];
+extern const int zram_swap_values[];
