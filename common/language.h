@@ -216,6 +216,28 @@ struct mux_lang {
     } MUXCUSTOM;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char VMSWAP[MAX_BUFFER_SIZE];
+        char DIRTYRATIO[MAX_BUFFER_SIZE];
+        char DIRTYBACK[MAX_BUFFER_SIZE];
+        char CACHE[MAX_BUFFER_SIZE];
+        char NOMERGE[MAX_BUFFER_SIZE];
+        char REQUESTS[MAX_BUFFER_SIZE];
+        char IOSTATS[MAX_BUFFER_SIZE];
+        char READAHEAD[MAX_BUFFER_SIZE];
+        struct {
+            char VMSWAP[MAX_BUFFER_SIZE];
+            char DIRTYRATIO[MAX_BUFFER_SIZE];
+            char DIRTYBACK[MAX_BUFFER_SIZE];
+            char CACHE[MAX_BUFFER_SIZE];
+            char NOMERGE[MAX_BUFFER_SIZE];
+            char REQUESTS[MAX_BUFFER_SIZE];
+            char IOSTATS[MAX_BUFFER_SIZE];
+            char READAHEAD[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXDANGER;
+
+    struct {
         char HELP[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];
@@ -660,8 +682,7 @@ struct mux_lang {
         } HELP;
     } MUXSTORAGE;
 
-    struct
-    {
+    struct {
         char TITLE[MAX_BUFFER_SIZE];
         char BIOS[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
@@ -680,15 +701,13 @@ struct mux_lang {
         char USER_INIT[MAX_BUFFER_SIZE];
         char BACKUP_TARGET[MAX_BUFFER_SIZE];
         char START_BACKUP[MAX_BUFFER_SIZE];
-        struct
-        {
+        struct {
             char THEME[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
             char BOOTLOGO[MAX_BUFFER_SIZE];
         } PACKAGE;
-        struct
-        {
+        struct {
             char BIOS[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char FRIENDLY[MAX_BUFFER_SIZE];
@@ -706,8 +725,7 @@ struct mux_lang {
             char USER_INIT[MAX_BUFFER_SIZE];
             char BACKUP_TARGET[MAX_BUFFER_SIZE];
             char START_BACKUP[MAX_BUFFER_SIZE];
-            struct
-            {
+            struct {
                 char THEME[MAX_BUFFER_SIZE];
                 char CATALOGUE[MAX_BUFFER_SIZE];
                 char RA_CONFIG[MAX_BUFFER_SIZE];

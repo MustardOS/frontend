@@ -118,6 +118,17 @@ struct mux_config {
         int16_t NTP;
         int16_t TAILSCALED;
     } WEB;
+
+    struct {
+        int16_t VMSWAP;
+        int16_t DIRTYRATIO;
+        int16_t DIRTYBACK;
+        int16_t CACHE;
+        int16_t MERGE;
+        int16_t REQUESTS;
+        int16_t IOSTATS;
+        int16_t READAHEAD;
+    } DANGER;
 };
 
 void load_config(struct mux_config *config);

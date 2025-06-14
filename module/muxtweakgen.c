@@ -312,6 +312,17 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
+static void launch_danger() {
+    if (msgbox_active) return;
+
+    if (lv_group_get_focused(ui_group) == ui_lblAdvanced_tweakgen) {
+        load_mux("danger");
+
+        close_input();
+        mux_input_stop();
+    }
+}
+
 static void adjust_panels() {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
@@ -400,10 +411,47 @@ int muxtweakgen_main() {
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
+            },
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_L2) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_X),
+                            .press_handler = launch_danger,
+                            .hold_handler = launch_danger,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright_up,
+                            .hold_handler = ui_common_handle_bright_up,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_MENU_LONG) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright_down,
+                            .hold_handler = ui_common_handle_bright_down,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_bright_up,
+                            .hold_handler = ui_common_handle_bright_up,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_SWITCH) | BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_bright_down,
+                            .hold_handler = ui_common_handle_bright_down,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_UP),
+                            .press_handler = ui_common_handle_volume_up,
+                            .hold_handler = ui_common_handle_volume_up,
+                    },
+                    {
+                            .type_mask = BIT(MUX_INPUT_VOL_DOWN),
+                            .press_handler = ui_common_handle_volume_down,
+                            .hold_handler = ui_common_handle_volume_down,
+                    },
             }
     };
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
-    init_input(&input_opts, true);
+    init_input(&input_opts, false);
     mux_input_task(&input_opts);
 
     return 0;

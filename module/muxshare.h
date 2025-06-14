@@ -103,6 +103,8 @@ int muxconnect_main();
 
 int muxcustom_main();
 
+int muxdanger_main();
+
 int muxgov_main(int auto_assign, char *name, char *dir, char *sys);
 
 int muxhdmi_main();

@@ -124,4 +124,13 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->WEB.RSLSYNC, CONF_CONFIG_PATH "web/rslsync", 0)
     CFG_INT_FIELD(config->WEB.NTP, CONF_CONFIG_PATH "web/ntp", 1)
     CFG_INT_FIELD(config->WEB.TAILSCALED, CONF_CONFIG_PATH "web/tailscaled", 0)
+
+    CFG_INT_FIELD(config->DANGER.VMSWAP, CONF_CONFIG_PATH "danger/vmswap", 8)
+    CFG_INT_FIELD(config->DANGER.DIRTYRATIO, CONF_CONFIG_PATH "danger/dirty_ratio", 16)
+    CFG_INT_FIELD(config->DANGER.DIRTYBACK, CONF_CONFIG_PATH "danger/dirty_back_ratio", 4)
+    CFG_INT_FIELD(config->DANGER.CACHE, CONF_CONFIG_PATH "danger/cache_pressure", 64)
+    CFG_INT_FIELD(config->DANGER.MERGE, CONF_CONFIG_PATH "danger/nomerges", 2)
+    CFG_INT_FIELD(config->DANGER.REQUESTS, CONF_CONFIG_PATH "danger/nr_requests", 128)
+    CFG_INT_FIELD(config->DANGER.IOSTATS, CONF_CONFIG_PATH "danger/iostats", 0)
+    CFG_INT_FIELD(config->DANGER.READAHEAD, CONF_CONFIG_PATH "danger/read_ahead", 4096)
 }

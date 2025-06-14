@@ -78,6 +78,16 @@
     CUSTOM(Sound,           "sound")      \
     CUSTOM(Chime,           "chime")
 
+#define DANGER_ELEMENTS                  \
+    DANGER(VmSwap,        "vmswap")      \
+    DANGER(DirtyRatio,    "dirty-ratio") \
+    DANGER(DirtyBack,     "dirty-back")  \
+    DANGER(CachePressure, "cache")       \
+    DANGER(NoMerge,       "merge")       \
+    DANGER(NrRequests,    "requests")    \
+    DANGER(IoStats,       "iostats")     \
+    DANGER(ReadAhead,     "readahead")
+
 #define INFO_ELEMENTS              \
     INFO(Screenshot, "screenshot") \
     INFO(Space,      "space")      \

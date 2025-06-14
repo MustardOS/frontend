@@ -278,6 +278,15 @@ static void module_tweakadv() {
     }
 }
 
+static void module_danger() {
+    exec_mux("tweakgen", "muxdanger", muxdanger_main);
+
+    if (!config.SETTINGS.ADVANCED.LOCK) {
+        if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
+        if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
+    }
+}
+
 static void module_rtc() {
     if (config.BOOT.FACTORY_RESET) {
         exec_mux("reset", "muxrtc", muxrtc_main);
@@ -305,6 +314,7 @@ static const ModuleEntry modules[] = {
         {"task",       NULL, NULL, NULL, module_task},
         {"config",     NULL, NULL, NULL, module_config},
         {"tweakadv",   NULL, NULL, NULL, module_tweakadv},
+        {"danger",     NULL, NULL, NULL, module_danger},
         {"rtc",        NULL, NULL, NULL, module_rtc},
         {"credits",    NULL, NULL, NULL, module_quit},
 

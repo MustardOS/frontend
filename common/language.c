@@ -106,6 +106,51 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXASSIGN.NONE, "No Cores Found…");
     SPECIFIC_FIELD(lang->MUXASSIGN.HELP, "This is where you can assign a core or external emulator to content");
 
+    // muxbackup
+    SPECIFIC_FIELD(lang->MUXBACKUP.TITLE, "DEVICE BACKUP");
+    SPECIFIC_FIELD(lang->MUXBACKUP.BIOS, "System BIOS");
+    SPECIFIC_FIELD(lang->MUXBACKUP.CATALOGUE, "Metadata Catalogue");
+    SPECIFIC_FIELD(lang->MUXBACKUP.FRIENDLY, "Friendly Name System");
+    SPECIFIC_FIELD(lang->MUXBACKUP.RA_SYSTEM, "RetroArch System");
+    SPECIFIC_FIELD(lang->MUXBACKUP.RA_CONFIG, "RetroArch Configs");
+    SPECIFIC_FIELD(lang->MUXBACKUP.ASSIGNED, "Assigned Core/Governor System");
+    SPECIFIC_FIELD(lang->MUXBACKUP.COLLECTION, "Content Collection");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HISTORY, "History");
+    SPECIFIC_FIELD(lang->MUXBACKUP.MUSIC, "Background Music");
+    SPECIFIC_FIELD(lang->MUXBACKUP.SAVE, "Save Games + Save States");
+    SPECIFIC_FIELD(lang->MUXBACKUP.SCREENSHOT, "Screenshots");
+    SPECIFIC_FIELD(lang->MUXBACKUP.LANGUAGE, "Languages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.NET_PROFILE, "Network Profiles");
+    SPECIFIC_FIELD(lang->MUXBACKUP.SYNCTHING, "Syncthing Configs");
+    SPECIFIC_FIELD(lang->MUXBACKUP.USER_INIT, "User Init Scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.THEME, "Themes");
+    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.CATALOGUE, "Catalogue Packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.RA_CONFIG, "RetroArch Config Packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.BOOTLOGO, "Bootlogo Packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.BACKUP_TARGET, "Backup Target");
+    SPECIFIC_FIELD(lang->MUXBACKUP.START_BACKUP, "Start Backup");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.BIOS, "Location of system BIOS files");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CATALOGUE, "Location of content images and text");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.FRIENDLY, "Location of friendly name configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.RA_SYSTEM, "Location of the RetroArch emulator");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.RA_CONFIG, "Location of RetroArch configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.ASSIGNED, "Location of assigned core and governor configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.COLLECTION, "Location of content collection");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.HISTORY, "Location of history");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MUSIC, "Location of background music");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SAVE, "Location of save states and files");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SCREENSHOT, "Location of screenshots");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.LANGUAGE, "Location of Language files");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.NET_PROFILE, "Location of Network Profiles");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SYNCTHING, "Location of Syncthing configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.USER_INIT, "Location of User Initialisation scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.THEME, "Location of themes");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.CATALOGUE, "Location of catalogue packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.RA_CONFIG, "Location of RetroArch configuration packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.BOOTLOGO, "Location of bootlogo packages");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.BACKUP_TARGET, "Toggle the target storage device for the backup");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.START_BACKUP, "Start the backup process for the selected items");
+
     // muxcharge
     SPECIFIC_FIELD(lang->MUXCHARGE.BOOT, "Booting System - Please Wait…");
     SPECIFIC_FIELD(lang->MUXCHARGE.CAPACITY, "Capacity");
@@ -202,6 +247,25 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
+
+    // muxdanger
+    SPECIFIC_FIELD(lang->MUXDANGER.TITLE, "DANGEROUS");
+    SPECIFIC_FIELD(lang->MUXDANGER.VMSWAP, "Swap Tendency");
+    SPECIFIC_FIELD(lang->MUXDANGER.DIRTYRATIO, "Write Back Threshold");
+    SPECIFIC_FIELD(lang->MUXDANGER.DIRTYBACK, "Background Write Back");
+    SPECIFIC_FIELD(lang->MUXDANGER.CACHE, "Cache Reclamation");
+    SPECIFIC_FIELD(lang->MUXDANGER.NOMERGE, "I/O Merge Policy");
+    SPECIFIC_FIELD(lang->MUXDANGER.REQUESTS, "Queue Depth");
+    SPECIFIC_FIELD(lang->MUXDANGER.IOSTATS, "I/O Stats");
+    SPECIFIC_FIELD(lang->MUXDANGER.READAHEAD, "Read Ahead Size");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.VMSWAP, "Controls how aggressively the system swaps memory to disk\n\nLower values keep processes in RAM longer");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.DIRTYRATIO, "Percentage of RAM allowed to hold unwritten (dirty) data before forcing a write to disk");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.DIRTYBACK, "Background write back starts when dirty data exceeds this percentage of RAM\n\nLower values help reduce latency");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.CACHE, "Higher values reclaim cached file data more aggressively\n\nLower values improve performance for repeated file access");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.NOMERGE, "Controls how kernel merges I/O requests\n\nDisabling merges may benefit specific flash storage performance");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.REQUESTS, "Sets the maximum number of queued I/O requests per device\n\nHigher values increase throughput but use more RAM");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.IOSTATS, "Enables or disables tracking of per-device I/O statistics\n\nDisabling may improve performance slightly");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.READAHEAD, "Amount of data preloaded in memory before it's requested\n\nLarger values improve sequential read performance");
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
@@ -768,51 +832,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SFTP, "Toggle SFTP support - WebUI can be found on port 9090");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.RESILIO, "Toggle Resilio - WebUI can be found on port 6060");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TAILSCALE, "Toggle Tailscale - Need to login via SSH first to configure it");
-
-    // muxbackup
-    SPECIFIC_FIELD(lang->MUXBACKUP.TITLE, "DEVICE BACKUP");
-    SPECIFIC_FIELD(lang->MUXBACKUP.BIOS, "System BIOS");
-    SPECIFIC_FIELD(lang->MUXBACKUP.CATALOGUE, "Metadata Catalogue");
-    SPECIFIC_FIELD(lang->MUXBACKUP.FRIENDLY, "Friendly Name System");
-    SPECIFIC_FIELD(lang->MUXBACKUP.RA_SYSTEM, "RetroArch System");
-    SPECIFIC_FIELD(lang->MUXBACKUP.RA_CONFIG, "RetroArch Configs");
-    SPECIFIC_FIELD(lang->MUXBACKUP.ASSIGNED, "Assigned Core/Governor System");
-    SPECIFIC_FIELD(lang->MUXBACKUP.COLLECTION, "Content Collection");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HISTORY, "History");
-    SPECIFIC_FIELD(lang->MUXBACKUP.MUSIC, "Background Music");
-    SPECIFIC_FIELD(lang->MUXBACKUP.SAVE, "Save Games + Save States");
-    SPECIFIC_FIELD(lang->MUXBACKUP.SCREENSHOT, "Screenshots");
-    SPECIFIC_FIELD(lang->MUXBACKUP.LANGUAGE, "Languages");
-    SPECIFIC_FIELD(lang->MUXBACKUP.NET_PROFILE, "Network Profiles");
-    SPECIFIC_FIELD(lang->MUXBACKUP.SYNCTHING, "Syncthing Configs");
-    SPECIFIC_FIELD(lang->MUXBACKUP.USER_INIT, "User Init Scripts");
-    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.THEME, "Themes");
-    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.CATALOGUE, "Catalogue Packages");
-    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.RA_CONFIG, "RetroArch Config Packages");
-    SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.BOOTLOGO, "Bootlogo Packages");
-    SPECIFIC_FIELD(lang->MUXBACKUP.BACKUP_TARGET, "Backup Target");
-    SPECIFIC_FIELD(lang->MUXBACKUP.START_BACKUP, "Start Backup");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.BIOS, "Location of system BIOS files");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CATALOGUE, "Location of content images and text");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.FRIENDLY, "Location of friendly name configurations");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.RA_SYSTEM, "Location of the RetroArch emulator");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.RA_CONFIG, "Location of RetroArch configurations");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.ASSIGNED, "Location of assigned core and governor configurations");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.COLLECTION, "Location of content collection");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.HISTORY, "Location of history");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MUSIC, "Location of background music");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SAVE, "Location of save states and files");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SCREENSHOT, "Location of screenshots");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.LANGUAGE, "Location of Language files");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.NET_PROFILE, "Location of Network Profiles");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SYNCTHING, "Location of Syncthing configurations");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.USER_INIT, "Location of User Initialisation scripts");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.THEME, "Location of themes");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.CATALOGUE, "Location of catalogue packages");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.RA_CONFIG, "Location of RetroArch configuration packages");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.BOOTLOGO, "Location of bootlogo packages");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.BACKUP_TARGET, "Toggle the target storage device for the backup");
-    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.START_BACKUP, "Start the backup process for the selected items");
 
 #undef SYSTEM_FIELD
 #undef GENERIC_FIELD
