@@ -16,30 +16,29 @@ struct backup backup_path[STORAGE_COUNT];
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help(lv_obj_t *element_focused)
-{
+static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-        {ui_lblBiosValue_backup, lang.MUXBACKUP.HELP.BIOS},
-        {ui_lblCatalogue_backup, lang.MUXBACKUP.HELP.CATALOGUE},
-        {ui_lblName_backup, lang.MUXBACKUP.HELP.FRIENDLY},
-        {ui_lblRetroArch_backup, lang.MUXBACKUP.HELP.RA_SYSTEM},
-        {ui_lblConfig_backup, lang.MUXBACKUP.HELP.RA_CONFIG},
-        {ui_lblCore_backup, lang.MUXBACKUP.HELP.ASSIGNED},
-        {ui_lblCollection_backup, lang.MUXBACKUP.HELP.COLLECTION},
-        {ui_lblHistory_backup, lang.MUXBACKUP.HELP.HISTORY},
-        {ui_lblMusic_backup, lang.MUXBACKUP.HELP.MUSIC},
-        {ui_lblSave_backup, lang.MUXBACKUP.HELP.SAVE},
-        {ui_lblScreenshot_backup, lang.MUXBACKUP.HELP.SCREENSHOT},
-        {ui_lblTheme_backup, lang.MUXBACKUP.HELP.PACKAGE.THEME},
-        {ui_lblCataloguePackage_backup, lang.MUXBACKUP.HELP.PACKAGE.CATALOGUE},
-        {ui_lblConfigPackage_backup, lang.MUXBACKUP.HELP.PACKAGE.RA_CONFIG},
-        {ui_lblBootlogoPackage_backup, lang.MUXBACKUP.HELP.PACKAGE.BOOTLOGO},
-        {ui_lblLanguage_backup, lang.MUXBACKUP.HELP.LANGUAGE},
-        {ui_lblNetwork_backup, lang.MUXBACKUP.HELP.NET_PROFILE},
-        {ui_lblSyncthing_backup, lang.MUXBACKUP.HELP.SYNCTHING},
-        {ui_lblUserInit_backup, lang.MUXBACKUP.HELP.USER_INIT},
-        {ui_lblBackupTarget_backup, lang.MUXBACKUP.HELP.BACKUP_TARGET},
-        {ui_lblStartBackup_backup, lang.MUXBACKUP.HELP.START_BACKUP},
+            {ui_lblBiosValue_backup,        lang.MUXBACKUP.HELP.BIOS},
+            {ui_lblCatalogue_backup,        lang.MUXBACKUP.HELP.CATALOGUE},
+            {ui_lblName_backup,             lang.MUXBACKUP.HELP.FRIENDLY},
+            {ui_lblRetroArch_backup,        lang.MUXBACKUP.HELP.RA_SYSTEM},
+            {ui_lblConfig_backup,           lang.MUXBACKUP.HELP.RA_CONFIG},
+            {ui_lblCore_backup,             lang.MUXBACKUP.HELP.ASSIGNED},
+            {ui_lblCollection_backup,       lang.MUXBACKUP.HELP.COLLECTION},
+            {ui_lblHistory_backup,          lang.MUXBACKUP.HELP.HISTORY},
+            {ui_lblMusic_backup,            lang.MUXBACKUP.HELP.MUSIC},
+            {ui_lblSave_backup,             lang.MUXBACKUP.HELP.SAVE},
+            {ui_lblScreenshot_backup,       lang.MUXBACKUP.HELP.SCREENSHOT},
+            {ui_lblTheme_backup,            lang.MUXBACKUP.HELP.PACKAGE.THEME},
+            {ui_lblCataloguePackage_backup, lang.MUXBACKUP.HELP.PACKAGE.CATALOGUE},
+            {ui_lblConfigPackage_backup,    lang.MUXBACKUP.HELP.PACKAGE.RA_CONFIG},
+            {ui_lblBootlogoPackage_backup,  lang.MUXBACKUP.HELP.PACKAGE.BOOTLOGO},
+            {ui_lblLanguage_backup,         lang.MUXBACKUP.HELP.LANGUAGE},
+            {ui_lblNetwork_backup,          lang.MUXBACKUP.HELP.NET_PROFILE},
+            {ui_lblSyncthing_backup,        lang.MUXBACKUP.HELP.SYNCTHING},
+            {ui_lblUserInit_backup,         lang.MUXBACKUP.HELP.USER_INIT},
+            {ui_lblBackupTarget_backup,     lang.MUXBACKUP.HELP.BACKUP_TARGET},
+            {ui_lblStartBackup_backup,      lang.MUXBACKUP.HELP.START_BACKUP},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -129,7 +128,7 @@ static void update_backup_info() {
     char dir[FILENAME_MAX];
     for (int i = 0; i < A_SIZE(backup_path); i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, backup_path[i].path_suffix);
-        if (directory_exist(dir)) {
+        if (is_partition_mounted(device.STORAGE.SDCARD.MOUNT) && directory_exist(dir)) {
             lv_label_set_text(backup_path[i].ui_label, "SD2");
         } else {
             lv_label_set_text(backup_path[i].ui_label, "SD1");
@@ -140,8 +139,7 @@ static void update_backup_info() {
     lv_label_set_text(ui_lblBackupTargetValue_backup, "SD1");
 }
 
-static void init_navigation_group()
-{
+static void init_navigation_group() {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -182,15 +180,12 @@ static void init_navigation_group()
     }
 
     int dbi_index = 0;
-    if (file_exist(MUOS_DBI_LOAD))
-    {
+    if (file_exist(MUOS_DBI_LOAD)) {
         dbi_index = read_line_int_from(MUOS_DBI_LOAD, 1);
         remove(MUOS_DBI_LOAD);
     }
-    if (ui_count > 0 && 
-        dbi_index >= 0 && 
-        dbi_index < ui_count && 
-        current_item_index < ui_count) {
+
+    if (ui_count > 0 && dbi_index >= 0 && dbi_index < ui_count && current_item_index < ui_count) {
         list_nav_move(dbi_index, 1);
     }
 }
@@ -242,35 +237,32 @@ static void handle_back(void) {
 }
 
 // Fuck you I'm a ukelele
-static int get_focused_element_index(struct _lv_obj_t *element_focused)
-{
-    if (ui_lblStartBackupValue_backup == element_focused)
+static int get_focused_element_index(struct _lv_obj_t *element_focused) {
+    if (ui_lblStartBackupValue_backup == element_focused) {
         return START_BACKUP_INDEX;
-    else if (ui_lblBackupTargetValue_backup == element_focused)
+    } else if (ui_lblBackupTargetValue_backup == element_focused) {
         return BACKUP_TARGET_INDEX;
-    else
-        for (int i = 0; i < STORAGE_COUNT; i++)
-            if (backup_path[i].ui_label == element_focused)
-                return i;
-    
+    } else
+        for (int i = 0; i < STORAGE_COUNT; i++) {
+            if (backup_path[i].ui_label == element_focused) return i;
+        }
+
     return -1; // Not found
 }
 
 static void handle_confirm(void) {
-    if (msgbox_active)
-        return;
+    if (msgbox_active) return;
 
     play_sound(SND_CONFIRM);
 
-    lv_obj_t* element_focused = lv_group_get_focused(ui_group_value);
+    lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
     int focused_index = get_focused_element_index(element_focused);
     char *label_value = lv_label_get_text(element_focused);
-    char *target_value = lv_label_get_text(ui_lblBackupTargetValue_backup);
 
     // Return if backup set to NONE or if on Toggle Target Storage
-    if (strcasecmp(label_value, "NONE") == 0 || focused_index == BACKUP_TARGET_INDEX)
-        return;
+    if (strcasecmp(label_value, "NONE") == 0 || focused_index == BACKUP_TARGET_INDEX) return;
 
+    char *target_value = lv_label_get_text(ui_lblBackupTargetValue_backup);
     char datetime[64];
 
     strncpy(datetime, get_datetime(), sizeof(datetime) - 1);
@@ -285,36 +277,24 @@ static void handle_confirm(void) {
     }
 
     // Write for batch backup
-    if (focused_index == START_BACKUP_INDEX)
-    {
+    if (focused_index == START_BACKUP_INDEX) {
         fprintf(fp, "%s %s\n", "BATCH", target_value);
 
         for (int i = 0; i < STORAGE_COUNT; i++) {
             label_value = lv_label_get_text(backup_path[i].ui_label);
 
             // Skip if set to NONE
-            if (strcasecmp(label_value, "NONE") == 0) 
-                continue; 
-            
-            fprintf(fp, 
-                    "%s %s %s\n", 
-                    label_value, 
-                    backup_path[i].shortname, 
-                    backup_path[i].path_suffix);
+            if (strcasecmp(label_value, "NONE") == 0) continue;
+            fprintf(fp, "%s %s %s\n", label_value,
+                    backup_path[i].shortname, backup_path[i].path_suffix);
         }
-    }
-    // For other backup paths, write the focused label and its path suffix
-    else
-    {
+    } else { // For other backup paths, write the focused label and its path suffix
         fprintf(fp, "%s %s\n", "INDIVIDUAL", target_value);
 
         label_value = lv_label_get_text(backup_path[focused_index].ui_label);
         if (strcasecmp(label_value, "NONE") != 0) {
-            fprintf(fp, 
-                    "%s %s %s\n", 
-                    label_value,
-                    backup_path[focused_index].shortname, 
-                    backup_path[focused_index].path_suffix);
+            fprintf(fp, "%s %s %s\n", label_value,
+                    backup_path[focused_index].shortname, backup_path[focused_index].path_suffix);
         }
     }
     fclose(fp);
@@ -340,8 +320,7 @@ static void handle_confirm(void) {
 }
 
 static void handle_toggle(void) {
-    if (msgbox_active)
-        return;
+    if (msgbox_active) return;
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
     const char *label_text = lv_label_get_text(element_focused);
@@ -350,9 +329,9 @@ static void handle_toggle(void) {
     if (focused_index == BACKUP_TARGET_INDEX) {
         play_sound(SND_CONFIRM);
 
-        if (strcasecmp(label_text, "SD2") == 0) {
+        if (strcasecmp(label_text, "SD2") == 0 && is_partition_mounted(device.STORAGE.USB.MOUNT)) {
             lv_label_set_text(element_focused, "USB");
-        } else if (strcasecmp(label_text, "SD1") == 0) {
+        } else if (strcasecmp(label_text, "SD1") == 0 && is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) {
             lv_label_set_text(element_focused, "SD2");
         } else {
             lv_label_set_text(element_focused, "SD1");
@@ -368,7 +347,7 @@ static void handle_toggle(void) {
         // Toggle between SD1 and SD2 (or from NONE to SD1)
         if (strcasecmp(label_text, "SD2") == 0) {
             lv_label_set_text(element_focused, "SD1");
-        } else if (strcasecmp(label_text, "SD1") == 0) {
+        } else if (strcasecmp(label_text, "SD1") == 0 && is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) {
             lv_label_set_text(element_focused, "SD2");
         } else if (strcasecmp(label_text, "NONE") == 0) {
             lv_label_set_text(element_focused, "SD1");
@@ -379,21 +358,20 @@ static void handle_toggle(void) {
 }
 
 static void handle_clear(void) {
-    if (msgbox_active)
-        return;
+    if (msgbox_active) return;
 
     play_sound(SND_CONFIRM);
 
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
-    const char *label_text = lv_label_get_text(element_focused);
-    int focused_index = get_focused_element_index(element_focused);
 
+    int focused_index = get_focused_element_index(element_focused);
     if (focused_index == BACKUP_TARGET_INDEX || focused_index == START_BACKUP_INDEX) {
         // If focused on Toggle Target or Start Backup, just return
         return;
-    } 
+    }
 
     // If SD1 or SD2, set to NONE
+    const char *label_text = lv_label_get_text(element_focused);
     if (strcasecmp(label_text, "SD1") == 0 || strcasecmp(label_text, "SD2") == 0) {
         lv_label_set_text(element_focused, "NONE");
     }
@@ -401,8 +379,7 @@ static void handle_clear(void) {
     nav_moved = 1;
 }
 
-static void handle_help(void)
-{
+static void handle_help(void) {
     if (msgbox_active) return;
 
     if (progress_onscreen == -1) {
@@ -412,29 +389,31 @@ static void handle_help(void)
 }
 
 static void adjust_panels() {
-    adjust_panel_priority((lv_obj_t *[]){
-        ui_pnlFooter,
-        ui_pnlHeader,
-        ui_pnlHelp,
-        ui_pnlProgressBrightness,
-        ui_pnlProgressVolume,
-        NULL});
+    adjust_panel_priority((lv_obj_t *[]) {
+            ui_pnlFooter,
+            ui_pnlHeader,
+            ui_pnlHelp,
+            ui_pnlProgressBrightness,
+            ui_pnlProgressVolume,
+            NULL
+    });
 }
 
 static void init_elements() {
     adjust_panels();
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]){
-        {ui_lblNavBGlyph, "", 0},
-        {ui_lblNavB, lang.GENERIC.BACK, 0},
-        {ui_lblNavXGlyph, "", 0},
-        {ui_lblNavX, lang.GENERIC.CHANGE, 0},
-        {ui_lblNavYGlyph, "", 0},
-        {ui_lblNavY, lang.GENERIC.CLEAR, 0},
-        {ui_lblNavAGlyph, "", 0},
-        {ui_lblNavA, lang.GENERIC.LAUNCH, 0},
-        {NULL, NULL, 0}});
+    setup_nav((struct nav_bar[]) {
+            {ui_lblNavBGlyph, "",                  0},
+            {ui_lblNavB,      lang.GENERIC.BACK,   0},
+            {ui_lblNavXGlyph, "",                  0},
+            {ui_lblNavX,      lang.GENERIC.CHANGE, 0},
+            {ui_lblNavYGlyph, "",                  0},
+            {ui_lblNavY,      lang.GENERIC.CLEAR,  0},
+            {ui_lblNavAGlyph, "",                  0},
+            {ui_lblNavA,      lang.GENERIC.LAUNCH, 0},
+            {NULL, NULL,                           0}
+    });
 
 #define BACKUP(NAME, UDATA) lv_obj_set_user_data(ui_lbl##NAME##_backup, UDATA);
     BACKUP_ELEMENTS
@@ -445,9 +424,7 @@ static void init_elements() {
 
 static void ui_refresh_task() {
     if (nav_moved) {
-        if (lv_group_get_obj_count(ui_group) > 0) 
-            adjust_wallpaper_element(ui_group, 0, GENERAL);
-        
+        if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
 
         struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
@@ -462,7 +439,7 @@ static void ui_refresh_task() {
             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
-        // Focused on Toggle Target label
+            // Focused on Toggle Target label
         } else if (focused_index == BACKUP_TARGET_INDEX) {
             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -470,7 +447,7 @@ static void ui_refresh_task() {
             lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
-        // Focused on any other backup path label
+            // Focused on any other backup path label
         } else {
             lv_obj_clear_flag(ui_lblNavX, LV_OBJ_FLAG_HIDDEN);
             lv_obj_clear_flag(ui_lblNavXGlyph, LV_OBJ_FLAG_HIDDEN);
@@ -481,8 +458,7 @@ static void ui_refresh_task() {
                 lv_obj_add_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(ui_lblNavAGlyph, LV_OBJ_FLAG_HIDDEN);
-            }
-            else {
+            } else {
                 lv_obj_clear_flag(ui_lblNavY, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(ui_lblNavYGlyph, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(ui_lblNavA, LV_OBJ_FLAG_HIDDEN);
