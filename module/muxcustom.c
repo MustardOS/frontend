@@ -30,8 +30,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblChime_custom,           lang.MUXCUSTOM.HELP.CHIME},
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static int populate_theme_alternates() {
@@ -153,7 +152,7 @@ static void init_navigation_group() {
     lv_dropdown_clear_options(ui_droThemeResolution_custom);
     lv_dropdown_add_option(ui_droThemeResolution_custom, lang.MUXCUSTOM.SCREEN, LV_DROPDOWN_POS_LAST);
     char theme_device_folder[MAX_BUFFER_SIZE];
-    for (int i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
+    for (int i = 0; i < A_SIZE(theme_resolutions); i++) {
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
                  STORAGE_THEME, theme_resolutions[i]);
         if (directory_exist(theme_device_folder)) {
@@ -349,7 +348,7 @@ static void handle_confirm() {
 
     save_custom_options();
 
-    for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(elements); i++) {
         if (strcasecmp(u_data, "themealternate") == 0) {
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themealternate");
             load_mux("custom");

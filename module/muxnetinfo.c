@@ -19,8 +19,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblTpTraffic_netinfo, lang.MUXNETINFO.HELP.TPTRAFFIC},
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static const char *get_hostname() {
@@ -200,7 +199,7 @@ static const char *get_channel_info() {
             // 6 GHz, maybe one day!
     };
 
-    for (size_t i = 0; i < sizeof(freq_table) / sizeof(freq_table[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(freq_table); i++) {
         if (freq_table[i].freq == freq) {
             static char info[64];
             snprintf(info, sizeof(info), "%d MHz - %s %d", freq, lang.GENERIC.CHANNEL, freq_table[i].channel);

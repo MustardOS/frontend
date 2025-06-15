@@ -23,7 +23,7 @@ static void update_storage_info() {
             {ui_pnlSystem_space,    ui_pnlSystemBar_space,    ui_lblSystemValue_space,    ui_barSystem_space,    device.STORAGE.ROOT.MOUNT}
     };
 
-    for (size_t i = 0; i < sizeof(storage_info) / sizeof(storage_info[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(storage_info); i++) {
         double total_space, free_space, used_space;
         get_storage_info(storage_info[i].partition, &total_space, &free_space, &used_space);
 

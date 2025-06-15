@@ -29,8 +29,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblSearchGlobal_search, lang.MUXSEARCH.HELP.GLOBAL},
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static void init_navigation_group() {
@@ -613,7 +612,7 @@ static void init_elements() {
             ui_lblNavX
     };
 
-    for (int i = 0; i < sizeof(nav_hide) / sizeof(nav_hide[0]); i++) {
+    for (int i = 0; i < A_SIZE(nav_hide); i++) {
         lv_obj_clear_flag(nav_hide[i], MU_OBJ_FLAG_HIDE_FLOAT);
     }
 

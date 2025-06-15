@@ -1,4 +1,4 @@
-#include "../common/options.h"
+#include "../common/common.h"
 #include "lookup.h"
 
 const char *lookup(const char *name) {
@@ -36,7 +36,7 @@ const char *r_lookup(const char *p_value) {
             r_lookup_w, r_lookup_x, r_lookup_y, r_lookup_z
     };
 
-    for (size_t i = 0; i < sizeof(lookups) / sizeof(lookups[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(lookups); i++) {
         const char *result = lookups[i](p_value);
         if (result) return result;
     }

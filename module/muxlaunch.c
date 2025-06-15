@@ -17,8 +17,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblShutdown_launch,   lang.MUXLAUNCH.HELP.SHUTDOWN},
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static void init_navigation_group_grid(lv_obj_t *ui_objects[], char *item_labels[], char *glyph_names[]) {
@@ -179,7 +178,7 @@ static void handle_a() {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     const char *u_data = lv_obj_get_user_data(element_focused);
 
-    for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(elements); i++) {
         if (!strcasecmp(u_data, elements[i].glyph_name)) {
             if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 play_sound(SND_ERROR);

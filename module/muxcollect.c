@@ -924,7 +924,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
         }
     }
 
-    set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
+    set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
     update_file_counter(ui_lblCounter_collect, file_count);

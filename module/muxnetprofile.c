@@ -173,7 +173,7 @@ static void create_profile_items() {
     char **file_names = NULL;
     size_t file_count = 0;
 
-    for (size_t dir_index = 0; dir_index < sizeof(profile_directories) / sizeof(profile_directories[0]); ++dir_index) {
+    for (size_t dir_index = 0; dir_index < A_SIZE(profile_directories); ++dir_index) {
         snprintf(profile_dir, sizeof(profile_dir), "%s/", profile_directories[dir_index]);
 
         DIR *pd = opendir(profile_dir);

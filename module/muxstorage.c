@@ -35,8 +35,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblUserInit_storage,         lang.MUXSTORAGE.HELP.USER_INIT},
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static void update_storage_info() {
@@ -102,7 +101,7 @@ static void update_storage_info() {
     storage_path[18].ui_label = ui_lblUserInitValue_storage;
 
     char dir[FILENAME_MAX];
-    for (int i = 0; i < sizeof(storage_path) / sizeof(storage_path[0]); i++) {
+    for (int i = 0; i < A_SIZE(storage_path); i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, storage_path[i].path_suffix);
         if (directory_exist(dir)) {
             lv_label_set_text(storage_path[i].ui_label, "SD2");

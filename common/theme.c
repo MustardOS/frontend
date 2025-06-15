@@ -984,7 +984,7 @@ void scale_theme(struct mux_device *device) {
     };
 
     char theme_device_folder[MAX_BUFFER_SIZE];
-    for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(dimensions); i++) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width,
                  dimensions[i].height);
@@ -1002,7 +1002,7 @@ void scale_theme(struct mux_device *device) {
         }
     }
 
-    for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(dimensions); i++) {
         if (target_width == dimensions[i].height && target_width == dimensions[i].width) continue;
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%dx%d", STORAGE_THEME, dimensions[i].width,
                  dimensions[i].height);
@@ -1057,7 +1057,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     int scheme_loaded = 0;
 
     if (theme_compat()) {
-        for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
+        for (size_t i = 0; i < A_SIZE(schemes); i++) {
             if (load_scheme(STORAGE_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
                 LOG_INFO("muxfrontend", "Loading STORAGE Theme Scheme: %s", scheme)
                 scheme_loaded = 1;
@@ -1073,7 +1073,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     }
 
     if (!scheme_loaded) {
-        for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); i++) {
+        for (size_t i = 0; i < A_SIZE(schemes); i++) {
             if (load_scheme(INTERNAL_THEME, mux_dimension, schemes[i], scheme, sizeof(scheme))) {
                 LOG_INFO("muxfrontend", "Loading INTERNAL Theme Scheme: %s", scheme)
                 scheme_loaded = 1;
@@ -1358,7 +1358,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.TEXT},
             {ui_rolComboSix,   theme.ROLL.TEXT},
     };
-    for (size_t i = 0; i < sizeof(roll_text_elements) / sizeof(roll_text_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_text_elements); ++i) {
         lv_obj_set_style_text_color(roll_text_elements[i].e, lv_color_hex(roll_text_elements[i].c),
                                     LV_PART_MAIN | LV_STATE_DEFAULT);
     }
@@ -1371,7 +1371,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.SELECT_TEXT},
             {ui_rolComboSix,   theme.ROLL.SELECT_TEXT},
     };
-    for (size_t i = 0; i < sizeof(roll_selected_text_elements) / sizeof(roll_selected_text_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_selected_text_elements); ++i) {
         lv_obj_set_style_text_color(roll_selected_text_elements[i].e, lv_color_hex(roll_selected_text_elements[i].c),
                                     LV_PART_SELECTED | LV_STATE_DEFAULT);
     }
@@ -1384,7 +1384,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.TEXT_ALPHA},
             {ui_rolComboSix,   theme.ROLL.TEXT_ALPHA},
     };
-    for (size_t i = 0; i < sizeof(roll_text_alpha_elements) / sizeof(roll_text_alpha_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_text_alpha_elements); ++i) {
         lv_obj_set_style_text_opa(roll_text_alpha_elements[i].e, roll_text_alpha_elements[i].c,
                                   LV_PART_MAIN | LV_STATE_DEFAULT);
     }
@@ -1397,8 +1397,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.SELECT_TEXT_ALPHA},
             {ui_rolComboSix,   theme.ROLL.SELECT_TEXT_ALPHA},
     };
-    for (size_t i = 0;
-         i < sizeof(roll_selected_text_alpha_elements) / sizeof(roll_selected_text_alpha_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_selected_text_alpha_elements); ++i) {
         lv_obj_set_style_text_opa(roll_selected_text_alpha_elements[i].e, roll_selected_text_alpha_elements[i].c,
                                   LV_PART_SELECTED | LV_STATE_DEFAULT);
     }
@@ -1411,7 +1410,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.BACKGROUND},
             {ui_rolComboSix,   theme.ROLL.BACKGROUND},
     };
-    for (size_t i = 0; i < sizeof(roll_background_elements) / sizeof(roll_background_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_background_elements); ++i) {
         lv_obj_set_style_bg_color(roll_background_elements[i].e, lv_color_hex(roll_background_elements[i].c),
                                   LV_PART_SELECTED | LV_STATE_DEFAULT);
     }
@@ -1424,7 +1423,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.BACKGROUND_ALPHA},
             {ui_rolComboSix,   theme.ROLL.BACKGROUND_ALPHA},
     };
-    for (size_t i = 0; i < sizeof(roll_background_alpha_elements) / sizeof(roll_background_alpha_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_background_alpha_elements); ++i) {
         lv_obj_set_style_bg_opa(roll_background_alpha_elements[i].e, roll_background_alpha_elements[i].c,
                                 LV_PART_SELECTED | LV_STATE_DEFAULT);
     }
@@ -1437,8 +1436,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.SELECT_BACKGROUND},
             {ui_rolComboSix,   theme.ROLL.SELECT_BACKGROUND},
     };
-    for (size_t i = 0;
-         i < sizeof(roll_selected_background_elements) / sizeof(roll_selected_background_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_selected_background_elements); ++i) {
         lv_obj_set_style_bg_color(roll_selected_background_elements[i].e,
                                   lv_color_hex(roll_selected_background_elements[i].c),
                                   LV_PART_SELECTED | LV_STATE_FOCUSED);
@@ -1452,8 +1450,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.SELECT_BACKGROUND_ALPHA},
             {ui_rolComboSix,   theme.ROLL.SELECT_BACKGROUND_ALPHA},
     };
-    for (size_t i = 0; i < sizeof(roll_selected_background_alpha_elements) /
-                           sizeof(roll_selected_background_alpha_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_selected_background_alpha_elements); ++i) {
         lv_obj_set_style_bg_opa(roll_selected_background_alpha_elements[i].e,
                                 roll_selected_background_alpha_elements[i].c,
                                 LV_PART_SELECTED | LV_STATE_FOCUSED);
@@ -1467,7 +1464,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.RADIUS},
             {ui_rolComboSix,   theme.ROLL.RADIUS},
     };
-    for (size_t i = 0; i < sizeof(roll_radius_elements) / sizeof(roll_radius_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_radius_elements); ++i) {
         lv_obj_set_style_radius(roll_radius_elements[i].e, roll_radius_elements[i].c,
                                 LV_PART_SELECTED | LV_STATE_DEFAULT);
     }
@@ -1479,7 +1476,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.SELECT_RADIUS},
             {ui_rolComboSix,   theme.ROLL.SELECT_RADIUS},
     };
-    for (size_t i = 0; i < sizeof(roll_selected_radius_elements) / sizeof(roll_selected_radius_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_selected_radius_elements); ++i) {
         lv_obj_set_style_radius(roll_selected_radius_elements[i].e, roll_selected_radius_elements[i].c,
                                 LV_PART_SELECTED | LV_STATE_FOCUSED);
     }
@@ -1492,7 +1489,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.BORDER_RADIUS},
             {ui_rolComboSix,   theme.ROLL.BORDER_RADIUS},
     };
-    for (size_t i = 0; i < sizeof(roll_border_radius_elements) / sizeof(roll_border_radius_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_border_radius_elements); ++i) {
         lv_obj_set_style_radius(roll_border_radius_elements[i].e, roll_border_radius_elements[i].c,
                                 LV_PART_MAIN | LV_STATE_FOCUSED);
     }
@@ -1505,7 +1502,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.BORDER_COLOUR},
             {ui_rolComboSix,   theme.ROLL.BORDER_COLOUR},
     };
-    for (size_t i = 0; i < sizeof(roll_border_colour_elements) / sizeof(roll_border_colour_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_border_colour_elements); ++i) {
         lv_obj_set_style_outline_color(roll_border_colour_elements[i].e, lv_color_hex(roll_border_colour_elements[i].c),
                                        LV_PART_MAIN | LV_STATE_FOCUSED);
     }
@@ -1518,7 +1515,7 @@ void apply_pass_theme(lv_obj_t *ui_rolComboOne, lv_obj_t *ui_rolComboTwo, lv_obj
             {ui_rolComboFive,  theme.ROLL.BORDER_ALPHA},
             {ui_rolComboSix,   theme.ROLL.BORDER_ALPHA},
     };
-    for (size_t i = 0; i < sizeof(roll_border_alpha_elements) / sizeof(roll_border_alpha_elements[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(roll_border_alpha_elements); ++i) {
         lv_obj_set_style_outline_opa(roll_border_alpha_elements[i].e, roll_border_alpha_elements[i].c,
                                      LV_PART_MAIN | LV_STATE_FOCUSED);
     }

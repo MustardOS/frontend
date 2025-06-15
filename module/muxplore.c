@@ -977,7 +977,7 @@ int muxplore_main(int index, char *dir) {
             {ui_lblNavMenu,      nav_vis},
             {ui_lblNavMenuGlyph, nav_vis}
     };
-    set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
+    set_nav_flags(nav_e, A_SIZE(nav_e));
 
     update_file_counter(ui_lblCounter_explore, file_count);
 

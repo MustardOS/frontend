@@ -208,7 +208,7 @@ static void handle_a() {
 
         int skip_toast = 0;
 
-        for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+        for (size_t i = 0; i < A_SIZE(elements); i++) {
             if (strcasecmp(items[current_item_index].name, elements[i].app_name) == 0) {
                 if (*(elements[i].kiosk_flag)) {
                     play_sound(SND_ERROR);

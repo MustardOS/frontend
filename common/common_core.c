@@ -84,7 +84,7 @@ void assign_core_single(char *rom_dir, char *core_dir, char *core, char *sys, ch
     snprintf(gov_path, sizeof(gov_path), "%s.gov", base_path);
 
     char *paths[] = {cfg_path, gov_path};
-    for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); ++i) if (file_exist(paths[i])) remove(paths[i]);
+    for (size_t i = 0; i < A_SIZE(paths); ++i) if (file_exist(paths[i])) remove(paths[i]);
 
     char *last_sub = get_last_subdir(rom_dir, '/', 4);
     char *trimmed_sys = str_trim(sys);

@@ -24,8 +24,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblTag_option,      lang.MUXOPTION.HELP.TAG},
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static void add_static_item(int index, const char *item_label, const char *item_value,
@@ -170,7 +169,7 @@ static void handle_confirm() {
     const char *u_data = lv_obj_get_user_data(element_focused);
     if (strcasecmp(u_data, "info_item") == 0) return;
 
-    for (size_t i = 0; i < sizeof(elements) / sizeof(elements[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(elements); i++) {
         if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
             if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 play_sound(SND_ERROR);

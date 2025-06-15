@@ -254,7 +254,7 @@ int muxshot_main() {
             {ui_lblNavX,      nav_hidden},
             {ui_lblNavXGlyph, nav_hidden}
     };
-    set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
+    set_nav_flags(nav_e, A_SIZE(nav_e));
 
     init_timer(ui_refresh_task, NULL);
 

@@ -269,7 +269,7 @@ void status_task() {
         --progress_onscreen;
     } else {
         lv_obj_t *panels[] = {ui_pnlProgressBrightness, ui_pnlProgressVolume};
-        for (size_t i = 0; i < sizeof(panels) / sizeof(panels[0]); ++i) {
+        for (size_t i = 0; i < A_SIZE(panels); ++i) {
             if (!lv_obj_has_flag(panels[i], LV_OBJ_FLAG_HIDDEN)) {
                 lv_obj_add_flag(panels[i], LV_OBJ_FLAG_HIDDEN);
             }

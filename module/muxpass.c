@@ -21,7 +21,7 @@ static void init_navigation_group() {
 
     ui_group = lv_group_create();
 
-    for (unsigned int i = 0; i < sizeof(ui_objects) / sizeof(ui_objects[0]); i++) {
+    for (unsigned int i = 0; i < A_SIZE(ui_objects); i++) {
         lv_group_add_obj(ui_group, ui_objects[i]);
     }
 }

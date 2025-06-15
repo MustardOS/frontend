@@ -24,8 +24,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblIdleSleep_power,   lang.MUXPOWER.HELP.IDLE_SLEEP},
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings() {
@@ -43,7 +42,7 @@ static void restore_tweak_options() {
 
     for (int i = 0; i < 2; i++) {
         int is_custom = 1;
-        for (size_t j = 0; j < sizeof(idle_values) / sizeof(idle_values[0]); j++) {
+        for (size_t j = 0; j < A_SIZE(idle_values); j++) {
             if (*config_values[i] == idle_values[j]) {
                 is_custom = 0;
                 break;

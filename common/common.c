@@ -937,9 +937,9 @@ int load_element_image_specifics(const char *theme_base, const char *mux_dimensi
     const char *dimensions[] = {mux_dimension, ""};
     const char *elements[] = {element, element_fallback};
 
-    for (size_t i = 0; i < sizeof(dimensions) / sizeof(dimensions[0]); ++i) {
-        for (size_t j = 0; j < sizeof(paths) / sizeof(paths[0]); ++j) {
-            for (size_t k = 0; k < sizeof(elements) / sizeof(elements[0]); ++k) {
+    for (size_t i = 0; i < A_SIZE(dimensions); ++i) {
+        for (size_t j = 0; j < A_SIZE(paths); ++j) {
+            for (size_t k = 0; k < A_SIZE(elements); ++k) {
                 int written;
 
                 switch (j) {
@@ -975,7 +975,7 @@ int load_image_specifics(const char *theme_base, const char *mux_dimension, cons
             "%s/%simage/%s/default.%s"
     };
 
-    for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); ++i) {
+    for (size_t i = 0; i < A_SIZE(paths); ++i) {
         int written;
 
         switch (i) {
@@ -1023,8 +1023,8 @@ int load_image_catalogue(const char *catalogue_name, const char *program, const 
     };
 
     const char *programs[] = {program, program_fallback};
-    for (size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); ++i) {
-        for (size_t j = 0; j < sizeof(programs) / sizeof(programs[0]); ++j) {
+    for (size_t i = 0; i < A_SIZE(paths); ++i) {
+        for (size_t j = 0; j < A_SIZE(programs); ++j) {
             int written;
 
             switch (i) {
@@ -1875,7 +1875,6 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
 int resolution_check(const char *zip_filename) {
     printf("Inspecting theme for supported resolutions: %s\n", zip_filename);
     const char *resolutions[] = {"640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720"};
-    size_t num_resolutions = sizeof(resolutions) / sizeof(resolutions[0]);
 
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
@@ -1901,7 +1900,7 @@ int resolution_check(const char *zip_filename) {
             folder_name[folder_length] = '\0';
 
             // Check if the folder name matches any target resolutions
-            for (size_t j = 0; j < num_resolutions; j++) {
+            for (size_t j = 0; j < A_SIZE(resolutions); j++) {
                 if (strcmp(folder_name, resolutions[j]) == 0) {
                     mz_zip_reader_end(&zip);
                     printf("Found supported resolution\n");

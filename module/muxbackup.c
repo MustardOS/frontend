@@ -42,8 +42,7 @@ static void show_help(lv_obj_t *element_focused)
         {ui_lblStartBackup_backup, lang.MUXBACKUP.HELP.START_BACKUP},
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static void update_backup_info() {
@@ -128,7 +127,7 @@ static void update_backup_info() {
     backup_path[18].shortname = "UserInit";
 
     char dir[FILENAME_MAX];
-    for (int i = 0; i < sizeof(backup_path) / sizeof(backup_path[0]); i++) {
+    for (int i = 0; i < A_SIZE(backup_path); i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, backup_path[i].path_suffix);
         if (directory_exist(dir)) {
             lv_label_set_text(backup_path[i].ui_label, "SD2");

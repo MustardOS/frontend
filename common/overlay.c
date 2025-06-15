@@ -80,7 +80,7 @@ int load_overlay_set(lv_obj_t *overlay_element) {
     char **selected_overlay;
     size_t overlay_count;
 
-    for (size_t i = 0; i < sizeof(overlay_map) / sizeof(overlay_map[0]); i++) {
+    for (size_t i = 0; i < A_SIZE(overlay_map); i++) {
         if (overlay_map[i].width == device.SCREEN.WIDTH && overlay_map[i].height == device.SCREEN.HEIGHT) {
             selected_overlay = overlay_map[i].overlay_list;
             overlay_count = overlay_map[i].overlay_count;

@@ -32,7 +32,7 @@ static void create_archive_items() {
             {".muxcfg", "CFG"}
     };
 
-    for (size_t dir_index = 0; dir_index < sizeof(archive_directories) / sizeof(archive_directories[0]); ++dir_index) {
+    for (size_t dir_index = 0; dir_index < A_SIZE(archive_directories); ++dir_index) {
         DIR *ad = opendir(archive_directories[dir_index]);
         if (!ad) continue;
 
@@ -43,7 +43,7 @@ static void create_archive_items() {
                 if (!last_dot) continue;
 
                 const char *prefix = NULL;
-                for (size_t i = 0; i < sizeof(ext_map) / sizeof(ext_map[0]); ++i) {
+                for (size_t i = 0; i < A_SIZE(ext_map); ++i) {
                     if (strcasecmp(last_dot, ext_map[i][0]) == 0) {
                         prefix = ext_map[i][1];
                         break;
@@ -92,14 +92,14 @@ static void create_archive_items() {
         if (!file_names[i]) continue;
 
         const char *prefix = NULL;
-        for (size_t j = 0; j < sizeof(mount_points) / sizeof(mount_points[0]); ++j) {
+        for (size_t j = 0; j < A_SIZE(mount_points); ++j) {
             if (strstr(base_filename, mount_points[j])) {
                 static char storage_prefix[MAX_BUFFER_SIZE];
 
                 const char *file_extension = strrchr(base_filename, '.');
                 const char *ext_type = NULL;
                 if (file_extension) {
-                    for (size_t i = 0; i < sizeof(ext_map) / sizeof(ext_map[0]); ++i) {
+                    for (size_t i = 0; i < A_SIZE(ext_map); ++i) {
                         if (strcasecmp(file_extension, ext_map[i][0]) == 0) {
                             ext_type = ext_map[i][1];
                             break;
@@ -308,7 +308,7 @@ int muxarchive_main() {
             {ui_lblNavA,      nav_hidden},
             {ui_lblNavAGlyph, nav_hidden}
     };
-    set_nav_flags(nav_e, sizeof(nav_e) / sizeof(nav_e[0]));
+    set_nav_flags(nav_e, A_SIZE(nav_e));
 
     init_timer(ui_refresh_task, NULL);
 

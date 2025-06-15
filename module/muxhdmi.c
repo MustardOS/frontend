@@ -19,8 +19,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblAudio_hdmi,      lang.MUXHDMI.HELP.AUDIO_OUTPUT}
     };
 
-    int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
-    gen_help(element_focused, help_messages, num_messages);
+    gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
 static void init_dropdown_settings() {
