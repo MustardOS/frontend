@@ -13,6 +13,7 @@
 
 #include <linux/limits.h>
 
+#include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/sysinfo.h>
 #include <sys/time.h>
