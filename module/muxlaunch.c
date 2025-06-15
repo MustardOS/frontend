@@ -376,7 +376,7 @@ static void handle_right() {
 static void launch_kiosk() {
     if (msgbox_active) return;
 
-    if (lv_group_get_focused(ui_group) == ui_lblConfig_launch) {
+    if (current_item_index == 5) { /* config */
         load_mux("kiosk");
 
         close_input();
