@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxdanger.h"
 
-#define UI_COUNT 8
+#define UI_COUNT 13
 
 #define DANGER(NAME, UDATA) static int NAME##_original;
     DANGER_ELEMENTS
@@ -15,8 +15,13 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblCachePressure_danger, lang.MUXDANGER.HELP.CACHE},
             {ui_lblNoMerge_danger,       lang.MUXDANGER.HELP.NOMERGE},
             {ui_lblNrRequests_danger,    lang.MUXDANGER.HELP.REQUESTS},
-            {ui_lblIoStats_danger,       lang.MUXDANGER.HELP.IOSTATS},
             {ui_lblReadAhead_danger,     lang.MUXDANGER.HELP.READAHEAD},
+            {ui_lblPageCluster_danger,   lang.MUXDANGER.HELP.PAGECLUSTER},
+            {ui_lblTimeSlice_danger,     lang.MUXDANGER.HELP.TIMESLICE},
+            {ui_lblIoStats_danger,       lang.MUXDANGER.HELP.IOSTATS},
+            {ui_lblIdleFlush_danger,     lang.MUXDANGER.HELP.IDLEFLUSH},
+            {ui_lblChildFirst_danger,    lang.MUXDANGER.HELP.CHILDFIRST},
+            {ui_lblTuneScale_danger,     lang.MUXDANGER.HELP.TUNESCALE},
     };
 
     int num_messages = sizeof(help_messages) / sizeof(help_messages[0]);
@@ -31,6 +36,10 @@ static void init_dropdown_settings() {
 
 static void restore_danger_options() {
     lv_dropdown_set_selected(ui_droIoStats_danger, config.DANGER.IOSTATS);
+    lv_dropdown_set_selected(ui_droIdleFlush_danger, config.DANGER.IDLEFLUSH);
+    lv_dropdown_set_selected(ui_droChildFirst_danger, config.DANGER.CHILDFIRST);
+    lv_dropdown_set_selected(ui_droTuneScale_danger, config.DANGER.TUNESCALE);
+    lv_dropdown_set_selected(ui_droPageCluster_danger, config.DANGER.PAGECLUSTER);
 
     map_drop_down_to_index(ui_droVmSwap_danger, config.DANGER.VMSWAP, four_values, 25, 3);
     map_drop_down_to_index(ui_droDirtyRatio_danger, config.DANGER.DIRTYRATIO, four_values, 25, 4);
@@ -39,12 +48,17 @@ static void restore_danger_options() {
     map_drop_down_to_index(ui_droNoMerge_danger, config.DANGER.MERGE, merge_values, 3, 2);
     map_drop_down_to_index(ui_droNrRequests_danger, config.DANGER.REQUESTS, request_values, 8, 1);
     map_drop_down_to_index(ui_droReadAhead_danger, config.DANGER.READAHEAD, read_ahead_values, 9, 6);
+    map_drop_down_to_index(ui_droTimeSlice_danger, config.DANGER.TIMESLICE, time_slice_values, 11, 1);
 }
 
 static void save_danger_options() {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(danger, IoStats, "danger/iostats", INT, 0);
+    CHECK_AND_SAVE_STD(danger, IdleFlush, "danger/idle_flush", INT, 0);
+    CHECK_AND_SAVE_STD(danger, ChildFirst, "danger/child_first", INT, 0);
+    CHECK_AND_SAVE_STD(danger, TuneScale, "danger/tune_scale", INT, 0);
+    CHECK_AND_SAVE_STD(danger, PageCluster, "danger/page_cluster", INT, 0);
 
     CHECK_AND_SAVE_MAP(danger, VmSwap, "danger/vmswap", four_values, 25, 3);
     CHECK_AND_SAVE_MAP(danger, DirtyRatio, "danger/dirty_ratio", four_values, 25, 4);
@@ -53,6 +67,7 @@ static void save_danger_options() {
     CHECK_AND_SAVE_MAP(danger, NoMerge, "danger/nomerges", merge_values, 3, 2);
     CHECK_AND_SAVE_MAP(danger, NrRequests, "danger/nr_requests", request_values, 8, 1);
     CHECK_AND_SAVE_MAP(danger, ReadAhead, "danger/read_ahead", read_ahead_values, 9, 6);
+    CHECK_AND_SAVE_MAP(danger, TimeSlice, "danger/time_slice", time_slice_values, 11, 1);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
@@ -69,6 +84,7 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
     char *read_ahead_options[] = {"64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384"};
+    char *time_slice_values[] = {"10", "100", "200", "300", "400", "500", "600", "700", "800", "900", "1000"};
 
     INIT_OPTION_ITEM(-1, danger, VmSwap, lang.MUXDANGER.VMSWAP, "vmswap", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, DirtyRatio, lang.MUXDANGER.DIRTYRATIO, "dirty-ratio", NULL, 0);
@@ -76,8 +92,13 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, danger, CachePressure, lang.MUXDANGER.CACHE, "cache", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, NoMerge, lang.MUXDANGER.NOMERGE, "merge", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, NrRequests, lang.MUXDANGER.REQUESTS, "requests", NULL, 0);
-    INIT_OPTION_ITEM(-1, danger, IoStats, lang.MUXDANGER.IOSTATS, "iostats", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, danger, ReadAhead, lang.MUXDANGER.READAHEAD, "readahead", read_ahead_options, 9);
+    INIT_OPTION_ITEM(-1, danger, PageCluster, lang.MUXDANGER.PAGECLUSTER, "cluster", NULL, 0);
+    INIT_OPTION_ITEM(-1, danger, TimeSlice, lang.MUXDANGER.TIMESLICE, "timeslice", time_slice_values, 11);
+    INIT_OPTION_ITEM(-1, danger, IoStats, lang.MUXDANGER.IOSTATS, "iostats", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, danger, IdleFlush, lang.MUXDANGER.IDLEFLUSH, "idleflush", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, danger, ChildFirst, lang.MUXDANGER.CHILDFIRST, "child", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, danger, TuneScale, lang.MUXDANGER.TUNESCALE, "tunescale", disabled_enabled, 2);
 
     char *four_values = generate_number_string(0, 100, 4, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droVmSwap_danger, four_values);
@@ -93,6 +114,10 @@ static void init_navigation_group() {
     char *request_values = generate_number_string(64, 512, 64, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droNrRequests_danger, request_values);
     free(request_values);
+
+    char *cluster_values = generate_number_string(0, 10, 1, NULL, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droPageCluster_danger, cluster_values);
+    free(cluster_values);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

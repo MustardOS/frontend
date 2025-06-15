@@ -31,3 +31,7 @@ const int request_values[] = {
 const int read_ahead_values[] = {
         64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384
 };
+
+const int time_slice_values[] = {
+        10, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000
+};

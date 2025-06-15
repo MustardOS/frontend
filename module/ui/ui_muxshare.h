@@ -85,8 +85,13 @@
     DANGER(CachePressure, "cache")       \
     DANGER(NoMerge,       "merge")       \
     DANGER(NrRequests,    "requests")    \
+    DANGER(ReadAhead,     "readahead")   \
+    DANGER(PageCluster,   "cluster")     \
+    DANGER(TimeSlice,     "timeslice")   \
     DANGER(IoStats,       "iostats")     \
-    DANGER(ReadAhead,     "readahead")
+    DANGER(IdleFlush,     "idleflush")   \
+    DANGER(ChildFirst,    "child")       \
+    DANGER(TuneScale,     "tunescale")
 
 #define INFO_ELEMENTS              \
     INFO(Screenshot, "screenshot") \

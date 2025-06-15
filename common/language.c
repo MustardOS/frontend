@@ -256,16 +256,26 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDANGER.CACHE, "Cache Reclamation");
     SPECIFIC_FIELD(lang->MUXDANGER.NOMERGE, "I/O Merge Policy");
     SPECIFIC_FIELD(lang->MUXDANGER.REQUESTS, "Queue Depth");
-    SPECIFIC_FIELD(lang->MUXDANGER.IOSTATS, "I/O Stats");
     SPECIFIC_FIELD(lang->MUXDANGER.READAHEAD, "Read Ahead Size");
+    SPECIFIC_FIELD(lang->MUXDANGER.PAGECLUSTER, "Swap Read-Ahead");
+    SPECIFIC_FIELD(lang->MUXDANGER.TIMESLICE, "Realtime Timeslice");
+    SPECIFIC_FIELD(lang->MUXDANGER.IOSTATS, "I/O Stats");
+    SPECIFIC_FIELD(lang->MUXDANGER.IDLEFLUSH, "Idle Flush Mode");
+    SPECIFIC_FIELD(lang->MUXDANGER.CHILDFIRST, "Fork Optimisation");
+    SPECIFIC_FIELD(lang->MUXDANGER.TUNESCALE, "Scheduler Scaling");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.VMSWAP, "Controls how aggressively the system swaps memory to disk\n\nLower values keep processes in RAM longer");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.DIRTYRATIO, "Percentage of RAM allowed to hold unwritten (dirty) data before forcing a write to disk");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.DIRTYBACK, "Background write back starts when dirty data exceeds this percentage of RAM\n\nLower values help reduce latency");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.CACHE, "Higher values reclaim cached file data more aggressively\n\nLower values improve performance for repeated file access");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.NOMERGE, "Controls how kernel merges I/O requests\n\nDisabling merges may benefit specific flash storage performance");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.REQUESTS, "Sets the maximum number of queued I/O requests per device\n\nHigher values increase throughput but use more RAM");
-    SPECIFIC_FIELD(lang->MUXDANGER.HELP.IOSTATS, "Enables or disables tracking of per-device I/O statistics\n\nDisabling may improve performance slightly");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.READAHEAD, "Amount of data preloaded in memory before it's requested\n\nLarger values improve sequential read performance");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.PAGECLUSTER, "Number of pages read ahead when swapping\n\nLower values = less latency, higher = more efficient bulk reads");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.TIMESLICE, "How long real-time tasks run before switching\n\nLower values favour responsiveness, higher values favour throughput");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.IOSTATS, "Enables or disables tracking of per-device I/O statistics\n\nDisabling may improve performance slightly");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.IDLEFLUSH, "Flushes dirty data on idle instead of using write back thresholds\n\nUseful for flash storage or reducing idle power");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.CHILDFIRST, "When enabled, a newly forked child process runs before the parent\n\nMay improve load times for some apps");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.TUNESCALE, "Automatically adjusts scheduler behaviour based on CPU count\n\nDisable for consistent tuning on devices");
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");

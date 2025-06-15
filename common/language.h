@@ -223,8 +223,13 @@ struct mux_lang {
         char CACHE[MAX_BUFFER_SIZE];
         char NOMERGE[MAX_BUFFER_SIZE];
         char REQUESTS[MAX_BUFFER_SIZE];
-        char IOSTATS[MAX_BUFFER_SIZE];
         char READAHEAD[MAX_BUFFER_SIZE];
+        char PAGECLUSTER[MAX_BUFFER_SIZE];
+        char TIMESLICE[MAX_BUFFER_SIZE];
+        char IOSTATS[MAX_BUFFER_SIZE];
+        char IDLEFLUSH[MAX_BUFFER_SIZE];
+        char CHILDFIRST[MAX_BUFFER_SIZE];
+        char TUNESCALE[MAX_BUFFER_SIZE];
         struct {
             char VMSWAP[MAX_BUFFER_SIZE];
             char DIRTYRATIO[MAX_BUFFER_SIZE];
@@ -232,8 +237,13 @@ struct mux_lang {
             char CACHE[MAX_BUFFER_SIZE];
             char NOMERGE[MAX_BUFFER_SIZE];
             char REQUESTS[MAX_BUFFER_SIZE];
-            char IOSTATS[MAX_BUFFER_SIZE];
             char READAHEAD[MAX_BUFFER_SIZE];
+            char PAGECLUSTER[MAX_BUFFER_SIZE];
+            char TIMESLICE[MAX_BUFFER_SIZE];
+            char IOSTATS[MAX_BUFFER_SIZE];
+            char IDLEFLUSH[MAX_BUFFER_SIZE];
+            char CHILDFIRST[MAX_BUFFER_SIZE];
+            char TUNESCALE[MAX_BUFFER_SIZE];
         } HELP;
     } MUXDANGER;
 

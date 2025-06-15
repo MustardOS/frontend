@@ -128,6 +128,11 @@ struct mux_config {
         int16_t REQUESTS;
         int16_t IOSTATS;
         int16_t READAHEAD;
+        int16_t IDLEFLUSH;
+        int16_t PAGECLUSTER;
+        int16_t CHILDFIRST;
+        int16_t TIMESLICE;
+        int16_t TUNESCALE;
     } DANGER;
 };
 

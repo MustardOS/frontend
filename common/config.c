@@ -131,6 +131,11 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->DANGER.CACHE, CONF_CONFIG_PATH "danger/cache_pressure", 64)
     CFG_INT_FIELD(config->DANGER.MERGE, CONF_CONFIG_PATH "danger/nomerges", 2)
     CFG_INT_FIELD(config->DANGER.REQUESTS, CONF_CONFIG_PATH "danger/nr_requests", 128)
-    CFG_INT_FIELD(config->DANGER.IOSTATS, CONF_CONFIG_PATH "danger/iostats", 0)
     CFG_INT_FIELD(config->DANGER.READAHEAD, CONF_CONFIG_PATH "danger/read_ahead", 4096)
+    CFG_INT_FIELD(config->DANGER.PAGECLUSTER, CONF_CONFIG_PATH "danger/page_cluster", 3)
+    CFG_INT_FIELD(config->DANGER.TIMESLICE, CONF_CONFIG_PATH "danger/time_slice", 10)
+    CFG_INT_FIELD(config->DANGER.IOSTATS, CONF_CONFIG_PATH "danger/iostats", 0)
+    CFG_INT_FIELD(config->DANGER.IDLEFLUSH, CONF_CONFIG_PATH "danger/idle_flush", 0)
+    CFG_INT_FIELD(config->DANGER.CHILDFIRST, CONF_CONFIG_PATH "danger/child_first", 0)
+    CFG_INT_FIELD(config->DANGER.TUNESCALE, CONF_CONFIG_PATH "danger/tune_scale", 1)
 }
