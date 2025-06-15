@@ -22,15 +22,10 @@ typedef struct {
 } ModuleEntry;
 
 static void cleanup_screen() {
-    if (toast_timer != NULL) {
-        lv_timer_del(toast_timer);
-        toast_timer = NULL;
-    }
-
-    if (counter_timer != NULL) {
-        lv_timer_del(counter_timer);
-        counter_timer = NULL;
-    }
+    SAFE_DELETE(toast_timer, lv_timer_del);
+    SAFE_DELETE(counter_timer, lv_timer_del);
+    SAFE_DELETE(key_entry, lv_obj_del);
+    SAFE_DELETE(num_entry, lv_obj_del);
 
     if (ui_screen_container == NULL) return;
 

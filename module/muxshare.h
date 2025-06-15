@@ -167,6 +167,14 @@ int muxvisual_main();
 
 int muxwebserv_main();
 
+#define SAFE_DELETE(ELEMENT, DEL_FUNC) \
+    do {                               \
+        if ((ELEMENT) != NULL) {       \
+            DEL_FUNC(ELEMENT);         \
+            (ELEMENT) = NULL;          \
+        }                              \
+    } while (0)
+
 #define INIT_OPTION_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, OPTION, COUNT)          \
     do {                                                                            \
         int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                 \
