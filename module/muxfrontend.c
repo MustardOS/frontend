@@ -338,6 +338,7 @@ static const ModuleEntry modules[] = {
         {"tester",      "info",     "muxtester",     muxtester_main,     NULL},
         {"sysinfo",     "info",     "muxsysinfo",    muxsysinfo_main,    NULL},
         {"netinfo",     "info",     "muxnetinfo",    muxnetinfo_main,    NULL},
+        {"text",        "info",     "muxtext",       muxtext_main,       NULL},
 
         // this is required because it is the end of the table!
         {NULL,         NULL, NULL, NULL,                                 NULL}

@@ -45,6 +45,7 @@ void load_lang(struct mux_lang *lang) {
 
     // generic common language
     GENERIC_FIELD(lang->GENERIC.BACK, "Back");
+    GENERIC_FIELD(lang->GENERIC.TOP, "Top");
     GENERIC_FIELD(lang->GENERIC.CLEAR, "Clear");
     GENERIC_FIELD(lang->GENERIC.COLLECT, "Collect");
     GENERIC_FIELD(lang->GENERIC.DIRECTORY, "Directory");

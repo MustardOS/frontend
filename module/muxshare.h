@@ -152,6 +152,8 @@ int muxstorage_main();
 
 int muxsysinfo_main();
 
+int muxtext_main();
+
 int muxtag_main(int nothing, char *name, char *dir, char *sys);
 
 int muxtask_main(char *ex_dir);
