@@ -316,6 +316,5 @@
     WEBSERV(SftpGo,     "sftpgo")     \
     WEBSERV(Ttyd,       "ttyd")       \
     WEBSERV(Syncthing,  "syncthing")  \
-    WEBSERV(RslSync,    "rslsync")    \
     WEBSERV(Ntp,        "ntp")        \
     WEBSERV(Tailscaled, "tailscaled")

@@ -974,7 +974,6 @@ struct mux_lang {
         char SYNCTHING[MAX_BUFFER_SIZE];
         char SHELL[MAX_BUFFER_SIZE];
         char SFTP[MAX_BUFFER_SIZE];
-        char RESILIO[MAX_BUFFER_SIZE];
         char TAILSCALE[MAX_BUFFER_SIZE];
         struct {
             char NTP[MAX_BUFFER_SIZE];
@@ -982,7 +981,6 @@ struct mux_lang {
             char SYNCTHING[MAX_BUFFER_SIZE];
             char SHELL[MAX_BUFFER_SIZE];
             char SFTP[MAX_BUFFER_SIZE];
-            char RESILIO[MAX_BUFFER_SIZE];
             char TAILSCALE[MAX_BUFFER_SIZE];
         } HELP;
     } MUXWEBSERV;

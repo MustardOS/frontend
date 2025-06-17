@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxwebserv.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 6
 
 #define WEBSERV(NAME, UDATA) static int NAME##_original;
     WEBSERV_ELEMENTS
@@ -13,7 +13,6 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblSftpGo_webserv,     lang.MUXWEBSERV.HELP.SFTP},
             {ui_lblTtyd_webserv,       lang.MUXWEBSERV.HELP.TERMINAL},
             {ui_lblSyncthing_webserv,  lang.MUXWEBSERV.HELP.SYNCTHING},
-            {ui_lblRslSync_webserv,    lang.MUXWEBSERV.HELP.RESILIO},
             {ui_lblNtp_webserv,        lang.MUXWEBSERV.HELP.NTP},
             {ui_lblTailscaled_webserv, lang.MUXWEBSERV.HELP.TAILSCALE},
     };
@@ -32,7 +31,6 @@ static void restore_web_options() {
     lv_dropdown_set_selected(ui_droSftpGo_webserv, config.WEB.SFTPGO);
     lv_dropdown_set_selected(ui_droTtyd_webserv, config.WEB.TTYD);
     lv_dropdown_set_selected(ui_droSyncthing_webserv, config.WEB.SYNCTHING);
-    lv_dropdown_set_selected(ui_droRslSync_webserv, config.WEB.RSLSYNC);
     lv_dropdown_set_selected(ui_droNtp_webserv, config.WEB.NTP);
     lv_dropdown_set_selected(ui_droTailscaled_webserv, config.WEB.TAILSCALED);
 }
@@ -44,7 +42,6 @@ static void save_web_options() {
     CHECK_AND_SAVE_STD(webserv, SftpGo, "web/sftpgo", INT, 0);
     CHECK_AND_SAVE_STD(webserv, Ttyd, "web/ttyd", INT, 0);
     CHECK_AND_SAVE_STD(webserv, Syncthing, "web/syncthing", INT, 0);
-    CHECK_AND_SAVE_STD(webserv, RslSync, "web/rslsync", INT, 0);
     CHECK_AND_SAVE_STD(webserv, Ntp, "web/ntp", INT, 0);
     CHECK_AND_SAVE_STD(webserv, Tailscaled, "web/tailscaled", INT, 0);
 
@@ -69,7 +66,6 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, webserv, SftpGo, lang.MUXWEBSERV.SFTP, "sftpgo", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, webserv, Ttyd, lang.MUXWEBSERV.TERMINAL, "ttyd", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, webserv, Syncthing, lang.MUXWEBSERV.SYNCTHING, "syncthing", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, webserv, RslSync, lang.MUXWEBSERV.RESILIO, "rslsync", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, webserv, Ntp, lang.MUXWEBSERV.NTP, "ntp", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, webserv, Tailscaled, lang.MUXWEBSERV.TAILSCALE, "tailscaled", disabled_enabled, 2);
 

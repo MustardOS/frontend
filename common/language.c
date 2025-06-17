@@ -833,14 +833,12 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXWEBSERV.SYNCTHING, "Syncthing");
     SPECIFIC_FIELD(lang->MUXWEBSERV.SHELL, "Secure Shell");
     SPECIFIC_FIELD(lang->MUXWEBSERV.SFTP, "SFTP + Filebrowser");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.RESILIO, "Resilio");
     SPECIFIC_FIELD(lang->MUXWEBSERV.TAILSCALE, "Tailscale");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.NTP, "Toggle network time protocol for active network connections");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TERMINAL, "Toggle virtual terminal - WebUI can be found on port 8080");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SYNCTHING, "Toggle Syncthing - WebUI can be found on port 7070");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SHELL, "Toggle SSH support - Access via port 22");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.SFTP, "Toggle SFTP support - WebUI can be found on port 9090");
-    SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.RESILIO, "Toggle Resilio - WebUI can be found on port 6060");
     SPECIFIC_FIELD(lang->MUXWEBSERV.HELP.TAILSCALE, "Toggle Tailscale - Need to login via SSH first to configure it");
 
 #undef SYSTEM_FIELD
