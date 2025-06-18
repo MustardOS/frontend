@@ -1,6 +1,8 @@
 #include "muxshare.h"
 #include "ui/ui_muxtext.h"
 
+#define TEXT_FILE "/tmp/mux_text_read"
+
 static void scroll_textarea(int step) {
     lv_coord_t y = lv_obj_get_scroll_y(ui_txtDocument_text);
     lv_coord_t max = lv_obj_get_height(lv_textarea_get_label(ui_txtDocument_text))
@@ -96,11 +98,13 @@ static void ui_refresh_task() {
 }
 
 int muxtext_main() {
+    if (!file_exist(TEXT_FILE)) return 1;
+
     init_module("muxtext");
 
     init_theme(1, 1);
 
-    init_ui_common_screen(&theme, &device, &lang, "TEXTY TEXT");
+    init_ui_common_screen(&theme, &device, &lang, read_line_char_from(TEXT_FILE, 1));
     init_muxtext(ui_pnlContent, &theme);
     init_elements();
 
@@ -111,6 +115,9 @@ int muxtext_main() {
 
     init_fonts();
     init_timer(ui_refresh_task, NULL);
+
+    lv_textarea_set_text(ui_txtDocument_text, read_all_char_from(read_line_char_from(TEXT_FILE, 2)));
+    handle_x();
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
