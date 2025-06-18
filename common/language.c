@@ -318,13 +318,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXINFO.SCREENSHOT, "Screenshots");
     SPECIFIC_FIELD(lang->MUXINFO.SPACE, "Storage Space");
     SPECIFIC_FIELD(lang->MUXINFO.INPUT, "Input Tester");
-    SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters");
+    SPECIFIC_FIELD(lang->MUXINFO.CREDIT, "Supporters and Credits");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SYSINFO, "Access version information and system details");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.NETINFO, "Access network information");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SCREENSHOT, "View all of the screenshots taken on the device");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.SPACE, "View the current used space of the mounted storage devices");
     SPECIFIC_FIELD(lang->MUXINFO.HELP.INPUT, "Test the controls of the device");
-    SPECIFIC_FIELD(lang->MUXINFO.HELP.CREDIT, "View all of the current muOS supporters");
+    SPECIFIC_FIELD(lang->MUXINFO.HELP.CREDIT, "View all of the current muOS supporters and extra credits");
 
     // muxkiosk
     SPECIFIC_FIELD(lang->MUXKIOSK.TITLE, "KIOSK SETTINGS");
