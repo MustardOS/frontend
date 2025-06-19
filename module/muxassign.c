@@ -262,7 +262,7 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     strcpy(core_launch, get_ini_string(local_ini, selected_item, "core", "none"));
     LOG_INFO(mux_module, "Content Core Launcher: %s", core_launch)
 
-    create_core_assignment(rom_dir, core_launch, core_catalogue, rom_name,
+    create_core_assignment(selected_item, rom_dir, core_launch, core_catalogue, rom_name,
                            core_governor, core_lookup, assignment_mode);
 
     mini_free(global_ini);

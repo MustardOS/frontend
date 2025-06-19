@@ -27,12 +27,15 @@ static void check_for_disable_grid_file(char *item_curr_dir) {
     nogrid_file_exists = file_exist(no_grid_path);
 }
 
-static char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue, int line_lookup) {
+static char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line_catalogue,
+                        int line_lookup, int line_launch) {
     const char *core_line = read_line_char_from(core_path, line_core) ?: "unknown";
     const char *catalogue_line = read_line_char_from(core_path, line_catalogue) ?: "unknown";
     const char *lookup_line = read_line_char_from(core_path, line_lookup) ?: "unknown";
+    const char *launch_line = read_line_char_from(core_path, line_launch) ?: "unknown";
 
-    size_t required_size = snprintf(NULL, 0, "%s\n%s\n%s", core_line, catalogue_line, lookup_line) + 1;
+    size_t required_size = snprintf(NULL, 0, "%s\n%s\n%s\n%s",
+                                    core_line, catalogue_line, lookup_line, launch_line) + 1;
 
     char *b_core = malloc(required_size);
     if (!b_core) {
@@ -40,7 +43,9 @@ static char *build_core(char core_path[MAX_BUFFER_SIZE], int line_core, int line
         return NULL;
     }
 
-    snprintf(b_core, required_size, "%s\n%s\n%s", core_line, catalogue_line, lookup_line);
+    snprintf(b_core, required_size, "%s\n%s\n%s\n%s",
+             core_line, catalogue_line, lookup_line, launch_line);
+
     return b_core;
 }
 
@@ -57,7 +62,7 @@ static char *load_content_core(int force, int run_quit) {
         if (file_exist(content_core) && !force) {
             LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core)
 
-            char *core = build_core(content_core, 2, 3, 4);
+            char *core = build_core(content_core, 2, 3, 4, 8);
             if (core) return core;
 
             LOG_ERROR(mux_module, "Failed to build individual core")
@@ -69,7 +74,7 @@ static char *load_content_core(int force, int run_quit) {
     if (file_exist(content_core) && !force) {
         LOG_SUCCESS(mux_module, "Loading Global Core: %s", content_core)
 
-        char *core = build_core(content_core, 1, 2, 3);
+        char *core = build_core(content_core, 1, 2, 3, 4);
         if (core) return core;
 
         LOG_ERROR(mux_module, "Failed to build global core")

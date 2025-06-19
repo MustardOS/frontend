@@ -32,7 +32,7 @@ char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
     return get_content_line(rom_dir, NULL, "cfg", 2);
 }
 
-void write_core_file(char *path, char *core, char *sys, int lookup,
+void write_core_file(char *def_core, char *path, char *core, char *sys, int lookup,
                      char *rom_name, char *rom_mount, char *rom_base, char *rom_full) {
     FILE *f = fopen(path, "w");
     if (!f) {
@@ -41,13 +41,13 @@ void write_core_file(char *path, char *core, char *sys, int lookup,
     }
 
     if (rom_name) {
-        fprintf(f, "%s\n%s\n%s\n%d\n%s\n%s\n%s",
-                rom_name, core, sys, lookup, rom_mount, rom_base, rom_full);
-        LOG_INFO(mux_module, "Assign Content (Single): %s|%s|%s|%d|%s|%s|%s",
-                 rom_name, core, sys, lookup, rom_mount, rom_base, rom_full)
+        fprintf(f, "%s\n%s\n%s\n%d\n%s\n%s\n%s\n%s",
+                rom_name, core, sys, lookup, rom_mount, rom_base, rom_full, def_core);
+        LOG_INFO(mux_module, "Assign Content (Single): %s|%s|%s|%d|%s|%s|%s|%s",
+                 rom_name, core, sys, lookup, rom_mount, rom_base, rom_full, def_core)
     } else {
-        fprintf(f, "%s\n%s\n%d", core, sys, lookup);
-        LOG_INFO(mux_module, "Assign Content: %s|%s|%d", core, sys, lookup)
+        fprintf(f, "%s\n%s\n%d\n%s", core, sys, lookup, def_core);
+        LOG_INFO(mux_module, "Assign Content: %s|%s|%d|%s", core, sys, lookup, def_core)
     }
 
     fclose(f);
@@ -71,7 +71,8 @@ void write_gov_file(char *path, char *gov, char *rom_name) {
     fclose(f);
 }
 
-void assign_core_single(char *rom_dir, char *core_dir, char *core, char *sys, char *rom, char *gov, int lookup) {
+void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *core,
+                        char *sys, char *rom, char *gov, int lookup) {
     char base_path[MAX_BUFFER_SIZE];
     char *rom_no_ext = strip_ext(rom);
 
@@ -89,11 +90,13 @@ void assign_core_single(char *rom_dir, char *core_dir, char *core, char *sys, ch
     char *last_sub = get_last_subdir(rom_dir, '/', 4);
     char *trimmed_sys = str_trim(sys);
 
-    write_core_file(cfg_path, core, trimmed_sys, lookup, rom_no_ext, str_replace(rom_dir, last_sub, ""), last_sub, rom);
+    write_core_file(def_core, cfg_path, core, trimmed_sys, lookup, rom_no_ext,
+                    str_replace(rom_dir, last_sub, ""), last_sub, rom);
     write_gov_file(gov_path, gov, rom_no_ext);
 }
 
-void assign_core_directory(char *core_dir, char *core, char *sys, char *gov, int lookup, int purge) {
+void assign_core_directory(char *def_core, char *core_dir, char *core,
+                           char *sys, char *gov, int lookup, int purge) {
     if (purge) {
         delete_files_of_type(core_dir, ".cfg", NULL, 0);
         delete_files_of_type(core_dir, ".gov", NULL, 0);
@@ -101,18 +104,19 @@ void assign_core_directory(char *core_dir, char *core, char *sys, char *gov, int
 
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/core.cfg", core_dir);
-    write_core_file(core_file, core, str_trim(sys), lookup, NULL, NULL, NULL, NULL);
+    write_core_file(def_core, core_file, core, str_trim(sys), lookup, NULL, NULL, NULL, NULL);
 
     char gov_file[MAX_BUFFER_SIZE];
     snprintf(gov_file, sizeof(gov_file), "%s/core.gov", core_dir);
     write_gov_file(gov_file, gov, NULL);
 }
 
-void assign_core_parent(char *rom_dir, char *core_dir, char *core, char *sys, char *gov, int lookup) {
+void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, char *core,
+                        char *sys, char *gov, int lookup) {
     delete_files_of_type(core_dir, ".cfg", NULL, 1);
     delete_files_of_type(core_dir, ".gov", NULL, 1);
 
-    assign_core_directory(core_dir, core, sys, gov, lookup, 1);
+    assign_core_directory(def_core, core_dir, core, sys, gov, lookup, 1);
 
     char **subdirs = get_subdirectories(rom_dir);
     if (!subdirs) return;
@@ -125,7 +129,7 @@ void assign_core_parent(char *rom_dir, char *core_dir, char *core, char *sys, ch
 
         char subdir_core[MAX_BUFFER_SIZE];
         snprintf(subdir_core, sizeof(subdir_core), "%s/%s/core.cfg", core_dir, subdirs[i]);
-        write_core_file(subdir_core, core, str_trim(sys), lookup, NULL, NULL, NULL, NULL);
+        write_core_file(def_core, subdir_core, core, str_trim(sys), lookup, NULL, NULL, NULL, NULL);
 
         char subdir_gov[MAX_BUFFER_SIZE];
         snprintf(subdir_gov, sizeof(subdir_gov), "%s/%s/core.gov", core_dir, subdirs[i]);
@@ -135,7 +139,7 @@ void assign_core_parent(char *rom_dir, char *core_dir, char *core, char *sys, ch
     free_subdirectories(subdirs);
 }
 
-void create_core_assignment(char *rom_dir, char *core, char *sys, char *rom,
+void create_core_assignment(char* def_core, char *rom_dir, char *core, char *sys, char *rom,
                             char *gov, int lookup, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s",
@@ -145,16 +149,16 @@ void create_core_assignment(char *rom_dir, char *core, char *sys, char *rom,
 
     switch (method) {
         case SINGLE:
-            assign_core_single(rom_dir, core_dir, core, sys, rom, gov, lookup);
+            assign_core_single(def_core, rom_dir, core_dir, core, sys, rom, gov, lookup);
             break;
         case PARENT:
-            assign_core_parent(rom_dir, core_dir, core, sys, gov, lookup);
+            assign_core_parent(def_core, rom_dir, core_dir, core, sys, gov, lookup);
             break;
         case DIRECTORY:
-            assign_core_directory(core_dir, core, sys, gov, lookup, 1);
+            assign_core_directory(def_core, core_dir, core, sys, gov, lookup, 1);
             break;
         case DIRECTORY_NO_WIPE:
-            assign_core_directory(core_dir, core, sys, gov, lookup, 0);
+            assign_core_directory(def_core, core_dir, core, sys, gov, lookup, 0);
             break;
     }
 
@@ -252,7 +256,7 @@ bool automatic_assign_core(char *rom_dir) {
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Lookup: %d", core_lookup)
                     }
 
-                    create_core_assignment(rom_dir, auto_core, core_catalogue, "",
+                    create_core_assignment(def_core, rom_dir, auto_core, core_catalogue, "",
                                            core_governor, core_lookup, DIRECTORY);
 
                     auto_assign_good = 1;
