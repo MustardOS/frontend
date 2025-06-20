@@ -327,7 +327,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
         }
 
         char assign_file[MAX_BUFFER_SIZE];
-        snprintf(assign_file, sizeof(assign_file), "%s/%s.json",
+        snprintf(assign_file, sizeof(assign_file), "%s/%s/assign.json",
                  device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN);
 
         if (json_valid(read_all_char_from(assign_file))) {
