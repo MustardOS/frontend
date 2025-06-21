@@ -25,6 +25,8 @@ extern Mix_Music *current_bgm;
 extern int current_brightness;
 extern int current_volume;
 
+extern char *theme_back_compat[];
+
 extern char *disabled_enabled[];
 
 #define SOUND_TOTAL 12

@@ -5,8 +5,9 @@ static char sys_dir[PATH_MAX];
 static char picker_type[32];
 static char *picker_extension;
 
-#define TEMP_PREVIEW "/tmp/preview.png"
-#define TEMP_VERSION "/tmp/version.txt"
+#define TEMP_PREVIEW "preview.png"
+#define TEMP_VERSION "version.txt"
+#define TEMP_CREDITS "credits.txt"
 
 static void show_help() {
     if (items[current_item_index].content_type == FOLDER) return;
@@ -17,8 +18,8 @@ static void show_help() {
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s", sys_dir, picker_name, picker_extension);
 
     char credits[MAX_BUFFER_SIZE];
-    if (extract_file_from_zip(picker_archive, "credits.txt", "/tmp/credits.txt")) {
-        strcpy(credits, read_all_char_from("/tmp/credits.txt"));
+    if (extract_file_from_zip(picker_archive, TEMP_CREDITS, "/tmp/" TEMP_CREDITS)) {
+        strcpy(credits, read_all_char_from("/tmp/" TEMP_CREDITS));
     } else {
         strcpy(credits, lang.MUXPICKER.NONE.CREDIT);
     }
@@ -30,9 +31,14 @@ static int version_check() {
     char picker_archive[MAX_BUFFER_SIZE];
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
-    if (!extract_file_from_zip(picker_archive, "version.txt", TEMP_VERSION)) return 0;
+    if (!extract_file_from_zip(picker_archive, TEMP_VERSION, "/tmp/" TEMP_VERSION)) return 0;
 
-    return str_startswith(config.SYSTEM.VERSION, read_line_char_from(TEMP_VERSION, 1));
+    const char *theme_version = read_line_char_from("/tmp/" TEMP_VERSION, 1);
+    for (int i = 0; theme_back_compat[i] != NULL; i++) {
+        if (str_startswith(theme_version, theme_back_compat[i])) return 1;
+    }
+
+    return 0;
 }
 
 static int extract_preview() {
@@ -41,20 +47,19 @@ static int extract_preview() {
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
 
     char device_preview[PATH_MAX];
-    snprintf(device_preview, sizeof(device_preview), "%spreview.png", mux_dimension);
-    return extract_file_from_zip(picker_archive, device_preview, TEMP_PREVIEW);
+    snprintf(device_preview, sizeof(device_preview), "%s" TEMP_PREVIEW, mux_dimension);
+    return extract_file_from_zip(picker_archive, device_preview, "/tmp/" TEMP_PREVIEW);
 }
 
 static void image_refresh() {
     if (items[current_item_index].content_type == FOLDER) return;
 
-    // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
     if (!extract_preview()) {
         lv_img_set_src(ui_imgBox, &ui_image_Missing);
     } else {
-        lv_img_set_src(ui_imgBox, "M:" TEMP_PREVIEW);
+        lv_img_set_src(ui_imgBox, "M:/tmp/" TEMP_PREVIEW);
     }
 }
 
@@ -204,9 +209,8 @@ static void handle_confirm() {
 
         if (exec) {
             config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-            if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "theme")) {
-                play_silence_bgm();
-            }
+            if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "theme")) play_silence_bgm();
+
             run_exec(exec, exec_count, 0);
         }
         free(exec);

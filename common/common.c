@@ -66,6 +66,12 @@ size_t bgm_file_count = 0;
 int current_brightness = 0;
 int current_volume = 0;
 
+char *theme_back_compat[] = {
+        config.SYSTEM.VERSION,
+        "2502",
+        NULL
+};
+
 char *disabled_enabled[] = {
         lang.GENERIC.DISABLED,
         lang.GENERIC.ENABLED
@@ -95,7 +101,7 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     if (!exec) return NULL;
 
     size_t i = 0;
-    exec[i++] = (INTERNAL_PATH "extra/muterm");
+    exec[i++] = (INTERNAL_PATH "frontend/muterm");
     exec[i++] = "-s";
     exec[i++] = (char *) theme.TERMINAL.FONT_SIZE;
 
@@ -1872,14 +1878,14 @@ char *get_script_value(const char *filename, const char *key, const char *not_fo
     return value;
 }
 
-int resolution_check(const char *zip_filename) {
-    printf("Inspecting theme for supported resolutions: %s\n", zip_filename);
+int resolution_check(const char *filename) {
+    printf("Inspecting theme for supported resolutions: %s\n", filename);
     const char *resolutions[] = {"640x480", "720x480", "720x576", "720x720", "1024x768", "1280x720"};
 
     mz_zip_archive zip;
     mz_zip_zero_struct(&zip);
 
-    if (!mz_zip_reader_init_file(&zip, zip_filename, 0)) {
+    if (!mz_zip_reader_init_file(&zip, filename, 0)) {
         printf("Failed to open ZIP archive!\n");
         return 0;
     }
@@ -1889,9 +1895,9 @@ int resolution_check(const char *zip_filename) {
         if (!mz_zip_reader_file_stat(&zip, i, &file_stat)) continue;
 
         const char *filename = file_stat.m_filename;
-        char *slash_pos = strchr(filename, '/'); // Find first '/'
+        char *slash_pos = strchr(filename, '/');
 
-        if (slash_pos && slash_pos == strrchr(filename, '/')) { // Ensure it's a root folder
+        if (slash_pos && slash_pos == strrchr(filename, '/')) {
             size_t folder_length = slash_pos - filename;
 
             // Extract folder name
@@ -1904,17 +1910,19 @@ int resolution_check(const char *zip_filename) {
                 if (strcmp(folder_name, resolutions[j]) == 0) {
                     mz_zip_reader_end(&zip);
                     printf("Found supported resolution\n");
-                    return 1;  // Found a match, exit early
+                    return 1;
                 }
             }
         }
     }
+
     mz_zip_reader_end(&zip);
     printf("No supported resolutions found\n");
+
     return 0;
 }
 
-int extract_file_from_zip(const char *zip_path, const char *file_name, const char *output_path) {
+int extract_file_from_zip(const char *zip_path, const char *filename, const char *output) {
     mz_zip_archive zip;
     memset(&zip, 0, sizeof(zip));
 
@@ -1923,15 +1931,15 @@ int extract_file_from_zip(const char *zip_path, const char *file_name, const cha
         return 0;
     }
 
-    int file_index = mz_zip_reader_locate_file(&zip, file_name, NULL, 0);
+    int file_index = mz_zip_reader_locate_file(&zip, filename, NULL, 0);
     if (file_index == -1) {
-        LOG_ERROR(mux_module, "File '%s' not found in archive", file_name)
+        LOG_ERROR(mux_module, "File '%s' not found in archive", filename)
         mz_zip_reader_end(&zip);
         return 0;
     }
 
-    if (!mz_zip_reader_extract_to_file(&zip, file_index, output_path, 0)) {
-        LOG_ERROR(mux_module, "File '%s' could not be extracted", file_name)
+    if (!mz_zip_reader_extract_to_file(&zip, file_index, output, 0)) {
+        LOG_ERROR(mux_module, "File '%s' could not be extracted", filename)
         mz_zip_reader_end(&zip);
         return 0;
     }
@@ -2506,11 +2514,10 @@ int theme_compat() {
 
     if (file_exist(theme_version_file)) {
         char *theme_version = read_line_char_from(theme_version_file, 1);
-        if (strstr(config.SYSTEM.VERSION, theme_version)) {
-            return 1;
-        } else {
-            LOG_WARN(mux_module, "Incompatible Theme Detected: %s", theme_version)
+        for (int i = 0; theme_back_compat[i] != NULL; i++) {
+            if (str_startswith(theme_version, theme_back_compat[i])) return 1;
         }
+        LOG_WARN(mux_module, "Incompatible Theme Detected: %s", theme_version)
     } else {
         LOG_WARN(mux_module, "Missing Theme Version File or Version Content")
     }
