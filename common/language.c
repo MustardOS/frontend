@@ -81,8 +81,8 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.CHANNEL, "Channel");
     GENERIC_FIELD(lang->GENERIC.USE, "Use");
     GENERIC_FIELD(lang->GENERIC.USER_DEFINED, "User Defined");
-    GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting");
-    GENERIC_FIELD(lang->GENERIC.SHUTTING_DOWN, "Shutting Down");
+    GENERIC_FIELD(lang->GENERIC.REBOOTING, "Rebooting…");
+    GENERIC_FIELD(lang->GENERIC.SHUTTING_DOWN, "Shutting Down…");
     GENERIC_FIELD(lang->GENERIC.NOT_CONNECTED, "Not Connected");
     GENERIC_FIELD(lang->GENERIC.EDIT, "Edit");
     GENERIC_FIELD(lang->GENERIC.CHANGE, "Change");

@@ -190,6 +190,10 @@ static void handle_a() {
             if (strcmp(elements[i].mux_name, "reboot") != 0 &&
                 strcmp(elements[i].mux_name, "shutdown") != 0) {
                 play_sound(SND_CONFIRM);
+            } else {
+                toast_message(!strcmp(elements[i].mux_name, "reboot") ? lang.GENERIC.REBOOTING
+                                                                      : lang.GENERIC.SHUTTING_DOWN, 0);
+                refresh_screen(ui_screen);
             }
 
             load_mux(elements[i].mux_name);
