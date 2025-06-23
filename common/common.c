@@ -411,6 +411,23 @@ char *str_capital_all(char *text) {
     return text;
 }
 
+char *str_rem_last_char(char *text, int count) {
+    static char buffer[PATH_MAX];
+    size_t len = strlen(text);
+
+    if (count >= (int)len) return "";
+
+    strncpy(buffer, text, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    while (count-- > 0 && len > 0) {
+        len--;
+        buffer[len] = '\0';
+    }
+
+    return buffer;
+}
+
 char *get_last_subdir(char *text, char separator, int n) {
     char *ptr = text;
     int count = 0;
@@ -2300,7 +2317,7 @@ void run_exec(const char *args[], size_t size, int background) {
 
 char *get_content_line(char *dir, char *name, char *ext, size_t line) {
     static char path[MAX_BUFFER_SIZE];
-    const char *subdir = get_last_subdir(dir, '/', 4);
+    char *subdir = str_tolower(get_last_subdir(dir, '/', 4));
 
     if (name == NULL) {
         snprintf(path, sizeof(path), "%s/%s/core.%s", INFO_COR_PATH, subdir, ext);

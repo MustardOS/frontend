@@ -8,18 +8,26 @@
 #include "mini/mini.h"
 
 void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, size_t catalogue_name_size) {
+    char sys_dir_lower[MAX_BUFFER_SIZE];
+    char *raw = get_last_subdir(sys_dir, '/', 4); // rawr XD...
+    if (!strcmp(raw, STORAGE_PATH) || !strcmp(raw, STORAGE_PATH "/")) {
+        sys_dir_lower[0] = '\0';
+    } else {
+        snprintf(sys_dir_lower, sizeof(sys_dir_lower), "%s/", str_tolower(raw));
+    }
+
     char core_file[MAX_BUFFER_SIZE];
-    snprintf(core_file, sizeof(core_file), "%s/%s/%s.cfg",
-             INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4), strip_ext(content_label));
+    snprintf(core_file, sizeof(core_file), "%s/%s%s.cfg",
+             INFO_COR_PATH, sys_dir_lower, strip_ext(content_label));
 
     if (!file_exist(core_file)) {
-        snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
-                 INFO_COR_PATH, get_last_subdir(sys_dir, '/', 4));
+        snprintf(core_file, sizeof(core_file), "%s/%score.cfg",
+                 INFO_COR_PATH, sys_dir_lower);
         snprintf(catalogue_name, catalogue_name_size, "%s",
-                 read_line_char_from(core_file, 2));
+                 read_line_char_from(core_file, GLOBAL_CATALOGUE));
     } else {
         snprintf(catalogue_name, catalogue_name_size, "%s",
-                 read_line_char_from(core_file, 3));
+                 read_line_char_from(core_file, CONTENT_CATALOGUE));
     }
 
     LOG_INFO(mux_module, "Reading Configuration: %s", core_file)
@@ -29,7 +37,7 @@ char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
     char rom_dir[MAX_BUFFER_SIZE];
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", sys_dir, content_label);
 
-    return get_content_line(rom_dir, NULL, "cfg", 2);
+    return get_content_line(rom_dir, NULL, "cfg", CONTENT_CATALOGUE);
 }
 
 void write_core_file(char *def_core, char *path, char *core, char *sys, char *cat, int lookup,
@@ -138,7 +146,7 @@ void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, char *cor
     free_subdirectories(subdirs);
 }
 
-void create_core_assignment(char* def_core, char *rom_dir, char *core, char *sys, char *cat,
+void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys, char *cat,
                             char *rom, char *gov, int lookup, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s",

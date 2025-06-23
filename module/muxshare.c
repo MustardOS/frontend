@@ -103,7 +103,7 @@ char *load_content_governor(char *sys_dir, char *pointer, int force, int run_qui
 
     if (pointer == NULL) {
         last_subdir = get_last_subdir(sys_dir, '/', 4);
-        if (!strcasecmp(last_subdir, strip_dir(CONTENT_PATH))) {
+        if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
             snprintf(content_gov, sizeof(content_gov), "%s/core.gov", INFO_COR_PATH);
         } else {
             snprintf(content_gov, sizeof(content_gov), "%s/%s/%s.gov",

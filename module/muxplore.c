@@ -54,7 +54,7 @@ static char *load_content_core(int force, int run_quit) {
     char content_core[MAX_BUFFER_SIZE] = {0};
     const char *last_subdir = get_last_subdir(sys_dir, '/', 4);
 
-    if (!strcasecmp(last_subdir, strip_dir(CONTENT_PATH))) {
+    if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
         snprintf(content_core, sizeof(content_core), "%s/core.cfg", INFO_COR_PATH);
     } else {
         snprintf(content_core, sizeof(content_core), "%s/%s/%s.cfg",
@@ -63,7 +63,9 @@ static char *load_content_core(int force, int run_quit) {
         if (file_exist(content_core) && !force) {
             LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core)
 
-            char *core = build_core(content_core, 2, 3, 4, 5, 6);
+            char *core = build_core(content_core, CONTENT_CORE, CONTENT_SYSTEM,
+                                    CONTENT_CATALOGUE, CONTENT_LOOKUP, CONTENT_ASSIGN);
+
             if (core) return core;
 
             LOG_ERROR(mux_module, "Failed to build individual core")
@@ -75,7 +77,9 @@ static char *load_content_core(int force, int run_quit) {
     if (file_exist(content_core) && !force) {
         LOG_SUCCESS(mux_module, "Loading Global Core: %s", content_core)
 
-        char *core = build_core(content_core, 1, 2, 3, 4, 5);
+        char *core = build_core(content_core, GLOBAL_CORE, GLOBAL_SYSTEM,
+                                GLOBAL_CATALOGUE, GLOBAL_LOOKUP, GLOBAL_ASSIGN);
+
         if (core) return core;
 
         LOG_ERROR(mux_module, "Failed to build global core")
@@ -124,7 +128,7 @@ static void image_refresh(char *image_type) {
 
     char *content_label = items[current_item_index].name;
 
-    if (!strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(CONTENT_PATH))) {
+    if (!strcasecmp(get_last_subdir(sys_dir, '/', 4), strip_dir(STORAGE_PATH))) {
         snprintf(image, sizeof(image), "%s/Folder/%s/%s.png",
                  INFO_CAT_PATH, image_type, content_label);
     } else {
@@ -264,18 +268,15 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
 
 static void gen_item(char **file_names, int file_count) {
     char init_meta_dir[MAX_BUFFER_SIZE];
+    const char *sub_path = sys_dir;
 
-    if (strcasecmp(sys_dir, strip_dir(CONTENT_PATH)) != 0) {
-        snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/",
-                 INFO_COR_PATH, strchr(sys_dir, '/') + strlen(CONTENT_PATH));
-    } else {
-        snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/", INFO_COR_PATH);
+    if (!strncasecmp(sys_dir, STORAGE_PATH, strlen(STORAGE_PATH))) {
+        sub_path = sys_dir + strlen(STORAGE_PATH);
+        while (*sub_path == '/') sub_path++;
     }
 
+    snprintf(init_meta_dir, sizeof(init_meta_dir), "%s/%s/", INFO_COR_PATH, sub_path);
     create_directories(init_meta_dir);
-
-    char name_lookup[MAX_BUFFER_SIZE];
-    snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
 
     char custom_lookup[MAX_BUFFER_SIZE];
     snprintf(custom_lookup, sizeof(custom_lookup), "%s/content.json",
@@ -289,12 +290,10 @@ static void gen_item(char **file_names, int file_count) {
         fn_json = json_parse(read_all_char_from(custom_lookup));
     }
 
-    int use_lookup = read_line_int_from(name_lookup, 3);
-
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
-        const char *stripped_name = strip_ext(file_names[i]);
+        char *stripped_name = strip_ext(str_tolower(file_names[i]));
 
         if (fn_valid) {
             struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
@@ -304,14 +303,20 @@ static void gen_item(char **file_names, int file_count) {
             }
         }
 
+        int lookup_line = CONTENT_LOOKUP;
+        char name_lookup[MAX_BUFFER_SIZE];
+        snprintf(name_lookup, sizeof(name_lookup), "%s/%s.cfg", str_rem_last_char(init_meta_dir, 1), stripped_name);
+
+        if (!file_exist(name_lookup)) {
+            snprintf(name_lookup, sizeof(name_lookup), "%score.cfg", init_meta_dir);
+            lookup_line = GLOBAL_LOOKUP;
+        }
+
         if (!has_custom_name) {
-            const char *lookup_result = use_lookup ? lookup(stripped_name) : NULL;
+            const char *lookup_result = read_line_int_from(name_lookup, lookup_line) ? lookup(stripped_name) : NULL;
             snprintf(fn_name, sizeof(fn_name), "%s",
                      lookup_result ? lookup_result : stripped_name);
         }
-
-        char curr_item[MAX_BUFFER_SIZE];
-        snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count);
 
         content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
@@ -438,7 +443,7 @@ static void create_content_items() {
         free(file_content);
     }
 
-    update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, CONTENT_PATH);
+    update_title(item_curr_dir, fn_valid, fn_json, lang.MUXPLORE.TITLE, STORAGE_PATH);
 
     if (dir_count > 0 || file_count > 0) {
         for (int i = 0; i < dir_count; i++) {
@@ -531,7 +536,7 @@ static int load_content(int add_collection) {
         snprintf(content_loader_data, sizeof(content_loader_data), "%s|%s|%s/|%s|%s",
                  content_name,
                  str_replace(assigned_core, "\n", "|"),
-                 CONTENT_PATH,
+                 STORAGE_PATH,
                  system_sub,
                  items[current_item_index].name);
 
@@ -915,7 +920,7 @@ int muxplore_main(int index, char *dir) {
     splash_valid = 0;
     nogrid_file_exists = 0;
 
-    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? CONTENT_PATH : dir);
+    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? STORAGE_PATH : dir);
     sys_index = index;
 
     init_module("muxplore");

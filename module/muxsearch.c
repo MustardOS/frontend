@@ -467,7 +467,7 @@ static void handle_back(void) {
     play_sound(SND_BACK);
 
     if (file_exist(MUOS_RES_LOAD)) remove(MUOS_RES_LOAD);
-    if (strlen(rom_dir) == 0 || strcasecmp(rom_dir, CONTENT_PATH) == 0 || kiosk.CONTENT.OPTION) load_mux("explore");
+    if (strlen(rom_dir) == 0 || strcasecmp(rom_dir, STORAGE_PATH) == 0 || kiosk.CONTENT.OPTION) load_mux("explore");
 
     close_input();
     mux_input_stop();

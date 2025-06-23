@@ -36,12 +36,15 @@ static char *load_content_description() {
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, 1), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
 
-    char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
-            read_line_char_from(pointer, 7));
-    char *h_core_artwork =
-            items[current_item_index].content_type == FOLDER ? "Collection" : read_line_char_from(pointer, 3);
+    char *h_file_name = items[current_item_index].content_type == FOLDER
+                        ? items[current_item_index].name
+                        : strip_ext(read_line_char_from(pointer, CONTENT_FULL));
+
+    char *h_core_artwork = items[current_item_index].content_type == FOLDER
+                           ? "Collection"
+                           : read_line_char_from(pointer, CONTENT_SYSTEM);
 
     char content_desc[MAX_BUFFER_SIZE];
     snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
@@ -68,13 +71,15 @@ static void image_refresh(char *image_type) {
 
     char pointer[MAX_BUFFER_SIZE];
     snprintf(pointer, sizeof(pointer), "%s/%s",
-             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, 1), '/', 6));
+             INFO_COR_PATH, get_last_subdir(read_line_char_from(core_file, CACHE_CORE_PATH), '/', 6));
 
-    char *h_file_name = items[current_item_index].content_type == FOLDER ? items[current_item_index].name : strip_ext(
-            read_line_char_from(pointer, 7));
+    char *h_file_name = items[current_item_index].content_type == FOLDER
+                        ? items[current_item_index].name
+                        : strip_ext(read_line_char_from(pointer, CONTENT_FULL));
 
-    char *h_core_artwork =
-            items[current_item_index].content_type == FOLDER ? "Collection" : read_line_char_from(pointer, 3);
+    char *h_core_artwork = items[current_item_index].content_type == FOLDER
+                           ? "Collection"
+                           : read_line_char_from(pointer, CONTENT_SYSTEM);
 
     if (strlen(h_core_artwork) <= 1) {
         snprintf(image, sizeof(image), "%s/%simage/none_%s.png",
@@ -203,13 +208,16 @@ static void gen_item(char **file_names, int file_count) {
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
+
         char collection_file[MAX_BUFFER_SIZE];
         snprintf(collection_file, sizeof(collection_file), "%s/%s",
                  sys_dir, file_names[i]);
-        const char *stripped_name = read_line_char_from(collection_file, 3);
+
+        const char *cache_file = read_line_char_from(collection_file, CACHE_CORE_PATH);
+        const char *stripped_name = read_line_char_from(collection_file, CACHE_CORE_NAME);
+
         if (stripped_name && stripped_name[0] == '\0') {
-            const char *cache_file = read_line_char_from(collection_file, 1);
-            stripped_name = strip_ext(read_line_char_from(cache_file, 7));
+            stripped_name = strip_ext(read_line_char_from(cache_file, CONTENT_FULL));
         }
 
         if (fn_valid) {
@@ -221,16 +229,15 @@ static void gen_item(char **file_names, int file_count) {
         }
 
         if (!has_custom_name) {
-            const char *lookup_result = lookup(stripped_name);
+            const char *lookup_result = read_line_int_from(cache_file, CONTENT_LOOKUP) ? lookup(stripped_name) : NULL;
             snprintf(fn_name, sizeof(fn_name), "%s",
                      lookup_result ? lookup_result : stripped_name);
         }
 
-        char curr_item[MAX_BUFFER_SIZE];
-        snprintf(curr_item, sizeof(curr_item), "%s :: %d", fn_name, ui_count++);
-
         content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
         adjust_visual_label(new_item->display_name, config.VISUAL.NAME, config.VISUAL.DASH);
+
+        ui_count++;
     }
 
     sort_items(items, item_count);
@@ -351,14 +358,14 @@ static int load_content(const char *content_name) {
 
     char cache_file[MAX_BUFFER_SIZE];
     snprintf(cache_file, sizeof(cache_file), "%s",
-             read_line_char_from(pointer_file, 1));
+             read_line_char_from(pointer_file, CACHE_CORE_PATH));
 
     char *assigned_gov = NULL;
     assigned_gov = load_content_governor(NULL, cache_file, 0, 0);
     if (!assigned_gov) assigned_gov = device.CPU.DEFAULT;
 
     if (file_exist(cache_file)) {
-        char *assigned_core = read_line_char_from(cache_file, 2);
+        char *assigned_core = read_line_char_from(cache_file, CONTENT_CORE);
         LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
         LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
         LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
@@ -368,7 +375,7 @@ static int load_content(const char *content_name) {
                  INFO_HIS_PATH, content_name);
 
         write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
-        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, 1));
+        write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, CONTENT_NAME));
         write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
         return 1;
@@ -466,7 +473,8 @@ static void add_collection_item() {
 
     char collection_content[MAX_BUFFER_SIZE];
     snprintf(collection_content, sizeof(collection_content), "%s\n%s\n%s",
-             cache_file, read_line_char_from(ADD_MODE_WORK, 3), strip_ext(read_line_char_from(cache_file, 7)));
+             cache_file, read_line_char_from(ADD_MODE_WORK, 3),
+             strip_ext(read_line_char_from(cache_file, CONTENT_FULL)));
 
     char collection_file[MAX_BUFFER_SIZE];
     snprintf(collection_file, sizeof(collection_file), "%s/%s-%08X.cfg",

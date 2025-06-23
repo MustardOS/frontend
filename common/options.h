@@ -12,6 +12,26 @@
 
 #define MU_OBJ_FLAG_HIDE_FLOAT (LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING)
 
+#define CONTENT_NAME      1
+#define CONTENT_CORE      2
+#define CONTENT_SYSTEM    3
+#define CONTENT_CATALOGUE 4
+#define CONTENT_LOOKUP    5
+#define CONTENT_ASSIGN    6
+#define CONTENT_MOUNT     7
+#define CONTENT_DIR       8
+#define CONTENT_FULL      9
+
+#define GLOBAL_CORE      1
+#define GLOBAL_SYSTEM    2
+#define GLOBAL_CATALOGUE 3
+#define GLOBAL_LOOKUP    4
+#define GLOBAL_ASSIGN    5
+
+#define CACHE_CORE_PATH 1
+#define CACHE_CORE_DIR  2
+#define CACHE_CORE_NAME 3
+
 #define TIMER_DATETIME  16384
 #define TIMER_CAPACITY  16384
 #define TIMER_STATUS    1024
@@ -40,7 +60,7 @@
 #define EXPLORE_DIR "/tmp/explore_dir"
 #define EXPLORE_NAME "/tmp/explore_name"
 
-#define CONTENT_PATH "/mnt/union/ROMS"
+#define STORAGE_PATH "/mnt/union/ROMS"
 #define OPTION_SKIP  "/tmp/skip_opt"
 
 #define INTERNAL_PATH    "/opt/muos/"
