@@ -156,7 +156,8 @@ static void image_refresh(char *image_type) {
     }
 }
 
-static void add_directory_and_file_names(const char *base_dir, char ***dir_names, char ***file_names) {
+static void add_directory_and_file_names(const char *base_dir, char ***dir_names,
+                                         char ***file_names, char ***last_dirs) {
     file_count = 0;
     dir_count = 0;
     struct dirent *entry;
@@ -180,31 +181,36 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
                 (dir_count)++;
             }
         } else if (entry->d_type == DT_REG) {
-            char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
-            snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
-
-            *file_names = (char **) realloc(*file_names, (file_count + 1) * sizeof(char *));
+            char *file_path = strdup(entry->d_name);
+            *file_names = realloc(*file_names, (file_count + 1) * sizeof(char *));
             (*file_names)[file_count] = file_path;
-            (file_count)++;
+
+            char *path_line = read_line_char_from(full_path, 1);
+            char *dir_name = NULL;
+
+            if (path_line) {
+                char *last_slash = strrchr(path_line, '/');
+
+                if (last_slash) {
+                    *last_slash = '\0';
+                    char *second_last_slash = strrchr(path_line, '/');
+                    dir_name = second_last_slash ? strdup(second_last_slash + 1) : strdup(path_line);
+                } else dir_name = strdup("");
+
+                free(path_line);
+            } else dir_name = strdup("");
+
+            *last_dirs = realloc(*last_dirs, (file_count + 1) * sizeof(char *));
+            (*last_dirs)[file_count] = dir_name;
+
+            file_count++;
         }
     }
 
     closedir(dir);
 }
 
-static void gen_item(char **file_names, int file_count) {
-    char custom_lookup[MAX_BUFFER_SIZE];
-    snprintf(custom_lookup, sizeof(custom_lookup), "%s/content.json",
-             INFO_NAM_PATH);
-
-    int fn_valid = 0;
-    struct json fn_json = {0};
-
-    if (json_valid(read_all_char_from(custom_lookup))) {
-        fn_valid = 1;
-        fn_json = json_parse(read_all_char_from(custom_lookup));
-    }
-
+static void gen_item(int file_count, char **file_names, char **last_dirs) {
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
@@ -220,6 +226,18 @@ static void gen_item(char **file_names, int file_count) {
             stripped_name = strip_ext(read_line_char_from(cache_file, CONTENT_FULL));
         }
 
+        char custom_lookup[MAX_BUFFER_SIZE];
+        snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/%s.json", last_dirs[i]);
+        if (!file_exist(custom_lookup)) snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/global.json");
+
+        int fn_valid = 0;
+        struct json fn_json;
+
+        if (json_valid(read_all_char_from(custom_lookup))) {
+            fn_valid = 1;
+            fn_json = json_parse(read_all_char_from(custom_lookup));
+        }
+
         if (fn_valid) {
             struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
             if (json_exists(custom_lookup_json)) {
@@ -230,8 +248,7 @@ static void gen_item(char **file_names, int file_count) {
 
         if (!has_custom_name) {
             const char *lookup_result = read_line_int_from(cache_file, CONTENT_LOOKUP) ? lookup(stripped_name) : NULL;
-            snprintf(fn_name, sizeof(fn_name), "%s",
-                     lookup_result ? lookup_result : stripped_name);
+            snprintf(fn_name, sizeof(fn_name), "%s", lookup_result ? lookup_result : stripped_name);
         }
 
         content_item *new_item = add_item(&items, &item_count, file_names[i], fn_name, "", ITEM);
@@ -289,7 +306,9 @@ static void init_navigation_group_grid() {
 static void create_collection_items() {
     char **dir_names = NULL;
     char **file_names = NULL;
-    add_directory_and_file_names(sys_dir, &dir_names, &file_names);
+    char **last_dirs = NULL;
+
+    add_directory_and_file_names(sys_dir, &dir_names, &file_names, &last_dirs);
 
     int fn_valid = 0;
     struct json fn_json = {0};
@@ -342,7 +361,7 @@ static void create_collection_items() {
             }
         }
 
-        gen_item(file_names, file_count);
+        gen_item(file_count, file_names, last_dirs);
 
         if (ui_count > 0) lv_obj_update_layout(ui_pnlContent);
 
