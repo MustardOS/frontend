@@ -88,6 +88,15 @@ static void handle_a() {
         LOG_ERROR(mux_module, "Failed to timezone symlink")
     }
 
+    // Because weirdos live in different timezones...
+    if (config.BOOT.FACTORY_RESET) {
+        const char *args_date[] = {"date", "010100002025", NULL};
+        run_exec(args_date, A_SIZE(args_date), 0);
+
+        const char *args_hw_clock[] = {"hwclock", "-w", NULL};
+        run_exec(args_hw_clock, A_SIZE(args_hw_clock), 0);
+    }
+
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "timezone");
     refresh_config = 1;
 
