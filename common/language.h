@@ -700,6 +700,7 @@ struct mux_lang {
         char FRIENDLY[MAX_BUFFER_SIZE];
         char RA_SYSTEM[MAX_BUFFER_SIZE];
         char RA_CONFIG[MAX_BUFFER_SIZE];
+        char EXTERNAL[MAX_BUFFER_SIZE];
         char ASSIGNED[MAX_BUFFER_SIZE];
         char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
@@ -724,6 +725,7 @@ struct mux_lang {
             char FRIENDLY[MAX_BUFFER_SIZE];
             char RA_SYSTEM[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
+            char EXTERNAL[MAX_BUFFER_SIZE];
             char ASSIGNED[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];

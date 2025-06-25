@@ -65,6 +65,7 @@
     BACKUP(Network,          "network")        \
     BACKUP(Syncthing,        "syncthing")      \
     BACKUP(UserInit,         "userinit")       \
+    BACKUP(External,         "external")       \
     BACKUP(BackupTarget,     "backuptarget")   \
     BACKUP(StartBackup,      "startbackup")
 
