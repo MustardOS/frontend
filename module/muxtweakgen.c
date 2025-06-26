@@ -60,7 +60,7 @@ static void restore_tweak_options() {
 
 static void set_setting_value(const char *script_name, int value, int offset) {
     char script_path[MAX_BUFFER_SIZE];
-    snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/input/%s.sh", script_name);
+    snprintf(script_path, sizeof(script_path), INTERNAL_PATH "device/script/%s.sh", script_name);
 
     char value_str[8];
     snprintf(value_str, sizeof(value_str), "%d", value + offset);

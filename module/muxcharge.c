@@ -3,8 +3,8 @@
 #include "../lvgl/src/drivers/display/sdl.h"
 
 static int exit_status = -1;
-static int was_blank = 0;
 static int is_blank = 0;
+static int blank_timeout = 3;
 
 static char capacity_info[MAX_BUFFER_SIZE];
 static char voltage_info[MAX_BUFFER_SIZE];
@@ -20,7 +20,7 @@ static void set_brightness(int brightness) {
     char bright_value[8];
     snprintf(bright_value, sizeof(bright_value), "%d", brightness);
 
-    const char *args[] = {(INTERNAL_PATH "device/input/bright.sh"), bright_value, NULL};
+    const char *args[] = {(INTERNAL_PATH "device/script/bright.sh"), bright_value, NULL};
     run_exec(args, A_SIZE(args), 0);
 
     load_config(&config);
@@ -29,13 +29,14 @@ static void set_brightness(int brightness) {
 static void handle_power_short(void) {
     LOG_SUCCESS(mux_module, "Power Button Pressed")
 
-    if (was_blank) {
+    if (is_blank) {
         int bright_value = read_line_int_from(CHARGER_BRIGHT, 1);
+
         LOG_INFO(mux_module, "Setting Brightness To: %d", bright_value)
         set_brightness(bright_value);
 
-        was_blank = 0;
         is_blank = 0;
+        blank_timeout = 5;
         return;
     }
 
@@ -70,20 +71,31 @@ static void handle_idle(void) {
 }
 
 static void battery_task_charge() {
-    snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", lang.MUXCHARGE.CAPACITY, read_battery_capacity());
-    snprintf(voltage_info, sizeof(voltage_info), "%s: %s", lang.MUXCHARGE.VOLTAGE, read_battery_voltage());
+    check_for_cable();
+    if (is_blank) return;
+
+    if (blank_timeout < 0) {
+        LOG_INFO(mux_module, "Setting Brightness To: %d", 0)
+
+        set_brightness(0);
+        is_blank = 1;
+
+        return;
+    }
+
+    int bat_cap = read_battery_capacity();
+    char *bat_vol = read_battery_voltage();
+
+    LOG_INFO(mux_module, "Capacity: %d%%", bat_cap)
+    LOG_INFO(mux_module, "Voltage: %s", bat_vol)
+
+    snprintf(capacity_info, sizeof(capacity_info), "%s: %d%%", lang.MUXCHARGE.CAPACITY, bat_cap);
+    snprintf(voltage_info, sizeof(voltage_info), "%s: %s", lang.MUXCHARGE.VOLTAGE, bat_vol);
 
     lv_label_set_text(ui_lblCapacity_charge, capacity_info);
     lv_label_set_text(ui_lblVoltage_charge, voltage_info);
 
-    if (is_blank == 4) {
-        LOG_INFO(mux_module, "Setting Brightness To: %d", 0)
-        set_brightness(0);
-        was_blank = 1;
-    }
-
-    check_for_cable();
-    is_blank++;
+    blank_timeout--;
 }
 
 int main() {
