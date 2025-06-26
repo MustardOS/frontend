@@ -415,7 +415,7 @@ char *str_rem_last_char(char *text, int count) {
     static char buffer[PATH_MAX];
     size_t len = strlen(text);
 
-    if (count >= (int)len) return "";
+    if (count >= (int) len) return "";
 
     strncpy(buffer, text, sizeof(buffer) - 1);
     buffer[sizeof(buffer) - 1] = '\0';

@@ -18,17 +18,24 @@
 #define SUCCESS_SYMBOL GREEN  "+" RESET
 #define DEBUG_SYMBOL   ORANGE "?" RESET
 
-#define LOG(level, symbol, mux_module, msg, ...) {       \
-    time_t now = time(NULL);                             \
-    struct tm *timeinfo = localtime(&now);               \
-    char time_buffer[20];                                \
-    strftime(time_buffer, sizeof(time_buffer),           \
-    "%Y-%m-%d %H:%M:%S", timeinfo);                      \
-    char truncated_module[12];                           \
-    snprintf(truncated_module, sizeof(truncated_module), \
-             "%.11s", mux_module);                       \
-    fprintf(stderr, "[%s] [" symbol "] [%s]\t" msg "\n", \
-    time_buffer, truncated_module, ##__VA_ARGS__);       \
+#define LOG(level, symbol, mux_module, msg, ...) {         \
+    struct timespec ts;                                    \
+    clock_gettime(CLOCK_MONOTONIC, &ts);                   \
+    double uptime = ts.tv_sec + ts.tv_nsec / 1000000000.0; \
+                                                           \
+    time_t now = time(NULL);                               \
+    struct tm *timeinfo = localtime(&now);                 \
+    char time_buffer[20];                                  \
+    strftime(time_buffer, sizeof(time_buffer),             \
+             "%Y-%m-%d %H:%M:%S", timeinfo);               \
+                                                           \
+    char truncated_module[20];                             \
+    snprintf(truncated_module, sizeof(truncated_module),   \
+             "%.19s", mux_module);                         \
+                                                           \
+    fprintf(stderr, "[%.2f]\t[%s] [%s] [%s]\t" msg "\n",   \
+        uptime, time_buffer, symbol, truncated_module,     \
+        ##__VA_ARGS__);                                    \
 }
 
 #define LOG_INFO(mux_module, msg, ...)    LOG(INFO,    INFO_SYMBOL,    mux_module, msg, ##__VA_ARGS__)
