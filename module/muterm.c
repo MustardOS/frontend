@@ -10,33 +10,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
-#include "../common/init.h"
 #include "../common/common.h"
-#include "../common/language.h"
 #include "../common/config.h"
 #include "../common/device.h"
-#include "../common/kiosk.h"
 #include "../common/theme.h"
-
-int msgbox_active = 0;
-int fe_snd = 0;
-
-struct mux_lang lang;
-struct mux_config config;
-struct mux_device device;
-struct mux_kiosk kiosk;
-struct theme_config theme;
-
-int progress_onscreen = -1;
-int ui_count = 0;
-int current_item_index = 0;
-
-lv_obj_t *msgbox_element = NULL;
-
-// Stubs to appease the compiler!
-void list_nav_prev(void) {}
-
-void list_nav_next(void) {}
 
 typedef struct {
     Uint32 codepoint;
