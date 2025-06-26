@@ -124,6 +124,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.NET_PROFILE, "Network Profiles");
     SPECIFIC_FIELD(lang->MUXBACKUP.SYNCTHING, "Syncthing Configs");
     SPECIFIC_FIELD(lang->MUXBACKUP.USER_INIT, "User Init Scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.EXTERNAL, "Standalone Emulator Files");
     SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.THEME, "Themes");
     SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.CATALOGUE, "Catalogue Packages");
     SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.RA_CONFIG, "RetroArch Config Packages");
@@ -145,6 +146,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.NET_PROFILE, "Location of Network Profiles");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SYNCTHING, "Location of Syncthing configurations");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.USER_INIT, "Location of User Initialisation scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.EXTERNAL, "Location of External Emulator files (e.g. PPSSPP, Pico-8, Dreamcast, Drastic)");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.THEME, "Location of themes");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.CATALOGUE, "Location of catalogue packages");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.RA_CONFIG, "Location of RetroArch configuration packages");

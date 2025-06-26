@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 21
+#define UI_COUNT 22
 #define STORAGE_COUNT UI_COUNT - 2
 #define START_BACKUP_INDEX UI_COUNT - 1
 #define BACKUP_TARGET_INDEX UI_COUNT - 2
@@ -18,27 +18,28 @@ static void list_nav_move(int steps, int direction);
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblBiosValue_backup,        lang.MUXBACKUP.HELP.BIOS},
-            {ui_lblCatalogue_backup,        lang.MUXBACKUP.HELP.CATALOGUE},
-            {ui_lblName_backup,             lang.MUXBACKUP.HELP.FRIENDLY},
-            {ui_lblRetroArch_backup,        lang.MUXBACKUP.HELP.RA_SYSTEM},
-            {ui_lblConfig_backup,           lang.MUXBACKUP.HELP.RA_CONFIG},
-            {ui_lblCore_backup,             lang.MUXBACKUP.HELP.ASSIGNED},
-            {ui_lblCollection_backup,       lang.MUXBACKUP.HELP.COLLECTION},
-            {ui_lblHistory_backup,          lang.MUXBACKUP.HELP.HISTORY},
-            {ui_lblMusic_backup,            lang.MUXBACKUP.HELP.MUSIC},
-            {ui_lblSave_backup,             lang.MUXBACKUP.HELP.SAVE},
-            {ui_lblScreenshot_backup,       lang.MUXBACKUP.HELP.SCREENSHOT},
-            {ui_lblTheme_backup,            lang.MUXBACKUP.HELP.PACKAGE.THEME},
-            {ui_lblCataloguePackage_backup, lang.MUXBACKUP.HELP.PACKAGE.CATALOGUE},
-            {ui_lblConfigPackage_backup,    lang.MUXBACKUP.HELP.PACKAGE.RA_CONFIG},
-            {ui_lblBootlogoPackage_backup,  lang.MUXBACKUP.HELP.PACKAGE.BOOTLOGO},
-            {ui_lblLanguage_backup,         lang.MUXBACKUP.HELP.LANGUAGE},
-            {ui_lblNetwork_backup,          lang.MUXBACKUP.HELP.NET_PROFILE},
-            {ui_lblSyncthing_backup,        lang.MUXBACKUP.HELP.SYNCTHING},
-            {ui_lblUserInit_backup,         lang.MUXBACKUP.HELP.USER_INIT},
-            {ui_lblBackupTarget_backup,     lang.MUXBACKUP.HELP.BACKUP_TARGET},
-            {ui_lblStartBackup_backup,      lang.MUXBACKUP.HELP.START_BACKUP},
+        {ui_lblBiosValue_backup,        lang.MUXBACKUP.HELP.BIOS},
+        {ui_lblCatalogue_backup,        lang.MUXBACKUP.HELP.CATALOGUE},
+        {ui_lblName_backup,             lang.MUXBACKUP.HELP.FRIENDLY},
+        {ui_lblRetroArch_backup,        lang.MUXBACKUP.HELP.RA_SYSTEM},
+        {ui_lblConfig_backup,           lang.MUXBACKUP.HELP.RA_CONFIG},
+        {ui_lblCore_backup,             lang.MUXBACKUP.HELP.ASSIGNED},
+        {ui_lblCollection_backup,       lang.MUXBACKUP.HELP.COLLECTION},
+        {ui_lblHistory_backup,          lang.MUXBACKUP.HELP.HISTORY},
+        {ui_lblMusic_backup,            lang.MUXBACKUP.HELP.MUSIC},
+        {ui_lblSave_backup,             lang.MUXBACKUP.HELP.SAVE},
+        {ui_lblScreenshot_backup,       lang.MUXBACKUP.HELP.SCREENSHOT},
+        {ui_lblTheme_backup,            lang.MUXBACKUP.HELP.PACKAGE.THEME},
+        {ui_lblCataloguePackage_backup, lang.MUXBACKUP.HELP.PACKAGE.CATALOGUE},
+        {ui_lblConfigPackage_backup,    lang.MUXBACKUP.HELP.PACKAGE.RA_CONFIG},
+        {ui_lblBootlogoPackage_backup,  lang.MUXBACKUP.HELP.PACKAGE.BOOTLOGO},
+        {ui_lblLanguage_backup,         lang.MUXBACKUP.HELP.LANGUAGE},
+        {ui_lblNetwork_backup,          lang.MUXBACKUP.HELP.NET_PROFILE},
+        {ui_lblSyncthing_backup,        lang.MUXBACKUP.HELP.SYNCTHING},
+        {ui_lblUserInit_backup,         lang.MUXBACKUP.HELP.USER_INIT},
+        {ui_lblExternal_backup,         lang.MUXBACKUP.HELP.EXTERNAL},
+        {ui_lblBackupTarget_backup,     lang.MUXBACKUP.HELP.BACKUP_TARGET},
+        {ui_lblStartBackup_backup,      lang.MUXBACKUP.HELP.START_BACKUP},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -125,6 +126,10 @@ static void update_backup_info() {
     backup_path[18].ui_label = ui_lblUserInitValue_backup;
     backup_path[18].shortname = "UserInit";
 
+    backup_path[19].path_suffix = ".";
+    backup_path[19].ui_label = ui_lblExternalValue_backup;
+    backup_path[19].shortname = "External";
+
     char dir[FILENAME_MAX];
     for (int i = 0; i < A_SIZE(backup_path); i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, backup_path[i].path_suffix);
@@ -145,27 +150,28 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    INIT_VALUE_ITEM(-1, backup, Bios, lang.MUXBACKUP.BIOS, "bios", "");
-    INIT_VALUE_ITEM(-1, backup, Catalogue, lang.MUXBACKUP.CATALOGUE, "catalogue", "");
-    INIT_VALUE_ITEM(-1, backup, Name, lang.MUXBACKUP.FRIENDLY, "name", "");
-    INIT_VALUE_ITEM(-1, backup, RetroArch, lang.MUXBACKUP.RA_SYSTEM, "retroarch", "");
-    INIT_VALUE_ITEM(-1, backup, Config, lang.MUXBACKUP.RA_CONFIG, "config", "");
-    INIT_VALUE_ITEM(-1, backup, Core, lang.MUXBACKUP.ASSIGNED, "core", "");
-    INIT_VALUE_ITEM(-1, backup, Collection, lang.MUXBACKUP.COLLECTION, "collection", "");
-    INIT_VALUE_ITEM(-1, backup, History, lang.MUXBACKUP.HISTORY, "history", "");
-    INIT_VALUE_ITEM(-1, backup, Music, lang.MUXBACKUP.MUSIC, "music", "");
-    INIT_VALUE_ITEM(-1, backup, Save, lang.MUXBACKUP.SAVE, "save", "");
-    INIT_VALUE_ITEM(-1, backup, Screenshot, lang.MUXBACKUP.SCREENSHOT, "screenshot", "");
-    INIT_VALUE_ITEM(-1, backup, Theme, lang.MUXBACKUP.PACKAGE.THEME, "theme", "");
-    INIT_VALUE_ITEM(-1, backup, CataloguePackage, lang.MUXBACKUP.PACKAGE.CATALOGUE, "pack-catalogue", "");
-    INIT_VALUE_ITEM(-1, backup, ConfigPackage, lang.MUXBACKUP.PACKAGE.RA_CONFIG, "pack-config", "");
-    INIT_VALUE_ITEM(-1, backup, BootlogoPackage, lang.MUXBACKUP.PACKAGE.BOOTLOGO, "pack-bootlogo", "");
-    INIT_VALUE_ITEM(-1, backup, Language, lang.MUXBACKUP.LANGUAGE, "language", "");
-    INIT_VALUE_ITEM(-1, backup, Network, lang.MUXBACKUP.NET_PROFILE, "network", "");
-    INIT_VALUE_ITEM(-1, backup, Syncthing, lang.MUXBACKUP.SYNCTHING, "syncthing", "");
-    INIT_VALUE_ITEM(-1, backup, UserInit, lang.MUXBACKUP.USER_INIT, "userinit", "");
-    INIT_VALUE_ITEM(-1, backup, BackupTarget, lang.MUXBACKUP.BACKUP_TARGET, "backuptarget", "");
-    INIT_VALUE_ITEM(-1, backup, StartBackup, lang.MUXBACKUP.START_BACKUP, "startbackup", "");
+    INIT_VALUE_ITEM(-1, backup, Bios,             lang.MUXBACKUP.BIOS,              "bios",            "");
+    INIT_VALUE_ITEM(-1, backup, Catalogue,        lang.MUXBACKUP.CATALOGUE,         "catalogue",       "");
+    INIT_VALUE_ITEM(-1, backup, Name,             lang.MUXBACKUP.FRIENDLY,          "name",            "");
+    INIT_VALUE_ITEM(-1, backup, RetroArch,        lang.MUXBACKUP.RA_SYSTEM,         "retroarch",       "");
+    INIT_VALUE_ITEM(-1, backup, Config,           lang.MUXBACKUP.RA_CONFIG,         "config",          "");
+    INIT_VALUE_ITEM(-1, backup, Core,             lang.MUXBACKUP.ASSIGNED,          "core",            "");
+    INIT_VALUE_ITEM(-1, backup, Collection,       lang.MUXBACKUP.COLLECTION,        "collection",      "");
+    INIT_VALUE_ITEM(-1, backup, History,          lang.MUXBACKUP.HISTORY,           "history",         "");
+    INIT_VALUE_ITEM(-1, backup, Music,            lang.MUXBACKUP.MUSIC,             "music",           "");
+    INIT_VALUE_ITEM(-1, backup, Save,             lang.MUXBACKUP.SAVE,              "save",            "");
+    INIT_VALUE_ITEM(-1, backup, Screenshot,       lang.MUXBACKUP.SCREENSHOT,        "screenshot",      "");
+    INIT_VALUE_ITEM(-1, backup, Theme,            lang.MUXBACKUP.PACKAGE.THEME,     "theme",           "");
+    INIT_VALUE_ITEM(-1, backup, CataloguePackage, lang.MUXBACKUP.PACKAGE.CATALOGUE, "pack-catalogue",  "");
+    INIT_VALUE_ITEM(-1, backup, ConfigPackage,    lang.MUXBACKUP.PACKAGE.RA_CONFIG, "pack-config",     "");
+    INIT_VALUE_ITEM(-1, backup, BootlogoPackage,  lang.MUXBACKUP.PACKAGE.BOOTLOGO,  "pack-bootlogo",   "");
+    INIT_VALUE_ITEM(-1, backup, Language,         lang.MUXBACKUP.LANGUAGE,          "language",        "");
+    INIT_VALUE_ITEM(-1, backup, Network,          lang.MUXBACKUP.NET_PROFILE,       "network",         "");
+    INIT_VALUE_ITEM(-1, backup, Syncthing,        lang.MUXBACKUP.SYNCTHING,         "syncthing",       "");
+    INIT_VALUE_ITEM(-1, backup, UserInit,         lang.MUXBACKUP.USER_INIT,         "userinit",        "");
+    INIT_VALUE_ITEM(-1, backup, External,         lang.MUXBACKUP.EXTERNAL,          "external",        "");
+    INIT_VALUE_ITEM(-1, backup, BackupTarget,     lang.MUXBACKUP.BACKUP_TARGET,     "backuptarget",    "");
+    INIT_VALUE_ITEM(-1, backup, StartBackup,      lang.MUXBACKUP.START_BACKUP,      "startbackup",     "");
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
