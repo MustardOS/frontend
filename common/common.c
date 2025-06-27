@@ -205,25 +205,27 @@ char *str_nonew(char *text) {
 }
 
 char *str_tolower(char *text) {
-    char *ptr = text;
+    char *result = strdup(text);
+    char *ptr = result;
 
     while (*ptr) {
         *ptr = tolower((unsigned char) *ptr);
         ptr++;
     }
 
-    return text;
+    return result;
 }
 
 char *str_toupper(char *text) {
-    char *ptr = text;
+    char *result = strdup(text);
+    char *ptr = result;
 
     while (*ptr) {
         *ptr = toupper((unsigned char) *ptr);
         ptr++;
     }
 
-    return text;
+    return result;
 }
 
 char *str_remchar(char *text, char c) {

@@ -302,10 +302,10 @@ static void gen_item(char **file_names, int file_count) {
     for (int i = 0; i < file_count; i++) {
         int has_custom_name = 0;
         char fn_name[MAX_BUFFER_SIZE];
-        char *stripped_name = strip_ext(str_tolower(file_names[i]));
+        char *stripped_name = strip_ext(file_names[i]);
 
         if (fn_valid) {
-            struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
+            struct json custom_lookup_json = json_object_get(fn_json, str_tolower(stripped_name));
             if (json_exists(custom_lookup_json)) {
                 json_string_copy(custom_lookup_json, fn_name, sizeof(fn_name));
                 has_custom_name = 1;
