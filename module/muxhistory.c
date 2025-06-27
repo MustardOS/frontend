@@ -213,7 +213,7 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
         }
 
         if (fn_valid) {
-            struct json custom_lookup_json = json_object_get(fn_json, stripped_name);
+            struct json custom_lookup_json = json_object_get(fn_json, str_tolower(stripped_name));
             if (json_exists(custom_lookup_json)) {
                 json_string_copy(custom_lookup_json, fn_name, sizeof(fn_name));
                 has_custom_name = 1;
