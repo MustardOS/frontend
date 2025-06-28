@@ -143,6 +143,8 @@ char *get_last_subdir(char *text, char separator, int n);
 
 char *get_last_dir(char *text);
 
+void remove_double_slashes(char *str);
+
 char *strip_dir(char *text);
 
 char *strip_ext(char *text);

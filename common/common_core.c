@@ -96,9 +96,10 @@ void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *cor
     for (size_t i = 0; i < A_SIZE(paths); ++i) if (file_exist(paths[i])) remove(paths[i]);
 
     char *last_sub = get_last_subdir(rom_dir, '/', 4);
+    char *base_dir = (last_sub[0] == '\0') ? rom_dir : str_replace(rom_dir, last_sub, "");
 
     write_core_file(def_core, cfg_path, core, str_trim(sys), cat, lookup, rom_no_ext,
-                    str_replace(rom_dir, last_sub, ""), last_sub, rom);
+                    base_dir, last_sub, rom);
     write_gov_file(gov_path, gov, rom_no_ext);
 }
 
@@ -151,6 +152,7 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    remove_double_slashes(core_dir);
 
     create_directories(core_dir);
 
@@ -182,6 +184,7 @@ bool automatic_assign_core(char *rom_dir) {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s/core.cfg",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    remove_double_slashes(core_file);
 
     if (file_exist(core_file)) return true;
     int auto_assign_good = 0;

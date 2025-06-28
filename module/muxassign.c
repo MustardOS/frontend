@@ -293,7 +293,7 @@ static void handle_x() {
 }
 
 static void handle_y() {
-    if (msgbox_active || !strcasecmp(rom_system, "none")) return;
+    if (msgbox_active || !strcasecmp(rom_system, "none") || at_base(rom_dir, "ROMS")) return;
 
     handle_core_assignment("Parent Core Assignment Triggered", PARENT);
 
@@ -332,15 +332,22 @@ static void init_elements() {
     });
 
     if (strcasecmp(rom_system, "none") != 0) {
-        setup_nav((struct nav_bar[]) {
-                {ui_lblNavAGlyph, "",                      1},
-                {ui_lblNavA,      lang.GENERIC.INDIVIDUAL, 1},
-                {ui_lblNavXGlyph, "",                      1},
-                {ui_lblNavX,      lang.GENERIC.DIRECTORY,  1},
-                {ui_lblNavYGlyph, "",                      1},
-                {ui_lblNavY,      lang.GENERIC.RECURSIVE,  1},
-                {NULL, NULL,                               0}
-        });
+        struct nav_bar nav_items[7];
+        int i = 0;
+
+        nav_items[i++] = (struct nav_bar){ui_lblNavAGlyph, "",                      1};
+        nav_items[i++] = (struct nav_bar){ui_lblNavA,      lang.GENERIC.INDIVIDUAL, 1};
+        nav_items[i++] = (struct nav_bar){ui_lblNavXGlyph, "",                      1};
+        nav_items[i++] = (struct nav_bar){ui_lblNavX,      lang.GENERIC.DIRECTORY,  1};
+
+        if (!at_base(rom_dir, "ROMS")) {
+            nav_items[i++] = (struct nav_bar){ui_lblNavYGlyph, "",                  1};
+            nav_items[i++] = (struct nav_bar){ui_lblNavY,      lang.GENERIC.RECURSIVE, 1};
+        }
+
+        nav_items[i] = (struct nav_bar){NULL, NULL, 0};  // Null-terminate
+
+        setup_nav(nav_items);
     }
 
     overlay_display();
