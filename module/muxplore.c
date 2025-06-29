@@ -252,7 +252,7 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
                         (dir_count)++;
                     }
                 }
-            } else if (entry->d_type == DT_REG && !at_base(sys_dir, "ROMS")) {
+            } else if (entry->d_type == DT_REG) {
                 char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
                 snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
@@ -818,27 +818,23 @@ static void handle_select() {
 
     write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
-    if (strcasecmp(get_last_dir(sys_dir), "ROMS") != 0) {
-        if (kiosk.CONTENT.OPTION) {
-            if (!kiosk.CONTENT.SEARCH) {
-                load_mux("search");
+    if (kiosk.CONTENT.OPTION) {
+        if (!kiosk.CONTENT.SEARCH) {
+            load_mux("search");
 
-                close_input();
-                mux_input_stop();
-            }
-            return;
+            close_input();
+            mux_input_stop();
         }
-
-        write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
-        write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
-
-        load_content_core(1, 0);
-        load_content_governor(sys_dir, NULL, 1, 0);
-
-        load_mux("option");
-    } else {
-        if (!kiosk.CONTENT.SEARCH) load_mux("search");
+        return;
     }
+
+    write_text_to_file(MUOS_SAA_LOAD, "w", INT, 1);
+    write_text_to_file(MUOS_SAG_LOAD, "w", INT, 1);
+
+    load_content_core(1, 0);
+    load_content_governor(sys_dir, NULL, 1, 0);
+
+    load_mux("option");
 
     close_input();
     mux_input_stop();

@@ -439,7 +439,31 @@ char *get_last_subdir(char *text, char separator, int n) {
         ptr++;
     }
 
-    return (*ptr) ? ptr : text;
+    if (count < n) {
+        return "";
+    }
+
+    return ptr;
+}
+
+void remove_double_slashes(char *str) {
+    char *src = str;
+    char *dst = str;
+
+    while (*src) {
+        *dst = *src;
+
+        if (*src == '/' && *(src + 1) == '/') {
+            while (*(src + 1) == '/') {
+                src++;
+            }
+        }
+
+        src++;
+        dst++;
+    }
+
+    *dst = '\0';
 }
 
 char *get_last_dir(char *text) {

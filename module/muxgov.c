@@ -36,6 +36,7 @@ static void assign_gov_directory(char *core_dir, const char *gov, int purge) {
     char gov_path[MAX_BUFFER_SIZE];
     snprintf(gov_path, sizeof(gov_path), "%s/%s/core.gov",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    remove_double_slashes(gov_path);
 
     write_gov_file(gov_path, gov, "Assign Governor");
 }
@@ -60,8 +61,8 @@ static void assign_gov_parent(char *core_dir, const char *gov) {
 
 static void create_gov_assignment(const char *gov, char *rom, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
-    snprintf(core_dir, sizeof(core_dir), "%s/%s/",
-             INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    snprintf(core_dir, sizeof(core_dir), "%s/%s/", INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    remove_double_slashes(core_dir);
 
     create_directories(core_dir);
 
@@ -242,7 +243,7 @@ static void handle_x() {
 }
 
 static void handle_y() {
-    if (msgbox_active) return;
+    if (msgbox_active || at_base(rom_dir, "ROMS")) return;
 
     LOG_INFO(mux_module, "Parent Governor Assignment Triggered")
     play_sound(SND_CONFIRM);
@@ -276,17 +277,24 @@ static void init_elements() {
     adjust_panels();
     header_and_footer_setup();
 
-    setup_nav((struct nav_bar[]) {
-            {ui_lblNavAGlyph, "",                      1},
-            {ui_lblNavA,      lang.GENERIC.INDIVIDUAL, 1},
-            {ui_lblNavBGlyph, "",                      0},
-            {ui_lblNavB,      lang.GENERIC.BACK,       0},
-            {ui_lblNavXGlyph, "",                      1},
-            {ui_lblNavX,      lang.GENERIC.DIRECTORY,  1},
-            {ui_lblNavYGlyph, "",                      1},
-            {ui_lblNavY,      lang.GENERIC.RECURSIVE,  1},
-            {NULL, NULL,                               0}
-    });
+    struct nav_bar nav_items[9];
+    int i = 0;
+
+    nav_items[i++] = (struct nav_bar){ui_lblNavAGlyph, "",                      1};
+    nav_items[i++] = (struct nav_bar){ui_lblNavA,      lang.GENERIC.INDIVIDUAL, 1};
+    nav_items[i++] = (struct nav_bar){ui_lblNavBGlyph, "",                      0};
+    nav_items[i++] = (struct nav_bar){ui_lblNavB,      lang.GENERIC.BACK,       0};
+    nav_items[i++] = (struct nav_bar){ui_lblNavXGlyph, "",                      1};
+    nav_items[i++] = (struct nav_bar){ui_lblNavX,      lang.GENERIC.DIRECTORY,  1};
+
+    if (!at_base(rom_dir, "ROMS")) {
+        nav_items[i++] = (struct nav_bar){ui_lblNavYGlyph, "",                      1};
+        nav_items[i++] = (struct nav_bar){ui_lblNavY,      lang.GENERIC.RECURSIVE,  1};
+    }
+
+    nav_items[i] = (struct nav_bar){NULL, NULL, 0};  // Null-terminate
+
+    setup_nav(nav_items);
 
     overlay_display();
 }
@@ -320,6 +328,7 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
         char core_file[MAX_BUFFER_SIZE];
         snprintf(core_file, sizeof(core_file), "%s/%s/core.gov",
                  INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+        remove_double_slashes(core_file);
 
         if (file_exist(core_file)) {
             close_input();

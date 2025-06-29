@@ -37,6 +37,7 @@ static void assign_tag_directory(char *core_dir, char *tag, int purge) {
     char tag_path[MAX_BUFFER_SIZE];
     snprintf(tag_path, sizeof(tag_path), "%s/%s/core.tag",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    remove_double_slashes(tag_path);
 
     write_tag_file(tag_path, tag, "Directory Tag Content");
 }
@@ -66,6 +67,7 @@ static void create_tag_assignment(char *tag, char *rom, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s/",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
+    remove_double_slashes(core_dir);
 
     create_directories(core_dir);
 
