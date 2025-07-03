@@ -106,6 +106,12 @@ static char *load_content_description() {
     if (items[current_item_index].content_type == FOLDER) {
         snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
                  INFO_CAT_PATH, content_label);
+        if (!file_exist(content_desc)){
+            char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
+            snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
+                    INFO_CAT_PATH, catalogue_name);
+            LOG_INFO(mux_module, "Falling back to catalogue name for content description '%s'", catalogue_name)
+        }
     } else {
         snprintf(content_desc, sizeof(content_desc), "%s/%s/text/%s.txt",
                  INFO_CAT_PATH, core_desc, desc_name);
