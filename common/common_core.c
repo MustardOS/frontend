@@ -10,7 +10,7 @@
 void get_catalogue_name(char *sys_dir, char *content_label, char *catalogue_name, size_t catalogue_name_size) {
     char sys_dir_lower[MAX_BUFFER_SIZE];
     char *raw = get_last_subdir(sys_dir, '/', 4); // rawr XD...
-    if (!strcmp(raw, STORAGE_PATH) || !strcmp(raw, STORAGE_PATH "/")) {
+    if (!strcmp(raw, "")) {
         sys_dir_lower[0] = '\0';
     } else {
         snprintf(sys_dir_lower, sizeof(sys_dir_lower), "%s/", str_tolower(raw));
@@ -37,7 +37,7 @@ char *get_catalogue_name_from_rom_path(char *sys_dir, char *content_label) {
     char rom_dir[MAX_BUFFER_SIZE];
     snprintf(rom_dir, sizeof(rom_dir), "%s/%s", sys_dir, content_label);
 
-    return get_content_line(rom_dir, NULL, "cfg", CONTENT_CATALOGUE);
+    return get_content_line(rom_dir, NULL, "cfg", GLOBAL_CATALOGUE);
 }
 
 void write_core_file(char *def_core, char *path, char *core, char *sys, char *cat, int lookup,
