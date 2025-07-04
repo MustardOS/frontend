@@ -169,7 +169,7 @@ static void handle_confirm() {
 
         write_text_to_file(EXPLORE_DIR, "w", CHAR, n_dir);
     } else {
-        if (!strcasecmp(picker_type, "theme") && !version_check()) {
+        if (!strcasecmp(picker_type, "/theme") && !version_check()) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXPICKER.INVALID_VER, 1000);
             return;
@@ -178,7 +178,7 @@ static void handle_confirm() {
         char picker_archive[MAX_BUFFER_SIZE];
         snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
                  sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
-        if (!strcasecmp(picker_type, "theme") && !resolution_check(picker_archive)) {
+        if (!strcasecmp(picker_type, "/theme") && !resolution_check(picker_archive)) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXPICKER.INVALID_RES, 1000);
             return;
@@ -201,7 +201,7 @@ static void handle_confirm() {
                      relative_path, selected_item);
         }
 
-        if (!strcasecmp(picker_type, "theme")) delete_files_of_type(INTERNAL_THEME, ".ttf", NULL, 1);
+        if (!strcasecmp(picker_type, "/theme")) delete_files_of_type(INTERNAL_THEME, ".ttf", NULL, 1);
 
         size_t exec_count;
         const char *args[] = {picker_script, "install", relative_zip_path, NULL};
@@ -209,7 +209,7 @@ static void handle_confirm() {
 
         if (exec) {
             config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-            if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "theme")) play_silence_bgm();
+            if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "/theme")) play_silence_bgm();
 
             run_exec(exec, exec_count, 0);
         }
@@ -224,7 +224,7 @@ static void handle_confirm() {
 
 static void handle_confirm_force() {
     if (msgbox_active || ui_count <= 0 ||
-        strcasecmp(picker_type, "theme") != 0 ||
+        strcasecmp(picker_type, "/theme") != 0 ||
         items[current_item_index].content_type == FOLDER) {
         return;
     }
@@ -256,7 +256,7 @@ static void handle_confirm_force() {
 
     if (exec) {
         config.VISUAL.BLACKFADE ? fade_to_black(ui_screen) : unload_image_animation();
-        if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "theme")) {
+        if (config.SETTINGS.GENERAL.BGM == 2 && !strcasecmp(picker_type, "/theme")) {
             play_silence_bgm();
         }
         run_exec(exec, exec_count, 0);
@@ -386,7 +386,7 @@ int muxpicker_main(char *type, char *ex_dir) {
     config.VISUAL.BOX_ART = 1;  //Force correct panel size for displaying preview in bottom right
 
     const char *picker_title = NULL;
-    if (!strcasecmp(picker_type, "theme")) {
+    if (!strcasecmp(picker_type, "/theme")) {
         picker_extension = "muxthm";
         picker_title = lang.MUXPICKER.THEME;
     } else if (!strcasecmp(picker_type, "package/bootlogo")) {
@@ -437,7 +437,7 @@ int muxpicker_main(char *type, char *ex_dir) {
         lv_obj_add_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
 
         const char *message_text = NULL;
-        if (!strcasecmp(picker_type, "theme")) {
+        if (!strcasecmp(picker_type, "/theme")) {
             message_text = lang.MUXPICKER.NONE.THEME;
         } else if (!strcasecmp(picker_type, "package/bootlogo")) {
             message_text = lang.MUXPICKER.NONE.BOOTLOGO;

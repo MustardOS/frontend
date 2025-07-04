@@ -337,7 +337,7 @@ static void handle_confirm() {
         const char *launch;
         int16_t *kiosk_flag;
     } elements[] = {
-            {"theme",     "theme",             &kiosk.CUSTOM.THEME},
+            {"theme",     "/theme",             &kiosk.CUSTOM.THEME},
             {"bootlogo",  "package/bootlogo",  &kiosk.CUSTOM.BOOTLOGO},
             {"catalogue", "package/catalogue", &kiosk.CUSTOM.CATALOGUE},
             {"config",    "package/config",    &kiosk.CUSTOM.CONFIGURATION}
