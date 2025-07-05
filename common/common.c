@@ -2558,7 +2558,7 @@ int theme_compat() {
     if (file_exist(theme_version_file)) {
         char *theme_version = read_line_char_from(theme_version_file, 1);
         for (int i = 0; theme_back_compat[i] != NULL; i++) {
-            if (str_startswith(theme_version, theme_back_compat[i])) return 1;
+            if (str_startswith(theme_back_compat[i], theme_version)) return 1;
         }
         LOG_WARN(mux_module, "Incompatible Theme Detected: %s", theme_version)
     } else {
