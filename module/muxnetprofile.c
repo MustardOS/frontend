@@ -60,6 +60,9 @@ static void load_profile(char *name) {
     write_text_to_file((CONF_CONFIG_PATH "network/dns"), "w", CHAR,
                        mini_get_string(net_profile, "network", "dns", ""));
 
+    write_text_to_file((CONF_CONFIG_PATH "network/hostname"), "w", CHAR,
+                       mini_get_string(net_profile, "network", "hostname", read_line_char_from("/etc/hostname", 1)));
+
     mini_free(net_profile);
 }
 
@@ -75,6 +78,7 @@ static int save_profile() {
     const char *p_subnet = read_all_char_from((CONF_CONFIG_PATH "network/subnet"));
     const char *p_gateway = read_all_char_from((CONF_CONFIG_PATH "network/gateway"));
     const char *p_dns = read_all_char_from((CONF_CONFIG_PATH "network/dns"));
+    const char *p_hostname = read_line_char_from("/etc/hostname", 1);
 
     if (!p_ssid || !strlen(p_ssid)) {
         toast_message(lang.MUXNETPROFILE.INVALID_SSID, 1000);
@@ -121,6 +125,7 @@ static int save_profile() {
     mini_set_string(net_profile, "network", "subnet", (!type) ? "" : p_subnet);
     mini_set_string(net_profile, "network", "gateway", (!type) ? "" : p_gateway);
     mini_set_string(net_profile, "network", "dns", (!type) ? "" : p_dns);
+    mini_set_string(net_profile, "network", "hostname", p_hostname);
 
     mini_save(net_profile, MINI_FLAGS_SKIP_EMPTY_GROUPS);
     mini_free(net_profile);
