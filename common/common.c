@@ -68,7 +68,7 @@ int current_volume = 0;
 
 char *theme_back_compat[] = {
         config.SYSTEM.VERSION,
-        "2502",
+        "2502.0_PIXIE",
         NULL
 };
 
