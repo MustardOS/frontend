@@ -1025,6 +1025,7 @@ void scale_theme(struct mux_device *device) {
 
 void load_theme(struct theme_config *theme, struct mux_config *config, struct mux_device *device) {
     char scheme[MAX_BUFFER_SIZE];
+    snprintf(mux_dimension, sizeof(mux_dimension), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
 
     // If theme does not support device resolution fallback to default but only after factory reset
     if (!config->BOOT.FACTORY_RESET) {
@@ -1036,6 +1037,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
             if (directory_exist(theme_device_folder)) {
                 device->MUX.WIDTH = config->SETTINGS.GENERAL.THEME_RESOLUTION_WIDTH;
                 device->MUX.HEIGHT = config->SETTINGS.GENERAL.THEME_RESOLUTION_HEIGHT;
+                snprintf(mux_dimension, sizeof(mux_dimension), "%dx%d/", device->MUX.WIDTH, device->MUX.HEIGHT);
 
                 float scale_width = (float) device->SCREEN.WIDTH / device->MUX.WIDTH;
                 float scale_height = (float) device->SCREEN.HEIGHT / device->MUX.HEIGHT;

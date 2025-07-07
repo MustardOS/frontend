@@ -349,8 +349,8 @@ static void handle_confirm() {
     save_custom_options();
 
     for (size_t i = 0; i < A_SIZE(elements); i++) {
-        if (strcasecmp(u_data, "themealternate") == 0) {
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themealternate");
+        if (strcasecmp(u_data, "alternate") == 0) {
+            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "alternate");
             load_mux("custom");
 
             close_input();
