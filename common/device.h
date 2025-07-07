@@ -17,6 +17,7 @@ struct mux_device {
         char RTC_CLOCK[MAX_BUFFER_SIZE];
         char RTC_WAKE[MAX_BUFFER_SIZE];
         char LED[MAX_BUFFER_SIZE];
+        int16_t RGB;
     } DEVICE;
 
     struct {

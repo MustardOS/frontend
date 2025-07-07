@@ -65,6 +65,7 @@ struct mux_config {
             int16_t COLOUR;
             int16_t BRIGHTNESS;
             int16_t VOLUME;
+            int16_t RGB;
             char LANGUAGE[MAX_BUFFER_SIZE];
             int16_t THEME_RESOLUTION;
             int16_t THEME_RESOLUTION_WIDTH;

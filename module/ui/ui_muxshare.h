@@ -293,6 +293,7 @@
     TWEAKGEN(Brightness, "brightness") \
     TWEAKGEN(Volume,     "volume")     \
     TWEAKGEN(Colour,     "colour")     \
+    TWEAKGEN(Rgb,        "rgb")        \
     TWEAKGEN(Startup,    "startup")
 
 #define VISUAL_ELEMENTS                                    \

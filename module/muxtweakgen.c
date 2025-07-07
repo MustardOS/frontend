@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakgen.h"
 
-#define UI_COUNT 7
+#define UI_COUNT 8
 
 #define TWEAKGEN(NAME, UDATA) static int NAME##_original;
     TWEAKGEN_ELEMENTS
@@ -17,6 +17,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBrightness_tweakgen, lang.MUXTWEAKGEN.HELP.BRIGHT},
             {ui_lblVolume_tweakgen,     lang.MUXTWEAKGEN.HELP.VOLUME},
             {ui_lblColour_tweakgen,     lang.MUXTWEAKGEN.HELP.TEMP},
+            {ui_lblRgb_tweakgen,        lang.MUXTWEAKGEN.HELP.RGB},
             {ui_lblStartup_tweakgen,    lang.MUXTWEAKGEN.HELP.STARTUP},
     };
 
@@ -49,6 +50,7 @@ static void restore_tweak_options() {
     update_volume_and_brightness();
 
     lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
+    lv_dropdown_set_selected(ui_droRgb_tweakgen, config.SETTINGS.GENERAL.RGB);
 
     lv_dropdown_set_selected(ui_droStartup_tweakgen,
                              !strcasecmp(config.SETTINGS.GENERAL.STARTUP, "explore") ? 1 :
@@ -88,6 +90,7 @@ static void save_tweak_options() {
     };
 
     CHECK_AND_SAVE_VAL(tweakgen, Startup, "settings/general/startup", CHAR, startup_options);
+    CHECK_AND_SAVE_STD(tweakgen, Rgb, "settings/general/rgb", INT, 0);
 
     if (lv_dropdown_get_selected(ui_droColour_tweakgen) != Colour_original) {
         is_modified++;
@@ -137,6 +140,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, tweakgen, Brightness, lang.MUXTWEAKGEN.BRIGHT, "brightness", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Volume, lang.MUXTWEAKGEN.VOLUME, "volume", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakgen, Colour, lang.MUXTWEAKGEN.TEMP, "colour", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakgen, Rgb, lang.MUXTWEAKGEN.RGB, "rgb", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakgen, Startup, lang.MUXTWEAKGEN.STARTUP.TITLE, "startup", startup_options, 6);
 
     char *brightness_values = generate_number_string(1, device.SCREEN.BRIGHT, 1, NULL, NULL, NULL, 0);
@@ -165,6 +169,11 @@ static void init_navigation_group() {
 
     if (!device.DEVICE.HAS_HDMI) {
         lv_obj_add_flag(ui_pnlHdmi_tweakgen, MU_OBJ_FLAG_HIDE_FLOAT);
+        ui_count -= 1;
+    }
+
+    if (!device.DEVICE.RGB) {
+        lv_obj_add_flag(ui_pnlRgb_tweakgen, MU_OBJ_FLAG_HIDE_FLOAT);
         ui_count -= 1;
     }
 
