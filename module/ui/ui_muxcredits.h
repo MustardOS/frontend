@@ -16,6 +16,7 @@ extern lv_obj_t *ui_conHeroOne;
 extern lv_obj_t *ui_conHeroTwo;
 extern lv_obj_t *ui_conKnightOne;
 extern lv_obj_t *ui_conKnightTwo;
+extern lv_obj_t *ui_conContrib;
 extern lv_obj_t *ui_conSpecial;
 extern lv_obj_t *ui_conKofi;
 extern lv_obj_t *ui_conMusic;
