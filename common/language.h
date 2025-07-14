@@ -232,6 +232,7 @@ struct mux_lang {
         char CHILDFIRST[MAX_BUFFER_SIZE];
         char TUNESCALE[MAX_BUFFER_SIZE];
         char CARDMODE[MAX_BUFFER_SIZE];
+        char STATE[MAX_BUFFER_SIZE];
         struct {
             char VMSWAP[MAX_BUFFER_SIZE];
             char DIRTYRATIO[MAX_BUFFER_SIZE];
@@ -247,6 +248,7 @@ struct mux_lang {
             char CHILDFIRST[MAX_BUFFER_SIZE];
             char TUNESCALE[MAX_BUFFER_SIZE];
             char CARDMODE[MAX_BUFFER_SIZE];
+            char STATE[MAX_BUFFER_SIZE];
         } HELP;
     } MUXDANGER;
 
@@ -824,7 +826,6 @@ struct mux_lang {
         char OVERDRIVE[MAX_BUFFER_SIZE];
         char SWAPFILE[MAX_BUFFER_SIZE];
         char ZRAMFILE[MAX_BUFFER_SIZE];
-        char STATE[MAX_BUFFER_SIZE];
         char DISPSUSPEND[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
@@ -867,7 +868,6 @@ struct mux_lang {
             char SWAPFILE[MAX_BUFFER_SIZE];
             char ZRAMFILE[MAX_BUFFER_SIZE];
             char RUMBLE[MAX_BUFFER_SIZE];
-            char STATE[MAX_BUFFER_SIZE];
             char BRIGHT[MAX_BUFFER_SIZE];
             char VOLUME[MAX_BUFFER_SIZE];
             char SWAP[MAX_BUFFER_SIZE];

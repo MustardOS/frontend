@@ -46,7 +46,6 @@ struct mux_config {
             int16_t THEME;
             int16_t RETROWAIT;
             char USBFUNCTION[MAX_BUFFER_SIZE];
-            char STATE[MAX_BUFFER_SIZE];
             int16_t VERBOSE;
             int16_t RUMBLE;
             int16_t USERINIT;
@@ -134,6 +133,7 @@ struct mux_config {
         int16_t TIMESLICE;
         int16_t TUNESCALE;
         char CARDMODE[MAX_BUFFER_SIZE];
+        char STATE[MAX_BUFFER_SIZE];
     } DANGER;
 };
 

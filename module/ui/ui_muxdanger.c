@@ -39,3 +39,7 @@ const int time_slice_values[] = {
 const char *cardmode_values[] = {
         "deadline", "noop"
 };
+
+const char *state_values[] = {
+        "mem", "freeze"
+};

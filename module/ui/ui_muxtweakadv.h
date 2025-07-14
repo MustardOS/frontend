@@ -18,8 +18,6 @@ extern const char *volume_values[];
 
 extern const char *brightness_values[];
 
-extern const char *state_values[];
-
 extern const int accelerate_values[];
 
 extern const int zram_swap_values[];

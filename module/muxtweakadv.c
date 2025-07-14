@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 19
+#define UI_COUNT 18
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
     TWEAKADV_ELEMENTS
@@ -19,7 +19,6 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblLed_tweakadv,         lang.MUXTWEAKADV.HELP.LED},
             {ui_lblTheme_tweakadv,       lang.MUXTWEAKADV.HELP.RANDOM},
             {ui_lblRetroWait_tweakadv,   lang.MUXTWEAKADV.HELP.NET_WAIT},
-            {ui_lblState_tweakadv,       lang.MUXTWEAKADV.HELP.STATE},
             {ui_lblVerbose_tweakadv,     lang.MUXTWEAKADV.HELP.VERBOSE},
             {ui_lblRumble_tweakadv,      lang.MUXTWEAKADV.HELP.RUMBLE},
             {ui_lblUserInit_tweakadv,    lang.MUXTWEAKADV.HELP.USER_INIT},
@@ -64,8 +63,6 @@ static void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droOverdrive_tweakadv, config.SETTINGS.ADVANCED.OVERDRIVE);
     lv_dropdown_set_selected(ui_droDispSuspend_tweakadv, config.SETTINGS.ADVANCED.DISPSUSPEND);
 
-    lv_dropdown_set_selected(ui_droState_tweakadv, !strcasecmp(config.SETTINGS.ADVANCED.STATE, "freeze"));
-
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
     map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, zram_swap_values, 11, 0);
     map_drop_down_to_index(ui_droZramfile_tweakadv, config.SETTINGS.ADVANCED.ZRAMFILE, zram_swap_values, 11, 0);
@@ -90,7 +87,6 @@ static void save_tweak_options() {
 
     CHECK_AND_SAVE_VAL(tweakadv, Volume, "settings/advanced/volume", CHAR, volume_values);
     CHECK_AND_SAVE_VAL(tweakadv, Brightness, "settings/advanced/brightness", CHAR, brightness_values);
-    CHECK_AND_SAVE_VAL(tweakadv, State, "settings/advanced/state", CHAR, state_values);
 
     CHECK_AND_SAVE_MAP(tweakadv, Accelerate, "settings/advanced/accelerate", accelerate_values, 17, 6);
     CHECK_AND_SAVE_MAP(tweakadv, Swapfile, "settings/advanced/swapfile", zram_swap_values, 11, 0);
@@ -142,8 +138,6 @@ static void init_navigation_group() {
             lang.MUXTWEAKADV.RUMBLE.SHSL
     };
 
-    char *state_options[] = {"mem", "freeze"};
-
     INIT_OPTION_ITEM(-1, tweakadv, Accelerate, lang.MUXTWEAKADV.SPEED, "accelerate", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, Swap, lang.MUXTWEAKADV.SWAP.TITLE, "swap", swap_options, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Thermal, lang.MUXTWEAKADV.THERMAL, "thermal", disabled_enabled, 2);
@@ -154,7 +148,6 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, tweakadv, Led, lang.MUXTWEAKADV.LED, "led", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Theme, lang.MUXTWEAKADV.RANDOM, "theme", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, RetroWait, lang.MUXTWEAKADV.NET_WAIT, "retrowait", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, tweakadv, State, lang.MUXTWEAKADV.STATE, "state", state_options, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Verbose, lang.MUXTWEAKADV.VERBOSE, "verbose", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Rumble, lang.MUXTWEAKADV.RUMBLE.TITLE, "rumble", rumble_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, UserInit, lang.MUXTWEAKADV.USER_INIT, "userinit", disabled_enabled, 2);

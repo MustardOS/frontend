@@ -39,7 +39,6 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RUMBLE, CONF_CONFIG_PATH "settings/advanced/rumble", 0)
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.VOLUME, CONF_CONFIG_PATH "settings/advanced/volume", "previous")
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.BRIGHTNESS, CONF_CONFIG_PATH "settings/advanced/brightness", "previous")
-    CFG_STR_FIELD(config->SETTINGS.ADVANCED.STATE, CONF_CONFIG_PATH "settings/advanced/state", "mem")
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.USERINIT, CONF_CONFIG_PATH "settings/advanced/user_init", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.DPADSWAP, CONF_CONFIG_PATH "settings/advanced/dpad_swap", 1)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.OVERDRIVE, CONF_CONFIG_PATH "settings/advanced/overdrive", 0)
@@ -139,4 +138,5 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->DANGER.CHILDFIRST, CONF_CONFIG_PATH "danger/child_first", 0)
     CFG_INT_FIELD(config->DANGER.TUNESCALE, CONF_CONFIG_PATH "danger/tune_scale", 1)
     CFG_STR_FIELD(config->DANGER.CARDMODE, CONF_CONFIG_PATH "danger/cardmode", "noop")
+    CFG_STR_FIELD(config->DANGER.STATE, CONF_CONFIG_PATH "danger/state", "mem")
 }

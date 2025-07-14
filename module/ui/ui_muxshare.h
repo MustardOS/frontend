@@ -116,7 +116,8 @@
     DANGER(IdleFlush,     "idleflush")   \
     DANGER(ChildFirst,    "child")       \
     DANGER(TuneScale,     "tunescale")   \
-    DANGER(CardMode,      "cardmode")
+    DANGER(CardMode,      "cardmode")    \
+    DANGER(State,         "state")
 
 #define INFO_ELEMENTS              \
     INFO(Screenshot, "screenshot") \
@@ -277,7 +278,6 @@
     TWEAKADV(Led,         "led")         \
     TWEAKADV(Theme,       "theme")       \
     TWEAKADV(RetroWait,   "retrowait")   \
-    TWEAKADV(State,       "state")       \
     TWEAKADV(Verbose,     "verbose")     \
     TWEAKADV(Rumble,      "rumble")      \
     TWEAKADV(UserInit,    "userinit")    \

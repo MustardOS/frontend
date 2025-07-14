@@ -267,6 +267,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDANGER.CHILDFIRST, "Fork Optimisation");
     SPECIFIC_FIELD(lang->MUXDANGER.TUNESCALE, "Scheduler Scaling");
     SPECIFIC_FIELD(lang->MUXDANGER.CARDMODE, "Disk Tuning");
+    SPECIFIC_FIELD(lang->MUXDANGER.STATE, "Suspend Power State");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.VMSWAP, "Controls how aggressively the system swaps memory to disk\n\nLower values keep processes in RAM longer");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.DIRTYRATIO, "Percentage of RAM allowed to hold unwritten (dirty) data before forcing a write to disk");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.DIRTYBACK, "Background write back starts when dirty data exceeds this percentage of RAM\n\nLower values help reduce latency");
@@ -281,6 +282,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.CHILDFIRST, "When enabled, a newly forked child process runs before the parent\n\nMay improve load times for some apps");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.TUNESCALE, "Automatically adjusts scheduler behaviour based on CPU count\n\nDisable for consistent tuning on devices");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.CARDMODE, "Switch between different storage tuning options\n\nMay improve performance on certain mSD cards");
+    SPECIFIC_FIELD(lang->MUXDANGER.HELP.STATE, "Switch between system sleep suspend states\n\nChanges how the device reacts to sleep mode and wake locks");
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");
@@ -728,7 +730,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.LOW, "Low");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.MEDIUM, "Medium");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.BRIGHT.HIGH, "High");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.STATE, "Suspend Power State");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.TITLE, "Device Rumble");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.ST, "Startup");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.SH, "Shutdown");
@@ -751,7 +752,6 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAPFILE, "Adjust the system swapfile if required by certain content");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.ZRAMFILE, "Adjust the system zram if required by certain content");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.RUMBLE, "Toggle vibration for device startup, sleep, and shutdown");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.STATE, "Switch between system sleep suspend states");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT, "Change the default brightness level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAP, "Change how the device buttons work globally");

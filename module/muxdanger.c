@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxdanger.h"
 
-#define UI_COUNT 14
+#define UI_COUNT 15
 
 #define DANGER(NAME, UDATA) static int NAME##_original;
     DANGER_ELEMENTS
@@ -23,6 +23,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblChildFirst_danger,    lang.MUXDANGER.HELP.CHILDFIRST},
             {ui_lblTuneScale_danger,     lang.MUXDANGER.HELP.TUNESCALE},
             {ui_lblCardMode_danger,      lang.MUXDANGER.HELP.CARDMODE},
+            {ui_lblState_danger,         lang.MUXDANGER.HELP.STATE},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -51,6 +52,7 @@ static void restore_danger_options() {
     map_drop_down_to_index(ui_droTimeSlice_danger, config.DANGER.TIMESLICE, time_slice_values, 11, 1);
 
     lv_dropdown_set_selected(ui_droCardMode_danger, !strcasecmp(config.DANGER.CARDMODE, "noop"));
+    lv_dropdown_set_selected(ui_droState_danger, !strcasecmp(config.DANGER.STATE, "mem"));
 }
 
 static void save_danger_options() {
@@ -72,6 +74,7 @@ static void save_danger_options() {
     CHECK_AND_SAVE_MAP(danger, TimeSlice, "danger/time_slice", time_slice_values, 11, 1);
 
     CHECK_AND_SAVE_VAL(danger, CardMode, "danger/cardmode", CHAR, cardmode_values);
+    CHECK_AND_SAVE_VAL(danger, State, "danger/state", CHAR, state_values);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
@@ -91,6 +94,7 @@ static void init_navigation_group() {
     char *time_slice_values[] = {"10", "100", "200", "300", "400", "500", "600", "700", "800", "900", "1000"};
 
     char *cardmode_options[] = {"deadline", "noop"};
+    char *state_options[] = {"mem", "freeze"};
 
     INIT_OPTION_ITEM(-1, danger, VmSwap, lang.MUXDANGER.VMSWAP, "vmswap", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, DirtyRatio, lang.MUXDANGER.DIRTYRATIO, "dirty-ratio", NULL, 0);
@@ -106,6 +110,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, danger, ChildFirst, lang.MUXDANGER.CHILDFIRST, "child", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, danger, TuneScale, lang.MUXDANGER.TUNESCALE, "tunescale", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, danger, CardMode, lang.MUXDANGER.CARDMODE, "cardmode", cardmode_options, 2);
+    INIT_OPTION_ITEM(-1, danger, State, lang.MUXDANGER.STATE, "state", state_options, 2);
 
     char *four_values = generate_number_string(0, 100, 4, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droVmSwap_danger, four_values);
