@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxdanger.h"
 
-#define UI_COUNT 13
+#define UI_COUNT 14
 
 #define DANGER(NAME, UDATA) static int NAME##_original;
     DANGER_ELEMENTS
@@ -22,6 +22,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblIdleFlush_danger,     lang.MUXDANGER.HELP.IDLEFLUSH},
             {ui_lblChildFirst_danger,    lang.MUXDANGER.HELP.CHILDFIRST},
             {ui_lblTuneScale_danger,     lang.MUXDANGER.HELP.TUNESCALE},
+            {ui_lblCardMode_danger,      lang.MUXDANGER.HELP.CARDMODE},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -48,6 +49,8 @@ static void restore_danger_options() {
     map_drop_down_to_index(ui_droNrRequests_danger, config.DANGER.REQUESTS, request_values, 8, 1);
     map_drop_down_to_index(ui_droReadAhead_danger, config.DANGER.READAHEAD, read_ahead_values, 9, 6);
     map_drop_down_to_index(ui_droTimeSlice_danger, config.DANGER.TIMESLICE, time_slice_values, 11, 1);
+
+    lv_dropdown_set_selected(ui_droCardMode_danger, !strcasecmp(config.DANGER.CARDMODE, "noop"));
 }
 
 static void save_danger_options() {
@@ -68,6 +71,8 @@ static void save_danger_options() {
     CHECK_AND_SAVE_MAP(danger, ReadAhead, "danger/read_ahead", read_ahead_values, 9, 6);
     CHECK_AND_SAVE_MAP(danger, TimeSlice, "danger/time_slice", time_slice_values, 11, 1);
 
+    CHECK_AND_SAVE_VAL(danger, CardMode, "danger/cardmode", CHAR, cardmode_values);
+
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
         refresh_screen(ui_screen);
@@ -85,6 +90,8 @@ static void init_navigation_group() {
     char *read_ahead_options[] = {"64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384"};
     char *time_slice_values[] = {"10", "100", "200", "300", "400", "500", "600", "700", "800", "900", "1000"};
 
+    char *cardmode_options[] = {"deadline", "noop"};
+
     INIT_OPTION_ITEM(-1, danger, VmSwap, lang.MUXDANGER.VMSWAP, "vmswap", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, DirtyRatio, lang.MUXDANGER.DIRTYRATIO, "dirty-ratio", NULL, 0);
     INIT_OPTION_ITEM(-1, danger, DirtyBack, lang.MUXDANGER.DIRTYBACK, "dirty-back", NULL, 0);
@@ -98,6 +105,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, danger, IdleFlush, lang.MUXDANGER.IDLEFLUSH, "idleflush", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, danger, ChildFirst, lang.MUXDANGER.CHILDFIRST, "child", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, danger, TuneScale, lang.MUXDANGER.TUNESCALE, "tunescale", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, danger, CardMode, lang.MUXDANGER.CARDMODE, "cardmode", cardmode_options, 2);
 
     char *four_values = generate_number_string(0, 100, 4, NULL, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droVmSwap_danger, four_values);

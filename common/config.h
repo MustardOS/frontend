@@ -54,7 +54,7 @@ struct mux_config {
             int16_t OVERDRIVE;
             int16_t SWAPFILE;
             int16_t ZRAMFILE;
-            char CARDMODE[MAX_BUFFER_SIZE];
+            int16_t DISPSUSPEND;
         } ADVANCED;
         struct {
             int16_t HIDDEN;
@@ -133,6 +133,7 @@ struct mux_config {
         int16_t CHILDFIRST;
         int16_t TIMESLICE;
         int16_t TUNESCALE;
+        char CARDMODE[MAX_BUFFER_SIZE];
     } DANGER;
 };
 

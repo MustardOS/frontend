@@ -23,3 +23,5 @@ extern const int request_values[];
 extern const int read_ahead_values[];
 
 extern const int time_slice_values[];
+
+extern const char *cardmode_values[];

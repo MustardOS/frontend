@@ -115,7 +115,8 @@
     DANGER(IoStats,       "iostats")     \
     DANGER(IdleFlush,     "idleflush")   \
     DANGER(ChildFirst,    "child")       \
-    DANGER(TuneScale,     "tunescale")
+    DANGER(TuneScale,     "tunescale")   \
+    DANGER(CardMode,      "cardmode")
 
 #define INFO_ELEMENTS              \
     INFO(Screenshot, "screenshot") \
@@ -265,26 +266,26 @@
     SYSINFO(Capacity, "capacity") \
     SYSINFO(Voltage,  "voltage")
 
-#define TWEAKADV_ELEMENTS              \
-    TWEAKADV(Accelerate, "accelerate") \
-    TWEAKADV(Swap,       "swap")       \
-    TWEAKADV(Thermal,    "thermal")    \
-    TWEAKADV(Volume,     "volume")     \
-    TWEAKADV(Brightness, "brightness") \
-    TWEAKADV(Offset,     "offset")     \
-    TWEAKADV(Passcode,   "lock")       \
-    TWEAKADV(Led,        "led")        \
-    TWEAKADV(Theme,      "theme")      \
-    TWEAKADV(RetroWait,  "retrowait")  \
-    TWEAKADV(State,      "state")      \
-    TWEAKADV(Verbose,    "verbose")    \
-    TWEAKADV(Rumble,     "rumble")     \
-    TWEAKADV(UserInit,   "userinit")   \
-    TWEAKADV(DpadSwap,   "dpadswap")   \
-    TWEAKADV(Overdrive,  "overdrive")  \
-    TWEAKADV(Swapfile,   "swapfile")   \
-    TWEAKADV(Zramfile,   "zramfile")   \
-    TWEAKADV(CardMode,   "cardmode")
+#define TWEAKADV_ELEMENTS                \
+    TWEAKADV(Accelerate,  "accelerate")  \
+    TWEAKADV(Swap,        "swap")        \
+    TWEAKADV(Thermal,     "thermal")     \
+    TWEAKADV(Volume,      "volume")      \
+    TWEAKADV(Brightness,  "brightness")  \
+    TWEAKADV(Offset,      "offset")      \
+    TWEAKADV(Passcode,    "lock")        \
+    TWEAKADV(Led,         "led")         \
+    TWEAKADV(Theme,       "theme")       \
+    TWEAKADV(RetroWait,   "retrowait")   \
+    TWEAKADV(State,       "state")       \
+    TWEAKADV(Verbose,     "verbose")     \
+    TWEAKADV(Rumble,      "rumble")      \
+    TWEAKADV(UserInit,    "userinit")    \
+    TWEAKADV(DpadSwap,    "dpadswap")    \
+    TWEAKADV(Overdrive,   "overdrive")   \
+    TWEAKADV(Swapfile,    "swapfile")    \
+    TWEAKADV(Zramfile,    "zramfile")    \
+    TWEAKADV(DispSuspend, "dispsuspend") \
 
 #define TWEAKGEN_ELEMENTS              \
     TWEAKGEN(Rtc,        "clock")      \
