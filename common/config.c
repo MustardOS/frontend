@@ -44,6 +44,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.OVERDRIVE, CONF_CONFIG_PATH "settings/advanced/overdrive", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAPFILE, CONF_CONFIG_PATH "settings/advanced/swapfile", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ZRAMFILE, CONF_CONFIG_PATH "settings/advanced/zramfile", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.LIDSWITCH, CONF_CONFIG_PATH "settings/advanced/lidswitch", 1)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.DISPSUSPEND, CONF_CONFIG_PATH "settings/advanced/disp_suspend", 0)
 
     CFG_INT_FIELD(config->SETTINGS.GENERAL.HIDDEN, CONF_CONFIG_PATH "settings/general/hidden", 0)

@@ -826,6 +826,7 @@ struct mux_lang {
         char OVERDRIVE[MAX_BUFFER_SIZE];
         char SWAPFILE[MAX_BUFFER_SIZE];
         char ZRAMFILE[MAX_BUFFER_SIZE];
+        char LIDSWITCH[MAX_BUFFER_SIZE];
         char DISPSUSPEND[MAX_BUFFER_SIZE];
         char SECONDPART[MAX_BUFFER_SIZE];
         char USBPART[MAX_BUFFER_SIZE];
@@ -869,6 +870,7 @@ struct mux_lang {
             char OVERDRIVE[MAX_BUFFER_SIZE];
             char SWAPFILE[MAX_BUFFER_SIZE];
             char ZRAMFILE[MAX_BUFFER_SIZE];
+            char LIDSWITCH[MAX_BUFFER_SIZE];
             char RUMBLE[MAX_BUFFER_SIZE];
             char BRIGHT[MAX_BUFFER_SIZE];
             char VOLUME[MAX_BUFFER_SIZE];

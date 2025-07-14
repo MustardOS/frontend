@@ -285,6 +285,7 @@
     TWEAKADV(Overdrive,   "overdrive")   \
     TWEAKADV(Swapfile,    "swapfile")    \
     TWEAKADV(Zramfile,    "zramfile")    \
+    TWEAKADV(LidSwitch,   "lidswitch")   \
     TWEAKADV(DispSuspend, "dispsuspend") \
     TWEAKADV(SecondPart,  "secondpart")  \
     TWEAKADV(UsbPart,     "usbpart")

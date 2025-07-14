@@ -53,6 +53,7 @@ struct mux_config {
             int16_t OVERDRIVE;
             int16_t SWAPFILE;
             int16_t ZRAMFILE;
+            int16_t LIDSWITCH;
             int16_t DISPSUSPEND;
         } ADVANCED;
         struct {

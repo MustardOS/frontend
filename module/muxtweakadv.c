@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 20
+#define UI_COUNT 21
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
     TWEAKADV_ELEMENTS
@@ -26,6 +26,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblOverdrive_tweakadv,   lang.MUXTWEAKADV.HELP.OVERDRIVE},
             {ui_lblSwapfile_tweakadv,    lang.MUXTWEAKADV.HELP.SWAPFILE},
             {ui_lblZramfile_tweakadv,    lang.MUXTWEAKADV.HELP.ZRAMFILE},
+            {ui_lblLidSwitch_tweakadv,    lang.MUXTWEAKADV.HELP.LIDSWITCH},
             {ui_lblDispSuspend_tweakadv, lang.MUXTWEAKADV.HELP.DISPSUSPEND},
             {ui_lblSecondPart_tweakadv,  lang.MUXTWEAKADV.HELP.SECONDPART},
             {ui_lblUsbPart_tweakadv,     lang.MUXTWEAKADV.HELP.USBPART},
@@ -63,6 +64,7 @@ static void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droUserInit_tweakadv, config.SETTINGS.ADVANCED.USERINIT);
     lv_dropdown_set_selected(ui_droDpadSwap_tweakadv, config.SETTINGS.ADVANCED.DPADSWAP);
     lv_dropdown_set_selected(ui_droOverdrive_tweakadv, config.SETTINGS.ADVANCED.OVERDRIVE);
+    lv_dropdown_set_selected(ui_droLidSwitch_tweakadv, config.SETTINGS.ADVANCED.LIDSWITCH);
     lv_dropdown_set_selected(ui_droDispSuspend_tweakadv, config.SETTINGS.ADVANCED.DISPSUSPEND);
     lv_dropdown_set_selected(ui_droSecondPart_tweakadv, device.STORAGE.SDCARD.PARTITION - 1);
     lv_dropdown_set_selected(ui_droUsbPart_tweakadv, device.STORAGE.USB.PARTITION - 1);
@@ -87,6 +89,7 @@ static void save_tweak_options() {
     CHECK_AND_SAVE_STD(tweakadv, UserInit, "settings/advanced/user_init", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, DpadSwap, "settings/advanced/dpad_swap", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Overdrive, "settings/advanced/overdrive", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, LidSwitch, "settings/advanced/lidswitch", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, DispSuspend, "settings/advanced/disp_suspend", INT, 0);
 
     do {
@@ -175,6 +178,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, tweakadv, Overdrive, lang.MUXTWEAKADV.OVERDRIVE, "overdrive", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Swapfile, lang.MUXTWEAKADV.SWAPFILE, "swapfile", NULL, 0);
     INIT_OPTION_ITEM(-1, tweakadv, Zramfile, lang.MUXTWEAKADV.ZRAMFILE, "zramfile", NULL, 0);
+    INIT_OPTION_ITEM(-1, tweakadv, LidSwitch, lang.MUXTWEAKADV.LIDSWITCH, "lidswitch", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, DispSuspend, lang.MUXTWEAKADV.DISPSUSPEND, "dispsuspend", disabled_enabled, 2);
 
     char *accelerate_values = generate_number_string(16, 256, 16, lang.GENERIC.DISABLED, NULL, NULL, 0);
@@ -212,6 +216,11 @@ static void init_navigation_group() {
 
     if (!device.DEVICE.HAS_NETWORK) {
         lv_obj_add_flag(ui_pnlRetroWait_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
+        ui_count -= 1;
+    }
+
+    if (!device.DEVICE.HAS_LID) {
+        lv_obj_add_flag(ui_pnlLidSwitch_tweakadv, MU_OBJ_FLAG_HIDE_FLOAT);
         ui_count -= 1;
     }
 
