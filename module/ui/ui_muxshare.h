@@ -286,6 +286,8 @@
     TWEAKADV(Swapfile,    "swapfile")    \
     TWEAKADV(Zramfile,    "zramfile")    \
     TWEAKADV(DispSuspend, "dispsuspend") \
+    TWEAKADV(SecondPart,  "secondpart")  \
+    TWEAKADV(UsbPart,     "usbpart")
 
 #define TWEAKGEN_ELEMENTS              \
     TWEAKGEN(Rtc,        "clock")      \

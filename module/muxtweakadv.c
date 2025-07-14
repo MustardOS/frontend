@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 18
+#define UI_COUNT 20
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
     TWEAKADV_ELEMENTS
@@ -27,6 +27,8 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblSwapfile_tweakadv,    lang.MUXTWEAKADV.HELP.SWAPFILE},
             {ui_lblZramfile_tweakadv,    lang.MUXTWEAKADV.HELP.ZRAMFILE},
             {ui_lblDispSuspend_tweakadv, lang.MUXTWEAKADV.HELP.DISPSUSPEND},
+            {ui_lblSecondPart_tweakadv,  lang.MUXTWEAKADV.HELP.SECONDPART},
+            {ui_lblUsbPart_tweakadv,     lang.MUXTWEAKADV.HELP.USBPART},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -62,6 +64,8 @@ static void restore_tweak_options() {
     lv_dropdown_set_selected(ui_droDpadSwap_tweakadv, config.SETTINGS.ADVANCED.DPADSWAP);
     lv_dropdown_set_selected(ui_droOverdrive_tweakadv, config.SETTINGS.ADVANCED.OVERDRIVE);
     lv_dropdown_set_selected(ui_droDispSuspend_tweakadv, config.SETTINGS.ADVANCED.DISPSUSPEND);
+    lv_dropdown_set_selected(ui_droSecondPart_tweakadv, device.STORAGE.SDCARD.PARTITION - 1);
+    lv_dropdown_set_selected(ui_droUsbPart_tweakadv, device.STORAGE.USB.PARTITION - 1);
 
     map_drop_down_to_index(ui_droAccelerate_tweakadv, config.SETTINGS.ADVANCED.ACCELERATE, accelerate_values, 17, 6);
     map_drop_down_to_index(ui_droSwapfile_tweakadv, config.SETTINGS.ADVANCED.SWAPFILE, zram_swap_values, 11, 0);
@@ -84,6 +88,22 @@ static void save_tweak_options() {
     CHECK_AND_SAVE_STD(tweakadv, DpadSwap, "settings/advanced/dpad_swap", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Overdrive, "settings/advanced/overdrive", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, DispSuspend, "settings/advanced/disp_suspend", INT, 0);
+
+    do {
+        int sd2_current = lv_dropdown_get_selected(ui_droSecondPart_tweakadv);
+        if (sd2_current != SecondPart_original) {
+            is_modified++;
+            write_text_to_file((CONF_DEVICE_PATH "storage/sdcard/num"), "w", INT, sd2_current + 1);
+        }
+    } while (0);
+
+    do {
+        int usb_current = lv_dropdown_get_selected(ui_droUsbPart_tweakadv);
+        if (usb_current != UsbPart_original) {
+            is_modified++;
+            write_text_to_file((CONF_DEVICE_PATH "storage/usb/num"), "w", INT, usb_current + 1);
+        }
+    } while (0);
 
     CHECK_AND_SAVE_VAL(tweakadv, Volume, "settings/advanced/volume", CHAR, volume_values);
     CHECK_AND_SAVE_VAL(tweakadv, Brightness, "settings/advanced/brightness", CHAR, brightness_values);
@@ -172,6 +192,11 @@ static void init_navigation_group() {
     char *zramfile_values = generate_number_string(64, 512, 64, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droZramfile_tweakadv, zramfile_values);
     free(zramfile_values);
+
+    char *partition_values = generate_number_string(1, 128, 1, NULL, NULL, NULL, 0);
+    apply_theme_list_drop_down(&theme, ui_droSecondPart_tweakadv, partition_values);
+    apply_theme_list_drop_down(&theme, ui_droUsbPart_tweakadv, partition_values);
+    free(partition_values);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

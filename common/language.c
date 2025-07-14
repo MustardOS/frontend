@@ -738,6 +738,8 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.STSL, "Startup + Sleep");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.RUMBLE.SHSL, "Shutdown + Sleep");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.DISPSUSPEND, "Display Suspend");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.SECONDPART, "Secondary Partition");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.USBPART, "External Partition");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SPEED, "Adjust the rate of speed when holding navigation keys down");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.THERMAL, "Toggle the system ability to automatically shut the device down due high temperature");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.OFFSET, "Change the displayed battery percentage to improve accuracy based on calibration or known deviations in the battery capacity reading");
@@ -755,7 +757,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.BRIGHT, "Change the default brightness level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.VOLUME, "Change the default audio level that the device will use each time it starts up");
     SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SWAP, "Change how the device buttons work globally");
-    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DISPSUSPEND, "Toggle the device display suspend function. Some displays will not like this enabled.");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.DISPSUSPEND, "Toggle the device display suspend function, however some displays will not like this enabled");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.SECONDPART, "Change the partition number requested upon secondary storage mount");
+    SPECIFIC_FIELD(lang->MUXTWEAKADV.HELP.USBPART, "Change the partition number requested upon external storage mount");
 
     // muxtweakgen
     SPECIFIC_FIELD(lang->MUXTWEAKGEN.TITLE, "GENERAL SETTINGS");
