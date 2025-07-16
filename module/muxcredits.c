@@ -68,7 +68,7 @@ int main(void) {
     if (config.BOOT.FACTORY_RESET) {
         lv_timer_create(timeout_task, anim_duration, NULL);
     } else {
-        lv_timer_create((lv_timer_cb_t) anim_sequence, anim_duration, NULL);
+        lv_timer_create(handle_b, anim_duration, NULL);
     }
 
     mux_input_options input_opts = {
