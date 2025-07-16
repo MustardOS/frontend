@@ -117,6 +117,8 @@ static int save_power_options() {
         refresh_config = 1;
     }
 
+    play_sound(SND_BACK);
+
     return 1;
 }
 

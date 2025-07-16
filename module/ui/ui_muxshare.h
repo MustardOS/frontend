@@ -270,11 +270,11 @@
 
 #define TWEAKADV_ELEMENTS                \
     TWEAKADV(Accelerate,  "accelerate")  \
+    TWEAKADV(Offset,      "offset")      \
     TWEAKADV(Swap,        "swap")        \
-    TWEAKADV(Thermal,     "thermal")     \
     TWEAKADV(Volume,      "volume")      \
     TWEAKADV(Brightness,  "brightness")  \
-    TWEAKADV(Offset,      "offset")      \
+    TWEAKADV(Thermal,     "thermal")     \
     TWEAKADV(Passcode,    "lock")        \
     TWEAKADV(Led,         "led")         \
     TWEAKADV(Theme,       "theme")       \
@@ -284,10 +284,10 @@
     TWEAKADV(UserInit,    "userinit")    \
     TWEAKADV(DpadSwap,    "dpadswap")    \
     TWEAKADV(Overdrive,   "overdrive")   \
-    TWEAKADV(Swapfile,    "swapfile")    \
-    TWEAKADV(Zramfile,    "zramfile")    \
     TWEAKADV(LidSwitch,   "lidswitch")   \
     TWEAKADV(DispSuspend, "dispsuspend") \
+    TWEAKADV(Swapfile,    "swapfile")    \
+    TWEAKADV(Zramfile,    "zramfile")    \
     TWEAKADV(SecondPart,  "secondpart")  \
     TWEAKADV(UsbPart,     "usbpart")
 

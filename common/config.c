@@ -27,7 +27,7 @@ void load_config(struct mux_config *config) {
 
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACCELERATE, CONF_CONFIG_PATH "settings/advanced/accelerate", 96)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAP, CONF_CONFIG_PATH "settings/advanced/swap", 0)
-    CFG_INT_FIELD(config->SETTINGS.ADVANCED.THERMAL, CONF_CONFIG_PATH "settings/advanced/thermal", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.THERMAL, CONF_CONFIG_PATH "settings/advanced/thermal", 1)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.FONT, CONF_CONFIG_PATH "settings/advanced/font", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.OFFSET, CONF_CONFIG_PATH "settings/advanced/offset", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.LOCK, CONF_CONFIG_PATH "settings/advanced/lock", 0)
