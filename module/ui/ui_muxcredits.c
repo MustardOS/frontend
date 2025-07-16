@@ -118,8 +118,9 @@ const char *knight_two[] = {
 
 const char *contributors[] = {
         "acmeplus", "Aeverdyn", "antikk", "arkun", "bgelmini", "Bitter_Bizarro",
-        "cart-su", "chronoss09", "duncanyoyo1", "Habbening", "ImCoKeMaN", "johnnyonflame",
-        "koolkidcorey", "kriznick", "mikhailzrick", "synthic", "xonglebongle", "zarquon",
+        "cart-su", "chronoss09", "duncanyoyo1", "Habbening", "ImCoKeMaN", "IncognitoMan",
+        "johnnyonflame", "koolkidcorey", "kriznick", "mikhailzrick", "synthic", "xonglebongle",
+        "zarquon",
         NULL
 };
 

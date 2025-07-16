@@ -552,9 +552,10 @@ void load_lang(struct mux_lang *lang) {
     // muxpower
     SPECIFIC_FIELD(lang->MUXPOWER.TITLE, "POWER SETTINGS");
     SPECIFIC_FIELD(lang->MUXPOWER.LOW_BATTERY, "Low Battery Indicator");
-    SPECIFIC_FIELD(lang->MUXPOWER.IDLE_ERROR, "Idle Display must be less than Idle Sleep");
+    SPECIFIC_FIELD(lang->MUXPOWER.IDLE.ERROR, "Idle Display must be less than Idle Sleep");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.DISPLAY, "Idle Input Display Timeout");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.SLEEP, "Idle Input Sleep Timeout");
+    SPECIFIC_FIELD(lang->MUXPOWER.IDLE.MUTE, "Mute on Display Timeout");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t10s, "10s");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t30s, "30s");
     SPECIFIC_FIELD(lang->MUXPOWER.IDLE.t60s, "60s");
@@ -575,8 +576,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t15m, "Sleep 15m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t30m, "Sleep 30m + Shutdown");
     SPECIFIC_FIELD(lang->MUXPOWER.SLEEP.t60m, "Sleep 60m + Shutdown");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_SLEEP, "Configure the time the device will sleep when no input is detected");
-    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE_DISPLAY, "Configure the time the screen will dim when no input is detected");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.SLEEP, "Configure the time the device will sleep when no input is detected");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.DISPLAY, "Configure the time the screen will dim when no input is detected");
+    SPECIFIC_FIELD(lang->MUXPOWER.HELP.IDLE.MUTE, "Toggle if the audio is muted when display is dimmed");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.LOW_BATTERY, "Configure when the red LED will display based on the current capacity percentage");
     SPECIFIC_FIELD(lang->MUXPOWER.HELP.SLEEP_FUNCTION, "Configure how the power button functions on long press (2 seconds)");
 

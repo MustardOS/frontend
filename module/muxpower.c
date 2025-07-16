@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxpower.h"
 
-#define UI_COUNT 4
+#define UI_COUNT 5
 
 #define POWER(NAME, UDATA) static int NAME##_original;
     POWER_ELEMENTS
@@ -20,8 +20,9 @@ static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblShutdown_power,    lang.MUXPOWER.HELP.SLEEP_FUNCTION},
             {ui_lblBattery_power,     lang.MUXPOWER.HELP.LOW_BATTERY},
-            {ui_lblIdleDisplay_power, lang.MUXPOWER.HELP.IDLE_DISPLAY},
-            {ui_lblIdleSleep_power,   lang.MUXPOWER.HELP.IDLE_SLEEP},
+            {ui_lblIdleDisplay_power, lang.MUXPOWER.HELP.IDLE.DISPLAY},
+            {ui_lblIdleSleep_power,   lang.MUXPOWER.HELP.IDLE.SLEEP},
+            {ui_lblIdleMute_power,    lang.MUXPOWER.HELP.IDLE.MUTE},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -33,12 +34,14 @@ static void init_dropdown_settings() {
 #undef POWER
 }
 
-static void restore_tweak_options() {
+static void restore_power_options() {
     lv_obj_t *ui_droIdle[2] = {ui_droIdleDisplay_power, ui_droIdleSleep_power};
-    int16_t *config_values[2] = {&config.SETTINGS.POWER.IDLE_DISPLAY, &config.SETTINGS.POWER.IDLE_SLEEP};
+    int16_t *config_values[2] = {&config.SETTINGS.POWER.IDLE.DISPLAY, &config.SETTINGS.POWER.IDLE.SLEEP};
 
     map_drop_down_to_index(ui_droShutdown_power, config.SETTINGS.POWER.SHUTDOWN, shutdown_values, SHUTDOWN_COUNT, 0);
     map_drop_down_to_index(ui_droBattery_power, config.SETTINGS.POWER.LOW_BATTERY, battery_values, BATTERY_COUNT, 5);
+
+    lv_dropdown_set_selected(ui_droIdleMute_power, config.SETTINGS.POWER.IDLE.MUTE);
 
     for (int i = 0; i < 2; i++) {
         int is_custom = 1;
@@ -58,13 +61,7 @@ static void restore_tweak_options() {
     }
 }
 
-static int save_tweak_options() {
-    int is_modified = 0;
-
-    int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown_power),
-                                              shutdown_values, SHUTDOWN_COUNT, -2);
-    int idx_battery = map_drop_down_to_value(lv_dropdown_get_selected(ui_droBattery_power),
-                                             battery_values, BATTERY_COUNT, 25);
+static int save_power_options() {
     int idx_idle_display = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleDisplay_power),
                                                   idle_values, IDLE_COUNT, 0);
     int idx_idle_sleep = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleSleep_power),
@@ -72,12 +69,19 @@ static int save_tweak_options() {
 
     if (idx_idle_display && idx_idle_sleep && idx_idle_display >= idx_idle_sleep) {
         play_sound(SND_ERROR);
-        toast_message(lang.MUXPOWER.IDLE_ERROR, 2000);
+
+        toast_message(lang.MUXPOWER.IDLE.ERROR, 2000);
         refresh_screen(ui_screen);
+
         return 0;
     }
 
-    play_sound(SND_BACK);
+    int is_modified = 0;
+
+    int idx_shutdown = map_drop_down_to_value(lv_dropdown_get_selected(ui_droShutdown_power),
+                                              shutdown_values, SHUTDOWN_COUNT, -2);
+    int idx_battery = map_drop_down_to_value(lv_dropdown_get_selected(ui_droBattery_power),
+                                             battery_values, BATTERY_COUNT, 25);
 
     if (lv_dropdown_get_selected(ui_droShutdown_power) != Shutdown_original) {
         is_modified++;
@@ -100,6 +104,8 @@ static int save_tweak_options() {
         is_modified++;
         write_text_to_file((CONF_CONFIG_PATH "settings/power/idle_sleep"), "w", INT, idx_idle_sleep);
     }
+
+    CHECK_AND_SAVE_STD(power, IdleMute, "settings/power/idle_mute", INT, 0);
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
@@ -135,8 +141,9 @@ static void init_navigation_group() {
 
     INIT_OPTION_ITEM(-1, power, Shutdown, lang.MUXPOWER.SLEEP.TITLE, "shutdown", sleep_timer, SHUTDOWN_COUNT);
     INIT_OPTION_ITEM(-1, power, Battery, lang.MUXPOWER.LOW_BATTERY, "battery", NULL, 0);
-    INIT_OPTION_ITEM(-1, power, IdleDisplay, lang.MUXPOWER.IDLE.DISPLAY, "idle_display", idle_timer, IDLE_COUNT);
     INIT_OPTION_ITEM(-1, power, IdleSleep, lang.MUXPOWER.IDLE.SLEEP, "idle_sleep", idle_timer, IDLE_COUNT);
+    INIT_OPTION_ITEM(-1, power, IdleDisplay, lang.MUXPOWER.IDLE.DISPLAY, "idle_display", idle_timer, IDLE_COUNT);
+    INIT_OPTION_ITEM(-1, power, IdleMute, lang.MUXPOWER.IDLE.MUTE, "idle_mute", disabled_enabled, 2);
 
     char *battery_string = generate_number_string(5, 50, 5, lang.GENERIC.DISABLED, NULL, NULL, 0);
     apply_theme_list_drop_down(&theme, ui_droBattery_power, battery_string);
@@ -210,7 +217,7 @@ static void handle_back(void) {
         return;
     }
 
-    if (save_tweak_options()) {
+    if (save_power_options()) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "power");
 
         close_input();
@@ -284,7 +291,7 @@ int muxpower_main() {
     init_fonts();
     init_navigation_group();
 
-    restore_tweak_options();
+    restore_power_options();
     init_dropdown_settings();
 
     init_timer(ui_refresh_task, NULL);

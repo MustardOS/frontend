@@ -210,8 +210,9 @@
 #define POWER_ELEMENTS \
     POWER(Shutdown,    "shutdown")     \
     POWER(Battery,     "battery")      \
+    POWER(IdleSleep,   "idle_sleep")   \
     POWER(IdleDisplay, "idle_display") \
-    POWER(IdleSleep,   "idle_sleep")
+    POWER(IdleMute,    "idle_mute")
 
 #define RTC_ELEMENTS          \
     RTC(Year,     "year")     \

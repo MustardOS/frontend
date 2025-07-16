@@ -571,10 +571,11 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char LOW_BATTERY[MAX_BUFFER_SIZE];
-        char IDLE_ERROR[MAX_BUFFER_SIZE];
         struct {
+            char ERROR[MAX_BUFFER_SIZE];
             char DISPLAY[MAX_BUFFER_SIZE];
             char SLEEP[MAX_BUFFER_SIZE];
+            char MUTE[MAX_BUFFER_SIZE];
             char t10s[MAX_BUFFER_SIZE];
             char t30s[MAX_BUFFER_SIZE];
             char t60s[MAX_BUFFER_SIZE];
@@ -599,8 +600,11 @@ struct mux_lang {
             char t60m[MAX_BUFFER_SIZE];
         } SLEEP;
         struct {
-            char IDLE_DISPLAY[MAX_BUFFER_SIZE];
-            char IDLE_SLEEP[MAX_BUFFER_SIZE];
+            struct {
+                char DISPLAY[MAX_BUFFER_SIZE];
+                char SLEEP[MAX_BUFFER_SIZE];
+                char MUTE[MAX_BUFFER_SIZE];
+            } IDLE;
             char LOW_BATTERY[MAX_BUFFER_SIZE];
             char SLEEP_FUNCTION[MAX_BUFFER_SIZE];
         } HELP;

@@ -149,12 +149,12 @@ static void handle_idle(void) {
     }
 
     // Handle idle timeout/activity.
-    uint32_t display_timeout_ms = config.SETTINGS.POWER.IDLE_DISPLAY * 1000;
+    uint32_t display_timeout_ms = config.SETTINGS.POWER.IDLE.DISPLAY * 1000;
     if (display_timeout_ms) {
         check_idle(&idle_display, display_timeout_ms);
     }
 
-    uint32_t sleep_timeout_ms = config.SETTINGS.POWER.IDLE_SLEEP * 1000;
+    uint32_t sleep_timeout_ms = config.SETTINGS.POWER.IDLE.SLEEP * 1000;
     if (sleep_timeout_ms) {
         check_idle(&idle_sleep, sleep_timeout_ms);
     }

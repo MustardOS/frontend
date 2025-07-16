@@ -82,8 +82,11 @@ struct mux_config {
         struct {
             int16_t LOW_BATTERY;
             int16_t SHUTDOWN;
-            int16_t IDLE_DISPLAY;
-            int16_t IDLE_SLEEP;
+            struct {
+                int16_t DISPLAY;
+                int16_t SLEEP;
+                int16_t MUTE;
+            } IDLE;
         } POWER;
     } SETTINGS;
 
