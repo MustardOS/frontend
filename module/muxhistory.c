@@ -11,9 +11,6 @@ static int splash_valid = 0;
 
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
-static char box_image_previous_path[MAX_BUFFER_SIZE];
-static char preview_image_previous_path[MAX_BUFFER_SIZE];
-static char splash_image_previous_path[MAX_BUFFER_SIZE];
 
 static char *load_content_description() {
     char core_file[MAX_BUFFER_SIZE];

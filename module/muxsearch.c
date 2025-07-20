@@ -13,7 +13,6 @@ static char E_USB[MAX_BUFFER_SIZE];
 static char search_result[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
 static char lookup_value[MAX_BUFFER_SIZE];
-static char box_image_previous_path[MAX_BUFFER_SIZE];
 
 struct json search_folders;
 

@@ -46,6 +46,9 @@ static void cleanup_screen() {
     grid_mode_enabled = 0;
 
     snprintf(current_wall, sizeof(current_wall), "");
+    snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
+    snprintf(preview_image_previous_path, sizeof(preview_image_previous_path), "");
+    snprintf(splash_image_previous_path, sizeof(splash_image_previous_path), "");
 }
 
 static void process_content_action(char *action, char *module) {
