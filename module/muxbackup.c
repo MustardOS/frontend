@@ -1,10 +1,12 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 22
-#define STORAGE_COUNT UI_COUNT - 2
-#define START_BACKUP_INDEX UI_COUNT - 1
-#define BACKUP_TARGET_INDEX UI_COUNT - 2
+#define UI_COUNT 23
+#define STORAGE_COUNT (UI_COUNT - 2)
+#define START_BACKUP_INDEX (UI_COUNT - 1)
+#define BACKUP_TARGET_INDEX (UI_COUNT - 2)
+#define MUOS_CONFIG_INDEX (UI_COUNT - 3)
+#define EXTERNAL_INDEX (UI_COUNT - 4)
 
 struct backup {
     const char *path_suffix;
@@ -38,6 +40,7 @@ static void show_help(lv_obj_t *element_focused) {
         {ui_lblSyncthing_backup,        lang.MUXBACKUP.HELP.SYNCTHING},
         {ui_lblUserInit_backup,         lang.MUXBACKUP.HELP.USER_INIT},
         {ui_lblExternal_backup,         lang.MUXBACKUP.HELP.EXTERNAL},
+        {ui_lblMuosConfig_backup,       lang.MUXBACKUP.HELP.MUOS_CONFIG},
         {ui_lblBackupTarget_backup,     lang.MUXBACKUP.HELP.BACKUP_TARGET},
         {ui_lblStartBackup_backup,      lang.MUXBACKUP.HELP.START_BACKUP},
     };
@@ -49,7 +52,8 @@ static void update_backup_info() {
     /*
      * Check for SD2 pathing, otherwise it should be on SD1.
      * If it's not on SD1 then you have bigger problems!
-    */
+     */
+
     backup_path[0].path_suffix = STORE_LOC_BIOS;
     backup_path[0].ui_label = ui_lblBiosValue_backup;
     backup_path[0].shortname = "BIOS";
@@ -130,6 +134,10 @@ static void update_backup_info() {
     backup_path[19].ui_label = ui_lblExternalValue_backup;
     backup_path[19].shortname = "External";
 
+    backup_path[20].path_suffix = ".";
+    backup_path[20].ui_label = ui_lblMuosConfigValue_backup;
+    backup_path[20].shortname = "MuosConfig";
+
     char dir[FILENAME_MAX];
     for (int i = 0; i < A_SIZE(backup_path); i++) {
         snprintf(dir, sizeof(dir), "%s/%s", device.STORAGE.SDCARD.MOUNT, backup_path[i].path_suffix);
@@ -142,6 +150,9 @@ static void update_backup_info() {
 
     // Set target to SD1 by default
     lv_label_set_text(ui_lblBackupTargetValue_backup, "SD1");
+
+    lv_label_set_text(ui_lblExternalValue_backup, "CUSTOM");
+    lv_label_set_text(ui_lblMuosConfigValue_backup, "CUSTOM");
 }
 
 static void init_navigation_group() {
@@ -170,6 +181,7 @@ static void init_navigation_group() {
     INIT_VALUE_ITEM(-1, backup, Syncthing,        lang.MUXBACKUP.SYNCTHING,         "syncthing",       "");
     INIT_VALUE_ITEM(-1, backup, UserInit,         lang.MUXBACKUP.USER_INIT,         "userinit",        "");
     INIT_VALUE_ITEM(-1, backup, External,         lang.MUXBACKUP.EXTERNAL,          "external",        "");
+    INIT_VALUE_ITEM(-1, backup, MuosConfig,       lang.MUXBACKUP.MUOS_CONFIG,       "muosconfig",      "");
     INIT_VALUE_ITEM(-1, backup, BackupTarget,     lang.MUXBACKUP.BACKUP_TARGET,     "backuptarget",    "");
     INIT_VALUE_ITEM(-1, backup, StartBackup,      lang.MUXBACKUP.START_BACKUP,      "startbackup",     "");
 
@@ -263,12 +275,12 @@ static void handle_confirm(void) {
 
     lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
     int focused_index = get_focused_element_index(element_focused);
-    char *label_value = lv_label_get_text(element_focused);
+    const char *label_value = lv_label_get_text(element_focused);
 
     // Return if backup set to NONE or if on Toggle Target Storage
     if (strcasecmp(label_value, "NONE") == 0 || focused_index == BACKUP_TARGET_INDEX) return;
 
-    char *target_value = lv_label_get_text(ui_lblBackupTargetValue_backup);
+    const char *target_value = lv_label_get_text(ui_lblBackupTargetValue_backup);
     char datetime[64];
 
     strncpy(datetime, get_datetime(), sizeof(datetime) - 1);
@@ -297,7 +309,7 @@ static void handle_confirm(void) {
     } else { // For other backup paths, write the focused label and its path suffix
         fprintf(fp, "%s %s\n", "INDIVIDUAL", target_value);
 
-        label_value = lv_label_get_text(backup_path[focused_index].ui_label);
+        const char *label_value = lv_label_get_text(backup_path[focused_index].ui_label);
         if (strcasecmp(label_value, "NONE") != 0) {
             fprintf(fp, "%s %s %s\n", label_value,
                     backup_path[focused_index].shortname, backup_path[focused_index].path_suffix);
@@ -347,13 +359,23 @@ static void handle_toggle(void) {
     } else if (focused_index == START_BACKUP_INDEX) {
         // If focused on Start Backup, just return
         return;
+    } else if (focused_index == EXTERNAL_INDEX 
+            || focused_index == MUOS_CONFIG_INDEX) {
+        play_sound(SND_CONFIRM);
+
+        if (strcasecmp(label_text, "NONE") == 0) {
+            lv_label_set_text(element_focused, "CUSTOM");
+        }
+        
+        nav_moved = 1;
     } else {
         play_sound(SND_CONFIRM);
 
         // Toggle between SD1 and SD2 (or from NONE to SD1)
         if (strcasecmp(label_text, "SD2") == 0) {
             lv_label_set_text(element_focused, "SD1");
-        } else if (strcasecmp(label_text, "SD1") == 0 && is_partition_mounted(device.STORAGE.SDCARD.MOUNT)) {
+        } else if (strcasecmp(label_text, "SD1") == 0 
+                && is_partition_mounted(device.STORAGE.SDCARD.MOUNT))  {
             lv_label_set_text(element_focused, "SD2");
         } else if (strcasecmp(label_text, "NONE") == 0) {
             lv_label_set_text(element_focused, "SD1");
@@ -371,14 +393,17 @@ static void handle_clear(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group_value);
 
     int focused_index = get_focused_element_index(element_focused);
-    if (focused_index == BACKUP_TARGET_INDEX || focused_index == START_BACKUP_INDEX) {
+    if (focused_index == BACKUP_TARGET_INDEX 
+        || focused_index == START_BACKUP_INDEX) {
         // If focused on Toggle Target or Start Backup, just return
         return;
     }
 
     // If SD1 or SD2, set to NONE
     const char *label_text = lv_label_get_text(element_focused);
-    if (strcasecmp(label_text, "SD1") == 0 || strcasecmp(label_text, "SD2") == 0) {
+    if (strcasecmp(label_text, "SD1") == 0 
+    || strcasecmp(label_text, "SD2") == 0
+    || strcasecmp(label_text, "CUSTOM") == 0) {
         lv_label_set_text(element_focused, "NONE");
     }
 
@@ -498,24 +523,24 @@ int muxbackup_main() {
     init_timer(ui_refresh_task, NULL);
 
     mux_input_options input_opts = {
-            .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
-            .press_handler = {
-                    [MUX_INPUT_B] = handle_back,
-                    [MUX_INPUT_X] = handle_toggle,
-                    [MUX_INPUT_Y] = handle_clear,
-                    [MUX_INPUT_A] = handle_confirm,
-                    [MUX_INPUT_MENU_SHORT] = handle_help,
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            },
-            .hold_handler = {
-                    [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
-                    [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
-                    [MUX_INPUT_L1] = handle_list_nav_page_up,
-                    [MUX_INPUT_R1] = handle_list_nav_page_down,
-            }
+        .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
+        .press_handler = {
+            [MUX_INPUT_B]           = handle_back,
+            [MUX_INPUT_X]           = handle_toggle,
+            [MUX_INPUT_Y]           = handle_clear,
+            [MUX_INPUT_A]           = handle_confirm,
+            [MUX_INPUT_MENU_SHORT]  = handle_help,
+            [MUX_INPUT_DPAD_UP]     = handle_list_nav_up,
+            [MUX_INPUT_DPAD_DOWN]   = handle_list_nav_down,
+            [MUX_INPUT_L1]          = handle_list_nav_page_up,
+            [MUX_INPUT_R1]          = handle_list_nav_page_down,
+        },
+        .hold_handler = {
+            [MUX_INPUT_DPAD_UP]     = handle_list_nav_up_hold,
+            [MUX_INPUT_DPAD_DOWN]   = handle_list_nav_down_hold,
+            [MUX_INPUT_L1]          = handle_list_nav_page_up,
+            [MUX_INPUT_R1]          = handle_list_nav_page_down,
+        }
     };
     list_nav_set_callbacks(list_nav_prev, list_nav_next);
     init_input(&input_opts, true);
