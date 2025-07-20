@@ -66,6 +66,7 @@
     BACKUP(Syncthing,        "syncthing")      \
     BACKUP(UserInit,         "userinit")       \
     BACKUP(External,         "external")       \
+    BACKUP(MuosConfig,       "muosconfig")     \
     BACKUP(BackupTarget,     "backuptarget")   \
     BACKUP(StartBackup,      "startbackup")
 

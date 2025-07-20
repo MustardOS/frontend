@@ -708,7 +708,6 @@ struct mux_lang {
         char FRIENDLY[MAX_BUFFER_SIZE];
         char RA_SYSTEM[MAX_BUFFER_SIZE];
         char RA_CONFIG[MAX_BUFFER_SIZE];
-        char EXTERNAL[MAX_BUFFER_SIZE];
         char ASSIGNED[MAX_BUFFER_SIZE];
         char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
@@ -719,6 +718,8 @@ struct mux_lang {
         char NET_PROFILE[MAX_BUFFER_SIZE];
         char SYNCTHING[MAX_BUFFER_SIZE];
         char USER_INIT[MAX_BUFFER_SIZE];
+        char EXTERNAL[MAX_BUFFER_SIZE];
+        char MUOS_CONFIG[MAX_BUFFER_SIZE];
         char BACKUP_TARGET[MAX_BUFFER_SIZE];
         char START_BACKUP[MAX_BUFFER_SIZE];
         struct {
@@ -733,7 +734,6 @@ struct mux_lang {
             char FRIENDLY[MAX_BUFFER_SIZE];
             char RA_SYSTEM[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
-            char EXTERNAL[MAX_BUFFER_SIZE];
             char ASSIGNED[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
@@ -744,6 +744,8 @@ struct mux_lang {
             char NET_PROFILE[MAX_BUFFER_SIZE];
             char SYNCTHING[MAX_BUFFER_SIZE];
             char USER_INIT[MAX_BUFFER_SIZE];
+            char EXTERNAL[MAX_BUFFER_SIZE];
+            char MUOS_CONFIG[MAX_BUFFER_SIZE];
             char BACKUP_TARGET[MAX_BUFFER_SIZE];
             char START_BACKUP[MAX_BUFFER_SIZE];
             struct {
