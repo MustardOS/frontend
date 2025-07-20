@@ -29,6 +29,10 @@ lv_group_t *ui_group_glyph;
 lv_group_t *ui_group_panel;
 lv_group_t *ui_group_value;
 
+char box_image_previous_path[MAX_BUFFER_SIZE];
+char preview_image_previous_path[MAX_BUFFER_SIZE];
+char splash_image_previous_path[MAX_BUFFER_SIZE];
+
 void adjust_box_art() {
     switch (config.VISUAL.BOX_ART) {
         case 0: // Behind
