@@ -2,10 +2,14 @@
 #include "ui/ui_muxcredits.h"
 #include "../lvgl/src/drivers/display/sdl.h"
 
-typedef struct {
-    lv_obj_t *element;
-    int delay;
-} CreditElement;
+static int credit_index = 0;
+#define CREDIT_ITEM_COUNT 11
+
+static lv_obj_t *credit_elements[CREDIT_ITEM_COUNT];
+static void fade_anim_cb(void * obj, int32_t v);
+static void fade_in_finish(lv_anim_t * a);
+static void fade_in(lv_obj_t * obj, uint32_t time, uint32_t delay);
+static void fade_out(lv_obj_t * obj, uint32_t time, uint32_t delay);
 
 static void timeout_task() {
     close_input();
@@ -17,35 +21,75 @@ static void trigger_timeout() {
     if (TEST_IMAGE) timeout_task();
 }
 
+static void create_credit_elements_array() {
+    credit_elements[0] = ui_conStart;
+    credit_elements[1] = ui_conOfficial;
+    credit_elements[2] = ui_conWizard;
+    credit_elements[3] = ui_conHeroOne;
+    credit_elements[4] = ui_conHeroTwo;
+    credit_elements[5] = ui_conKnightOne;
+    credit_elements[6] = ui_conKnightTwo;
+    credit_elements[7] = ui_conContrib;
+    credit_elements[8] = ui_conSpecial;
+    credit_elements[9] = ui_conKofi;
+    credit_elements[10] = ui_conMusic;
+}
+
+static void fade_anim_cb(void * obj, int32_t v)
+{
+    lv_obj_set_style_opa(obj, v, 0);
+}
+
+static void fade_in_finish(lv_anim_t * a)
+{
+    lv_obj_remove_local_style_prop(a->var, LV_STYLE_OPA, 0);
+    fade_out(a->var, 3000, 3000);
+}
+
+static void fade_out_finish(lv_anim_t * a)
+{
+    credit_index++;
+    if (credit_index >= CREDIT_ITEM_COUNT) {
+        if (config.BOOT.FACTORY_RESET) {
+            timeout_task();
+            return;
+        }
+        credit_index = 0;
+    }
+    fade_in(credit_elements[credit_index], 3000, 0);
+}
+
+static void fade_in(lv_obj_t * obj, uint32_t time, uint32_t delay)
+{
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, obj);
+    lv_anim_set_values(&a, 0, LV_OPA_COVER);
+    lv_anim_set_exec_cb(&a, fade_anim_cb);
+    lv_anim_set_ready_cb(&a, fade_in_finish);
+    lv_anim_set_time(&a, time);
+    lv_anim_set_delay(&a, delay);
+    lv_anim_start(&a);
+}
+
+static void fade_out(lv_obj_t * obj, uint32_t time, uint32_t delay)
+{
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, obj);
+    lv_anim_set_values(&a, lv_obj_get_style_opa(obj, 0), LV_OPA_TRANSP);
+    lv_anim_set_exec_cb(&a, fade_anim_cb);
+    lv_anim_set_ready_cb(&a, fade_out_finish);
+    lv_anim_set_time(&a, time);
+    lv_anim_set_delay(&a, delay);
+    lv_anim_start(&a);
+}
+
 static void handle_b() {
     if (!config.BOOT.FACTORY_RESET) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
         timeout_task();
     }
-}
-
-static int anim_sequence() {
-    CreditElement anim_elements[] = {
-            {ui_conStart,     -1250},
-            {ui_conOfficial,  12250},
-            {ui_conWizard,    23250},
-            {ui_conHeroOne,   34250},
-            {ui_conHeroTwo,   45250},
-            {ui_conKnightOne, 56250},
-            {ui_conKnightTwo, 67250},
-            {ui_conContrib,   78250},
-            {ui_conSpecial,   89250},
-            {ui_conKofi,      101250},
-            {ui_conMusic,     112250}
-    };
-
-    size_t count = sizeof(anim_elements) / sizeof(anim_elements[0]);
-
-    for (size_t i = 0; i < count; i++) {
-        animFade_Animation(anim_elements[i].element, anim_elements[i].delay);
-    }
-
-    return anim_elements[count - 1].delay + 22250;
 }
 
 int main(void) {
@@ -63,13 +107,8 @@ int main(void) {
 
     init_muxcredits(header_font);
     load_font_text(ui_scrCredits);
-
-    int anim_duration = anim_sequence();
-    if (config.BOOT.FACTORY_RESET) {
-        lv_timer_create(timeout_task, anim_duration, NULL);
-    } else {
-        lv_timer_create((lv_timer_cb_t) anim_sequence, anim_duration, NULL);
-    }
+    create_credit_elements_array();
+    fade_in(ui_conStart, 3000, 0);
 
     mux_input_options input_opts = {
             .press_handler = {
