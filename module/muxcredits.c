@@ -2,14 +2,21 @@
 #include "ui/ui_muxcredits.h"
 #include "../lvgl/src/drivers/display/sdl.h"
 
-static int credit_index = 0;
 #define CREDIT_ITEM_COUNT 11
+#define CREDIT_DELAY 4675
+#define CREDIT_FADE 3250
+
+static int credit_index = 0;
 
 static lv_obj_t *credit_elements[CREDIT_ITEM_COUNT];
-static void fade_anim_cb(void * obj, int32_t v);
-static void fade_in_finish(lv_anim_t * a);
-static void fade_in(lv_obj_t * obj, uint32_t time, uint32_t delay);
-static void fade_out(lv_obj_t * obj, uint32_t time, uint32_t delay);
+
+static void fade_anim_cb(void *obj, int32_t v);
+
+static void fade_in_finish(lv_anim_t *a);
+
+static void fade_in(lv_obj_t *obj);
+
+static void fade_out(lv_obj_t *obj);
 
 static void timeout_task() {
     close_input();
@@ -35,53 +42,51 @@ static void create_credit_elements_array() {
     credit_elements[10] = ui_conMusic;
 }
 
-static void fade_anim_cb(void * obj, int32_t v)
-{
+static void fade_anim_cb(void *obj, int32_t v) {
     lv_obj_set_style_opa(obj, v, 0);
 }
 
-static void fade_in_finish(lv_anim_t * a)
-{
+static void fade_in_finish(lv_anim_t *a) {
     lv_obj_remove_local_style_prop(a->var, LV_STYLE_OPA, 0);
-    fade_out(a->var, 3000, 3000);
+    fade_out(a->var);
 }
 
-static void fade_out_finish(lv_anim_t * a)
-{
+static void fade_out_finish(lv_anim_t *a) {
     credit_index++;
+
     if (credit_index >= CREDIT_ITEM_COUNT) {
         if (config.BOOT.FACTORY_RESET) {
             timeout_task();
             return;
         }
+
         credit_index = 0;
     }
-    fade_in(credit_elements[credit_index], 3000, 0);
+
+    fade_in(credit_elements[credit_index]);
 }
 
-static void fade_in(lv_obj_t * obj, uint32_t time, uint32_t delay)
-{
+static void fade_in(lv_obj_t *obj) {
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, obj);
     lv_anim_set_values(&a, 0, LV_OPA_COVER);
     lv_anim_set_exec_cb(&a, fade_anim_cb);
     lv_anim_set_ready_cb(&a, fade_in_finish);
-    lv_anim_set_time(&a, time);
-    lv_anim_set_delay(&a, delay);
+    lv_anim_set_time(&a, CREDIT_FADE);
+    lv_anim_set_delay(&a, 0);
     lv_anim_start(&a);
 }
 
-static void fade_out(lv_obj_t * obj, uint32_t time, uint32_t delay)
-{
+static void fade_out(lv_obj_t *obj) {
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, obj);
     lv_anim_set_values(&a, lv_obj_get_style_opa(obj, 0), LV_OPA_TRANSP);
     lv_anim_set_exec_cb(&a, fade_anim_cb);
     lv_anim_set_ready_cb(&a, fade_out_finish);
-    lv_anim_set_time(&a, time);
-    lv_anim_set_delay(&a, delay);
+    lv_anim_set_time(&a, CREDIT_FADE);
+    lv_anim_set_delay(&a, CREDIT_DELAY);
     lv_anim_start(&a);
 }
 
@@ -108,7 +113,7 @@ int main(void) {
     init_muxcredits(header_font);
     load_font_text(ui_scrCredits);
     create_credit_elements_array();
-    fade_in(ui_conStart, 3000, 0);
+    fade_in(ui_conStart);
 
     mux_input_options input_opts = {
             .press_handler = {
