@@ -479,6 +479,8 @@ struct mux_lang {
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];
+        char MONITOR[MAX_BUFFER_SIZE];
+        char BOOT[MAX_BUFFER_SIZE];
         char CONNECT[MAX_BUFFER_SIZE];
         char DISCONNECT[MAX_BUFFER_SIZE];
         char CONNECTED[MAX_BUFFER_SIZE];
@@ -510,6 +512,8 @@ struct mux_lang {
             char GATEWAY[MAX_BUFFER_SIZE];
             char CIDR[MAX_BUFFER_SIZE];
             char IP[MAX_BUFFER_SIZE];
+            char MONITOR[MAX_BUFFER_SIZE];
+            char BOOT[MAX_BUFFER_SIZE];
             char CONNECT[MAX_BUFFER_SIZE];
         } HELP;
     } MUXNETWORK;

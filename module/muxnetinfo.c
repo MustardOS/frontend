@@ -444,7 +444,7 @@ static void handle_a() {
             return;
         }
 
-        const char *mac_change_args[] = {"macchanger", "-r", device.NETWORK.INTERFACE, NULL};
+        const char *mac_change_args[] = {INTERNAL_PATH "script/web/macchange.sh", NULL};
         run_exec(mac_change_args, A_SIZE(mac_change_args), 1);
     }
 }

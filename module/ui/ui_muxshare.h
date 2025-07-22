@@ -200,6 +200,8 @@
     NETWORK(Subnet,     "subnet")     \
     NETWORK(Gateway,    "gateway")    \
     NETWORK(Dns,        "dns")        \
+    NETWORK(Monitor,    "monitor")    \
+    NETWORK(Boot,       "boot")       \
     NETWORK(Connect,    "connect")
 
 #define OPTION_ELEMENTS          \

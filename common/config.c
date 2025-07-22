@@ -24,6 +24,8 @@ void load_config(struct mux_config *config) {
     CFG_STR_FIELD(config->NETWORK.GATEWAY, CONF_CONFIG_PATH "network/gateway", "192.168.0.1")
     CFG_STR_FIELD(config->NETWORK.SUBNET, CONF_CONFIG_PATH "network/subnet", "24")
     CFG_STR_FIELD(config->NETWORK.DNS, CONF_CONFIG_PATH "network/dns", "1.1.1.1")
+    CFG_INT_FIELD(config->NETWORK.MONITOR, CONF_CONFIG_PATH "network/monitor", 1)
+    CFG_INT_FIELD(config->NETWORK.BOOT, CONF_CONFIG_PATH "network/boot", 1)
 
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.ACCELERATE, CONF_CONFIG_PATH "settings/advanced/accelerate", 96)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.SWAP, CONF_CONFIG_PATH "settings/advanced/swap", 0)

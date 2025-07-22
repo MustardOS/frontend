@@ -30,6 +30,8 @@ struct mux_config {
         char GATEWAY[MAX_BUFFER_SIZE];
         char SUBNET[MAX_BUFFER_SIZE];
         char DNS[MAX_BUFFER_SIZE];
+        int16_t MONITOR;
+        int16_t BOOT;
     } NETWORK;
 
     struct {
