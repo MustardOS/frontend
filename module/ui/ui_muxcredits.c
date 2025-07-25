@@ -2,6 +2,9 @@
 #include "../../common/common.h"
 #include "../../common/config.h"
 
+#define SONG_TRACK "Final Frontier"
+#define SONG_ARTIST "Nimn One"
+
 lv_obj_t *ui_scrCredits;
 
 lv_obj_t *ui_conCredits;
@@ -79,22 +82,22 @@ const char *wizards[] = {
 const char *hero_one[] = {
         "romus85", "x_tremis", "lmarcomiranda", "jottenmiller", "timecarp", "intelliaim",
         "kentonftw", "bazkart", "msx6011", "joeysretrohandhelds", "btreecat", "teggydave",
-        "zazouboy", "robbiet480", "rabite890", "luzfcb", "brohsnbluffs", "zaka1w3",
-        "superzu", "nico_linber_36894", "nico_linber", "pr0j3kt2501", "bigbossman0816", "meowman_",
+        "zazouboy", "robbiet480", "rabite890", "luzfcb", "brohsnbluffs", "bigbossman0816",
+        "superzu", "nico_linber_36894", "nico_linber", "pr0j3kt2501", "meowman_", "zaka1w3",
         "kaeltis", "reitw", "raouldook.", "gamerguy1975", "paletochen", "benjaminbercy",
-        "suribii", "tobitaibuta", "jimmycrackedcorn_4711", "opinion_panda", "hueykablooey", "mrwhistles",
-        "losermatic",
+        "suribii", "tobitaibuta", "opinion_panda", "hueykablooey", "mrwhistles", ".zerohalo",
+        "losermatic", "pr0j3kt2501", "jimmycrackedcorn_4711",
         NULL
 };
 
 const char *hero_two[] = {
-        "ivar2028", "piatypos", ".dririan", "spivvmeister", "sol6_vi", "jelzer.",
+        "ivar2028", "piatypos", ".dririan", "spivvmeister", "sol6_vi", "izzythefool",
         "n3vurmynd", "qpla", "supremedialects", "amos_06286", "techagent", "ayan4m1",
         "meanagar", "roundpi", "turner74.", "chiefwally_73445", "bigfoothenders", "scy0n",
         "luckyphil", "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith",
         "suuuuuuper", "mxdamp", "ownedmumbles", "zenith.rose", "techyysean", "cliffupperlip",
-        "roymustang", "frizzin78", "kernelkritic", "verctexius", "misfitsorbet", "izzythefool",
-        "bigolpeewee",
+        "roymustang", "frizzin78", "kernelkritic", "verctexius", "misfitsorbet", "jelzer.",
+        "bigolpeewee", "iam8bitwolf",
         NULL
 };
 
@@ -117,8 +120,8 @@ const char *knight_two[] = {
 };
 
 const char *contributors[] = {
-        "acmeplus", "Aeverdyn", "antikk", "arkun", "bgelmini", "Bitter_Bizarro",
-        "cart-su", "chronoss09", "duncanyoyo1", "Habbening", "ImCoKeMaN", "IncognitoMan",
+        "acmeplus", "aeverdyn", "antikk", "arkun", "bgelmini", "bitter_bizarro",
+        "cart-su", "chronoss09", "duncanyoyo1", "vq37vhrgang", "imcokeman", "incognitoman",
         "johnnyonflame", "koolkidcorey", "kriznick", "mikhailzrick", "synthic", "xonglebongle",
         "zarquon",
         NULL
@@ -1133,13 +1136,13 @@ void init_muxcredits(const lv_font_t *header_font) {
     lv_obj_set_align(ui_lblMusicMessage, LV_ALIGN_CENTER);
     if (config.BOOT.FACTORY_RESET) {
         lv_label_set_text(ui_lblMusicMessage,
-                          "\nTrack - Final Frontier"
-                          "\nComposer - Nimn One"
+                          "\nTrack - " SONG_TRACK
+                          "\nArtist - " SONG_ARTIST
                           "\n\n\nYour device will now reboot...");
     } else {
         lv_label_set_text(ui_lblMusicMessage,
-                          "\nTrack - Final Frontier"
-                          "\nComposer - Nimn One"
+                          "\nTrack - " SONG_TRACK
+                          "\nArtist - " SONG_ARTIST
                           "\n\n\nHave a blessed day...");
     }
     lv_obj_set_scroll_dir(ui_lblMusicMessage, LV_DIR_HOR);
