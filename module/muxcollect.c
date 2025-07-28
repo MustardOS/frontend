@@ -414,8 +414,7 @@ static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            items[current_item_index].display_name);
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
@@ -436,7 +435,7 @@ static void list_nav_move(int steps, int direction) {
                                current_item_index, ui_pnlContent);
     }
 
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), items[current_item_index].display_name);
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     lv_label_set_text(ui_lblGridCurrentItem, items[current_item_index].display_name);
 
     image_refresh("box");

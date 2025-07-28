@@ -1115,7 +1115,7 @@ void load_theme(struct theme_config *theme, struct mux_config *config, struct mu
     theme->MISC.ANIMATED_BACKGROUND = 0;
 }
 
-void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, char *item_text) {
+void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem) {
     if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) return;
 
     char *content_label = lv_label_get_text(ui_lblItem);
@@ -1123,14 +1123,12 @@ void set_label_long_mode(struct theme_config *theme, lv_obj_t *ui_lblItem, char 
     size_t len = strlen(content_label);
     bool ends_with_ellipse = len > 3 && strcmp(&content_label[len - 3], "...") == 0;
 
-    if (strcasecmp(item_text, content_label) != 0 && ends_with_ellipse) {
+    if (ends_with_ellipse) {
         lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_SCROLL_CIRCULAR);
-        lv_label_set_text(ui_lblItem, item_text);
     }
 }
 
-void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent,
-                         lv_obj_t *ui_lblItem, const char *item_text) {
+void apply_text_long_dot(struct theme_config *theme, lv_obj_t *ui_pnlContent, lv_obj_t *ui_lblItem) {
     if (theme->LIST_DEFAULT.LABEL_LONG_MODE == LV_LABEL_LONG_WRAP) return;
 
     lv_label_set_long_mode(ui_lblItem, LV_LABEL_LONG_DOT);

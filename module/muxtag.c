@@ -121,7 +121,7 @@ static void generate_available_tags() {
         lv_group_add_obj(ui_group_panel, ui_pnlTag);
 
         apply_size_to_content(&theme, ui_pnlContent, ui_lblTagItem, ui_lblTagItemGlyph, cap_name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblTagItem, cap_name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblTagItem);
     }
 
     if (ui_count > 0) {
@@ -135,8 +135,7 @@ static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? ui_count - 1 : current_item_index - 1;
@@ -150,8 +149,7 @@ static void list_nav_move(int steps, int direction) {
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group),
-                        lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     nav_moved = 1;
 }
 

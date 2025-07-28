@@ -138,7 +138,7 @@ static void gen_result(char *item_glyph, char *item_text, char *item_data, char 
     if (strcasecmp(item_data, "folder") != 0) {
         apply_size_to_content(&theme, ui_pnlContent, ui_lblResultItem, ui_lblResultItemGlyph, item_text);
     }
-    apply_text_long_dot(&theme, ui_pnlContent, ui_lblResultItem, item_text);
+    apply_text_long_dot(&theme, ui_pnlContent, ui_lblResultItem);
 
     lv_obj_set_user_data(ui_lblResultItem, item_data);
 
@@ -187,8 +187,7 @@ static void list_nav_move(int steps, int direction) {
 
     for (int step = 0; step < steps; ++step) {
         if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
-            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                                all_items[current_item_index].display_name);
+            apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
         }
 
         if (direction < 0) {
@@ -207,7 +206,7 @@ static void list_nav_move(int steps, int direction) {
 
     if (all_item_count > 0 && all_items[current_item_index].content_type == ITEM) {
         image_refresh("box");
-        set_label_long_mode(&theme, lv_group_get_focused(ui_group), all_items[current_item_index].display_name);
+        set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     } else {
         lv_img_set_src(ui_imgBox, &ui_image_Nothing);
         snprintf(box_image_previous_path, sizeof(box_image_previous_path), "");
