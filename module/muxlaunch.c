@@ -112,8 +112,6 @@ static void init_navigation_group() {
             lv_group_add_obj(ui_group, ui_objects[i]);
             lv_group_add_obj(ui_group_glyph, ui_objects_glyph[i]);
             lv_group_add_obj(ui_group_panel, ui_objects_panel[i]);
-            apply_size_to_content(&theme, ui_pnlContent, ui_objects[i], ui_objects_glyph[i], item_labels[i]);
-            apply_text_long_dot(&theme, ui_pnlContent, ui_objects[i], item_labels[i]);
         }
     }
 
@@ -124,8 +122,7 @@ static void list_nav_move(int steps, int direction) {
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
 
     for (int step = 0; step < steps; ++step) {
-        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group),
-                            lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+        apply_text_long_dot(&theme, ui_pnlContent, lv_group_get_focused(ui_group));
 
         if (direction < 0) {
             current_item_index = (current_item_index == 0) ? UI_COUNT - 1 : current_item_index - 1;
@@ -145,7 +142,7 @@ static void list_nav_move(int steps, int direction) {
         update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, UI_COUNT, current_item_index, ui_pnlContent);
     }
 
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group), lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
+    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     lv_label_set_text(ui_lblGridCurrentItem, lv_obj_get_user_data(lv_group_get_focused(ui_group_panel)));
 
     nav_moved = 1;
