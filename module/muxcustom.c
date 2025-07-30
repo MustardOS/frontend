@@ -11,6 +11,40 @@ static void list_nav_move(int steps, int direction);
 
 static char theme_alt_original[MAX_BUFFER_SIZE];
 
+static int theme_resolution_original;
+
+struct theme_resolution {
+    char *resolution;
+    int value;
+};
+
+struct theme_resolution theme_resolutions[] = {
+        {"640x480",  1},
+        {"720x480",  2},
+        {"720x576",  3},
+        {"720x720",  4},
+        {"1024x768", 5},
+        {"1280x720", 6}
+};
+
+static int get_theme_resolution_value(char *resolution) {
+    for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
+        if (strcmp(resolution, theme_resolutions[i].resolution) == 0) return theme_resolutions[i].value;
+    }
+
+    return 0;
+}
+
+static void restore_theme_resolution() {
+    for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
+        if (theme_resolutions[i].value == config.SETTINGS.GENERAL.THEME_RESOLUTION) {
+            int index = lv_dropdown_get_option_index(ui_droThemeResolution_custom, theme_resolutions[i].resolution);
+            theme_resolution_original = index <= 0 ? 0 : index;
+            lv_dropdown_set_selected(ui_droThemeResolution_custom, theme_resolution_original);
+        }
+    }
+}
+
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblBootlogo_custom,        lang.MUXCUSTOM.HELP.BOOTLOGO},
@@ -81,15 +115,6 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    char *theme_resolutions[] = {
-            "640x480",
-            "720x480",
-            "720x576",
-            "720x720",
-            "1024x768",
-            "1280x720"
-    };
-
     char *music_options[] = {
             lang.GENERIC.DISABLED,
             lang.MUXCUSTOM.MUSIC.GLOBAL,
@@ -154,9 +179,9 @@ static void init_navigation_group() {
     char theme_device_folder[MAX_BUFFER_SIZE];
     for (int i = 0; i < A_SIZE(theme_resolutions); i++) {
         snprintf(theme_device_folder, sizeof(theme_device_folder), "%s/%s",
-                 STORAGE_THEME, theme_resolutions[i]);
+                 STORAGE_THEME, theme_resolutions[i].resolution);
         if (directory_exist(theme_device_folder)) {
-            lv_dropdown_add_option(ui_droThemeResolution_custom, theme_resolutions[i], LV_DROPDOWN_POS_LAST);
+            lv_dropdown_add_option(ui_droThemeResolution_custom, theme_resolutions[i].resolution, LV_DROPDOWN_POS_LAST);
         }
     }
 
@@ -247,7 +272,7 @@ static void restore_custom_options() {
     int32_t option_index = lv_dropdown_get_option_index(ui_droThemeAlternate_custom, theme_alt_original);
     if (option_index > 0) lv_dropdown_set_selected(ui_droThemeAlternate_custom, option_index);
 
-    lv_dropdown_set_selected(ui_droThemeResolution_custom, config.SETTINGS.GENERAL.THEME_RESOLUTION);
+    restore_theme_resolution();
     lv_dropdown_set_selected(ui_droBoxArtImage_custom, config.VISUAL.BOX_ART);
     lv_dropdown_set_selected(ui_droBoxArtAlign_custom, config.VISUAL.BOX_ART_ALIGN - 1);
     lv_dropdown_set_selected(ui_droAnimation_custom, config.VISUAL.BACKGROUNDANIMATION);
@@ -262,7 +287,6 @@ static void restore_custom_options() {
 static void save_custom_options() {
     int is_modified = 0;
 
-    CHECK_AND_SAVE_STD(custom, ThemeResolution, "settings/general/theme_resolution", INT, 0);
     CHECK_AND_SAVE_STD(custom, Animation, "visual/backgroundanimation", INT, 0);
     CHECK_AND_SAVE_STD(custom, Music, "settings/general/bgm", INT, 0);
     CHECK_AND_SAVE_STD(custom, BlackFade, "visual/blackfade", INT, 0);
@@ -272,6 +296,16 @@ static void save_custom_options() {
     CHECK_AND_SAVE_STD(custom, Font, "settings/advanced/font", INT, 0);
     CHECK_AND_SAVE_STD(custom, Sound, "settings/general/sound", INT, 0);
     CHECK_AND_SAVE_STD(custom, Chime, "settings/general/chime", INT, 0);
+
+    char theme_resolution[MAX_BUFFER_SIZE];
+    lv_dropdown_get_selected_str(ui_droThemeResolution_custom, theme_resolution, sizeof(theme_resolution));
+    int idx_theme_resolution = get_theme_resolution_value(theme_resolution);
+
+    if (lv_dropdown_get_selected(ui_droThemeResolution_custom) != theme_resolution_original) {
+        is_modified++;
+        write_text_to_file((CONF_CONFIG_PATH "settings/general/theme_resolution"), "w", INT, idx_theme_resolution);
+        refresh_resolution = 1;
+    }
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
