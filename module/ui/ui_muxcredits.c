@@ -86,7 +86,7 @@ const char *hero_one[] = {
         "superzu", "nico_linber_36894", "nico_linber", "pr0j3kt2501", "meowman_", "zaka1w3",
         "kaeltis", "reitw", "raouldook.", "gamerguy1975", "paletochen", "benjaminbercy",
         "suribii", "tobitaibuta", "opinion_panda", "hueykablooey", "mrwhistles", ".zerohalo",
-        "losermatic", "pr0j3kt2501", "jimmycrackedcorn_4711",
+        "losermatic", "jimmycrackedcorn_4711",
         NULL
 };
 
@@ -115,7 +115,7 @@ const char *knight_two[] = {
         "poppajonzz", "wmaddler", "yomama78", "pixelgabz", "admiralthrawn_1", "penpen2crayon",
         ".jupyter.", "lander95", "rxepicness", "bburbank", "crownlessk", "johnunsc",
         "nuke_67641", "misjbaksel", "zauberpony", "dreadpirates", "artur_ditu", "wizardfights",
-        "smittywerbenjaegermanjensen9250",
+        "smittywerbenjaegermanjensen9250", "stin87", "rkevinc",
         NULL
 };
 
