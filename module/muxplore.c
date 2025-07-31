@@ -103,10 +103,10 @@ static char *load_content_description() {
     if (items[current_item_index].content_type == FOLDER) {
         snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
                  INFO_CAT_PATH, content_label);
-        if (!file_exist(content_desc)){
+        if (!file_exist(content_desc)) {
             char *catalogue_name = get_catalogue_name_from_rom_path(sys_dir, items[current_item_index].name);
             snprintf(content_desc, sizeof(content_desc), "%s/Folder/text/%s.txt",
-                    INFO_CAT_PATH, catalogue_name);
+                     INFO_CAT_PATH, catalogue_name);
             LOG_INFO(mux_module, "Falling back to catalogue name for content description '%s'", catalogue_name)
         }
     } else {
@@ -1007,7 +1007,7 @@ int muxplore_main(int index, char *dir) {
 
     init_timer(ui_refresh_task, NULL);
 
-    set_label_long_mode(&theme, lv_group_get_focused(ui_group));
+    if (ui_count > 0) set_label_long_mode(&theme, lv_group_get_focused(ui_group));
 
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
