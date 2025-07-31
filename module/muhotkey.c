@@ -176,9 +176,12 @@ static void handle_combo(int num, mux_input_action action) {
         //
         // To support separate hotkeys for these two cases, we delay triggering of a POWER_SHORT
         // combo till release (2) so we can tell if the short press turned into a long press or not.
-        if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_POWER_LONG)) {
-            printf("%s\n", combo[num].name);
-        }
+        if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_POWER_LONG)) printf("%s\n", combo[num].name);
+        return;
+    }
+
+    if (input_opts.combo[num].type_mask == BIT(MUX_INPUT_MENU_SHORT)) {
+        if (action == MUX_INPUT_RELEASE && !mux_input_pressed(MUX_INPUT_MENU_SHORT)) printf("%s\n", combo[num].name);
         return;
     }
 
