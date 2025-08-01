@@ -97,7 +97,7 @@ const char *hero_two[] = {
         "luckyphil", "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith",
         "suuuuuuper", "mxdamp", "ownedmumbles", "zenith.rose", "techyysean", "cliffupperlip",
         "roymustang", "frizzin78", "kernelkritic", "verctexius", "misfitsorbet", "jelzer.",
-        "bigolpeewee", "iam8bitwolf",
+        "bigolpeewee", "iam8bitwolf", ".manny.",
         NULL
 };
 
