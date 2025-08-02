@@ -422,7 +422,7 @@ int muxtweakgen_main() {
             },
             .combo = {
                     {
-                            .type_mask = BIT(MUX_INPUT_L2) | BIT(MUX_INPUT_R2) | BIT(MUX_INPUT_X),
+                            .type_mask = BIT(MUX_INPUT_L2) | BIT(MUX_INPUT_X),
                             .press_handler = launch_danger,
                             .hold_handler = launch_danger,
                     },

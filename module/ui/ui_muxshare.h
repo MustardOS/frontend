@@ -120,6 +120,15 @@
     DANGER(CardMode,      "cardmode")    \
     DANGER(State,         "state")
 
+#define DEVICE_ELEMENTS                 \
+    DEVICE(HasBluetooth,  "bluetooth")  \
+    DEVICE(HasRgb,        "rgb")        \
+    DEVICE(HasDebugFs,    "debugfs")    \
+    DEVICE(HasHdmi,       "hdmi")       \
+    DEVICE(HasLid,        "lid")        \
+    DEVICE(HasNetwork,    "network")    \
+    DEVICE(HasPortmaster, "portmaster")
+
 #define INFO_ELEMENTS              \
     INFO(Screenshot, "screenshot") \
     INFO(Space,      "space")      \

@@ -5,6 +5,7 @@ content_item *items = NULL;
 
 int refresh_kiosk = 0;
 int refresh_config = 0;
+int refresh_device = 0;
 int refresh_resolution = 0;
 
 struct mux_lang lang;

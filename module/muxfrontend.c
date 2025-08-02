@@ -267,22 +267,26 @@ static void module_config() {
     }
 }
 
-static void module_tweakadv() {
-    exec_mux("tweakgen", "muxtweakadv", muxtweakadv_main);
-
+static void clear_auth() {
     if (!config.SETTINGS.ADVANCED.LOCK) {
         if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
         if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
     }
 }
 
+static void module_tweakadv() {
+    exec_mux("tweakgen", "muxtweakadv", muxtweakadv_main);
+    clear_auth();
+}
+
 static void module_danger() {
     exec_mux("tweakgen", "muxdanger", muxdanger_main);
+    clear_auth();
+}
 
-    if (!config.SETTINGS.ADVANCED.LOCK) {
-        if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
-        if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
-    }
+static void module_device() {
+    exec_mux("sysinfo", "muxdevice", muxdevice_main);
+    clear_auth();
 }
 
 static void module_rtc() {
@@ -313,6 +317,7 @@ static const ModuleEntry modules[] = {
         {"config",     NULL, NULL, NULL, module_config},
         {"tweakadv",   NULL, NULL, NULL, module_tweakadv},
         {"danger",     NULL, NULL, NULL, module_danger},
+        {"device",     NULL, NULL, NULL, module_device},
         {"rtc",        NULL, NULL, NULL, module_rtc},
         {"credits",    NULL, NULL, NULL, module_quit},
 
@@ -426,6 +431,12 @@ int main() {
                 sync();
                 load_config(&config);
                 refresh_config = 0;
+            }
+
+            if (refresh_device) {
+                sync();
+                load_device(&device);
+                refresh_device = 0;
             }
 
             int go_mux = 0;

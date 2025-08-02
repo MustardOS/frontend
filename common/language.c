@@ -254,7 +254,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
 
     // muxdanger
-    SPECIFIC_FIELD(lang->MUXDANGER.TITLE, "DANGEROUS");
+    SPECIFIC_FIELD(lang->MUXDANGER.TITLE, "DANGER SETTINGS");
     SPECIFIC_FIELD(lang->MUXDANGER.VMSWAP, "Swap Tendency");
     SPECIFIC_FIELD(lang->MUXDANGER.DIRTYRATIO, "Write Back Threshold");
     SPECIFIC_FIELD(lang->MUXDANGER.DIRTYBACK, "Background Write Back");
@@ -285,6 +285,23 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.TUNESCALE, "Automatically adjusts scheduler behaviour based on CPU count\n\nDisable for consistent tuning on devices");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.CARDMODE, "Switch between different storage tuning options\n\nMay improve performance on certain mSD cards");
     SPECIFIC_FIELD(lang->MUXDANGER.HELP.STATE, "Switch between system sleep suspend states\n\nChanges how the device reacts to sleep mode and wake locks");
+
+    // muxdevice
+    SPECIFIC_FIELD(lang->MUXDEVICE.TITLE, "DEVICE SETTINGS");
+    SPECIFIC_FIELD(lang->MUXDEVICE.BLUETOOTH, "Bluetooth Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.RGB, "RGB LED Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.DEBUGFS, "Kernel Level DebugFS");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HDMI, "HDMI Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.LID, "Lid Switch Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.NETWORK, "Network Integration");
+    SPECIFIC_FIELD(lang->MUXDEVICE.PORTMASTER, "Portmaster Support");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.BLUETOOTH, "Toggles Bluetooth integration on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.RGB, "Toggles RGB LED integration on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.DEBUGFS, "Toggles kernel level DebugFS mount on startup\n\nBest to leave this enabled unless otherwise advised!");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.HDMI, "Toggles HDMI integration on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.LID, "Toggles hall switch (lid) support on device\n\nDo not enable this on non-lid devices!");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.NETWORK, "Toggles Network integration on device");
+    SPECIFIC_FIELD(lang->MUXDEVICE.HELP.PORTMASTER, "Toggles internal Portmaster support on device");
 
     // muxgov
     SPECIFIC_FIELD(lang->MUXGOV.TITLE, "GOVERNOR");

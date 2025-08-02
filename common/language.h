@@ -253,6 +253,26 @@ struct mux_lang {
     } MUXDANGER;
 
     struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char BLUETOOTH[MAX_BUFFER_SIZE];
+        char RGB[MAX_BUFFER_SIZE];
+        char DEBUGFS[MAX_BUFFER_SIZE];
+        char HDMI[MAX_BUFFER_SIZE];
+        char LID[MAX_BUFFER_SIZE];
+        char NETWORK[MAX_BUFFER_SIZE];
+        char PORTMASTER[MAX_BUFFER_SIZE];
+        struct {
+            char BLUETOOTH[MAX_BUFFER_SIZE];
+            char RGB[MAX_BUFFER_SIZE];
+            char DEBUGFS[MAX_BUFFER_SIZE];
+            char HDMI[MAX_BUFFER_SIZE];
+            char LID[MAX_BUFFER_SIZE];
+            char NETWORK[MAX_BUFFER_SIZE];
+            char PORTMASTER[MAX_BUFFER_SIZE];
+        } HELP;
+    } MUXDEVICE;
+
+    struct {
         char HELP[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char TITLE[MAX_BUFFER_SIZE];

@@ -49,6 +49,7 @@ extern content_item *items;
 
 extern int refresh_kiosk;
 extern int refresh_config;
+extern int refresh_device;
 extern int refresh_resolution;
 
 extern int nav_moved;
@@ -109,6 +110,8 @@ int muxconnect_main();
 int muxcustom_main();
 
 int muxdanger_main();
+
+int muxdevice_main();
 
 int muxgov_main(int auto_assign, char *name, char *dir, char *sys);
 
@@ -258,6 +261,15 @@ int muxwebserv_main();
         if (current != NAME##_original) {                                             \
             is_modified++;                                                            \
             write_text_to_file((CONF_CONFIG_PATH FILE), "w", TYPE, current + OFFSET); \
+        }                                                                             \
+    } while (0)
+
+#define CHECK_AND_SAVE_DEV(MODULE, NAME, FILE, TYPE, OFFSET)                          \
+    do {                                                                              \
+        int current = lv_dropdown_get_selected(ui_dro##NAME##_##MODULE);              \
+        if (current != NAME##_original) {                                             \
+            is_modified++;                                                            \
+            write_text_to_file((CONF_DEVICE_PATH FILE), "w", TYPE, current + OFFSET); \
         }                                                                             \
     } while (0)
 
