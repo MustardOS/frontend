@@ -86,7 +86,7 @@ const char *hero_one[] = {
         "superzu", "nico_linber_36894", "nico_linber", "pr0j3kt2501", "meowman_", "zaka1w3",
         "kaeltis", "reitw", "raouldook.", "gamerguy1975", "paletochen", "benjaminbercy",
         "suribii", "tobitaibuta", "opinion_panda", "hueykablooey", "mrwhistles", ".zerohalo",
-        "losermatic", "jimmycrackedcorn_4711",
+        "losermatic", "jimmycrackedcorn_4711", "milkworlds",
         NULL
 };
 
