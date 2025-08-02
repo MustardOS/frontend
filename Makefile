@@ -1,12 +1,16 @@
 SHELL = /bin/sh
 
-ifeq ($(DEVICE), RG35XX)
-    ARCH = -march=armv7-a -mtune=cortex-a9 -mfpu=neon-vfpv3 -mfloat-abi=softfp
-else ifeq ($(DEVICE), RG35XXPLUS)
-    ARCH = -march=armv8-a+simd -mtune=cortex-a53
-else ifeq ($(DEVICE), ARM64)
+DEVICE := $(strip $(DEVICE))
+
+ifeq ($(DEVICE), ARM64)          # standard aarch64
     ARCH = -march=armv8-a
-else ifeq ($(DEVICE), NATIVE)
+else ifeq ($(DEVICE), ARM64_A53) # currently for h700 and a133p
+    ARCH = -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto
+else ifeq ($(DEVICE), ARM32)     # only if you still build armhf for og 35x
+    ARCH = -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=hard
+else ifeq ($(DEVICE), ARM32_A9)  # armhf w/thumb for cortex a9 with neon
+    ARCH = -mcpu=cortex-a9 -mthumb -mfpu=neon-vfpv3 -mfloat-abi=softfp
+else ifeq ($(DEVICE), NATIVE)    # everything else, like maybe x86?
     ARCH = -march=native
 else
     $(error Unsupported Device: $(DEVICE))
@@ -23,7 +27,7 @@ DEBUG ?= 0
 VERBOSE = $(if $(filter 2,$(DEBUG)),, @)
 QUIET = $(if $(filter 1,$(DEBUG)),,>/dev/null 2>&1)
 
-CC = ccache $(CROSS_COMPILE)gcc -O3
+CC = ccache $(CROSS_COMPILE)gcc -O3 -pipe
 
 CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
          -flto -finline-functions -Wall -Wno-format-zero-length
@@ -33,12 +37,12 @@ MUXLIB = $(CFLAGS) -I./module/ui -I./font -I./lookup -I./common \
          -I./common/mini -I./common/miniz
 
 LDFLAGS = $(MUXLIB) -L./bin/lib -lui -llookup -lmux -lmuxmodule \
-          -lnotosans_big -lnotosans_big_hd \
-		  -lnotosans_medium -lnotosans_sc_medium -lnotosans_tc_medium -lnotosans_jp_medium -lnotosans_kr_medium -lnotosans_ar_medium\
+          -lnotosans_big -lnotosans_big_hd -lnotosans_medium \
+          -lnotosans_sc_medium -lnotosans_tc_medium -lnotosans_jp_medium -lnotosans_kr_medium -lnotosans_ar_medium \
           -lSDL2 -lSDL2_mixer -lSDL2_ttf -lSDL2_image -Wl,--gc-sections -s -Wl,-rpath,'./lib'
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
-		-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
+         -fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
 
 .PHONY: all $(MODULES) prebuild clean notify
 
