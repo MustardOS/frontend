@@ -331,6 +331,7 @@ static void handle_a() {
         }
 
         if (tap_count > 50) {
+            tap_count = 0;
             srandom(time(NULL));
 
             char s_rotate_str[8], s_zoom_str[8];
@@ -341,6 +342,8 @@ static void handle_a() {
 
             write_text_to_file(CONF_DEVICE_PATH "screen/s_rotate", "w", CHAR, s_rotate_str);
             write_text_to_file(CONF_DEVICE_PATH "screen/s_zoom", "w", CHAR, s_zoom_str);
+
+            refresh_device = 1;
 
             load_mux("launcher");
             write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "");

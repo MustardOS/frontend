@@ -130,15 +130,17 @@ void display_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *c
                 scale_height - (underscan * 2)
         };
 
-        // Simply the rendering if we aren't rotating, saves a few cycles
+        // Simplify the rendering if we are not rotating as this saves a few cycles
         double angle = device.SCREEN.ROTATE <= 3 ? (device.SCREEN.ROTATE * 90.0) : device.SCREEN.ROTATE;
         if (angle == 0.0) {
             SDL_RenderCopy(monitor.renderer, monitor.texture, NULL, &dest_rect);
         } else {
-            SDL_Point pivot;
-            pivot.x = device.SCREEN.ROTATE_PIVOT_X;
-            pivot.y = device.SCREEN.ROTATE_PIVOT_Y;
-            SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &dest_rect, angle, &pivot, SDL_FLIP_NONE);
+            SDL_Point pivot = {
+                    device.SCREEN.ROTATE_PIVOT_X,
+                    device.SCREEN.ROTATE_PIVOT_Y
+            };
+            SDL_Point *pivot_ptr = (pivot.x > 0 && pivot.y > 0) ? &pivot : NULL;
+            SDL_RenderCopyEx(monitor.renderer, monitor.texture, NULL, &dest_rect, angle, pivot_ptr, SDL_FLIP_NONE);
         }
 
         SDL_RenderPresent(monitor.renderer);
