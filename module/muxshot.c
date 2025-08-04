@@ -193,22 +193,12 @@ static void init_elements() {
             {NULL, NULL,                           0}
     });
 
-#if TEST_IMAGE
-    display_testing_message(ui_screen);
-#endif
-
     ui_imgScreenshot = lv_img_create(ui_screen);
     lv_img_set_pivot(ui_imgScreenshot, 0, 0);
     lv_img_set_src(ui_imgScreenshot, &ui_image_Nothing);
     lv_obj_set_style_img_opa(ui_imgScreenshot, 25, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    if (kiosk.ENABLE) {
-        kiosk_image = lv_img_create(ui_screen);
-        load_kiosk_image(ui_screen, kiosk_image);
-    }
-
-    overlay_image = lv_img_create(ui_screen);
-    load_overlay_image(ui_screen, overlay_image);
+    overlay_display();
 }
 
 static void ui_refresh_task() {

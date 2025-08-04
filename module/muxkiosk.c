@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxkiosk.h"
 
-#define UI_COUNT 31
+#define UI_COUNT 35
 
 #define KIOSK(NAME, UDATA) static int NAME##_original;
     KIOSK_ELEMENTS
@@ -32,8 +32,12 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblApps_kiosk,       lang.MUXKIOSK.HELP.APPS},
             {ui_lblConfig_kiosk,     lang.MUXKIOSK.HELP.CONFIG},
             {ui_lblExplore_kiosk,    lang.MUXKIOSK.HELP.EXPLORE},
-            {ui_lblCollection_kiosk, lang.MUXKIOSK.HELP.COLLECTION},
-            {ui_lblHistory_kiosk,    lang.MUXKIOSK.HELP.HISTORY},
+            {ui_lblCollectMod_kiosk, lang.MUXKIOSK.HELP.COLLECTION.MAIN},
+            {ui_lblCollectAdd_kiosk, lang.MUXKIOSK.HELP.COLLECTION.ADD_CONTENT},
+            {ui_lblCollectNew_kiosk, lang.MUXKIOSK.HELP.COLLECTION.NEW_DIR},
+            {ui_lblCollectRem_kiosk, lang.MUXKIOSK.HELP.COLLECTION.REMOVE},
+            {ui_lblHistoryMod_kiosk, lang.MUXKIOSK.HELP.HISTORY.MAIN},
+            {ui_lblHistoryRem_kiosk, lang.MUXKIOSK.HELP.HISTORY.REMOVE},
             {ui_lblInfo_kiosk,       lang.MUXKIOSK.HELP.INFO},
             {ui_lblAdvanced_kiosk,   lang.MUXKIOSK.HELP.ADVANCED},
             {ui_lblGeneral_kiosk,    lang.MUXKIOSK.HELP.GENERAL},
@@ -75,8 +79,12 @@ static void restore_kiosk_options() {
     lv_dropdown_set_selected(ui_droApps_kiosk, kiosk.LAUNCH.APPLICATION);
     lv_dropdown_set_selected(ui_droConfig_kiosk, kiosk.LAUNCH.CONFIGURATION);
     lv_dropdown_set_selected(ui_droExplore_kiosk, kiosk.LAUNCH.EXPLORE);
-    lv_dropdown_set_selected(ui_droCollection_kiosk, kiosk.LAUNCH.COLLECTION);
-    lv_dropdown_set_selected(ui_droHistory_kiosk, kiosk.LAUNCH.HISTORY);
+    lv_dropdown_set_selected(ui_droCollectMod_kiosk, kiosk.LAUNCH.COLLECTION);
+    lv_dropdown_set_selected(ui_droCollectAdd_kiosk, kiosk.COLLECT.ADD_CON);
+    lv_dropdown_set_selected(ui_droCollectNew_kiosk, kiosk.COLLECT.NEW_DIR);
+    lv_dropdown_set_selected(ui_droCollectRem_kiosk, kiosk.COLLECT.REMOVE);
+    lv_dropdown_set_selected(ui_droHistoryMod_kiosk, kiosk.LAUNCH.HISTORY);
+    lv_dropdown_set_selected(ui_droHistoryRem_kiosk, kiosk.CONTENT.HISTORY);
     lv_dropdown_set_selected(ui_droInfo_kiosk, kiosk.LAUNCH.INFORMATION);
     lv_dropdown_set_selected(ui_droAdvanced_kiosk, kiosk.SETTING.ADVANCED);
     lv_dropdown_set_selected(ui_droGeneral_kiosk, kiosk.SETTING.GENERAL);
@@ -111,8 +119,12 @@ static void save_kiosk_options() {
     CHECK_AND_SAVE_KSK(kiosk, Apps, "launch/apps", INT);
     CHECK_AND_SAVE_KSK(kiosk, Config, "launch/config", INT);
     CHECK_AND_SAVE_KSK(kiosk, Explore, "launch/explore", INT);
-    CHECK_AND_SAVE_KSK(kiosk, Collection, "launch/collection", INT);
-    CHECK_AND_SAVE_KSK(kiosk, History, "launch/history", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectMod, "launch/collection", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectAdd, "collect/add_con", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectNew, "collect/new_dir", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectRem, "collect/remove", INT);
+    CHECK_AND_SAVE_KSK(kiosk, HistoryMod, "launch/history", INT);
+    CHECK_AND_SAVE_KSK(kiosk, HistoryRem, "content/history", INT);
     CHECK_AND_SAVE_KSK(kiosk, Info, "launch/info", INT);
     CHECK_AND_SAVE_KSK(kiosk, Advanced, "setting/advanced", INT);
     CHECK_AND_SAVE_KSK(kiosk, General, "setting/general", INT);
@@ -134,36 +146,40 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
     INIT_OPTION_ITEM(-1, kiosk, Enable, lang.MUXKIOSK.ENABLE, "enable", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Archive, lang.MUXKIOSK.ARCHIVE, "archive", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Task, lang.MUXKIOSK.TASK, "task", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Custom, lang.MUXKIOSK.CUSTOM, "custom", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Language, lang.MUXKIOSK.LANGUAGE, "language", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Network, lang.MUXKIOSK.NETWORK, "network", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Storage, lang.MUXKIOSK.STORAGE, "storage", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, WebServ, lang.MUXKIOSK.WEBSERV, "webserv", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Core, lang.MUXKIOSK.CORE, "core", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Governor, lang.MUXKIOSK.GOVERNOR, "governor", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Option, lang.MUXKIOSK.OPTION, "option", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, RetroArch, lang.MUXKIOSK.RETROARCH, "retroarch", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Search, lang.MUXKIOSK.SEARCH, "search", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Tag, lang.MUXKIOSK.TAG, "tag", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Bootlogo, lang.MUXKIOSK.BOOTLOGO, "bootlogo", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Catalogue, lang.MUXKIOSK.CATALOGUE, "catalogue", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, RAConfig, lang.MUXKIOSK.RACONFIG, "raconfig", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Theme, lang.MUXKIOSK.THEME, "theme", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Clock, lang.MUXKIOSK.CLOCK, "clock", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Timezone, lang.MUXKIOSK.TIMEZONE, "timezone", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Apps, lang.MUXKIOSK.APPS, "apps", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Config, lang.MUXKIOSK.CONFIG, "config", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Explore, lang.MUXKIOSK.EXPLORE, "explore", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Collection, lang.MUXKIOSK.COLLECTION, "collection", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, History, lang.MUXKIOSK.HISTORY, "history", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Info, lang.MUXKIOSK.INFO, "info", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Advanced, lang.MUXKIOSK.ADVANCED, "advanced", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, General, lang.MUXKIOSK.GENERAL, "general", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Hdmi, lang.MUXKIOSK.HDMI, "hdmi", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Power, lang.MUXKIOSK.POWER, "power", disabled_enabled, 2);
-    INIT_OPTION_ITEM(-1, kiosk, Visual, lang.MUXKIOSK.VISUAL, "visual", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Archive, lang.MUXKIOSK.ARCHIVE, "archive", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Task, lang.MUXKIOSK.TASK, "task", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Custom, lang.MUXKIOSK.CUSTOM, "custom", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Language, lang.MUXKIOSK.LANGUAGE, "language", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Network, lang.MUXKIOSK.NETWORK, "network", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Storage, lang.MUXKIOSK.STORAGE, "storage", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, WebServ, lang.MUXKIOSK.WEBSERV, "webserv", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Core, lang.MUXKIOSK.CORE, "core", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Governor, lang.MUXKIOSK.GOVERNOR, "governor", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Option, lang.MUXKIOSK.OPTION, "option", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, RetroArch, lang.MUXKIOSK.RETROARCH, "retroarch", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Search, lang.MUXKIOSK.SEARCH, "search", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Tag, lang.MUXKIOSK.TAG, "tag", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Bootlogo, lang.MUXKIOSK.BOOTLOGO, "bootlogo", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Catalogue, lang.MUXKIOSK.CATALOGUE, "catalogue", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, RAConfig, lang.MUXKIOSK.RACONFIG, "raconfig", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Theme, lang.MUXKIOSK.THEME, "theme", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Clock, lang.MUXKIOSK.CLOCK, "clock", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Timezone, lang.MUXKIOSK.TIMEZONE, "timezone", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Apps, lang.MUXKIOSK.APPS, "apps", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Config, lang.MUXKIOSK.CONFIG, "config", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Explore, lang.MUXKIOSK.EXPLORE, "explore", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, CollectMod, lang.MUXKIOSK.COLLECTION.MAIN, "collectmod", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, CollectAdd, lang.MUXKIOSK.COLLECTION.ADD_CONTENT, "collectadd", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, CollectNew, lang.MUXKIOSK.COLLECTION.NEW_DIR, "collectnew", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, CollectRem, lang.MUXKIOSK.COLLECTION.REMOVE, "collectrem", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, HistoryMod, lang.MUXKIOSK.HISTORY.MAIN, "historymod", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, HistoryRem, lang.MUXKIOSK.HISTORY.REMOVE, "historyrem", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Info, lang.MUXKIOSK.INFO, "info", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Advanced, lang.MUXKIOSK.ADVANCED, "advanced", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, General, lang.MUXKIOSK.GENERAL, "general", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Hdmi, lang.MUXKIOSK.HDMI, "hdmi", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Power, lang.MUXKIOSK.POWER, "power", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Visual, lang.MUXKIOSK.VISUAL, "visual", allowed_restricted, 2);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();

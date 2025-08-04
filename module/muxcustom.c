@@ -393,9 +393,7 @@ static void handle_confirm() {
             return;
         } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
-                play_sound(SND_ERROR);
-                toast_message(kiosk_nope(), 1000);
-                refresh_screen(ui_screen);
+                kiosk_denied();
                 return;
             }
 

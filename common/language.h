@@ -70,6 +70,8 @@ struct mux_lang {
         char NOT_CONNECTED[MAX_BUFFER_SIZE];
         char EDIT[MAX_BUFFER_SIZE];
         char CHANGE[MAX_BUFFER_SIZE];
+        char ALLOWED[MAX_BUFFER_SIZE];
+        char RESTRICTED[MAX_BUFFER_SIZE];
     } GENERIC;
 
     struct {
@@ -365,14 +367,22 @@ struct mux_lang {
         char APPS[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char EXPLORE[MAX_BUFFER_SIZE];
-        char COLLECTION[MAX_BUFFER_SIZE];
-        char HISTORY[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
         char ADVANCED[MAX_BUFFER_SIZE];
         char GENERAL[MAX_BUFFER_SIZE];
         char HDMI[MAX_BUFFER_SIZE];
         char POWER[MAX_BUFFER_SIZE];
         char VISUAL[MAX_BUFFER_SIZE];
+        struct {
+            char MAIN[MAX_BUFFER_SIZE];
+            char ADD_CONTENT[MAX_BUFFER_SIZE];
+            char NEW_DIR[MAX_BUFFER_SIZE];
+            char REMOVE[MAX_BUFFER_SIZE];
+        } COLLECTION;
+        struct {
+            char MAIN[MAX_BUFFER_SIZE];
+            char REMOVE[MAX_BUFFER_SIZE];
+        } HISTORY;
         struct {
             char ENABLE[MAX_BUFFER_SIZE];
             char ARCHIVE[MAX_BUFFER_SIZE];
@@ -397,14 +407,22 @@ struct mux_lang {
             char APPS[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
             char EXPLORE[MAX_BUFFER_SIZE];
-            char COLLECTION[MAX_BUFFER_SIZE];
-            char HISTORY[MAX_BUFFER_SIZE];
             char INFO[MAX_BUFFER_SIZE];
             char ADVANCED[MAX_BUFFER_SIZE];
             char GENERAL[MAX_BUFFER_SIZE];
             char HDMI[MAX_BUFFER_SIZE];
             char POWER[MAX_BUFFER_SIZE];
             char VISUAL[MAX_BUFFER_SIZE];
+            struct {
+                char MAIN[MAX_BUFFER_SIZE];
+                char ADD_CONTENT[MAX_BUFFER_SIZE];
+                char NEW_DIR[MAX_BUFFER_SIZE];
+                char REMOVE[MAX_BUFFER_SIZE];
+            } COLLECTION;
+            struct {
+                char MAIN[MAX_BUFFER_SIZE];
+                char REMOVE[MAX_BUFFER_SIZE];
+            } HISTORY;
         } HELP;
     } MUXKIOSK;
 

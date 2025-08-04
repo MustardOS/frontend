@@ -29,7 +29,14 @@ struct mux_kiosk {
         int16_t OPTION;
         int16_t RETROARCH;
         int16_t SEARCH;
+        int16_t HISTORY;
     } CONTENT;
+
+    struct {;
+        int16_t ADD_CON;
+        int16_t NEW_DIR;
+        int16_t REMOVE;
+    } COLLECT;
 
     struct {
         int16_t BOOTLOGO;

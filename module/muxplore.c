@@ -289,9 +289,9 @@ static void gen_item(char **file_names, int file_count) {
 
     if (!file_exist(custom_lookup)) {
         snprintf(custom_lookup, sizeof(custom_lookup), INFO_NAM_PATH "/global.json");
-        LOG_INFO(mux_module, "Using Global Friendly Name file: %s", custom_lookup);
+        LOG_INFO(mux_module, "Using Global Friendly Name file: %s", custom_lookup)
     } else {
-        LOG_SUCCESS(mux_module, "Using Local Friendly Name file %s", custom_lookup);
+        LOG_SUCCESS(mux_module, "Using Local Friendly Name file %s", custom_lookup)
     }
 
     int fn_valid = 0;
@@ -794,6 +794,8 @@ static void handle_y() {
         play_sound(SND_ERROR);
         toast_message(lang.MUXPLORE.ERROR.NO_FOLDER, 1000);
     } else {
+        if (kiosk.LAUNCH.COLLECTION || kiosk.COLLECT.ADD_CON) return;
+
         if (!load_content(1)) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXPLORE.ERROR.NO_CORE, 1000);
@@ -994,7 +996,14 @@ int muxplore_main(int index, char *dir) {
             {ui_lblNavMenu,      nav_vis},
             {ui_lblNavMenuGlyph, nav_vis}
     };
+
     set_nav_flags(nav_e, A_SIZE(nav_e));
+    adjust_panels();
+
+    if (kiosk.LAUNCH.COLLECTION || kiosk.COLLECT.ADD_CON) {
+        lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
 
     update_file_counter(ui_lblCounter_explore, file_count);
 

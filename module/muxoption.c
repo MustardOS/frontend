@@ -172,9 +172,7 @@ static void handle_confirm() {
     for (size_t i = 0; i < A_SIZE(elements); i++) {
         if (strcasecmp(u_data, elements[i].glyph_name) == 0) {
             if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
-                play_sound(SND_ERROR);
-                toast_message(kiosk_nope(), 1000);
-                refresh_screen(ui_screen);
+                kiosk_denied();
                 return;
             }
 

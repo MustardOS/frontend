@@ -77,6 +77,11 @@ char *disabled_enabled[] = {
         lang.GENERIC.ENABLED
 };
 
+char *allowed_restricted[] = {
+        lang.GENERIC.ALLOWED,
+        lang.GENERIC.RESTRICTED
+};
+
 const char *snd_names[SOUND_TOTAL] = {
         "confirm", "back", "keypress", "navigate",
         "error", "muos", "reboot", "shutdown",
@@ -2307,9 +2312,10 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
-char *kiosk_nope() {
+void kiosk_denied() {
     play_sound(SND_ERROR);
-    return lang.GENERIC.KIOSK_DISABLE;
+    toast_message(lang.GENERIC.KIOSK_DISABLE, 1000);
+    refresh_screen(ui_screen);
 }
 
 void run_exec(const char *args[], size_t size, int background) {

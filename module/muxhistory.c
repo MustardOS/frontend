@@ -434,14 +434,14 @@ static void handle_b() {
 }
 
 static void handle_x() {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY) return;
 
     play_sound(SND_CONFIRM);
     remove_from_history();
 }
 
 static void handle_y() {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON) return;
 
     play_sound(SND_CONFIRM);
     add_to_collection();
@@ -583,7 +583,19 @@ int muxhistory_main(int his_index) {
             {ui_lblNavMenu,      nav_vis},
             {ui_lblNavMenuGlyph, nav_vis}
     };
+
     set_nav_flags(nav_e, A_SIZE(nav_e));
+    adjust_panels();
+
+    if (kiosk.CONTENT.HISTORY) {
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    if (kiosk.COLLECT.ADD_CON) {
+        lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
 
     update_file_counter(ui_lblCounter_history, file_count);
 

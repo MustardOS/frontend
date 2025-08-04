@@ -680,7 +680,7 @@ static void handle_y() {
         return;
     }
 
-    if (at_base(sys_dir, "collection")) {
+    if (!kiosk.COLLECT.NEW_DIR && at_base(sys_dir, "collection")) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
@@ -949,6 +949,16 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
+
+    if (kiosk.COLLECT.REMOVE) {
+        lv_obj_add_flag(ui_lblNavXGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavX, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
+
+    if (kiosk.COLLECT.NEW_DIR) {
+        lv_obj_add_flag(ui_lblNavYGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
+        lv_obj_add_flag(ui_lblNavY, MU_OBJ_FLAG_HIDE_FLOAT);
+    }
 
     update_file_counter(ui_lblCounter_collect, file_count);
     init_osk(ui_pnlEntry_collect, ui_txtEntry_collect, false);

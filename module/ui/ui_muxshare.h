@@ -169,8 +169,12 @@
     KIOSK(Apps,       "apps")       \
     KIOSK(Config,     "config")     \
     KIOSK(Explore,    "explore")    \
-    KIOSK(Collection, "collection") \
-    KIOSK(History,    "history")    \
+    KIOSK(CollectMod, "collectmod") \
+    KIOSK(CollectAdd, "collectadd") \
+    KIOSK(CollectNew, "collectnew") \
+    KIOSK(CollectRem, "collectrem") \
+    KIOSK(HistoryMod, "historymod") \
+    KIOSK(HistoryRem, "historyrem") \
     KIOSK(Info,       "info")       \
     KIOSK(Advanced,   "advanced")   \
     KIOSK(General,    "general")    \

@@ -28,6 +28,7 @@ extern int current_volume;
 extern char *theme_back_compat[];
 
 extern char *disabled_enabled[];
+extern char *allowed_restricted[];
 
 #define SOUND_TOTAL 12
 
@@ -307,7 +308,7 @@ int get_grid_column_index(int current_item_index);
 
 int get_grid_row_item_count(int current_item_index);
 
-char *kiosk_nope();
+void kiosk_denied();
 
 void run_exec(const char *args[], size_t size, int background);
 
