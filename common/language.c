@@ -731,7 +731,7 @@ void load_lang(struct mux_lang *lang) {
     // muxtester
     SPECIFIC_FIELD(lang->MUXTESTER.TITLE, "INPUT TESTER");
     SPECIFIC_FIELD(lang->MUXTESTER.ANY, "Press any button to start input testing!");
-    SPECIFIC_FIELD(lang->MUXTESTER.POWER, "Press POWER to finish testing");
+    SPECIFIC_FIELD(lang->MUXTESTER.QUIT, "Press DOWN + B to finish testing");
 
     // muxtimezone
     SPECIFIC_FIELD(lang->MUXTIMEZONE.TITLE, "TIMEZONE");

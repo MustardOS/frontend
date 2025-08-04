@@ -90,7 +90,7 @@ static void init_elements() {
     lv_obj_set_style_img_recolor_opa(ui_imgButton, theme.LIST_DEFAULT.GLYPH_RECOLOUR_ALPHA,
                                      LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_label_set_text(ui_lblMessage, lang.MUXTESTER.POWER);
+    lv_label_set_text(ui_lblMessage, lang.MUXTESTER.QUIT);
     lv_obj_clear_flag(ui_pnlMessage, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_y(ui_pnlMessage, -12);
 
@@ -118,8 +118,14 @@ int muxtester_main() {
     init_timer(NULL, NULL);
 
     mux_input_options input_opts = {
-            .press_handler = {[MUX_INPUT_POWER_SHORT] = handle_power},
             .input_handler = handle_input,
+            .combo = {
+                    {
+                            .type_mask = BIT(MUX_INPUT_DPAD_DOWN) | BIT(MUX_INPUT_B),
+                            .press_handler = handle_power,
+                            .hold_handler = handle_power,
+                    }
+            }
     };
     init_input(&input_opts, false);
     input_opts.stick_nav = false;

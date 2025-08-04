@@ -849,7 +849,7 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char ANY[MAX_BUFFER_SIZE];
-        char POWER[MAX_BUFFER_SIZE];
+        char QUIT[MAX_BUFFER_SIZE];
     } MUXTESTER;
 
     struct {
