@@ -60,7 +60,7 @@ static char *load_content_core(int force, int run_quit) {
         if (file_exist(content_core) && !force) {
             LOG_SUCCESS(mux_module, "Loading Individual Core: %s", content_core)
 
-            char *core = build_core(content_core, CONTENT_CORE, CONTENT_SYSTEM,
+            char *core = build_core(content_core, CONTENT_NAME, CONTENT_SYSTEM,
                                     CONTENT_CATALOGUE, CONTENT_LOOKUP, CONTENT_ASSIGN);
 
             if (core) return core;

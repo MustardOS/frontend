@@ -52,6 +52,37 @@ struct grid_info {
 
 extern struct grid_info grid_info;
 
+/* The following enums start at 1 because the values are used to
+ * reference specific line numbers in associated core content files.
+ *
+ * Index 0 is unused, and line 'n' corresponds directly to value 'n'.
+ */
+enum content_type {
+    CONTENT_NAME = 1,
+    CONTENT_CORE,
+    CONTENT_SYSTEM,
+    CONTENT_CATALOGUE,
+    CONTENT_LOOKUP,
+    CONTENT_ASSIGN,
+    CONTENT_MOUNT,
+    CONTENT_DIR,
+    CONTENT_FULL
+};
+
+enum global_type {
+    GLOBAL_CORE = 1,
+    GLOBAL_SYSTEM,
+    GLOBAL_CATALOGUE,
+    GLOBAL_LOOKUP,
+    GLOBAL_ASSIGN
+};
+
+enum cache_type {
+    CACHE_CORE_PATH = 1,
+    CACHE_CORE_DIR,
+    CACHE_CORE_NAME
+};
+
 enum parse_mode {
     LINES, TOKENS
 };
