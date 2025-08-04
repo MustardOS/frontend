@@ -542,6 +542,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.TITLE, "CONTENT OPTION");
     SPECIFIC_FIELD(lang->MUXOPTION.SEARCH, "Search");
     SPECIFIC_FIELD(lang->MUXOPTION.NAME, "Name");
+    SPECIFIC_FIELD(lang->MUXOPTION.TIME, "Time Played");
     SPECIFIC_FIELD(lang->MUXOPTION.CURRENT, "Current");
     SPECIFIC_FIELD(lang->MUXOPTION.DIRECTORY, "Directory");
     SPECIFIC_FIELD(lang->MUXOPTION.INDIVIDUAL, "Individual");

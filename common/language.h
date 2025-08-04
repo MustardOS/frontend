@@ -560,6 +560,7 @@ struct mux_lang {
         char TITLE[MAX_BUFFER_SIZE];
         char SEARCH[MAX_BUFFER_SIZE];
         char NAME[MAX_BUFFER_SIZE];
+        char TIME[MAX_BUFFER_SIZE];
         char CURRENT[MAX_BUFFER_SIZE];
         char DIRECTORY[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];

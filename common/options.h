@@ -76,6 +76,7 @@
 #define INFO_COL_PATH RUN_STORAGE_PATH "info/collection"
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
+#define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
 
 #define MUOS_APPS_PATH "MUOS/application"
 #define MUOS_TASK_PATH "MUOS/task"
@@ -103,6 +104,7 @@
 #define STORE_LOC_CORE MUOS_INFO_PATH "/core"
 #define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
+#define STORE_LOC_PLAY MUOS_INFO_PATH "/track"
 
 #define MUOS_ACT_LOAD "/tmp/act_go" // Module Action
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
@@ -128,6 +130,7 @@
 #define BRIGHT_PERC "/tmp/current_brightness_percent"
 #define VOLUME_PERC "/tmp/current_volume_percent"
 
+#define PLAYTIME_DATA   "playtime_data.json"
 #define FRIENDLY_RESULT "/tmp/f_result.json"
 #define APP_LAUNCHER    "mux_launch.sh"
 

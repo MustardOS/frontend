@@ -90,11 +90,55 @@ static void add_info_items() {
     add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
 }
 
+static char *get_time_played() {
+    static char time_buffer[MAX_BUFFER_SIZE] = "0m";
+
+    char fullpath[PATH_MAX];
+    snprintf(fullpath, sizeof(fullpath), "%s/%s", rom_dir, rom_name);
+
+    char playtime_data[MAX_BUFFER_SIZE];
+    snprintf(playtime_data, sizeof(playtime_data), INFO_ACT_PATH "/" PLAYTIME_DATA);
+
+    if (!file_exist(playtime_data)) {
+        LOG_WARN(mux_module, "Playtime Data Not Found At: %s", playtime_data);
+        return lang.GENERIC.UNKNOWN;
+    } else {
+        LOG_SUCCESS(mux_module, "Found Playtime Data At: %s", playtime_data);
+    }
+
+    char *json_str = read_all_char_from(playtime_data);
+    if (!json_valid(json_str)) return lang.GENERIC.UNKNOWN;
+
+    struct json fn_json = json_parse(json_str);
+    free(json_str);
+
+    struct json playtime_json = json_object_get(fn_json, fullpath);
+    if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
+
+    int total_time = json_int(json_object_get(playtime_json, "total_time"));
+    int days = total_time / 86400;
+    int hours = (total_time % 86400) / 3600;
+    int minutes = (total_time % 3600) / 60;
+
+    if (days > 0) {
+        snprintf(time_buffer, sizeof(time_buffer), "%dd %dh %dm", days, hours, minutes);
+    } else if (hours > 0) {
+        snprintf(time_buffer, sizeof(time_buffer), "%dh %dm", hours, minutes);
+    } else if (minutes > 0) {
+        snprintf(time_buffer, sizeof(time_buffer), "%dm", minutes);
+    } else {
+        snprintf(time_buffer, sizeof(time_buffer), "%s", lang.GENERIC.UNKNOWN);
+    }
+
+    return time_buffer;
+}
+
 static void init_navigation_group() {
     int line_index = 0;
 
     add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
     add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
+    add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
     add_static_item(line_index, "", "", "", true);
 
     INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
