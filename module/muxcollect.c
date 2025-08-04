@@ -895,55 +895,47 @@ int muxcollect_main(int add, char *dir, int last_index) {
             {ui_lblNavMenuGlyph, 1}
     };
 
-    /* the below is absolutely fucked logic and I hate it */
-    if (add_mode) {
-        if (at_base(sys_dir, "collection")) {
-            if (!ui_count) {
-                int hidden[] = {2, 3, 6, 7};
-                for (int i = 0; i < 4; ++i) {
-                    nav_e[hidden[i]].visible = 0;
-                }
-                lv_label_set_text(ui_lblNavA, lang.GENERIC.ADD);
-            } else {
-                int hidden[] = {2, 3};
-                for (int i = 0; i < 2; ++i) {
-                    nav_e[hidden[i]].visible = 0;
-                }
-            }
-        } else { // not at base
-            lv_label_set_text(ui_lblNavA, lang.GENERIC.ADD);
-            if (!ui_count) {
-                int hidden[] = {2, 3, 4, 5, 6, 7};
-                for (int i = 0; i < 6; ++i) {
-                    nav_e[hidden[i]].visible = 0;
-                }
-            } else {
-                int hidden[] = {2, 3, 4, 5};
-                for (int i = 0; i < 4; ++i) {
-                    nav_e[hidden[i]].visible = 0;
-                }
-            }
+    /* this should make it somewhat easier to reference hidden navs... */
+    enum {
+        NavA, NavAGlyph,
+        NavX, NavXGlyph,
+        NavY, NavYGlyph,
+        NavMenu, NavMenuGlyph
+    };
+
+    struct {
+        int add_mode;
+        int at_collect;
+        int ui_count;
+        const int *hidden;
+        size_t count;
+    } nav_rules[] = {
+            {1, 1, 0, (int[]) {NavX, NavXGlyph, NavMenu, NavMenuGlyph},                                   4},
+            {1, 1, 1, (int[]) {NavX, NavXGlyph},                                                          2},
+            {1, 0, 0, (int[]) {NavX, NavXGlyph, NavY, NavYGlyph, NavMenu, NavMenuGlyph},                  6},
+            {1, 0, 1, (int[]) {NavX, NavXGlyph, NavY, NavYGlyph},                                         4},
+            {0, 1, 0, (int[]) {NavA, NavAGlyph, NavX, NavXGlyph, NavMenu, NavMenuGlyph},                  6},
+            {0, 0, 0, (int[]) {NavA, NavAGlyph, NavX, NavXGlyph, NavY, NavYGlyph, NavMenu, NavMenuGlyph}, 8},
+            {0, 0, 1, (int[]) {NavY, NavYGlyph},                                                          2},
+    };
+
+    const int *hidden = NULL;
+    size_t hidden_count;
+
+    for (size_t i = 0; i < A_SIZE(nav_rules); ++i) {
+        if (nav_rules[i].add_mode == add_mode &&
+            nav_rules[i].at_collect == at_base(sys_dir, "collection") &&
+            nav_rules[i].ui_count == !!ui_count) {
+            hidden = nav_rules[i].hidden;
+            hidden_count = nav_rules[i].count;
+            break;
         }
-    } else { // not in add mode
-        if (at_base(sys_dir, "collection")) {
-            if (!ui_count) {
-                int hidden[] = {0, 1, 2, 3, 6, 7};
-                for (int i = 0; i < 6; ++i) {
-                    nav_e[hidden[i]].visible = 0;
-                }
-            }
-        } else { // not at base
-            if (!ui_count) {
-                int hidden[] = {0, 1, 2, 3, 4, 5, 6, 7};
-                for (int i = 0; i < 8; ++i) {
-                    nav_e[hidden[i]].visible = 0;
-                }
-            } else {
-                int hidden[] = {4, 5};
-                for (int i = 0; i < 2; ++i) {
-                    nav_e[hidden[i]].visible = 0;
-                }
-            }
+    }
+
+    if (hidden != NULL) {
+        for (int i = 0; i < hidden_count; ++i) {
+            int k = hidden[i];
+            if (k >= 0 && k < (int) A_SIZE(nav_e)) nav_e[k].visible = 0;
         }
     }
 
