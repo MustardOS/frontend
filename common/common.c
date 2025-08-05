@@ -837,6 +837,7 @@ char *get_capacity() {
 
 void capacity_task() {
     battery_capacity = read_battery_capacity();
+    update_battery_capacity(ui_staCapacity, &theme);
 }
 
 void increase_option_value(lv_obj_t *element) {

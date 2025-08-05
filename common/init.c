@@ -36,7 +36,6 @@ lv_timer_t *timer_capacity;
 lv_timer_t *timer_status;
 lv_timer_t *timer_bluetooth;
 lv_timer_t *timer_network;
-lv_timer_t *timer_battery;
 lv_timer_t *timer_update_system_info;
 
 uint32_t mux_tick(void) {
@@ -192,15 +191,20 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
     dt_par.lblDatetime = ui_lblDatetime;
     bat_par.staCapacity = ui_staCapacity;
     timer_ui_refresh = lv_timer_create(ui_refresh_task, TIMER_REFRESH, NULL);
-    timer_datetime = lv_timer_create(datetime_task, TIMER_DATETIME, &dt_par);
-    timer_capacity = lv_timer_create(capacity_task, TIMER_CAPACITY, &bat_par);
     timer_status = lv_timer_create(status_task, TIMER_STATUS, NULL);
+
+    if (config.VISUAL.CLOCK)
+        timer_datetime = lv_timer_create(datetime_task, TIMER_DATETIME, &dt_par);
+
+    if (config.VISUAL.BATTERY)
+        timer_capacity = lv_timer_create(capacity_task, TIMER_CAPACITY, &bat_par);
 
     if (device.DEVICE.HAS_BLUETOOTH && config.VISUAL.BLUETOOTH)
         timer_bluetooth = lv_timer_create(bluetooth_task, TIMER_BLUETOOTH, NULL);
+
     if (device.DEVICE.HAS_NETWORK && config.VISUAL.NETWORK)
         timer_network = lv_timer_create(network_task, TIMER_NETWORK, NULL);
-    if (config.VISUAL.BATTERY) timer_battery = lv_timer_create(battery_task, TIMER_BATTERY, NULL);
+
     if (update_system_info) timer_update_system_info = lv_timer_create(update_system_info, TIMER_SYSINFO, NULL);
     lv_refr_now(NULL);
 }
@@ -222,7 +226,6 @@ void init_dispose() {
         lv_timer_del(timer_status);
         timer_status = NULL;
     }
-
     if (timer_bluetooth) {
         lv_timer_del(timer_bluetooth);
         timer_bluetooth = NULL;
@@ -230,10 +233,6 @@ void init_dispose() {
     if (timer_network) {
         lv_timer_del(timer_network);
         timer_network = NULL;
-    }
-    if (timer_battery) {
-        lv_timer_del(timer_battery);
-        timer_battery = NULL;
     }
     if (timer_update_system_info) {
         lv_timer_del(timer_update_system_info);
@@ -289,12 +288,4 @@ void bluetooth_task() {
 void network_task() {
     if (!strcasecmp(mux_module, "muxnetwork")) return;
     update_network_status(ui_staNetwork, &theme, 0);
-}
-
-void battery_task() {
-    int bat_cap = read_line_int_from(device.BATTERY.CHARGER, 1);
-    if (bat_cap != current_capacity) {
-        current_capacity = bat_cap;
-        update_battery_capacity(ui_staCapacity, &theme);
-    }
 }
