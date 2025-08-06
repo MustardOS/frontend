@@ -173,6 +173,7 @@
     KIOSK(CollectAdd, "collectadd") \
     KIOSK(CollectNew, "collectnew") \
     KIOSK(CollectRem, "collectrem") \
+    KIOSK(CollectAcc, "collectacc") \
     KIOSK(HistoryMod, "historymod") \
     KIOSK(HistoryRem, "historyrem") \
     KIOSK(Info,       "info")       \

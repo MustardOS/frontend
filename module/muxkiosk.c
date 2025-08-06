@@ -36,6 +36,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblCollectAdd_kiosk, lang.MUXKIOSK.HELP.COLLECTION.ADD_CONTENT},
             {ui_lblCollectNew_kiosk, lang.MUXKIOSK.HELP.COLLECTION.NEW_DIR},
             {ui_lblCollectRem_kiosk, lang.MUXKIOSK.HELP.COLLECTION.REMOVE},
+            {ui_lblCollectAcc_kiosk, lang.MUXKIOSK.HELP.COLLECTION.ACCESS},
             {ui_lblHistoryMod_kiosk, lang.MUXKIOSK.HELP.HISTORY.MAIN},
             {ui_lblHistoryRem_kiosk, lang.MUXKIOSK.HELP.HISTORY.REMOVE},
             {ui_lblInfo_kiosk,       lang.MUXKIOSK.HELP.INFO},
@@ -83,6 +84,7 @@ static void restore_kiosk_options() {
     lv_dropdown_set_selected(ui_droCollectAdd_kiosk, kiosk.COLLECT.ADD_CON);
     lv_dropdown_set_selected(ui_droCollectNew_kiosk, kiosk.COLLECT.NEW_DIR);
     lv_dropdown_set_selected(ui_droCollectRem_kiosk, kiosk.COLLECT.REMOVE);
+    lv_dropdown_set_selected(ui_droCollectAcc_kiosk, kiosk.COLLECT.ACCESS);
     lv_dropdown_set_selected(ui_droHistoryMod_kiosk, kiosk.LAUNCH.HISTORY);
     lv_dropdown_set_selected(ui_droHistoryRem_kiosk, kiosk.CONTENT.HISTORY);
     lv_dropdown_set_selected(ui_droInfo_kiosk, kiosk.LAUNCH.INFORMATION);
@@ -123,6 +125,7 @@ static void save_kiosk_options() {
     CHECK_AND_SAVE_KSK(kiosk, CollectAdd, "collect/add_con", INT);
     CHECK_AND_SAVE_KSK(kiosk, CollectNew, "collect/new_dir", INT);
     CHECK_AND_SAVE_KSK(kiosk, CollectRem, "collect/remove", INT);
+    CHECK_AND_SAVE_KSK(kiosk, CollectAcc, "collect/access", INT);
     CHECK_AND_SAVE_KSK(kiosk, HistoryMod, "launch/history", INT);
     CHECK_AND_SAVE_KSK(kiosk, HistoryRem, "content/history", INT);
     CHECK_AND_SAVE_KSK(kiosk, Info, "launch/info", INT);
@@ -134,6 +137,10 @@ static void save_kiosk_options() {
 
     if (is_modified > 0) {
         toast_message(lang.GENERIC.SAVING, 0);
+
+        if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
+        if (file_exist(MUOS_PDI_LOAD)) remove(MUOS_PDI_LOAD);
+
         refresh_screen(ui_screen);
         refresh_kiosk = 1;
     }
@@ -172,6 +179,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, kiosk, CollectAdd, lang.MUXKIOSK.COLLECTION.ADD_CONTENT, "collectadd", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, CollectNew, lang.MUXKIOSK.COLLECTION.NEW_DIR, "collectnew", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, CollectRem, lang.MUXKIOSK.COLLECTION.REMOVE, "collectrem", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, CollectAcc, lang.MUXKIOSK.COLLECTION.ACCESS, "collectacc", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, HistoryMod, lang.MUXKIOSK.HISTORY.MAIN, "historymod", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, HistoryRem, lang.MUXKIOSK.HISTORY.REMOVE, "historyrem", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Info, lang.MUXKIOSK.INFO, "info", allowed_restricted, 2);

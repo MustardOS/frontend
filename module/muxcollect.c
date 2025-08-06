@@ -20,6 +20,8 @@ static int nogrid_file_exists = 0;
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
+char *access_mode = NULL;
+
 static void check_for_disable_grid_file(char *item_curr_dir) {
     char no_grid_path[PATH_MAX];
     snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
@@ -168,8 +170,10 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     while ((entry = readdir(dir))) {
         char full_path[PATH_MAX];
         snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
-        if (entry->d_type == DT_DIR && at_base(sys_dir, "collection")) {
-            if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+        if (entry->d_type == DT_DIR && at_base(sys_dir, access_mode)) {
+            if (strcmp(entry->d_name, "kiosk") != 0 &&
+                strcmp(entry->d_name, ".") != 0 &&
+                strcmp(entry->d_name, "..") != 0) {
                 char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
                 snprintf(subdir_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 
@@ -324,10 +328,14 @@ static void create_collection_items() {
         free(file_content);
     }
 
-    update_title(sys_dir, fn_valid, fn_json, lang.MUXCOLLECT.TITLE, INFO_COL_PATH);
+    const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
+                                  ? INFO_CKS_PATH
+                                  : INFO_COL_PATH;
+
+    update_title(sys_dir, fn_valid, fn_json, lang.MUXCOLLECT.TITLE, collection_path);
 
     if (dir_count > 0 || file_count > 0) {
-        if (at_base(sys_dir, "collection")) {
+        if (at_base(sys_dir, access_mode)) {
             for (int i = 0; i < dir_count; i++) {
                 char *friendly_folder_name = get_friendly_folder_name(dir_names[i], fn_valid, fn_json);
 
@@ -613,7 +621,7 @@ static void handle_b() {
 
     play_sound(SND_BACK);
 
-    if (at_base(sys_dir, "collection")) {
+    if (at_base(sys_dir, access_mode)) {
         if (file_exist(ADD_MODE_WORK)) remove(ADD_MODE_WORK);
         if (add_mode) write_text_to_file(ADD_MODE_DONE, "w", CHAR, "CANCEL");
         if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
@@ -680,7 +688,7 @@ static void handle_y() {
         return;
     }
 
-    if (!kiosk.COLLECT.NEW_DIR && at_base(sys_dir, "collection")) {
+    if (!kiosk.COLLECT.NEW_DIR && at_base(sys_dir, access_mode)) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(key_entry, LV_STATE_DISABLED);
 
@@ -830,7 +838,13 @@ int muxcollect_main(int add, char *dir, int last_index) {
     splash_valid = 0;
     nogrid_file_exists = 0;
 
-    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? INFO_COL_PATH : dir);
+    const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
+                                  ? INFO_CKS_PATH
+                                  : INFO_COL_PATH;
+
+    snprintf(sys_dir, sizeof(sys_dir), "%s", (strcmp(dir, "") == 0) ? collection_path : dir);
+    access_mode = strcasecmp(collection_path, INFO_CKS_PATH) ? "collection" : "kiosk";
+
     init_module("muxcollect");
 
     init_theme(1, 0);
@@ -924,7 +938,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
 
     for (size_t i = 0; i < A_SIZE(nav_rules); ++i) {
         if (nav_rules[i].add_mode == add_mode &&
-            nav_rules[i].at_collect == at_base(sys_dir, "collection") &&
+            nav_rules[i].at_collect == at_base(sys_dir, access_mode) &&
             nav_rules[i].ui_count == !!ui_count) {
             hidden = nav_rules[i].hidden;
             hidden_count = nav_rules[i].count;

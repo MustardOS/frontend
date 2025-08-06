@@ -378,6 +378,7 @@ struct mux_lang {
             char ADD_CONTENT[MAX_BUFFER_SIZE];
             char NEW_DIR[MAX_BUFFER_SIZE];
             char REMOVE[MAX_BUFFER_SIZE];
+            char ACCESS[MAX_BUFFER_SIZE];
         } COLLECTION;
         struct {
             char MAIN[MAX_BUFFER_SIZE];
@@ -418,6 +419,7 @@ struct mux_lang {
                 char ADD_CONTENT[MAX_BUFFER_SIZE];
                 char NEW_DIR[MAX_BUFFER_SIZE];
                 char REMOVE[MAX_BUFFER_SIZE];
+                char ACCESS[MAX_BUFFER_SIZE];
             } COLLECTION;
             struct {
                 char MAIN[MAX_BUFFER_SIZE];

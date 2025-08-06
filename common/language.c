@@ -165,7 +165,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCHARGE.VOLTAGE, "Voltage");
 
     // muxcollect
-    SPECIFIC_FIELD(lang->MUXCOLLECT.TITLE, "COLLECTIONS");
+    SPECIFIC_FIELD(lang->MUXCOLLECT.TITLE, "COLLECTION");
     SPECIFIC_FIELD(lang->MUXCOLLECT.NONE, "Nothing Saved Yet…");
     SPECIFIC_FIELD(lang->MUXCOLLECT.ERROR.REMOVE_FILE, "Error removing from Collections");
     SPECIFIC_FIELD(lang->MUXCOLLECT.ERROR.REMOVE_DIR, "Collection folder is not empty");
@@ -388,6 +388,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.ADD_CONTENT, "Collection Adding Content");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.NEW_DIR, "Collection Folder Creation");
     SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.REMOVE, "Collection Removal");
+    SPECIFIC_FIELD(lang->MUXKIOSK.COLLECTION.ACCESS, "Collection Access");
     SPECIFIC_FIELD(lang->MUXKIOSK.HISTORY.MAIN, "History Viewing");
     SPECIFIC_FIELD(lang->MUXKIOSK.HISTORY.REMOVE, "History Removal");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.ENABLE, "Enable or disable kiosk mode restrictions");
@@ -423,6 +424,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.ADD_CONTENT, "Permit adding content to collections");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.NEW_DIR, "Allow creation of new collection folders");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.REMOVE, "Permit deletion of collections");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.COLLECTION.ACCESS, "Restrict to specific 'kiosk' directory within collections");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HISTORY.MAIN, "Enable access to recently used content");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.HISTORY.REMOVE, "Allow clearing items from history");
 

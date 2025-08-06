@@ -162,7 +162,9 @@ static void module_content_list(const char *path, const char *max_depth, int is_
 }
 
 static void module_collection() {
-    module_content_list(INFO_COL_PATH, "2", 1);
+    const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
+                                  ? INFO_CKS_PATH : INFO_COL_PATH;
+    module_content_list(collection_path, "2", 1);
 }
 
 static void module_history() {

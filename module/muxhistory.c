@@ -177,7 +177,12 @@ static char *get_glyph_name(size_t index) {
     const char *file_name = strip_ext(items[index].name);
     const char *system_name = read_line_char_from(history_file, CACHE_CORE_DIR);
 
-    if (search_for_config(INFO_COL_PATH, file_name, system_name)) return "collection";
+    const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
+                                  ? INFO_CKS_PATH
+                                  : INFO_COL_PATH;
+
+    if (search_for_config(collection_path, file_name, system_name)) return "collection";
+
     return "history";
 }
 
