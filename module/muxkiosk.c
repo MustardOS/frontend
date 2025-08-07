@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxkiosk.h"
 
-#define UI_COUNT 35
+#define UI_COUNT 37
 
 #define KIOSK(NAME, UDATA) static int NAME##_original;
     KIOSK_ELEMENTS
@@ -10,6 +10,7 @@
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
             {ui_lblEnable_kiosk,     lang.MUXKIOSK.HELP.ENABLE},
+            {ui_lblMessage_kiosk,    lang.MUXKIOSK.HELP.MESSAGE},
             {ui_lblArchive_kiosk,    lang.MUXKIOSK.HELP.ARCHIVE},
             {ui_lblTask_kiosk,       lang.MUXKIOSK.HELP.TASK},
             {ui_lblCustom_kiosk,     lang.MUXKIOSK.HELP.CUSTOM},
@@ -58,6 +59,7 @@ static void init_dropdown_settings() {
 
 static void restore_kiosk_options() {
     lv_dropdown_set_selected(ui_droEnable_kiosk, kiosk.ENABLE);
+    lv_dropdown_set_selected(ui_droMessage_kiosk, kiosk.MESSAGE);
     lv_dropdown_set_selected(ui_droArchive_kiosk, kiosk.APPLICATION.ARCHIVE);
     lv_dropdown_set_selected(ui_droTask_kiosk, kiosk.APPLICATION.TASK);
     lv_dropdown_set_selected(ui_droCustom_kiosk, kiosk.CONFIG.CUSTOMISATION);
@@ -99,6 +101,7 @@ static void save_kiosk_options() {
     int is_modified = 0;
 
     CHECK_AND_SAVE_KSK(kiosk, Enable, "enable", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Message, "message", INT);
     CHECK_AND_SAVE_KSK(kiosk, Archive, "application/archive", INT);
     CHECK_AND_SAVE_KSK(kiosk, Task, "application/task", INT);
     CHECK_AND_SAVE_KSK(kiosk, Custom, "config/customisation", INT);
@@ -153,6 +156,7 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
     INIT_OPTION_ITEM(-1, kiosk, Enable, lang.MUXKIOSK.ENABLE, "enable", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Message, lang.MUXKIOSK.MESSAGE, "message", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, kiosk, Archive, lang.MUXKIOSK.ARCHIVE, "archive", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Task, lang.MUXKIOSK.TASK, "task", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Custom, lang.MUXKIOSK.CUSTOM, "custom", allowed_restricted, 2);

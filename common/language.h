@@ -345,6 +345,7 @@ struct mux_lang {
     struct {
         char TITLE[MAX_BUFFER_SIZE];
         char ENABLE[MAX_BUFFER_SIZE];
+        char MESSAGE[MAX_BUFFER_SIZE];
         char ARCHIVE[MAX_BUFFER_SIZE];
         char TASK[MAX_BUFFER_SIZE];
         char CUSTOM[MAX_BUFFER_SIZE];
@@ -386,6 +387,7 @@ struct mux_lang {
         } HISTORY;
         struct {
             char ENABLE[MAX_BUFFER_SIZE];
+            char MESSAGE[MAX_BUFFER_SIZE];
             char ARCHIVE[MAX_BUFFER_SIZE];
             char TASK[MAX_BUFFER_SIZE];
             char CUSTOM[MAX_BUFFER_SIZE];

@@ -147,6 +147,7 @@
 
 #define KIOSK_ELEMENTS              \
     KIOSK(Enable,     "enable")     \
+    KIOSK(Message,    "message")    \
     KIOSK(Archive,    "archive")    \
     KIOSK(Task,       "task")       \
     KIOSK(Custom,     "custom")     \

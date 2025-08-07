@@ -34,6 +34,7 @@
 #include "options.h"
 #include "config.h"
 #include "device.h"
+#include "kiosk.h"
 #include "theme.h"
 #include "mini/mini.h"
 
@@ -2314,9 +2315,11 @@ int get_grid_row_item_count(int current_item_index) {
 }
 
 void kiosk_denied() {
-    play_sound(SND_ERROR);
-    toast_message(lang.GENERIC.KIOSK_DISABLE, 1000);
-    refresh_screen(ui_screen);
+    if (kiosk.MESSAGE) {
+        play_sound(SND_ERROR);
+        toast_message(lang.GENERIC.KIOSK_DISABLE, 1000);
+        refresh_screen(ui_screen);
+    }
 }
 
 void run_exec(const char *args[], size_t size, int background) {

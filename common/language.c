@@ -356,6 +356,7 @@ void load_lang(struct mux_lang *lang) {
     // muxkiosk
     SPECIFIC_FIELD(lang->MUXKIOSK.TITLE, "KIOSK SETTINGS");
     SPECIFIC_FIELD(lang->MUXKIOSK.ENABLE, "Kiosk Mode");
+    SPECIFIC_FIELD(lang->MUXKIOSK.MESSAGE, "Restricted Messages");
     SPECIFIC_FIELD(lang->MUXKIOSK.ARCHIVE, "Archive Manager");
     SPECIFIC_FIELD(lang->MUXKIOSK.TASK, "Task Toolkit");
     SPECIFIC_FIELD(lang->MUXKIOSK.CUSTOM, "Customisation");
@@ -392,6 +393,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HISTORY.MAIN, "History Viewing");
     SPECIFIC_FIELD(lang->MUXKIOSK.HISTORY.REMOVE, "History Removal");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.ENABLE, "Enable or disable kiosk mode restrictions");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.MESSAGE, "Enable or disable kiosk mode messages");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.ARCHIVE, "Allow access to archive manager");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.TASK, "Permit access to the task toolkit");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CUSTOM, "Allow users to customise the interface");
