@@ -157,6 +157,7 @@
     KIOSK(WebServ,    "webserv")    \
     KIOSK(Core,       "core")       \
     KIOSK(Governor,   "governor")   \
+    KIOSK(Control,    "control")    \
     KIOSK(Option,     "option")     \
     KIOSK(RetroArch,  "retroarch")  \
     KIOSK(Search,     "search")     \
@@ -223,6 +224,7 @@
     OPTION(Search,   "search")   \
     OPTION(Core,     "core")     \
     OPTION(Governor, "governor") \
+    OPTION(Control,  "control")  \
     OPTION(Tag,      "tag")
 
 #define POWER_ELEMENTS \

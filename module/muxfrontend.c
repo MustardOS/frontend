@@ -138,6 +138,7 @@ static void module_explore() {
     char *explore_dir = read_line_char_from(EXPLORE_DIR, 1);
     muxassign_main(1, rom_name, explore_dir, "none");
     muxgov_main(1, rom_name, explore_dir, "none");
+    muxcontrol_main(1, rom_name, explore_dir, "none");
 
     load_mux("launcher");
     if (muxplore_main(last_index, explore_dir) == 1) safe_quit(0);
@@ -203,6 +204,10 @@ static void module_assign() {
 
 static void module_governor() {
     module_run("option", muxgov_main);
+}
+
+static void module_control() {
+    module_run("option", muxcontrol_main);
 }
 
 static void module_tag() {
@@ -307,6 +312,7 @@ static const ModuleEntry modules[] = {
         {"shutdown",   NULL, NULL, NULL, module_shutdown},
         {"assign",     NULL, NULL, NULL, module_assign},
         {"governor",   NULL, NULL, NULL, module_governor},
+        {"control",    NULL, NULL, NULL, module_control},
         {"tag",        NULL, NULL, NULL, module_tag},
         {"explore",    NULL, NULL, NULL, module_explore},
         {"collection", NULL, NULL, NULL, module_collection},

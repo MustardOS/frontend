@@ -21,6 +21,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
 
     CFG_INT_FIELD(kiosk->CONTENT.CORE, CONF_KIOSK_PATH "content/core", 0)
     CFG_INT_FIELD(kiosk->CONTENT.GOVERNOR, CONF_KIOSK_PATH "content/governor", 0)
+    CFG_INT_FIELD(kiosk->CONTENT.CONTROL, CONF_KIOSK_PATH "content/control", 0)
     CFG_INT_FIELD(kiosk->CONTENT.TAG, CONF_KIOSK_PATH "content/tag", 0)
     CFG_INT_FIELD(kiosk->CONTENT.OPTION, CONF_KIOSK_PATH "content/option", 0)
     CFG_INT_FIELD(kiosk->CONTENT.RETROARCH, CONF_KIOSK_PATH "content/retroarch", 0)

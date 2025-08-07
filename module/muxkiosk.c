@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxkiosk.h"
 
-#define UI_COUNT 37
+#define UI_COUNT 38
 
 #define KIOSK(NAME, UDATA) static int NAME##_original;
     KIOSK_ELEMENTS
@@ -20,6 +20,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblWebServ_kiosk,    lang.MUXKIOSK.HELP.WEBSERV},
             {ui_lblCore_kiosk,       lang.MUXKIOSK.HELP.CORE},
             {ui_lblGovernor_kiosk,   lang.MUXKIOSK.HELP.GOVERNOR},
+            {ui_lblControl_kiosk,    lang.MUXKIOSK.HELP.CONTROL},
             {ui_lblOption_kiosk,     lang.MUXKIOSK.HELP.OPTION},
             {ui_lblRetroArch_kiosk,  lang.MUXKIOSK.HELP.RETROARCH},
             {ui_lblSearch_kiosk,     lang.MUXKIOSK.HELP.SEARCH},
@@ -69,6 +70,7 @@ static void restore_kiosk_options() {
     lv_dropdown_set_selected(ui_droWebServ_kiosk, kiosk.CONFIG.WEB_SERVICES);
     lv_dropdown_set_selected(ui_droCore_kiosk, kiosk.CONTENT.CORE);
     lv_dropdown_set_selected(ui_droGovernor_kiosk, kiosk.CONTENT.GOVERNOR);
+    lv_dropdown_set_selected(ui_droControl_kiosk, kiosk.CONTENT.CONTROL);
     lv_dropdown_set_selected(ui_droOption_kiosk, kiosk.CONTENT.OPTION);
     lv_dropdown_set_selected(ui_droRetroArch_kiosk, kiosk.CONTENT.RETROARCH);
     lv_dropdown_set_selected(ui_droSearch_kiosk, kiosk.CONTENT.SEARCH);
@@ -111,6 +113,7 @@ static void save_kiosk_options() {
     CHECK_AND_SAVE_KSK(kiosk, WebServ, "config/webserv", INT);
     CHECK_AND_SAVE_KSK(kiosk, Core, "content/core", INT);
     CHECK_AND_SAVE_KSK(kiosk, Governor, "content/governor", INT);
+    CHECK_AND_SAVE_KSK(kiosk, Control, "content/control", INT);
     CHECK_AND_SAVE_KSK(kiosk, Option, "content/option", INT);
     CHECK_AND_SAVE_KSK(kiosk, RetroArch, "content/retroarch", INT);
     CHECK_AND_SAVE_KSK(kiosk, Search, "content/search", INT);
@@ -166,6 +169,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, kiosk, WebServ, lang.MUXKIOSK.WEBSERV, "webserv", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Core, lang.MUXKIOSK.CORE, "core", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Governor, lang.MUXKIOSK.GOVERNOR, "governor", allowed_restricted, 2);
+    INIT_OPTION_ITEM(-1, kiosk, Control, lang.MUXKIOSK.CONTROL, "control", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Option, lang.MUXKIOSK.OPTION, "option", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, RetroArch, lang.MUXKIOSK.RETROARCH, "retroarch", allowed_restricted, 2);
     INIT_OPTION_ITEM(-1, kiosk, Search, lang.MUXKIOSK.SEARCH, "search", allowed_restricted, 2);

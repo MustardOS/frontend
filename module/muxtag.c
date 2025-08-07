@@ -28,7 +28,7 @@ static void assign_tag_single(char *core_dir, char *tag, char *rom) {
     snprintf(tag_path, sizeof(tag_path), "%s/%s.tag", core_dir, strip_ext(rom));
 
     if (file_exist(tag_path)) remove(tag_path);
-    write_tag_file(tag_path, tag, "Single Tag Content");
+    write_tag_file(tag_path, tag, "Assign Tag (Single)");
 }
 
 static void assign_tag_directory(char *core_dir, char *tag, int purge) {
@@ -39,7 +39,7 @@ static void assign_tag_directory(char *core_dir, char *tag, int purge) {
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(tag_path);
 
-    write_tag_file(tag_path, tag, "Directory Tag Content");
+    write_tag_file(tag_path, tag, "Assign Tag (Directory)");
 }
 
 static void assign_tag_parent(char *core_dir, char *tag) {
@@ -57,7 +57,7 @@ static void assign_tag_parent(char *core_dir, char *tag) {
         snprintf(tag_path, sizeof(tag_path), "%s%s/core.tag", core_dir, subdirs[i]);
 
         create_directories(strip_dir(tag_path));
-        write_tag_file(tag_path, tag, "Recursive Tag Content");
+        write_tag_file(tag_path, tag, "Assign Tag (Recursive)");
     }
 
     free_subdirectories(subdirs);

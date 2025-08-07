@@ -202,6 +202,11 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.WIFI, "Connect to a Wi-Fi network manually or via a saved profile");
     SPECIFIC_FIELD(lang->MUXCONNECT.HELP.BLUETOOTH, "Toggle the visibility of the bluetooth glyph");
 
+    // muxcontrol
+    SPECIFIC_FIELD(lang->MUXCONTROL.TITLE, "CONTROL");
+    SPECIFIC_FIELD(lang->MUXCONTROL.HELP, "Change the control scheme of your current selected content");
+    SPECIFIC_FIELD(lang->MUXCONTROL.NONE, "No Control Schemes Found…");
+
     // muxcustom
     SPECIFIC_FIELD(lang->MUXCUSTOM.TITLE, "CUSTOMISATION");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOOTLOGO, "Bootlogo Images");
@@ -366,6 +371,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.WEBSERV, "Web Services");
     SPECIFIC_FIELD(lang->MUXKIOSK.CORE, "Content Core");
     SPECIFIC_FIELD(lang->MUXKIOSK.GOVERNOR, "Content Governor");
+    SPECIFIC_FIELD(lang->MUXKIOSK.CONTROL, "Content Control Scheme");
     SPECIFIC_FIELD(lang->MUXKIOSK.OPTION, "Content Options");
     SPECIFIC_FIELD(lang->MUXKIOSK.RETROARCH, "RetroArch Kiosk");
     SPECIFIC_FIELD(lang->MUXKIOSK.SEARCH, "Content Search");
@@ -403,6 +409,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.WEBSERV, "Enable use of web based features");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CORE, "Allow selection of content cores");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.GOVERNOR, "Allow selection of content governor");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CONTROL, "Allow selection of content control scheme");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.OPTION, "Allow users to adjust content options");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.RETROARCH, "Enable or restrict RetroArch settings");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.SEARCH, "Allow searching for content");
@@ -552,11 +559,13 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXOPTION.INDIVIDUAL, "Individual");
     SPECIFIC_FIELD(lang->MUXOPTION.CORE, "Core");
     SPECIFIC_FIELD(lang->MUXOPTION.GOVERNOR, "Governor");
-    SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Tag");
+    SPECIFIC_FIELD(lang->MUXOPTION.CONTROL, "Control Scheme");
+    SPECIFIC_FIELD(lang->MUXOPTION.TAG, "Glyph Tag");
     SPECIFIC_FIELD(lang->MUXOPTION.NONE, "None");
     SPECIFIC_FIELD(lang->MUXOPTION.NOT_ASSIGNED, "Not Assigned");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.CORE, "Set the system core or external emulator for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.GOV, "Set the CPU governor for the selected content or directory");
+    SPECIFIC_FIELD(lang->MUXOPTION.HELP.CONTROL, "Set the control scheme for the selected content or directory");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.TAG, "Set the specific tag of the content selected to change the glyph");
     SPECIFIC_FIELD(lang->MUXOPTION.HELP.SEARCH, "Search for content within the selected directory");
 

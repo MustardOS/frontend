@@ -79,8 +79,26 @@ void write_gov_file(char *path, char *gov, char *rom_name) {
     fclose(f);
 }
 
+void write_control_file(char *path, char *control, char *rom_name) {
+    FILE *f = fopen(path, "w");
+    if (!f) {
+        perror(lang.SYSTEM.FAIL_FILE_OPEN);
+        return;
+    }
+
+    if (rom_name) {
+        fprintf(f, "%s", control);
+        LOG_INFO(mux_module, "Assign Control (Single): %s", control)
+    } else {
+        fprintf(f, "%s", control);
+        LOG_INFO(mux_module, "Assign Control: %s", control)
+    }
+
+    fclose(f);
+}
+
 void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *core,
-                        char *sys, char *cat, char *rom, char *gov, int lookup) {
+                        char *sys, char *cat, char *rom, char *gov, char *control, int lookup) {
     char base_path[MAX_BUFFER_SIZE];
     char *rom_no_ext = strip_ext(rom);
 
@@ -88,11 +106,13 @@ void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *cor
 
     char cfg_path[MAX_BUFFER_SIZE];
     char gov_path[MAX_BUFFER_SIZE];
+    char control_path[MAX_BUFFER_SIZE];
 
     snprintf(cfg_path, sizeof(cfg_path), "%s.cfg", base_path);
     snprintf(gov_path, sizeof(gov_path), "%s.gov", base_path);
+    snprintf(control_path, sizeof(control_path), "%s.con", base_path);
 
-    char *paths[] = {cfg_path, gov_path};
+    char *paths[] = {cfg_path, gov_path, control_path};
     for (size_t i = 0; i < A_SIZE(paths); ++i) if (file_exist(paths[i])) remove(paths[i]);
 
     char *last_sub = get_last_subdir(rom_dir, '/', 4);
@@ -101,13 +121,15 @@ void assign_core_single(char *def_core, char *rom_dir, char *core_dir, char *cor
     write_core_file(def_core, cfg_path, core, str_trim(sys), cat, lookup, rom_no_ext,
                     base_dir, last_sub, rom);
     write_gov_file(gov_path, gov, rom_no_ext);
+    write_control_file(control_path, control, rom_no_ext);
 }
 
-void assign_core_directory(char *def_core, char *core_dir, char *core,
-                           char *sys, char *cat, char *gov, int lookup, int purge) {
+void assign_core_directory(char *def_core, char *core_dir, char *core, char *sys, char *cat,
+                           char *gov, char *control, int lookup, int purge) {
     if (purge) {
         delete_files_of_type(core_dir, ".cfg", NULL, 0);
         delete_files_of_type(core_dir, ".gov", NULL, 0);
+        delete_files_of_type(core_dir, ".con", NULL, 0);
     }
 
     char core_file[MAX_BUFFER_SIZE];
@@ -117,14 +139,19 @@ void assign_core_directory(char *def_core, char *core_dir, char *core,
     char gov_file[MAX_BUFFER_SIZE];
     snprintf(gov_file, sizeof(gov_file), "%s/core.gov", core_dir);
     write_gov_file(gov_file, gov, NULL);
+
+    char control_file[MAX_BUFFER_SIZE];
+    snprintf(control_file, sizeof(control_file), "%s/core.con", core_dir);
+    write_control_file(control_file, control, NULL);
 }
 
 void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, char *core,
-                        char *sys, char *cat, char *gov, int lookup) {
+                        char *sys, char *cat, char *gov, char *control, int lookup) {
     delete_files_of_type(core_dir, ".cfg", NULL, 1);
     delete_files_of_type(core_dir, ".gov", NULL, 1);
+    delete_files_of_type(core_dir, ".con", NULL, 1);
 
-    assign_core_directory(def_core, core_dir, core, sys, cat, gov, lookup, 1);
+    assign_core_directory(def_core, core_dir, core, sys, cat, gov, control, lookup, 1);
 
     char **subdirs = get_subdirectories(rom_dir);
     if (!subdirs) return;
@@ -142,13 +169,17 @@ void assign_core_parent(char *def_core, char *rom_dir, char *core_dir, char *cor
         char subdir_gov[MAX_BUFFER_SIZE];
         snprintf(subdir_gov, sizeof(subdir_gov), "%s/%s/core.gov", core_dir, subdirs[i]);
         write_gov_file(subdir_gov, gov, NULL);
+
+        char subdir_control[MAX_BUFFER_SIZE];
+        snprintf(subdir_control, sizeof(subdir_control), "%s/%s/core.con", core_dir, subdirs[i]);
+        write_gov_file(subdir_control, control, NULL);
     }
 
     free_subdirectories(subdirs);
 }
 
-void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys, char *cat,
-                            char *rom, char *gov, int lookup, enum gen_type method) {
+void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys, char *cat, char *rom,
+                            char *gov, char *control, int lookup, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
@@ -158,16 +189,16 @@ void create_core_assignment(char *def_core, char *rom_dir, char *core, char *sys
 
     switch (method) {
         case SINGLE:
-            assign_core_single(def_core, rom_dir, core_dir, core, sys, cat, rom, gov, lookup);
+            assign_core_single(def_core, rom_dir, core_dir, core, sys, cat, rom, gov, control, lookup);
             break;
         case PARENT:
-            assign_core_parent(def_core, rom_dir, core_dir, core, sys, cat, gov, lookup);
+            assign_core_parent(def_core, rom_dir, core_dir, core, sys, cat, gov, control, lookup);
             break;
         case DIRECTORY:
-            assign_core_directory(def_core, core_dir, core, sys, cat, gov, lookup, 1);
+            assign_core_directory(def_core, core_dir, core, sys, cat, gov, control, lookup, 1);
             break;
         case DIRECTORY_NO_WIPE:
-            assign_core_directory(def_core, core_dir, core, sys, cat, gov, lookup, 0);
+            assign_core_directory(def_core, core_dir, core, sys, cat, gov, control, lookup, 0);
             break;
     }
 
@@ -237,6 +268,7 @@ bool automatic_assign_core(char *rom_dir) {
 
                     static char core_catalogue[MAX_BUFFER_SIZE];
                     static char core_governor[MAX_BUFFER_SIZE];
+                    static char core_control[MAX_BUFFER_SIZE];
                     static int core_lookup;
 
                     char *use_local_catalogue = get_ini_string(core_ini, def_core, "catalogue", "none");
@@ -257,6 +289,15 @@ bool automatic_assign_core(char *rom_dir) {
                         LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor)
                     }
 
+                    char *use_local_control = get_ini_string(core_ini, def_core, "control", "none");
+                    if (strcmp(use_local_control, "none") != 0) {
+                        strcpy(core_control, use_local_control);
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control)
+                    } else {
+                        strcpy(core_control, get_ini_string(global_ini, "global", "control", "system"));
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_control)
+                    }
+
                     int use_local_lookup = get_ini_int(core_ini, def_core, "lookup", 0);
                     if (use_local_lookup) {
                         core_lookup = use_local_lookup;
@@ -267,7 +308,7 @@ bool automatic_assign_core(char *rom_dir) {
                     }
 
                     create_core_assignment(def_core, rom_dir, auto_core, ass_config, core_catalogue,
-                                           "", core_governor, core_lookup, DIRECTORY);
+                                           "", core_governor, core_control, core_lookup, DIRECTORY);
 
                     auto_assign_good = 1;
                     LOG_SUCCESS(mux_module, "\tSystem and Core Assignment Successful")

@@ -5,61 +5,61 @@ static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
 static void show_help() {
-    show_info_box(lang.MUXGOV.TITLE, lang.MUXGOV.HELP, 0);
+    show_info_box(lang.MUXCONTROL.TITLE, lang.MUXCONTROL.HELP, 0);
 }
 
-static void write_gov_file(char *path, const char *gov, char *log) {
+static void write_control_file(char *path, const char *control, char *log) {
     FILE *file = fopen(path, "w");
     if (!file) {
         perror(lang.SYSTEM.FAIL_FILE_OPEN);
         return;
     }
 
-    LOG_INFO(mux_module, "%s: %s", log, gov)
+    LOG_INFO(mux_module, "%s: %s", log, control)
 
-    fprintf(file, "%s", gov);
+    fprintf(file, "%s", control);
     fclose(file);
 }
 
-static void assign_gov_single(char *core_dir, const char *gov, char *rom) {
-    char gov_path[MAX_BUFFER_SIZE];
-    snprintf(gov_path, sizeof(gov_path), "%s/%s.gov", core_dir, strip_ext(rom));
+static void assign_control_single(char *core_dir, const char *control, char *rom) {
+    char control_path[MAX_BUFFER_SIZE];
+    snprintf(control_path, sizeof(control_path), "%s/%s.con", core_dir, strip_ext(rom));
 
-    if (file_exist(gov_path)) remove(gov_path);
+    if (file_exist(control_path)) remove(control_path);
 
-    write_gov_file(gov_path, gov, "Assign Governor (Single)");
+    write_control_file(control_path, control, "Assign Control (Single)");
 }
 
-static void assign_gov_directory(char *core_dir, const char *gov, int purge) {
-    if (purge) delete_files_of_type(core_dir, ".gov", NULL, 0);
+static void assign_control_directory(char *core_dir, const char *control, int purge) {
+    if (purge) delete_files_of_type(core_dir, ".con", NULL, 0);
 
-    char gov_path[MAX_BUFFER_SIZE];
-    snprintf(gov_path, sizeof(gov_path), "%s/%s/core.gov",
+    char control_path[MAX_BUFFER_SIZE];
+    snprintf(control_path, sizeof(control_path), "%s/%s/core.con",
              INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
-    remove_double_slashes(gov_path);
+    remove_double_slashes(control_path);
 
-    write_gov_file(gov_path, gov, "Assign Governor (Directory)");
+    write_control_file(control_path, control, "Assign Control (Directory)");
 }
 
-static void assign_gov_parent(char *core_dir, const char *gov) {
-    delete_files_of_type(core_dir, ".gov", NULL, 1);
-    assign_gov_directory(core_dir, gov, 0);
+static void assign_control_parent(char *core_dir, const char *control) {
+    delete_files_of_type(core_dir, ".con", NULL, 1);
+    assign_control_directory(core_dir, control, 0);
 
     char **subdirs = get_subdirectories(rom_dir);
     if (!subdirs) return;
 
     for (int i = 0; subdirs[i]; i++) {
-        char gov_path[MAX_BUFFER_SIZE];
-        snprintf(gov_path, sizeof(gov_path), "%s%s/core.gov", core_dir, subdirs[i]);
+        char control_path[MAX_BUFFER_SIZE];
+        snprintf(control_path, sizeof(control_path), "%s%s/core.con", core_dir, subdirs[i]);
 
-        create_directories(strip_dir(gov_path));
-        write_gov_file(gov_path, gov, "Assign Governor (Recursive)");
+        create_directories(strip_dir(control_path));
+        write_control_file(control_path, control, "Assign Control (Recursive)");
     }
 
     free_subdirectories(subdirs);
 }
 
-static void create_gov_assignment(const char *gov, char *rom, enum gen_type method) {
+static void create_control_assignment(const char *control, char *rom, enum gen_type method) {
     char core_dir[MAX_BUFFER_SIZE];
     snprintf(core_dir, sizeof(core_dir), "%s/%s/", INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
     remove_double_slashes(core_dir);
@@ -68,29 +68,29 @@ static void create_gov_assignment(const char *gov, char *rom, enum gen_type meth
 
     switch (method) {
         case SINGLE:
-            assign_gov_single(core_dir, gov, rom);
+            assign_control_single(core_dir, control, rom);
             break;
         case PARENT:
-            assign_gov_parent(core_dir, gov);
+            assign_control_parent(core_dir, control);
             break;
         case DIRECTORY:
-            assign_gov_directory(core_dir, gov, 1);
+            assign_control_directory(core_dir, control, 1);
             break;
         case DIRECTORY_NO_WIPE:
         default:
-            assign_gov_directory(core_dir, gov, 0);
+            assign_control_directory(core_dir, control, 0);
             break;
     }
 
     if (file_exist(MUOS_SAG_LOAD)) remove(MUOS_SAG_LOAD);
 }
 
-static void generate_available_governors(const char *default_governor) {
-    int governor_count;
-    char **governors = str_parse_file(device.CPU.AVAILABLE, &governor_count, TOKENS);
-    if (!governors) return;
+static void generate_available_controls(const char *default_control) {
+    int control_count;
+    char **controls = str_parse_file(INFO_NAM_PATH "/control.txt", &control_count, LINES);
+    if (!controls) return;
 
-    for (int i = 0; i < governor_count; ++i) add_item(&items, &item_count, governors[i], governors[i], "", ITEM);
+    for (int i = 0; i < control_count; ++i) add_item(&items, &item_count, controls[i], controls[i], "", ITEM);
     sort_items(items, item_count);
 
     ui_group = lv_group_create();
@@ -103,25 +103,25 @@ static void generate_available_governors(const char *default_governor) {
         char *cap_name = str_capital(items[i].display_name);
         char *raw_name = str_tolower(str_remchar(str_trim(strdup(items[i].display_name)), ' '));
 
-        lv_obj_t *ui_pnlGov = lv_obj_create(ui_pnlContent);
-        apply_theme_list_panel(ui_pnlGov);
+        lv_obj_t *ui_pnlControl = lv_obj_create(ui_pnlContent);
+        apply_theme_list_panel(ui_pnlControl);
 
-        lv_obj_set_user_data(ui_pnlGov, raw_name);
+        lv_obj_set_user_data(ui_pnlControl, raw_name);
 
-        lv_obj_t *ui_lblGovItem = lv_label_create(ui_pnlGov);
-        apply_theme_list_item(&theme, ui_lblGovItem, cap_name);
+        lv_obj_t *ui_lblControlItem = lv_label_create(ui_pnlControl);
+        apply_theme_list_item(&theme, ui_lblControlItem, cap_name);
 
-        lv_obj_t *ui_lblGovItemGlyph = lv_img_create(ui_pnlGov);
+        lv_obj_t *ui_lblControlItemGlyph = lv_img_create(ui_pnlControl);
 
-        char *glyph = !strcasecmp(raw_name, default_governor) ? "default" : str_remchar(raw_name, ' ');
-        apply_theme_list_glyph(&theme, ui_lblGovItemGlyph, mux_module, glyph);
+        char *glyph = !strcasecmp(raw_name, default_control) ? "system" : str_remchar(raw_name, ' ');
+        apply_theme_list_glyph(&theme, ui_lblControlItemGlyph, mux_module, glyph);
 
-        lv_group_add_obj(ui_group, ui_lblGovItem);
-        lv_group_add_obj(ui_group_glyph, ui_lblGovItemGlyph);
-        lv_group_add_obj(ui_group_panel, ui_pnlGov);
+        lv_group_add_obj(ui_group, ui_lblControlItem);
+        lv_group_add_obj(ui_group_glyph, ui_lblControlItemGlyph);
+        lv_group_add_obj(ui_group_panel, ui_pnlControl);
 
-        apply_size_to_content(&theme, ui_pnlContent, ui_lblGovItem, ui_lblGovItemGlyph, cap_name);
-        apply_text_long_dot(&theme, ui_pnlContent, ui_lblGovItem);
+        apply_size_to_content(&theme, ui_pnlContent, ui_lblControlItem, ui_lblControlItemGlyph, cap_name);
+        apply_text_long_dot(&theme, ui_pnlContent, ui_lblControlItem);
     }
 
     if (ui_count > 0) {
@@ -130,8 +130,8 @@ static void generate_available_governors(const char *default_governor) {
     }
 }
 
-static void create_gov_items(const char *target) {
-    if (!strcmp(target, "none")) generate_available_governors(target);
+static void create_control_items(const char *target) {
+    if (!strcmp(target, "none")) generate_available_controls(target);
 
     char assign_dir[PATH_MAX];
     snprintf(assign_dir, sizeof(assign_dir), "%s/%s/%s",
@@ -149,22 +149,22 @@ static void create_gov_items(const char *target) {
     snprintf(local_assign, sizeof(local_assign), "%s/%s.ini", assign_dir, target_default);
     mini_t *local_config = mini_load(local_assign);
 
-    char *use_governor;
-    char *local_governor = get_ini_string(local_config, target_default, "governor", "none");
-    if (strcmp(local_governor, "none") != 0) {
-        use_governor = local_governor;
+    char *use_control;
+    char *local_control = get_ini_string(local_config, target_default, "control", "none");
+    if (strcmp(local_control, "none") != 0) {
+        use_control = local_control;
     } else {
-        use_governor = get_ini_string(global_config, "global", "governor", device.CPU.DEFAULT);
+        use_control = get_ini_string(global_config, "global", "control", "system");
     }
 
-    char default_governor[FILENAME_MAX];
-    strncpy(default_governor, use_governor, sizeof(default_governor));
-    default_governor[sizeof(default_governor) - 1] = '\0';
+    char default_control[FILENAME_MAX];
+    strncpy(default_control, use_control, sizeof(default_control));
+    default_control[sizeof(default_control) - 1] = '\0';
 
     mini_free(global_config);
     mini_free(local_config);
 
-    generate_available_governors(default_governor);
+    generate_available_controls(default_control);
 }
 
 static void list_nav_move(int steps, int direction) {
@@ -201,11 +201,11 @@ static void list_nav_next(int steps) {
 static void handle_a() {
     if (msgbox_active) return;
 
-    LOG_INFO(mux_module, "Single Governor Assignment Triggered")
+    LOG_INFO(mux_module, "Single Control Assignment Triggered")
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_gov_assignment(selected, rom_name, SINGLE);
+    create_control_assignment(selected, rom_name, SINGLE);
 
     close_input();
     mux_input_stop();
@@ -230,11 +230,11 @@ static void handle_b() {
 static void handle_x() {
     if (msgbox_active) return;
 
-    LOG_INFO(mux_module, "Directory Governor Assignment Triggered")
+    LOG_INFO(mux_module, "Directory Control Assignment Triggered")
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_gov_assignment(selected, rom_name, DIRECTORY);
+    create_control_assignment(selected, rom_name, DIRECTORY);
 
     close_input();
     mux_input_stop();
@@ -243,11 +243,11 @@ static void handle_x() {
 static void handle_y() {
     if (msgbox_active || at_base(rom_dir, "ROMS")) return;
 
-    LOG_INFO(mux_module, "Parent Governor Assignment Triggered")
+    LOG_INFO(mux_module, "Parent Control Assignment Triggered")
     play_sound(SND_CONFIRM);
 
     const char *selected = str_tolower(str_trim(lv_label_get_text(lv_group_get_focused(ui_group))));
-    create_gov_assignment(selected, rom_name, PARENT);
+    create_control_assignment(selected, rom_name, PARENT);
 
     close_input();
     mux_input_stop();
@@ -278,19 +278,19 @@ static void init_elements() {
     struct nav_bar nav_items[9];
     int i = 0;
 
-    nav_items[i++] = (struct nav_bar){ui_lblNavAGlyph, "",                      1};
-    nav_items[i++] = (struct nav_bar){ui_lblNavA,      lang.GENERIC.INDIVIDUAL, 1};
-    nav_items[i++] = (struct nav_bar){ui_lblNavBGlyph, "",                      0};
-    nav_items[i++] = (struct nav_bar){ui_lblNavB,      lang.GENERIC.BACK,       0};
-    nav_items[i++] = (struct nav_bar){ui_lblNavXGlyph, "",                      1};
-    nav_items[i++] = (struct nav_bar){ui_lblNavX,      lang.GENERIC.DIRECTORY,  1};
+    nav_items[i++] = (struct nav_bar) {ui_lblNavAGlyph, "", 1};
+    nav_items[i++] = (struct nav_bar) {ui_lblNavA, lang.GENERIC.INDIVIDUAL, 1};
+    nav_items[i++] = (struct nav_bar) {ui_lblNavBGlyph, "", 0};
+    nav_items[i++] = (struct nav_bar) {ui_lblNavB, lang.GENERIC.BACK, 0};
+    nav_items[i++] = (struct nav_bar) {ui_lblNavXGlyph, "", 1};
+    nav_items[i++] = (struct nav_bar) {ui_lblNavX, lang.GENERIC.DIRECTORY, 1};
 
     if (!at_base(rom_dir, "ROMS")) {
-        nav_items[i++] = (struct nav_bar){ui_lblNavYGlyph, "",                      1};
-        nav_items[i++] = (struct nav_bar){ui_lblNavY,      lang.GENERIC.RECURSIVE,  1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavYGlyph, "", 1};
+        nav_items[i++] = (struct nav_bar) {ui_lblNavY, lang.GENERIC.RECURSIVE, 1};
     }
 
-    nav_items[i] = (struct nav_bar){NULL, NULL, 0};  // Null-terminate
+    nav_items[i] = (struct nav_bar) {NULL, NULL, 0};  // Null-terminate
 
     setup_nav(nav_items);
 
@@ -309,22 +309,22 @@ static void ui_refresh_task() {
     }
 }
 
-int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
+int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys) {
     snprintf(rom_name, sizeof(rom_name), "%s", name);
     snprintf(rom_dir, sizeof(rom_name), "%s", dir);
     snprintf(rom_system, sizeof(rom_name), "%s", sys);
 
-    init_module("muxgov");
+    init_module("muxcontrol");
 
-    LOG_INFO(mux_module, "Assign Governor ROM_NAME: \"%s\"", rom_name)
-    LOG_INFO(mux_module, "Assign Governor ROM_DIR: \"%s\"", rom_dir)
-    LOG_INFO(mux_module, "Assign Governor ROM_SYS: \"%s\"", rom_system)
+    LOG_INFO(mux_module, "Assign Control ROM_NAME: \"%s\"", rom_name)
+    LOG_INFO(mux_module, "Assign Control ROM_DIR: \"%s\"", rom_dir)
+    LOG_INFO(mux_module, "Assign Control ROM_SYS: \"%s\"", rom_system)
 
     if (auto_assign && !file_exist(MUOS_SAG_LOAD)) {
-        LOG_INFO(mux_module, "Automatic Assign Governor Initiated")
+        LOG_INFO(mux_module, "Automatic Assign Control Initiated")
 
         char core_file[MAX_BUFFER_SIZE];
-        snprintf(core_file, sizeof(core_file), "%s/%s/core.gov",
+        snprintf(core_file, sizeof(core_file), "%s/%s/core.con",
                  INFO_COR_PATH, get_last_subdir(rom_dir, '/', 4));
         remove_double_slashes(core_file);
 
@@ -361,37 +361,36 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
 
                 mini_t *global_ini = mini_load(assigned_global);
 
-                static char def_gov[MAX_BUFFER_SIZE];
-                strcpy(def_gov, get_ini_string(global_ini, "global", "governor", "none"));
+                static char def_control[MAX_BUFFER_SIZE];
+                strcpy(def_control, get_ini_string(global_ini, "global", "control", "none"));
 
                 static char def_sys[MAX_BUFFER_SIZE];
                 strcpy(def_sys, get_ini_string(global_ini, "global", "default", "none"));
 
-                if (strcmp(def_gov, "none") != 0) {
+                if (strcmp(def_control, "none") != 0) {
                     char default_core[MAX_BUFFER_SIZE];
                     snprintf(default_core, sizeof(default_core), "%s/%s/%s/%s.ini",
                              device.STORAGE.ROM.MOUNT, STORE_LOC_ASIN, ass_config, def_sys);
 
-                    static char core_governor[MAX_BUFFER_SIZE];
+                    static char core_control[MAX_BUFFER_SIZE];
                     mini_t *local_ini = mini_load(default_core);
 
-                    char *use_local_governor = get_ini_string(local_ini, def_sys, "governor", "none");
-                    if (strcmp(use_local_governor, "none") != 0) {
-                        strcpy(core_governor, use_local_governor);
-                        LOG_INFO(mux_module, "\t(LOCAL) Core Governor: %s", core_governor)
+                    char *use_local_control = get_ini_string(local_ini, def_sys, "control", "none");
+                    if (strcmp(use_local_control, "none") != 0) {
+                        strcpy(core_control, use_local_control);
+                        LOG_INFO(mux_module, "\t(LOCAL) Core Control: %s", core_control)
                     } else {
-                        strcpy(core_governor, get_ini_string(global_ini, "global", "governor", device.CPU.DEFAULT));
-                        LOG_INFO(mux_module, "\t(GLOBAL) Core Governor: %s", core_governor)
+                        strcpy(core_control, get_ini_string(global_ini, "global", "control", "system"));
+                        LOG_INFO(mux_module, "\t(GLOBAL) Core Control: %s", core_control)
                     }
 
                     mini_free(local_ini);
 
-                    create_gov_assignment(core_governor, rom_name, DIRECTORY_NO_WIPE);
-                    LOG_SUCCESS(mux_module, "\tGovernor Assignment Successful")
+                    create_control_assignment(core_control, rom_name, DIRECTORY_NO_WIPE);
+                    LOG_SUCCESS(mux_module, "\tControl Assignment Successful")
                 } else {
-                    LOG_INFO(mux_module, "\tAssigned Governor To Default: %s",
-                             device.CPU.DEFAULT)
-                    create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
+                    LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system")
+                    create_control_assignment("system", rom_name, DIRECTORY_NO_WIPE);
                 }
 
                 mini_free(global_ini);
@@ -399,8 +398,8 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
                 close_input();
                 return 0;
             } else {
-                LOG_INFO(mux_module, "\tAssigned Governor To Default: %s", device.CPU.DEFAULT)
-                create_gov_assignment(device.CPU.DEFAULT, rom_name, DIRECTORY_NO_WIPE);
+                LOG_INFO(mux_module, "\tAssigned Control To Default: %s", "system")
+                create_control_assignment("system", rom_name, DIRECTORY_NO_WIPE);
 
                 close_input();
                 return 0;
@@ -444,20 +443,20 @@ int muxgov_main(int auto_assign, char *name, char *dir, char *sys) {
     }
 
     char title[MAX_BUFFER_SIZE];
-    snprintf(title, sizeof(title), "%s - %s", lang.MUXGOV.TITLE, get_last_dir(dir));
+    snprintf(title, sizeof(title), "%s - %s", lang.MUXCONTROL.TITLE, get_last_dir(dir));
     lv_label_set_text(ui_lblTitle, title);
 
     printf("ROM SYSTEM IS: %s\n", rom_system);
 
-    create_gov_items(rom_system);
+    create_control_items(rom_system);
     init_elements();
 
     if (ui_count > 0) {
-        LOG_SUCCESS(mux_module, "%d Governor%s Detected", ui_count, ui_count == 1 ? "" : "s")
+        LOG_SUCCESS(mux_module, "%d Control%s Detected", ui_count, ui_count == 1 ? "" : "s")
         list_nav_next(0);
     } else {
-        LOG_ERROR(mux_module, "No Governors Detected!")
-        lv_label_set_text(ui_lblScreenMessage, lang.MUXGOV.NONE);
+        LOG_ERROR(mux_module, "No Controls Detected!")
+        lv_label_set_text(ui_lblScreenMessage, lang.MUXCONTROL.NONE);
     }
 
     init_timer(ui_refresh_task, NULL);

@@ -251,6 +251,15 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     }
     LOG_INFO(mux_module, "Content Core Governor: %s", core_governor)
 
+    static char core_control[MAX_BUFFER_SIZE];
+    char *use_local_control = get_ini_string(local_ini, selected_item, "control", "none");
+    if (strcmp(use_local_control, "none") != 0) {
+        strcpy(core_control, use_local_control);
+    } else {
+        strcpy(core_control, get_ini_string(global_ini, "global", "control", "system"));
+    }
+    LOG_INFO(mux_module, "Content Core Control: %s", core_control)
+
     static int core_lookup;
     int use_local_lookup = get_ini_int(local_ini, selected_item, "lookup", 0);
     core_lookup = use_local_lookup ? use_local_lookup : get_ini_int(global_ini, "global", "lookup", 0);
@@ -261,7 +270,7 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     LOG_INFO(mux_module, "Content Core Launcher: %s", core_launch)
 
     create_core_assignment(selected_item, rom_dir, core_launch, rom_system, core_catalogue,
-                           rom_name, core_governor, core_lookup, assignment_mode);
+                           rom_name, core_governor, core_control, core_lookup, assignment_mode);
 
     mini_free(global_ini);
     mini_free(local_ini);

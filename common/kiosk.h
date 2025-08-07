@@ -26,6 +26,7 @@ struct mux_kiosk {
     struct {
         int16_t CORE;
         int16_t GOVERNOR;
+        int16_t CONTROL;
         int16_t TAG;
         int16_t OPTION;
         int16_t RETROARCH;

@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxoption.h"
 
-#define UI_COUNT 6
+#define UI_COUNT 7
 
 static char rom_name[MAX_BUFFER_SIZE];
 static char rom_dir[MAX_BUFFER_SIZE];
@@ -21,6 +21,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblSearch_option,   lang.MUXOPTION.HELP.SEARCH},
             {ui_lblCore_option,     lang.MUXOPTION.HELP.CORE},
             {ui_lblGovernor_option, lang.MUXOPTION.HELP.GOV},
+            {ui_lblControl_option,  lang.MUXOPTION.HELP.CONTROL},
             {ui_lblTag_option,      lang.MUXOPTION.HELP.TAG},
     };
 
@@ -68,6 +69,7 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     const char *value = get_file;
 
     if (!*value) value = get_dir;
+    if (!*value) value = !strcmp(opt_type, "con") ? lang.MUXOPTION.NONE : "System";
     if (!*value) value = !strcmp(opt_type, "tag") ? lang.MUXOPTION.NONE : lang.MUXOPTION.NOT_ASSIGNED;
 
     char cap_value[MAX_BUFFER_SIZE];
@@ -85,6 +87,10 @@ static void add_info_items() {
     const char *gov_dir = get_content_line(rom_dir, NULL, "gov", 1);
     add_info_item_type(ui_lblGovernorValue_option, gov_file, gov_dir, "governor", true);
 
+    const char *control_file = get_content_line(rom_dir, rom_name, "con", 1);
+    const char *control_dir = get_content_line(rom_dir, NULL, "con", 1);
+    add_info_item_type(ui_lblControlValue_option, control_file, control_dir, "con", true);
+
     const char *tag_file = get_content_line(rom_dir, rom_name, "tag", 1);
     const char *tag_dir = get_content_line(rom_dir, NULL, "tag", 1);
     add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
@@ -100,10 +106,10 @@ static char *get_time_played() {
     snprintf(playtime_data, sizeof(playtime_data), INFO_ACT_PATH "/" PLAYTIME_DATA);
 
     if (!file_exist(playtime_data)) {
-        LOG_WARN(mux_module, "Playtime Data Not Found At: %s", playtime_data);
+        LOG_WARN(mux_module, "Playtime Data Not Found At: %s", playtime_data)
         return lang.GENERIC.UNKNOWN;
     } else {
-        LOG_SUCCESS(mux_module, "Found Playtime Data At: %s", playtime_data);
+        LOG_SUCCESS(mux_module, "Found Playtime Data At: %s", playtime_data)
     }
 
     char *json_str = read_all_char_from(playtime_data);
@@ -147,6 +153,7 @@ static void init_navigation_group() {
     if ((dot && dot != rom_name)) {
         INIT_VALUE_ITEM(-1, option, Core, lang.MUXOPTION.CORE, "core", "");
         INIT_VALUE_ITEM(-1, option, Governor, lang.MUXOPTION.GOVERNOR, "governor", "");
+        INIT_VALUE_ITEM(-1, option, Control, lang.MUXOPTION.CONTROL, "control", "");
         INIT_VALUE_ITEM(-1, option, Tag, lang.MUXOPTION.TAG, "tag", "");
 
         add_info_items();
@@ -206,6 +213,7 @@ static void handle_confirm() {
             {"search",   "search",   &kiosk.CONTENT.SEARCH},
             {"core",     "assign",   &kiosk.CONTENT.CORE},
             {"governor", "governor", &kiosk.CONTENT.GOVERNOR},
+            {"control",  "control",  &kiosk.CONTENT.CONTROL},
             {"tag",      "tag",      &kiosk.CONTENT.TAG}
     };
 

@@ -153,6 +153,12 @@ struct mux_lang {
     } MUXCONNECT;
 
     struct {
+        char HELP[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char TITLE[MAX_BUFFER_SIZE];
+    } MUXCONTROL;
+
+    struct {
         char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
@@ -355,6 +361,7 @@ struct mux_lang {
         char WEBSERV[MAX_BUFFER_SIZE];
         char CORE[MAX_BUFFER_SIZE];
         char GOVERNOR[MAX_BUFFER_SIZE];
+        char CONTROL[MAX_BUFFER_SIZE];
         char OPTION[MAX_BUFFER_SIZE];
         char RETROARCH[MAX_BUFFER_SIZE];
         char SEARCH[MAX_BUFFER_SIZE];
@@ -397,6 +404,7 @@ struct mux_lang {
             char WEBSERV[MAX_BUFFER_SIZE];
             char CORE[MAX_BUFFER_SIZE];
             char GOVERNOR[MAX_BUFFER_SIZE];
+            char CONTROL[MAX_BUFFER_SIZE];
             char OPTION[MAX_BUFFER_SIZE];
             char RETROARCH[MAX_BUFFER_SIZE];
             char SEARCH[MAX_BUFFER_SIZE];
@@ -570,12 +578,14 @@ struct mux_lang {
         char INDIVIDUAL[MAX_BUFFER_SIZE];
         char CORE[MAX_BUFFER_SIZE];
         char GOVERNOR[MAX_BUFFER_SIZE];
+        char CONTROL[MAX_BUFFER_SIZE];
         char TAG[MAX_BUFFER_SIZE];
         char NONE[MAX_BUFFER_SIZE];
         char NOT_ASSIGNED[MAX_BUFFER_SIZE];
         struct {
             char CORE[MAX_BUFFER_SIZE];
             char GOV[MAX_BUFFER_SIZE];
+            char CONTROL[MAX_BUFFER_SIZE];
             char TAG[MAX_BUFFER_SIZE];
             char SEARCH[MAX_BUFFER_SIZE];
         } HELP;

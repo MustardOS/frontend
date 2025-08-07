@@ -107,6 +107,8 @@ int muxconfig_main();
 
 int muxconnect_main();
 
+int muxcontrol_main(int auto_assign, char *name, char *dir, char *sys);
+
 int muxcustom_main();
 
 int muxdanger_main();
