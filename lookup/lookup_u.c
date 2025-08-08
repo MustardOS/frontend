@@ -1,4 +1,4 @@
-#include <string.h>
+﻿#include <string.h>
 #include "../common/common.h"
 #include "lookup.h"
 
@@ -37,6 +37,7 @@ static const LookupName lookup_table[] = {
         {"umk3p",     "Ultimate Mortal Kombat 3 Plus (Beta 2)"},
         {"umk3r10",   "Ultimate Mortal Kombat 3 (rev 1.0)"},
         {"umk3r11",   "Ultimate Mortal Kombat 3 (rev 1.1)"},
+        {"umk3uk",    "Ultimate Mortal Kombat 3 Uk (FBNeo, Ver. 2021-07-20)"},
         {"unclepoo",  "Uncle Poo"},
         {"undefeat",  "Under Defeat (Japan) (GDL-0035)"},
         {"undoukai",  "The Undoukai (Japan)"},
@@ -47,7 +48,14 @@ static const LookupName lookup_table[] = {
         {"undrfiru",  "Under Fire (US)"},
         {"uniwars",   "UniWar S"},
         {"uniwarsa",  "UniWar S (bootleg)"},
+        {"unkmeyco",  "unknown Meyco game"},
+        {"unkpacga",  "Pucman"},
+        {"unkpacgb",  "unknown 'Pac-Man' gambling game (set 2)"},
         {"unkpacgc",  "Coco Louco"},
+        {"unkpacgd",  "unknown 'Pac Man with cars' gambling game"},
+        {"unksig",    "unknown 'Space Invaders' gambling game (encrypted, set 1)"},
+        {"unksiga",   "unknown 'Space Invaders' gambling game (encrypted, set 2)"},
+        {"unksigb",   "unknown 'Space Invaders' gambling game (unencrypted)"},
         {"unsquad",   "U.N. Squadron (US)"},
         {"untoucha",  "Untouchable (Japan)"},
         {"uopoko",    "Uo Poko (Japan)"},
@@ -56,6 +64,9 @@ static const LookupName lookup_table[] = {
         {"upndownu",  "Up'n Down (not encrypted)"},
         {"upscope",   "Up Scope"},
         {"upyoural",  "Up Your Alley"},
+        {"urashima",  "Otogizoushi Urashima Mahjong (Japan)"},
+        {"usagi",     "Usagi (V2.02J)"},
+        {"usagui",    "Usagi - Yamashiro Mahjong Hen (GDL-0022)"},
         {"usclssic",  "U.S. Classic"},
         {"usg182",    "Games V18.2"},
         {"usg185",    "Games V18.7C"},

@@ -1,4 +1,4 @@
-#include <string.h>
+﻿#include <string.h>
 #include "../common/common.h"
 #include "lookup.h"
 
@@ -9,6 +9,7 @@ typedef struct {
 
 static const LookupName lookup_table[] = {
         {"720",     "720 Degrees (rev 4)"},
+        {"720b",    "720 Degrees (set 2)"},
         {"720g",    "720 Degrees (German, rev 2)"},
         {"720gr1",  "720 Degrees (German, rev 1)"},
         {"720r1",   "720 Degrees (rev 1)"},

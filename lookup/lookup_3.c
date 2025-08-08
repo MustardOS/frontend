@@ -1,4 +1,4 @@
-#include <string.h>
+﻿#include <string.h>
 #include "../common/common.h"
 #include "lookup.h"
 
@@ -10,6 +10,8 @@ typedef struct {
 static const LookupName lookup_table[] = {
         {"39in1",      "39 in 1 MAME bootleg (GNO-V000)"},
         {"3countb",    "3 Count Bout / Fire Suplex (NGM-043 ~ NGH-043)"},
+        {"3countba",   "3 Count Bout / Fire Suplex (NGM-043)"},
+        {"3ds",        "Three Ds - Three Dealers Casino House"},
         {"3in1semi",   "New HyperMan (3-in-1 with Cookie & Bibi & HyperMan)"},
         {"3in1semia",  "New HyperMan (3-in-1 with Cookie & Bibi & HyperMan) (set 2)"},
         {"3kokushi",   "Sankokushi (Japan)"},
@@ -19,6 +21,7 @@ static const LookupName lookup_table[] = {
         {"3wonders",   "Three Wonders (World 910520)"},
         {"3wondersb",  "Three Wonders (bootleg)"},
         {"3wondersh",  "Three Wonders (hack)"},
+        {"3wondersha", "Three Wonders (bootleg set 2)"},
         {"3wondersr1", "Three Wonders (World 910513)"},
         {"3wondersu",  "Three Wonders (USA 910520)"},
         {"3wonderu",   "Three Wonders (US 910520)"},

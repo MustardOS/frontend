@@ -1,4 +1,4 @@
-#include <string.h>
+﻿#include <string.h>
 #include "../common/common.h"
 #include "lookup.h"
 
@@ -8,28 +8,29 @@ typedef struct {
 } LookupName;
 
 static const LookupName lookup_table[] = {
-        {"1941",      "1941 - Counter Attack (World)"},
-        {"1942",      "1942 (set 1)"},
-        {"1943",      "1943 - The Battle of Midway (US)"},
-        {"1944",      "1944: The Loop Master (Euro 000620)"},
         {"10yard",    "10-Yard Fight (World, set 1)"},
         {"10yard85",  "10-Yard Fight '85 (US, Taito license)"},
         {"10yardj",   "10-Yard Fight (Japan)"},
+        {"11beat",    "Eleven Beat"},
         {"18wheelr",  "18 Wheeler: American Pro Trucker (deluxe, Rev A)"},
         {"18wheelro", "18 Wheeler: American Pro Trucker (deluxe)"},
         {"18wheelrt", "18 Wheeler: American Pro Trucker (deluxe, Rev T)"},
         {"18wheels",  "18 Wheeler: American Pro Trucker (standard)"},
         {"18wheelu",  "18 Wheeler: American Pro Trucker (upright)"},
+        {"1941",      "1941 - Counter Attack (World)"},
         {"1941j",     "1941 - Counter Attack (Japan)"},
         {"1941r1",    "1941: Counter Attack (World)"},
         {"1941u",     "1941: Counter Attack (USA 900227)"},
+        {"1942",      "1942 (set 1)"},
         {"1942a",     "1942 (set 2)"},
         {"1942abl",   "1942 (Revision A, bootleg)"},
         {"1942b",     "1942 (set 3)"},
+        {"1942c64",   "1942 (C64 Music)"},
         {"1942h",     "Supercharger 1942"},
         {"1942iti",   "1942 (Itisa bootleg)"},
         {"1942p",     "1942 (Tecfri PCB, bootleg?)"},
         {"1942w",     "1942 (Williams Electronics license)"},
+        {"1943",      "1943 - The Battle of Midway (US)"},
         {"1943b",     "1943: Battle of Midway (bootleg, hack of Japan set)"},
         {"1943bj",    "1943: Midway Kaisen (bootleg)"},
         {"1943j",     "1943 - The Battle of Midway (Japan)"},
@@ -39,6 +40,8 @@ static const LookupName lookup_table[] = {
         {"1943mii",   "1943 - The Battle of Midway Mark II (US)"},
         {"1943u",     "1943: The Battle of Midway (US, Rev C)"},
         {"1943ua",    "1943: The Battle of Midway (US)"},
+        {"1944",      "1944: The Loop Master (Euro 000620)"},
+        {"1944ad",    "1944: The Loop Master (USA 000620 alt Phoenix Edition) (bootleg)"},
         {"1944d",     "1944: The Loop Master (USA 000620 Phoenix Edition) (bootleg)"},
         {"1944j",     "1944: The Loop Master (Japan 000620)"},
         {"1944u",     "1944: The Loop Master (USA 000620)"},
@@ -56,6 +59,8 @@ static const LookupName lookup_table[] = {
         {"19xxjr2",   "19XX: The War Against Destiny (Japan 951207)"},
         {"19xxu",     "19XX: The War Against Destiny (USA 951207)"},
         {"19yy",      "19YY"},
+        {"19yyo",     "19YY (Neo CD conversion, ADK World)(Original release)"},
+        {"1on1gov",   "1 on 1 Government (Japan)"},
 };
 
 const char *lookup_1(const char *name) {

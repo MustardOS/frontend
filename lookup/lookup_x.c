@@ -1,4 +1,4 @@
-#include <string.h>
+﻿#include <string.h>
 #include "../common/common.h"
 #include "lookup.h"
 
@@ -8,8 +8,11 @@ typedef struct {
 } LookupName;
 
 static const LookupName lookup_table[] = {
+        {"x2222",       "X2222 (final debug?)"},
+        {"x2222o",      "X2222 (5-level prototype)"},
         {"xday2",       "X-Day 2 (Japan)"},
         {"xeno",        "Xeno Crisis (Neo Geo MVS)"},
+        {"xenocrisis",  "Xeno Crisis (NGM-BB01 ~ NGH-BB01)"},
         {"xenophob",    "Xenophobe"},
         {"xevi3dg",     "Xevious 3D-G (XV31-VER.A)"},
         {"xevi3dga",    "Xevious 3D/G (World, XV32/VER.A)"},
@@ -19,16 +22,19 @@ static const LookupName lookup_table[] = {
         {"xeviousa",    "Xevious (Atari set 1)"},
         {"xeviousb",    "Xevious (Atari set 2)"},
         {"xeviousc",    "Xevious (Atari set 3)"},
+        {"xeviousng",   "Xevious (Neo-Geo Conversion)"},
         {"xexex",       "Xexex (World)"},
         {"xexexa",      "Xexex (ver AAA)"},
         {"xexexj",      "Xexex (Japan)"},
         {"xfiles",      "X-Files"},
         {"xfilesk",     "The X-Files (Censored, Korea)"},
+        {"xiistag",     "XII Stag (V2.01J)"},
         {"xmcota",      "X-Men: Children of the Atom (Euro 950331)"},
         {"xmcotaa",     "X-Men: Children of the Atom (Asia 950105)"},
         {"xmcotaar1",   "X-Men: Children of the Atom (Asia 941219)"},
         {"xmcotaar2",   "X-Men: Children of the Atom (Asia 941217)"},
         {"xmcotab",     "X-Men: Children of the Atom (Brazil 950331)"},
+        {"xmcotad",     "X-Men: Children of the Atom (Euro 950105 Phoenix Edition) (bootleg)"},
         {"xmcotah",     "X-Men: Children of the Atom (Hispanic 950331)"},
         {"xmcotahr1",   "X-Men: Children of the Atom (Hispanic 950105)"},
         {"xmcotaj",     "X-Men: Children of the Atom (Japan 950105)"},
@@ -49,6 +55,7 @@ static const LookupName lookup_table[] = {
         {"xmen6pu",     "X-Men (US 6 Players)"},
         {"xmena",       "X-Men (4 Players ver AEA)"},
         {"xmenaa",      "X-Men (4 Players ver ADA)"},
+        {"xmene",       "X-Men (4 Players ver EBA)"},
         {"xmenj",       "X-Men (4 Players ver JBA)"},
         {"xmenja",      "X-Men (4 Players ver JEA)"},
         {"xmenu",       "X-Men (4 Players ver UBB)"},
@@ -72,12 +79,15 @@ static const LookupName lookup_table[] = {
         {"xmvsfur1",    "X-Men Vs. Street Fighter (USA 961004)"},
         {"xmvsfur2",    "X-Men Vs. Street Fighter (USA 960910)"},
         {"xorworld",    "Xor World (prototype)"},
+        {"xrally",      "Xtreme Rally / Off Beat Racer!"},
+        {"xsedae",      "X Se Dae Quiz (Korea)"},
         {"xsleena",     "Xain'd Sleena"},
         {"xsleenab",    "Xain'd Sleena (bootleg)"},
         {"xsleenaba",   "Xain'd Sleena (bootleg, bugfixed)"},
         {"xsleenabb",   "Xain'd Sleena (bootleg, set 2)"},
         {"xsleenaj",    "Xain'd Sleena (Japan)"},
         {"xtheball",    "X the Ball"},
+        {"xtrial",      "Xtrial Racing (ver JAB)"},
         {"xtrmhnt2",    "Extreme Hunting 2"},
         {"xtrmhunt",    "Extreme Hunting"},
         {"xxmissio",    "XX Mission"},
@@ -86,6 +96,7 @@ static const LookupName lookup_table[] = {
         {"xybots1",     "Xybots (rev 1)"},
         {"xybotsf",     "Xybots (French, rev 3)"},
         {"xybotsg",     "Xybots (German, rev 3)"},
+        {"xymg",        "Xing Yun Man Guan (China, V651C)"},
         {"xyonix",      "Xyonix"},
 };
 

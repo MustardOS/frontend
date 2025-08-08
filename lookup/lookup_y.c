@@ -1,4 +1,4 @@
-#include <string.h>
+﻿#include <string.h>
 #include "../common/common.h"
 #include "lookup.h"
 
@@ -28,12 +28,21 @@ static const LookupName lookup_table[] = {
         {"yokaidko",  "Yokai Douchuuki (Japan old version)"},
         {"yosakdoa",  "Yosaku To Donbei (set 2)"},
         {"yosakdon",  "Yosaku To Donbei (set 1)"},
+        {"yosakdona", "Yosaku To Donbei (set 2)"},
+        {"yosimoto",  "Mahjong Yoshimoto Gekijou (Japan)"},
         {"youjyudn",  "Youjyuden (Japan)"},
         {"youkaidk",  "Yokai Douchuuki (Japan new version)"},
         {"youkaidk1", "Youkai Douchuuki (Japan, old version (YD1))"},
         {"youkaidk2", "Youkai Douchuuki (Japan, new version (YD2, Rev B))"},
+        {"youkaidko", "Yokai Douchuuki (Japan old version)"},
         {"youma",     "Youma Ninpou Chou (Japan)"},
+        {"youma2",    "Youma Ninpou Chou (Japan, alt)"},
+        {"youmab",    "Youma Ninpou Chou (Game Electronics bootleg, set 1)"},
+        {"youmab2",   "Youma Ninpou Chou (Game Electronics bootleg, set 2)"},
+        {"yoyoshkn",  "Yo-Yo Shuriken (HB)"},
         {"yoyospel",  "YoYo Spell (prototype)"},
+        {"yujan",     "Yu-Jan"},
+        {"yuka",      "Yu-Ka"},
         {"yukiwo",    "Yukiwo (World, prototype)"},
         {"yumefuda",  "Yumefuda [BET]"},
         {"yuyugogo",  "Yuuyu no Quiz de GO!GO! (Japan)"},
