@@ -71,9 +71,9 @@ const char *enforcers[] = {
 };
 
 const char *wizards[] = {
-        "xquader", "ee1000", "kloptops", "thegammasqueeze", ".tokyovigilante", "joyrider3774",
-        ".cebion", "irilivibi", "vagueparade", "shengy.", "siliconexarch", "shauninman",
-        "johnnyonflame", "snowram", "vq37vhrgang", "trngaje", "rosemelody254", "skorpy",
+        "xquader", "ee1000", "kloptops", "thegammasqueeze", "tokyovigilante", "joyrider3774",
+        "cebion", "irilivibi", "vagueparade", "shengy", "siliconexarch", "shauninman",
+        "johnnyonflame", "snowram", "habbening", "trngaje", "rosemelody254", "skorpy",
         "stanley_00", "ajmandourah", "bcat24", "xanxic", "midwan", "arkun_",
         "mikhailzrick", "retrogfx_", "aeverdyn", "spycat88",
         NULL
@@ -84,44 +84,44 @@ const char *hero_one[] = {
         "kentonftw", "bazkart", "msx6011", "joeysretrohandhelds", "btreecat", "teggydave",
         "zazouboy", "robbiet480", "rabite890", "luzfcb", "brohsnbluffs", "bigbossman0816",
         "superzu", "nico_linber_36894", "nico_linber", "pr0j3kt2501", "meowman_", "zaka1w3",
-        "kaeltis", "reitw", "raouldook.", "gamerguy1975", "paletochen", "benjaminbercy",
-        "suribii", "tobitaibuta", "opinion_panda", "hueykablooey", "mrwhistles", ".zerohalo",
+        "kaeltis", "reitw", "raouldook", "gamerguy1975", "paletochen", "benjaminbercy",
+        "suribii", "tobitaibuta", "opinion_panda", "hueykablooey", "mrwhistles", "zerohalo",
         "losermatic", "jimmycrackedcorn_4711", "milkworlds",
         NULL
 };
 
 const char *hero_two[] = {
-        "ivar2028", "piatypos", ".dririan", "spivvmeister", "sol6_vi", "izzythefool",
+        "ivar2028", "piatypos", "dririan", "spivvmeister", "sol6_vi", "izzythefool",
         "n3vurmynd", "qpla", "supremedialects", "amos_06286", "techagent", "ayan4m1",
-        "meanagar", "roundpi", "turner74.", "chiefwally_73445", "bigfoothenders", "scy0n",
+        "meanagar", "roundpi", "turner74", "chiefwally_73445", "bigfoothenders", "scy0n",
         "luckyphil", "nahck", "mach5682", "foamygames", "xraygoggles", "hybrid_sith",
-        "suuuuuuper", "mxdamp", "ownedmumbles", "zenith.rose", "techyysean", "cliffupperlip",
-        "roymustang", "frizzin78", "kernelkritic", "verctexius", "misfitsorbet", "jelzer.",
-        "bigolpeewee", "iam8bitwolf", ".manny.",
+        "suuuuuuper", "mxdamp", "ownedmumbles", "zenith_rose", "techyysean", "cliffupperlip",
+        "roymustang", "frizzin78", "kernelkritic", "verctexius", "misfitsorbet", "jelzer",
+        "bigolpeewee", "iam8bitwolf", "manny", "amildinconvenience",
         NULL
 };
 
 const char *knight_one[] = {
         "allanc5963", "notflacko", "jdanteq_18123", "skyarcher", "hai6266", "galloc",
-        "ben819.", "_maxwellsdemon", "status.quo.exile", "phyrex", "delored", "kiko_lake",
-        "arkholt", "julas8799", ".starship9", "fibroidjames", "allepac", "pakwan8243",
-        "heyitscap.", "xluuke", "drisc", "clempurp9868", "aj15", "retrogamecorps",
-        "biffout", "rbndr_", "sanelessone", ".retrogamingmonkey", "billynaing", "gasqbduv",
+        "ben819", "_maxwellsdemon", "status_quo_exile", "phyrex", "delored", "kiko_lake",
+        "arkholt", "julas8799", "starship9", "fibroidjames", "allepac", "pakwan8243",
+        "heyitscap", "xluuke", "drisc", "clempurp9868", "aj15", "retrogamecorps",
+        "biffout", "rbndr_", "sanelessone", "retrogamingmonkey", "billynaing", "gasqbduv",
         NULL
 };
 
 const char *knight_two[] = {
         "_wizdude", "blkxltng", "surge_84306", "phlurblepoot", "mrcee1503", "splendid88_98891",
         "poppajonzz", "wmaddler", "yomama78", "pixelgabz", "admiralthrawn_1", "penpen2crayon",
-        ".jupyter.", "lander95", "rxepicness", "bburbank", "crownlessk", "johnunsc",
+        "jupyter", "lander95", "rxepicness", "bburbank", "crownlessk", "johnunsc",
         "nuke_67641", "misjbaksel", "zauberpony", "dreadpirates", "artur_ditu", "wizardfights",
-        "smittywerbenjaegermanjensen9250", "stin87", "rkevinc",
+        "smittywerbenjaegermanjensen9250", "stin87", "rkevinc", "obitomatheus",
         NULL
 };
 
 const char *contributors[] = {
         "acmeplus", "aeverdyn", "antikk", "arkun", "bgelmini", "bitter_bizarro",
-        "cart-su", "chronoss09", "duncanyoyo1", "vq37vhrgang", "imcokeman", "incognitoman",
+        "cart_su", "chronoss09", "duncanyoyo1", "habbening", "imcokeman", "incognitoman",
         "johnnyonflame", "koolkidcorey", "kriznick", "mikhailzrick", "synthic", "xonglebongle",
         "zarquon",
         NULL
