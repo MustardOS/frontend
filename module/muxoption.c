@@ -69,8 +69,12 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     const char *value = get_file;
 
     if (!*value) value = get_dir;
-    if (!*value) value = !strcmp(opt_type, "con") ? lang.MUXOPTION.NONE : "System";
-    if (!*value) value = !strcmp(opt_type, "tag") ? lang.MUXOPTION.NONE : lang.MUXOPTION.NOT_ASSIGNED;
+
+    if (!*value) {
+        value = !strcmp(opt_type, "con") ? lang.MUXOPTION.NONE :
+                !strcmp(opt_type, "tag") ? lang.MUXOPTION.NOT_ASSIGNED :
+                "System";
+    }
 
     char cap_value[MAX_BUFFER_SIZE];
     snprintf(cap_value, sizeof(cap_value), "%s", value);
