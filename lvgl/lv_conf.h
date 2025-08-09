@@ -18,7 +18,7 @@
 #define LV_CONF_H
 
 #include <stdint.h>
-#include <../common/options.h>
+#include "../common/options.h"
 
 /*=======================
    FUNCTION PROTOTYPES
