@@ -40,6 +40,9 @@ static void handle_power_short(void) {
         return;
     }
 
+    lv_obj_add_flag(ui_lblCapacity_charge, MU_OBJ_FLAG_HIDE_FLOAT);
+    lv_obj_add_flag(ui_lblVoltage_charge, MU_OBJ_FLAG_HIDE_FLOAT);
+
     lv_label_set_text(ui_lblBoot_charge, lang.MUXCHARGE.BOOT);
     lv_refr_now(NULL);
 
