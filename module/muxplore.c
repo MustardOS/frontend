@@ -675,7 +675,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
+static void process_load(int from_start) {
     if (!ui_count) return;
 
     if (msgbox_active) {
@@ -734,6 +734,8 @@ static void handle_a() {
         }
     }
 
+    if (from_start) write_text_to_file("/tmp/ra_no_load", "w", INT, 1);
+
     if (load_message) {
         toast_message(lang.GENERIC.LOADING, 0);
         lv_obj_move_foreground(ui_pnlMessage);
@@ -745,6 +747,14 @@ static void handle_a() {
 
     close_input();
     mux_input_stop();
+}
+
+static void handle_a() {
+    process_load(0);
+}
+
+static void handle_a_alt() {
+    process_load(1);
 }
 
 static void handle_b() {
@@ -1022,7 +1032,6 @@ int muxplore_main(int index, char *dir) {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
                           (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
             .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
@@ -1037,7 +1046,11 @@ int muxplore_main(int index, char *dir) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
                     [MUX_INPUT_R2] = handle_random_select,
             },
+            .release_handler = {
+                    [MUX_INPUT_A] = handle_a,
+            },
             .hold_handler = {
+                    [MUX_INPUT_A] = handle_a_alt,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
