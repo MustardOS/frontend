@@ -1203,7 +1203,7 @@ void init_panel_style(struct theme_config *theme) {
     lv_style_set_bg_grad_stop(&style_list_panel_focused, theme->LIST_FOCUS.GRADIENT_STOP);
 }
 
-void init_item_animation() {
+void init_item_animation(void) {
     lv_anim_init(&style_list_item_animation);
     lv_anim_set_delay(&style_list_item_animation, 250);
     lv_style_set_anim(&style_list_item_default, &style_list_item_animation);

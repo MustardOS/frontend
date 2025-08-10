@@ -52,7 +52,7 @@ static void can_scan_check(int forced_disconnect) {
     update_network_status(ui_staNetwork, &theme, 2);
 }
 
-static void get_current_ip() {
+static void get_current_ip(void) {
     char address_file[MAX_BUFFER_SIZE];
     snprintf(address_file, sizeof(address_file),
              CONF_CONFIG_PATH "/network/address");
@@ -76,7 +76,7 @@ static void get_current_ip() {
     }
 }
 
-static void restore_network_values() {
+static void restore_network_values(void) {
     lv_label_set_text(ui_lblTypeValue_network, config.NETWORK.TYPE ? lang.MUXNETWORK.STATIC : lang.MUXNETWORK.DHCP);
     ui_count = config.NETWORK.TYPE ? UI_STATIC : UI_DHCP;
 
@@ -99,7 +99,7 @@ static void restore_network_values() {
     get_current_ip();
 }
 
-static void save_network_config() {
+static void save_network_config(void) {
     int idx_type = 0;
     int idx_scan = 0;
     int idx_monitor = 0;
@@ -137,7 +137,7 @@ static void save_network_config() {
     refresh_config = 1;
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -544,7 +544,7 @@ static void handle_r1(void) {
     if (!key_show) handle_list_nav_page_down();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -557,7 +557,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -592,7 +592,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -609,7 +609,7 @@ static void on_key_event(struct input_event ev) {
     ev.code == KEY_ESC && ev.value == 1 ? handle_b() : process_key_event(&ev, ui_txtEntry_network);
 }
 
-int muxnetwork_main() {
+int muxnetwork_main(void) {
     init_module("muxnetwork");
 
     init_theme(1, 0);

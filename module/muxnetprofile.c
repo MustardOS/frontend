@@ -1,6 +1,6 @@
 #include "muxshare.h"
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXNETPROFILE.TITLE, lang.MUXNETPROFILE.HELP, 0);
 }
 
@@ -66,7 +66,7 @@ static void load_profile(char *name) {
     mini_free(net_profile);
 }
 
-static int save_profile() {
+static int save_profile(void) {
     toast_message(lang.GENERIC.SAVING, 0);
     refresh_screen(ui_screen);
 
@@ -164,7 +164,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void create_profile_items() {
+static void create_profile_items(void) {
     char profile_path[MAX_BUFFER_SIZE];
     snprintf(profile_path, sizeof(profile_path), (RUN_STORAGE_PATH "network"));
 
@@ -333,7 +333,7 @@ static void handle_help(void) {
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -344,7 +344,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -363,7 +363,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -375,7 +375,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxnetprofile_main() {
+int muxnetprofile_main(void) {
     init_module("muxnetprofile");
 
     init_theme(1, 1);

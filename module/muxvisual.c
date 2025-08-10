@@ -31,13 +31,13 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define VISUAL(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_visual);
     VISUAL_ELEMENTS
 #undef VISUAL
 }
 
-static void restore_visual_options() {
+static void restore_visual_options(void) {
     lv_dropdown_set_selected(ui_droBattery_visual, config.VISUAL.BATTERY);
     lv_dropdown_set_selected(ui_droClock_visual, config.VISUAL.CLOCK);
     lv_dropdown_set_selected(ui_droNetwork_visual, config.VISUAL.NETWORK);
@@ -56,7 +56,7 @@ static void restore_visual_options() {
     lv_dropdown_set_selected(ui_droOverlayTransparency_visual, config.VISUAL.OVERLAY_TRANSPARENCY);
 }
 
-static void save_visual_options() {
+static void save_visual_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(visual, Battery, "visual/battery", INT, 0);
@@ -82,7 +82,7 @@ static void save_visual_options() {
     }
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -199,7 +199,7 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -210,7 +210,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -229,7 +229,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -241,7 +241,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxvisual_main() {
+int muxvisual_main(void) {
     init_module("muxvisual");
 
     init_theme(1, 0);

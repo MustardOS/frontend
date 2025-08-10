@@ -12,7 +12,7 @@ static int splash_valid = 0;
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
-static char *load_content_description() {
+static char *load_content_description(void) {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
              INFO_HIS_PATH, strip_ext(items[current_item_index].name));
@@ -247,7 +247,7 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
     }
 }
 
-static void create_history_items() {
+static void create_history_items(void) {
     char **file_names = NULL;
     char **last_dirs = NULL;
 
@@ -262,7 +262,7 @@ static void create_history_items() {
     free(file_names);
 }
 
-static void remove_from_history() {
+static void remove_from_history(void) {
     char history_file[MAX_BUFFER_SIZE];
     snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
              INFO_HIS_PATH, strip_ext(items[current_item_index].name));
@@ -279,7 +279,7 @@ static void remove_from_history() {
     }
 }
 
-static void add_to_collection() {
+static void add_to_collection(void) {
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
              items[current_item_index].name);
@@ -431,23 +431,23 @@ static void process_load(int from_start) {
     mux_input_stop();
 }
 
-static void handle_a() {
+static void handle_a(void) {
     process_load(0);
 }
 
-static void handle_a_alt() {
+static void handle_a_alt(void) {
     process_load(1);
 }
 
-static void handle_l2_hold() {
+static void handle_l2_hold(void) {
     holding_cell = 1;
 }
 
-static void handle_l2_release() {
+static void handle_l2_release(void) {
     holding_cell = 0;
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (holding_cell) return;
 
     if (msgbox_active) {
@@ -464,21 +464,21 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_x() {
+static void handle_x(void) {
     if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY || holding_cell) return;
 
     play_sound(SND_CONFIRM);
     remove_from_history();
 }
 
-static void handle_y() {
+static void handle_y(void) {
     if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON || holding_cell) return;
 
     play_sound(SND_CONFIRM);
     add_to_collection();
 }
 
-static void handle_menu() {
+static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
 
     play_sound(SND_INFO_OPEN);
@@ -496,7 +496,7 @@ static void handle_random_select(void) {
     list_nav_move(target, dir);
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -509,7 +509,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
 
@@ -534,7 +534,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
         adjust_panels();

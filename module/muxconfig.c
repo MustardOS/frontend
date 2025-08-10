@@ -20,7 +20,7 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
@@ -82,7 +82,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     struct {
@@ -120,7 +120,7 @@ static void handle_a() {
     mux_input_stop();
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -136,14 +136,14 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_menu() {
+static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -154,7 +154,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -173,7 +173,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -185,7 +185,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxconfig_main() {
+int muxconfig_main(void) {
     init_module("muxconfig");
 
     init_theme(1, 1);

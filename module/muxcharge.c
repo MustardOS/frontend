@@ -12,7 +12,7 @@ static char voltage_info[MAX_BUFFER_SIZE];
 #define CHARGER_BRIGHT "/tmp/charger_bright"
 #define CHARGER_EXIT "/tmp/charger_exit"
 
-static void check_for_cable() {
+static void check_for_cable(void) {
     if (file_exist(device.BATTERY.CHARGER) && !read_line_int_from(device.BATTERY.CHARGER, 1)) exit_status = 1;
 }
 
@@ -73,7 +73,7 @@ static void handle_idle(void) {
     refresh_screen(ui_scrCharge_charge);
 }
 
-static void battery_task_charge() {
+static void battery_task_charge(void) {
     check_for_cable();
     if (is_blank) return;
 
@@ -101,7 +101,7 @@ static void battery_task_charge() {
     blank_timeout--;
 }
 
-int main() {
+int main(void) {
     load_device(&device);
     load_config(&config);
 

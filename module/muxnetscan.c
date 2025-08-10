@@ -1,10 +1,10 @@
 #include "muxshare.h"
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXNETSCAN.TITLE, lang.MUXNETSCAN.HELP, 0);
 }
 
-static void scan_networks() {
+static void scan_networks(void) {
     lv_label_set_text(ui_lblScreenMessage, lang.MUXNETSCAN.SCAN);
 
     lv_obj_invalidate(ui_screen);
@@ -45,7 +45,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void create_network_items() {
+static void create_network_items(void) {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
@@ -133,7 +133,7 @@ static void handle_help(void) {
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -144,7 +144,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -161,7 +161,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -173,7 +173,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxnetscan_main() {
+int muxnetscan_main(void) {
     init_module("muxnetscan");
 
     init_theme(1, 1);

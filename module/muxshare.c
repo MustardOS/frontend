@@ -44,7 +44,7 @@ void shuffle_index(int current, int *dir, int *target) {
     *dir = (*target > current) ? +1 : -1;
 }
 
-void adjust_box_art() {
+void adjust_box_art(void) {
     switch (config.VISUAL.BOX_ART) {
         case 0: // Behind
             lv_obj_move_background(ui_pnlBox);
@@ -83,7 +83,7 @@ void setup_nav(struct nav_bar *nav_items) {
     }
 }
 
-void header_and_footer_setup() {
+void header_and_footer_setup(void) {
     lv_obj_set_style_bg_opa(ui_pnlHeader, theme.HEADER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_pnlFooter, theme.FOOTER.BACKGROUND_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -98,7 +98,7 @@ void header_and_footer_setup() {
     lv_label_set_text(ui_lblMessage, "");
 }
 
-void overlay_display() {
+void overlay_display(void) {
 #if TEST_IMAGE
     display_testing_message(ui_screen);
 #endif

@@ -22,7 +22,7 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static const char *get_hostname() {
+static const char *get_hostname(void) {
     const char *result = read_line_char_from("/etc/hostname", 1);
     if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
 
@@ -32,7 +32,7 @@ static const char *get_hostname() {
     return hostname;
 }
 
-static const char *get_mac_address() {
+static const char *get_mac_address(void) {
     char path[128];
     snprintf(path, sizeof(path), "/sys/class/net/%s/address", device.NETWORK.INTERFACE);
 
@@ -53,7 +53,7 @@ static const char *get_mac_address() {
     return mac;
 }
 
-static const char *get_ip_address() {
+static const char *get_ip_address(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char cmd[128];
@@ -68,7 +68,7 @@ static const char *get_ip_address() {
     return ip;
 }
 
-static const char *get_ssid() {
+static const char *get_ssid(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char cmd[128];
@@ -83,7 +83,7 @@ static const char *get_ssid() {
     return ssid;
 }
 
-static const char *get_gateway() {
+static const char *get_gateway(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     const char *result = get_execute_result("ip route | awk '/default/ {print $3}'");
@@ -95,7 +95,7 @@ static const char *get_gateway() {
     return gw;
 }
 
-static const char *get_dns_servers() {
+static const char *get_dns_servers(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     const char *result = get_execute_result("awk '/nameserver/ {print $2}' /etc/resolv.conf | xargs");
@@ -107,7 +107,7 @@ static const char *get_dns_servers() {
     return dns;
 }
 
-static const char *get_signal_strength() {
+static const char *get_signal_strength(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     // I think these values are correct?
@@ -142,7 +142,7 @@ static const char *get_signal_strength() {
     return signal;
 }
 
-static const char *get_channel_info() {
+static const char *get_channel_info(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char cmd[128];
@@ -217,7 +217,7 @@ static const char *get_channel_info() {
     return unknown;
 }
 
-static const char *get_ac_traffic() {
+static const char *get_ac_traffic(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     char rx_path[128], tx_path[128];
@@ -234,7 +234,7 @@ static const char *get_ac_traffic() {
     return ac_traffic;
 }
 
-static const char *get_tp_traffic() {
+static const char *get_tp_traffic(void) {
     if (!is_network_connected()) return lang.GENERIC.NOT_CONNECTED;
 
     static unsigned long long last_rx = 0, last_tx = 0;
@@ -269,7 +269,7 @@ static const char *get_tp_traffic() {
     return tp_traffic;
 }
 
-static void update_network_info() {
+static void update_network_info(void) {
     lv_label_set_text(ui_lblHostnameValue_netinfo, get_hostname());
     lv_label_set_text(ui_lblMacValue_netinfo, get_mac_address());
     lv_label_set_text(ui_lblIpValue_netinfo, get_ip_address());
@@ -282,7 +282,7 @@ static void update_network_info() {
     lv_label_set_text(ui_lblTpTrafficValue_netinfo, get_tp_traffic());
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -417,7 +417,7 @@ static void handle_back(void) {
     mux_input_stop();
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     if (key_show) {
@@ -454,7 +454,7 @@ static void handle_a() {
     }
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -525,7 +525,7 @@ static void handle_r1(void) {
     if (!key_show) handle_list_nav_page_down();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -536,7 +536,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -555,7 +555,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -578,7 +578,7 @@ static void on_key_event(struct input_event ev) {
     }
 }
 
-int muxnetinfo_main() {
+int muxnetinfo_main(void) {
     init_module("muxnetinfo");
 
     init_theme(1, 0);

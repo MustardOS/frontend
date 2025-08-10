@@ -11,7 +11,7 @@
 #include "../common/device.h"
 #include "../common/theme.h"
 
-int clear_framebuffer() {
+int clear_framebuffer(void) {
     int fb_fd;
     struct fb_fix_screeninfo finfo;
     struct fb_var_screeninfo vinfo;
@@ -51,7 +51,7 @@ int clear_framebuffer() {
     return 0;
 }
 
-void print_available_modes() {
+void print_available_modes(void) {
     const char *sys_modes = "/sys/class/graphics/fb0/modes";
     FILE *modes_file = fopen(sys_modes, "r");
     if (!modes_file) {

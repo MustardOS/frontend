@@ -1,6 +1,6 @@
 #include "muxshare.h"
 
-static void show_help() {
+static void show_help(void) {
     char *title = items[current_item_index].name;
 
     char help_info[MAX_BUFFER_SIZE];
@@ -53,7 +53,7 @@ static void init_navigation_group_grid(const char *app_path) {
     }
 }
 
-static void create_app_items() {
+static void create_app_items(void) {
     char app_path[MAX_BUFFER_SIZE];
     snprintf(app_path, sizeof(app_path), "%s/%s", device.STORAGE.ROM.MOUNT, MUOS_APPS_PATH);
 
@@ -193,7 +193,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     if (ui_count > 0) {
@@ -233,7 +233,7 @@ static void handle_a() {
     }
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -249,14 +249,14 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_menu() {
+static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -267,7 +267,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -282,7 +282,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
@@ -299,7 +299,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxapp_main() {
+int muxapp_main(void) {
     init_module("muxapp");
 
     init_theme(1, 1);

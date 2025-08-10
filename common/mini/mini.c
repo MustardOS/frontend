@@ -95,7 +95,7 @@ static inline char *mini_strdup(const char *str) {
 
 /* === Utilities === */
 
-mini_value_t *make_value() {
+mini_value_t *make_value(void) {
     mini_value_t *val = malloc(sizeof(mini_value_t));
     val->id = NULL;
     val->val = NULL;

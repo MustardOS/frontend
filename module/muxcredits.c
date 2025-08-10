@@ -18,17 +18,17 @@ static void fade_in(lv_obj_t *obj);
 
 static void fade_out(lv_obj_t *obj);
 
-static void timeout_task() {
+static void timeout_task(void) {
     close_input();
     safe_quit(0);
     mux_input_stop();
 }
 
-static void trigger_timeout() {
+static void trigger_timeout(void) {
     if (TEST_IMAGE) timeout_task();
 }
 
-static void create_credit_elements_array() {
+static void create_credit_elements_array(void) {
     credit_elements[0] = ui_conStart;
     credit_elements[1] = ui_conOfficial;
     credit_elements[2] = ui_conWizard;
@@ -90,7 +90,7 @@ static void fade_out(lv_obj_t *obj) {
     lv_anim_start(&a);
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (!config.BOOT.FACTORY_RESET) {
         write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "credit");
         timeout_task();

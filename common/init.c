@@ -48,7 +48,7 @@ uint32_t mux_tick(void) {
     return (uint32_t) (now_ms - start_ms);
 }
 
-void setup_background_process() {
+void setup_background_process(void) {
     pid_t pid = fork();
 
     if (pid == -1) {
@@ -71,7 +71,7 @@ void safe_quit(int exit_status) {
     write_text_to_file(SAFE_QUIT, "w", INT, exit_status);
 }
 
-void close_input() {
+void close_input(void) {
     close(joy_general);
     close(joy_power);
     close(joy_volume);
@@ -209,7 +209,7 @@ void init_timer(void (*ui_refresh_task)(lv_timer_t *), void (*update_system_info
     lv_refr_now(NULL);
 }
 
-void init_dispose() {
+void init_dispose(void) {
     if (timer_ui_refresh) {
         lv_timer_del(timer_ui_refresh);
         timer_ui_refresh = NULL;
@@ -244,7 +244,7 @@ void init_dispose() {
     }
 }
 
-void init_fonts() {
+void init_fonts(void) {
     load_font_text(ui_screen);
     load_font_section(FONT_PANEL_FOLDER, ui_pnlContent);
     load_font_section(FONT_HEADER_FOLDER, ui_pnlHeader);
@@ -263,7 +263,7 @@ void init_theme(int panel_init, int long_mode) {
     if (long_mode && theme.LIST_DEFAULT.LABEL_LONG_MODE != LV_LABEL_LONG_WRAP) init_item_animation();
 }
 
-void status_task() {
+void status_task(void) {
     if (progress_onscreen > 0) {
         --progress_onscreen;
     } else {
@@ -277,7 +277,7 @@ void status_task() {
     }
 }
 
-void bluetooth_task() {
+void bluetooth_task(void) {
 //    update_bluetooth_status(ui_staBluetooth, &theme);
 //    if (!bluetooth_period_set) {
 //        bluetooth_period_set = 1;
@@ -285,7 +285,7 @@ void bluetooth_task() {
 //    }
 }
 
-void network_task() {
+void network_task(void) {
     if (!strcasecmp(mux_module, "muxnetwork")) return;
     update_network_status(ui_staNetwork, &theme, 0);
 }

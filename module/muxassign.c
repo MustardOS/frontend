@@ -4,11 +4,11 @@ static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXASSIGN.TITLE, lang.MUXASSIGN.HELP, 0);
 }
 
-static void create_system_items() {
+static void create_system_items(void) {
     DIR *ad;
     struct dirent *af;
 
@@ -186,7 +186,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -276,7 +276,7 @@ static void handle_core_assignment(const char *log_msg, int assignment_mode) {
     mini_free(local_ini);
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     if (!strcasecmp(rom_system, "none")) {
@@ -290,7 +290,7 @@ static void handle_a() {
     mux_input_stop();
 }
 
-static void handle_x() {
+static void handle_x(void) {
     if (msgbox_active || !strcasecmp(rom_system, "none")) return;
 
     handle_core_assignment("Directory Core Assignment Triggered", DIRECTORY);
@@ -299,7 +299,7 @@ static void handle_x() {
     mux_input_stop();
 }
 
-static void handle_y() {
+static void handle_y(void) {
     if (msgbox_active || !strcasecmp(rom_system, "none") || at_base(rom_dir, "ROMS")) return;
 
     handle_core_assignment("Parent Core Assignment Triggered", PARENT);
@@ -308,14 +308,14 @@ static void handle_y() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -326,7 +326,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -360,7 +360,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();

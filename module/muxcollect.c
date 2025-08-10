@@ -28,7 +28,7 @@ static void check_for_disable_grid_file(char *item_curr_dir) {
     nogrid_file_exists = file_exist(no_grid_path);
 }
 
-static char *load_content_description() {
+static char *load_content_description(void) {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
              sys_dir, strip_ext(items[current_item_index].name));
@@ -267,7 +267,7 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
     }
 }
 
-static void init_navigation_group_grid() {
+static void init_navigation_group_grid(void) {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
@@ -304,7 +304,7 @@ static void init_navigation_group_grid() {
     }
 }
 
-static void create_collection_items() {
+static void create_collection_items(void) {
     char **dir_names = NULL;
     char **file_names = NULL;
     char **last_dirs = NULL;
@@ -417,7 +417,7 @@ static int load_content(const char *content_name) {
     return 0;
 }
 
-static void update_footer_glyph() {
+static void update_footer_glyph(void) {
     if (!add_mode) return;
     lv_label_set_text(ui_lblNavA,
                       items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.ADD);
@@ -496,7 +496,7 @@ static void handle_keyboard_press(void) {
     }
 }
 
-static void add_collection_item() {
+static void add_collection_item(void) {
     char *base_file_name = read_line_char_from(ADD_MODE_WORK, 1);
     char *cache_file = read_line_char_from(ADD_MODE_WORK, 2);
 
@@ -613,23 +613,23 @@ static void process_load(int from_start) {
     mux_input_stop();
 }
 
-static void handle_a() {
+static void handle_a(void) {
     process_load(0);
 }
 
-static void handle_a_alt() {
+static void handle_a_alt(void) {
     process_load(1);
 }
 
-static void handle_l2_hold() {
+static void handle_l2_hold(void) {
     holding_cell = 1;
 }
 
-static void handle_l2_release() {
+static void handle_l2_release(void) {
     holding_cell = 0;
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (key_show) {
         close_osk(key_entry, ui_group, ui_txtEntry_collect, ui_pnlEntry_collect);
         return;
@@ -672,7 +672,7 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_x() {
+static void handle_x(void) {
     if (key_show) {
         key_backspace(ui_txtEntry_collect);
         return;
@@ -706,7 +706,7 @@ static void handle_x() {
     mux_input_stop();
 }
 
-static void handle_y() {
+static void handle_y(void) {
     if (key_show) {
         key_swap();
         return;
@@ -727,7 +727,7 @@ static void handle_y() {
     }
 }
 
-static void handle_menu() {
+static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
 
     play_sound(SND_INFO_OPEN);
@@ -785,7 +785,7 @@ static void handle_r1(void) {
     if (!key_show) handle_list_nav_page_down();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -798,7 +798,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
 
@@ -823,7 +823,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
         adjust_panels();

@@ -82,7 +82,7 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     apply_theme_list_value(&theme, ui_lblItemValue, cap_label ? str_capital_all(cap_value) : cap_value);
 }
 
-static void add_info_items() {
+static void add_info_items(void) {
     const char *core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
     const char *core_dir = get_content_line(rom_dir, NULL, "cfg", 1);
     add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
@@ -168,7 +168,7 @@ static char *get_launch_count(void) {
     return launch_count;
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     int line_index = 0;
 
     add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
@@ -232,7 +232,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_confirm() {
+static void handle_confirm(void) {
     if (msgbox_active) return;
 
     struct {
@@ -269,7 +269,7 @@ static void handle_confirm() {
     mux_input_stop();
 }
 
-static void handle_back() {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -287,14 +287,14 @@ static void handle_back() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -305,7 +305,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -324,7 +324,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();

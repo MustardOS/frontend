@@ -1,10 +1,10 @@
 #include "muxshare.h"
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXLANGUAGE.TITLE, lang.MUXLANGUAGE.HELP, 0);
 }
 
-static void populate_languages() {
+static void populate_languages(void) {
     struct dirent *entry;
 
     char lang_dir[MAX_BUFFER_SIZE];
@@ -60,7 +60,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void create_language_items() {
+static void create_language_items(void) {
     ui_group = lv_group_create();
     ui_group_glyph = lv_group_create();
     ui_group_panel = lv_group_create();
@@ -87,7 +87,7 @@ static void create_language_items() {
     }
 }
 
-static void handle_confirm() {
+static void handle_confirm(void) {
     if (msgbox_active) return;
 
     play_sound(SND_CONFIRM);
@@ -104,7 +104,7 @@ static void handle_confirm() {
     mux_input_stop();
 }
 
-static void handle_back() {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -119,14 +119,14 @@ static void handle_back() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -137,7 +137,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -152,7 +152,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -164,7 +164,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxlanguage_main() {
+int muxlanguage_main(void) {
     init_module("muxlanguage");
 
     init_theme(1, 1);

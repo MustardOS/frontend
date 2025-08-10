@@ -28,13 +28,13 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define POWER(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_power);
     POWER_ELEMENTS
 #undef POWER
 }
 
-static void restore_power_options() {
+static void restore_power_options(void) {
     lv_obj_t *ui_droIdle[2] = {ui_droIdleDisplay_power, ui_droIdleSleep_power};
     int16_t *config_values[2] = {&config.SETTINGS.POWER.IDLE.DISPLAY, &config.SETTINGS.POWER.IDLE.SLEEP};
 
@@ -61,7 +61,7 @@ static void restore_power_options() {
     }
 }
 
-static int save_power_options() {
+static int save_power_options(void) {
     int idx_idle_display = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleDisplay_power),
                                                   idle_values, IDLE_COUNT, 0);
     int idx_idle_sleep = map_drop_down_to_value(lv_dropdown_get_selected(ui_droIdleSleep_power),
@@ -122,7 +122,7 @@ static int save_power_options() {
     return 1;
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -234,7 +234,7 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -245,7 +245,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -264,7 +264,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -276,7 +276,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxpower_main() {
+int muxpower_main(void) {
     init_module("muxpower");
 
     init_theme(1, 0);

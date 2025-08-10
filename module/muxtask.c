@@ -3,7 +3,7 @@
 static char base_dir[PATH_MAX];
 static char sys_dir[PATH_MAX];
 
-static void show_help() {
+static void show_help(void) {
     char *title = items[current_item_index].name;
 
     char help_info[MAX_BUFFER_SIZE];
@@ -14,7 +14,7 @@ static void show_help() {
     show_info_box(TS(title), TS(message), 0);
 }
 
-static void create_task_items() {
+static void create_task_items(void) {
     DIR *td;
     struct dirent *tf;
 
@@ -99,7 +99,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_confirm() {
+static void handle_confirm(void) {
     if (msgbox_active || ui_count <= 0) return;
 
     play_sound(SND_CONFIRM);
@@ -134,7 +134,7 @@ static void handle_confirm() {
     mux_input_stop();
 }
 
-static void handle_back() {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -158,14 +158,14 @@ static void handle_back() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -176,7 +176,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -191,7 +191,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (ui_count > 0 && nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) {
             struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);

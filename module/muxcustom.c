@@ -35,7 +35,7 @@ static int get_theme_resolution_value(char *resolution) {
     return 0;
 }
 
-static void restore_theme_resolution() {
+static void restore_theme_resolution(void) {
     for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
         if (theme_resolutions[i].value == config.SETTINGS.GENERAL.THEME_RESOLUTION) {
             int index = lv_dropdown_get_option_index(ui_droThemeResolution_custom, theme_resolutions[i].resolution);
@@ -68,7 +68,7 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static int populate_theme_alternates() {
+static int populate_theme_alternates(void) {
     lv_dropdown_clear_options(ui_droThemeAlternate_custom);
 
     char alt_path[MAX_BUFFER_SIZE];
@@ -104,13 +104,13 @@ static int populate_theme_alternates() {
     return lv_dropdown_get_option_cnt(ui_droThemeAlternate_custom);
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define CUSTOM(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_custom);
     CUSTOM_ELEMENTS
 #undef CUSTOM
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -207,7 +207,7 @@ static void init_navigation_group() {
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
 
-static void check_focus() {
+static void check_focus(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBootlogo_custom || element_focused == ui_lblCatalogue_custom ||
         element_focused == ui_lblConfig_custom || element_focused == ui_lblTheme_custom) {
@@ -268,7 +268,7 @@ static void handle_option_next(void) {
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
-static void restore_custom_options() {
+static void restore_custom_options(void) {
     snprintf(theme_alt_original, sizeof(theme_alt_original), "%s",
              str_replace(read_line_char_from((STORAGE_THEME "/active.txt"), 1), "\r", ""));
     int32_t option_index = lv_dropdown_get_option_index(ui_droThemeAlternate_custom, theme_alt_original);
@@ -287,7 +287,7 @@ static void restore_custom_options() {
     lv_dropdown_set_selected(ui_droChime_custom, config.SETTINGS.GENERAL.CHIME);
 }
 
-static void save_custom_options() {
+static void save_custom_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(custom, Animation, "visual/backgroundanimation", INT, 0);
@@ -367,7 +367,7 @@ static void save_custom_options() {
     }
 }
 
-static void handle_confirm() {
+static void handle_confirm(void) {
     if (msgbox_active) return;
 
     struct {
@@ -417,7 +417,7 @@ static void handle_confirm() {
     handle_option_next();
 }
 
-static void handle_back() {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -435,14 +435,14 @@ static void handle_back() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -453,7 +453,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -476,7 +476,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -488,7 +488,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxcustom_main() {
+int muxcustom_main(void) {
     init_module("muxcustom");
 
     init_theme(1, 1);

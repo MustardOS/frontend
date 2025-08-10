@@ -3,11 +3,11 @@
 lv_obj_t *ui_imgScreenshot;
 static int is_fullscreen = 0;
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(TS(lv_label_get_text(lv_group_get_focused(ui_group))), lang.MUXSHOT.HELP, 0);
 }
 
-static void image_refresh() {
+static void image_refresh(void) {
     // Invalidate the cache for this image path
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgScreenshot));
 
@@ -24,7 +24,7 @@ static void image_refresh() {
     }
 }
 
-static void create_screenshot_items() {
+static void create_screenshot_items(void) {
     DIR *td;
     struct dirent *tf;
     regex_t regex;
@@ -112,7 +112,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_confirm() {
+static void handle_confirm(void) {
     if (msgbox_active || ui_count <= 0) return;
 
     play_sound(SND_CONFIRM);
@@ -130,7 +130,7 @@ static void handle_confirm() {
     }
 }
 
-static void handle_back() {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -145,7 +145,7 @@ static void handle_back() {
     mux_input_stop();
 }
 
-static void handle_remove() {
+static void handle_remove(void) {
     if (msgbox_active || is_fullscreen || !ui_count) return;
 
     char screenshot_file[PATH_MAX];
@@ -161,14 +161,14 @@ static void handle_remove() {
     }
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count || is_fullscreen) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -179,7 +179,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -201,7 +201,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (ui_count > 0 && nav_moved) {
         image_refresh();
 
@@ -212,7 +212,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxshot_main() {
+int muxshot_main(void) {
     is_fullscreen = 0;
 
     init_module("muxshot");

@@ -49,7 +49,7 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void update_backup_info() {
+static void update_backup_info(void) {
     /*
      * Check for SD2 pathing, otherwise it should be on SD1.
      * If it's not on SD1 then you have bigger problems!
@@ -160,7 +160,7 @@ static void update_backup_info() {
     lv_label_set_text(ui_lblMuosConfigValue_backup, "CUSTOM");
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -425,7 +425,7 @@ static void handle_help(void) {
     }
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -436,7 +436,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -459,7 +459,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -508,7 +508,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxbackup_main() {
+int muxbackup_main(void) {
     init_module("muxbackup");
 
     init_theme(1, 0);

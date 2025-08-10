@@ -9,7 +9,7 @@ static char *picker_extension;
 #define TEMP_VERSION "version.txt"
 #define TEMP_CREDITS "credits.txt"
 
-static void show_help() {
+static void show_help(void) {
     if (items[current_item_index].content_type == FOLDER) return;
 
     char *picker_name = lv_label_get_text(lv_group_get_focused(ui_group));
@@ -27,7 +27,7 @@ static void show_help() {
     show_info_box(TS(lv_label_get_text(lv_group_get_focused(ui_group))), TS(credits), 0);
 }
 
-static int version_check() {
+static int version_check(void) {
     char picker_archive[MAX_BUFFER_SIZE];
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
@@ -41,7 +41,7 @@ static int version_check() {
     return 0;
 }
 
-static int extract_preview() {
+static int extract_preview(void) {
     char picker_archive[MAX_BUFFER_SIZE];
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
@@ -51,7 +51,7 @@ static int extract_preview() {
     return extract_file_from_zip(picker_archive, device_preview, "/tmp/" TEMP_PREVIEW);
 }
 
-static void image_refresh() {
+static void image_refresh(void) {
     if (items[current_item_index].content_type == FOLDER) return;
 
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
@@ -63,7 +63,7 @@ static void image_refresh() {
     }
 }
 
-static void create_picker_items() {
+static void create_picker_items(void) {
     DIR *td;
     struct dirent *tf;
 
@@ -154,7 +154,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_confirm() {
+static void handle_confirm(void) {
     if (msgbox_active || ui_count <= 0) return;
 
     play_sound(SND_CONFIRM);
@@ -221,7 +221,7 @@ static void handle_confirm() {
     mux_input_stop();
 }
 
-static void handle_confirm_force() {
+static void handle_confirm_force(void) {
     if (msgbox_active || ui_count <= 0 ||
         strcasecmp(picker_type, "/theme") != 0 ||
         items[current_item_index].content_type == FOLDER) {
@@ -268,7 +268,7 @@ static void handle_confirm_force() {
     mux_input_stop();
 }
 
-static void handle_back() {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -292,7 +292,7 @@ static void handle_back() {
     mux_input_stop();
 }
 
-static void handle_save() {
+static void handle_save(void) {
     if (msgbox_active) return;
 
     play_sound(SND_CONFIRM);
@@ -319,14 +319,14 @@ static void handle_save() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -337,7 +337,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     lv_obj_set_align(ui_imgBox, LV_ALIGN_BOTTOM_RIGHT);
 
     adjust_panels();
@@ -361,7 +361,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (ui_count > 0 && nav_moved) {
         image_refresh();
 

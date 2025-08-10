@@ -20,13 +20,13 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define WEBSERV(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_webserv);
     WEBSERV_ELEMENTS
 #undef WEBSERV
 }
 
-static void restore_web_options() {
+static void restore_web_options(void) {
     lv_dropdown_set_selected(ui_droSshd_webserv, config.WEB.SSHD);
     lv_dropdown_set_selected(ui_droSftpGo_webserv, config.WEB.SFTPGO);
     lv_dropdown_set_selected(ui_droTtyd_webserv, config.WEB.TTYD);
@@ -35,7 +35,7 @@ static void restore_web_options() {
     lv_dropdown_set_selected(ui_droTailscaled_webserv, config.WEB.TAILSCALED);
 }
 
-static void save_web_options() {
+static void save_web_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(webserv, Sshd, "web/sshd", INT, 0);
@@ -56,7 +56,7 @@ static void save_web_options() {
     }
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -147,7 +147,7 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -158,7 +158,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -177,7 +177,7 @@ static void init_elements() {
     overlay_display();
 }
 
-static void ui_refresh_task() {
+static void ui_refresh_task(void) {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();
@@ -189,7 +189,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxwebserv_main() {
+int muxwebserv_main(void) {
     init_module("muxwebserv");
 
     init_theme(1, 0);
