@@ -65,6 +65,7 @@
     BACKUP(Network,          "network")        \
     BACKUP(Syncthing,        "syncthing")      \
     BACKUP(UserInit,         "userinit")       \
+    BACKUP(ActivityTracker,  "activity")       \
     BACKUP(External,         "external")       \
     BACKUP(MuosConfig,       "muosconfig")     \
     BACKUP(BackupTarget,     "backuptarget")   \

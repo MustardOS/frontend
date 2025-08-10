@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 23
+#define UI_COUNT 24
 #define STORAGE_COUNT (UI_COUNT - 2)
 #define START_BACKUP_INDEX (UI_COUNT - 1)
 #define BACKUP_TARGET_INDEX (UI_COUNT - 2)
@@ -39,6 +39,7 @@ static void show_help(lv_obj_t *element_focused) {
         {ui_lblNetwork_backup,          lang.MUXBACKUP.HELP.NET_PROFILE},
         {ui_lblSyncthing_backup,        lang.MUXBACKUP.HELP.SYNCTHING},
         {ui_lblUserInit_backup,         lang.MUXBACKUP.HELP.USER_INIT},
+        {ui_lblActivityTracker_backup,  lang.MUXBACKUP.HELP.ACTIVITY_TRACKER},
         {ui_lblExternal_backup,         lang.MUXBACKUP.HELP.EXTERNAL},
         {ui_lblMuosConfig_backup,       lang.MUXBACKUP.HELP.MUOS_CONFIG},
         {ui_lblBackupTarget_backup,     lang.MUXBACKUP.HELP.BACKUP_TARGET},
@@ -130,13 +131,17 @@ static void update_backup_info() {
     backup_path[18].ui_label = ui_lblUserInitValue_backup;
     backup_path[18].shortname = "UserInit";
 
-    backup_path[19].path_suffix = ".";
-    backup_path[19].ui_label = ui_lblExternalValue_backup;
-    backup_path[19].shortname = "External";
+    backup_path[19].path_suffix = STORE_LOC_ACTI;
+    backup_path[19].ui_label = ui_lblActivityTrackerValue_backup;
+    backup_path[19].shortname = "ActivityTracker";
 
     backup_path[20].path_suffix = ".";
-    backup_path[20].ui_label = ui_lblMuosConfigValue_backup;
-    backup_path[20].shortname = "MuosConfig";
+    backup_path[20].ui_label = ui_lblExternalValue_backup;
+    backup_path[20].shortname = "External";
+
+    backup_path[21].path_suffix = ".";
+    backup_path[21].ui_label = ui_lblMuosConfigValue_backup;
+    backup_path[21].shortname = "MuosConfig";
 
     char dir[FILENAME_MAX];
     for (int i = 0; i < A_SIZE(backup_path); i++) {
@@ -180,6 +185,7 @@ static void init_navigation_group() {
     INIT_VALUE_ITEM(-1, backup, Network,          lang.MUXBACKUP.NET_PROFILE,       "network",         "");
     INIT_VALUE_ITEM(-1, backup, Syncthing,        lang.MUXBACKUP.SYNCTHING,         "syncthing",       "");
     INIT_VALUE_ITEM(-1, backup, UserInit,         lang.MUXBACKUP.USER_INIT,         "userinit",        "");
+    INIT_VALUE_ITEM(-1, backup, ActivityTracker,  lang.MUXBACKUP.ACTIVITY_TRACKER,  "activity",        "");
     INIT_VALUE_ITEM(-1, backup, External,         lang.MUXBACKUP.EXTERNAL,          "external",        "");
     INIT_VALUE_ITEM(-1, backup, MuosConfig,       lang.MUXBACKUP.MUOS_CONFIG,       "muosconfig",      "");
     INIT_VALUE_ITEM(-1, backup, BackupTarget,     lang.MUXBACKUP.BACKUP_TARGET,     "backuptarget",    "");

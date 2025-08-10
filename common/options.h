@@ -97,6 +97,7 @@
 #define STORE_LOC_NETW "MUOS/network"
 #define STORE_LOC_SYCT "MUOS/syncthing"
 #define STORE_LOC_INIT "MUOS/init"
+#define STORE_LOC_ACTI "MUOS/info/track"
 
 #define STORE_LOC_ASIN MUOS_INFO_PATH "/assign"
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
