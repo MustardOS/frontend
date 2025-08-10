@@ -219,6 +219,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.SPLASH, "Content Launch Splash");
     SPECIFIC_FIELD(lang->MUXCUSTOM.FADE, "Black Fade Animation");
     SPECIFIC_FIELD(lang->MUXCUSTOM.ANIMATION, "Background Animation");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.SHUFFLE, "Content Shuffle");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.TITLE, "Content Box Art");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.BEHIND, "Behind");
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOX_ART.FRONT, "Front");
@@ -259,6 +260,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.MUSIC, "Toggle the background music of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
 
     // muxdanger
     SPECIFIC_FIELD(lang->MUXDANGER.TITLE, "DANGER SETTINGS");

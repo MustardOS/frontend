@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxcustom.h"
 
-#define UI_COUNT 15
+#define UI_COUNT 16
 
 #define CUSTOM(NAME, UDATA) static int NAME##_original;
     CUSTOM_ELEMENTS
@@ -55,6 +55,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblThemeAlternate_custom,  lang.MUXCUSTOM.HELP.THEME_ALTERNATE},
             {ui_lblAnimation_custom,       lang.MUXCUSTOM.HELP.ANIMATION},
             {ui_lblMusic_custom,           lang.MUXCUSTOM.HELP.MUSIC},
+            {ui_lblShuffle_custom,         lang.MUXCUSTOM.HELP.SHUFFLE},
             {ui_lblBlackFade_custom,       lang.MUXCUSTOM.HELP.FADE},
             {ui_lblBoxArtImage_custom,     lang.MUXCUSTOM.HELP.BOX_ART},
             {ui_lblBoxArtAlign_custom,     lang.MUXCUSTOM.HELP.BOX_ALIGN},
@@ -167,6 +168,7 @@ static void init_navigation_group() {
     INIT_OPTION_ITEM(-1, custom, Animation, lang.MUXCUSTOM.ANIMATION, "animation", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, Music, lang.MUXCUSTOM.MUSIC.TITLE, "music", music_options, 3);
     INIT_OPTION_ITEM(-1, custom, BlackFade, lang.MUXCUSTOM.FADE, "blackfade", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, custom, Shuffle, lang.MUXCUSTOM.SHUFFLE, "shuffle", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, custom, BoxArtImage, lang.MUXCUSTOM.BOX_ART.TITLE, "boxart", boxart_image, 5);
     INIT_OPTION_ITEM(-1, custom, BoxArtAlign, lang.MUXCUSTOM.BOX_ART.ALIGN.TITLE, "align", boxart_align, 9);
     INIT_OPTION_ITEM(-1, custom, LaunchSplash, lang.MUXCUSTOM.SPLASH, "splash", disabled_enabled, 2);
@@ -278,6 +280,7 @@ static void restore_custom_options() {
     lv_dropdown_set_selected(ui_droAnimation_custom, config.VISUAL.BACKGROUNDANIMATION);
     lv_dropdown_set_selected(ui_droLaunchSplash_custom, config.VISUAL.LAUNCHSPLASH);
     lv_dropdown_set_selected(ui_droBlackFade_custom, config.VISUAL.BLACKFADE);
+    lv_dropdown_set_selected(ui_droShuffle_custom, config.VISUAL.SHUFFLE);
     lv_dropdown_set_selected(ui_droFont_custom, config.SETTINGS.ADVANCED.FONT);
     lv_dropdown_set_selected(ui_droMusic_custom, config.SETTINGS.GENERAL.BGM);
     lv_dropdown_set_selected(ui_droSound_custom, config.SETTINGS.GENERAL.SOUND);
@@ -290,6 +293,7 @@ static void save_custom_options() {
     CHECK_AND_SAVE_STD(custom, Animation, "visual/backgroundanimation", INT, 0);
     CHECK_AND_SAVE_STD(custom, Music, "settings/general/bgm", INT, 0);
     CHECK_AND_SAVE_STD(custom, BlackFade, "visual/blackfade", INT, 0);
+    CHECK_AND_SAVE_STD(custom, Shuffle, "visual/shuffle", INT, 0);
     CHECK_AND_SAVE_STD(custom, BoxArtImage, "visual/boxart", INT, 0);
     CHECK_AND_SAVE_STD(custom, BoxArtAlign, "visual/boxartalign", INT, 1);
     CHECK_AND_SAVE_STD(custom, LaunchSplash, "visual/launchsplash", INT, 0);

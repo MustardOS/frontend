@@ -170,6 +170,7 @@ struct mux_lang {
         char ANIMATION[MAX_BUFFER_SIZE];
         char FADE[MAX_BUFFER_SIZE];
         char SPLASH[MAX_BUFFER_SIZE];
+        char SHUFFLE[MAX_BUFFER_SIZE];
         char CHIME[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
@@ -217,6 +218,7 @@ struct mux_lang {
             char BOX_ALIGN[MAX_BUFFER_SIZE];
             char FADE[MAX_BUFFER_SIZE];
             char SPLASH[MAX_BUFFER_SIZE];
+            char SHUFFLE[MAX_BUFFER_SIZE];
             char FONT[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
             char SOUND[MAX_BUFFER_SIZE];

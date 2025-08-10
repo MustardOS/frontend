@@ -96,6 +96,7 @@
     CUSTOM(Animation,       "animation")  \
     CUSTOM(Music,           "music")      \
     CUSTOM(BlackFade,       "blackfade")  \
+    CUSTOM(Shuffle,         "shuffle")    \
     CUSTOM(BoxArtImage,     "boxart")     \
     CUSTOM(BoxArtAlign,     "align")      \
     CUSTOM(LaunchSplash,    "splash")     \

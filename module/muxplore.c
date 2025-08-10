@@ -879,7 +879,7 @@ static void handle_menu() {
 }
 
 static void handle_random_select() {
-    if (msgbox_active || ui_count < 2 || holding_cell) return;
+    if (msgbox_active || ui_count < 2 || holding_cell || !config.VISUAL.SHUFFLE) return;
 
     uint32_t random_select = random() % ui_count;
     int selected_index = (int) (random_select & INT16_MAX);
