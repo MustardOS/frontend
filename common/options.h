@@ -111,6 +111,7 @@
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
+#define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader

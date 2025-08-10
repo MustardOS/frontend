@@ -524,22 +524,12 @@ static void add_to_collection(char *filename, const char *pointer) {
 static int load_content(int add_collection) {
     char *assigned_core = load_content_core(0, !add_collection);
     if (assigned_core == NULL || strcasestr(assigned_core, "(null)")) return 0;
-    LOG_INFO(mux_module, "Assigned Core: %s", str_replace(assigned_core, "\n", "|"))
-
-    char *assigned_gov = load_content_governor(sys_dir, NULL, 0, 1);
-    if (assigned_gov == NULL && strcasestr(assigned_gov, "(null)")) {
-        LOG_INFO(mux_module, "Using Default Governor: %s", device.CPU.DEFAULT)
-        assigned_gov = strdup(device.CPU.DEFAULT);
-    } else {
-        LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
-    }
 
     const char *content_name = strip_ext(items[current_item_index].name);
     const char *system_sub = get_last_subdir(sys_dir, '/', 4);
 
     char content_loader_file[MAX_BUFFER_SIZE];
-    snprintf(content_loader_file, sizeof(content_loader_file), "%s/%s/%s.cfg",
-             INFO_COR_PATH,
+    snprintf(content_loader_file, sizeof(content_loader_file), INFO_COR_PATH "/%s/%s.cfg",
              system_sub,
              content_name);
     LOG_INFO(mux_module, "Configuration File: %s", content_loader_file)
@@ -562,8 +552,8 @@ static int load_content(int add_collection) {
         char content[MAX_BUFFER_SIZE];
 
         char cache_file[MAX_BUFFER_SIZE];
-        snprintf(cache_file, sizeof(cache_file), "%s/%s/%s.cfg",
-                 INFO_COR_PATH, system_sub, content_name);
+        snprintf(cache_file, sizeof(cache_file), INFO_COR_PATH "/%s/%s.cfg",
+                 system_sub, content_name);
 
         snprintf(pointer, sizeof(pointer), "%s\n%s\n%s",
                  cache_file, system_sub, content_name);
@@ -572,10 +562,25 @@ static int load_content(int add_collection) {
             snprintf(content, sizeof(content), "%s.cfg", content_name);
             add_to_collection(content, pointer);
         } else {
-            snprintf(content, sizeof(content), "%s/%s-%08X.cfg", INFO_HIS_PATH, content_name, fnv1a_hash(cache_file));
+            char *assigned_gov = specify_asset(load_content_governor(sys_dir, NULL, 0, 1),
+                                               device.CPU.DEFAULT, "Governor");
+
+            char *assigned_con = specify_asset(load_content_control_scheme(sys_dir, NULL, 0, 1),
+                                               "system", "Control Scheme");
+
+            LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
+            LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
+            LOG_INFO(mux_module, "Assigned Control Scheme: %s", assigned_con)
+            LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
+
+            snprintf(content, sizeof(content), INFO_HIS_PATH "/%s-%08X.cfg",
+                     content_name, fnv1a_hash(cache_file));
+
             write_text_to_file(content, "w", CHAR, pointer);
             write_text_to_file(LAST_PLAY_FILE, "w", CHAR, cache_file);
+
             write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
+            write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
             write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(content_loader_file));
         }
 

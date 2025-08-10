@@ -102,52 +102,78 @@ void overlay_display() {
     load_overlay_image(ui_screen, overlay_image);
 }
 
-char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit) {
-    char content_gov[MAX_BUFFER_SIZE];
+char *specify_asset(char *val, const char *def_val, const char *label) {
+    if (!val || !strcasecmp(val, "(null)")) {
+        LOG_INFO(mux_module, "Using Default %s: %s", label, def_val)
+        return strdup(def_val);
+    }
+
+    LOG_INFO(mux_module, "Assigned %s: %s", label, val)
+    return val;
+}
+
+static char *load_content_asset(char *sys_dir, char *pointer, int force,
+                                int run_quit, const char *ext, const char *label) {
+    char path[MAX_BUFFER_SIZE];
     const char *last_subdir = NULL;
 
     if (pointer == NULL) {
         last_subdir = get_last_subdir(sys_dir, '/', 4);
-        if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
-            snprintf(content_gov, sizeof(content_gov), "%s/core.gov", INFO_COR_PATH);
-        } else {
-            snprintf(content_gov, sizeof(content_gov), "%s/%s/%s.gov",
-                     INFO_COR_PATH, last_subdir, strip_ext(items[current_item_index].name));
 
-            if (file_exist(content_gov) && !force) {
-                LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
-                char *gov_text = read_all_char_from(content_gov);
-                if (gov_text) return gov_text;
-                LOG_ERROR(mux_module, "Failed to read individual governor")
+        if (!strcasecmp(last_subdir, strip_dir(STORAGE_PATH))) {
+            snprintf(path, sizeof(path), "%s/core.%s", INFO_COR_PATH, ext);
+        } else {
+            snprintf(path, sizeof(path), "%s/%s/%s.%s",
+                     INFO_COR_PATH,
+                     last_subdir,
+                     strip_ext(items[current_item_index].name),
+                     ext);
+
+            if (file_exist(path) && !force) {
+                LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path)
+
+                char *txt = read_all_char_from(path);
+                if (txt) return txt;
+
+                LOG_ERROR(mux_module, "Failed to read individual %s", label)
             }
 
-            snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov",
-                     INFO_COR_PATH, last_subdir);
+            snprintf(path, sizeof(path), "%s/%s/core.%s", INFO_COR_PATH, last_subdir, ext);
         }
     } else {
-        snprintf(content_gov, sizeof(content_gov), "%s.gov", strip_ext(pointer));
+        snprintf(path, sizeof(path), "%s.%s", strip_ext(pointer), ext);
 
-        if (file_exist(content_gov)) {
-            LOG_SUCCESS(mux_module, "Loading Individual Governor: %s", content_gov)
-            return read_all_char_from(content_gov);
+        if (file_exist(path)) {
+            LOG_SUCCESS(mux_module, "Loading Individual %s: %s", label, path)
+            return read_all_char_from(path);
         }
 
         const char *replaced = str_replace(get_last_subdir(pointer, '/', 6), get_last_dir(pointer), "");
-        snprintf(content_gov, sizeof(content_gov), "%s/%s/core.gov", INFO_COR_PATH, replaced);
-        snprintf(content_gov, sizeof(content_gov), "%s", str_replace(content_gov, "//", "/"));
+        snprintf(path, sizeof(path), "%s/%s/core.%s", INFO_COR_PATH, replaced, ext);
+        snprintf(path, sizeof(path), "%s", str_replace(path, "//", "/"));
     }
 
-    if (file_exist(content_gov) && !force) {
-        LOG_SUCCESS(mux_module, "Loading Global Governor: %s", content_gov)
-        char *gov = read_all_char_from(content_gov);
-        if (gov) return gov;
-        LOG_ERROR(mux_module, "Failed to read global governor")
+    if (file_exist(path) && !force) {
+        LOG_SUCCESS(mux_module, "Loading Global %s: %s", label, path)
+
+        char *txt = read_all_char_from(path);
+        if (txt) return txt;
+
+        LOG_ERROR(mux_module, "Failed to read global %s", label)
     }
 
     if (run_quit) mux_input_stop();
 
-    LOG_INFO(mux_module, "No governor detected")
+    LOG_INFO(mux_module, "No %s detected", label)
     return NULL;
+}
+
+char *load_content_governor(char *sys_dir, char *pointer, int force, int run_quit) {
+    return load_content_asset(sys_dir, pointer, force, run_quit, "gov", "Governor");
+}
+
+char *load_content_control_scheme(char *sys_dir, char *pointer, int force, int run_quit) {
+    return load_content_asset(sys_dir, pointer, force, run_quit, "con", "Control Scheme");
 }
 
 void viewport_refresh(lv_obj_t **ui_viewport_objects, char *artwork_config,

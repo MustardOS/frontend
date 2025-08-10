@@ -312,24 +312,30 @@ static int load_content(const char *content_name) {
     snprintf(cache_file, sizeof(cache_file), "%s",
              read_line_char_from(pointer_file, CACHE_CORE_PATH));
 
-    char *assigned_gov = NULL;
-    assigned_gov = load_content_governor(NULL, cache_file, 0, 0);
-    if (!assigned_gov) assigned_gov = device.CPU.DEFAULT;
-
     if (file_exist(cache_file)) {
         char *assigned_core = read_line_char_from(cache_file, CONTENT_CORE);
+
+        char *assigned_gov = specify_asset(load_content_governor(NULL, cache_file, 0, 0),
+                                           device.CPU.DEFAULT, "Governor");
+
+        char *assigned_con = specify_asset(load_content_control_scheme(NULL, cache_file, 0, 0),
+                                           "system", "Control Scheme");
+
         LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
         LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
+        LOG_INFO(mux_module, "Assigned Control Scheme: %s", assigned_con)
         LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
 
         char add_to_history[MAX_BUFFER_SIZE];
-        snprintf(add_to_history, sizeof(add_to_history), "%s/%s",
-                 INFO_HIS_PATH, content_name);
-
+        snprintf(add_to_history, sizeof(add_to_history), INFO_HIS_PATH "/%s", content_name);
         write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
+
         write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, CONTENT_NAME));
+
         write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
+        write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
+
         return 1;
     }
 
