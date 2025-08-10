@@ -18,6 +18,8 @@ static int nogrid_file_exists = 0;
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
+int holding_cell = 0;
+
 static void check_for_disable_grid_file(char *item_curr_dir) {
     char no_grid_path[PATH_MAX];
     snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
@@ -676,7 +678,7 @@ static void list_nav_next(int steps) {
 }
 
 static void process_load(int from_start) {
-    if (!ui_count) return;
+    if (!ui_count || holding_cell) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -757,7 +759,17 @@ static void handle_a_alt() {
     process_load(1);
 }
 
+static void handle_l2_hold() {
+    holding_cell = 1;
+}
+
+static void handle_l2_release() {
+    holding_cell = 0;
+}
+
 static void handle_b() {
+    if (holding_cell) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -782,7 +794,7 @@ static void handle_b() {
 }
 
 static void handle_x() {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count || holding_cell) return;
 
     toast_message(lang.MUXPLORE.REFRESH_RUN, 0);
     lv_obj_move_foreground(ui_pnlMessage);
@@ -798,7 +810,7 @@ static void handle_x() {
 }
 
 static void handle_y() {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count || holding_cell) return;
 
     if (items[current_item_index].content_type == FOLDER) {
         play_sound(SND_ERROR);
@@ -864,7 +876,7 @@ static void handle_menu() {
 }
 
 static void handle_random_select() {
-    if (msgbox_active || ui_count < 2) return;
+    if (msgbox_active || ui_count < 2 || holding_cell) return;
 
     uint32_t random_select = random() % ui_count;
     int selected_index = (int) (random_select & INT16_MAX);
@@ -1048,6 +1060,7 @@ int muxplore_main(int index, char *dir) {
             },
             .release_handler = {
                     [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_L2] = handle_l2_release,
             },
             .hold_handler = {
                     [MUX_INPUT_A] = handle_a_alt,
@@ -1056,6 +1069,7 @@ int muxplore_main(int index, char *dir) {
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = handle_l2_hold,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
                     [MUX_INPUT_R2] = handle_random_select,
             }
