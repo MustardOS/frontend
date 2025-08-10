@@ -18,8 +18,6 @@ static int nogrid_file_exists = 0;
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
-int holding_cell = 0;
-
 static void check_for_disable_grid_file(char *item_curr_dir) {
     char no_grid_path[PATH_MAX];
     snprintf(no_grid_path, sizeof(no_grid_path), "%s/.nogrid", item_curr_dir);
@@ -741,7 +739,7 @@ static void process_load(int from_start) {
         }
     }
 
-    if (from_start) write_text_to_file("/tmp/ra_no_load", "w", INT, 1);
+    if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
 
     if (load_message) {
         toast_message(lang.GENERIC.LOADING, 0);
@@ -831,7 +829,7 @@ static void handle_y() {
 }
 
 static void handle_start() {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count || holding_cell) return;
 
     play_sound(SND_CONFIRM);
 
@@ -843,7 +841,7 @@ static void handle_start() {
 }
 
 static void handle_select() {
-    if (msgbox_active || !ui_count) return;
+    if (msgbox_active || !ui_count || holding_cell) return;
 
     play_sound(SND_CONFIRM);
 
@@ -872,7 +870,7 @@ static void handle_select() {
 }
 
 static void handle_menu() {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");

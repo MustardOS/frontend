@@ -517,7 +517,14 @@ static void add_collection_item() {
     if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
 }
 
-static void handle_a() {
+static void process_load(int from_start) {
+    if (key_show) {
+        handle_keyboard_press();
+        return;
+    }
+
+    if (holding_cell || (!add_mode && !ui_count)) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
@@ -529,13 +536,6 @@ static void handle_a() {
         }
         return;
     }
-
-    if (key_show) {
-        handle_keyboard_press();
-        return;
-    }
-
-    if (!add_mode && !ui_count) return;
 
     play_sound(SND_CONFIRM);
 
@@ -591,6 +591,8 @@ static void handle_a() {
         }
     }
 
+    if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
+
     if (load_message) {
         toast_message(lang.GENERIC.LOADING, 0);
         lv_obj_move_foreground(ui_pnlMessage);
@@ -611,17 +613,35 @@ static void handle_a() {
     mux_input_stop();
 }
 
+static void handle_a() {
+    process_load(0);
+}
+
+static void handle_a_alt() {
+    process_load(1);
+}
+
+static void handle_l2_hold() {
+    holding_cell = 1;
+}
+
+static void handle_l2_release() {
+    holding_cell = 0;
+}
+
 static void handle_b() {
+    if (key_show) {
+        close_osk(key_entry, ui_group, ui_txtEntry_collect, ui_pnlEntry_collect);
+        return;
+    }
+
+    if (holding_cell) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
-
-    if (key_show) {
-        close_osk(key_entry, ui_group, ui_txtEntry_collect, ui_pnlEntry_collect);
         return;
     }
 
@@ -658,7 +678,7 @@ static void handle_x() {
         return;
     }
 
-    if (msgbox_active || !ui_count || add_mode) return;
+    if (msgbox_active || !ui_count || add_mode || holding_cell) return;
 
     if (items[current_item_index].content_type == FOLDER) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {
@@ -687,12 +707,12 @@ static void handle_x() {
 }
 
 static void handle_y() {
-    if (msgbox_active) return;
-
     if (key_show) {
         key_swap();
         return;
     }
+
+    if (msgbox_active || holding_cell) return;
 
     if (!kiosk.COLLECT.NEW_DIR && at_base(sys_dir, access_mode)) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
@@ -708,7 +728,7 @@ static void handle_y() {
 }
 
 static void handle_menu() {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");
@@ -717,7 +737,7 @@ static void handle_menu() {
 }
 
 static void handle_random_select() {
-    if (msgbox_active || ui_count < 2) return;
+    if (msgbox_active || ui_count < 2 || holding_cell) return;
 
     uint32_t random_select = random() % ui_count;
     int selected_index = (int) (random_select & INT16_MAX);
@@ -981,7 +1001,6 @@ int muxcollect_main(int add, char *dir, int last_index) {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
                           (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
             .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
@@ -994,12 +1013,18 @@ int muxcollect_main(int add, char *dir, int last_index) {
                     [MUX_INPUT_R1] = handle_r1,
                     [MUX_INPUT_R2] = handle_random_select,
             },
+            .release_handler = {
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_L2] = handle_l2_release,
+            },
             .hold_handler = {
+                    [MUX_INPUT_A] = handle_a_alt,
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
+                    [MUX_INPUT_L2] = handle_l2_hold,
                     [MUX_INPUT_R1] = handle_r1,
                     [MUX_INPUT_R2] = handle_random_select,
             }

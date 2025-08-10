@@ -134,6 +134,7 @@
 
 #define PLAYTIME_DATA   "playtime_data.json"
 #define FRIENDLY_RESULT "/tmp/f_result.json"
+#define MANUAL_RA_LOAD  "/tmp/ra_no_load"
 #define APP_LAUNCHER    "mux_launch.sh"
 
 #define FONT_PANEL_FOLDER  "panel"

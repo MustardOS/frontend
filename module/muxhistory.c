@@ -345,7 +345,6 @@ static int load_content(const char *content_name) {
     return 0;
 }
 
-
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
     first_open ? (first_open = 0) : play_sound(SND_NAVIGATE);
@@ -379,8 +378,8 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
-    if (!ui_count) return;
+static void process_load(int from_start) {
+    if (!ui_count || holding_cell) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -424,12 +423,33 @@ static void handle_a() {
         return;
     }
 
+    if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
+
     load_mux("history");
+
     close_input();
     mux_input_stop();
 }
 
+static void handle_a() {
+    process_load(0);
+}
+
+static void handle_a_alt() {
+    process_load(1);
+}
+
+static void handle_l2_hold() {
+    holding_cell = 1;
+}
+
+static void handle_l2_release() {
+    holding_cell = 0;
+}
+
 static void handle_b() {
+    if (holding_cell) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -445,21 +465,21 @@ static void handle_b() {
 }
 
 static void handle_x() {
-    if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY) return;
+    if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY || holding_cell) return;
 
     play_sound(SND_CONFIRM);
     remove_from_history();
 }
 
 static void handle_y() {
-    if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON) return;
+    if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON || holding_cell) return;
 
     play_sound(SND_CONFIRM);
     add_to_collection();
 }
 
 static void handle_menu() {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");
@@ -468,7 +488,7 @@ static void handle_menu() {
 }
 
 static void handle_random_select() {
-    if (msgbox_active || ui_count < 2) return;
+    if (msgbox_active || ui_count < 2 || holding_cell) return;
 
     uint32_t random_select = random() % ui_count;
     int selected_index = (int) (random_select & INT16_MAX);
@@ -623,7 +643,6 @@ int muxhistory_main(int his_index) {
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
@@ -636,12 +655,18 @@ int muxhistory_main(int his_index) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
                     [MUX_INPUT_R2] = handle_random_select,
             },
+            .release_handler = {
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_L2] = handle_l2_release,
+            },
             .hold_handler = {
+                    [MUX_INPUT_A] = handle_a_alt,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = handle_l2_hold,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
                     [MUX_INPUT_R2] = handle_random_select,
             }
