@@ -120,10 +120,11 @@ static char *get_time_played() {
     if (!json_valid(json_str)) return lang.GENERIC.UNKNOWN;
 
     struct json fn_json = json_parse(json_str);
-    free(json_str);
 
     struct json playtime_json = json_object_get(fn_json, fullpath);
     if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
+
+    free(json_str);
 
     int total_time = json_int(json_object_get(playtime_json, "total_time"));
     int days = total_time / 86400;
