@@ -736,13 +736,13 @@ static void handle_menu() {
     show_info_box(items[current_item_index].display_name, load_content_description(), 1);
 }
 
-static void handle_random_select() {
+static void handle_random_select(void) {
     if (msgbox_active || ui_count < 2 || holding_cell || !config.VISUAL.SHUFFLE) return;
 
-    uint32_t random_select = random() % ui_count;
-    int selected_index = (int) (random_select & INT16_MAX);
+    int dir, target;
+    shuffle_index(current_item_index, &dir, &target);
 
-    !(selected_index & 1) ? list_nav_move(selected_index, +1) : list_nav_move(selected_index, -1);
+    list_nav_move(target, dir);
 }
 
 static void handle_up(void) {

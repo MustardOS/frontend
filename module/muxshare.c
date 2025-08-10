@@ -35,6 +35,15 @@ char box_image_previous_path[MAX_BUFFER_SIZE];
 char preview_image_previous_path[MAX_BUFFER_SIZE];
 char splash_image_previous_path[MAX_BUFFER_SIZE];
 
+void shuffle_index(int current, int *dir, int *target) {
+    do {
+        int ran = (int) (random() % (ui_count - 1));
+        *target = (ran >= current) ? ran + 1 : ran;
+    } while (*target == 0);
+
+    *dir = (*target > current) ? +1 : -1;
+}
+
 void adjust_box_art() {
     switch (config.VISUAL.BOX_ART) {
         case 0: // Behind

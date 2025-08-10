@@ -70,6 +70,8 @@ extern char box_image_previous_path[MAX_BUFFER_SIZE];
 extern char preview_image_previous_path[MAX_BUFFER_SIZE];
 extern char splash_image_previous_path[MAX_BUFFER_SIZE];
 
+void shuffle_index(int current, int *dir, int *target);
+
 void adjust_box_art();
 
 void setup_nav(struct nav_bar *nav_items);
