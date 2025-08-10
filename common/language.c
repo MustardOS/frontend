@@ -126,6 +126,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.NET_PROFILE, "Network Profiles");
     SPECIFIC_FIELD(lang->MUXBACKUP.SYNCTHING, "Syncthing Configs");
     SPECIFIC_FIELD(lang->MUXBACKUP.USER_INIT, "User Init Scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.ACTIVITY_TRACKER, "User Game Activity Tracker");
     SPECIFIC_FIELD(lang->MUXBACKUP.EXTERNAL, "Standalone Emulator Files");
     SPECIFIC_FIELD(lang->MUXBACKUP.MUOS_CONFIG, "muOS Settings");
     SPECIFIC_FIELD(lang->MUXBACKUP.PACKAGE.THEME, "Themes");
@@ -149,6 +150,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.NET_PROFILE, "Location of Network Profiles");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.SYNCTHING, "Location of Syncthing configurations");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.USER_INIT, "Location of User Initialisation scripts");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.ACTIVITY_TRACKER, "Location of user's Game Activity Tracker");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.EXTERNAL, "Location of External Emulator files (e.g. PPSSPP, Pico-8, Dreamcast, Drastic)");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MUOS_CONFIG, "Location of muOS Settings and Configuration");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.PACKAGE.THEME, "Location of themes");

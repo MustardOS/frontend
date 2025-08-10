@@ -778,6 +778,7 @@ struct mux_lang {
         char NET_PROFILE[MAX_BUFFER_SIZE];
         char SYNCTHING[MAX_BUFFER_SIZE];
         char USER_INIT[MAX_BUFFER_SIZE];
+        char ACTIVITY_TRACKER[MAX_BUFFER_SIZE];
         char EXTERNAL[MAX_BUFFER_SIZE];
         char MUOS_CONFIG[MAX_BUFFER_SIZE];
         char BACKUP_TARGET[MAX_BUFFER_SIZE];
@@ -804,6 +805,7 @@ struct mux_lang {
             char NET_PROFILE[MAX_BUFFER_SIZE];
             char SYNCTHING[MAX_BUFFER_SIZE];
             char USER_INIT[MAX_BUFFER_SIZE];
+            char ACTIVITY_TRACKER[MAX_BUFFER_SIZE];
             char EXTERNAL[MAX_BUFFER_SIZE];
             char MUOS_CONFIG[MAX_BUFFER_SIZE];
             char BACKUP_TARGET[MAX_BUFFER_SIZE];
