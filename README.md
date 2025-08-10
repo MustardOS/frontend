@@ -29,7 +29,10 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxcollect`: Content Collection Manager
 * `muxconfig`: Configuration Menu
 * `muxconnect`: Connectivity Menu
+* `muxcontrol`: Content Control Scheme Selector
 * `muxcustom`: Customisation Menu
+* `muxdanger`: Dangerous Settings
+* `muxdevice`: Device Settings
 * `muxgov`: System Governor Selector
 * `muxhdmi`: HDMI Configuration
 * `muxhistory`: Content History Menu
@@ -56,6 +59,7 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxtag`: Content Tag Manager
 * `muxtask`: Task Toolkit
 * `muxtester`: Input Tester
+* `muxtext`: Basic Text File Viewer
 * `muxtimezone`: Timezone Selector
 * `muxtweakadv`: Advanced Settings
 * `muxtweakgen`: General Settings
