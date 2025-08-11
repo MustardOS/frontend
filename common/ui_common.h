@@ -135,5 +135,5 @@ extern lv_obj_t *ui_pnlProgressVolume;
 extern lv_obj_t *ui_icoProgressVolume;
 extern lv_obj_t *ui_barProgressVolume;
 
-LV_IMG_DECLARE(ui_img_nothing_png);
-LV_IMG_DECLARE(ui_img_muoskofi_png);
+LV_IMG_DECLARE(ui_img_nothing_png)
+LV_IMG_DECLARE(ui_img_muoskofi_png)

@@ -770,7 +770,7 @@ void *joystick_handler(void *arg) {
     while (!stop) {
         int ret = poll(&pfd, 1, 100); // 100ms timeout
         if (ret == -1) {
-            LOG_ERROR("input", "poll() error on joystick");
+            LOG_ERROR("input", "poll() error on joystick")
             break;
         } else if (ret == 0) {
             continue; // timeout, re-check stop
