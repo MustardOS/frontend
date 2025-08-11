@@ -62,6 +62,7 @@ static void handle_idle(void) {
 
     if (exit_status >= 0) {
         write_text_to_file(CHARGER_EXIT, "w", INT, exit_status);
+        if (file_exist(CHARGER_BRIGHT)) remove(CHARGER_BRIGHT);
 
         close_input();
         safe_quit(0);
