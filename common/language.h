@@ -207,6 +207,11 @@ struct mux_lang {
             char THEME[MAX_BUFFER_SIZE];
         } SOUND;
         struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char PRESS_A[MAX_BUFFER_SIZE];
+            char HOLD_A[MAX_BUFFER_SIZE];
+        } LAUNCH_SWAP;
+        struct {
             char BOOTLOGO[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
@@ -219,6 +224,7 @@ struct mux_lang {
             char FADE[MAX_BUFFER_SIZE];
             char SPLASH[MAX_BUFFER_SIZE];
             char SHUFFLE[MAX_BUFFER_SIZE];
+            char LAUNCH_SWAP[MAX_BUFFER_SIZE];
             char FONT[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
             char SOUND[MAX_BUFFER_SIZE];

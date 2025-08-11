@@ -614,11 +614,11 @@ static void process_load(int from_start) {
 }
 
 static void handle_a(void) {
-    process_load(0);
+    process_load(config.VISUAL.LAUNCH_SWAP ? 1 : 0);
 }
 
-static void handle_a_alt(void) {
-    process_load(1);
+static void handle_a_hold(void) {
+    process_load(config.VISUAL.LAUNCH_SWAP ? 0 : 1);
 }
 
 static void handle_l2_hold(void) {
@@ -1018,7 +1018,7 @@ int muxcollect_main(int add, char *dir, int last_index) {
                     [MUX_INPUT_L2] = handle_l2_release,
             },
             .hold_handler = {
-                    [MUX_INPUT_A] = handle_a_alt,
+                    [MUX_INPUT_A] = handle_a_hold,
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,

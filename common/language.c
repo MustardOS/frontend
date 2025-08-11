@@ -246,6 +246,9 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.TITLE, "Navigation Sound");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.GLOBAL, "Global");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SOUND.THEME, "Theme");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.TITLE, "Content Save State Launch");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.PRESS_A, "Press A");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.LAUNCH_SWAP.HOLD_A, "Hold A");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CHIME, "Startup Chime");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOOTLOGO, "Load user created boot logos for your device");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
@@ -263,6 +266,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SOUND, "Toggle the navigation sound of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CHIME, "Toggle the startup chime of the frontend");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.SHUFFLE, "Toggles the ability to shuffle content using the R2 button");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.LAUNCH_SWAP, "Switch between pressing A or holding A to launch content save state automatically");
 
     // muxdanger
     SPECIFIC_FIELD(lang->MUXDANGER.TITLE, "DANGER SETTINGS");
