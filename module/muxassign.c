@@ -360,7 +360,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-static void ui_refresh_task(void) {
+static void ui_refresh_task() {
     if (nav_moved) {
         if (lv_group_get_obj_count(ui_group) > 0) adjust_wallpaper_element(ui_group, 0, GENERAL);
         adjust_panels();

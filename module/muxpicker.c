@@ -361,7 +361,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-static void ui_refresh_task(void) {
+static void ui_refresh_task() {
     if (ui_count > 0 && nav_moved) {
         image_refresh();
 

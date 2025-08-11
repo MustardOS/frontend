@@ -73,7 +73,7 @@ static void handle_idle(void) {
     refresh_screen(ui_scrCharge_charge);
 }
 
-static void battery_task_charge(void) {
+static void battery_task_charge() {
     check_for_cable();
     if (is_blank) return;
 

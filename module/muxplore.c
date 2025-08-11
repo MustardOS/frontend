@@ -925,7 +925,7 @@ static void init_elements(void) {
     overlay_display();
 }
 
-static void ui_refresh_task(void) {
+static void ui_refresh_task() {
     if (nav_moved) {
         starter_image = adjust_wallpaper_element(ui_group, starter_image, GENERAL);
         adjust_panels();
