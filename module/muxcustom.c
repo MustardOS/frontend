@@ -336,8 +336,10 @@ static void save_custom_options(void) {
             snprintf(rgb_script, sizeof(rgb_script),
                      "%s/alternate/rgb/%s/rgbconf.sh", STORAGE_THEME, theme_alt);
             if (file_exist(rgb_script)) {
-                const char *args[] = {rgb_script, NULL};
-                run_exec(args, A_SIZE(args), 0);
+                if (config.SETTINGS.GENERAL.RGB) {
+                    const char *args[] = {rgb_script, NULL};
+                    run_exec(args, A_SIZE(args), 0);
+                }
 
                 static char rgb_script_dest[MAX_BUFFER_SIZE];
                 snprintf(rgb_script_dest, sizeof(rgb_script_dest), "%s/rgb/rgbconf.sh", STORAGE_THEME);
