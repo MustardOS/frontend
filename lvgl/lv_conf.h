@@ -43,7 +43,7 @@ extern uint32_t mux_tick(void);
 
 /* Adjust color mix functions rounding. GPUs might calculate color mix (blending) differently.
  * 0: round down, 64: round up from x.75, 128: round up from half, 192: round up from x.25, 254: round up */
-#define LV_COLOR_MIX_ROUND_OFS 0
+#define LV_COLOR_MIX_ROUND_OFS 192
 
 /*Images pixels with this color will not be drawn if they are chroma keyed)*/
 #define LV_COLOR_CHROMA_KEY lv_color_hex(0x00ff00)
@@ -140,8 +140,8 @@ extern uint32_t mux_tick(void);
  * "Transformed layers" (where transform_angle/zoom properties are used) use larger buffers
  * and can't be drawn in chunks. So these settings affects only widgets with opacity.
  */
-#define LV_LAYER_SIMPLE_BUF_SIZE          (24 * 1024)
-#define LV_LAYER_SIMPLE_FALLBACK_BUF_SIZE (3 * 1024)
+#define LV_LAYER_SIMPLE_BUF_SIZE          (32 * 1024)
+#define LV_LAYER_SIMPLE_FALLBACK_BUF_SIZE (4 * 1024)
 
 /*Default image cache size. Image caching keeps the images opened.
  *If only the built-in image formats are used there is no real advantage of caching. (I.e. if no new image decoder is added)
@@ -164,12 +164,12 @@ extern uint32_t mux_tick(void);
 /*Allow dithering the gradients (to achieve visual smooth color gradients on limited color depth display)
  *LV_DITHER_GRADIENT implies allocating one or two more lines of the object's rendering surface
  *The increase in memory consumption is (32 bits * object width) plus 24 bits * object width if using error diffusion */
-#define LV_DITHER_GRADIENT      0
+#define LV_DITHER_GRADIENT      1
 #if LV_DITHER_GRADIENT
 /*Add support for error diffusion dithering.
  *Error diffusion dithering gets a much better visual result, but implies more CPU consumption and memory when drawing.
  *The increase in memory consumption is (24 bits * object's width)*/
-#define LV_DITHER_ERROR_DIFFUSION   0
+#define LV_DITHER_ERROR_DIFFUSION   1
 #endif
 
 /*Maximum buffer size to allocate for rotation.
