@@ -30,7 +30,7 @@ static void init_dropdown_settings(void) {
 #undef TWEAKGEN
 }
 
-static void update_volume_and_brightness(void) {
+static void update_volume_and_brightness() {
     char buffer[MAX_BUFFER_SIZE];
     CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
     CFG_INT_FIELD(config.SETTINGS.GENERAL.VOLUME, CONF_CONFIG_PATH "settings/general/volume", 75)

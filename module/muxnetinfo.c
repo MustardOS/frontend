@@ -269,7 +269,7 @@ static const char *get_tp_traffic(void) {
     return tp_traffic;
 }
 
-static void update_network_info(void) {
+static void update_network_info() {
     lv_label_set_text(ui_lblHostnameValue_netinfo, get_hostname());
     lv_label_set_text(ui_lblMacValue_netinfo, get_mac_address());
     lv_label_set_text(ui_lblIpValue_netinfo, get_ip_address());

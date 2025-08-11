@@ -177,7 +177,7 @@ const char *get_kernel_version(void) {
     return buffer;
 }
 
-static void update_system_info(void) {
+static void update_system_info() {
     lv_label_set_text(ui_lblVersionValue_sysinfo, get_build_version());
     lv_label_set_text(ui_lblDeviceValue_sysinfo, get_device_info());
     lv_label_set_text(ui_lblKernelValue_sysinfo, get_kernel_version());

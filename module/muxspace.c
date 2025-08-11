@@ -15,7 +15,7 @@ static void show_help(lv_obj_t *element_focused) {
     show_info_box(TS(lv_label_get_text(lv_group_get_focused(ui_group))), lang.MUXSPACE.HELP, 0);
 }
 
-static void update_storage_info(void) {
+static void update_storage_info() {
     struct mount storage_info[] = {
             {ui_pnlPrimary_space,   ui_pnlPrimaryBar_space,   ui_lblPrimaryValue_space,   ui_barPrimary_space,   device.STORAGE.ROM.MOUNT},
             {ui_pnlSecondary_space, ui_pnlSecondaryBar_space, ui_lblSecondaryValue_space, ui_barSecondary_space, device.STORAGE.SDCARD.MOUNT},
