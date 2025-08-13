@@ -75,6 +75,7 @@
 #define INFO_CNT_PATH RUN_STORAGE_PATH "info/controller"
 #define INFO_COL_PATH RUN_STORAGE_PATH "info/collection"
 #define INFO_CKS_PATH RUN_STORAGE_PATH "info/collection/kiosk"
+#define INFO_GCD_PATH RUN_STORAGE_PATH "info/gamecontrollerdb"
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
