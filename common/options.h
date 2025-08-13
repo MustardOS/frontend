@@ -105,6 +105,7 @@
 #define STORE_LOC_NAME MUOS_INFO_PATH "/name"
 #define STORE_LOC_CONF MUOS_INFO_PATH "/config"
 #define STORE_LOC_CORE MUOS_INFO_PATH "/core"
+#define STORE_LOC_GCDB MUOS_INFO_PATH "/gamecontrollerdb"
 #define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 #define STORE_LOC_PLAY MUOS_INFO_PATH "/track"
