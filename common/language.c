@@ -685,6 +685,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.RA_SYSTEM, "RetroArch System");
     SPECIFIC_FIELD(lang->MUXSTORAGE.RA_CONFIG, "RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXSTORAGE.ASSIGNED, "Assigned Core/Governor System");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.CONTROL_SCHEME, "Content Control Schemes");
     SPECIFIC_FIELD(lang->MUXSTORAGE.COLLECTION, "Content Collection");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXSTORAGE.MUSIC, "Background Music");
@@ -704,6 +705,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.RA_SYSTEM, "Location of the RetroArch emulator");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.RA_CONFIG, "Location of RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.ASSIGNED, "Location of assigned core and governor configurations");
+    SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.CONTROL_SCHEME, "Location of content control schemes");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.COLLECTION, "Location of content collection");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.HISTORY, "Location of history");
     SPECIFIC_FIELD(lang->MUXSTORAGE.HELP.MUSIC, "Location of background music");
