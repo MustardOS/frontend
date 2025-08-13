@@ -147,38 +147,6 @@ void extract_archive(char *filename) {
     free(exec);
 }
 
-unsigned long long total_file_size(const char *path) {
-    long long total_size = 0;
-    struct dirent *entry;
-
-    DIR *dir = opendir(path);
-    if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
-        return 0;
-    }
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            char full_path[PATH_MAX];
-            snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
-
-            struct stat file_stat;
-            if (stat(full_path, &file_stat) != -1) {
-                if (S_ISDIR(file_stat.st_mode)) {
-                    if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                        total_size += total_file_size(full_path);
-                    }
-                } else if (S_ISREG(file_stat.st_mode)) {
-                    total_size += file_stat.st_size;
-                }
-            }
-        }
-    }
-
-    closedir(dir);
-    return total_size;
-}
-
 int str_compare(const void *a, const void *b) {
     const char *str1 = *(const char **) a;
     const char *str2 = *(const char **) b;
@@ -1141,7 +1109,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
             default:
                 break;
         }
-        if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall", 
+        if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
                                          !strcmp(program, "muxlaunch") ? element : "default",
                                          "default", wall_extension, wall_image_path, sizeof(wall_image_path))) {
             int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1551,13 +1519,23 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     }
 }
 
+static void free_skip_patterns(void) {
+    for (size_t i = 0; i < skip_pattern_list.count; i++) free(skip_pattern_list.patterns[i]);
+    free(skip_pattern_list.patterns);
+    skip_pattern_list.patterns = NULL;
+    skip_pattern_list.count = 0;
+    skip_pattern_list.capacity = 0;
+}
+
 void load_skip_patterns(void) {
     char skip_ini[MAX_BUFFER_SIZE];
-    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.SDCARD.MOUNT, MUOS_INFO_PATH);
+    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini",
+                           device.STORAGE.SDCARD.MOUNT, MUOS_INFO_PATH);
     if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
 
     if (!file_exist(skip_ini)) {
-        written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+        written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini",
+                           device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
         if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
     }
 
@@ -1567,14 +1545,10 @@ void load_skip_patterns(void) {
         return;
     }
 
-    for (size_t i = 0; i < skip_pattern_list.count; i++) {
-        free(skip_pattern_list.patterns[i]);
-    }
-    free(skip_pattern_list.patterns);
+    free_skip_patterns();
 
-    skip_pattern_list.count = 0;
-    skip_pattern_list.capacity = 2;
-    skip_pattern_list.patterns = malloc(skip_pattern_list.capacity * sizeof(char *));
+    skip_pattern_list.capacity = 4;
+    skip_pattern_list.patterns = malloc(skip_pattern_list.capacity * sizeof *skip_pattern_list.patterns);
     if (!skip_pattern_list.patterns) {
         perror("malloc failed");
         fclose(file);
@@ -1582,26 +1556,31 @@ void load_skip_patterns(void) {
     }
 
     char line[MAX_BUFFER_SIZE];
-    while (fgets(line, sizeof(line), file)) {
+    while (fgets(line, sizeof line, file)) {
         size_t len = strlen(line);
-        if (len > 0 && line[len - 1] == '\n') {
-            line[len - 1] = '\0';
-        }
+        while (len && (line[len - 1] == '\n' || line[len - 1] == '\r')) line[--len] = '\0';
+
+        if (len == 0 || line[0] == '#') continue;
 
         if (skip_pattern_list.count >= skip_pattern_list.capacity) {
-            skip_pattern_list.capacity *= 2;
-            skip_pattern_list.patterns = realloc(skip_pattern_list.patterns,
-                                                 skip_pattern_list.capacity * sizeof(char *));
-            if (!skip_pattern_list.patterns) {
+            size_t newcap = skip_pattern_list.capacity * 2;
+            char **newptr = realloc(skip_pattern_list.patterns, newcap * sizeof *newptr);
+
+            if (!newptr) {
                 perror("realloc failed");
+                free_skip_patterns();
                 fclose(file);
                 return;
             }
+
+            skip_pattern_list.patterns = newptr;
+            skip_pattern_list.capacity = newcap;
         }
 
         skip_pattern_list.patterns[skip_pattern_list.count] = strdup(line);
         if (!skip_pattern_list.patterns[skip_pattern_list.count]) {
             perror("strdup failed");
+            free_skip_patterns();
             fclose(file);
             return;
         }
@@ -1611,11 +1590,17 @@ void load_skip_patterns(void) {
     fclose(file);
 }
 
-int should_skip(const char *name) {
+int should_skip(const char *name, int is_dir) {
     for (size_t i = 0; i < skip_pattern_list.count; i++) {
-        if (fnmatch(skip_pattern_list.patterns[i], name, 0) == 0) {
-            return 1;
+        const char *pat = skip_pattern_list.patterns[i];
+
+        // Directory only pattern if it starts with a '/'
+        if (pat[0] == '/') {
+            if (!is_dir) continue;
+            pat++;
         }
+
+        if (fnmatch(pat, name, 0) == 0) return 1;
     }
     return 0;
 }
@@ -2022,8 +2007,8 @@ void collect_subdirectories(const char *base_dir, char ***list, int *size, int *
     load_skip_patterns();
 
     while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            if (entry->d_type == DT_DIR) {
+        if (entry->d_type == DT_DIR) {
+            if (!should_skip(entry->d_name, 1)) {
                 if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
                     snprintf(subdir_path, sizeof(subdir_path), "%s/%s", base_dir, entry->d_name);
                     const char *trimmed_path = subdir_path + trim_start_count;

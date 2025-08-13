@@ -138,8 +138,6 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt);
 
 void extract_archive(char *filename);
 
-unsigned long long total_file_size(const char *path);
-
 int str_compare(const void *a, const void *b);
 
 int str_startswith(const char *a, const char *b);
@@ -278,7 +276,7 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element);
 
 void load_skip_patterns();
 
-int should_skip(const char *name);
+int should_skip(const char *name, int is_dir);
 
 void display_testing_message(lv_obj_t *screen);
 

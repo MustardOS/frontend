@@ -241,10 +241,10 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
     }
 
     while ((entry = readdir(dir))) {
-        if (!should_skip(entry->d_name)) {
-            char full_path[PATH_MAX];
-            snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
-            if (entry->d_type == DT_DIR) {
+        char full_path[PATH_MAX];
+        snprintf(full_path, sizeof(full_path), "%s/%s", base_dir, entry->d_name);
+        if (entry->d_type == DT_DIR) {
+            if (!should_skip(entry->d_name, 1)) {
                 if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
                     if (config.VISUAL.FOLDEREMPTY || get_directory_item_count(base_dir, entry->d_name, 1) != 0) {
                         char *subdir_path = (char *) malloc(strlen(entry->d_name) + 2);
@@ -255,7 +255,9 @@ static void add_directory_and_file_names(const char *base_dir, char ***dir_names
                         (dir_count)++;
                     }
                 }
-            } else if (entry->d_type == DT_REG) {
+            }
+        } else if (entry->d_type == DT_REG) {
+            if (!should_skip(entry->d_name, 0)) {
                 char *file_path = (char *) malloc(strlen(entry->d_name) + 2);
                 snprintf(file_path, strlen(entry->d_name) + 2, "%s", entry->d_name);
 

@@ -249,10 +249,12 @@ int32_t get_directory_item_count(const char *base_dir, const char *dir_name, int
 
     while ((entry = readdir(dir))) {
         if (run_skip) {
-            if (!should_skip(entry->d_name)) {
-                if (entry->d_type == DT_DIR) {
+            if (entry->d_type == DT_DIR) {
+                if (!should_skip(entry->d_name, 1)) {
                     if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) dir_count++;
-                } else if (entry->d_type == DT_REG) {
+                }
+            } else if (entry->d_type == DT_REG) {
+                if (!should_skip(entry->d_name, 0)) {
                     dir_count++;
                 }
             }
