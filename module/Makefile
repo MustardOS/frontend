@@ -39,7 +39,7 @@ MODULES = muxapp muxarchive muxassign muxbackup muxcollect muxconfig \
           muxhdmi muxhistory muxinfo muxkiosk muxlanguage muxlaunch \
           muxnetinfo muxnetprofile muxnetscan muxnetwork muxoption \
           muxpass muxpicker muxpower muxplore muxrtc muxsearch muxshot \
-          muxspace muxsplash muxstorage muxsysinfo muxtag muxtask \
+          muxspace muxsplash muxstorage muxsysinfo muxtag muxtask muxthemedownloader \
           muxtester muxtext muxtimezone muxtweakadv muxtweakgen \
           muxvisual muxwebserv muxshare
 MODULE_DIR = .

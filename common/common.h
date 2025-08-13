@@ -136,7 +136,7 @@ int directory_exist(char *dirname);
 
 const char **build_term_exec(const char **term_cmd, size_t *term_cnt);
 
-void extract_archive(char *filename);
+void extract_archive(char *filename, char *screen);
 
 unsigned long long total_file_size(const char *path);
 

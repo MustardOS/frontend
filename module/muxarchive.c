@@ -199,7 +199,7 @@ static void handle_a() {
 
         write_text_to_file(MUOS_IDX_LOAD, "w", INT, current_item_index);
 
-        extract_archive(items[current_item_index].name);
+        extract_archive(items[current_item_index].name, "archive");
 
         load_mux("archive");
 

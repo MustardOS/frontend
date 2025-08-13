@@ -134,6 +134,10 @@ extern lv_obj_t *ui_barProgressBrightness;
 extern lv_obj_t *ui_pnlProgressVolume;
 extern lv_obj_t *ui_icoProgressVolume;
 extern lv_obj_t *ui_barProgressVolume;
+extern lv_obj_t *ui_pnlDownload;
+extern lv_obj_t *ui_barDownload;
+extern lv_obj_t *ui_lblDownload;
+
 
 LV_IMG_DECLARE(ui_img_nothing_png);
 LV_IMG_DECLARE(ui_img_muoskofi_png);

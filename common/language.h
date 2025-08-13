@@ -36,6 +36,7 @@ struct mux_lang {
         char DISABLED[MAX_BUFFER_SIZE];
         char ENABLED[MAX_BUFFER_SIZE];
         char EXTRACT[MAX_BUFFER_SIZE];
+        char FILTER[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];
         char INFO[MAX_BUFFER_SIZE];
         char INSTALL[MAX_BUFFER_SIZE];
@@ -162,6 +163,7 @@ struct mux_lang {
         char BOOTLOGO[MAX_BUFFER_SIZE];
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
+        char THEME_DOWNLOADER[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
         char THEME_RESOLUTION[MAX_BUFFER_SIZE];
         char SCREEN[MAX_BUFFER_SIZE];
@@ -209,6 +211,7 @@ struct mux_lang {
             char BOOTLOGO[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
+            char THEME_DOWNLOADER[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
             char THEME_RESOLUTION[MAX_BUFFER_SIZE];
             char THEME_ALTERNATE[MAX_BUFFER_SIZE];
@@ -624,6 +627,20 @@ struct mux_lang {
             char GENERAL[MAX_BUFFER_SIZE];
         } ERROR;
     } MUXPLORE;
+
+    struct {
+        char TITLE[MAX_BUFFER_SIZE];
+        char REFRESH[MAX_BUFFER_SIZE];
+        char REFRESH_RUN[MAX_BUFFER_SIZE];
+        char THEME_REMOVED[MAX_BUFFER_SIZE];
+        char NONE[MAX_BUFFER_SIZE];
+        char DOWNLOAD[MAX_BUFFER_SIZE];
+        char DOWNLOADING_THEME[MAX_BUFFER_SIZE];
+        char DOWNLOADING_THEME_DATA[MAX_BUFFER_SIZE];
+        char DOWNLOADING_THEME_PREVIEWS[MAX_BUFFER_SIZE];
+        char REMOVE[MAX_BUFFER_SIZE];
+        char ERROR_RETRIEVING_THEME_DATA[MAX_BUFFER_SIZE];
+    } MUXTHEMEDOWNLOADER;
 
     struct {
         char TITLE[MAX_BUFFER_SIZE];

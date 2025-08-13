@@ -167,6 +167,8 @@ int muxtag_main(int nothing, char *name, char *dir, char *sys);
 
 int muxtask_main(char *ex_dir);
 
+int muxthemedownloader_main();
+
 int muxtester_main();
 
 int muxtimezone_main();

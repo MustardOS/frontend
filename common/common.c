@@ -135,9 +135,9 @@ const char **build_term_exec(const char **term_cmd, size_t *term_cnt) {
     return exec;
 }
 
-void extract_archive(char *filename) {
+void extract_archive(char *filename, char *screen) {
     size_t exec_count;
-    const char *args[] = {(INTERNAL_PATH "script/mux/extract.sh"), filename, NULL};
+    const char *args[] = {(INTERNAL_PATH "script/mux/extract.sh"), filename, screen, NULL};
     const char **exec = build_term_exec(args, &exec_count);
 
     if (exec) {

@@ -19,7 +19,7 @@ CC = ccache $(CROSS_COMPILE)gcc -O3 -pipe
 CFLAGS = $(ARCH) -flto=auto -ffunction-sections -fdata-sections \
 	-flto -finline-functions -Wall -Wno-format-zero-length -fPIC
 
-LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lpthread -Wl,--gc-sections -s
+LDFLAGS = $(CFLAGS) -lSDL2 -lSDL2_mixer -lcurl -lpthread -Wl,--gc-sections -s
 
 EXTRA = $(LDFLAGS) -fno-exceptions -fno-stack-protector -fomit-frame-pointer \
 	-fmerge-all-constants -fno-ident -ffast-math -funroll-loops -falign-functions
