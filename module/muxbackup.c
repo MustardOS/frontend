@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxbackup.h"
 
-#define UI_COUNT 24
+#define UI_COUNT 25
 #define STORAGE_COUNT (UI_COUNT - 2)
 #define START_BACKUP_INDEX (UI_COUNT - 1)
 #define BACKUP_TARGET_INDEX (UI_COUNT - 2)
@@ -26,6 +26,7 @@ static void show_help(lv_obj_t *element_focused) {
         {ui_lblRetroArch_backup,        lang.MUXBACKUP.HELP.RA_SYSTEM},
         {ui_lblConfig_backup,           lang.MUXBACKUP.HELP.RA_CONFIG},
         {ui_lblCore_backup,             lang.MUXBACKUP.HELP.ASSIGNED},
+        {ui_lblScheme_backup,           lang.MUXBACKUP.HELP.CONTROL_SCHEME},
         {ui_lblCollection_backup,       lang.MUXBACKUP.HELP.COLLECTION},
         {ui_lblHistory_backup,          lang.MUXBACKUP.HELP.HISTORY},
         {ui_lblMusic_backup,            lang.MUXBACKUP.HELP.MUSIC},
@@ -79,69 +80,73 @@ static void update_backup_info(void) {
     backup_path[5].ui_label = ui_lblCoreValue_backup;
     backup_path[5].shortname = "Core";
 
-    backup_path[6].path_suffix = STORE_LOC_COLL;
-    backup_path[6].ui_label = ui_lblCollectionValue_backup;
-    backup_path[6].shortname = "Collection";
+    backup_path[6].path_suffix = STORE_LOC_GCDB;
+    backup_path[6].ui_label = ui_lblSchemeValue_backup;
+    backup_path[6].shortname = "GameControllerDB";
 
-    backup_path[7].path_suffix = STORE_LOC_HIST;
-    backup_path[7].ui_label = ui_lblHistoryValue_backup;
-    backup_path[7].shortname = "History";
+    backup_path[7].path_suffix = STORE_LOC_COLL;
+    backup_path[7].ui_label = ui_lblCollectionValue_backup;
+    backup_path[7].shortname = "Collection";
 
-    backup_path[8].path_suffix = STORE_LOC_MUSC;
-    backup_path[8].ui_label = ui_lblMusicValue_backup;
-    backup_path[8].shortname = "Music";
+    backup_path[8].path_suffix = STORE_LOC_HIST;
+    backup_path[8].ui_label = ui_lblHistoryValue_backup;
+    backup_path[8].shortname = "History";
 
-    backup_path[9].path_suffix = STORE_LOC_SAVE;
-    backup_path[9].ui_label = ui_lblSaveValue_backup;
-    backup_path[9].shortname = "Save";
+    backup_path[9].path_suffix = STORE_LOC_MUSC;
+    backup_path[9].ui_label = ui_lblMusicValue_backup;
+    backup_path[9].shortname = "Music";
 
-    backup_path[10].path_suffix = STORE_LOC_SCRS;
-    backup_path[10].ui_label = ui_lblScreenshotValue_backup;
-    backup_path[10].shortname = "Screenshot";
+    backup_path[10].path_suffix = STORE_LOC_SAVE;
+    backup_path[10].ui_label = ui_lblSaveValue_backup;
+    backup_path[10].shortname = "Save";
 
-    backup_path[11].path_suffix = STORE_LOC_THEM;
-    backup_path[11].ui_label = ui_lblThemeValue_backup;
-    backup_path[11].shortname = "Theme";
+    backup_path[11].path_suffix = STORE_LOC_SCRS;
+    backup_path[11].ui_label = ui_lblScreenshotValue_backup;
+    backup_path[11].shortname = "Screenshot";
 
-    backup_path[12].path_suffix = STORE_LOC_PCAT;
-    backup_path[12].ui_label = ui_lblCataloguePackageValue_backup;
-    backup_path[12].shortname = "CataloguePkg";
+    backup_path[12].path_suffix = STORE_LOC_THEM;
+    backup_path[12].ui_label = ui_lblThemeValue_backup;
+    backup_path[12].shortname = "Theme";
 
-    backup_path[13].path_suffix = STORE_LOC_PCON;
-    backup_path[13].ui_label = ui_lblConfigPackageValue_backup;
-    backup_path[13].shortname = "ConfigPkg";
+    backup_path[13].path_suffix = STORE_LOC_PCAT;
+    backup_path[13].ui_label = ui_lblCataloguePackageValue_backup;
+    backup_path[13].shortname = "CataloguePkg";
 
-    backup_path[14].path_suffix = STORE_LOC_PLOG;
-    backup_path[14].ui_label = ui_lblBootlogoPackageValue_backup;
-    backup_path[14].shortname = "BootlogoPkg";
+    backup_path[14].path_suffix = STORE_LOC_PCON;
+    backup_path[14].ui_label = ui_lblConfigPackageValue_backup;
+    backup_path[14].shortname = "ConfigPkg";
 
-    backup_path[15].path_suffix = STORE_LOC_LANG;
-    backup_path[15].ui_label = ui_lblLanguageValue_backup;
-    backup_path[15].shortname = "Language";
+    backup_path[15].path_suffix = STORE_LOC_PLOG;
+    backup_path[15].ui_label = ui_lblBootlogoPackageValue_backup;
+    backup_path[15].shortname = "BootlogoPkg";
 
-    backup_path[16].path_suffix = STORE_LOC_NETW;
-    backup_path[16].ui_label = ui_lblNetworkValue_backup;
-    backup_path[16].shortname = "Network";
+    backup_path[16].path_suffix = STORE_LOC_LANG;
+    backup_path[16].ui_label = ui_lblLanguageValue_backup;
+    backup_path[16].shortname = "Language";
 
-    backup_path[17].path_suffix = STORE_LOC_SYCT;
-    backup_path[17].ui_label = ui_lblSyncthingValue_backup;
-    backup_path[17].shortname = "Syncthing";
+    backup_path[17].path_suffix = STORE_LOC_NETW;
+    backup_path[17].ui_label = ui_lblNetworkValue_backup;
+    backup_path[17].shortname = "Network";
 
-    backup_path[18].path_suffix = STORE_LOC_INIT;
-    backup_path[18].ui_label = ui_lblUserInitValue_backup;
-    backup_path[18].shortname = "UserInit";
+    backup_path[18].path_suffix = STORE_LOC_SYCT;
+    backup_path[18].ui_label = ui_lblSyncthingValue_backup;
+    backup_path[18].shortname = "Syncthing";
 
-    backup_path[19].path_suffix = STORE_LOC_ACTI;
-    backup_path[19].ui_label = ui_lblActivityTrackerValue_backup;
-    backup_path[19].shortname = "ActivityTracker";
+    backup_path[19].path_suffix = STORE_LOC_INIT;
+    backup_path[19].ui_label = ui_lblUserInitValue_backup;
+    backup_path[19].shortname = "UserInit";
 
-    backup_path[20].path_suffix = ".";
-    backup_path[20].ui_label = ui_lblExternalValue_backup;
-    backup_path[20].shortname = "External";
+    backup_path[20].path_suffix = STORE_LOC_ACTI;
+    backup_path[20].ui_label = ui_lblActivityTrackerValue_backup;
+    backup_path[20].shortname = "ActivityTracker";
 
     backup_path[21].path_suffix = ".";
-    backup_path[21].ui_label = ui_lblMuosConfigValue_backup;
-    backup_path[21].shortname = "MuosConfig";
+    backup_path[21].ui_label = ui_lblExternalValue_backup;
+    backup_path[21].shortname = "External";
+
+    backup_path[22].path_suffix = ".";
+    backup_path[22].ui_label = ui_lblMuosConfigValue_backup;
+    backup_path[22].shortname = "MuosConfig";
 
     char dir[FILENAME_MAX];
     for (int i = 0; i < A_SIZE(backup_path); i++) {
@@ -172,6 +177,7 @@ static void init_navigation_group(void) {
     INIT_VALUE_ITEM(-1, backup, RetroArch,        lang.MUXBACKUP.RA_SYSTEM,         "retroarch",       "");
     INIT_VALUE_ITEM(-1, backup, Config,           lang.MUXBACKUP.RA_CONFIG,         "config",          "");
     INIT_VALUE_ITEM(-1, backup, Core,             lang.MUXBACKUP.ASSIGNED,          "core",            "");
+    INIT_VALUE_ITEM(-1, backup, Scheme,           lang.MUXBACKUP.CONTROL_SCHEME,    "scheme",          "");
     INIT_VALUE_ITEM(-1, backup, Collection,       lang.MUXBACKUP.COLLECTION,        "collection",      "");
     INIT_VALUE_ITEM(-1, backup, History,          lang.MUXBACKUP.HISTORY,           "history",         "");
     INIT_VALUE_ITEM(-1, backup, Music,            lang.MUXBACKUP.MUSIC,             "music",           "");

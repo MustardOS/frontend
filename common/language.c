@@ -117,6 +117,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.RA_SYSTEM, "RetroArch System");
     SPECIFIC_FIELD(lang->MUXBACKUP.RA_CONFIG, "RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXBACKUP.ASSIGNED, "Assigned Core/Governor System");
+    SPECIFIC_FIELD(lang->MUXBACKUP.CONTROL_SCHEME, "Content Control Schemes");
     SPECIFIC_FIELD(lang->MUXBACKUP.COLLECTION, "Content Collection");
     SPECIFIC_FIELD(lang->MUXBACKUP.HISTORY, "History");
     SPECIFIC_FIELD(lang->MUXBACKUP.MUSIC, "Background Music");
@@ -141,6 +142,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.RA_SYSTEM, "Location of the RetroArch emulator");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.RA_CONFIG, "Location of RetroArch configurations");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.ASSIGNED, "Location of assigned core and governor configurations");
+    SPECIFIC_FIELD(lang->MUXBACKUP.HELP.CONTROL_SCHEME, "Location of content control schemes");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.COLLECTION, "Location of content collection");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.HISTORY, "Location of history");
     SPECIFIC_FIELD(lang->MUXBACKUP.HELP.MUSIC, "Location of background music");

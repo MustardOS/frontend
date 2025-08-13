@@ -52,6 +52,7 @@
     BACKUP(RetroArch,        "retroarch")      \
     BACKUP(Config,           "config")         \
     BACKUP(Core,             "core")           \
+    BACKUP(Scheme,           "scheme")         \
     BACKUP(Collection,       "collection")     \
     BACKUP(History,          "history")        \
     BACKUP(Music,            "music")          \
@@ -264,6 +265,7 @@
     STORAGE(RetroArch,        "retroarch")      \
     STORAGE(Config,           "config")         \
     STORAGE(Core,             "core")           \
+    STORAGE(Scheme,           "scheme")         \
     STORAGE(Collection,       "collection")     \
     STORAGE(History,          "history")        \
     STORAGE(Music,            "music")          \

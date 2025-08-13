@@ -727,6 +727,7 @@ struct mux_lang {
         char RA_SYSTEM[MAX_BUFFER_SIZE];
         char RA_CONFIG[MAX_BUFFER_SIZE];
         char ASSIGNED[MAX_BUFFER_SIZE];
+        char CONTROL_SCHEME[MAX_BUFFER_SIZE];
         char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char MUSIC[MAX_BUFFER_SIZE];
@@ -749,6 +750,7 @@ struct mux_lang {
             char RA_SYSTEM[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
             char ASSIGNED[MAX_BUFFER_SIZE];
+            char CONTROL_SCHEME[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
@@ -775,6 +777,7 @@ struct mux_lang {
         char RA_SYSTEM[MAX_BUFFER_SIZE];
         char RA_CONFIG[MAX_BUFFER_SIZE];
         char ASSIGNED[MAX_BUFFER_SIZE];
+        char CONTROL_SCHEME[MAX_BUFFER_SIZE];
         char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char MUSIC[MAX_BUFFER_SIZE];
@@ -802,6 +805,7 @@ struct mux_lang {
             char RA_SYSTEM[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
             char ASSIGNED[MAX_BUFFER_SIZE];
+            char CONTROL_SCHEME[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
