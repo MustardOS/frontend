@@ -60,6 +60,8 @@ This is where all the magic of the user interface of MustardOS (muOS) comes to l
 * `muxtask`: Task Toolkit
 * `muxtester`: Input Tester
 * `muxtext`: Basic Text File Viewer
+* `muxthemedownloader`: Custom Theme Downloader
+* `muxthemefilter`: Custom Theme Filter Selector
 * `muxtimezone`: Timezone Selector
 * `muxtweakadv`: Advanced Settings
 * `muxtweakgen`: General Settings
