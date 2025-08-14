@@ -6,16 +6,16 @@
 static char lookup_original_value[MAX_BUFFER_SIZE];
 
 #define THEMEFILTER(NAME, UDATA) static int NAME##_original;
-    THEMEFILTER_ELEMENTS
+THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 
 static void show_help(lv_obj_t *element_focused) {
     struct help_msg help_messages[] = {
-            {ui_lblAllThemes_themefilter,   lang.MUXTHEMEFILTER.HELP.THEME_COMPATIBILITY},
-            {ui_lblGrid_themefilter,        lang.MUXTHEMEFILTER.HELP.GRID},
-            {ui_lblHdmi_themefilter,        lang.MUXTHEMEFILTER.HELP.HDMI},
-            {ui_lblLanguage_themefilter,    lang.MUXTHEMEFILTER.HELP.LANGUAGE},
-            {ui_lblLookup_themefilter,      lang.MUXTHEMEFILTER.HELP.LOOKUP},
+            {ui_lblAllThemes_themefilter, lang.MUXTHEMEFILTER.HELP.THEME_COMPATIBILITY},
+            {ui_lblGrid_themefilter,      lang.MUXTHEMEFILTER.HELP.GRID},
+            {ui_lblHdmi_themefilter,      lang.MUXTHEMEFILTER.HELP.HDMI},
+            {ui_lblLanguage_themefilter,  lang.MUXTHEMEFILTER.HELP.LANGUAGE},
+            {ui_lblLookup_themefilter,    lang.MUXTHEMEFILTER.HELP.LOOKUP},
     };
 
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
@@ -42,7 +42,7 @@ static void save_theme_filter_options() {
     CHECK_AND_SAVE_STD(themefilter, Hdmi, "themefilter/hdmi", INT, 0);
     CHECK_AND_SAVE_STD(themefilter, Language, "themefilter/language", INT, 0);
 
-    if (strcmp(lookup_original_value, lv_label_get_text(ui_lblLookupValue_themefilter)) != 0 ) {
+    if (strcmp(lookup_original_value, lv_label_get_text(ui_lblLookupValue_themefilter)) != 0) {
         is_modified++;
         write_text_to_file((CONF_CONFIG_PATH "themefilter/lookup"), "w", CHAR,
                            lv_label_get_text(ui_lblLookupValue_themefilter));
@@ -61,17 +61,19 @@ static void init_navigation_group() {
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
     static lv_obj_t *ui_objects_panel[UI_COUNT];
 
-    char *theme_compatibility_options[] = {
-        lang.MUXTHEMEFILTER.THEME_COMPATIBILITY_OPTIONS.DEVICE,
-        lang.MUXTHEMEFILTER.THEME_COMPATIBILITY_OPTIONS.ALL,
+    char *theme_compat_opt[] = {
+            lang.MUXTHEMEFILTER.THEME_COMPATIBILITY_OPTIONS.DEVICE,
+            lang.MUXTHEMEFILTER.THEME_COMPATIBILITY_OPTIONS.ALL,
     };
 
-    INIT_OPTION_ITEM(-1, themefilter, AllThemes, lang.MUXTHEMEFILTER.THEME_COMPATIBILITY, "theme", theme_compatibility_options, 2);
+    INIT_OPTION_ITEM(-1, themefilter, AllThemes, lang.MUXTHEMEFILTER.THEME_COMPATIBILITY, "theme", theme_compat_opt, 2);
     INIT_OPTION_ITEM(-1, themefilter, Grid, lang.MUXTHEMEFILTER.GRID, "grid", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, themefilter, Hdmi, lang.MUXTHEMEFILTER.HDMI, "hdmi", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, themefilter, Language, lang.MUXTHEMEFILTER.LANGUAGE, "language", disabled_enabled, 2);
+
     INIT_VALUE_ITEM(-1, themefilter, Lookup, lang.MUXTHEMEFILTER.LOOKUP, "lookup", config.THEME_FILTER.LOOKUP);
-    snprintf(lookup_original_value, sizeof(lookup_original_value), config.THEME_FILTER.LOOKUP);
+
+    snprintf(lookup_original_value, sizeof(lookup_original_value), "%s", config.THEME_FILTER.LOOKUP);
 
     ui_group = lv_group_create();
     ui_group_value = lv_group_create();
@@ -134,7 +136,8 @@ static void list_nav_next(int steps) {
 static void handle_option_prev(void) {
     if (msgbox_active) return;
 
-    if (lv_group_get_focused(ui_group) != ui_lblLookup_themefilter) decrease_option_value(lv_group_get_focused(ui_group_value));
+    if (lv_group_get_focused(ui_group) != ui_lblLookup_themefilter)
+        decrease_option_value(lv_group_get_focused(ui_group_value));
 }
 
 static void handle_keyboard_OK_press(void) {
@@ -142,8 +145,7 @@ static void handle_keyboard_OK_press(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblLookup_themefilter) {
-        lv_label_set_text(ui_lblLookupValue_themefilter,
-                          lv_textarea_get_text(ui_txtEntry_themefilter));
+        lv_label_set_text(ui_lblLookupValue_themefilter, lv_textarea_get_text(ui_txtEntry_themefilter));
     }
 
     reset_osk(key_entry);
@@ -173,12 +175,13 @@ static void handle_keyboard_press(void) {
 static void handle_option_next(void) {
     if (msgbox_active) return;
 
-    if (lv_group_get_focused(ui_group) != ui_lblLookup_themefilter) increase_option_value(lv_group_get_focused(ui_group_value));
+    if (lv_group_get_focused(ui_group) != ui_lblLookup_themefilter)
+        increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
 static void handle_confirm(void) {
     play_sound(SND_CONFIRM);
-    
+
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
 
     if (element_focused == ui_lblLookup_themefilter) {
@@ -337,12 +340,12 @@ int muxthemefilter_main() {
     init_theme(1, 0);
     init_ui_common_screen(&theme, &device, &lang, lang.MUXTHEMEFILTER.TITLE);
     init_muxthemefilter(ui_screen, ui_pnlContent, &theme);
-    
+
     init_elements();
     lv_obj_set_user_data(ui_screen, mux_module);
     lv_label_set_text(ui_lblDatetime, get_datetime());
     load_wallpaper(ui_screen, NULL, ui_pnlWall, ui_imgWall, GENERAL);
-    
+
     init_fonts();
     init_navigation_group();
 

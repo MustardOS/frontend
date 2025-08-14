@@ -13,4 +13,5 @@ extern bool cancel_download;
 extern bool download_in_progress;
 
 void set_download_callbacks(void (*callback)(int));
+
 void initiate_download(const char *url, const char *output_path, bool showProgress, char *message);

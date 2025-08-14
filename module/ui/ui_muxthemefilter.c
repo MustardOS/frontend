@@ -23,7 +23,7 @@ void init_muxthemefilter(lv_obj_t *ui_screen, lv_obj_t *ui_pnlContent, struct th
     THEMEFILTER_ELEMENTS
 #undef THEMEFILTER
 
-CREATE_VALUE_ITEM(themefilter, Lookup);
+    CREATE_VALUE_ITEM(themefilter, Lookup);
 
     ui_pnlEntry_themefilter = lv_obj_create(ui_screen);
     lv_obj_set_width(ui_pnlEntry_themefilter, device.MUX.WIDTH);
@@ -51,7 +51,8 @@ CREATE_VALUE_ITEM(themefilter, Lookup);
     lv_textarea_set_max_length(ui_txtEntry_themefilter, 1024);
     lv_textarea_set_one_line(ui_txtEntry_themefilter, true);
     lv_obj_set_style_radius(ui_txtEntry_themefilter, theme->OSK.RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_txtEntry_themefilter, lv_color_hex(theme->OSK.BORDER), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_txtEntry_themefilter, lv_color_hex(theme->OSK.BORDER),
+                                  LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_txtEntry_themefilter, theme->OSK.BORDER_ALPHA, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_txtEntry_themefilter, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
 }

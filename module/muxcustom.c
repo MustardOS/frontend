@@ -219,7 +219,7 @@ static void init_navigation_group(void) {
 static void check_focus(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBootlogo_custom || element_focused == ui_lblCatalogue_custom ||
-        element_focused == ui_lblConfig_custom || element_focused == ui_lblThemeDownloader_custom || 
+        element_focused == ui_lblConfig_custom || element_focused == ui_lblThemeDownloader_custom ||
         element_focused == ui_lblTheme_custom) {
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -417,7 +417,7 @@ static void handle_confirm(void) {
             close_input();
             mux_input_stop();
 
-            break;            
+            break;
         } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 kiosk_denied();
