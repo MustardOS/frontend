@@ -66,6 +66,7 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.LED, CONF_CONFIG_PATH "settings/advanced/led", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.THEME, CONF_CONFIG_PATH "settings/advanced/random_theme", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROWAIT, CONF_CONFIG_PATH "settings/advanced/retrowait", 0)
+    CFG_INT_FIELD(config->SETTINGS.ADVANCED.RETROFREE, CONF_CONFIG_PATH "settings/advanced/retrofree", 0)
     CFG_STR_FIELD(config->SETTINGS.ADVANCED.USBFUNCTION, CONF_CONFIG_PATH "settings/advanced/usb_function", "none")
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.VERBOSE, CONF_CONFIG_PATH "settings/advanced/verbose", 0)
     CFG_INT_FIELD(config->SETTINGS.ADVANCED.RUMBLE, CONF_CONFIG_PATH "settings/advanced/rumble", 0)

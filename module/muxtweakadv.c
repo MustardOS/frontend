@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxtweakadv.h"
 
-#define UI_COUNT 21
+#define UI_COUNT 22
 
 #define TWEAKADV(NAME, UDATA) static int NAME##_original;
     TWEAKADV_ELEMENTS
@@ -19,6 +19,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblLed_tweakadv,         lang.MUXTWEAKADV.HELP.LED},
             {ui_lblTheme_tweakadv,       lang.MUXTWEAKADV.HELP.RANDOM},
             {ui_lblRetroWait_tweakadv,   lang.MUXTWEAKADV.HELP.NET_WAIT},
+            {ui_lblRetroFree_tweakadv,   lang.MUXTWEAKADV.HELP.RA_FREE},
             {ui_lblVerbose_tweakadv,     lang.MUXTWEAKADV.HELP.VERBOSE},
             {ui_lblRumble_tweakadv,      lang.MUXTWEAKADV.HELP.RUMBLE},
             {ui_lblUserInit_tweakadv,    lang.MUXTWEAKADV.HELP.USER_INIT},
@@ -59,6 +60,7 @@ static void restore_tweak_options(void) {
     lv_dropdown_set_selected(ui_droLed_tweakadv, config.SETTINGS.ADVANCED.LED);
     lv_dropdown_set_selected(ui_droTheme_tweakadv, config.SETTINGS.ADVANCED.THEME);
     lv_dropdown_set_selected(ui_droRetroWait_tweakadv, config.SETTINGS.ADVANCED.RETROWAIT);
+    lv_dropdown_set_selected(ui_droRetroFree_tweakadv, config.SETTINGS.ADVANCED.RETROFREE);
     lv_dropdown_set_selected(ui_droVerbose_tweakadv, config.SETTINGS.ADVANCED.VERBOSE);
     lv_dropdown_set_selected(ui_droRumble_tweakadv, config.SETTINGS.ADVANCED.RUMBLE);
     lv_dropdown_set_selected(ui_droUserInit_tweakadv, config.SETTINGS.ADVANCED.USERINIT);
@@ -84,6 +86,7 @@ static void save_tweak_options(void) {
     CHECK_AND_SAVE_STD(tweakadv, Led, "settings/advanced/led", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Theme, "settings/advanced/random_theme", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, RetroWait, "settings/advanced/retrowait", INT, 0);
+    CHECK_AND_SAVE_STD(tweakadv, RetroFree, "settings/advanced/retrofree", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Verbose, "settings/advanced/verbose", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, Rumble, "settings/advanced/rumble", INT, 0);
     CHECK_AND_SAVE_STD(tweakadv, UserInit, "settings/advanced/user_init", INT, 0);
@@ -171,6 +174,7 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, tweakadv, Led, lang.MUXTWEAKADV.LED, "led", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Theme, lang.MUXTWEAKADV.RANDOM, "theme", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, RetroWait, lang.MUXTWEAKADV.NET_WAIT, "retrowait", disabled_enabled, 2);
+    INIT_OPTION_ITEM(-1, tweakadv, RetroFree, lang.MUXTWEAKADV.RA_FREE, "retrofree", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Verbose, lang.MUXTWEAKADV.VERBOSE, "verbose", disabled_enabled, 2);
     INIT_OPTION_ITEM(-1, tweakadv, Rumble, lang.MUXTWEAKADV.RUMBLE.TITLE, "rumble", rumble_options, 7);
     INIT_OPTION_ITEM(-1, tweakadv, UserInit, lang.MUXTWEAKADV.USER_INIT, "userinit", disabled_enabled, 2);

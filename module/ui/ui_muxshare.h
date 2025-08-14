@@ -312,6 +312,7 @@
     TWEAKADV(Led,         "led")         \
     TWEAKADV(Theme,       "theme")       \
     TWEAKADV(RetroWait,   "retrowait")   \
+    TWEAKADV(RetroFree,   "retrofree")   \
     TWEAKADV(Verbose,     "verbose")     \
     TWEAKADV(Rumble,      "rumble")      \
     TWEAKADV(UserInit,    "userinit")    \
