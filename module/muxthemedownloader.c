@@ -21,7 +21,6 @@ static void image_refresh(char *image_type) {
     if (!strcasecmp(image_type, "box") && config.VISUAL.BOX_ART == 8) return;
 
     char image[MAX_BUFFER_SIZE];
-    char image_path[MAX_BUFFER_SIZE];
     char *core_artwork = "theme";
 
     load_image_catalogue(core_artwork, theme_items[current_item_index].name, "default", mux_dimension,
@@ -55,8 +54,13 @@ static void image_refresh(char *image_type) {
         if (strcasecmp(box_image_previous_path, image) != 0) {
             if (file_exist(image)) {
                 starter_image = 1;
-                snprintf(image_path, sizeof(image_path), "M:%s", image);
-                lv_img_set_src(ui_imgBox, image_path);
+                struct ImageSettings image_settings = {
+                        image, config.VISUAL.BOX_ART_ALIGN,
+                        validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
+                        validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
+                        theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT, theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
+                };
+                update_image(ui_imgBox, image_settings);                
                 snprintf(box_image_previous_path, sizeof(box_image_previous_path), "%s", image);
             } else {
                 lv_img_set_src(ui_imgBox, &ui_image_Nothing);
