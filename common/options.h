@@ -140,6 +140,8 @@
 #define MANUAL_RA_LOAD  "/tmp/ra_no_load"
 #define APP_LAUNCHER    "mux_launch.sh"
 
+#define THEME_DATA   "theme_data.json"
+
 #define FONT_PANEL_FOLDER  "panel"
 #define FONT_HEADER_FOLDER "header"
 #define FONT_FOOTER_FOLDER "footer"

@@ -52,6 +52,7 @@ void load_lang(struct mux_lang *lang) {
     GENERIC_FIELD(lang->GENERIC.DISABLED, "Disabled");
     GENERIC_FIELD(lang->GENERIC.ENABLED, "Enabled");
     GENERIC_FIELD(lang->GENERIC.EXTRACT, "Extract");
+    GENERIC_FIELD(lang->GENERIC.FILTER, "Filter");
     GENERIC_FIELD(lang->GENERIC.INDIVIDUAL, "Individual");
     GENERIC_FIELD(lang->GENERIC.INFO, "Info");
     GENERIC_FIELD(lang->GENERIC.INSTALL, "Install");
@@ -216,6 +217,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.BOOTLOGO, "Bootlogo Images");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CATALOGUE, "Catalogue Sets");
     SPECIFIC_FIELD(lang->MUXCUSTOM.CONFIG, "RetroArch Configurations");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_DOWNLOADER, "Theme Downloader");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME, "Theme Picker");
     SPECIFIC_FIELD(lang->MUXCUSTOM.THEME_RESOLUTION, "Theme Resolution");
     SPECIFIC_FIELD(lang->MUXCUSTOM.SCREEN, "Screen");
@@ -255,6 +257,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.BOOTLOGO, "Load user created boot logos for your device");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CATALOGUE, "Load user created artwork catalogue for content");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.CONFIG, "Load user created RetroArch configurations");
+    SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_DOWNLOADER, "Download themes from the muOS website");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME, "Change the appearance of the muOS frontend launcher");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_RESOLUTION, "Allows for testing different theme resolutions");
     SPECIFIC_FIELD(lang->MUXCUSTOM.HELP.THEME_ALTERNATE, "Switch between different theme alternatives");
@@ -759,6 +762,34 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXTESTER.TITLE, "INPUT TESTER");
     SPECIFIC_FIELD(lang->MUXTESTER.ANY, "Press any button to start input testing!");
     SPECIFIC_FIELD(lang->MUXTESTER.QUIT, "Press DOWN + B to finish testing");
+
+    // muxthemedownloader
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.TITLE, "THEME DOWNLOADER");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.REFRESH, "Refresh");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.REFRESH_RUN, "Refreshing…");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.THEME_REMOVED, "Theme Removed");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.NONE, "No Content Found…");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.DOWNLOAD, "Download");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.DOWNLOADING_THEME, "Downloading Theme");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_DATA, "Downloading Theme Data");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_PREVIEWS, "Downloading Theme Previews");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.REMOVE, "Remove");
+    SPECIFIC_FIELD(lang->MUXTHEMEDOWNLOADER.ERROR_RETRIEVING_THEME_DATA, "Error Retrieving Theme Data");
+
+    // muxthemefilter
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.TITLE, "THEME FILTER");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.THEME_COMPATIBILITY, "Theme Compatibility");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.THEME_COMPATIBILITY_OPTIONS.DEVICE, "Device");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.THEME_COMPATIBILITY_OPTIONS.ALL, "All");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.GRID, "Grid");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HDMI, "HDMI");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.LANGUAGE, "Language");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.LOOKUP, "Lookup");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.THEME_COMPATIBILITY, "Filter to themes for this device or all themes.  All themes can work on any device but if the theme does not implement your devices resolution it will be letterboxed.");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.GRID, "Filter to themes that support displaying content folders in a tile layout");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.HDMI, "Filter to themes that support HDMI resolution 1280x720.  Themes will still work on HDMI without support for 1280x720 but content will be letterboxed.");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LANGUAGE, "Filter to themes that let muOS handle translating text.  Themes that use static images for the main menu will be filtere out.");
+    SPECIFIC_FIELD(lang->MUXTHEMEFILTER.HELP.LOOKUP, "Filter to theme with a name containing lookup text.");
 
     // muxtimezone
     SPECIFIC_FIELD(lang->MUXTIMEZONE.TITLE, "TIMEZONE");

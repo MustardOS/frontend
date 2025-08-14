@@ -92,6 +92,7 @@
     CUSTOM(Bootlogo,        "bootlogo")   \
     CUSTOM(Catalogue,       "catalogue")  \
     CUSTOM(Config,          "config")     \
+    CUSTOM(ThemeDownloader, "themedwn")   \
     CUSTOM(Theme,           "theme")      \
     CUSTOM(ThemeResolution, "resolution") \
     CUSTOM(ThemeAlternate,  "alternate")  \
@@ -106,6 +107,12 @@
     CUSTOM(Font,            "font")       \
     CUSTOM(Sound,           "sound")      \
     CUSTOM(Chime,           "chime")
+
+#define THEMEFILTER_ELEMENTS               \
+    THEMEFILTER(AllThemes,   "theme")      \
+    THEMEFILTER(Grid,        "grid")       \
+    THEMEFILTER(Hdmi,        "hdmi")       \
+    THEMEFILTER(Language,    "language")
 
 #define DANGER_ELEMENTS                  \
     DANGER(VmSwap,        "vmswap")      \
