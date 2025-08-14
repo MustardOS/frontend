@@ -177,6 +177,7 @@
     KIOSK(Catalogue,  "catalogue")  \
     KIOSK(RAConfig,   "raconfig")   \
     KIOSK(Theme,      "theme")      \
+    KIOSK(ThemeDown,  "themedown")  \
     KIOSK(Clock,      "clock")      \
     KIOSK(Timezone,   "timezone")   \
     KIOSK(Apps,       "apps")       \

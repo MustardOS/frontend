@@ -381,6 +381,7 @@ struct mux_lang {
         char CATALOGUE[MAX_BUFFER_SIZE];
         char RACONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
+        char THEME_DOWN[MAX_BUFFER_SIZE];
         char CLOCK[MAX_BUFFER_SIZE];
         char TIMEZONE[MAX_BUFFER_SIZE];
         char APPS[MAX_BUFFER_SIZE];
@@ -424,6 +425,7 @@ struct mux_lang {
             char CATALOGUE[MAX_BUFFER_SIZE];
             char RACONFIG[MAX_BUFFER_SIZE];
             char THEME[MAX_BUFFER_SIZE];
+            char THEME_DOWN[MAX_BUFFER_SIZE];
             char CLOCK[MAX_BUFFER_SIZE];
             char TIMEZONE[MAX_BUFFER_SIZE];
             char APPS[MAX_BUFFER_SIZE];

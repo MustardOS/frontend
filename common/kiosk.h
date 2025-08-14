@@ -46,6 +46,7 @@ struct mux_kiosk {
         int16_t CATALOGUE;
         int16_t CONFIGURATION;
         int16_t THEME;
+        int16_t THEME_DOWN;
     } CUSTOM;
 
     struct {

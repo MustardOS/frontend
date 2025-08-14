@@ -209,6 +209,11 @@ static void init_navigation_group(void) {
         apply_text_long_dot(&theme, ui_objects_panel[i], ui_objects[i]);
     }
 
+    if (!device.DEVICE.HAS_NETWORK || kiosk.CUSTOM.THEME_DOWN) {
+        lv_obj_add_flag(ui_pnlThemeDownloader_custom, MU_OBJ_FLAG_HIDE_FLOAT);
+        ui_count -= 1;
+    }
+
     // Removal of animated background element
     lv_obj_add_flag(ui_pnlAnimation_custom, MU_OBJ_FLAG_HIDE_FLOAT);
     ui_count -= 1;

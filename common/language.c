@@ -393,6 +393,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.CATALOGUE, "Custom Catalogue");
     SPECIFIC_FIELD(lang->MUXKIOSK.RACONFIG, "Custom RetroArch Configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.THEME, "Custom Themes");
+    SPECIFIC_FIELD(lang->MUXKIOSK.THEME_DOWN, "Theme Downloader");
     SPECIFIC_FIELD(lang->MUXKIOSK.CLOCK, "Date and Time");
     SPECIFIC_FIELD(lang->MUXKIOSK.TIMEZONE, "Timezone");
     SPECIFIC_FIELD(lang->MUXKIOSK.APPS, "Applications");
@@ -431,6 +432,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CATALOGUE, "Allow access to install content catalogues");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.RACONFIG, "Allow access to use custom RetroArch configs");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.THEME, "Permit changing system themes");
+    SPECIFIC_FIELD(lang->MUXKIOSK.HELP.THEME_DOWN, "Permit downloading of themes");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.CLOCK, "Allow changing the system clock");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.TIMEZONE, "Permit adjusting the timezone");
     SPECIFIC_FIELD(lang->MUXKIOSK.HELP.APPS, "Enable access to applications");

@@ -37,6 +37,7 @@ void load_kiosk(struct mux_kiosk *kiosk) {
     CFG_INT_FIELD(kiosk->CUSTOM.CATALOGUE, CONF_KIOSK_PATH "custom/catalogue", 0)
     CFG_INT_FIELD(kiosk->CUSTOM.CONFIGURATION, CONF_KIOSK_PATH "custom/configuration", 0)
     CFG_INT_FIELD(kiosk->CUSTOM.THEME, CONF_KIOSK_PATH "custom/theme", 0)
+    CFG_INT_FIELD(kiosk->CUSTOM.THEME_DOWN, CONF_KIOSK_PATH "custom/theme_down", 0)
 
     CFG_INT_FIELD(kiosk->DATETIME.CLOCK, CONF_KIOSK_PATH "datetime/clock", 0)
     CFG_INT_FIELD(kiosk->DATETIME.TIMEZONE, CONF_KIOSK_PATH "datetime/timezone", 0)
