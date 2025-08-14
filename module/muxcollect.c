@@ -28,7 +28,7 @@ static void check_for_disable_grid_file(char *item_curr_dir) {
     nogrid_file_exists = file_exist(no_grid_path);
 }
 
-static char *load_content_description() {
+static char *load_content_description(void) {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
              sys_dir, strip_ext(items[current_item_index].name));
@@ -267,7 +267,7 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
     }
 }
 
-static void init_navigation_group_grid() {
+static void init_navigation_group_grid(void) {
     grid_mode_enabled = 1;
     init_grid_info((int) item_count, theme.GRID.COLUMN_COUNT);
     create_grid_panel(&theme, (int) item_count);
@@ -304,7 +304,7 @@ static void init_navigation_group_grid() {
     }
 }
 
-static void create_collection_items() {
+static void create_collection_items(void) {
     char **dir_names = NULL;
     char **file_names = NULL;
     char **last_dirs = NULL;
@@ -384,24 +384,30 @@ static int load_content(const char *content_name) {
     snprintf(cache_file, sizeof(cache_file), "%s",
              read_line_char_from(pointer_file, CACHE_CORE_PATH));
 
-    char *assigned_gov = NULL;
-    assigned_gov = load_content_governor(NULL, cache_file, 0, 0);
-    if (!assigned_gov) assigned_gov = device.CPU.DEFAULT;
-
     if (file_exist(cache_file)) {
         char *assigned_core = read_line_char_from(cache_file, CONTENT_CORE);
+
+        char *assigned_gov = specify_asset(load_content_governor(NULL, cache_file, 0, 0),
+                                           device.CPU.DEFAULT, "Governor");
+
+        char *assigned_con = specify_asset(load_content_control_scheme(NULL, cache_file, 0, 0),
+                                           "system", "Control Scheme");
+
         LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
         LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
+        LOG_INFO(mux_module, "Assigned Control Scheme: %s", assigned_con)
         LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
 
         char add_to_history[MAX_BUFFER_SIZE];
-        snprintf(add_to_history, sizeof(add_to_history), "%s/%s",
-                 INFO_HIS_PATH, content_name);
-
+        snprintf(add_to_history, sizeof(add_to_history), INFO_HIS_PATH "/%s", content_name);
         write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
+
         write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, CONTENT_NAME));
+
         write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
+        write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
+
         return 1;
     }
 
@@ -411,7 +417,7 @@ static int load_content(const char *content_name) {
     return 0;
 }
 
-static void update_footer_glyph() {
+static void update_footer_glyph(void) {
     if (!add_mode) return;
     lv_label_set_text(ui_lblNavA,
                       items[current_item_index].content_type == FOLDER ? lang.GENERIC.OPEN : lang.GENERIC.ADD);
@@ -490,7 +496,7 @@ static void handle_keyboard_press(void) {
     }
 }
 
-static void add_collection_item() {
+static void add_collection_item(void) {
     char *base_file_name = read_line_char_from(ADD_MODE_WORK, 1);
     char *cache_file = read_line_char_from(ADD_MODE_WORK, 2);
 
@@ -511,7 +517,14 @@ static void add_collection_item() {
     if (file_exist(COLLECTION_DIR)) remove(COLLECTION_DIR);
 }
 
-static void handle_a() {
+static void process_load(int from_start) {
+    if (key_show) {
+        handle_keyboard_press();
+        return;
+    }
+
+    if (holding_cell || (!add_mode && !ui_count)) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         if (lv_obj_has_flag(ui_pnlHelpPreview, LV_OBJ_FLAG_HIDDEN)) {
@@ -523,13 +536,6 @@ static void handle_a() {
         }
         return;
     }
-
-    if (key_show) {
-        handle_keyboard_press();
-        return;
-    }
-
-    if (!add_mode && !ui_count) return;
 
     play_sound(SND_CONFIRM);
 
@@ -585,6 +591,8 @@ static void handle_a() {
         }
     }
 
+    if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
+
     if (load_message) {
         toast_message(lang.GENERIC.LOADING, 0);
         lv_obj_move_foreground(ui_pnlMessage);
@@ -605,17 +613,35 @@ static void handle_a() {
     mux_input_stop();
 }
 
-static void handle_b() {
+static void handle_a(void) {
+    process_load(config.VISUAL.LAUNCH_SWAP ? 1 : 0);
+}
+
+static void handle_a_hold(void) {
+    process_load(config.VISUAL.LAUNCH_SWAP ? 0 : 1);
+}
+
+static void handle_l2_hold(void) {
+    holding_cell = 1;
+}
+
+static void handle_l2_release(void) {
+    holding_cell = 0;
+}
+
+static void handle_b(void) {
+    if (key_show) {
+        close_osk(key_entry, ui_group, ui_txtEntry_collect, ui_pnlEntry_collect);
+        return;
+    }
+
+    if (holding_cell) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
         progress_onscreen = 0;
         lv_obj_add_flag(msgbox_element, LV_OBJ_FLAG_HIDDEN);
-        return;
-    }
-
-    if (key_show) {
-        close_osk(key_entry, ui_group, ui_txtEntry_collect, ui_pnlEntry_collect);
         return;
     }
 
@@ -646,13 +672,13 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_x() {
+static void handle_x(void) {
     if (key_show) {
         key_backspace(ui_txtEntry_collect);
         return;
     }
 
-    if (msgbox_active || !ui_count || add_mode) return;
+    if (msgbox_active || !ui_count || add_mode || holding_cell) return;
 
     if (items[current_item_index].content_type == FOLDER) {
         if (get_directory_item_count(sys_dir, items[current_item_index].name, 0) > 0) {
@@ -680,13 +706,13 @@ static void handle_x() {
     mux_input_stop();
 }
 
-static void handle_y() {
-    if (msgbox_active) return;
-
+static void handle_y(void) {
     if (key_show) {
         key_swap();
         return;
     }
+
+    if (msgbox_active || holding_cell) return;
 
     if (!kiosk.COLLECT.NEW_DIR && at_base(sys_dir, access_mode)) {
         lv_obj_clear_flag(key_entry, LV_OBJ_FLAG_HIDDEN);
@@ -701,8 +727,8 @@ static void handle_y() {
     }
 }
 
-static void handle_menu() {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+static void handle_menu(void) {
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");
@@ -710,13 +736,13 @@ static void handle_menu() {
     show_info_box(items[current_item_index].display_name, load_content_description(), 1);
 }
 
-static void handle_random_select() {
-    if (msgbox_active || ui_count < 2) return;
+static void handle_random_select(void) {
+    if (msgbox_active || ui_count < 2 || holding_cell || !config.VISUAL.SHUFFLE) return;
 
-    uint32_t random_select = random() % ui_count;
-    int selected_index = (int) (random_select & INT16_MAX);
+    int dir, target;
+    shuffle_index(current_item_index, &dir, &target);
 
-    !(selected_index & 1) ? list_nav_move(selected_index, +1) : list_nav_move(selected_index, -1);
+    list_nav_move(target, dir);
 }
 
 static void handle_up(void) {
@@ -759,7 +785,7 @@ static void handle_r1(void) {
     if (!key_show) handle_list_nav_page_down();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -772,7 +798,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
 
@@ -975,7 +1001,6 @@ int muxcollect_main(int add, char *dir, int last_index) {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1 ||
                           (grid_mode_enabled && theme.GRID.NAVIGATION_TYPE >= 1 && theme.GRID.NAVIGATION_TYPE <= 5)),
             .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
@@ -988,12 +1013,18 @@ int muxcollect_main(int add, char *dir, int last_index) {
                     [MUX_INPUT_R1] = handle_r1,
                     [MUX_INPUT_R2] = handle_random_select,
             },
+            .release_handler = {
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_L2] = handle_l2_release,
+            },
             .hold_handler = {
+                    [MUX_INPUT_A] = handle_a_hold,
                     [MUX_INPUT_DPAD_UP] = handle_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_right_hold,
                     [MUX_INPUT_L1] = handle_l1,
+                    [MUX_INPUT_L2] = handle_l2_hold,
                     [MUX_INPUT_R1] = handle_r1,
                     [MUX_INPUT_R2] = handle_random_select,
             }

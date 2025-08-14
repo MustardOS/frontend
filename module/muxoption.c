@@ -82,7 +82,7 @@ static void add_info_item_type(lv_obj_t *ui_lblItemValue, const char *get_file, 
     apply_theme_list_value(&theme, ui_lblItemValue, cap_label ? str_capital_all(cap_value) : cap_value);
 }
 
-static void add_info_items() {
+static void add_info_items(void) {
     const char *core_file = get_content_line(rom_dir, rom_name, "cfg", 2);
     const char *core_dir = get_content_line(rom_dir, NULL, "cfg", 1);
     add_info_item_type(ui_lblCoreValue_option, core_file, core_dir, "core", false);
@@ -100,9 +100,7 @@ static void add_info_items() {
     add_info_item_type(ui_lblTagValue_option, tag_file, tag_dir, "tag", true);
 }
 
-static char *get_time_played() {
-    static char time_buffer[MAX_BUFFER_SIZE] = "0m";
-
+static struct json get_playtime_json(void) {
     char fullpath[PATH_MAX];
     snprintf(fullpath, sizeof(fullpath), "%s/%s", rom_dir, rom_name);
 
@@ -111,44 +109,72 @@ static char *get_time_played() {
 
     if (!file_exist(playtime_data)) {
         LOG_WARN(mux_module, "Playtime Data Not Found At: %s", playtime_data)
-        return lang.GENERIC.UNKNOWN;
+        return (struct json) {0};
     } else {
         LOG_SUCCESS(mux_module, "Found Playtime Data At: %s", playtime_data)
     }
 
     char *json_str = read_all_char_from(playtime_data);
-    if (!json_valid(json_str)) return lang.GENERIC.UNKNOWN;
+    if (!json_valid(json_str)) {
+        free(json_str);
+        return (struct json) {0};
+    }
 
     struct json fn_json = json_parse(json_str);
-    free(json_str);
 
     struct json playtime_json = json_object_get(fn_json, fullpath);
+    if (!json_exists(playtime_json)) return (struct json) {0};
+
+    free(json_str);
+
+    return playtime_json;
+}
+
+static char *get_time_played(void) {
+    struct json playtime_json = get_playtime_json();
     if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
 
+    static char time_buffer[MAX_BUFFER_SIZE] = "0m";
     int total_time = json_int(json_object_get(playtime_json, "total_time"));
+
     int days = total_time / 86400;
     int hours = (total_time % 86400) / 3600;
     int minutes = (total_time % 3600) / 60;
 
-    if (days > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dd %dh %dm", days, hours, minutes);
-    } else if (hours > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dh %dm", hours, minutes);
-    } else if (minutes > 0) {
-        snprintf(time_buffer, sizeof(time_buffer), "%dm", minutes);
-    } else {
-        snprintf(time_buffer, sizeof(time_buffer), "%s", lang.GENERIC.UNKNOWN);
-    }
+    if (days > 0)
+        snprintf(time_buffer, sizeof(time_buffer), "%dd %dh %dm",
+                 days, hours, minutes);
+    else if (hours > 0)
+        snprintf(time_buffer, sizeof(time_buffer), "%dh %dm",
+                 hours, minutes);
+    else if (minutes > 0)
+        snprintf(time_buffer, sizeof(time_buffer), "%dm",
+                 minutes);
+    else
+        snprintf(time_buffer, sizeof(time_buffer), "%s",
+                 lang.GENERIC.UNKNOWN);
 
     return time_buffer;
 }
 
-static void init_navigation_group() {
+static char *get_launch_count(void) {
+    struct json playtime_json = get_playtime_json();
+    if (!json_exists(playtime_json)) return lang.GENERIC.UNKNOWN;
+
+    static char launch_count[MAX_BUFFER_SIZE];
+    snprintf(launch_count, sizeof(launch_count), "%d",
+             json_int(json_object_get(playtime_json, "launches")));
+
+    return launch_count;
+}
+
+static void init_navigation_group(void) {
     int line_index = 0;
 
     add_static_item(line_index++, lang.MUXOPTION.DIRECTORY, get_last_subdir(rom_dir, '/', 4), "folder", false);
     add_static_item(line_index++, lang.MUXOPTION.NAME, rom_name, "rom", false);
     add_static_item(line_index++, lang.MUXOPTION.TIME, get_time_played(), "time", false);
+    add_static_item(line_index++, lang.MUXOPTION.LAUNCH, get_launch_count(), "count", false);
     add_static_item(line_index, "", "", "", true);
 
     INIT_VALUE_ITEM(-1, option, Search, lang.MUXOPTION.SEARCH, "search", "");
@@ -206,7 +232,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_confirm() {
+static void handle_confirm(void) {
     if (msgbox_active) return;
 
     struct {
@@ -243,7 +269,7 @@ static void handle_confirm() {
     mux_input_stop();
 }
 
-static void handle_back() {
+static void handle_back(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -261,14 +287,14 @@ static void handle_back() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -279,7 +305,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 

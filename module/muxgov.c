@@ -4,7 +4,7 @@ static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXGOV.TITLE, lang.MUXGOV.HELP, 0);
 }
 
@@ -198,7 +198,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Single Governor Assignment Triggered")
@@ -211,7 +211,7 @@ static void handle_a() {
     mux_input_stop();
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -227,7 +227,7 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_x() {
+static void handle_x(void) {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Directory Governor Assignment Triggered")
@@ -240,7 +240,7 @@ static void handle_x() {
     mux_input_stop();
 }
 
-static void handle_y() {
+static void handle_y(void) {
     if (msgbox_active || at_base(rom_dir, "ROMS")) return;
 
     LOG_INFO(mux_module, "Parent Governor Assignment Triggered")
@@ -253,14 +253,14 @@ static void handle_y() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -271,7 +271,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 

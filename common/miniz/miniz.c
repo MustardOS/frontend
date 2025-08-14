@@ -33,7 +33,8 @@ typedef unsigned char mz_validate_uint32[sizeof(mz_uint32) == 4 ? 1 : -1];
 typedef unsigned char mz_validate_uint64[sizeof(mz_uint64) == 8 ? 1 : -1];
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* ------------------- zlib-style API's */
@@ -66,21 +67,21 @@ mz_ulong mz_adler32(mz_ulong adler, const unsigned char *ptr, size_t buf_len) {
 /* Karl Malbrain's compact CRC-32. See "A compact CCITT crc16 and crc32 C implementation that balances processor cache usage against speed": http://www.geocities.com/malbrain/ */
 #if 0
 mz_ulong mz_crc32(mz_ulong crc, const mz_uint8 *ptr, size_t buf_len)
-{
-    static const mz_uint32 s_crc32[16] = { 0, 0x1db71064, 0x3b6e20c8, 0x26d930ac, 0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
-                                           0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c, 0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c };
-    mz_uint32 crcu32 = (mz_uint32)crc;
-    if (!ptr)
-        return MZ_CRC32_INIT;
-    crcu32 = ~crcu32;
-    while (buf_len--)
     {
-        mz_uint8 b = *ptr++;
-        crcu32 = (crcu32 >> 4) ^ s_crc32[(crcu32 & 0xF) ^ (b & 0xF)];
-        crcu32 = (crcu32 >> 4) ^ s_crc32[(crcu32 & 0xF) ^ (b >> 4)];
+        static const mz_uint32 s_crc32[16] = { 0, 0x1db71064, 0x3b6e20c8, 0x26d930ac, 0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+                                               0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c, 0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c };
+        mz_uint32 crcu32 = (mz_uint32)crc;
+        if (!ptr)
+            return MZ_CRC32_INIT;
+        crcu32 = ~crcu32;
+        while (buf_len--)
+        {
+            mz_uint8 b = *ptr++;
+            crcu32 = (crcu32 >> 4) ^ s_crc32[(crcu32 & 0xF) ^ (b & 0xF)];
+            crcu32 = (crcu32 >> 4) ^ s_crc32[(crcu32 & 0xF) ^ (b >> 4)];
+        }
+        return ~crcu32;
     }
-    return ~crcu32;
-}
 #elif defined(USE_EXTERNAL_MZCRC)
 /* If USE_EXTERNAL_CRC is defined, an external module will export the
  * mz_crc32() symbol for us to use, e.g. an SSE-accelerated version.
@@ -92,46 +93,45 @@ mz_ulong mz_crc32(mz_ulong crc, const mz_uint8 *ptr, size_t buf_len);
 /* Faster, but larger CPU cache footprint.
  */
 mz_ulong mz_crc32(mz_ulong crc, const mz_uint8 *ptr, size_t buf_len) {
-    static const mz_uint32 s_crc_table[256] =
-            {
-                    0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535,
-                    0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD,
-                    0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE, 0x1ADAD47D,
-                    0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC,
-                    0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5, 0x3B6E20C8, 0x4C69105E, 0xD56041E4,
-                    0xA2677172, 0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C,
-                    0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59, 0x26D930AC,
-                    0x51DE003A, 0xC8D75180, 0xBFD06116, 0x21B4F4B5, 0x56B3C423, 0xCFBA9599, 0xB8BDA50F,
-                    0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924, 0x2F6F7C87, 0x58684C11, 0xC1611DAB,
-                    0xB6662D3D, 0x76DC4190, 0x01DB7106, 0x98D220BC, 0xEFD5102A, 0x71B18589, 0x06B6B51F,
-                    0x9FBFE4A5, 0xE8B8D433, 0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818, 0x7F6A0DBB,
-                    0x086D3D2D, 0x91646C97, 0xE6635C01, 0x6B6B51F4, 0x1C6C6162, 0x856530D8, 0xF262004E,
-                    0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457, 0x65B0D9C6, 0x12B7E950, 0x8BBEB8EA,
-                    0xFCB9887C, 0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65, 0x4DB26158, 0x3AB551CE,
-                    0xA3BC0074, 0xD4BB30E2, 0x4ADFA541, 0x3DD895D7, 0xA4D1C46D, 0xD3D6F4FB, 0x4369E96A,
-                    0x346ED9FC, 0xAD678846, 0xDA60B8D0, 0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9,
-                    0x5005713C, 0x270241AA, 0xBE0B1010, 0xC90C2086, 0x5768B525, 0x206F85B3, 0xB966D409,
-                    0xCE61E49F, 0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4, 0x59B33D17, 0x2EB40D81,
-                    0xB7BD5C3B, 0xC0BA6CAD, 0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A, 0xEAD54739,
-                    0x9DD277AF, 0x04DB2615, 0x73DC1683, 0xE3630B12, 0x94643B84, 0x0D6D6A3E, 0x7A6A5AA8,
-                    0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1, 0xF00F9344, 0x8708A3D2, 0x1E01F268,
-                    0x6906C2FE, 0xF762575D, 0x806567CB, 0x196C3671, 0x6E6B06E7, 0xFED41B76, 0x89D32BE0,
-                    0x10DA7A5A, 0x67DD4ACC, 0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5, 0xD6D6A3E8,
-                    0xA1D1937E, 0x38D8C2C4, 0x4FDFF252, 0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B,
-                    0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6, 0x41047A60, 0xDF60EFC3, 0xA867DF55, 0x316E8EEF,
-                    0x4669BE79, 0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236, 0xCC0C7795, 0xBB0B4703,
-                    0x220216B9, 0x5505262F, 0xC5BA3BBE, 0xB2BD0B28, 0x2BB45A92, 0x5CB36A04, 0xC2D7FFA7,
-                    0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D, 0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A,
-                    0x9C0906A9, 0xEB0E363F, 0x72076785, 0x05005713, 0x95BF4A82, 0xE2B87A14, 0x7BB12BAE,
-                    0x0CB61B38, 0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 0x0BDBDF21, 0x86D3D2D4, 0xF1D4E242,
-                    0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777, 0x88085AE6,
-                    0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45,
-                    0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D,
-                    0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5,
-                    0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605,
-                    0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94,
-                    0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
-            };
+    static const mz_uint32 s_crc_table[256] = {
+            0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535,
+            0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD,
+            0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE, 0x1ADAD47D,
+            0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC,
+            0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5, 0x3B6E20C8, 0x4C69105E, 0xD56041E4,
+            0xA2677172, 0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C,
+            0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59, 0x26D930AC,
+            0x51DE003A, 0xC8D75180, 0xBFD06116, 0x21B4F4B5, 0x56B3C423, 0xCFBA9599, 0xB8BDA50F,
+            0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924, 0x2F6F7C87, 0x58684C11, 0xC1611DAB,
+            0xB6662D3D, 0x76DC4190, 0x01DB7106, 0x98D220BC, 0xEFD5102A, 0x71B18589, 0x06B6B51F,
+            0x9FBFE4A5, 0xE8B8D433, 0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818, 0x7F6A0DBB,
+            0x086D3D2D, 0x91646C97, 0xE6635C01, 0x6B6B51F4, 0x1C6C6162, 0x856530D8, 0xF262004E,
+            0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457, 0x65B0D9C6, 0x12B7E950, 0x8BBEB8EA,
+            0xFCB9887C, 0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65, 0x4DB26158, 0x3AB551CE,
+            0xA3BC0074, 0xD4BB30E2, 0x4ADFA541, 0x3DD895D7, 0xA4D1C46D, 0xD3D6F4FB, 0x4369E96A,
+            0x346ED9FC, 0xAD678846, 0xDA60B8D0, 0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9,
+            0x5005713C, 0x270241AA, 0xBE0B1010, 0xC90C2086, 0x5768B525, 0x206F85B3, 0xB966D409,
+            0xCE61E49F, 0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4, 0x59B33D17, 0x2EB40D81,
+            0xB7BD5C3B, 0xC0BA6CAD, 0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A, 0xEAD54739,
+            0x9DD277AF, 0x04DB2615, 0x73DC1683, 0xE3630B12, 0x94643B84, 0x0D6D6A3E, 0x7A6A5AA8,
+            0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1, 0xF00F9344, 0x8708A3D2, 0x1E01F268,
+            0x6906C2FE, 0xF762575D, 0x806567CB, 0x196C3671, 0x6E6B06E7, 0xFED41B76, 0x89D32BE0,
+            0x10DA7A5A, 0x67DD4ACC, 0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5, 0xD6D6A3E8,
+            0xA1D1937E, 0x38D8C2C4, 0x4FDFF252, 0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B,
+            0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6, 0x41047A60, 0xDF60EFC3, 0xA867DF55, 0x316E8EEF,
+            0x4669BE79, 0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236, 0xCC0C7795, 0xBB0B4703,
+            0x220216B9, 0x5505262F, 0xC5BA3BBE, 0xB2BD0B28, 0x2BB45A92, 0x5CB36A04, 0xC2D7FFA7,
+            0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D, 0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A,
+            0x9C0906A9, 0xEB0E363F, 0x72076785, 0x05005713, 0x95BF4A82, 0xE2B87A14, 0x7BB12BAE,
+            0x0CB61B38, 0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 0x0BDBDF21, 0x86D3D2D4, 0xF1D4E242,
+            0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777, 0x88085AE6,
+            0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45,
+            0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D,
+            0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5,
+            0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605,
+            0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94,
+            0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
+    };
 
     mz_uint32 crc32 = (mz_uint32) crc ^ 0xFFFFFFFF;
     const mz_uint8 *pByte_buf = (const mz_uint8 *) ptr;
@@ -276,7 +276,7 @@ int mz_deflate(mz_streamp pStream, int flush) {
             if ((flush) || (pStream->total_in != orig_total_in) || (pStream->total_out != orig_total_out))
                 break;
             return MZ_BUF_ERROR; /* Can't make forward progress without some input.
- */
+                                      */
         }
     }
     return mz_status;
@@ -568,19 +568,18 @@ const char *mz_error(int err) {
     static struct {
         int m_err;
         const char *m_pDesc;
-    } s_error_descs[] =
-            {
-                    {MZ_OK,            ""},
-                    {MZ_STREAM_END,    "stream end"},
-                    {MZ_NEED_DICT,     "need dictionary"},
-                    {MZ_ERRNO,         "file error"},
-                    {MZ_STREAM_ERROR,  "stream error"},
-                    {MZ_DATA_ERROR,    "data error"},
-                    {MZ_MEM_ERROR,     "out of memory"},
-                    {MZ_BUF_ERROR,     "buf error"},
-                    {MZ_VERSION_ERROR, "version error"},
-                    {MZ_PARAM_ERROR,   "parameter error"}
-            };
+    } s_error_descs[] = {
+            {MZ_OK,            ""},
+            {MZ_STREAM_END,    "stream end"},
+            {MZ_NEED_DICT,     "need dictionary"},
+            {MZ_ERRNO,         "file error"},
+            {MZ_STREAM_ERROR,  "stream error"},
+            {MZ_DATA_ERROR,    "data error"},
+            {MZ_MEM_ERROR,     "out of memory"},
+            {MZ_BUF_ERROR,     "buf error"},
+            {MZ_VERSION_ERROR, "version error"},
+            {MZ_PARAM_ERROR,   "parameter error"}
+    };
     mz_uint i;
     for (i = 0; i < sizeof(s_error_descs) / sizeof(s_error_descs[0]); ++i)
         if (s_error_descs[i].m_err == err)
@@ -651,117 +650,104 @@ const char *mz_error(int err) {
 #ifndef MINIZ_NO_DEFLATE_APIS
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* ------------------- Low-level Compression (independent from all decompression API's) */
 
 /* Purposely making these tables static for faster init and thread safety. */
-static const mz_uint16 s_tdefl_len_sym[256] =
-        {
-                257, 258, 259, 260, 261, 262, 263, 264, 265, 265, 266, 266, 267, 267, 268, 268, 269, 269, 269, 269, 270,
-                270, 270, 270, 271, 271, 271, 271, 272, 272, 272, 272,
-                273, 273, 273, 273, 273, 273, 273, 273, 274, 274, 274, 274, 274, 274, 274, 274, 275, 275, 275, 275, 275,
-                275, 275, 275, 276, 276, 276, 276, 276, 276, 276, 276,
-                277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 278, 278, 278, 278, 278,
-                278, 278, 278, 278, 278, 278, 278, 278, 278, 278, 278,
-                279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 280, 280, 280, 280, 280,
-                280, 280, 280, 280, 280, 280, 280, 280, 280, 280, 280,
-                281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281,
-                281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281,
-                282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282,
-                282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282,
-                283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283,
-                283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283,
-                284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284,
-                284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 285
-        };
+static const mz_uint16 s_tdefl_len_sym[256] = {
+        257, 258, 259, 260, 261, 262, 263, 264, 265, 265, 266, 266, 267, 267, 268, 268, 269, 269, 269, 269, 270, 270,
+        270, 270, 271, 271, 271, 271, 272, 272, 272, 272,
+        273, 273, 273, 273, 273, 273, 273, 273, 274, 274, 274, 274, 274, 274, 274, 274, 275, 275, 275, 275, 275, 275,
+        275, 275, 276, 276, 276, 276, 276, 276, 276, 276,
+        277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 277, 278, 278, 278, 278, 278, 278,
+        278, 278, 278, 278, 278, 278, 278, 278, 278, 278,
+        279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 279, 280, 280, 280, 280, 280, 280,
+        280, 280, 280, 280, 280, 280, 280, 280, 280, 280,
+        281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281, 281,
+        281, 281, 281, 281, 281, 281, 281, 281, 281, 281,
+        282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282, 282,
+        282, 282, 282, 282, 282, 282, 282, 282, 282, 282,
+        283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283, 283,
+        283, 283, 283, 283, 283, 283, 283, 283, 283, 283,
+        284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284, 284,
+        284, 284, 284, 284, 284, 284, 284, 284, 284, 285
+};
 
-static const mz_uint8 s_tdefl_len_extra[256] =
-        {
-                0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3,
-                3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-                4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-                4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-                5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-                5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-                5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-                5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0
-        };
+static const mz_uint8 s_tdefl_len_extra[256] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
+        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0
+};
 
-static const mz_uint8 s_tdefl_small_dist_sym[512] =
-        {
-                0, 1, 2, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10,
-                10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11,
-                11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-                12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
-                14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
-                14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
-                14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                15, 15, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
-                16, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-                17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-                17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-                17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-                17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-                17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
-                17, 17
-        };
+static const mz_uint8 s_tdefl_small_dist_sym[512] = {
+        0, 1, 2, 3, 4, 4, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10,
+        10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+        12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13,
+        13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+        13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
+        14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
+        14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
+        14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+        16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+        16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+        16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+        16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+        16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+        16, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+        17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+        17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+        17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+        17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+        17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17
+};
 
-static const mz_uint8 s_tdefl_small_dist_extra[512] =
-        {
-                0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4,
-                4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5,
-                5, 5,
-                5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-                5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-                6, 6,
-                6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-                6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-                6, 6,
-                6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-                6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                7, 7,
-                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                7, 7,
-                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                7, 7,
-                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                7, 7,
-                7, 7, 7, 7, 7, 7, 7, 7
-        };
+static const mz_uint8 s_tdefl_small_dist_extra[512] = {
+        0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7
+};
 
-static const mz_uint8 s_tdefl_large_dist_sym[128] =
-        {
-                0, 0, 18, 19, 20, 20, 21, 21, 22, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25,
-                25, 25, 25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
-                26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28,
-                28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
-                28, 28, 28, 28, 28, 28, 28, 28, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
-                29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29
-        };
+static const mz_uint8 s_tdefl_large_dist_sym[128] = {
+        0, 0, 18, 19, 20, 20, 21, 21, 22, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25, 25,
+        25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+        26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28,
+        28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
+        28, 28, 28, 28, 28, 28, 28, 28, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
+        29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29
+};
 
-static const mz_uint8 s_tdefl_large_dist_extra[128] =
-        {
-                0, 0, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
-                11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-                12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-                13, 13, 13, 13, 13, 13
-        };
+static const mz_uint8 s_tdefl_large_dist_extra[128] = {
+        0, 0, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+        12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+        13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+        13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+        13, 13, 13, 13
+};
 
 /* Radix sorts tdefl_sym_freq[] array by 16-bit key m_key. Returns ptr to sorted values. */
 typedef struct {
@@ -1085,13 +1071,13 @@ static const mz_uint mz_bitmasks[17] = {0x0000, 0x0001, 0x0003, 0x0007, 0x000F, 
 
 #if MINIZ_USE_UNALIGNED_LOADS_AND_STORES && MINIZ_LITTLE_ENDIAN && MINIZ_HAS_64BIT_REGISTERS
 static mz_bool tdefl_compress_lz_codes(tdefl_compressor *d)
-{
-    mz_uint flags;
-    mz_uint8 *pLZ_codes;
-    mz_uint8 *pOutput_buf = d->m_pOutput_buf;
-    mz_uint8 *pLZ_code_buf_end = d->m_pLZ_code_buf;
-    mz_uint64 bit_buffer = d->m_bit_buffer;
-    mz_uint bits_in = d->m_bits_in;
+    {
+        mz_uint flags;
+        mz_uint8 *pLZ_codes;
+        mz_uint8 *pOutput_buf = d->m_pOutput_buf;
+        mz_uint8 *pLZ_code_buf_end = d->m_pLZ_code_buf;
+        mz_uint64 bit_buffer = d->m_bit_buffer;
+        mz_uint bits_in = d->m_bits_in;
 
 #define TDEFL_PUT_BITS_FAST(b, l)                    \
     {                                                \
@@ -1099,45 +1085,38 @@ static mz_bool tdefl_compress_lz_codes(tdefl_compressor *d)
         bits_in += (l);                              \
     }
 
-    flags = 1;
-    for (pLZ_codes = d->m_lz_code_buf; pLZ_codes < pLZ_code_buf_end; flags >>= 1)
-    {
-        if (flags == 1)
-            flags = *pLZ_codes++ | 0x100;
-
-        if (flags & 1)
+        flags = 1;
+        for (pLZ_codes = d->m_lz_code_buf; pLZ_codes < pLZ_code_buf_end; flags >>= 1)
         {
-            mz_uint s0, s1, n0, n1, sym, num_extra_bits;
-            mz_uint match_len = pLZ_codes[0];
-            mz_uint match_dist = (pLZ_codes[1] | (pLZ_codes[2] << 8));
-            pLZ_codes += 3;
+            if (flags == 1)
+                flags = *pLZ_codes++ | 0x100;
 
-            MZ_ASSERT(d->m_huff_code_sizes[0][s_tdefl_len_sym[match_len]]);
-            TDEFL_PUT_BITS_FAST(d->m_huff_codes[0][s_tdefl_len_sym[match_len]], d->m_huff_code_sizes[0][s_tdefl_len_sym[match_len]]);
-            TDEFL_PUT_BITS_FAST(match_len & mz_bitmasks[s_tdefl_len_extra[match_len]], s_tdefl_len_extra[match_len]);
-
-            /* This sequence coaxes MSVC into using cmov's vs. jmp's. */
-            s0 = s_tdefl_small_dist_sym[match_dist & 511];
-            n0 = s_tdefl_small_dist_extra[match_dist & 511];
-            s1 = s_tdefl_large_dist_sym[match_dist >> 8];
-            n1 = s_tdefl_large_dist_extra[match_dist >> 8];
-            sym = (match_dist < 512) ? s0 : s1;
-            num_extra_bits = (match_dist < 512) ? n0 : n1;
-
-            MZ_ASSERT(d->m_huff_code_sizes[1][sym]);
-            TDEFL_PUT_BITS_FAST(d->m_huff_codes[1][sym], d->m_huff_code_sizes[1][sym]);
-            TDEFL_PUT_BITS_FAST(match_dist & mz_bitmasks[num_extra_bits], num_extra_bits);
-        }
-        else
-        {
-            mz_uint lit = *pLZ_codes++;
-            MZ_ASSERT(d->m_huff_code_sizes[0][lit]);
-            TDEFL_PUT_BITS_FAST(d->m_huff_codes[0][lit], d->m_huff_code_sizes[0][lit]);
-
-            if (((flags & 2) == 0) && (pLZ_codes < pLZ_code_buf_end))
+            if (flags & 1)
             {
-                flags >>= 1;
-                lit = *pLZ_codes++;
+                mz_uint s0, s1, n0, n1, sym, num_extra_bits;
+                mz_uint match_len = pLZ_codes[0];
+                mz_uint match_dist = (pLZ_codes[1] | (pLZ_codes[2] << 8));
+                pLZ_codes += 3;
+
+                MZ_ASSERT(d->m_huff_code_sizes[0][s_tdefl_len_sym[match_len]]);
+                TDEFL_PUT_BITS_FAST(d->m_huff_codes[0][s_tdefl_len_sym[match_len]], d->m_huff_code_sizes[0][s_tdefl_len_sym[match_len]]);
+                TDEFL_PUT_BITS_FAST(match_len & mz_bitmasks[s_tdefl_len_extra[match_len]], s_tdefl_len_extra[match_len]);
+
+                /* This sequence coaxes MSVC into using cmov's vs. jmp's. */
+                s0 = s_tdefl_small_dist_sym[match_dist & 511];
+                n0 = s_tdefl_small_dist_extra[match_dist & 511];
+                s1 = s_tdefl_large_dist_sym[match_dist >> 8];
+                n1 = s_tdefl_large_dist_extra[match_dist >> 8];
+                sym = (match_dist < 512) ? s0 : s1;
+                num_extra_bits = (match_dist < 512) ? n0 : n1;
+
+                MZ_ASSERT(d->m_huff_code_sizes[1][sym]);
+                TDEFL_PUT_BITS_FAST(d->m_huff_codes[1][sym], d->m_huff_code_sizes[1][sym]);
+                TDEFL_PUT_BITS_FAST(match_dist & mz_bitmasks[num_extra_bits], num_extra_bits);
+            }
+            else
+            {
+                mz_uint lit = *pLZ_codes++;
                 MZ_ASSERT(d->m_huff_code_sizes[0][lit]);
                 TDEFL_PUT_BITS_FAST(d->m_huff_codes[0][lit], d->m_huff_code_sizes[0][lit]);
 
@@ -1147,37 +1126,44 @@ static mz_bool tdefl_compress_lz_codes(tdefl_compressor *d)
                     lit = *pLZ_codes++;
                     MZ_ASSERT(d->m_huff_code_sizes[0][lit]);
                     TDEFL_PUT_BITS_FAST(d->m_huff_codes[0][lit], d->m_huff_code_sizes[0][lit]);
+
+                    if (((flags & 2) == 0) && (pLZ_codes < pLZ_code_buf_end))
+                    {
+                        flags >>= 1;
+                        lit = *pLZ_codes++;
+                        MZ_ASSERT(d->m_huff_code_sizes[0][lit]);
+                        TDEFL_PUT_BITS_FAST(d->m_huff_codes[0][lit], d->m_huff_code_sizes[0][lit]);
+                    }
                 }
             }
+
+            if (pOutput_buf >= d->m_pOutput_buf_end)
+                return MZ_FALSE;
+
+            memcpy(pOutput_buf, &bit_buffer, sizeof(mz_uint64));
+            pOutput_buf += (bits_in >> 3);
+            bit_buffer >>= (bits_in & ~7);
+            bits_in &= 7;
         }
-
-        if (pOutput_buf >= d->m_pOutput_buf_end)
-            return MZ_FALSE;
-
-        memcpy(pOutput_buf, &bit_buffer, sizeof(mz_uint64));
-        pOutput_buf += (bits_in >> 3);
-        bit_buffer >>= (bits_in & ~7);
-        bits_in &= 7;
-    }
 
 #undef TDEFL_PUT_BITS_FAST
 
-    d->m_pOutput_buf = pOutput_buf;
-    d->m_bits_in = 0;
-    d->m_bit_buffer = 0;
+        d->m_pOutput_buf = pOutput_buf;
+        d->m_bits_in = 0;
+        d->m_bit_buffer = 0;
 
-    while (bits_in)
-    {
-        mz_uint32 n = MZ_MIN(bits_in, 16);
-        TDEFL_PUT_BITS((mz_uint)bit_buffer & mz_bitmasks[n], n);
-        bit_buffer >>= n;
-        bits_in -= n;
+        while (bits_in)
+        {
+            mz_uint32 n = MZ_MIN(bits_in, 16);
+            TDEFL_PUT_BITS((mz_uint)bit_buffer & mz_bitmasks[n], n);
+            bit_buffer >>= n;
+            bits_in -= n;
+        }
+
+        TDEFL_PUT_BITS(d->m_huff_codes[0][256], d->m_huff_code_sizes[0][256]);
+
+        return (d->m_pOutput_buf < d->m_pOutput_buf_end);
     }
-
-    TDEFL_PUT_BITS(d->m_huff_codes[0][256], d->m_huff_code_sizes[0][256]);
-
-    return (d->m_pOutput_buf < d->m_pOutput_buf_end);
-}
 #else
 
 static mz_bool tdefl_compress_lz_codes(tdefl_compressor *d) {
@@ -1230,7 +1216,7 @@ static mz_bool tdefl_compress_block(tdefl_compressor *d, mz_bool static_block) {
     return tdefl_compress_lz_codes(d);
 }
 
-static const mz_uint s_tdefl_num_probes[11];
+static const mz_uint s_tdefl_num_probes[11] = {0, 1, 6, 32, 16, 32, 128, 256, 512, 768, 1500};
 
 static int tdefl_flush_block(tdefl_compressor *d, int flush) {
     mz_uint saved_bit_buf, saved_bits_in;
@@ -1259,7 +1245,8 @@ static int tdefl_flush_block(tdefl_compressor *d, int flush) {
 
         /* Determine compression level by reversing the process in tdefl_create_comp_flags_from_zip_params() */
         for (i = 0; i < mz_un; i++)
-            if (s_tdefl_num_probes[i] == (d->m_flags & 0xFFF)) break;
+            if (s_tdefl_num_probes[i] == (d->m_flags & 0xFFF))
+                break;
 
         if (i < 2)
             flevel = 0;
@@ -1370,13 +1357,13 @@ static int tdefl_flush_block(tdefl_compressor *d, int flush) {
 
 #if MINIZ_USE_UNALIGNED_LOADS_AND_STORES
 #ifdef MINIZ_UNALIGNED_USE_MEMCPY
-static mz_uint16 TDEFL_READ_UNALIGNED_WORD(const mz_uint8* p)
+static mz_uint16 TDEFL_READ_UNALIGNED_WORD(const mz_uint8 *p)
 {
     mz_uint16 ret;
     memcpy(&ret, p, sizeof(mz_uint16));
     return ret;
 }
-static mz_uint16 TDEFL_READ_UNALIGNED_WORD2(const mz_uint16* p)
+static mz_uint16 TDEFL_READ_UNALIGNED_WORD2(const mz_uint16 *p)
 {
     mz_uint16 ret;
     memcpy(&ret, p, sizeof(mz_uint16));
@@ -1487,7 +1474,7 @@ tdefl_find_match(tdefl_compressor *d, mz_uint lookahead_pos, mz_uint max_dist, m
 
 #if MINIZ_USE_UNALIGNED_LOADS_AND_STORES && MINIZ_LITTLE_ENDIAN
 #ifdef MINIZ_UNALIGNED_USE_MEMCPY
-static mz_uint32 TDEFL_READ_UNALIGNED_WORD32(const mz_uint8* p)
+static mz_uint32 TDEFL_READ_UNALIGNED_WORD32(const mz_uint8 *p)
 {
     mz_uint32 ret;
     memcpy(&ret, p, sizeof(mz_uint32));
@@ -1889,13 +1876,13 @@ tdefl_compress(tdefl_compressor *d, const void *pIn_buf, size_t *pIn_buf_size, v
 
 #if MINIZ_USE_UNALIGNED_LOADS_AND_STORES && MINIZ_LITTLE_ENDIAN
     if (((d->m_flags & TDEFL_MAX_PROBES_MASK) == 1) &&
-        ((d->m_flags & TDEFL_GREEDY_PARSING_FLAG) != 0) &&
-        ((d->m_flags & (TDEFL_FILTER_MATCHES | TDEFL_FORCE_ALL_RAW_BLOCKS | TDEFL_RLE_MATCHES)) == 0))
-    {
-        if (!tdefl_compress_fast(d))
-            return d->m_prev_return_status;
-    }
-    else
+            ((d->m_flags & TDEFL_GREEDY_PARSING_FLAG) != 0) &&
+            ((d->m_flags & (TDEFL_FILTER_MATCHES | TDEFL_FORCE_ALL_RAW_BLOCKS | TDEFL_RLE_MATCHES)) == 0))
+        {
+            if (!tdefl_compress_fast(d))
+                return d->m_prev_return_status;
+        }
+        else
 #endif /* #if MINIZ_USE_UNALIGNED_LOADS_AND_STORES && MINIZ_LITTLE_ENDIAN */
     {
         if (!tdefl_compress_normal(d))
@@ -2038,8 +2025,6 @@ tdefl_compress_mem_to_mem(void *pOut_buf, size_t out_buf_len, const void *pSrc_b
     return out_buf.m_size;
 }
 
-static const mz_uint s_tdefl_num_probes[11] = {0, 1, 6, 32, 16, 32, 128, 256, 512, 768, 1500};
-
 /* level may actually range from [0,10] (10 is a "hidden" max level, where we want a bit more compression and it's fine if throughput to fall off a cliff on some files). */
 mz_uint tdefl_create_comp_flags_from_zip_params(int level, int window_bits, int strategy) {
     mz_uint comp_flags = s_tdefl_num_probes[(level >= 0) ? MZ_MIN(10, level) : MZ_DEFAULT_LEVEL] |
@@ -2067,8 +2052,8 @@ mz_uint tdefl_create_comp_flags_from_zip_params(int level, int window_bits, int 
 #endif
 
 /* Simple PNG writer function by Alex Evans, 2011. Released into the public domain: https://gist.github.com/908299, more context at
- http://altdevblogaday.org/2011/04/06/a-smaller-jpg-encoder/.
- This is actually a modification of Alex's original code so PNG files generated by this function pass pngcheck. */
+     http://altdevblogaday.org/2011/04/06/a-smaller-jpg-encoder/.
+     This is actually a modification of Alex's original code so PNG files generated by this function pass pngcheck. */
 void *tdefl_write_image_to_png_file_in_memory_ex(const void *pImage, int w, int h, int num_chans, size_t *pLen_out,
                                                  mz_uint level, mz_bool flip) {
     /* Using a local copy of this array here in case MINIZ_NO_ZLIB_APIS was defined. */
@@ -2174,37 +2159,38 @@ void tdefl_compressor_free(tdefl_compressor *pComp) {
 
 #endif /*#ifndef MINIZ_NO_DEFLATE_APIS*/
 /**************************************************************************
-*
-* Copyright 2013-2014 RAD Game Tools and Valve Software
-* Copyright 2010-2014 Rich Geldreich and Tenacious Software LLC
-* All Rights Reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*
-**************************************************************************/
+ *
+ * Copyright 2013-2014 RAD Game Tools and Valve Software
+ * Copyright 2010-2014 Rich Geldreich and Tenacious Software LLC
+ * All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ **************************************************************************/
 
 
 
 #ifndef MINIZ_NO_INFLATE_APIS
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* ------------------- Low-level Decompression (completely independent from all compression API's) */
@@ -2283,29 +2269,29 @@ extern "C" {
 /* It reads just enough bytes from the input stream that are needed to decode the next Huffman code (and absolutely no more). It works by trying to fully decode a */
 /* Huffman code by using whatever bits are currently present in the bit buffer. If this fails, it reads another byte, and tries again until it succeeds or until the */
 /* bit buffer contains >=15 bits (deflate's max. Huffman code size). */
-#define TINFL_HUFF_BITBUF_FILL(state_index, pLookUp, pTree)                    \
-    do                                                                         \
-    {                                                                          \
-        temp = pLookUp[bit_buf & (TINFL_FAST_LOOKUP_SIZE - 1)];                \
-        if (temp >= 0)                                                         \
-        {                                                                      \
-            code_len = temp >> 9;                                              \
-            if ((code_len) && (num_bits >= code_len))                          \
-                break;                                                         \
-        }                                                                      \
-        else if (num_bits > TINFL_FAST_LOOKUP_BITS)                            \
-        {                                                                      \
-            code_len = TINFL_FAST_LOOKUP_BITS;                                 \
-            do                                                                 \
-            {                                                                  \
-                temp = pTree[~temp + ((bit_buf >> code_len++) & 1)];           \
-            } while ((temp < 0) && (num_bits >= (code_len + 1)));              \
-            if (temp >= 0)                                                     \
-                break;                                                         \
-        }                                                                      \
-        TINFL_GET_BYTE(state_index, c);                                        \
-        bit_buf |= (((tinfl_bit_buf_t)c) << num_bits);                         \
-        num_bits += 8;                                                         \
+#define TINFL_HUFF_BITBUF_FILL(state_index, pLookUp, pTree)          \
+    do                                                               \
+    {                                                                \
+        temp = pLookUp[bit_buf & (TINFL_FAST_LOOKUP_SIZE - 1)];      \
+        if (temp >= 0)                                               \
+        {                                                            \
+            code_len = temp >> 9;                                    \
+            if ((code_len) && (num_bits >= code_len))                \
+                break;                                               \
+        }                                                            \
+        else if (num_bits > TINFL_FAST_LOOKUP_BITS)                  \
+        {                                                            \
+            code_len = TINFL_FAST_LOOKUP_BITS;                       \
+            do                                                       \
+            {                                                        \
+                temp = pTree[~temp + ((bit_buf >> code_len++) & 1)]; \
+            } while ((temp < 0) && (num_bits >= (code_len + 1)));    \
+            if (temp >= 0)                                           \
+                break;                                               \
+        }                                                            \
+        TINFL_GET_BYTE(state_index, c);                              \
+        bit_buf |= (((tinfl_bit_buf_t)c) << num_bits);               \
+        num_bits += 8;                                               \
     } while (num_bits < 15);
 
 /* TINFL_HUFF_DECODE() decodes the next Huffman coded symbol. It's more complex than you would initially expect because the zlib API expects the decompressor to never read */
@@ -2591,11 +2577,11 @@ tinfl_decompress(tinfl_decompressor *r, const mz_uint8 *pIn_buf_next, size_t *pI
                                 }
 #else
                                 if (num_bits < 15)
-                                {
-                                    bit_buf |= (((tinfl_bit_buf_t)MZ_READ_LE16(pIn_buf_cur)) << num_bits);
-                                    pIn_buf_cur += 2;
-                                    num_bits += 16;
-                                }
+                        {
+                            bit_buf |= (((tinfl_bit_buf_t)MZ_READ_LE16(pIn_buf_cur)) << num_bits);
+                            pIn_buf_cur += 2;
+                            num_bits += 16;
+                        }
 #endif
                                 if ((sym2 = r->m_look_up[0][bit_buf & (TINFL_FAST_LOOKUP_SIZE - 1)]) >= 0)
                                     code_len = sym2 >> 9;
@@ -2613,11 +2599,11 @@ tinfl_decompress(tinfl_decompressor *r, const mz_uint8 *pIn_buf_next, size_t *pI
 
 #if !TINFL_USE_64BIT_BITBUF
                                 if (num_bits < 15)
-                                {
-                                    bit_buf |= (((tinfl_bit_buf_t)MZ_READ_LE16(pIn_buf_cur)) << num_bits);
-                                    pIn_buf_cur += 2;
-                                    num_bits += 16;
-                                }
+                            {
+                                bit_buf |= (((tinfl_bit_buf_t)MZ_READ_LE16(pIn_buf_cur)) << num_bits);
+                                pIn_buf_cur += 2;
+                                num_bits += 16;
+                            }
 #endif
                                 if ((sym2 = r->m_look_up[0][bit_buf & (TINFL_FAST_LOOKUP_SIZE - 1)]) >= 0)
                                     code_len = sym2 >> 9;
@@ -2680,30 +2666,30 @@ tinfl_decompress(tinfl_decompressor *r, const mz_uint8 *pIn_buf_next, size_t *pI
                         }
 #if MINIZ_USE_UNALIGNED_LOADS_AND_STORES
                         else if ((counter >= 9) && (counter <= dist))
+                    {
+                        const mz_uint8 *pSrc_end = pSrc + (counter & ~7);
+                        do
                         {
-                            const mz_uint8 *pSrc_end = pSrc + (counter & ~7);
-                            do
-                            {
 #ifdef MINIZ_UNALIGNED_USE_MEMCPY
-                                memcpy(pOut_buf_cur, pSrc, sizeof(mz_uint32)*2);
+                            memcpy(pOut_buf_cur, pSrc, sizeof(mz_uint32) * 2);
 #else
-                                ((mz_uint32 *)pOut_buf_cur)[0] = ((const mz_uint32 *)pSrc)[0];
-                                ((mz_uint32 *)pOut_buf_cur)[1] = ((const mz_uint32 *)pSrc)[1];
+                            ((mz_uint32 *)pOut_buf_cur)[0] = ((const mz_uint32 *)pSrc)[0];
+                            ((mz_uint32 *)pOut_buf_cur)[1] = ((const mz_uint32 *)pSrc)[1];
 #endif
-                                pOut_buf_cur += 8;
-                            } while ((pSrc += 8) < pSrc_end);
-                            if ((counter &= 7) < 3)
+                            pOut_buf_cur += 8;
+                        } while ((pSrc += 8) < pSrc_end);
+                        if ((counter &= 7) < 3)
+                        {
+                            if (counter)
                             {
-                                if (counter)
-                                {
-                                    pOut_buf_cur[0] = pSrc[0];
-                                    if (counter > 1)
-                                        pOut_buf_cur[1] = pSrc[1];
-                                    pOut_buf_cur += counter;
-                                }
-                                continue;
+                                pOut_buf_cur[0] = pSrc[0];
+                                if (counter > 1)
+                                    pOut_buf_cur[1] = pSrc[1];
+                                pOut_buf_cur += counter;
                             }
+                            continue;
                         }
+                    }
 #endif
                         while (counter > 2) {
                             pOut_buf_cur[0] = pSrc[0];
@@ -2897,37 +2883,38 @@ void tinfl_decompressor_free(tinfl_decompressor *pDecomp) {
 
 #endif /*#ifndef MINIZ_NO_INFLATE_APIS*/
 /**************************************************************************
-*
-* Copyright 2013-2014 RAD Game Tools and Valve Software
-* Copyright 2010-2014 Rich Geldreich and Tenacious Software LLC
-* Copyright 2016 Martin Raiber
-* All Rights Reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*
-**************************************************************************/
+ *
+ * Copyright 2013-2014 RAD Game Tools and Valve Software
+ * Copyright 2010-2014 Rich Geldreich and Tenacious Software LLC
+ * Copyright 2016 Martin Raiber
+ * All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ **************************************************************************/
 
 
 #ifndef MINIZ_NO_ARCHIVE_APIS
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* ------------------- .ZIP archive reading */
@@ -2938,48 +2925,66 @@ extern "C" {
 
 #include <sys/stat.h>
 
-#if defined(_MSC_VER) || defined(__MINGW64__)
+#if defined(_MSC_VER) || defined(__MINGW64__) || defined(__MINGW32__)
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef __cplusplus
+#define MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS 0
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 
-static WCHAR* mz_utf8z_to_widechar(const char* str)
+static WCHAR *mz_utf8z_to_widechar(const char *str)
 {
-  int reqChars = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-  WCHAR* wStr = (WCHAR*)malloc(reqChars * sizeof(WCHAR));
-  MultiByteToWideChar(CP_UTF8, 0, str, -1, wStr, reqChars);
-  return wStr;
+    int reqChars = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
+    WCHAR *wStr = (WCHAR *)malloc(reqChars * sizeof(WCHAR));
+    MultiByteToWideChar(CP_UTF8, 0, str, -1, wStr, reqChars);
+    return wStr;
 }
 
 static FILE *mz_fopen(const char *pFilename, const char *pMode)
 {
-  WCHAR* wFilename = mz_utf8z_to_widechar(pFilename);
-  WCHAR* wMode = mz_utf8z_to_widechar(pMode);
-  FILE* pFile = NULL;
-  errno_t err = _wfopen_s(&pFile, wFilename, wMode);
-  free(wFilename);
-  free(wMode);
-  return err ? NULL : pFile;
+    WCHAR *wFilename = mz_utf8z_to_widechar(pFilename);
+    WCHAR *wMode = mz_utf8z_to_widechar(pMode);
+    FILE *pFile = NULL;
+    errno_t err = _wfopen_s(&pFile, wFilename, wMode);
+    free(wFilename);
+    free(wMode);
+    return err ? NULL : pFile;
 }
 
 static FILE *mz_freopen(const char *pPath, const char *pMode, FILE *pStream)
 {
-  WCHAR* wPath = mz_utf8z_to_widechar(pPath);
-  WCHAR* wMode = mz_utf8z_to_widechar(pMode);
-  FILE* pFile = NULL;
-  errno_t err = _wfreopen_s(&pFile, wPath, wMode, pStream);
-  free(wPath);
-  free(wMode);
-  return err ? NULL : pFile;
+    WCHAR *wPath = mz_utf8z_to_widechar(pPath);
+    WCHAR *wMode = mz_utf8z_to_widechar(pMode);
+    FILE *pFile = NULL;
+    errno_t err = _wfreopen_s(&pFile, wPath, wMode, pStream);
+    free(wPath);
+    free(wMode);
+    return err ? NULL : pFile;
 }
 
+#if defined(__MINGW32__)
+static int mz_stat(const char *path, struct _stat *buffer)
+{
+    WCHAR *wPath = mz_utf8z_to_widechar(path);
+    int res = _wstat(wPath, buffer);
+    free(wPath);
+    return res;
+}
+#else
 static int mz_stat64(const char *path, struct __stat64 *buffer)
 {
-  WCHAR* wPath = mz_utf8z_to_widechar(path);
-  int res = _wstat64(wPath, buffer);
-  free(wPath);
-  return res;
+    WCHAR *wPath = mz_utf8z_to_widechar(path);
+    int res = _wstat64(wPath, buffer);
+    free(wPath);
+    return res;
 }
+#endif
 
 #ifndef MINIZ_NO_TIME
 #include <sys/utime.h>
@@ -2990,13 +2995,18 @@ static int mz_stat64(const char *path, struct __stat64 *buffer)
 #define MZ_FWRITE fwrite
 #define MZ_FTELL64 _ftelli64
 #define MZ_FSEEK64 _fseeki64
+#if defined(__MINGW32__)
+#define MZ_FILE_STAT_STRUCT _stat
+#define MZ_FILE_STAT mz_stat
+#else
 #define MZ_FILE_STAT_STRUCT _stat64
-#define MZ_FILE_STAT mz_stat64 
+#define MZ_FILE_STAT mz_stat64
+#endif
 #define MZ_FFLUSH fflush
 #define MZ_FREOPEN mz_freopen
 #define MZ_DELETE_FILE remove
 
-#elif defined(__MINGW32__) || defined(__WATCOMC__)
+#elif defined(__WATCOMC__)
 #ifndef MINIZ_NO_TIME
 #include <sys/utime.h>
 #endif
@@ -3044,7 +3054,7 @@ static int mz_stat64(const char *path, struct __stat64 *buffer)
 #define MZ_FREOPEN(p, m, s) freopen64(p, m, s)
 #define MZ_DELETE_FILE remove
 
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__APPLE__) || defined(__FreeBSD__) || (defined(__linux__) && defined(__x86_64__))
 #ifndef MINIZ_NO_TIME
 #include <utime.h>
 #endif
@@ -3061,7 +3071,7 @@ static int mz_stat64(const char *path, struct __stat64 *buffer)
 #define MZ_DELETE_FILE remove
 
 #else
-//#pragma message("Using fopen, ftello, fseeko, stat() etc. path for file I/O - this path may not support large files.")
+#pragma message("Using fopen, ftello, fseeko, stat() etc. path for file I/O - this path may not support large files.")
 #ifndef MINIZ_NO_TIME
 
 #include <utime.h>
@@ -3210,10 +3220,10 @@ struct mz_zip_internal_state_tag {
 
 #if defined(DEBUG) || defined(_DEBUG)
 static MZ_FORCEINLINE mz_uint mz_zip_array_range_check(const mz_zip_array *pArray, mz_uint index)
-{
-    MZ_ASSERT(index < pArray->m_size);
-    return index;
-}
+    {
+        MZ_ASSERT(index < pArray->m_size);
+        return index;
+    }
 #define MZ_ZIP_ARRAY_ELEMENT(array_ptr, element_type, index) ((element_type *)((array_ptr)->m_p))[mz_zip_array_range_check(array_ptr, index)]
 #else
 #define MZ_ZIP_ARRAY_ELEMENT(array_ptr, element_type, index) ((element_type *)((array_ptr)->m_p))[index]
@@ -3301,14 +3311,14 @@ static MZ_TIME_T mz_zip_dos_to_time_t(int dos_time, int dos_date) {
 static void mz_zip_time_t_to_dos_time(MZ_TIME_T time, mz_uint16 *pDOS_time, mz_uint16 *pDOS_date) {
 #ifdef _MSC_VER
     struct tm tm_struct;
-    struct tm *tm = &tm_struct;
-    errno_t err = localtime_s(tm, &time);
-    if (err)
-    {
-        *pDOS_date = 0;
-        *pDOS_time = 0;
-        return;
-    }
+        struct tm *tm = &tm_struct;
+        errno_t err = localtime_s(tm, &time);
+        if (err)
+        {
+            *pDOS_date = 0;
+            *pDOS_time = 0;
+            return;
+        }
 #else
     struct tm *tm = localtime(&time);
 #endif /* #ifdef _MSC_VER */
@@ -3504,7 +3514,7 @@ mz_zip_reader_locate_header_sig(mz_zip_archive *pZip, mz_uint32 record_sig, mz_u
         }
 
         /* Give up if we've searched the entire file, or we've gone back "too far" (~64kb) */
-        if ((!cur_file_ofs) || ((pZip->m_archive_size - cur_file_ofs) >= (MZ_UINT16_MAX + record_size)))
+        if ((!cur_file_ofs) || ((pZip->m_archive_size - cur_file_ofs) >= ((mz_uint64) (MZ_UINT16_MAX) + record_size)))
             return MZ_FALSE;
 
         cur_file_ofs = MZ_MAX(cur_file_ofs - (sizeof(buf_u32) - 3), 0);
@@ -3514,9 +3524,20 @@ mz_zip_reader_locate_header_sig(mz_zip_archive *pZip, mz_uint32 record_sig, mz_u
     return MZ_TRUE;
 }
 
+static mz_bool mz_zip_reader_eocd64_valid(mz_zip_archive *pZip, uint64_t offset, uint8_t *buf) {
+    if (pZip->m_pRead(pZip->m_pIO_opaque, offset, buf, MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE) ==
+        MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE) {
+        if (MZ_READ_LE32(buf + MZ_ZIP64_ECDH_SIG_OFS) == MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIG) {
+            return MZ_TRUE;
+        }
+    }
+
+    return MZ_FALSE;
+}
+
 static mz_bool mz_zip_reader_read_central_dir(mz_zip_archive *pZip, mz_uint flags) {
     mz_uint cdir_size = 0, cdir_entries_on_this_disk = 0, num_this_disk = 0, cdir_disk_index = 0;
-    mz_uint64 cdir_ofs = 0;
+    mz_uint64 cdir_ofs = 0, eocd_ofs = 0, archive_ofs = 0;
     mz_int64 cur_file_ofs = 0;
     const mz_uint8 *p;
 
@@ -3541,6 +3562,7 @@ static mz_bool mz_zip_reader_read_central_dir(mz_zip_archive *pZip, mz_uint flag
                                          MZ_ZIP_END_OF_CENTRAL_DIR_HEADER_SIZE, &cur_file_ofs))
         return mz_zip_set_error(pZip, MZ_ZIP_FAILED_FINDING_CENTRAL_DIR);
 
+    eocd_ofs = cur_file_ofs;
     /* Read and verify the end of central directory record. */
     if (pZip->m_pRead(pZip->m_pIO_opaque, cur_file_ofs, pBuf, MZ_ZIP_END_OF_CENTRAL_DIR_HEADER_SIZE) !=
         MZ_ZIP_END_OF_CENTRAL_DIR_HEADER_SIZE)
@@ -3553,18 +3575,35 @@ static mz_bool mz_zip_reader_read_central_dir(mz_zip_archive *pZip, mz_uint flag
         if (pZip->m_pRead(pZip->m_pIO_opaque, cur_file_ofs - MZ_ZIP64_END_OF_CENTRAL_DIR_LOCATOR_SIZE, pZip64_locator,
                           MZ_ZIP64_END_OF_CENTRAL_DIR_LOCATOR_SIZE) == MZ_ZIP64_END_OF_CENTRAL_DIR_LOCATOR_SIZE) {
             if (MZ_READ_LE32(pZip64_locator + MZ_ZIP64_ECDL_SIG_OFS) == MZ_ZIP64_END_OF_CENTRAL_DIR_LOCATOR_SIG) {
-                zip64_end_of_central_dir_ofs = MZ_READ_LE64(pZip64_locator + MZ_ZIP64_ECDL_REL_OFS_TO_ZIP64_ECDR_OFS);
-                if (zip64_end_of_central_dir_ofs > (pZip->m_archive_size - MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE))
-                    return mz_zip_set_error(pZip, MZ_ZIP_NOT_AN_ARCHIVE);
-
-                if (pZip->m_pRead(pZip->m_pIO_opaque, zip64_end_of_central_dir_ofs, pZip64_end_of_central_dir,
-                                  MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE) == MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE) {
-                    if (MZ_READ_LE32(pZip64_end_of_central_dir + MZ_ZIP64_ECDH_SIG_OFS) ==
-                        MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIG) {
-                        pZip->m_pState->m_zip64 = MZ_TRUE;
-                    }
-                }
+                pZip->m_pState->m_zip64 = MZ_TRUE;
             }
+        }
+    }
+
+    if (pZip->m_pState->m_zip64) {
+        /* Try locating the EOCD64 right before the EOCD64 locator. This works even
+             * when the effective start of the zip header is not yet known. */
+        if (cur_file_ofs < MZ_ZIP64_END_OF_CENTRAL_DIR_LOCATOR_SIZE +
+                           MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE)
+            return mz_zip_set_error(pZip, MZ_ZIP_NOT_AN_ARCHIVE);
+
+        zip64_end_of_central_dir_ofs = cur_file_ofs -
+                                       MZ_ZIP64_END_OF_CENTRAL_DIR_LOCATOR_SIZE -
+                                       MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE;
+
+        if (!mz_zip_reader_eocd64_valid(pZip, zip64_end_of_central_dir_ofs,
+                                        pZip64_end_of_central_dir)) {
+            /* That failed, try reading where the locator tells us to. */
+            zip64_end_of_central_dir_ofs = MZ_READ_LE64(
+                    pZip64_locator + MZ_ZIP64_ECDL_REL_OFS_TO_ZIP64_ECDR_OFS);
+
+            if (zip64_end_of_central_dir_ofs >
+                (pZip->m_archive_size - MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE))
+                return mz_zip_set_error(pZip, MZ_ZIP_NOT_AN_ARCHIVE);
+
+            if (!mz_zip_reader_eocd64_valid(pZip, zip64_end_of_central_dir_ofs,
+                                            pZip64_end_of_central_dir))
+                return mz_zip_set_error(pZip, MZ_ZIP_NOT_AN_ARCHIVE);
         }
     }
 
@@ -3627,6 +3666,28 @@ static mz_bool mz_zip_reader_read_central_dir(mz_zip_archive *pZip, mz_uint flag
 
     if ((cdir_ofs + (mz_uint64) cdir_size) > pZip->m_archive_size)
         return mz_zip_set_error(pZip, MZ_ZIP_INVALID_HEADER_OR_CORRUPTED);
+
+    if (eocd_ofs < cdir_ofs + cdir_size)
+        return mz_zip_set_error(pZip, MZ_ZIP_INVALID_HEADER_OR_CORRUPTED);
+
+    /* The end of central dir follows the central dir, unless the zip file has
+         * some trailing data (e.g. it is appended to an executable file). */
+    archive_ofs = eocd_ofs - (cdir_ofs + cdir_size);
+    if (pZip->m_pState->m_zip64) {
+        if (archive_ofs < MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE +
+                          MZ_ZIP64_END_OF_CENTRAL_DIR_LOCATOR_SIZE)
+            return mz_zip_set_error(pZip, MZ_ZIP_INVALID_HEADER_OR_CORRUPTED);
+
+        archive_ofs -= MZ_ZIP64_END_OF_CENTRAL_DIR_HEADER_SIZE +
+                       MZ_ZIP64_END_OF_CENTRAL_DIR_LOCATOR_SIZE;
+    }
+
+    /* Update the archive start position, but only if not specified. */
+    if ((pZip->m_zip_type == MZ_ZIP_TYPE_FILE || pZip->m_zip_type == MZ_ZIP_TYPE_CFILE ||
+         pZip->m_zip_type == MZ_ZIP_TYPE_USER) && pZip->m_pState->m_file_archive_start_ofs == 0) {
+        pZip->m_pState->m_file_archive_start_ofs = archive_ofs;
+        pZip->m_archive_size -= archive_ofs;
+    }
 
     pZip->m_central_directory_file_ofs = cdir_ofs;
 
@@ -3896,7 +3957,7 @@ mz_bool mz_zip_reader_init_file_v2(mz_zip_archive *pZip, const char *pFilename, 
     if ((!pZip) || (!pFilename) || ((archive_size) && (archive_size < MZ_ZIP_END_OF_CENTRAL_DIR_HEADER_SIZE)))
         return mz_zip_set_error(pZip, MZ_ZIP_INVALID_PARAMETER);
 
-    pFile = MZ_FOPEN(pFilename, "rb");
+    pFile = MZ_FOPEN(pFilename, (flags & MZ_ZIP_FLAG_READ_ALLOW_WRITING) ? "r+b" : "rb");
     if (!pFile)
         return mz_zip_set_error(pZip, MZ_ZIP_FILE_OPEN_FAILED);
 
@@ -4308,10 +4369,10 @@ mz_bool mz_zip_reader_locate_file_v2(mz_zip_archive *pZip, const char *pName, co
     return mz_zip_set_error(pZip, MZ_ZIP_FILE_NOT_FOUND);
 }
 
-static
-mz_bool mz_zip_reader_extract_to_mem_no_alloc1(mz_zip_archive *pZip, mz_uint file_index, void *pBuf, size_t buf_size,
-                                               mz_uint flags, void *pUser_read_buf, size_t user_read_buf_size,
-                                               const mz_zip_archive_file_stat *st) {
+static mz_bool
+mz_zip_reader_extract_to_mem_no_alloc1(mz_zip_archive *pZip, mz_uint file_index, void *pBuf, size_t buf_size,
+                                       mz_uint flags, void *pUser_read_buf, size_t user_read_buf_size,
+                                       const mz_zip_archive_file_stat *st) {
     int status = TINFL_STATUS_DONE;
     mz_uint64 needed_size, cur_file_ofs, comp_remaining, out_buf_ofs = 0, read_buf_size, read_buf_ofs = 0, read_buf_avail;
     mz_zip_archive_file_stat file_stat;
@@ -4357,8 +4418,9 @@ mz_bool mz_zip_reader_extract_to_mem_no_alloc1(mz_zip_archive *pZip, mz_uint fil
     if (MZ_READ_LE32(pLocal_header) != MZ_ZIP_LOCAL_DIR_HEADER_SIG)
         return mz_zip_set_error(pZip, MZ_ZIP_INVALID_HEADER_OR_CORRUPTED);
 
-    cur_file_ofs += MZ_ZIP_LOCAL_DIR_HEADER_SIZE + MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_FILENAME_LEN_OFS) +
-                    MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_EXTRA_LEN_OFS);
+    cur_file_ofs +=
+            (mz_uint64) (MZ_ZIP_LOCAL_DIR_HEADER_SIZE) + MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_FILENAME_LEN_OFS) +
+            MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_EXTRA_LEN_OFS);
     if ((cur_file_ofs + file_stat.m_comp_size) > pZip->m_archive_size)
         return mz_zip_set_error(pZip, MZ_ZIP_INVALID_HEADER_OR_CORRUPTED);
 
@@ -4563,8 +4625,9 @@ mz_zip_reader_extract_to_callback(mz_zip_archive *pZip, mz_uint file_index, mz_f
     if (MZ_READ_LE32(pLocal_header) != MZ_ZIP_LOCAL_DIR_HEADER_SIG)
         return mz_zip_set_error(pZip, MZ_ZIP_INVALID_HEADER_OR_CORRUPTED);
 
-    cur_file_ofs += MZ_ZIP_LOCAL_DIR_HEADER_SIZE + MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_FILENAME_LEN_OFS) +
-                    MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_EXTRA_LEN_OFS);
+    cur_file_ofs +=
+            (mz_uint64) (MZ_ZIP_LOCAL_DIR_HEADER_SIZE) + MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_FILENAME_LEN_OFS) +
+            MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_EXTRA_LEN_OFS);
     if ((cur_file_ofs + file_stat.m_comp_size) > pZip->m_archive_size)
         return mz_zip_set_error(pZip, MZ_ZIP_INVALID_HEADER_OR_CORRUPTED);
 
@@ -4784,8 +4847,9 @@ mz_zip_reader_extract_iter_new(mz_zip_archive *pZip, mz_uint file_index, mz_uint
         return NULL;
     }
 
-    pState->cur_file_ofs += MZ_ZIP_LOCAL_DIR_HEADER_SIZE + MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_FILENAME_LEN_OFS) +
-                            MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_EXTRA_LEN_OFS);
+    pState->cur_file_ofs +=
+            (mz_uint64) (MZ_ZIP_LOCAL_DIR_HEADER_SIZE) + MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_FILENAME_LEN_OFS) +
+            MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_EXTRA_LEN_OFS);
     if ((pState->cur_file_ofs + pState->file_stat.m_comp_size) > pZip->m_archive_size) {
         mz_zip_set_error(pZip, MZ_ZIP_INVALID_HEADER_OR_CORRUPTED);
         pZip->m_pFree(pZip->m_pAlloc_opaque, pState);
@@ -5694,12 +5758,13 @@ mz_bool mz_zip_writer_init_from_reader_v2(mz_zip_archive *pZip, const char *pFil
     if (pState->m_pFile) {
 #ifdef MINIZ_NO_STDIO
         (void)pFilename;
-        return mz_zip_set_error(pZip, MZ_ZIP_INVALID_PARAMETER);
+            return mz_zip_set_error(pZip, MZ_ZIP_INVALID_PARAMETER);
 #else
         if (pZip->m_pIO_opaque != pZip)
             return mz_zip_set_error(pZip, MZ_ZIP_INVALID_PARAMETER);
 
-        if (pZip->m_zip_type == MZ_ZIP_TYPE_FILE) {
+        if (pZip->m_zip_type == MZ_ZIP_TYPE_FILE &&
+            !(flags & MZ_ZIP_FLAG_READ_ALLOW_WRITING)) {
             if (!pFilename)
                 return mz_zip_set_error(pZip, MZ_ZIP_INVALID_PARAMETER);
 
@@ -5997,6 +6062,8 @@ mz_bool mz_zip_writer_add_mem_ex_v2(mz_zip_archive *pZip, const char *pArchive_n
         time(&cur_time);
         mz_zip_time_t_to_dos_time(cur_time, &dos_time, &dos_date);
     }
+#else
+    (void)last_modified;
 #endif /* #ifndef MINIZ_NO_TIME */
 
     if (!(level_and_flags & MZ_ZIP_FLAG_COMPRESSED_DATA)) {
@@ -6021,10 +6088,10 @@ mz_bool mz_zip_writer_add_mem_ex_v2(mz_zip_archive *pZip, const char *pArchive_n
 
     if (!pState->m_zip64) {
         /* Bail early if the archive would obviously become too large */
-        if ((pZip->m_archive_size + num_alignment_padding_bytes + MZ_ZIP_LOCAL_DIR_HEADER_SIZE + archive_name_size
-             + MZ_ZIP_CENTRAL_DIR_HEADER_SIZE + archive_name_size + comment_size + user_extra_data_len +
-             pState->m_central_dir.m_size + MZ_ZIP_END_OF_CENTRAL_DIR_HEADER_SIZE + user_extra_data_central_len
-             + MZ_ZIP_DATA_DESCRIPTER_SIZE32) > 0xFFFFFFFF) {
+        if ((pZip->m_archive_size + num_alignment_padding_bytes + MZ_ZIP_LOCAL_DIR_HEADER_SIZE + archive_name_size +
+             MZ_ZIP_CENTRAL_DIR_HEADER_SIZE + archive_name_size + comment_size + user_extra_data_len +
+             pState->m_central_dir.m_size + MZ_ZIP_END_OF_CENTRAL_DIR_HEADER_SIZE + user_extra_data_central_len +
+             MZ_ZIP_DATA_DESCRIPTER_SIZE32) > 0xFFFFFFFF) {
             pState->m_zip64 = MZ_TRUE;
             /*return mz_zip_set_error(pZip, MZ_ZIP_ARCHIVE_TOO_LARGE); */
         }
@@ -6281,10 +6348,9 @@ mz_zip_writer_add_read_buf_callback(mz_zip_archive *pZip, const char *pArchive_n
     if (!pState->m_zip64) {
         /* Bail early if the archive would obviously become too large */
         if ((pZip->m_archive_size + num_alignment_padding_bytes + MZ_ZIP_LOCAL_DIR_HEADER_SIZE + archive_name_size +
-             MZ_ZIP_CENTRAL_DIR_HEADER_SIZE
-             + archive_name_size + comment_size + user_extra_data_len + pState->m_central_dir.m_size +
-             MZ_ZIP_END_OF_CENTRAL_DIR_HEADER_SIZE + 1024
-             + MZ_ZIP_DATA_DESCRIPTER_SIZE32 + user_extra_data_central_len) > 0xFFFFFFFF) {
+             MZ_ZIP_CENTRAL_DIR_HEADER_SIZE + archive_name_size + comment_size + user_extra_data_len +
+             pState->m_central_dir.m_size + MZ_ZIP_END_OF_CENTRAL_DIR_HEADER_SIZE + 1024 +
+             MZ_ZIP_DATA_DESCRIPTER_SIZE32 + user_extra_data_central_len) > 0xFFFFFFFF) {
             pState->m_zip64 = MZ_TRUE;
             /*return mz_zip_set_error(pZip, MZ_ZIP_ARCHIVE_TOO_LARGE); */
         }
@@ -6294,6 +6360,8 @@ mz_zip_writer_add_read_buf_callback(mz_zip_archive *pZip, const char *pArchive_n
     if (pFile_time) {
         mz_zip_time_t_to_dos_time(*pFile_time, &dos_time, &dos_date);
     }
+#else
+    (void)pFile_time;
 #endif
 
     if (max_size <= 3)
@@ -6770,7 +6838,7 @@ mz_bool mz_zip_writer_add_from_zip_reader(mz_zip_archive *pZip, mz_zip_archive *
     local_header_extra_len = MZ_READ_LE16(pLocal_header + MZ_ZIP_LDH_EXTRA_LEN_OFS);
     local_header_comp_size = MZ_READ_LE32(pLocal_header + MZ_ZIP_LDH_COMPRESSED_SIZE_OFS);
     local_header_uncomp_size = MZ_READ_LE32(pLocal_header + MZ_ZIP_LDH_DECOMPRESSED_SIZE_OFS);
-    src_archive_bytes_remaining = local_header_filename_size + local_header_extra_len + src_file_stat.m_comp_size;
+    src_archive_bytes_remaining = src_file_stat.m_comp_size + local_header_filename_size + local_header_extra_len;
 
     /* Try to find a zip64 extended information field */
     if ((local_header_extra_len) &&
@@ -7205,13 +7273,15 @@ mz_zip_add_mem_to_archive_file_in_place_v2(const char *pZip_filename, const char
     } else {
         /* Append to an existing archive. */
         if (!mz_zip_reader_init_file_v2(&zip_archive, pZip_filename,
-                                        level_and_flags | MZ_ZIP_FLAG_DO_NOT_SORT_CENTRAL_DIRECTORY, 0, 0)) {
+                                        level_and_flags | MZ_ZIP_FLAG_DO_NOT_SORT_CENTRAL_DIRECTORY |
+                                        MZ_ZIP_FLAG_READ_ALLOW_WRITING, 0, 0)) {
             if (pErr)
                 *pErr = zip_archive.m_last_error;
             return MZ_FALSE;
         }
 
-        if (!mz_zip_writer_init_from_reader_v2(&zip_archive, pZip_filename, level_and_flags)) {
+        if (!mz_zip_writer_init_from_reader_v2(&zip_archive, pZip_filename,
+                                               level_and_flags | MZ_ZIP_FLAG_READ_ALLOW_WRITING)) {
             if (pErr)
                 *pErr = zip_archive.m_last_error;
 

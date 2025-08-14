@@ -139,5 +139,5 @@ extern lv_obj_t *ui_barDownload;
 extern lv_obj_t *ui_lblDownload;
 
 
-LV_IMG_DECLARE(ui_img_nothing_png);
-LV_IMG_DECLARE(ui_img_muoskofi_png);
+LV_IMG_DECLARE(ui_img_nothing_png)
+LV_IMG_DECLARE(ui_img_muoskofi_png)

@@ -172,6 +172,7 @@ struct mux_lang {
         char ANIMATION[MAX_BUFFER_SIZE];
         char FADE[MAX_BUFFER_SIZE];
         char SPLASH[MAX_BUFFER_SIZE];
+        char SHUFFLE[MAX_BUFFER_SIZE];
         char CHIME[MAX_BUFFER_SIZE];
         struct {
             char TITLE[MAX_BUFFER_SIZE];
@@ -208,6 +209,11 @@ struct mux_lang {
             char THEME[MAX_BUFFER_SIZE];
         } SOUND;
         struct {
+            char TITLE[MAX_BUFFER_SIZE];
+            char PRESS_A[MAX_BUFFER_SIZE];
+            char HOLD_A[MAX_BUFFER_SIZE];
+        } LAUNCH_SWAP;
+        struct {
             char BOOTLOGO[MAX_BUFFER_SIZE];
             char CATALOGUE[MAX_BUFFER_SIZE];
             char CONFIG[MAX_BUFFER_SIZE];
@@ -220,6 +226,8 @@ struct mux_lang {
             char BOX_ALIGN[MAX_BUFFER_SIZE];
             char FADE[MAX_BUFFER_SIZE];
             char SPLASH[MAX_BUFFER_SIZE];
+            char SHUFFLE[MAX_BUFFER_SIZE];
+            char LAUNCH_SWAP[MAX_BUFFER_SIZE];
             char FONT[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
             char SOUND[MAX_BUFFER_SIZE];
@@ -576,6 +584,7 @@ struct mux_lang {
         char SEARCH[MAX_BUFFER_SIZE];
         char NAME[MAX_BUFFER_SIZE];
         char TIME[MAX_BUFFER_SIZE];
+        char LAUNCH[MAX_BUFFER_SIZE];
         char CURRENT[MAX_BUFFER_SIZE];
         char DIRECTORY[MAX_BUFFER_SIZE];
         char INDIVIDUAL[MAX_BUFFER_SIZE];
@@ -721,6 +730,7 @@ struct mux_lang {
         char RA_SYSTEM[MAX_BUFFER_SIZE];
         char RA_CONFIG[MAX_BUFFER_SIZE];
         char ASSIGNED[MAX_BUFFER_SIZE];
+        char CONTROL_SCHEME[MAX_BUFFER_SIZE];
         char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char MUSIC[MAX_BUFFER_SIZE];
@@ -743,6 +753,7 @@ struct mux_lang {
             char RA_SYSTEM[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
             char ASSIGNED[MAX_BUFFER_SIZE];
+            char CONTROL_SCHEME[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
@@ -769,6 +780,7 @@ struct mux_lang {
         char RA_SYSTEM[MAX_BUFFER_SIZE];
         char RA_CONFIG[MAX_BUFFER_SIZE];
         char ASSIGNED[MAX_BUFFER_SIZE];
+        char CONTROL_SCHEME[MAX_BUFFER_SIZE];
         char COLLECTION[MAX_BUFFER_SIZE];
         char HISTORY[MAX_BUFFER_SIZE];
         char MUSIC[MAX_BUFFER_SIZE];
@@ -778,6 +790,7 @@ struct mux_lang {
         char NET_PROFILE[MAX_BUFFER_SIZE];
         char SYNCTHING[MAX_BUFFER_SIZE];
         char USER_INIT[MAX_BUFFER_SIZE];
+        char ACTIVITY_TRACKER[MAX_BUFFER_SIZE];
         char EXTERNAL[MAX_BUFFER_SIZE];
         char MUOS_CONFIG[MAX_BUFFER_SIZE];
         char BACKUP_TARGET[MAX_BUFFER_SIZE];
@@ -795,6 +808,7 @@ struct mux_lang {
             char RA_SYSTEM[MAX_BUFFER_SIZE];
             char RA_CONFIG[MAX_BUFFER_SIZE];
             char ASSIGNED[MAX_BUFFER_SIZE];
+            char CONTROL_SCHEME[MAX_BUFFER_SIZE];
             char COLLECTION[MAX_BUFFER_SIZE];
             char HISTORY[MAX_BUFFER_SIZE];
             char MUSIC[MAX_BUFFER_SIZE];
@@ -804,6 +818,7 @@ struct mux_lang {
             char NET_PROFILE[MAX_BUFFER_SIZE];
             char SYNCTHING[MAX_BUFFER_SIZE];
             char USER_INIT[MAX_BUFFER_SIZE];
+            char ACTIVITY_TRACKER[MAX_BUFFER_SIZE];
             char EXTERNAL[MAX_BUFFER_SIZE];
             char MUOS_CONFIG[MAX_BUFFER_SIZE];
             char BACKUP_TARGET[MAX_BUFFER_SIZE];

@@ -140,6 +140,8 @@ void load_config(struct mux_config *config) {
     CFG_INT_FIELD(config->VISUAL.BOX_ART_ALIGN, CONF_CONFIG_PATH "visual/boxartalign", 0)
     CFG_INT_FIELD(config->VISUAL.NAME, CONF_CONFIG_PATH "visual/name", 0)
     CFG_INT_FIELD(config->VISUAL.DASH, CONF_CONFIG_PATH "visual/dash", 0)
+    CFG_INT_FIELD(config->VISUAL.LAUNCH_SWAP, CONF_CONFIG_PATH "visual/launch_swap", 0)
+    CFG_INT_FIELD(config->VISUAL.SHUFFLE, CONF_CONFIG_PATH "visual/shuffle", 1)
     CFG_INT_FIELD(config->VISUAL.FRIENDLYFOLDER, CONF_CONFIG_PATH "visual/friendlyfolder", 1)
     CFG_INT_FIELD(config->VISUAL.THETITLEFORMAT, CONF_CONFIG_PATH "visual/thetitleformat", 0)
     CFG_INT_FIELD(config->VISUAL.TITLEINCLUDEROOTDRIVE, CONF_CONFIG_PATH "visual/titleincluderootdrive", 0)

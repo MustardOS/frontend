@@ -45,11 +45,11 @@ static void handle_down_page(void) {
     scroll_textarea(-config.SETTINGS.ADVANCED.ACCELERATE * 3);
 }
 
-static void handle_x() {
+static void handle_x(void) {
     lv_obj_scroll_to_y(ui_txtDocument_text, 0, LV_ANIM_ON);
 }
 
-static void handle_b() {
+static void handle_b(void) {
     play_sound(SND_BACK);
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "text");
 
@@ -57,7 +57,7 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -68,7 +68,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -97,7 +97,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxtext_main() {
+int muxtext_main(void) {
     if (!file_exist(TEXT_FILE)) return 1;
 
     init_module("muxtext");

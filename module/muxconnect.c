@@ -20,13 +20,13 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define CONNECT(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_connect);
     CONNECT_ELEMENTS
 #undef CONNECT
 }
 
-static void restore_options() {
+static void restore_options(void) {
     const char *usb_type = config.SETTINGS.ADVANCED.USBFUNCTION;
     if (!strcasecmp(usb_type, "adb")) {
         lv_dropdown_set_selected(ui_droUsbFunction_connect, 1);
@@ -38,7 +38,7 @@ static void restore_options() {
     lv_dropdown_set_selected(ui_droBluetooth_connect, config.VISUAL.BLUETOOTH);
 }
 
-static void save_options() {
+static void save_options(void) {
     char *idx_usbfunction;
     switch (lv_dropdown_get_selected(ui_droUsbFunction_connect)) {
         case 1:
@@ -75,7 +75,7 @@ static void save_options() {
     }
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -165,7 +165,7 @@ static void handle_option_next(void) {
     increase_option_value(lv_group_get_focused(ui_group_value));
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     struct {
@@ -200,7 +200,7 @@ static void handle_a() {
     handle_option_next();
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -219,14 +219,14 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_menu() {
+static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -237,7 +237,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -268,7 +268,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxconnect_main() {
+int muxconnect_main(void) {
     init_module("muxconnect");
 
     init_theme(1, 1);

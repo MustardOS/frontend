@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxstorage.h"
 
-#define UI_COUNT 19
+#define UI_COUNT 20
 
 struct storage {
     const char *path_suffix;
@@ -20,6 +20,7 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblRetroArch_storage,        lang.MUXSTORAGE.HELP.RA_SYSTEM},
             {ui_lblConfig_storage,           lang.MUXSTORAGE.HELP.RA_CONFIG},
             {ui_lblCore_storage,             lang.MUXSTORAGE.HELP.ASSIGNED},
+            {ui_lblScheme_storage,           lang.MUXSTORAGE.HELP.CONTROL_SCHEME},
             {ui_lblCollection_storage,       lang.MUXSTORAGE.HELP.COLLECTION},
             {ui_lblHistory_storage,          lang.MUXSTORAGE.HELP.HISTORY},
             {ui_lblMusic_storage,            lang.MUXSTORAGE.HELP.MUSIC},
@@ -38,7 +39,7 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void update_storage_info() {
+static void update_storage_info(void) {
     /*
      * Check for SD2 pathing, otherwise it should be on SD1.
      * If it's not on SD1 then you have bigger problems!
@@ -61,44 +62,47 @@ static void update_storage_info() {
     storage_path[5].path_suffix = STORE_LOC_CORE;
     storage_path[5].ui_label = ui_lblCoreValue_storage;
 
-    storage_path[6].path_suffix = STORE_LOC_COLL;
-    storage_path[6].ui_label = ui_lblCollectionValue_storage;
+    storage_path[6].path_suffix = STORE_LOC_GCDB;
+    storage_path[6].ui_label = ui_lblSchemeValue_storage;
 
-    storage_path[7].path_suffix = STORE_LOC_HIST;
-    storage_path[7].ui_label = ui_lblHistoryValue_storage;
+    storage_path[7].path_suffix = STORE_LOC_COLL;
+    storage_path[7].ui_label = ui_lblCollectionValue_storage;
 
-    storage_path[8].path_suffix = STORE_LOC_MUSC;
-    storage_path[8].ui_label = ui_lblMusicValue_storage;
+    storage_path[8].path_suffix = STORE_LOC_HIST;
+    storage_path[8].ui_label = ui_lblHistoryValue_storage;
 
-    storage_path[9].path_suffix = STORE_LOC_SAVE;
-    storage_path[9].ui_label = ui_lblSaveValue_storage;
+    storage_path[9].path_suffix = STORE_LOC_MUSC;
+    storage_path[9].ui_label = ui_lblMusicValue_storage;
 
-    storage_path[10].path_suffix = STORE_LOC_SCRS;
-    storage_path[10].ui_label = ui_lblScreenshotValue_storage;
+    storage_path[10].path_suffix = STORE_LOC_SAVE;
+    storage_path[10].ui_label = ui_lblSaveValue_storage;
 
-    storage_path[11].path_suffix = STORE_LOC_THEM;
-    storage_path[11].ui_label = ui_lblThemeValue_storage;
+    storage_path[11].path_suffix = STORE_LOC_SCRS;
+    storage_path[11].ui_label = ui_lblScreenshotValue_storage;
 
-    storage_path[12].path_suffix = STORE_LOC_PCAT;
-    storage_path[12].ui_label = ui_lblCataloguePackageValue_storage;
+    storage_path[12].path_suffix = STORE_LOC_THEM;
+    storage_path[12].ui_label = ui_lblThemeValue_storage;
 
-    storage_path[13].path_suffix = STORE_LOC_PCON;
-    storage_path[13].ui_label = ui_lblConfigPackageValue_storage;
+    storage_path[13].path_suffix = STORE_LOC_PCAT;
+    storage_path[13].ui_label = ui_lblCataloguePackageValue_storage;
 
-    storage_path[14].path_suffix = STORE_LOC_PLOG;
-    storage_path[14].ui_label = ui_lblBootlogoPackageValue_storage;
+    storage_path[14].path_suffix = STORE_LOC_PCON;
+    storage_path[14].ui_label = ui_lblConfigPackageValue_storage;
 
-    storage_path[15].path_suffix = STORE_LOC_LANG;
-    storage_path[15].ui_label = ui_lblLanguageValue_storage;
+    storage_path[15].path_suffix = STORE_LOC_PLOG;
+    storage_path[15].ui_label = ui_lblBootlogoPackageValue_storage;
 
-    storage_path[16].path_suffix = STORE_LOC_NETW;
-    storage_path[16].ui_label = ui_lblNetworkValue_storage;
+    storage_path[16].path_suffix = STORE_LOC_LANG;
+    storage_path[16].ui_label = ui_lblLanguageValue_storage;
 
-    storage_path[17].path_suffix = STORE_LOC_SYCT;
-    storage_path[17].ui_label = ui_lblSyncthingValue_storage;
+    storage_path[17].path_suffix = STORE_LOC_NETW;
+    storage_path[17].ui_label = ui_lblNetworkValue_storage;
 
-    storage_path[18].path_suffix = STORE_LOC_INIT;
-    storage_path[18].ui_label = ui_lblUserInitValue_storage;
+    storage_path[18].path_suffix = STORE_LOC_SYCT;
+    storage_path[18].ui_label = ui_lblSyncthingValue_storage;
+
+    storage_path[19].path_suffix = STORE_LOC_INIT;
+    storage_path[19].ui_label = ui_lblUserInitValue_storage;
 
     char dir[FILENAME_MAX];
     for (int i = 0; i < A_SIZE(storage_path); i++) {
@@ -113,7 +117,7 @@ static void update_storage_info() {
     }
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -125,6 +129,7 @@ static void init_navigation_group() {
     INIT_VALUE_ITEM(-1, storage, RetroArch, lang.MUXSTORAGE.RA_SYSTEM, "retroarch", "");
     INIT_VALUE_ITEM(-1, storage, Config, lang.MUXSTORAGE.RA_CONFIG, "config", "");
     INIT_VALUE_ITEM(-1, storage, Core, lang.MUXSTORAGE.ASSIGNED, "core", "");
+    INIT_VALUE_ITEM(-1, storage, Scheme, lang.MUXSTORAGE.CONTROL_SCHEME, "scheme", "");
     INIT_VALUE_ITEM(-1, storage, Collection, lang.MUXSTORAGE.COLLECTION, "collection", "");
     INIT_VALUE_ITEM(-1, storage, History, lang.MUXSTORAGE.HISTORY, "history", "");
     INIT_VALUE_ITEM(-1, storage, Music, lang.MUXSTORAGE.MUSIC, "music", "");
@@ -246,7 +251,7 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -257,7 +262,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -293,7 +298,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxstorage_main() {
+int muxstorage_main(void) {
     init_module("muxstorage");
 
     init_theme(1, 0);

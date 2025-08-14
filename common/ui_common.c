@@ -837,7 +837,7 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_disp_load_scr(ui_screen_container);
 }
 
-int ui_common_check() {
+int ui_common_check(void) {
     if (config.BOOT.DEVICE_MODE || config.BOOT.FACTORY_RESET) return 0;
 
     progress_onscreen = 1;
@@ -896,23 +896,23 @@ static void adjust_volume(int direction) {
     volume_changed = 1;
 }
 
-void ui_common_handle_bright_up() {
+void ui_common_handle_bright_up(void) {
     adjust_brightness(+1);
 }
 
-void ui_common_handle_bright_down() {
+void ui_common_handle_bright_down(void) {
     adjust_brightness(-1);
 }
 
-void ui_common_handle_volume_up() {
+void ui_common_handle_volume_up(void) {
     adjust_volume(+1);
 }
 
-void ui_common_handle_volume_down() {
+void ui_common_handle_volume_down(void) {
     adjust_volume(-1);
 }
 
-void ui_common_handle_idle() {
+void ui_common_handle_idle(void) {
     if (!strcmp(mux_module, "muxcredits") || !strcmp(mux_module, "muxcharge")) {
         lv_task_handler();
         return;

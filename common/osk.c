@@ -285,7 +285,7 @@ void close_osk(lv_obj_t *osk, lv_group_t *ui, lv_obj_t *entry, lv_obj_t *panel) 
     lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
 }
 
-void key_up() {
+void key_up(void) {
     play_sound(SND_KEYPRESS);
 
     if (key_curr >= 1) {
@@ -330,7 +330,7 @@ void key_up() {
     lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
 }
 
-void key_down() {
+void key_down(void) {
     play_sound(SND_KEYPRESS);
 
     int max_key;
@@ -384,7 +384,7 @@ void key_down() {
     lv_event_send(num_entry, LV_EVENT_SCROLL, &key_curr);
 }
 
-void key_left() {
+void key_left(void) {
     play_sound(SND_KEYPRESS);
 
     if (key_curr >= 1) {
@@ -400,7 +400,7 @@ void key_left() {
     }
 }
 
-void key_right() {
+void key_right(void) {
     play_sound(SND_KEYPRESS);
 
     int max_key;
@@ -422,7 +422,7 @@ void key_right() {
     }
 }
 
-void key_swap() {
+void key_swap(void) {
     play_sound(SND_KEYPRESS);
 
     if (key_show == 1) {

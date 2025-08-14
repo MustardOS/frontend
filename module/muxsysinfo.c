@@ -24,7 +24,7 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-const char *get_cpu_model() {
+const char *get_cpu_model(void) {
     static char cpu_model[48];
     snprintf(cpu_model, sizeof(cpu_model), "%s",
              get_execute_result("lscpu | grep 'Model name:' | awk -F: '{print $2}'"));
@@ -48,7 +48,7 @@ const char *get_cpu_model() {
     return result;
 }
 
-const char *get_current_frequency() {
+const char *get_current_frequency(void) {
     static char buffer[32];
     char *freq_str = read_all_char_from("/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_cur_freq");
 
@@ -72,7 +72,7 @@ const char *get_current_frequency() {
     return buffer;
 }
 
-const char *get_scaling_governor() {
+const char *get_scaling_governor(void) {
     static char buffer[MAX_BUFFER_SIZE];
     char *governor_str = read_all_char_from("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor");
 
@@ -87,14 +87,14 @@ const char *get_scaling_governor() {
     return buffer;
 }
 
-const char *get_memory_usage() {
+const char *get_memory_usage(void) {
     char *result = get_execute_result("free -m | awk '/^Mem:/ {printf \"%.2f MB / %.2f MB\", $3, $2}'");
     if (!result || strlen(result) == 0) return lang.GENERIC.UNKNOWN;
 
     return result;
 }
 
-const char *get_temperature() {
+const char *get_temperature(void) {
     static char buffer[32];
     char *temp_str = read_all_char_from("/sys/class/thermal/thermal_zone0/temp");
 
@@ -118,7 +118,7 @@ const char *get_temperature() {
     return buffer;
 }
 
-const char *get_uptime() {
+const char *get_uptime(void) {
     static char formatted_uptime[MAX_BUFFER_SIZE];
     struct sysinfo info;
 
@@ -148,7 +148,7 @@ const char *get_uptime() {
     return formatted_uptime;
 }
 
-const char *get_battery_cap() {
+const char *get_battery_cap(void) {
     static char battery_cap[32];
     snprintf(battery_cap, sizeof(battery_cap), "%d%% (Offset: %d)",
              read_battery_capacity(),
@@ -156,14 +156,14 @@ const char *get_battery_cap() {
     return battery_cap;
 }
 
-const char *get_device_info() {
+const char *get_device_info(void) {
     static char device_info[32];
     snprintf(device_info, sizeof(device_info), "%s",
              str_toupper(read_line_char_from((CONF_DEVICE_PATH "board/name"), 1)));
     return device_info;
 }
 
-const char *get_kernel_version() {
+const char *get_kernel_version(void) {
     static char buffer[128];
     struct utsname sys_info;
 
@@ -191,7 +191,7 @@ static void update_system_info() {
     lv_label_set_text(ui_lblVoltageValue_sysinfo, read_battery_voltage());
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -250,7 +250,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblVersion_sysinfo) {
@@ -367,7 +367,7 @@ static void handle_a() {
     refresh_screen(ui_screen);
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -383,14 +383,14 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_menu() {
+static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void launch_device() {
+static void launch_device(void) {
     if (msgbox_active) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblDevice_sysinfo) {
@@ -401,7 +401,7 @@ static void launch_device() {
     }
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -412,7 +412,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -441,7 +441,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxsysinfo_main() {
+int muxsysinfo_main(void) {
     init_module("muxsysinfo");
 
     init_theme(1, 0);

@@ -4,7 +4,7 @@ static char rom_name[PATH_MAX];
 static char rom_dir[PATH_MAX];
 static char rom_system[PATH_MAX];
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXCONTROL.TITLE, lang.MUXCONTROL.HELP, 0);
 }
 
@@ -86,11 +86,27 @@ static void create_control_assignment(const char *control, char *rom, enum gen_t
 }
 
 static void generate_available_controls(const char *default_control) {
-    int control_count;
-    char **controls = str_parse_file(INFO_NAM_PATH "/control.txt", &control_count, LINES);
-    if (!controls) return;
+    DIR *cd;
+    struct dirent *cf;
 
-    for (int i = 0; i < control_count; ++i) add_item(&items, &item_count, controls[i], controls[i], "", ITEM);
+    char assign_dir[PATH_MAX];
+    snprintf(assign_dir, sizeof(assign_dir), INFO_GCD_PATH);
+
+    cd = opendir(assign_dir);
+    if (!cd) return;
+
+    while ((cf = readdir(cd))) {
+        if (cf->d_type == DT_REG) {
+            puts(cf->d_name);
+            char *last_dot = strrchr(cf->d_name, '.');
+            if (last_dot && !strcasecmp(last_dot, ".txt")) {
+                *last_dot = '\0';
+                add_item(&items, &item_count, cf->d_name, cf->d_name, "", ITEM);
+            }
+        }
+    }
+
+    closedir(cd);
     sort_items(items, item_count);
 
     ui_group = lv_group_create();
@@ -100,8 +116,8 @@ static void generate_available_controls(const char *default_control) {
     for (size_t i = 0; i < item_count; i++) {
         ui_count++;
 
-        char *cap_name = str_capital(items[i].display_name);
-        char *raw_name = str_tolower(str_remchar(str_trim(strdup(items[i].display_name)), ' '));
+        char *cap_name = str_capital_all(items[i].display_name);
+        char *raw_name = str_tolower(str_trim(strdup(items[i].display_name)));
 
         lv_obj_t *ui_pnlControl = lv_obj_create(ui_pnlContent);
         apply_theme_list_panel(ui_pnlControl);
@@ -113,7 +129,12 @@ static void generate_available_controls(const char *default_control) {
 
         lv_obj_t *ui_lblControlItemGlyph = lv_img_create(ui_pnlControl);
 
-        char *glyph = !strcasecmp(raw_name, default_control) ? "system" : str_remchar(raw_name, ' ');
+        const char *glyph =
+                !strcasecmp(raw_name, default_control) ? "system" :
+                !strcasecmp(raw_name, "system") ? "system" :
+                !strcasecmp(raw_name, "retro") ? "retro" :
+                !strcasecmp(raw_name, "modern") ? "modern" :
+                "default";
         apply_theme_list_glyph(&theme, ui_lblControlItemGlyph, mux_module, glyph);
 
         lv_group_add_obj(ui_group, ui_lblControlItem);
@@ -198,7 +219,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Single Control Assignment Triggered")
@@ -211,7 +232,7 @@ static void handle_a() {
     mux_input_stop();
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -227,7 +248,7 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_x() {
+static void handle_x(void) {
     if (msgbox_active) return;
 
     LOG_INFO(mux_module, "Directory Control Assignment Triggered")
@@ -240,7 +261,7 @@ static void handle_x() {
     mux_input_stop();
 }
 
-static void handle_y() {
+static void handle_y(void) {
     if (msgbox_active || at_base(rom_dir, "ROMS")) return;
 
     LOG_INFO(mux_module, "Parent Control Assignment Triggered")
@@ -253,14 +274,14 @@ static void handle_y() {
     mux_input_stop();
 }
 
-static void handle_help() {
+static void handle_help(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -271,7 +292,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 

@@ -52,6 +52,7 @@
     BACKUP(RetroArch,        "retroarch")      \
     BACKUP(Config,           "config")         \
     BACKUP(Core,             "core")           \
+    BACKUP(Scheme,           "scheme")         \
     BACKUP(Collection,       "collection")     \
     BACKUP(History,          "history")        \
     BACKUP(Music,            "music")          \
@@ -65,6 +66,7 @@
     BACKUP(Network,          "network")        \
     BACKUP(Syncthing,        "syncthing")      \
     BACKUP(UserInit,         "userinit")       \
+    BACKUP(ActivityTracker,  "activity")       \
     BACKUP(External,         "external")       \
     BACKUP(MuosConfig,       "muosconfig")     \
     BACKUP(BackupTarget,     "backuptarget")   \
@@ -97,6 +99,8 @@
     CUSTOM(Animation,       "animation")  \
     CUSTOM(Music,           "music")      \
     CUSTOM(BlackFade,       "blackfade")  \
+    CUSTOM(LaunchSwap,      "launchswap") \
+    CUSTOM(Shuffle,         "shuffle")    \
     CUSTOM(BoxArtImage,     "boxart")     \
     CUSTOM(BoxArtAlign,     "align")      \
     CUSTOM(LaunchSplash,    "splash")     \
@@ -268,6 +272,7 @@
     STORAGE(RetroArch,        "retroarch")      \
     STORAGE(Config,           "config")         \
     STORAGE(Core,             "core")           \
+    STORAGE(Scheme,           "scheme")         \
     STORAGE(Collection,       "collection")     \
     STORAGE(History,          "history")        \
     STORAGE(Music,            "music")          \

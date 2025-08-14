@@ -92,7 +92,7 @@ void handle_list_nav_down_hold(void) {
     }
 }
 
-void handle_list_nav_left() {
+void handle_list_nav_left(void) {
     if (block_input) return;
     if (msgbox_active) {
         if (swap_axis) scroll_help_content(1, false);
@@ -112,7 +112,7 @@ void handle_list_nav_left() {
     }
 }
 
-void handle_list_nav_right() {
+void handle_list_nav_right(void) {
     if (block_input) return;
     if (msgbox_active) {
         if (swap_axis) scroll_help_content(-1, false);

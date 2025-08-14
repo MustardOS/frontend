@@ -11,7 +11,7 @@ static char *p_msg;
 
 static lv_obj_t *ui_objects[UI_COUNT];
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     ui_objects[0] = ui_rolComboOne;
     ui_objects[1] = ui_rolComboTwo;
     ui_objects[2] = ui_rolComboThree;
@@ -85,7 +85,7 @@ static void handle_right(void) {
     nav_next(ui_group, 1);
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -93,7 +93,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 

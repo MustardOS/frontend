@@ -129,7 +129,7 @@ void reset_cell(Cell *c) {
     c->underline = current_underline;
 }
 
-void clear_screen() {
+void clear_screen(void) {
     for (int r = 0; r < TERM_ROWS; r++) {
         for (int c = 0; c < TERM_COLS; c++) {
             reset_cell(&screen[r][c]);
@@ -147,7 +147,7 @@ void set_cursor_position(int row, int col) {
     }
 }
 
-void scroll_up() {
+void scroll_up(void) {
     for (int r = 0; r < TERM_ROWS - 1; r++) {
         memcpy(screen[r], screen[r + 1], sizeof(Cell) * TERM_COLS);
     }

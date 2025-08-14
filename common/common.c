@@ -147,38 +147,6 @@ void extract_archive(char *filename, char *screen) {
     free(exec);
 }
 
-unsigned long long total_file_size(const char *path) {
-    long long total_size = 0;
-    struct dirent *entry;
-
-    DIR *dir = opendir(path);
-    if (!dir) {
-        perror(lang.SYSTEM.FAIL_DIR_OPEN);
-        return 0;
-    }
-
-    while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            char full_path[PATH_MAX];
-            snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
-
-            struct stat file_stat;
-            if (stat(full_path, &file_stat) != -1) {
-                if (S_ISDIR(file_stat.st_mode)) {
-                    if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-                        total_size += total_file_size(full_path);
-                    }
-                } else if (S_ISREG(file_stat.st_mode)) {
-                    total_size += file_stat.st_size;
-                }
-            }
-        }
-    }
-
-    closedir(dir);
-    return total_size;
-}
-
 int str_compare(const void *a, const void *b) {
     const char *str1 = *(const char **) a;
     const char *str2 = *(const char **) b;
@@ -523,7 +491,7 @@ char *get_execute_result(const char *command) {
     return result;
 }
 
-int read_battery_capacity() {
+int read_battery_capacity(void) {
     FILE *file = fopen(device.BATTERY.CAPACITY, "r");
 
     if (file == NULL) {
@@ -543,7 +511,7 @@ int read_battery_capacity() {
     return capacity > 100 ? 100 : capacity;
 }
 
-char *read_battery_voltage() {
+char *read_battery_voltage(void) {
     FILE *file = fopen(device.BATTERY.VOLTAGE, "r");
 
     if (file == NULL) {
@@ -683,7 +651,7 @@ unsigned long long read_all_long_from(const char *filename) {
     return value;
 }
 
-const char *get_random_hex() {
+const char *get_random_hex(void) {
     int red = rand() % UINT8_MAX;
     int green = rand() % UINT8_MAX;
     int blue = rand() % UINT8_MAX;
@@ -805,7 +773,7 @@ void nav_next(lv_group_t *group, int count) {
     for (int i = 0; i < count; i++) lv_group_focus_next(group);
 }
 
-char *get_datetime() {
+char *get_datetime(void) {
     time_t now = time(NULL);
     struct tm *time_info = localtime(&now);
     static char datetime_str[MAX_BUFFER_SIZE];
@@ -819,7 +787,7 @@ void datetime_task(lv_timer_t *timer) {
     lv_label_set_text(dt_par->lblDatetime, get_datetime());
 }
 
-char *get_capacity() {
+char *get_capacity(void) {
     static char capacity[MAX_BUFFER_SIZE];
     const char *prefix = read_line_int_from(device.BATTERY.CHARGER, 1)
                          ? "capacity_charging_"
@@ -836,7 +804,7 @@ char *get_capacity() {
     return capacity;
 }
 
-void capacity_task() {
+void capacity_task(void) {
     battery_capacity = read_battery_capacity();
     update_battery_capacity(ui_staCapacity, &theme);
 }
@@ -1141,7 +1109,7 @@ char *get_wallpaper_path(lv_obj_t *ui_screen, lv_group_t *ui_group, int animated
             default:
                 break;
         }
-        if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall", 
+        if (load_element_image_specifics(STORAGE_THEME, mux_dimension, program, "wall",
                                          !strcmp(program, "muxlaunch") ? element : "default",
                                          "default", wall_extension, wall_image_path, sizeof(wall_image_path))) {
             int written = snprintf(wall_image_embed, sizeof(wall_image_embed), "M:%s", wall_image_path);
@@ -1405,12 +1373,12 @@ void load_image_animation(lv_obj_t *ui_imgWall, int animation_time, int repeat_c
     }
 }
 
-void unload_image_animation() {
+void unload_image_animation(void) {
     if (lv_obj_is_valid(wall_img)) lv_obj_del(wall_img);
     if (lv_obj_is_valid(img_obj)) lv_anim_del(img_obj, NULL);
 }
 
-int get_font_size() {
+int get_font_size(void) {
     if (device.MUX.WIDTH == 1280) {
         return 30;
     } else if (device.MUX.WIDTH == 1024) {
@@ -1420,7 +1388,7 @@ int get_font_size() {
     }
 }
 
-lv_font_t *get_language_font() {
+lv_font_t *get_language_font(void) {
     int font_size = get_font_size();
     size_t cache_size = 1024 * 10;
     lv_font_t *font;
@@ -1526,7 +1494,7 @@ void load_font_section(const char *section, lv_obj_t *element) {
     }
 }
 
-int is_network_connected() {
+int is_network_connected(void) {
     if (file_exist(device.NETWORK.STATE)) {
         if (strcasecmp("up", read_all_char_from(device.NETWORK.STATE)) == 0) return 1;
     }
@@ -1551,13 +1519,23 @@ void process_visual_element(enum visual_type visual, lv_obj_t *element) {
     }
 }
 
-void load_skip_patterns() {
+static void free_skip_patterns(void) {
+    for (size_t i = 0; i < skip_pattern_list.count; i++) free(skip_pattern_list.patterns[i]);
+    free(skip_pattern_list.patterns);
+    skip_pattern_list.patterns = NULL;
+    skip_pattern_list.count = 0;
+    skip_pattern_list.capacity = 0;
+}
+
+void load_skip_patterns(void) {
     char skip_ini[MAX_BUFFER_SIZE];
-    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.SDCARD.MOUNT, MUOS_INFO_PATH);
+    int written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini",
+                           device.STORAGE.SDCARD.MOUNT, MUOS_INFO_PATH);
     if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
 
     if (!file_exist(skip_ini)) {
-        written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini", device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
+        written = snprintf(skip_ini, sizeof(skip_ini), "%s/%s/skip.ini",
+                           device.STORAGE.ROM.MOUNT, MUOS_INFO_PATH);
         if (written < 0 || (size_t) written >= sizeof(skip_ini)) return;
     }
 
@@ -1567,14 +1545,10 @@ void load_skip_patterns() {
         return;
     }
 
-    for (size_t i = 0; i < skip_pattern_list.count; i++) {
-        free(skip_pattern_list.patterns[i]);
-    }
-    free(skip_pattern_list.patterns);
+    free_skip_patterns();
 
-    skip_pattern_list.count = 0;
-    skip_pattern_list.capacity = 2;
-    skip_pattern_list.patterns = malloc(skip_pattern_list.capacity * sizeof(char *));
+    skip_pattern_list.capacity = 4;
+    skip_pattern_list.patterns = malloc(skip_pattern_list.capacity * sizeof *skip_pattern_list.patterns);
     if (!skip_pattern_list.patterns) {
         perror("malloc failed");
         fclose(file);
@@ -1582,26 +1556,31 @@ void load_skip_patterns() {
     }
 
     char line[MAX_BUFFER_SIZE];
-    while (fgets(line, sizeof(line), file)) {
+    while (fgets(line, sizeof line, file)) {
         size_t len = strlen(line);
-        if (len > 0 && line[len - 1] == '\n') {
-            line[len - 1] = '\0';
-        }
+        while (len && (line[len - 1] == '\n' || line[len - 1] == '\r')) line[--len] = '\0';
+
+        if (len == 0 || line[0] == '#') continue;
 
         if (skip_pattern_list.count >= skip_pattern_list.capacity) {
-            skip_pattern_list.capacity *= 2;
-            skip_pattern_list.patterns = realloc(skip_pattern_list.patterns,
-                                                 skip_pattern_list.capacity * sizeof(char *));
-            if (!skip_pattern_list.patterns) {
+            size_t newcap = skip_pattern_list.capacity * 2;
+            char **newptr = realloc(skip_pattern_list.patterns, newcap * sizeof *newptr);
+
+            if (!newptr) {
                 perror("realloc failed");
+                free_skip_patterns();
                 fclose(file);
                 return;
             }
+
+            skip_pattern_list.patterns = newptr;
+            skip_pattern_list.capacity = newcap;
         }
 
         skip_pattern_list.patterns[skip_pattern_list.count] = strdup(line);
         if (!skip_pattern_list.patterns[skip_pattern_list.count]) {
             perror("strdup failed");
+            free_skip_patterns();
             fclose(file);
             return;
         }
@@ -1611,11 +1590,17 @@ void load_skip_patterns() {
     fclose(file);
 }
 
-int should_skip(const char *name) {
+int should_skip(const char *name, int is_dir) {
     for (size_t i = 0; i < skip_pattern_list.count; i++) {
-        if (fnmatch(skip_pattern_list.patterns[i], name, 0) == 0) {
-            return 1;
+        const char *pat = skip_pattern_list.patterns[i];
+
+        // Directory only pattern if it starts with a '/'
+        if (pat[0] == '/') {
+            if (!is_dir) continue;
+            pat++;
         }
+
+        if (fnmatch(pat, name, 0) == 0) return 1;
     }
     return 0;
 }
@@ -2022,8 +2007,8 @@ void collect_subdirectories(const char *base_dir, char ***list, int *size, int *
     load_skip_patterns();
 
     while ((entry = readdir(dir)) != NULL) {
-        if (!should_skip(entry->d_name)) {
-            if (entry->d_type == DT_DIR) {
+        if (entry->d_type == DT_DIR) {
+            if (!should_skip(entry->d_name, 1)) {
                 if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
                     snprintf(subdir_path, sizeof(subdir_path), "%s/%s", base_dir, entry->d_name);
                     const char *trimmed_path = subdir_path + trim_start_count;
@@ -2314,7 +2299,7 @@ int get_grid_row_item_count(int current_item_index) {
     }
 }
 
-void kiosk_denied() {
+void kiosk_denied(void) {
     if (kiosk.MESSAGE) {
         play_sound(SND_ERROR);
         toast_message(lang.GENERIC.KIOSK_DISABLE, 1000);
@@ -2367,7 +2352,7 @@ char *get_content_line(char *dir, char *name, char *ext, size_t line) {
     return "";
 }
 
-struct screen_dimension get_device_dimensions() {
+struct screen_dimension get_device_dimensions(void) {
     struct screen_dimension dims;
     if (read_line_int_from(device.SCREEN.HDMI, 1)) {
         dims.WIDTH = device.SCREEN.EXTERNAL.WIDTH;
@@ -2475,11 +2460,11 @@ void populate_items(const char *base_path, const char ***items, int *item_count)
     closedir(dir);
 }
 
-void populate_history_items() {
+void populate_history_items(void) {
     populate_items(INFO_HIS_PATH, &history_items, &history_item_count);
 }
 
-void populate_collection_items() {
+void populate_collection_items(void) {
     populate_items(INFO_COL_PATH, &collection_items, &collection_item_count);
 }
 
@@ -2561,7 +2546,7 @@ int direct_to_previous(lv_obj_t **ui_objects, size_t ui_count, int *nav_moved) {
     return nav_next_return;
 }
 
-int theme_compat() {
+int theme_compat(void) {
     char *theme_location = config.BOOT.FACTORY_RESET ? INTERNAL_THEME : STORAGE_THEME;
     char theme_version_file[MAX_BUFFER_SIZE];
     snprintf(theme_version_file, sizeof(theme_version_file), "%s/version.txt", theme_location);
@@ -2579,7 +2564,7 @@ int theme_compat() {
     return 0;
 }
 
-void update_bootlogo() {
+void update_bootlogo(void) {
     char bootlogo_image[MAX_BUFFER_SIZE];
     snprintf(bootlogo_image, sizeof(bootlogo_image), "%s/%simage/bootlogo.bmp", STORAGE_THEME, mux_dimension);
 
@@ -2718,7 +2703,7 @@ void get_storage_info(const char *partition, double *total, double *free, double
     *used = *total - *free;
 }
 
-char *get_build_version() {
+char *get_build_version(void) {
     static char build_version[32];
     snprintf(build_version, sizeof(build_version), "%s (%s)",
              str_replace(config.SYSTEM.VERSION, "_", " "), config.SYSTEM.BUILD);

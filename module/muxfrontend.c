@@ -21,7 +21,7 @@ typedef struct {
     void (*mux_func)(void);
 } ModuleEntry;
 
-static void cleanup_screen() {
+static void cleanup_screen(void) {
     SAFE_DELETE(toast_timer, lv_timer_del);
     SAFE_DELETE(counter_timer, lv_timer_del);
     SAFE_DELETE(key_entry, lv_obj_del);
@@ -63,7 +63,7 @@ static void process_content_action(char *action, char *module) {
     load_mux((strcmp(forced_flag, "1") == 0) ? "option" : module);
 }
 
-static void last_index_check() {
+static void last_index_check(void) {
     last_index = 0;
     if (file_exist(MUOS_IDX_LOAD) && !file_exist(ADD_MODE_WORK)) {
         last_index = safe_atoi(read_line_char_from(MUOS_IDX_LOAD, 1));
@@ -92,7 +92,7 @@ static int set_splash_image_path(char *splash_image_name) {
     return 0;
 }
 
-static int set_alert_image_path() {
+static int set_alert_image_path(void) {
     if ((snprintf(alert_image_path, sizeof(alert_image_path),
                   INTERNAL_PATH "share/media/alert-%s.png", device.SCREEN.HEIGHT < 720 ? "small" : "big") >= 0 &&
          file_exist(alert_image_path)))
@@ -109,7 +109,7 @@ static void exec_mux(char *goback, char *module, int (*func_to_exec)(void)) {
     set_previous_module(module);
 }
 
-static void module_reset() {
+static void module_reset(void) {
     if (config.BOOT.FACTORY_RESET) safe_quit(0);
 }
 
@@ -120,19 +120,19 @@ static void module_exit(char *module) {
     safe_quit(0);
 }
 
-static void module_shutdown() {
+static void module_shutdown(void) {
     module_exit("shutdown");
 }
 
-static void module_reboot() {
+static void module_reboot(void) {
     module_exit("reboot");
 }
 
-static void module_quit() {
+static void module_quit(void) {
     safe_quit(0);
 }
 
-static void module_explore() {
+static void module_explore(void) {
     last_index_check();
 
     char *explore_dir = read_line_char_from(EXPLORE_DIR, 1);
@@ -162,17 +162,17 @@ static void module_content_list(const char *path, const char *max_depth, int is_
     }
 }
 
-static void module_collection() {
+static void module_collection(void) {
     const char *collection_path = (kiosk.COLLECT.ACCESS && directory_exist(INFO_CKS_PATH))
                                   ? INFO_CKS_PATH : INFO_COL_PATH;
     module_content_list(collection_path, "2", 1);
 }
 
-static void module_history() {
+static void module_history(void) {
     module_content_list(INFO_HIS_PATH, "1", 0);
 }
 
-static void module_search() {
+static void module_search(void) {
     load_mux("option");
     muxsearch_main(read_line_char_from(EXPLORE_DIR, 1));
 
@@ -188,7 +188,7 @@ static void module_search() {
     }
 }
 
-static void module_picker() {
+static void module_picker(void) {
     load_mux("custom");
     muxpicker_main(read_line_char_from(MUOS_PIK_LOAD, 1), read_line_char_from(EXPLORE_DIR, 1));
 }
@@ -198,27 +198,27 @@ static void module_run(const char *mux, int (*func_to_exec)(int, char *, char *,
     func_to_exec(0, rom_name, rom_dir, rom_sys);
 }
 
-static void module_assign() {
+static void module_assign(void) {
     module_run("option", muxassign_main);
 }
 
-static void module_governor() {
+static void module_governor(void) {
     module_run("option", muxgov_main);
 }
 
-static void module_control() {
+static void module_control(void) {
     module_run("option", muxcontrol_main);
 }
 
-static void module_tag() {
+static void module_tag(void) {
     module_run("option", muxtag_main);
 }
 
-static void module_option() {
+static void module_option(void) {
     module_run("explore", muxoption_main);
 }
 
-static void module_app() {
+static void module_app(void) {
     int auth = 0; // no more fights about 's' vs 'z'...
 
     if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_LAUNCHER_AUTH)) {
@@ -253,12 +253,12 @@ static void module_app() {
     }
 }
 
-static void module_task() {
+static void module_task(void) {
     load_mux("app");
     muxtask_main(read_line_char_from(EXPLORE_DIR, 1));
 }
 
-static void module_config() {
+static void module_config(void) {
     if (config.SETTINGS.ADVANCED.LOCK && !file_exist(MUX_AUTH) &&
         strcmp(previous_module, "muxtweakgen") != 0) {
         load_mux("launcher");
@@ -274,29 +274,29 @@ static void module_config() {
     }
 }
 
-static void clear_auth() {
+static void clear_auth(void) {
     if (!config.SETTINGS.ADVANCED.LOCK) {
         if (file_exist(MUX_AUTH)) remove(MUX_AUTH);
         if (file_exist(MUX_LAUNCHER_AUTH)) remove(MUX_LAUNCHER_AUTH);
     }
 }
 
-static void module_tweakadv() {
+static void module_tweakadv(void) {
     exec_mux("tweakgen", "muxtweakadv", muxtweakadv_main);
     clear_auth();
 }
 
-static void module_danger() {
+static void module_danger(void) {
     exec_mux("tweakgen", "muxdanger", muxdanger_main);
     clear_auth();
 }
 
-static void module_device() {
+static void module_device(void) {
     exec_mux("sysinfo", "muxdevice", muxdevice_main);
     clear_auth();
 }
 
-static void module_rtc() {
+static void module_rtc(void) {
     if (config.BOOT.FACTORY_RESET) {
         exec_mux("reset", "muxrtc", muxrtc_main);
     } else {
@@ -362,7 +362,7 @@ static const ModuleEntry modules[] = {
         {NULL,         NULL, NULL, NULL,                                 NULL}
 };
 
-void init_audio() {
+void init_audio(void) {
     int r = 10;
     while (r-- > 0) {
         if (init_audio_backend()) {
@@ -384,7 +384,7 @@ void init_audio() {
     write_text_to_file(CHIME_DONE, "w", CHAR, "");
 }
 
-int main() {
+int main(void) {
     load_device(&device);
     load_config(&config);
     load_kiosk(&kiosk);

@@ -75,6 +75,7 @@
 #define INFO_CNT_PATH RUN_STORAGE_PATH "info/controller"
 #define INFO_COL_PATH RUN_STORAGE_PATH "info/collection"
 #define INFO_CKS_PATH RUN_STORAGE_PATH "info/collection/kiosk"
+#define INFO_GCD_PATH RUN_STORAGE_PATH "info/gamecontrollerdb"
 #define INFO_HIS_PATH RUN_STORAGE_PATH "info/history"
 #define INFO_NAM_PATH RUN_STORAGE_PATH "info/name"
 #define INFO_ACT_PATH RUN_STORAGE_PATH "info/track"
@@ -97,12 +98,14 @@
 #define STORE_LOC_NETW "MUOS/network"
 #define STORE_LOC_SYCT "MUOS/syncthing"
 #define STORE_LOC_INIT "MUOS/init"
+#define STORE_LOC_ACTI "MUOS/info/track"
 
 #define STORE_LOC_ASIN MUOS_INFO_PATH "/assign"
 #define STORE_LOC_CLOG MUOS_INFO_PATH "/catalogue"
 #define STORE_LOC_NAME MUOS_INFO_PATH "/name"
 #define STORE_LOC_CONF MUOS_INFO_PATH "/config"
 #define STORE_LOC_CORE MUOS_INFO_PATH "/core"
+#define STORE_LOC_GCDB MUOS_INFO_PATH "/gamecontrollerdb"
 #define STORE_LOC_COLL MUOS_INFO_PATH "/collection"
 #define STORE_LOC_HIST MUOS_INFO_PATH "/history"
 #define STORE_LOC_PLAY MUOS_INFO_PATH "/track"
@@ -111,6 +114,7 @@
 #define MUOS_AIN_LOAD "/tmp/ain_go" // Application Last Index
 #define MUOS_APP_LOAD "/tmp/app_go" // Application Launch
 #define MUOS_ASS_LOAD "/tmp/ass_go" // Core/System Assignment Loader
+#define MUOS_CON_LOAD "/tmp/con_go" // Control Scheme
 #define MUOS_DBI_LOAD "/tmp/dbi_go" // Device Backup Last Index
 #define MUOS_IDX_LOAD "/tmp/idx_go" // Last Known Item Index
 #define MUOS_GOV_LOAD "/tmp/gov_go" // Governor Assignment Loader
@@ -133,6 +137,7 @@
 
 #define PLAYTIME_DATA   "playtime_data.json"
 #define FRIENDLY_RESULT "/tmp/f_result.json"
+#define MANUAL_RA_LOAD  "/tmp/ra_no_load"
 #define APP_LAUNCHER    "mux_launch.sh"
 
 #define THEME_DATA   "theme_data.json"

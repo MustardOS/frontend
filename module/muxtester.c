@@ -72,14 +72,14 @@ static void handle_input(mux_input_type type, mux_input_action action) {
     }
 }
 
-static void handle_power() {
+static void handle_power(void) {
     write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "tester");
 
     close_input();
     mux_input_stop();
 }
 
-static void init_elements() {
+static void init_elements(void) {
     header_and_footer_setup();
 
     ui_imgButton = lv_img_create(ui_screen);
@@ -99,7 +99,7 @@ static void init_elements() {
     overlay_display();
 }
 
-int muxtester_main() {
+int muxtester_main(void) {
     init_module("muxtester");
 
     init_theme(0, 0);

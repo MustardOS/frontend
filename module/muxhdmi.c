@@ -22,13 +22,13 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define HDMI(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_hdmi);
     HDMI_ELEMENTS
 #undef HDMI
 }
 
-static void restore_hdmi_options() {
+static void restore_hdmi_options(void) {
     map_drop_down_to_index(ui_droResolution_hdmi, config.SETTINGS.HDMI.RESOLUTION, hdmi_index, 11, 0);
     lv_dropdown_set_selected(ui_droSpace_hdmi, config.SETTINGS.HDMI.SPACE);
     lv_dropdown_set_selected(ui_droDepth_hdmi, config.SETTINGS.HDMI.DEPTH);
@@ -37,7 +37,7 @@ static void restore_hdmi_options() {
     lv_dropdown_set_selected(ui_droAudio_hdmi, config.SETTINGS.HDMI.AUDIO);
 }
 
-static void save_hdmi_options() {
+static void save_hdmi_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_MAP(hdmi, Resolution, "settings/hdmi/resolution", hdmi_index, 11, 0);
@@ -54,7 +54,7 @@ static void save_hdmi_options() {
     }
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -196,7 +196,7 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -207,7 +207,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -238,7 +238,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxhdmi_main() {
+int muxhdmi_main(void) {
     init_module("muxhdmi");
 
     init_theme(1, 0);

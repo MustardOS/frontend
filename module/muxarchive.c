@@ -1,10 +1,10 @@
 #include "muxshare.h"
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXARCHIVE.TITLE, lang.MUXARCHIVE.HELP, 0);
 }
 
-static void create_archive_items() {
+static void create_archive_items(void) {
     const char *mount_points[] = {
             device.STORAGE.ROM.MOUNT,
             device.STORAGE.SDCARD.MOUNT,
@@ -191,7 +191,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     if (ui_count > 0) {
@@ -208,7 +208,7 @@ static void handle_a() {
     }
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -223,14 +223,14 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_menu() {
+static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -241,7 +241,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -273,7 +273,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxarchive_main() {
+int muxarchive_main(void) {
     init_module("muxarchive");
 
     init_theme(1, 1);

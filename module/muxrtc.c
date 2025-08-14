@@ -24,11 +24,11 @@ const char *notation[] = {NULL, NULL};
 
 static void list_nav_move(int steps, int direction);
 
-static void show_help() {
+static void show_help(void) {
     show_info_box(lang.MUXRTC.TITLE, lang.MUXRTC.HELP, 0);
 }
 
-static void confirm_rtc_config() {
+static void confirm_rtc_config(void) {
     const char *notation_type = lv_label_get_text(ui_lblNotationValue_rtc);
     int idx_notation = (notation_type && strcmp(notation_type, notation[1]) == TIME_12H) ? TIME_24H : TIME_12H;
 
@@ -57,7 +57,7 @@ static int days_in_month(int year, int month) {
     return max_days;
 }
 
-static void restore_clock_settings() {
+static void restore_clock_settings(void) {
     time_t now = time(NULL);
     struct tm *tm_now;
     bool is_error = false;
@@ -151,7 +151,7 @@ static void save_clock_settings(int year, int month, int day, int hour, int minu
     refresh_config = 1;
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -222,14 +222,14 @@ static void list_nav_next(int steps) {
 }
 
 // Trickle down validation functions to ensure the RTC state is always valid
-static void validate_notation() {
+static void validate_notation(void) {
     if (rtc.notation < 0)
         rtc.notation = 1;
     if (rtc.notation > 1)
         rtc.notation = 0;
 }
 
-static void validate_minute() {
+static void validate_minute(void) {
     if (rtc.minute < 0)
         rtc.minute = MINUTES_IN_HOUR - 1;
     if (rtc.minute >= MINUTES_IN_HOUR)
@@ -238,7 +238,7 @@ static void validate_minute() {
     validate_notation();
 }
 
-static void validate_hour() {
+static void validate_hour(void) {
     if (rtc.hour < 0)
         rtc.hour = HOURS_IN_DAY - 1;
     if (rtc.hour >= HOURS_IN_DAY)
@@ -247,7 +247,7 @@ static void validate_hour() {
     validate_minute();
 }
 
-static void validate_day() {
+static void validate_day(void) {
     int max_days = days_in_month(rtc.year, rtc.month);
     if (rtc.day < 1)
         rtc.day = max_days;
@@ -257,7 +257,7 @@ static void validate_day() {
     validate_hour();
 }
 
-static void validate_month() {
+static void validate_month(void) {
     if (rtc.month < 1)
         rtc.month = MONTHS_IN_YEAR;
     if (rtc.month > MONTHS_IN_YEAR)
@@ -266,7 +266,7 @@ static void validate_month() {
     validate_day();
 }
 
-static void validate_year() {
+static void validate_year(void) {
     if (rtc.year < MIN_YEAR)
         rtc.year = MIN_YEAR;
     if (rtc.year > MAX_YEAR)
@@ -354,7 +354,7 @@ static void save_and_exit(char *message) {
     mux_input_stop();
 }
 
-static void handle_a() {
+static void handle_a(void) {
     if (msgbox_active) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblTimezone_rtc) {
@@ -369,7 +369,7 @@ static void handle_a() {
     }
 }
 
-static void handle_b() {
+static void handle_b(void) {
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -389,22 +389,22 @@ static void handle_b() {
     save_and_exit(lang.GENERIC.SAVING);
 }
 
-static void handle_left() {
+static void handle_left(void) {
     adjust_option(-1);
 }
 
-static void handle_right() {
+static void handle_right(void) {
     adjust_option(+1);
 }
 
-static void handle_menu() {
+static void handle_menu(void) {
     if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
 
     play_sound(SND_INFO_OPEN);
     show_help();
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -415,7 +415,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -450,7 +450,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxrtc_main() {
+int muxrtc_main(void) {
     init_module("muxrtc");
 
     init_theme(1, 0);

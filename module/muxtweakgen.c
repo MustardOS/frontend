@@ -24,7 +24,7 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define TWEAKGEN(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_tweakgen);
     TWEAKGEN_ELEMENTS
 #undef TWEAKGEN
@@ -46,7 +46,7 @@ static void update_volume_and_brightness() {
     }
 }
 
-static void restore_tweak_options() {
+static void restore_tweak_options(void) {
     update_volume_and_brightness();
 
     lv_dropdown_set_selected(ui_droColour_tweakgen, config.SETTINGS.GENERAL.COLOUR + 255);
@@ -77,7 +77,7 @@ static void set_setting_value(const char *script_name, int value, int offset) {
     }
 }
 
-static void save_tweak_options() {
+static void save_tweak_options(void) {
     int is_modified = 0;
 
     const char *startup_options[] = {
@@ -119,7 +119,7 @@ static void save_tweak_options() {
     }
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -180,7 +180,7 @@ static void init_navigation_group() {
     list_nav_move(direct_to_previous(ui_objects, UI_COUNT, &nav_moved), +1);
 }
 
-static void check_focus() {
+static void check_focus(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblHdmi_tweakgen ||
         element_focused == ui_lblRtc_tweakgen ||
@@ -227,7 +227,7 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void update_option_values() {
+static void update_option_values(void) {
     int curr_brightness = lv_dropdown_get_selected(ui_droBrightness_tweakgen);
     int curr_volume = lv_dropdown_get_selected(ui_droVolume_tweakgen);
 
@@ -318,7 +318,7 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void launch_danger() {
+static void launch_danger(void) {
     if (msgbox_active) return;
 
     if (lv_group_get_focused(ui_group) == ui_lblAdvanced_tweakgen) {
@@ -329,7 +329,7 @@ static void launch_danger() {
     }
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -340,7 +340,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -375,7 +375,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxtweakgen_main() {
+int muxtweakgen_main(void) {
     init_module("muxtweakgen");
 
     init_theme(1, 0);

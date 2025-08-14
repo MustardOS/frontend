@@ -29,13 +29,13 @@ static void show_help(lv_obj_t *element_focused) {
     gen_help(element_focused, help_messages, A_SIZE(help_messages));
 }
 
-static void init_dropdown_settings() {
+static void init_dropdown_settings(void) {
 #define DANGER(NAME, UDATA) NAME##_original = lv_dropdown_get_selected(ui_dro##NAME##_danger);
     DANGER_ELEMENTS
 #undef DANGER
 }
 
-static void restore_danger_options() {
+static void restore_danger_options(void) {
     lv_dropdown_set_selected(ui_droIoStats_danger, config.DANGER.IOSTATS);
     lv_dropdown_set_selected(ui_droIdleFlush_danger, config.DANGER.IDLEFLUSH);
     lv_dropdown_set_selected(ui_droChildFirst_danger, config.DANGER.CHILDFIRST);
@@ -55,7 +55,7 @@ static void restore_danger_options() {
     lv_dropdown_set_selected(ui_droState_danger, !strcasecmp(config.DANGER.STATE, "mem"));
 }
 
-static void save_danger_options() {
+static void save_danger_options(void) {
     int is_modified = 0;
 
     CHECK_AND_SAVE_STD(danger, IoStats, "danger/iostats", INT, 0);
@@ -84,7 +84,7 @@ static void save_danger_options() {
     }
 }
 
-static void init_navigation_group() {
+static void init_navigation_group(void) {
     static lv_obj_t *ui_objects[UI_COUNT];
     static lv_obj_t *ui_objects_value[UI_COUNT];
     static lv_obj_t *ui_objects_glyph[UI_COUNT];
@@ -215,7 +215,7 @@ static void handle_help(void) {
     show_help(lv_group_get_focused(ui_group));
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -226,7 +226,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     adjust_panels();
     header_and_footer_setup();
 
@@ -257,7 +257,7 @@ static void ui_refresh_task() {
     }
 }
 
-int muxdanger_main() {
+int muxdanger_main(void) {
     init_module("muxdanger");
 
     init_theme(1, 0);

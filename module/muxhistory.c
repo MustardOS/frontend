@@ -12,7 +12,7 @@ static int splash_valid = 0;
 static char current_meta_text[MAX_BUFFER_SIZE];
 static char current_content_label[MAX_BUFFER_SIZE];
 
-static char *load_content_description() {
+static char *load_content_description(void) {
     char core_file[MAX_BUFFER_SIZE];
     snprintf(core_file, sizeof(core_file), "%s/%s.cfg",
              INFO_HIS_PATH, strip_ext(items[current_item_index].name));
@@ -247,7 +247,7 @@ static void gen_item(int file_count, char **file_names, char **last_dirs) {
     }
 }
 
-static void create_history_items() {
+static void create_history_items(void) {
     char **file_names = NULL;
     char **last_dirs = NULL;
 
@@ -262,7 +262,7 @@ static void create_history_items() {
     free(file_names);
 }
 
-static void remove_from_history() {
+static void remove_from_history(void) {
     char history_file[MAX_BUFFER_SIZE];
     snprintf(history_file, sizeof(history_file), "%s/%s.cfg",
              INFO_HIS_PATH, strip_ext(items[current_item_index].name));
@@ -279,7 +279,7 @@ static void remove_from_history() {
     }
 }
 
-static void add_to_collection() {
+static void add_to_collection(void) {
     char pointer_file[MAX_BUFFER_SIZE];
     snprintf(pointer_file, sizeof(pointer_file), INFO_HIS_PATH "/%s",
              items[current_item_index].name);
@@ -312,24 +312,30 @@ static int load_content(const char *content_name) {
     snprintf(cache_file, sizeof(cache_file), "%s",
              read_line_char_from(pointer_file, CACHE_CORE_PATH));
 
-    char *assigned_gov = NULL;
-    assigned_gov = load_content_governor(NULL, cache_file, 0, 0);
-    if (!assigned_gov) assigned_gov = device.CPU.DEFAULT;
-
     if (file_exist(cache_file)) {
         char *assigned_core = read_line_char_from(cache_file, CONTENT_CORE);
+
+        char *assigned_gov = specify_asset(load_content_governor(NULL, cache_file, 0, 0),
+                                           device.CPU.DEFAULT, "Governor");
+
+        char *assigned_con = specify_asset(load_content_control_scheme(NULL, cache_file, 0, 0),
+                                           "system", "Control Scheme");
+
         LOG_INFO(mux_module, "Assigned Core: %s", assigned_core)
         LOG_INFO(mux_module, "Assigned Governor: %s", assigned_gov)
+        LOG_INFO(mux_module, "Assigned Control Scheme: %s", assigned_con)
         LOG_INFO(mux_module, "Using Configuration: %s", cache_file)
 
         char add_to_history[MAX_BUFFER_SIZE];
-        snprintf(add_to_history, sizeof(add_to_history), "%s/%s",
-                 INFO_HIS_PATH, content_name);
-
+        snprintf(add_to_history, sizeof(add_to_history), INFO_HIS_PATH "/%s", content_name);
         write_text_to_file(add_to_history, "w", CHAR, read_all_char_from(pointer_file));
+
         write_text_to_file(LAST_PLAY_FILE, "w", CHAR, read_line_char_from(pointer_file, CONTENT_NAME));
+
         write_text_to_file(MUOS_GOV_LOAD, "w", CHAR, assigned_gov);
+        write_text_to_file(MUOS_CON_LOAD, "w", CHAR, assigned_con);
         write_text_to_file(MUOS_ROM_LOAD, "w", CHAR, read_all_char_from(cache_file));
+
         return 1;
     }
 
@@ -338,7 +344,6 @@ static int load_content(const char *content_name) {
 
     return 0;
 }
-
 
 static void list_nav_move(int steps, int direction) {
     if (ui_count <= 0) return;
@@ -373,8 +378,8 @@ static void list_nav_next(int steps) {
     list_nav_move(steps, +1);
 }
 
-static void handle_a() {
-    if (!ui_count) return;
+static void process_load(int from_start) {
+    if (!ui_count || holding_cell) return;
 
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
@@ -418,12 +423,33 @@ static void handle_a() {
         return;
     }
 
+    if (from_start) write_text_to_file(MANUAL_RA_LOAD, "w", INT, 1);
+
     load_mux("history");
+
     close_input();
     mux_input_stop();
 }
 
-static void handle_b() {
+static void handle_a(void) {
+    process_load(config.VISUAL.LAUNCH_SWAP ? 1 : 0);
+}
+
+static void handle_a_hold(void) {
+    process_load(config.VISUAL.LAUNCH_SWAP ? 0 : 1);
+}
+
+static void handle_l2_hold(void) {
+    holding_cell = 1;
+}
+
+static void handle_l2_release(void) {
+    holding_cell = 0;
+}
+
+static void handle_b(void) {
+    if (holding_cell) return;
+
     if (msgbox_active) {
         play_sound(SND_INFO_CLOSE);
         msgbox_active = 0;
@@ -438,22 +464,22 @@ static void handle_b() {
     mux_input_stop();
 }
 
-static void handle_x() {
-    if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY) return;
+static void handle_x(void) {
+    if (msgbox_active || !ui_count || kiosk.CONTENT.HISTORY || holding_cell) return;
 
     play_sound(SND_CONFIRM);
     remove_from_history();
 }
 
-static void handle_y() {
-    if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON) return;
+static void handle_y(void) {
+    if (msgbox_active || !ui_count || kiosk.COLLECT.ADD_CON || holding_cell) return;
 
     play_sound(SND_CONFIRM);
     add_to_collection();
 }
 
-static void handle_menu() {
-    if (msgbox_active || progress_onscreen != -1 || !ui_count) return;
+static void handle_menu(void) {
+    if (msgbox_active || progress_onscreen != -1 || !ui_count || holding_cell) return;
 
     play_sound(SND_INFO_OPEN);
     image_refresh("preview");
@@ -461,16 +487,16 @@ static void handle_menu() {
     show_info_box(items[current_item_index].display_name, load_content_description(), 1);
 }
 
-static void handle_random_select() {
-    if (msgbox_active || ui_count < 2) return;
+static void handle_random_select(void) {
+    if (msgbox_active || ui_count < 2 || holding_cell || !config.VISUAL.SHUFFLE) return;
 
-    uint32_t random_select = random() % ui_count;
-    int selected_index = (int) (random_select & INT16_MAX);
+    int dir, target;
+    shuffle_index(current_item_index, &dir, &target);
 
-    !(selected_index & 1) ? list_nav_move(selected_index, +1) : list_nav_move(selected_index, -1);
+    list_nav_move(target, dir);
 }
 
-static void adjust_panels() {
+static void adjust_panels(void) {
     adjust_panel_priority((lv_obj_t *[]) {
             ui_pnlFooter,
             ui_pnlHeader,
@@ -483,7 +509,7 @@ static void adjust_panels() {
     });
 }
 
-static void init_elements() {
+static void init_elements(void) {
     lv_obj_set_align(ui_imgBox, config.VISUAL.BOX_ART_ALIGN);
     lv_obj_set_align(ui_viewport_objects[0], config.VISUAL.BOX_ART_ALIGN);
 
@@ -617,7 +643,6 @@ int muxhistory_main(int his_index) {
     mux_input_options input_opts = {
             .swap_axis = (theme.MISC.NAVIGATION_TYPE == 1),
             .press_handler = {
-                    [MUX_INPUT_A] = handle_a,
                     [MUX_INPUT_B] = handle_b,
                     [MUX_INPUT_X] = handle_x,
                     [MUX_INPUT_Y] = handle_y,
@@ -630,12 +655,18 @@ int muxhistory_main(int his_index) {
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
                     [MUX_INPUT_R2] = handle_random_select,
             },
+            .release_handler = {
+                    [MUX_INPUT_A] = handle_a,
+                    [MUX_INPUT_L2] = handle_l2_release,
+            },
             .hold_handler = {
+                    [MUX_INPUT_A] = handle_a_hold,
                     [MUX_INPUT_DPAD_UP] = handle_list_nav_up_hold,
                     [MUX_INPUT_DPAD_DOWN] = handle_list_nav_down_hold,
                     [MUX_INPUT_DPAD_LEFT] = handle_list_nav_left_hold,
                     [MUX_INPUT_DPAD_RIGHT] = handle_list_nav_right_hold,
                     [MUX_INPUT_L1] = handle_list_nav_page_up,
+                    [MUX_INPUT_L2] = handle_l2_hold,
                     [MUX_INPUT_R1] = handle_list_nav_page_down,
                     [MUX_INPUT_R2] = handle_random_select,
             }
