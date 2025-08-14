@@ -66,6 +66,21 @@ static void image_refresh(char *image_type) {
     }
 }
 
+static bool skip_theme_item(const char *name, bool grid_enabled, bool hdmi_enabled, bool language_enabled, bool resolution640x480, 
+        bool resolution720x480, bool resolution720x720, bool resolution1024x768, bool resolution1280x720) {
+    return (
+        (config.THEME_FILTER.RESOLUTION_640x480 && !resolution640x480) ||
+        (config.THEME_FILTER.RESOLUTION_720x480 && !resolution720x480) ||
+        (config.THEME_FILTER.RESOLUTION_720x720 && !resolution720x720) ||
+        (config.THEME_FILTER.RESOLUTION_1024x768 && !resolution1024x768) ||
+        (config.THEME_FILTER.RESOLUTION_1280x720 && !resolution1280x720) ||
+        (config.THEME_FILTER.GRID && !grid_enabled) ||
+        (config.THEME_FILTER.HDMI && !hdmi_enabled) ||
+        (config.THEME_FILTER.LANGUAGE && !language_enabled) ||
+        (config.THEME_FILTER.LOOKUP[0] != '\0' && strcasestr(name, config.THEME_FILTER.LOOKUP) == NULL)
+    );
+}
+
 static void create_content_items() {
     if (!file_exist(theme_data_local_path)) {
         LOG_WARN(mux_module, "Theme Data Not Found At: %s", theme_data_local_path)
@@ -97,8 +112,11 @@ static void create_content_items() {
         char theme_url[MAX_BUFFER_SIZE];
         json_string_copy(json_object_get(theme_item, "url"), theme_url, sizeof(theme_url));
 
-        add_theme_item(&theme_items, &theme_item_count, theme_name, theme_url, grid_enabled, hdmi, language, 
-            resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720);
+        if (!skip_theme_item(theme_name, grid_enabled, hdmi, language, 
+                resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720)) {
+            add_theme_item(&theme_items, &theme_item_count, theme_name, theme_url, grid_enabled, hdmi, language, 
+                resolution640x480, resolution720x480, resolution720x720, resolution1024x768, resolution1280x720);
+        }
     }
     sort_theme_items(theme_items, theme_item_count);
 
@@ -203,7 +221,6 @@ static void theme_download_finished(int result) {
 }
 
 static void refresh_theme_previews_finished(int result) {
-    printf("****refresh_theme_previews: %d\n", result);
     if (result == 0) {
         extract_archive(preview_zip_path, "themedwn");
         load_mux("themedwn");
@@ -216,13 +233,10 @@ static void refresh_theme_previews_finished(int result) {
 }
 
 static void refresh_theme_data_finished(int result) {
-    printf("****refresh_theme_data: %d\n", result);
     if (result == 0) {
         if (file_exist(preview_zip_path)) remove(preview_zip_path);
         set_download_callbacks(refresh_theme_previews_finished);
-        char *theme_preview_url = read_line_char_from("/tmp/themepreviewurl.txt", 1);
-        initiate_download(theme_preview_url, preview_zip_path, true, lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_PREVIEWS);
-        // initiate_download("https://raw.githubusercontent.com/MustardOS/theme/refs/heads/main/docs/theme_catalogue.muxzip", preview_zip_path, true, lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_PREVIEWS);
+        initiate_download(config.THEME_DOWNLOADER.THEME_PREVIEW_URL, preview_zip_path, true, lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_PREVIEWS);
     } else {
         play_sound(SND_ERROR);
         toast_message(lang.MUXTHEMEDOWNLOADER.ERROR_RETRIEVING_THEME_DATA, 0);
@@ -232,9 +246,7 @@ static void refresh_theme_data_finished(int result) {
 static void update_theme_data() {
     if (file_exist(theme_data_local_path)) remove(theme_data_local_path);
     set_download_callbacks(refresh_theme_data_finished);
-    char *theme_data_url = read_line_char_from("/tmp/themedataurl.txt", 1);
-    initiate_download(theme_data_url, theme_data_local_path, true, lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_DATA);
-    // initiate_download("https://raw.githubusercontent.com/MustardOS/theme/refs/heads/main/docs/theme_data.json", theme_data_local_path, true, lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_DATA);
+    initiate_download(config.THEME_DOWNLOADER.THEME_DATA_URL, theme_data_local_path, true, lang.MUXTHEMEDOWNLOADER.DOWNLOADING_THEME_DATA);
 }
 
 static void handle_a() {
@@ -289,8 +301,13 @@ static void handle_x() {
 }
 
 static void handle_y() {
-    if (download_in_progress || msgbox_active || !ui_count) return;
+    if (download_in_progress || msgbox_active) return;
     play_sound(SND_CONFIRM);
+    
+    load_mux("themefilter");
+
+    close_input();
+    mux_input_stop();
 }
 
 static void adjust_panels() {

@@ -352,6 +352,7 @@ static const ModuleEntry modules[] = {
         {"screenshot",  "info",     "muxshot",            muxshot_main,       NULL},
         {"space",       "info",     "muxspace",           muxspace_main,      NULL},
         {"themedwn",    "custom",   "muxthemedownloader", muxthemedownloader_main, NULL},
+        {"themefilter", "themedwn", "muxthemefilter",     muxthemefilter_main, NULL},
         {"tester",      "info",     "muxtester",          muxtester_main,     NULL},
         {"sysinfo",     "info",     "muxsysinfo",         muxsysinfo_main,    NULL},
         {"netinfo",     "info",     "muxnetinfo",         muxnetinfo_main,    NULL},

@@ -104,6 +104,12 @@
     CUSTOM(Sound,           "sound")      \
     CUSTOM(Chime,           "chime")
 
+#define THEMEFILTER_ELEMENTS               \
+    THEMEFILTER(AllThemes,   "theme")      \
+    THEMEFILTER(Grid,        "grid")       \
+    THEMEFILTER(Hdmi,        "hdmi")       \
+    THEMEFILTER(Language,    "language")
+
 #define DANGER_ELEMENTS                  \
     DANGER(VmSwap,        "vmswap")      \
     DANGER(DirtyRatio,    "dirty-ratio") \
