@@ -58,6 +58,8 @@ extern int first_open;
 extern int ui_count;
 extern int holding_cell;
 
+extern int theme_downloader_index;
+
 extern lv_obj_t *overlay_image;
 extern lv_obj_t *kiosk_image;
 

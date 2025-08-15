@@ -20,6 +20,8 @@ int first_open = 1;
 int ui_count = 0;
 int holding_cell = 0;
 
+int theme_downloader_index = 0;
+
 lv_obj_t *msgbox_element = NULL;
 lv_obj_t *overlay_image = NULL;
 lv_obj_t *kiosk_image = NULL;

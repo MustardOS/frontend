@@ -135,6 +135,13 @@ content_item get_item_by_index(content_item *content_items, size_t index) {
     return content_items[index];
 }
 
+int get_folder_item_index_by_name(content_item *content_items, size_t count, const char *name) {
+    for (size_t i = 0; i < count; i++) {
+        if (content_items[i].content_type == FOLDER && strcasecmp(content_items[i].name, name) == 0) return i;
+    }
+    return -1;
+}
+
 void free_items(content_item **content_items, size_t *count) {
     for (size_t i = 0; i < *count; i++) {
         free((*content_items)[i].name);

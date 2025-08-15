@@ -320,6 +320,8 @@ static void handle_x() {
 static void handle_y() {
     if (download_in_progress || msgbox_active) return;
     play_sound(SND_CONFIRM);
+    
+    theme_downloader_index = current_item_index;
 
     load_mux("themefilter");
 
@@ -423,9 +425,11 @@ int muxthemedownloader_main() {
     set_nav_flags(nav_e, A_SIZE(nav_e));
     adjust_panels();
 
+    if (ui_count > 0) list_nav_move(theme_downloader_index, 1);
+    theme_downloader_index = 0;
+
     init_timer(ui_refresh_task, NULL);
 
-    if (ui_count > 0) list_nav_move(0, 1);
     if (!file_exist(theme_data_local_path)) update_theme_data();
 
     mux_input_options input_opts = {
