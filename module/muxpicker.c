@@ -54,19 +54,25 @@ static int extract_preview(char *dimension, char *extract_path) {
 
 static void image_refresh(void) {
     if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU ||
-        (strcasecmp(picker_type, "/theme") && strcasecmp(picker_type, "package/bootlogo"))) return;
+        (!strcasecmp(picker_type, "/theme") && !strcasecmp(picker_type, "package/bootlogo"))) {
+        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
+        return;
+    }
 
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
     char *name = lv_label_get_text(lv_group_get_focused(ui_group));
     char preview_path[PATH_MAX];
-    snprintf(preview_path, sizeof(preview_path), "%s/%s/box/%s%s.png", INFO_CAT_PATH, get_last_subdir(picker_type, '/', 1), mux_dimension, name);
+    snprintf(preview_path, sizeof(preview_path), "%s/%s/box/%s%s.png", INFO_CAT_PATH,
+             get_last_subdir(picker_type, '/', 1), mux_dimension, name);
 
     char fallback_path[PATH_MAX];
-    snprintf(fallback_path, sizeof(fallback_path), "%s/%s/box/640x480/%s.png", INFO_CAT_PATH, get_last_subdir(picker_type, '/', 1), name);
+    snprintf(fallback_path, sizeof(fallback_path), "%s/%s/box/640x480/%s.png", INFO_CAT_PATH,
+             get_last_subdir(picker_type, '/', 1), name);
 
     if (!file_exist(preview_path) && !file_exist(fallback_path)) {
-        if (!extract_preview(mux_dimension, preview_path) && strcmp("640x480/", mux_dimension)) extract_preview("640x480/", fallback_path);
+        if (!extract_preview(mux_dimension, preview_path) && !strcmp("640x480/", mux_dimension))
+            extract_preview("640x480/", fallback_path);
     }
 
     if (!file_exist(preview_path) && !file_exist(fallback_path)) {
@@ -76,17 +82,18 @@ static void image_refresh(void) {
                 file_exist(preview_path) ? preview_path : fallback_path, config.VISUAL.BOX_ART_ALIGN,
                 validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
                 validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
-                theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT, theme.IMAGE_LIST.PAD_TOP,
-                theme.IMAGE_LIST.PAD_BOTTOM
+                theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT,
+                theme.IMAGE_LIST.PAD_TOP, theme.IMAGE_LIST.PAD_BOTTOM
         };
         update_image(ui_imgBox, image_settings);
     }
 }
 
 static void create_picker_items(void) {
-    if (device.DEVICE.HAS_NETWORK && !strcasecmp(picker_type, "/theme") && strcasecmp(base_dir, sys_dir) == 0 && !kiosk.CUSTOM.THEME_DOWN) 
-    {
-        add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWNLOADER_LABEL, lang.MUXPICKER.THEME_DOWNLOADER_LABEL, "", MENU);
+    if (device.DEVICE.HAS_NETWORK && !strcasecmp(picker_type, "/theme") && strcasecmp(base_dir, sys_dir) == 0 &&
+        !kiosk.CUSTOM.THEME_DOWN) {
+        add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWNLOADER_LABEL,
+                 lang.MUXPICKER.THEME_DOWNLOADER_LABEL, "", MENU);
     }
 
     DIR *td;
@@ -134,7 +141,9 @@ static void create_picker_items(void) {
 
         lv_obj_t *ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
         apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module,
-                               items[i].content_type == MENU ? "download" : items[i].content_type == FOLDER ? "folder" : get_last_subdir(picker_type, '/', 1));
+                               items[i].content_type == MENU ? "download" :
+                               items[i].content_type == FOLDER ? "folder" :
+                               get_last_subdir(picker_type, '/', 1));
 
         lv_group_add_obj(ui_group, ui_lblPickerItem);
         lv_group_add_obj(ui_group_glyph, ui_lblPickerItemGlyph);
