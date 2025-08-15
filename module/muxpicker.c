@@ -59,7 +59,14 @@ static void image_refresh(void) {
     if (!extract_preview()) {
         lv_img_set_src(ui_imgBox, &ui_image_Missing);
     } else {
-        lv_img_set_src(ui_imgBox, "M:/tmp/" TEMP_PREVIEW);
+        struct ImageSettings image_settings = {
+                "/tmp/" TEMP_PREVIEW, config.VISUAL.BOX_ART_ALIGN,
+                validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
+                validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
+                theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT, theme.IMAGE_LIST.PAD_TOP,
+                theme.IMAGE_LIST.PAD_BOTTOM
+        };
+        update_image(ui_imgBox, image_settings);
     }
 }
 
