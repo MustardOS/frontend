@@ -41,26 +41,39 @@ static int version_check(void) {
     return 0;
 }
 
-static int extract_preview(void) {
+static int extract_preview(char *dimension, char *extract_path) {
     char picker_archive[MAX_BUFFER_SIZE];
     snprintf(picker_archive, sizeof(picker_archive), "%s/%s.%s",
              sys_dir, lv_label_get_text(lv_group_get_focused(ui_group)), picker_extension);
 
     char device_preview[PATH_MAX];
-    snprintf(device_preview, sizeof(device_preview), "%s" TEMP_PREVIEW, mux_dimension);
-    return extract_file_from_zip(picker_archive, device_preview, "/tmp/" TEMP_PREVIEW);
+    snprintf(device_preview, sizeof(device_preview), "%s" TEMP_PREVIEW, dimension);
+
+    return extract_file_from_zip(picker_archive, device_preview, extract_path);
 }
 
 static void image_refresh(void) {
-    if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU) return;
+    if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU ||
+        (strcasecmp(picker_type, "/theme") && strcasecmp(picker_type, "package/bootlogo"))) return;
 
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
-    if (!extract_preview()) {
-        lv_img_set_src(ui_imgBox, &ui_image_Missing);
+    char *name = lv_label_get_text(lv_group_get_focused(ui_group));
+    char preview_path[PATH_MAX];
+    snprintf(preview_path, sizeof(preview_path), "%s/%s/box/%s%s.png", INFO_CAT_PATH, get_last_subdir(picker_type, '/', 1), mux_dimension, name);
+
+    char fallback_path[PATH_MAX];
+    snprintf(fallback_path, sizeof(fallback_path), "%s/%s/box/640x480/%s.png", INFO_CAT_PATH, get_last_subdir(picker_type, '/', 1), name);
+
+    if (!file_exist(preview_path) && !file_exist(fallback_path)) {
+        if (!extract_preview(mux_dimension, preview_path) && strcmp("640x480/", mux_dimension)) extract_preview("640x480/", fallback_path);
+    }
+
+    if (!file_exist(preview_path) && !file_exist(fallback_path)) {
+        lv_img_set_src(ui_imgBox, &ui_image_Nothing);
     } else {
         struct ImageSettings image_settings = {
-                "/tmp/" TEMP_PREVIEW, config.VISUAL.BOX_ART_ALIGN,
+                file_exist(preview_path) ? preview_path : fallback_path, config.VISUAL.BOX_ART_ALIGN,
                 validate_int16((int16_t) (device.MUX.WIDTH * .45), "width"),
                 validate_int16((int16_t) (device.MUX.HEIGHT), "height"),
                 theme.IMAGE_LIST.PAD_LEFT, theme.IMAGE_LIST.PAD_RIGHT, theme.IMAGE_LIST.PAD_TOP,
@@ -153,7 +166,6 @@ static void list_nav_move(int steps, int direction) {
     }
 
     update_scroll_position(theme.MUX.ITEM.COUNT, theme.MUX.ITEM.PANEL, ui_count, current_item_index, ui_pnlContent);
-    image_refresh();
     set_label_long_mode(&theme, lv_group_get_focused(ui_group));
     nav_moved = 1;
 }
@@ -396,6 +408,8 @@ int muxpicker_main(char *type, char *ex_dir) {
     snprintf(sys_dir, sizeof(sys_dir), "%s", ex_dir);
     snprintf(base_dir, sizeof(base_dir), (RUN_STORAGE_PATH "%s"), picker_type);
     if (strcmp(sys_dir, "") == 0) snprintf(sys_dir, sizeof(sys_dir), "%s", base_dir);
+    remove_double_slashes(sys_dir);
+    remove_double_slashes(base_dir);
 
     init_module("muxpicker");
 
