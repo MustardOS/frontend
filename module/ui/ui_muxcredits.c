@@ -115,15 +115,15 @@ const char *knight_two[] = {
         "poppajonzz", "wmaddler", "yomama78", "pixelgabz", "admiralthrawn_1", "penpen2crayon",
         "jupyter", "lander95", "rxepicness", "bburbank", "crownlessk", "johnunsc",
         "nuke_67641", "misjbaksel", "zauberpony", "dreadpirates", "artur_ditu", "wizardfights",
-        "smittywerbenjaegermanjensen9250", "stin87", "rkevinc", "obitomatheus",
+        "smittywerbenjaegermanjensen9250", "stin87", "rkevinc", "obitomatheus", "johnrich340",
         NULL
 };
 
 const char *contributors[] = {
         "acmeplus", "aeverdyn", "antikk", "arkun", "bgelmini", "bitter_bizarro",
         "cart_su", "chronoss09", "duncanyoyo1", "habbening", "imcokeman", "incognitoman",
-        "johnnyonflame", "koolkidcorey", "kriznick", "mikhailzrick", "synthic", "xonglebongle",
-        "zarquon",
+        "johnnyonflame", "koolkidcorey", "kriznick", "mikhailzrick", "synthic", "voodatari",
+        "xonglebongle", "zarquon",
         NULL
 };
 
