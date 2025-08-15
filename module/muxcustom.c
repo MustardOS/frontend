@@ -417,6 +417,14 @@ static void handle_confirm(void) {
             write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, elements[i].launch);
 
             play_sound(SND_CONFIRM);
+
+            toast_message(lang.GENERIC.LOADING, 0);
+            lv_obj_move_foreground(ui_pnlMessage);
+
+            // Refresh and add a small delay to actually display the message!
+            lv_task_handler();
+            usleep(256);
+
             load_mux("picker");
 
             close_input();
