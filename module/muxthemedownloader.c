@@ -301,9 +301,10 @@ static void handle_b() {
             remove(theme_path);
         }
     } else {
-        play_sound(SND_BACK);
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "theme");
+        write_text_to_file(MUOS_PIK_LOAD, "w", CHAR, "/theme");
 
-        load_mux("custom");
+        load_mux("picker");
 
         close_input();
         mux_input_stop();

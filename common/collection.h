@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 typedef enum {
+    MENU,
     FOLDER,
     ITEM
 } content_type;

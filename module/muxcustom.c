@@ -1,7 +1,7 @@
 #include "muxshare.h"
 #include "ui/ui_muxcustom.h"
 
-#define UI_COUNT 18
+#define UI_COUNT 17
 
 #define CUSTOM(NAME, UDATA) static int NAME##_original;
     CUSTOM_ELEMENTS
@@ -50,7 +50,6 @@ static void show_help(lv_obj_t *element_focused) {
             {ui_lblBootlogo_custom,        lang.MUXCUSTOM.HELP.BOOTLOGO},
             {ui_lblCatalogue_custom,       lang.MUXCUSTOM.HELP.CATALOGUE},
             {ui_lblConfig_custom,          lang.MUXCUSTOM.HELP.CONFIG},
-            {ui_lblThemeDownloader_custom, lang.MUXCUSTOM.HELP.THEME_DOWNLOADER},
             {ui_lblTheme_custom,           lang.MUXCUSTOM.HELP.THEME},
             {ui_lblThemeResolution_custom, lang.MUXCUSTOM.HELP.THEME_RESOLUTION},
             {ui_lblThemeAlternate_custom,  lang.MUXCUSTOM.HELP.THEME_ALTERNATE},
@@ -163,7 +162,6 @@ static void init_navigation_group(void) {
     INIT_OPTION_ITEM(-1, custom, Bootlogo, lang.MUXCUSTOM.BOOTLOGO, "bootlogo", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Catalogue, lang.MUXCUSTOM.CATALOGUE, "catalogue", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Config, lang.MUXCUSTOM.CONFIG, "config", NULL, 0);
-    INIT_OPTION_ITEM(-1, custom, ThemeDownloader, lang.MUXCUSTOM.THEME_DOWNLOADER, "themedwn", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, Theme, lang.MUXCUSTOM.THEME, "theme", NULL, 0);
     INIT_OPTION_ITEM(-1, custom, ThemeResolution, lang.MUXCUSTOM.THEME_RESOLUTION, "resolution", NULL, 0);
 
@@ -209,11 +207,6 @@ static void init_navigation_group(void) {
         apply_text_long_dot(&theme, ui_objects_panel[i], ui_objects[i]);
     }
 
-    if (!device.DEVICE.HAS_NETWORK || kiosk.CUSTOM.THEME_DOWN) {
-        lv_obj_add_flag(ui_pnlThemeDownloader_custom, MU_OBJ_FLAG_HIDE_FLOAT);
-        ui_count -= 1;
-    }
-
     // Removal of animated background element
     lv_obj_add_flag(ui_pnlAnimation_custom, MU_OBJ_FLAG_HIDE_FLOAT);
     ui_count -= 1;
@@ -224,7 +217,7 @@ static void init_navigation_group(void) {
 static void check_focus(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBootlogo_custom || element_focused == ui_lblCatalogue_custom ||
-        element_focused == ui_lblConfig_custom || element_focused == ui_lblThemeDownloader_custom ||
+        element_focused == ui_lblConfig_custom || 
         element_focused == ui_lblTheme_custom) {
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -414,15 +407,6 @@ static void handle_confirm(void) {
             mux_input_stop();
 
             return;
-        } else if (strcasecmp(u_data, "themedwn") == 0) {
-            play_sound(SND_CONFIRM);
-            write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themedwn");
-            load_mux("themedwn");
-
-            close_input();
-            mux_input_stop();
-
-            break;
         } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
             if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 kiosk_denied();
