@@ -11,8 +11,6 @@ static void list_nav_move(int steps, int direction);
 
 static char theme_alt_original[MAX_BUFFER_SIZE];
 
-static int theme_resolution_original;
-
 struct theme_resolution {
     char *resolution;
     int value;
@@ -39,8 +37,8 @@ static void restore_theme_resolution(void) {
     for (size_t i = 0; i < sizeof(theme_resolutions) / sizeof(theme_resolutions[0]); i++) {
         if (theme_resolutions[i].value == config.SETTINGS.GENERAL.THEME_RESOLUTION) {
             int index = lv_dropdown_get_option_index(ui_droThemeResolution_custom, theme_resolutions[i].resolution);
-            theme_resolution_original = index <= 0 ? 0 : index;
-            lv_dropdown_set_selected(ui_droThemeResolution_custom, theme_resolution_original);
+            ThemeResolution_original = index <= 0 ? 0 : index;
+            lv_dropdown_set_selected(ui_droThemeResolution_custom, ThemeResolution_original);
         }
     }
 }
@@ -217,7 +215,7 @@ static void init_navigation_group(void) {
 static void check_focus(void) {
     struct _lv_obj_t *element_focused = lv_group_get_focused(ui_group);
     if (element_focused == ui_lblBootlogo_custom || element_focused == ui_lblCatalogue_custom ||
-        element_focused == ui_lblConfig_custom || 
+        element_focused == ui_lblConfig_custom ||
         element_focused == ui_lblTheme_custom) {
         lv_obj_clear_flag(ui_lblNavA, MU_OBJ_FLAG_HIDE_FLOAT);
         lv_obj_clear_flag(ui_lblNavAGlyph, MU_OBJ_FLAG_HIDE_FLOAT);
@@ -315,16 +313,10 @@ static void save_custom_options(void) {
     lv_dropdown_get_selected_str(ui_droThemeResolution_custom, theme_resolution, sizeof(theme_resolution));
     int idx_theme_resolution = get_theme_resolution_value(theme_resolution);
 
-    if (lv_dropdown_get_selected(ui_droThemeResolution_custom) != theme_resolution_original) {
+    if (lv_dropdown_get_selected(ui_droThemeResolution_custom) != ThemeResolution_original) {
         is_modified++;
+
         write_text_to_file((CONF_CONFIG_PATH "settings/general/theme_resolution"), "w", INT, idx_theme_resolution);
-        refresh_resolution = 1;
-    }
-
-    if (is_modified > 0) {
-        toast_message(lang.GENERIC.SAVING, 0);
-        refresh_screen(ui_screen);
-
         refresh_resolution = 1;
     }
 
@@ -359,17 +351,23 @@ static void save_custom_options(void) {
         }
     }
 
-    int idx_music = lv_dropdown_get_selected(ui_droMusic_custom);
-    if (!idx_music) {
-        if (!is_silence_playing) play_silence_bgm();
-    } else {
-        if (idx_music != Music_original || is_silence_playing) {
-            init_fe_bgm(&fe_bgm, idx_music, 1);
+    if (lv_dropdown_get_selected(ui_droMusic_custom) != Music_original) {
+        is_modified++;
+
+        int idx_music = lv_dropdown_get_selected(ui_droMusic_custom);
+        if (!idx_music) {
+            if (!is_silence_playing) play_silence_bgm();
+        } else {
+            if (idx_music != Music_original || is_silence_playing) init_fe_bgm(&fe_bgm, idx_music, 1);
         }
     }
 
-    int idx_sound = lv_dropdown_get_selected(ui_droSound_custom);
-    init_fe_snd(&fe_snd, idx_sound, idx_sound);
+    if (lv_dropdown_get_selected(ui_droSound_custom) != Sound_original) {
+        is_modified++;
+
+        int idx_sound = lv_dropdown_get_selected(ui_droSound_custom);
+        init_fe_snd(&fe_snd, idx_sound, idx_sound);
+    }
 
     if (is_modified > 0) {
         const char *args[] = {INTERNAL_PATH "script/mux/tweak.sh", NULL};
@@ -407,7 +405,7 @@ static void handle_confirm(void) {
             mux_input_stop();
 
             return;
-        } else if (strcasecmp(u_data, elements[i].mux_name) == 0) {
+        } else if (!strcasecmp(u_data, elements[i].mux_name)) {
             if (kiosk.ENABLE && elements[i].kiosk_flag && *elements[i].kiosk_flag) {
                 kiosk_denied();
                 return;
