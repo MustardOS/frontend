@@ -263,7 +263,8 @@ static void handle_confirm(void) {
 static void handle_confirm_force(void) {
     if (msgbox_active || ui_count <= 0 ||
         strcasecmp(picker_type, "/theme") != 0 ||
-        items[current_item_index].content_type == FOLDER) {
+        items[current_item_index].content_type == FOLDER || 
+        items[current_item_index].content_type == MENU) {
         return;
     }
 
