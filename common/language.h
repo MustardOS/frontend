@@ -615,6 +615,7 @@ struct mux_lang {
         char CATALOGUE[MAX_BUFFER_SIZE];
         char CONFIG[MAX_BUFFER_SIZE];
         char THEME[MAX_BUFFER_SIZE];
+        char THEME_DOWNLOADER_LABEL[MAX_BUFFER_SIZE];
         char INVALID_VER[MAX_BUFFER_SIZE];
         char INVALID_RES[MAX_BUFFER_SIZE];
         struct {

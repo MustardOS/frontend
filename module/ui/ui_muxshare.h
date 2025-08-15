@@ -92,7 +92,6 @@
     CUSTOM(Bootlogo,        "bootlogo")   \
     CUSTOM(Catalogue,       "catalogue")  \
     CUSTOM(Config,          "config")     \
-    CUSTOM(ThemeDownloader, "themedwn")   \
     CUSTOM(Theme,           "theme")      \
     CUSTOM(ThemeResolution, "resolution") \
     CUSTOM(ThemeAlternate,  "alternate")  \

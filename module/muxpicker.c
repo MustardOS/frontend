@@ -52,7 +52,7 @@ static int extract_preview(void) {
 }
 
 static void image_refresh(void) {
-    if (items[current_item_index].content_type == FOLDER) return;
+    if (items[current_item_index].content_type == FOLDER || items[current_item_index].content_type == MENU) return;
 
     lv_img_cache_invalidate_src(lv_img_get_src(ui_imgBox));
 
@@ -64,6 +64,11 @@ static void image_refresh(void) {
 }
 
 static void create_picker_items(void) {
+    if (device.DEVICE.HAS_NETWORK && !strcasecmp(picker_type, "/theme") && strcasecmp(base_dir, sys_dir) == 0 && !kiosk.CUSTOM.THEME_DOWN) 
+    {
+        add_item(&items, &item_count, lang.MUXPICKER.THEME_DOWNLOADER_LABEL, lang.MUXPICKER.THEME_DOWNLOADER_LABEL, "", MENU);
+    }
+
     DIR *td;
     struct dirent *tf;
 
@@ -109,7 +114,7 @@ static void create_picker_items(void) {
 
         lv_obj_t *ui_lblPickerItemGlyph = lv_img_create(ui_pnlPicker);
         apply_theme_list_glyph(&theme, ui_lblPickerItemGlyph, mux_module,
-                               items[i].content_type == FOLDER ? "folder" : get_last_subdir(picker_type, '/', 1));
+                               items[i].content_type == MENU ? "download" : items[i].content_type == FOLDER ? "folder" : get_last_subdir(picker_type, '/', 1));
 
         lv_group_add_obj(ui_group, ui_lblPickerItem);
         lv_group_add_obj(ui_group_glyph, ui_lblPickerItemGlyph);
@@ -161,7 +166,14 @@ static void handle_confirm(void) {
 
     write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
 
-    if (items[current_item_index].content_type == FOLDER) {
+    if (items[current_item_index].content_type == MENU) {
+        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themedwn");
+        load_mux("themedwn");
+
+        close_input();
+        mux_input_stop();
+        return;
+    } else if (items[current_item_index].content_type == FOLDER) {
         char n_dir[MAX_BUFFER_SIZE];
         snprintf(n_dir, sizeof(n_dir), "%s/%s",
                  sys_dir, items[current_item_index].name);

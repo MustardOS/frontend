@@ -594,6 +594,7 @@ void load_lang(struct mux_lang *lang) {
     SPECIFIC_FIELD(lang->MUXPICKER.CATALOGUE, "CATALOGUE PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.CONFIG, "CONFIG PICKER");
     SPECIFIC_FIELD(lang->MUXPICKER.THEME, "THEME PICKER");
+    SPECIFIC_FIELD(lang->MUXPICKER.THEME_DOWNLOADER_LABEL, "Theme Downloader");
     SPECIFIC_FIELD(lang->MUXPICKER.INVALID_VER, "Incompatible Theme Version Detected");
     SPECIFIC_FIELD(lang->MUXPICKER.INVALID_RES, "Incompatible Theme Resolution Detected");
     SPECIFIC_FIELD(lang->MUXPICKER.NONE.CREDIT, "There are no attributed credits!");
