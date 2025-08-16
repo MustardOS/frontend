@@ -52,6 +52,7 @@ static void save_theme_filter_options() {
         toast_message(lang.GENERIC.SAVING, 0);
         refresh_screen(ui_screen);
         refresh_config = 1;
+        theme_downloader_index = 0;
     }
 }
 

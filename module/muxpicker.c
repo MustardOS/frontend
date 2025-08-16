@@ -192,10 +192,7 @@ static void handle_confirm(void) {
 
     play_sound(SND_CONFIRM);
 
-    write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
-
     if (items[current_item_index].content_type == MENU) {
-        write_text_to_file(MUOS_PDI_LOAD, "w", CHAR, "themedwn");
         load_mux("themedwn");
 
         close_input();
@@ -208,6 +205,8 @@ static void handle_confirm(void) {
 
         write_text_to_file(EXPLORE_DIR, "w", CHAR, n_dir);
     } else {
+        write_text_to_file(MUOS_PIN_LOAD, "w", INT, current_item_index);
+
         if (!strcasecmp(picker_type, "/theme") && !version_check()) {
             play_sound(SND_ERROR);
             toast_message(lang.MUXPICKER.INVALID_VER, 1000);
@@ -264,7 +263,8 @@ static void handle_confirm(void) {
 static void handle_confirm_force(void) {
     if (msgbox_active || ui_count <= 0 ||
         strcasecmp(picker_type, "/theme") != 0 ||
-        items[current_item_index].content_type == FOLDER) {
+        items[current_item_index].content_type == FOLDER || 
+        items[current_item_index].content_type == MENU) {
         return;
     }
 
@@ -324,7 +324,8 @@ static void handle_back(void) {
     } else {
         char *base_dir = strrchr(sys_dir, '/');
         if (base_dir) write_text_to_file(EXPLORE_DIR, "w", CHAR, strndup(sys_dir, base_dir - sys_dir));
-        write_text_to_file(EXPLORE_NAME, "w", CHAR, get_last_subdir(sys_dir, '/', 5));
+        base_dir++; // skip the '/' at the start
+        write_text_to_file(EXPLORE_NAME, "w", CHAR, base_dir);
         load_mux("picker");
     }
 
@@ -462,13 +463,9 @@ int muxpicker_main(char *type, char *ex_dir) {
 
     char *e_name_line = file_exist(EXPLORE_NAME) ? read_line_char_from(EXPLORE_NAME, 1) : NULL;
     if (e_name_line) {
-        for (size_t i = 0; i < item_count; i++) {
-            if (!strcasecmp(items[i].name, e_name_line)) {
-                sys_index = (int) i;
-                remove(EXPLORE_NAME);
-                break;
-            }
-        }
+        int index = get_folder_item_index_by_name(items, item_count, e_name_line);
+        if (index > -1) sys_index = index;
+        remove(EXPLORE_NAME);
     }
 
     if (ui_count > 0) {
