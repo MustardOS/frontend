@@ -24,6 +24,7 @@ extern int is_silence_playing;
 extern Mix_Music *current_bgm;
 extern int current_brightness;
 extern int current_volume;
+extern int is_blank;
 
 extern char *theme_back_compat[];
 

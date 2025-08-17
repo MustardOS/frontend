@@ -3,7 +3,6 @@
 #include "../lvgl/src/drivers/display/sdl.h"
 
 static int exit_status = -1;
-static int is_blank = 0;
 static int blank_timeout = 3;
 
 static char capacity_info[MAX_BUFFER_SIZE];

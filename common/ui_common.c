@@ -812,7 +812,6 @@ void init_ui_common_screen(struct theme_config *theme, struct mux_device *device
     lv_obj_set_style_bg_opa(ui_pnlDownload, 230, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_opa(ui_pnlDownload, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    
     ui_barDownload = lv_bar_create(ui_pnlDownload);
     lv_obj_set_size(ui_barDownload, 400, 40);
     lv_obj_set_style_radius(ui_barDownload, theme->BAR.PROGRESS_RADIUS, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -956,9 +955,23 @@ void ui_common_handle_idle(void) {
     }
 
     if (file_exist("/tmp/mux_blank")) {
-        lv_obj_set_style_bg_opa(ui_blank, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_move_foreground(ui_blank);
+        if (!is_blank) {
+            char buffer[MAX_BUFFER_SIZE];
+            CFG_INT_FIELD(config.SETTINGS.GENERAL.BRIGHTNESS, CONF_CONFIG_PATH "settings/general/brightness", 90)
+
+            if (config.SETTINGS.GENERAL.BRIGHTNESS <= 0) {
+                is_blank = 1;
+
+                lv_obj_set_style_bg_opa(ui_blank, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_move_foreground(ui_blank);
+            }
+        } else {
+            is_blank = 0;
+            remove("/tmp/mux_blank");
+        }
     } else {
+        is_blank = 0;
+
         if (lv_obj_get_style_bg_opa(ui_blank, LV_PART_MAIN | LV_STATE_DEFAULT) > 0) {
             lv_obj_set_style_bg_opa(ui_blank, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_obj_move_background(ui_blank);

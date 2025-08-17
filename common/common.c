@@ -66,6 +66,7 @@ char **bgm_files = NULL;
 size_t bgm_file_count = 0;
 int current_brightness = 0;
 int current_volume = 0;
+int is_blank = 0;
 
 char *theme_back_compat[] = {
         config.SYSTEM.VERSION,
