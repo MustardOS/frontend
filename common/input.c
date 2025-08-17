@@ -144,6 +144,10 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     mux_input_type mux_type;
     int axis;
     bool analog;
+    
+    // Check if this is an RK3326-based device that needs axis remapping
+    bool is_rk_device = (strncasecmp(device.DEVICE.NAME, "rk", 2) == 0);
+    
     if (event->type == device.INPUT_TYPE.DPAD.UP &&
         event->code == device.INPUT_CODE.DPAD.UP) {
         // Axis: D-pad vertical
@@ -156,7 +160,7 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
         analog = false;
     } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.UP &&
                event->code == device.INPUT_CODE.ANALOG.LEFT.UP) {
-        // Axis: left stick vertical
+        // Axis: left stick vertical 
         axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
         analog = true;
     } else if (event->type == device.INPUT_TYPE.ANALOG.LEFT.LEFT &&
@@ -166,13 +170,21 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
         analog = true;
     } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.UP &&
                event->code == device.INPUT_CODE.ANALOG.RIGHT.UP) {
-        // Axis: right stick vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
+        // Axis: right stick vertical (but on RK devices this actually controls left stick vertical)
+        if (is_rk_device) {
+            axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+        } else {
+            axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
+        }
         analog = true;
     } else if (event->type == device.INPUT_TYPE.ANALOG.RIGHT.LEFT &&
                event->code == device.INPUT_CODE.ANALOG.RIGHT.LEFT) {
-        // Axis: right stick horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+        // Axis: right stick horizontal (but on RK devices this actually controls left stick vertical)
+        if (is_rk_device) {
+            axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+        } else {
+            axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+        }
         analog = true;
     } else if (event->type == device.INPUT_TYPE.BUTTON.L2 &&
                event->code == device.INPUT_CODE.BUTTON.L2) {
@@ -195,14 +207,26 @@ static void process_abs(const mux_input_options *opts, const struct input_event 
     //
     // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
     // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
+    
+    // Check if this is an RK3326-based device that needs inverted analog stick logic
+    bool invert_analog = analog && (strncasecmp(device.DEVICE.NAME, "rk", 2) == 0);
+    
     if ((analog && event->value <= -device.INPUT_EVENT.AXIS + device.INPUT_EVENT.AXIS / 5) ||
         (!analog && event->value == -1)) {
-        // Direction: up/left
-        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+        // Direction: up/left (or down/right for inverted RK devices)
+        if (invert_analog) {
+            pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+        } else {
+            pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+        }
     } else if ((analog && event->value >= device.INPUT_EVENT.AXIS - device.INPUT_EVENT.AXIS / 5) ||
                (!analog && event->value == 1)) {
-        // Direction: down/right
-        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+        // Direction: down/right (or up/left for inverted RK devices)
+        if (invert_analog) {
+            pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+        } else {
+            pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+        }
     } else {
         // Direction: center
         pressed &= ~(BIT(axis) | BIT(axis + 1));
@@ -319,6 +343,10 @@ static void process_usb_key(const mux_input_options *opts, struct js_event js) {
 static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     int axis;
     int axis_max = 32767;
+    
+    // Check if this is an RK3326-based device that needs axis remapping
+    bool is_rk_device = (strncasecmp(device.DEVICE.NAME, "rk", 2) == 0);
+    
     if (js.number == controller.DPAD.UP) {
         // Axis: D-pad vertical
         axis = !opts->swap_axis || key_show ? MUX_INPUT_DPAD_UP : MUX_INPUT_DPAD_LEFT;
@@ -336,13 +364,23 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
         axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_LEFT : MUX_INPUT_LS_UP;
         axis_max = controller.ANALOG.LEFT.AXIS;
     } else if (js.number == controller.ANALOG.RIGHT.UP) {
-        // Axis: right stick vertical
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
-        axis_max = controller.ANALOG.RIGHT.AXIS;
+        // Axis: right stick vertical (but on RK devices this actually controls left stick vertical)
+        if (is_rk_device) {
+            axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+            axis_max = controller.ANALOG.LEFT.AXIS;
+        } else {
+            axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_UP : MUX_INPUT_RS_LEFT;
+            axis_max = controller.ANALOG.RIGHT.AXIS;
+        }
     } else if (js.number == controller.ANALOG.RIGHT.LEFT) {
-        // Axis: right stick horizontal
-        axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
-        axis_max = controller.ANALOG.RIGHT.AXIS;
+        // Axis: right stick horizontal (but on RK devices this actually controls left stick vertical)
+        if (is_rk_device) {
+            axis = !opts->swap_axis || key_show ? MUX_INPUT_LS_UP : MUX_INPUT_LS_LEFT;
+            axis_max = controller.ANALOG.LEFT.AXIS;
+        } else {
+            axis = !opts->swap_axis || key_show ? MUX_INPUT_RS_LEFT : MUX_INPUT_RS_UP;
+            axis_max = controller.ANALOG.RIGHT.AXIS;
+        }
     } else if (js.number == controller.TRIGGER.L2) {
         int threshold = (controller.TRIGGER.AXIS * 80) / 100;
         if (threshold > 0) {
@@ -368,12 +406,26 @@ static void process_usb_abs(const mux_input_options *opts, struct js_event js) {
     //
     // We use threshold of 80% of the nominal axis maximum to detect analog directional presses,
     // which seems to accommodate most variation without being too sensitive for "in-spec" sticks.
+    
+    // Check if this is an RK3326-based device that needs inverted analog stick logic for USB controllers
+    bool invert_usb_analog = (js.number == controller.ANALOG.LEFT.UP || js.number == controller.ANALOG.LEFT.LEFT ||
+                              js.number == controller.ANALOG.RIGHT.UP || js.number == controller.ANALOG.RIGHT.LEFT) &&
+                             (strncasecmp(device.DEVICE.NAME, "rk", 2) == 0);
+    
     if (js.value <= -axis_max + axis_max / 5) {
-        // Direction: up/left
-        pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+        // Direction: up/left (or down/right for inverted RK devices)
+        if (invert_usb_analog) {
+            pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+        } else {
+            pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+        }
     } else if (js.value >= axis_max - axis_max / 5) {
-        // Direction: down/right
-        pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+        // Direction: down/right (or up/left for inverted RK devices)
+        if (invert_usb_analog) {
+            pressed = ((pressed | BIT(axis)) & ~BIT(axis + 1));
+        } else {
+            pressed = ((pressed | BIT(axis + 1)) & ~BIT(axis));
+        }
     } else {
         // Direction: center
         pressed &= ~(BIT(axis) | BIT(axis + 1));

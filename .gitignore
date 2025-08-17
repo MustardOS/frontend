@@ -4,3 +4,5 @@ bin/
 interface/autosave/
 interface/backup/
 interface/cache/
+.vscode/settings.json
+CLAUDE.md
