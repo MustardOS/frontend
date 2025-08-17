@@ -29,7 +29,8 @@ void sdl_init(void) {
     SDL_SetHint(SDL_HINT_APP_NAME, MUX_CALLER);
 
     SDL_Init(SDL_INIT_VIDEO);
-
+    SDL_ShowCursor(SDL_DISABLE);
+    
     scale_width = device.MUX.WIDTH * device.SCREEN.ZOOM;
     scale_height = device.MUX.HEIGHT * device.SCREEN.ZOOM;
     LOG_INFO("video", "Device Scale: %dx%d", scale_width, scale_height)
