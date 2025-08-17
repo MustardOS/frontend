@@ -221,6 +221,16 @@ int muxwebserv_main();
         ui_count++;                                                                 \
     } while (0)
 
+#define HIDE_OPTION_ITEM(MODULE, NAME)                                     \
+    do {                                                                   \
+        lv_obj_add_flag(ui_pnl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);  \
+        lv_obj_add_flag(ui_lbl##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);  \
+        lv_obj_add_flag(ui_ico##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);  \
+        lv_obj_add_flag(ui_dro##NAME##_##MODULE, MU_OBJ_FLAG_HIDE_FLOAT);  \
+                                                                           \
+        ui_count--;                                                        \
+    } while (0)
+
 #define INIT_STATIC_ITEM(INDEX, MODULE, NAME, LABEL, GLYPH, NOGEN)                                                       \
     do {                                                                                                                 \
         int _idx = ((INDEX) < 0) ? ui_count : (ui_count + (INDEX));                                                      \

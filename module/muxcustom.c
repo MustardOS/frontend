@@ -207,9 +207,8 @@ static void init_navigation_group(void) {
     }
 
     // Temporary removal of elements
-    lv_obj_add_flag(ui_pnlAnimation_custom, MU_OBJ_FLAG_HIDE_FLOAT);
-    lv_obj_add_flag(ui_pnlBootlogo_custom, MU_OBJ_FLAG_HIDE_FLOAT);
-    ui_count -= 2;
+    HIDE_OPTION_ITEM(custom, Animation);
+    HIDE_OPTION_ITEM(custom, Bootlogo);
 
     list_nav_move(direct_to_previous(ui_objects, ui_count, &nav_moved), +1);
 }
